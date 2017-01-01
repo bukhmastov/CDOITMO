@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_e_register"
+            android:icon="@drawable/ic_e_journal"
+            android:title="@string/e_journal"/>
+        <item
+            android:id="@+id/nav_protocol_changes"
+            android:icon="@drawable/ic_protocol_changes"
+            android:title="@string/protocol_changes"/>
+        <item
+            android:id="@+id/nav_rating"
+            android:icon="@drawable/ic_rating"
+            android:title="@string/rating"/>
+    </group>
+
+    <item android:title="@string/account">
+        <menu>
+            <item
+                android:id="@+id/nav_logout"
+                android:icon="@drawable/ic_logout"
+                android:title="@string/logout"/>
+        </menu>
+    </item>
+
+</menu>

@@ -1,0 +1,33 @@
+<resources>
+    <string name="app_name">ЦДО ИТМО</string>
+    <string name="title_activity_login">Авторизация</string>
+    <string name="login">Логин</string>
+    <string name="password">Пароль</string>
+    <string name="enter">Войти</string>
+    <string name="fill_fields">Заполните поля</string>
+    <string name="cdo">ЦДО</string>
+    <string name="invalid_login_password">Неверный логин/пароль</string>
+    <string name="no_connection">Нет подключения к сети</string>
+    <string name="redo">Повторить</string>
+    <string name="e_journal">Электронный журнал</string>
+    <string name="protocol_changes">Протокол изменений</string>
+    <string name="rating">Рейтинг</string>
+    <string name="account">Аккаунт</string>
+    <string name="logout">Выйти</string>
+    <string name="navigation_drawer_open">Открыть меню</string>
+    <string name="navigation_drawer_close">Закрыть меню</string>
+    <string name="logged_out">Вы вышли из аккаунта</string>
+    <string name="failed_to_open_fragment">Не удалось открыть фрагмент</string>
+    <string name="loading">Загрузка</string>
+    <string name="load_failed">Загрузка не удалась</string>
+    <string name="auth_failed">Авторизация не удалась</string>
+    <string name="semester">семестр</string>
+    <string name="update_date">Последнее обновление:</string>
+    <string name="year">Год</string>
+    <string name="subject_review">Обзор предмета</string>
+    <string name="lorem_ipsum">Lorem ipsum</string>
+    <string name="auth_check">Авторизация</string>
+    <string name="authorization">Авторизация</string>
+    <string name="authorized">Авторизован</string>
+
+</resources>
