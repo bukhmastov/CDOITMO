@@ -66,9 +66,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         DeIfmoRestClient.check(new DeIfmoRestClientResponseHandler() {
             @Override
             public void onSuccess(int statusCode, String response) {
-                TextView user_name = (TextView) findViewById(R.id.user_name);
-                user_name.setText(response);
-                user_name.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                if(!response.isEmpty()) {
+                    TextView user_name = (TextView) findViewById(R.id.user_name);
+                    user_name.setText(response);
+                    user_name.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                }
                 selectSection(selectedSection);
             }
             @Override

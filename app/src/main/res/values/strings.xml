@@ -34,5 +34,6 @@
     <string name="last_2_weeks">последние 2 недели</string>
     <string name="last_3_weeks">последние 3 недели</string>
     <string name="last_4_weeks">последние 4 недели</string>
+    <string name="no_changes_for_period">Нет изменений за указанный период</string>
 
 </resources>

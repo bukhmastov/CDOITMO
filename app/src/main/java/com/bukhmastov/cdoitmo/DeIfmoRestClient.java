@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.nfc.Tag;
+import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -12,12 +14,14 @@ import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
+import org.htmlcleaner.HtmlCleaner;
+import org.htmlcleaner.TagNode;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import cz.msebera.android.httpclient.Header;
 
@@ -73,20 +77,17 @@ class DeIfmoRestClient {
                 DeIfmoRestClient.get("servlet/distributedCDE?Rule=editPersonProfile", null, new DeIfmoRestClientResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, String response) {
-                        Matcher matcher;
-                        matcher = Pattern.compile("<tr><th>Группа</th><tdcolspan=\"2\">(.{1,10})</td><td.{1,120}</tr>", Pattern.CASE_INSENSITIVE).matcher(response.replaceAll("\n|\r|\t| ", ""));
-                        if(matcher.find()) MainActivity.group = matcher.group(1);
-                        matcher = Pattern.compile("<td id=\"fio\" class=\"fio\">(.*)</td>", Pattern.CASE_INSENSITIVE).matcher(response);
-                        if(matcher.find()){
-                            String u_name = matcher.group(1);
-                            if(!Objects.equals(u_name, "")){
-                                responseHandler.onSuccess(200, u_name);
-                                SharedPreferences.Editor editor = sharedPreferences.edit();
-                                editor.putString("u_name", u_name);
-                                editor.apply();
+                        new UserDataParse(new UserDataParse.response() {
+                            @Override
+                            public void finish(HashMap<String, String> result) {
+                                if(result != null){
+                                    MainActivity.group = result.get("group");
+                                    responseHandler.onSuccess(200, result.get("name"));
+                                } else {
+                                    responseHandler.onSuccess(200, "");
+                                }
                             }
-                        }
-
+                        }).execute(response);
                     }
                     @Override
                     public void onProgress(int state) {}
@@ -282,6 +283,46 @@ class DeIfmoRestClient {
     private static boolean isOnline() {
         NetworkInfo networkInfo = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
         return (networkInfo != null && networkInfo.isConnected());
+    }
+}
+
+class UserDataParse extends AsyncTask<String, Void, HashMap<String, String>> {
+    interface response {
+        void finish(HashMap<String, String> result);
+    }
+    private response delegate = null;
+    UserDataParse(response delegate){
+        this.delegate = delegate;
+    }
+    @Override
+    protected HashMap<String, String> doInBackground(String... params) {
+        try {
+            HashMap<String, String> response = new HashMap<>();
+            TagNode root = new HtmlCleaner().clean(params[0].replace("&nbsp;", " "));
+            // находим имя пользователя
+            TagNode fio = root.findElementByAttValue("id", "fio", true, false);
+            response.put("name", fio.getText().toString().trim());
+            // находим группу пользователя
+            TagNode editForm = root.findElementByAttValue("name", "editForm", true, false);
+            TagNode div = editForm.findElementByAttValue("class", "d_text", false, false);
+            TagNode table = div.findElementByAttValue("class", "d_table", false, false);
+            List<? extends TagNode> rows = table.findElementByName("tbody", false).getAllElementsList(false);
+            for (TagNode row : rows) {
+                List<? extends TagNode> columns = row.getAllElementsList(false);
+                if (Objects.equals(columns.get(0).getText().toString().trim(), "Группа")) {
+                    response.put("group", columns.get(1).getText().toString().trim());
+                    break;
+                }
+            }
+            return response;
+        } catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
+    }
+    @Override
+    protected void onPostExecute(HashMap<String, String> result) {
+        delegate.finish(result);
     }
 }
 

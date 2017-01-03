@@ -86,13 +86,16 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
             return;
         }
         notifyAboutDateUpdate = true;
+        Calendar now = Calendar.getInstance();
+        int year = now.get(Calendar.YEAR);
+        int month = now.get(Calendar.MONTH);
         RequestParams params = new RequestParams();
         params.put("Rule", "eRegisterGetProtokolVariable");
         params.put("ST_GRP", MainActivity.group);
         params.put("PERSONID", sharedPreferences.getString("login", ""));
         params.put("SYU_ID", "0");
         params.put("UNIVER", "1");
-        params.put("APPRENTICESHIP", "2016/2017");
+        params.put("APPRENTICESHIP", month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year);
         params.put("PERIOD", String.valueOf(number_of_weeks * 7));
         DeIfmoRestClient.post("servlet/distributedCDE", params, new DeIfmoRestClientResponseHandler() {
             @Override
@@ -151,7 +154,6 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
                 }
             }
         });
-
     }
     private void loadFailed(){
         draw(R.layout.state_try_again);
@@ -182,7 +184,13 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
             draw(R.layout.protocol_layout);
             // работаем со списком
             ListView pl_list_view = (ListView) getActivity().findViewById(R.id.pl_list_view);
-            pl_list_view.setAdapter(new ProtocolListView(getActivity(), changes));
+            if(changes.size() > 0) {
+                pl_list_view.setAdapter(new ProtocolListView(getActivity(), changes));
+            } else {
+                ViewGroup mSwipeRefreshLayout = (SwipeRefreshLayout) getActivity().findViewById(R.id.swipe_container);
+                mSwipeRefreshLayout.removeView(pl_list_view);
+                mSwipeRefreshLayout.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.state_protocol_empty, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            }
             // работаем со свайпом
             SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) getActivity().findViewById(R.id.swipe_container);
             mSwipeRefreshLayout.setColorSchemeColors(getActivity().getResources().getColor(R.color.colorPrimaryLight), getActivity().getResources().getColor(R.color.colorPrimary), getActivity().getResources().getColor(R.color.colorPrimaryDark));
