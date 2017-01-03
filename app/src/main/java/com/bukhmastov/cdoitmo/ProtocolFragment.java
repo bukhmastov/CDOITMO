@@ -283,7 +283,6 @@ class Protocol {
                 e.printStackTrace();
             }
         }
-
     }
     void put(JSONObject data, int number_of_weeks){
         try {

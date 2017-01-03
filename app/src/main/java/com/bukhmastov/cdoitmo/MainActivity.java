@@ -128,7 +128,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 break;
             case R.id.nav_rating:
                 title = getString(R.string.rating);
-                //fragmentClass = ERegisterFragment.class;
+                fragmentClass = RatingFragment.class;
                 break;
             case R.id.nav_logout: gotoLogin(LoginActivity.SIGNAL_LOGOUT); break;
         }
@@ -138,11 +138,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Fragment fragment = (Fragment) fragmentClass.newInstance();
                 FragmentManager fragmentManager = getSupportFragmentManager();
                 fragmentManager.beginTransaction().replace(R.id.content_container, fragment).commit();
-                if(title != null) {
-                    ActionBar actionBar = getSupportActionBar();
-                    if (actionBar != null) {
-                        actionBar.setTitle(title);
-                    }
+                ActionBar actionBar = getSupportActionBar();
+                if (actionBar != null) {
+                    actionBar.setTitle(title);
                 }
             } catch (Exception e) {
                 e.printStackTrace();

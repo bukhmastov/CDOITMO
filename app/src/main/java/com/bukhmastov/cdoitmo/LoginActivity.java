@@ -101,10 +101,12 @@ public class LoginActivity extends AppCompatActivity {
             public void onFailure(int state) {}
         });
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString("u_name", "");
         editor.putString("login", "");
         editor.putString("password", "");
         editor.putString("session_cookie", "");
+        editor.putString("ERegister", "");
+        editor.putString("Protocol", "");
+        editor.putString("Rating", "");
         editor.apply();
         Snackbar.make(findViewById(R.id.activity_login), R.string.logged_out, Snackbar.LENGTH_SHORT).show();
     }
