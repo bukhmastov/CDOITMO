@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin" >
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toStartOf="@+id/lv_protocol_value"
+        android:gravity="center" >
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="12dp" />
+
+        <TextView
+            android:text="@string/lorem_ipsum"
+            android:layout_width="match_parent"
+            android:id="@+id/lv_protocol_name"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+            android:textSize="16sp"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical" />
+
+        <TextView
+            android:text="@string/lorem_ipsum"
+            android:layout_width="match_parent"
+            android:id="@+id/lv_protocol_desc"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:textAppearance="@android:style/TextAppearance.Material.Small" />
+
+        <TextView
+            android:text="@string/lorem_ipsum"
+            android:layout_width="match_parent"
+            android:id="@+id/lv_protocol_meta"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:textAllCaps="false"
+            android:fontFamily="sans-serif" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="12dp" />
+
+    </LinearLayout>
+
+    <TextView
+        android:text="@string/lorem_ipsum"
+        android:id="@+id/lv_protocol_value"
+        android:textAppearance="@style/TextAppearance.AppCompat.Button"
+        android:textSize="18sp"
+        android:layout_width="50dp"
+        android:gravity="center"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_height="75dp" />
+
+</RelativeLayout>

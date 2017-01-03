@@ -2,6 +2,7 @@ package com.bukhmastov.cdoitmo;
 
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -25,6 +26,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private static final String TAG = "MainActivity";
     public static int selectedSection = R.id.nav_e_register;
     public static SharedPreferences sharedPreferences;
+    public static String group = null;
     private NavigationView navigationView;
 
     @Override
@@ -43,7 +45,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         ((DrawerLayout) findViewById(R.id.drawer_layout)).closeDrawer(GravityCompat.START); // закрываем меню
         selectSection(item.getItemId()); // выполняем выбор секции меню
         return true;
@@ -120,7 +122,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 break;
             case R.id.nav_protocol_changes:
                 title = getString(R.string.protocol_changes);
-                //fragmentClass = ERegisterFragment.class;
+                fragmentClass = ProtocolFragment.class;
                 break;
             case R.id.nav_rating:
                 title = getString(R.string.rating);

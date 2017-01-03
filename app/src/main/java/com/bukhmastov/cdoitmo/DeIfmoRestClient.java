@@ -70,11 +70,13 @@ class DeIfmoRestClient {
                     }
                 });
             } else {
-                DeIfmoRestClient.get("servlet/distributedCDE?Rule=ShowWorkSpace", null, new DeIfmoRestClientResponseHandler() {
+                DeIfmoRestClient.get("servlet/distributedCDE?Rule=editPersonProfile", null, new DeIfmoRestClientResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, String response) {
-                        Pattern pattern = Pattern.compile("<td id=\"fio\" class=\"fio\">(.*)</td>", Pattern.CASE_INSENSITIVE);
-                        Matcher matcher = pattern.matcher(response);
+                        Matcher matcher;
+                        matcher = Pattern.compile("<tr><th>Группа</th><tdcolspan=\"2\">(.{1,10})</td><td.{1,120}</tr>", Pattern.CASE_INSENSITIVE).matcher(response.replaceAll("\n|\r|\t| ", ""));
+                        if(matcher.find()) MainActivity.group = matcher.group(1);
+                        matcher = Pattern.compile("<td id=\"fio\" class=\"fio\">(.*)</td>", Pattern.CASE_INSENSITIVE).matcher(response);
                         if(matcher.find()){
                             String u_name = matcher.group(1);
                             if(!Objects.equals(u_name, "")){
@@ -84,6 +86,7 @@ class DeIfmoRestClient {
                                 editor.apply();
                             }
                         }
+
                     }
                     @Override
                     public void onProgress(int state) {}
@@ -176,11 +179,52 @@ class DeIfmoRestClient {
                         String data = "";
                         if (responseBody != null) data = new String((new String(responseBody, "windows-1251")).getBytes("UTF-8"));
                         if (data.contains("Закончился интервал неактивности") || data.contains("Доступ запрещен")) {
-                            Log.d(TAG, data);
                             authorize(new DeIfmoRestClientResponseHandler() {
                                 @Override
                                 public void onSuccess(int statusCode, String response) {
                                     get(url, params, responseHandler);
+                                }
+                                @Override
+                                public void onProgress(int state) {
+                                    responseHandler.onProgress(state);
+                                }
+                                @Override
+                                public void onFailure(int state) {
+                                    responseHandler.onFailure(state);
+                                }
+                            });
+                        } else {
+                            responseHandler.onSuccess(statusCode, data);
+                        }
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                        responseHandler.onFailure(FAILED_TRY_AGAIN);
+                    }
+                }
+                @Override
+                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                    responseHandler.onFailure(FAILED_TRY_AGAIN);
+                }
+            });
+        } else {
+            responseHandler.onFailure(FAILED_OFFLINE);
+        }
+    }
+    static void post(final String url, final RequestParams params, final DeIfmoRestClientResponseHandler responseHandler){
+        if(isOnline()) {
+            responseHandler.onProgress(STATE_HANDLING);
+            renewSessionCookie();
+            httpclient.post(getAbsoluteUrl(url), params, new AsyncHttpResponseHandler() {
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                    try {
+                        String data = "";
+                        if (responseBody != null) data = new String((new String(responseBody, "windows-1251")).getBytes("UTF-8"));
+                        if (data.contains("Закончился интервал неактивности") || data.contains("Доступ запрещен")) {
+                            authorize(new DeIfmoRestClientResponseHandler() {
+                                @Override
+                                public void onSuccess(int statusCode, String response) {
+                                    post(url, params, responseHandler);
                                 }
                                 @Override
                                 public void onProgress(int state) {

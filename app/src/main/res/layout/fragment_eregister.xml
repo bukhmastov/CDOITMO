@@ -7,10 +7,4 @@
     android:id="@+id/container_eregister">
 
 
-    <TextView
-        android:text="@string/lorem_ipsum"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/textView"
-        android:textAppearance="@style/TextAppearance.AppCompat.Display2" />
 </LinearLayout>

@@ -29,5 +29,10 @@
     <string name="auth_check">Авторизация</string>
     <string name="authorization">Авторизация</string>
     <string name="authorized">Авторизован</string>
+    <string name="for_the">За</string>
+    <string name="last_week">последнюю неделю</string>
+    <string name="last_2_weeks">последние 2 недели</string>
+    <string name="last_3_weeks">последние 3 недели</string>
+    <string name="last_4_weeks">последние 4 недели</string>
 
 </resources>
