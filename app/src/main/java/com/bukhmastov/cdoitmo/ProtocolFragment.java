@@ -288,7 +288,7 @@ class Protocol {
         try {
             JSONObject json = new JSONObject();
             json.put("timestamp", Calendar.getInstance().getTimeInMillis());
-            json.put("date", new SimpleDateFormat("dd.MM.YYYY HH:mm", Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis())));
+            json.put("date", new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis())));
             json.put("number_of_weeks", number_of_weeks);
             json.put("protocol", data);
             protocol = json;

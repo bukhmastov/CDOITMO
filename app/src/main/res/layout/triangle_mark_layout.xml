@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_height="60dp"
+    android:layout_width="60dp">
+
+    <View
+        android:background="@color/colorPrimary"
+        android:rotation="45"
+        android:layout_margin="9dp"
+        android:layout_height="42dp"
+        android:layout_width="42dp" />
+    <View
+        android:background="@color/colorPrimary"
+        android:layout_width="30dp"
+        android:layout_height="60dp" />
+
+    <TextView
+        android:text="50"
+        android:layout_height="60dp"
+        android:textAppearance="@style/TextAppearance.AppCompat.Button"
+        android:gravity="center"
+        android:textSize="18sp"
+        android:textColor="@color/colorWhite"
+        android:id="@+id/lvrl_number"
+        android:layout_width="60dp" />
+</FrameLayout>

@@ -9,7 +9,6 @@
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_toStartOf="@+id/lv_protocol_value"
         android:gravity="center" >
 
         <Space
@@ -31,7 +30,7 @@
             android:id="@+id/lv_rating_position"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
-            android:textAppearance="@android:style/TextAppearance.Material.Small" />
+            android:textAppearance="@android:style/TextAppearance.Material.Body1" />
 
         <Space
             android:layout_width="match_parent"

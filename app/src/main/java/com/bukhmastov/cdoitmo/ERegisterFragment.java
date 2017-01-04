@@ -362,7 +362,7 @@ class ERegister {
             try {
                 parsedERegister = new ParsedERegister();
                 parsedERegister.timestamp = json.getLong("timestamp");
-                parsedERegister.date = new SimpleDateFormat("dd.MM.YYYY HH:mm", Locale.ROOT).format(new Date(parsedERegister.timestamp));
+                parsedERegister.date = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.ROOT).format(new Date(parsedERegister.timestamp));
                 JSONArray years = json.getJSONObject("eregister").getJSONArray("years");
                 for(int i = 0; i < years.length(); i++){
                     JSONObject groupData = years.getJSONObject(i);

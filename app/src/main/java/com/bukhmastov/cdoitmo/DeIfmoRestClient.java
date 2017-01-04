@@ -82,6 +82,7 @@ class DeIfmoRestClient {
                             public void finish(HashMap<String, String> result) {
                                 if(result != null){
                                     MainActivity.group = result.get("group");
+                                    MainActivity.name = result.get("name");
                                     responseHandler.onSuccess(200, result.get("name"));
                                 } else {
                                     responseHandler.onSuccess(200, "");

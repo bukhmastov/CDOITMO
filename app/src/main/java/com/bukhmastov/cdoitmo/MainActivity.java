@@ -27,6 +27,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public static int selectedSection = R.id.nav_e_register;
     public static SharedPreferences sharedPreferences;
     public static String group = null;
+    public static String name = null;
     private NavigationView navigationView;
 
     @Override

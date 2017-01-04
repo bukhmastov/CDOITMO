@@ -70,9 +70,11 @@ public class SubjectActivity extends AppCompatActivity {
         } else {
             finish();
         }
+        if(actionBar != null){
+            actionBar.setTitle(subject.name);
+        }
         // отображаем шапку
         TextView as_current_points = (TextView) findViewById(R.id.as_current_points);
-        TextView as_name = (TextView) findViewById(R.id.as_name);
         TextView as_desc = (TextView) findViewById(R.id.as_desc);
         TextView as_result = (TextView) findViewById(R.id.as_result);
         Double points = subject.currentPoints;
@@ -85,7 +87,6 @@ public class SubjectActivity extends AppCompatActivity {
             pointsStr = "";
         }
         as_current_points.setText(pointsStr);
-        as_name.setText(subject.name);
         as_desc.setText(termSub + " " + getString(R.string.semester) + (Objects.equals(subject.type, "") ? "" : " | " + subject.type));
         if(Objects.equals(subject.mark, "")){
             ((ViewGroup) as_result.getParent()).removeView(as_result);

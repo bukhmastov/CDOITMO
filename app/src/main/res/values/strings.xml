@@ -36,5 +36,7 @@
     <string name="last_4_weeks">последние 4 недели</string>
     <string name="no_changes_for_period">Нет изменений за указанный период</string>
     <string name="course">курс</string>
+    <string name="detailed_rating">Подробный рейтинг</string>
+    <string name="your_rating">Ваш рейтинг</string>
 
 </resources>
