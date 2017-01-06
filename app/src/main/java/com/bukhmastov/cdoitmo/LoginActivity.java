@@ -53,7 +53,6 @@ public class LoginActivity extends AppCompatActivity {
                 String login = input_login.getText().toString();
                 String password = input_password.getText().toString();
                 if(!(Objects.equals(login, "") || Objects.equals(password, ""))){
-                    Log.d(TAG, "Login: " + login + " | Password: " + password);
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     editor.putString("login", login);
                     editor.putString("password", password);
@@ -71,14 +70,18 @@ public class LoginActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         switch(state){
+            case SIGNAL_CREDENTIALS_REQUIRED: break;
             case SIGNAL_LOGOUT: logOut(); break;
             case SIGNAL_CREDENTIALS_FAILED: // неверные учетные данные
                 SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putString("u_name", "");
+                editor.putString("group", "");
                 editor.putString("password", "");
                 editor.putString("session_cookie", "");
                 editor.apply();
                 Snackbar.make(findViewById(R.id.activity_login), R.string.invalid_login_password, Snackbar.LENGTH_LONG).show();
+                break;
+            default:
+                if(sharedPreferences.getBoolean("pref_auto_logout", false) && !(Objects.equals(sharedPreferences.getString("login", ""), "") || Objects.equals(sharedPreferences.getString("password", ""), ""))) logOut();
                 break;
         }
         state = -1;

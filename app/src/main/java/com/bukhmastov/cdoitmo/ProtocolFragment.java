@@ -270,12 +270,12 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
 class Protocol {
 
     private static final String TAG = "Protocol";
-    private SharedPreferences sharedPreferences;
+    private Context context;
     private JSONObject protocol = null;
 
     Protocol(Context context){
-        this.sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        String protocol = this.sharedPreferences.getString("Protocol", "");
+        this.context = context;
+        String protocol = Cache.get(context, "Protocol");
         if(!Objects.equals(protocol, "")){
             try {
                 this.protocol = new JSONObject(protocol);
@@ -292,9 +292,12 @@ class Protocol {
             json.put("number_of_weeks", number_of_weeks);
             json.put("protocol", data);
             protocol = json;
-            SharedPreferences.Editor editor = this.sharedPreferences.edit();
-            editor.putString("Protocol", json.toString());
-            editor.apply();
+            Cache.put(context, "Protocol", protocol.toString());
+            JSONArray arr = data.getJSONArray("changes");
+            if(arr.length() > 0){
+                JSONObject obj = arr.getJSONObject(0);
+                PreferenceManager.getDefaultSharedPreferences(context).edit().putString("TrackingProtocolJobServiceLASTDATA", obj.getString("subject") + obj.getString("field") + obj.getDouble("value")).apply();
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

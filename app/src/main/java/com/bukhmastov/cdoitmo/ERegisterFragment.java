@@ -322,12 +322,12 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
 class ERegister {
 
     private static final String TAG = "ERegister";
-    private SharedPreferences sharedPreferences;
+    private Context context;
     private ParsedERegister parsedERegister = null;
 
     ERegister(Context context){
-        this.sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        String eRegister = this.sharedPreferences.getString("ERegister", "");
+        this.context = context;
+        String eRegister = Cache.get(context, "ERegister");
         if(!Objects.equals(eRegister, "")){
             try {
                 parse(new JSONObject(eRegister));
@@ -342,9 +342,7 @@ class ERegister {
             json.put("timestamp", Calendar.getInstance().getTimeInMillis());
             json.put("eregister", data);
             parse(json);
-            SharedPreferences.Editor editor = this.sharedPreferences.edit();
-            editor.putString("ERegister", json.toString());
-            editor.apply();
+            Cache.put(context, "ERegister", json.toString());
         } catch (Exception e) {
             e.printStackTrace();
         }

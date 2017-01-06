@@ -205,7 +205,10 @@ class RatingTopListParse extends AsyncTask<String, Void, JSONObject> {
                 if(matcher.find()){
                     JSONObject user = new JSONObject();
                     user.put("number", Integer.parseInt(matcher.group(1)));
-                    user.put("fio", matcher.group(2));
+                    String fio = matcher.group(2).trim();
+                    Matcher m = Pattern.compile("^(.*) \\(\\)$").matcher(fio);
+                    if(m.find()) fio = m.group(1);
+                    user.put("fio", fio);
                     user.put("group", matcher.group(3));
                     user.put("department", matcher.group(4));
                     user.put("is_me", Objects.equals(matcher.group(2), MainActivity.name));

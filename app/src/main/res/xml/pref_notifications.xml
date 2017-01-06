@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <SwitchPreference
+        android:key="pref_use_notifications"
+        android:defaultValue="true"
+        android:title="@string/pref_use_notifications"
+        android:summary="@string/pref_use_notifications_summary"/>
+
+    <ListPreference
+        android:key="pref_notify_frequency"
+        android:dependency="pref_use_notifications"
+        android:title="@string/pref_notify_frequency"
+        android:entries="@array/pref_notifications_interval_titles"
+        android:entryValues="@array/pref_notifications_interval_values"
+        android:defaultValue="30" />
+
+    <RingtonePreference
+        android:key="pref_notify_sound"
+        android:dependency="pref_use_notifications"
+        android:title="@string/pref_notify_sound"
+        android:defaultValue="content://settings/system/notification_sound"
+        android:ringtoneType="notification" />
+
+    <SwitchPreference
+        android:key="pref_notify_vibrate"
+        android:dependency="pref_use_notifications"
+        android:defaultValue="true"
+        android:title="@string/pref_notify_vibrate" />
+
+</PreferenceScreen>

@@ -17,7 +17,7 @@
     <string name="navigation_drawer_open">Открыть меню</string>
     <string name="navigation_drawer_close">Закрыть меню</string>
     <string name="logged_out">Вы вышли из аккаунта</string>
-    <string name="failed_to_open_fragment">Не удалось открыть фрагмент</string>
+    <string name="failed_to_open_fragment">Не удалось открыть вкладку</string>
     <string name="loading">Загрузка</string>
     <string name="load_failed">Загрузка не удалась</string>
     <string name="auth_failed">Авторизация не удалась</string>
@@ -38,5 +38,20 @@
     <string name="course">курс</string>
     <string name="detailed_rating">Подробный рейтинг</string>
     <string name="your_rating">Ваш рейтинг</string>
+    <string name="settings">Настройки</string>
+    <string name="general">Основные</string>
+    <string name="notifications">Уведомления</string>
+    <string name="pref_default_fragment">Вкладка по умолчанию</string>
+    <string name="pref_use_cache">Кэшировать данные на диске</string>
+    <string name="pref_auto_logout">Автовыход</string>
+    <string name="pref_auto_logout_summary">Автоматический выход из аккаунта</string>
+    <string name="pref_use_notifications">Уведомления</string>
+    <string name="pref_use_notifications_summary">Уведомления о новых баллах</string>
+    <string name="pref_notify_frequency">Частота обновления</string>
+    <string name="pref_notify_sound">Звук уведомления</string>
+    <string name="pref_ringtone_silent">Без звука</string>
+    <string name="pref_notify_vibrate">Вибрация</string>
+    <string name="attention">Внимание</string>
+    <string name="pref_use_cache_warning">Выключая кэширование, Вы принимаете факт того, что приложение не всегда сможет предоставить Вам запрашиваемую информацию с серверов http://de.ifmo.ru/</string>
 
 </resources>

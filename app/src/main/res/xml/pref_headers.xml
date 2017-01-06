@@ -1,0 +1,13 @@
+<preference-headers xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <header
+        android:fragment="com.bukhmastov.cdoitmo.SettingsActivity$GeneralPreferenceFragment"
+        android:icon="@drawable/ic_pref_general"
+        android:title="@string/general" />
+
+    <header
+        android:fragment="com.bukhmastov.cdoitmo.SettingsActivity$NotificationsPreferenceFragment"
+        android:icon="@drawable/ic_notifications"
+        android:title="@string/notifications" />
+
+</preference-headers>

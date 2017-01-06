@@ -83,6 +83,7 @@ class DeIfmoRestClient {
                                 if(result != null){
                                     MainActivity.group = result.get("group");
                                     MainActivity.name = result.get("name");
+                                    sharedPreferences.edit().putString("group", result.get("group")).apply();
                                     responseHandler.onSuccess(200, result.get("name"));
                                 } else {
                                     responseHandler.onSuccess(200, "");

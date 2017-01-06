@@ -1,5 +1,7 @@
 package com.bukhmastov.cdoitmo;
 
+import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
@@ -14,6 +16,7 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,6 +29,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private static final String TAG = "MainActivity";
     public static int selectedSection = R.id.nav_e_register;
     public static SharedPreferences sharedPreferences;
+    public static ProtocolTracker protocolTracker;
     public static String group = null;
     public static String name = null;
     private NavigationView navigationView;
@@ -42,7 +46,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mDrawerToggle.syncState();
         navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+        switch(sharedPreferences.getString("pref_default_fragment", "e_journal")){
+            case "e_journal": selectedSection = R.id.nav_e_register; break;
+            case "protocol_changes": selectedSection = R.id.nav_protocol_changes; break;
+            case "rating": selectedSection = R.id.nav_rating; break;
+        }
+        protocolTracker = new ProtocolTracker(this);
+        protocolTracker.check();
         check();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        navigationView.setCheckedItem(selectedSection);
+    }
+
+    @Override
+    protected void onDestroy() {
+        if(sharedPreferences.getBoolean("pref_auto_logout", false)) gotoLogin(LoginActivity.SIGNAL_LOGOUT);
+        super.onDestroy();
     }
 
     @Override
@@ -114,8 +137,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
     }
     private void selectSection(final int section){
-        navigationView.setCheckedItem(section);
-        ((ViewGroup) findViewById(R.id.content_container)).removeAllViews();
         Class fragmentClass = null;
         String title = null;
         switch(section){
@@ -131,9 +152,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 title = getString(R.string.rating);
                 fragmentClass = RatingFragment.class;
                 break;
+            case R.id.nav_settings:
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
+                break;
             case R.id.nav_logout: gotoLogin(LoginActivity.SIGNAL_LOGOUT); break;
         }
         if(fragmentClass != null){
+            navigationView.setCheckedItem(section);
+            ((ViewGroup) findViewById(R.id.content_container)).removeAllViews();
             selectedSection = section;
             try {
                 Fragment fragment = (Fragment) fragmentClass.newInstance();
@@ -162,5 +189,35 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ViewGroup vg = ((ViewGroup) findViewById(R.id.content_container));
         vg.removeAllViews();
         vg.addView(((LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+    }
+}
+
+class Cache {
+    static boolean enabled = true;
+    static String get(Context context, String key){
+        check(context);
+        if(enabled){
+            return PreferenceManager.getDefaultSharedPreferences(context).getString(key, "");
+        } else {
+            return "";
+        }
+    }
+    static void put(Context context, String key, String value){
+        check(context);
+        if(enabled){
+            PreferenceManager.getDefaultSharedPreferences(context).edit().putString(key, value).apply();
+        }
+    }
+    static void check(Context context){
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        enabled = sharedPreferences.getBoolean("pref_use_cache", true);
+        if(!enabled){
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("ERegister", "");
+            editor.putString("Protocol", "");
+            editor.putString("Rating", "");
+            editor.putString("RatingList", "");
+            editor.apply();
+        }
     }
 }

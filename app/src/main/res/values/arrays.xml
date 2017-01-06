@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="pref_general_default_fragment_titles">
+        <item>@string/e_journal</item>
+        <item>@string/protocol_changes</item>
+        <item>@string/rating</item>
+    </string-array>
+    <string-array name="pref_general_default_fragment_values">
+        <item>e_journal</item>
+        <item>protocol_changes</item>
+        <item>rating</item>
+    </string-array>
+
+    <string-array name="pref_notifications_interval_titles">
+        <item>Каждые 15 минут</item>
+        <item>Каждые 30 минут</item>
+        <item>Каждый час</item>
+        <item>Каждые 6 часов</item>
+        <item>Каждые 12 часов</item>
+    </string-array>
+    <string-array name="pref_notifications_interval_values">
+        <item>15</item>
+        <item>30</item>
+        <item>60</item>
+        <item>360</item>
+        <item>720</item>
+    </string-array>
+
+</resources>

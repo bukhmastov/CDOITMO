@@ -288,14 +288,14 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
 class Rating {
 
     private static final String TAG = "Rating";
-    private SharedPreferences sharedPreferences;
+    private Context context;
     private JSONObject rating = null;
     private JSONObject ratingList = null;
 
     Rating(Context context){
-        this.sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        this.context = context;
         String protocol;
-        protocol = this.sharedPreferences.getString("Rating", "");
+        protocol = Cache.get(context, "Rating");
         if(!Objects.equals(protocol, "")){
             try {
                 this.rating = new JSONObject(protocol);
@@ -303,7 +303,7 @@ class Rating {
                 e.printStackTrace();
             }
         }
-        protocol = this.sharedPreferences.getString("RatingList", "");
+        protocol = Cache.get(context, "RatingList");
         if(!Objects.equals(protocol, "")){
             try {
                 this.ratingList = new JSONObject(protocol);
@@ -323,9 +323,7 @@ class Rating {
             } else {
                 ratingList = json;
             }
-            SharedPreferences.Editor editor = this.sharedPreferences.edit();
-            editor.putString(type, json.toString());
-            editor.apply();
+            Cache.put(context, type, json.toString());
         } catch (Exception e) {
             e.printStackTrace();
         }
