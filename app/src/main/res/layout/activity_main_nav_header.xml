@@ -14,7 +14,7 @@
 
     <ImageView
         android:layout_width="60dp"
-        app:srcCompat="@drawable/cdo_small"
+        app:srcCompat="?attr/ic_cdo_small"
         android:id="@+id/imageView"
         android:layout_height="60dp"
         android:contentDescription="@string/cdo" />
@@ -23,6 +23,7 @@
         android:layout_width="match_parent"
         android:textAppearance="@style/TextAppearance.AppCompat.Body1"
         android:id="@+id/user_name"
-        android:layout_height="0dp" />
+        android:layout_height="0dp"
+        android:textColor="?android:attr/textColorSecondary" />
 
 </LinearLayout>

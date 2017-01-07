@@ -3,14 +3,13 @@ package com.bukhmastov.cdoitmo;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +18,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
+
+import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -40,6 +41,7 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
     private boolean spinner_group_blocker = true, spinner_period_blocker = true;
     private boolean notifyAboutDateUpdate = false;
     private boolean loaded = false;
+    private RequestHandle fragmentRequestHandle = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -53,12 +55,18 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
+    public void onResume() {
+        super.onResume();
         if(!loaded) {
             loaded = true;
             forceLoad();
         }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if(fragmentRequestHandle != null) fragmentRequestHandle.cancel(true);
     }
 
     @Override
@@ -126,6 +134,10 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                     case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED: gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED); break;
                 }
             }
+            @Override
+            public void onNewHandle(RequestHandle requestHandle) {
+                fragmentRequestHandle = requestHandle;
+            }
         });
     }
     private void loadFailed(){
@@ -181,7 +193,11 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
         });
         // работаем со свайпом
         SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) getActivity().findViewById(R.id.swipe_container);
-        mSwipeRefreshLayout.setColorSchemeColors(getActivity().getResources().getColor(R.color.colorPrimaryLight), getActivity().getResources().getColor(R.color.colorPrimary), getActivity().getResources().getColor(R.color.colorPrimaryDark));
+        TypedValue typedValue = new TypedValue();
+        getActivity().getTheme().resolveAttribute(R.attr.colorAccent, typedValue, true);
+        mSwipeRefreshLayout.setColorSchemeColors(typedValue.data);
+        getActivity().getTheme().resolveAttribute(R.attr.colorBackgroundRefresh, typedValue, true);
+        mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(typedValue.data);
         mSwipeRefreshLayout.setOnRefreshListener(this);
         // работаем с раскрывающимися списками
         // список групп
@@ -258,7 +274,10 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
             } else {
                 message = parsedERegister.date;
             }
-            Snackbar.make(getActivity().findViewById(R.id.eregister_layout), getString(R.string.update_date) + " " + message, Snackbar.LENGTH_SHORT).show();
+            Snackbar snackbar = Snackbar.make(getActivity().findViewById(R.id.eregister_layout), getString(R.string.update_date) + " " + message, Snackbar.LENGTH_SHORT);
+            getActivity().getTheme().resolveAttribute(R.attr.colorBackgroundSnackBar, typedValue, true);
+            snackbar.getView().setBackgroundColor(typedValue.data);
+            snackbar.show();
             notifyAboutDateUpdate = false;
         }
     }
@@ -313,9 +332,13 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
         getActivity().finish();
     }
     private void draw(int layoutId){
-        ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_eregister));
-        vg.removeAllViews();
-        vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        try {
+            ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_eregister));
+            vg.removeAllViews();
+            vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        } catch (Exception e){
+            e.printStackTrace();
+        }
     }
 }
 
@@ -504,9 +527,11 @@ class SubjectListView extends ArrayAdapter<HashMap<String, String>> {
         lv_subject_sem.setText(sub.get("semester") + " " + context.getString(R.string.semester) + (Objects.equals(sub.get("type"), "") ? "" : " | " + sub.get("type")));
         lv_subject_points.setText(double2string(Double.parseDouble(sub.get("value"))));
         if(Double.parseDouble(sub.get("value")) >= 60.0){
-            lv_subject_name.setTextColor(context.getResources().getColor(R.color.colorTextSubjectPassed));
-            lv_subject_sem.setTextColor(context.getResources().getColor(R.color.colorTextSubjectPassed));
-            lv_subject_points.setTextColor(context.getResources().getColor(R.color.colorTextSubjectPassed));
+            TypedValue typedValue = new TypedValue();
+            context.getTheme().resolveAttribute(R.attr.textColorPassed, typedValue, true);
+            lv_subject_name.setTextColor(typedValue.data);
+            lv_subject_sem.setTextColor(typedValue.data);
+            lv_subject_points.setTextColor(typedValue.data);
         }
         return rowView;
     }

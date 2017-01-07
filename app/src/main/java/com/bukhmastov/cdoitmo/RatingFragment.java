@@ -12,6 +12,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +23,8 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
+
+import com.loopj.android.http.RequestHandle;
 
 import org.htmlcleaner.HtmlCleaner;
 import org.htmlcleaner.TagNode;
@@ -46,14 +49,18 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
     public static Rating rating = null;
     private boolean loaded = false;
     private HashMap<String, Integer> ready;
+    private HashMap<String, RequestHandle> fragmentRequestHandle;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         rating = new Rating(getActivity());
         ready = new HashMap<>();
+        fragmentRequestHandle = new HashMap<>();
         ready.put("Rating", 0);
         ready.put("RatingList", 0);
+        fragmentRequestHandle.put("Rating", null);
+        fragmentRequestHandle.put("RatingList", null);
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
     }
 
@@ -63,12 +70,19 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
+    public void onResume() {
+        super.onResume();
         if(!loaded) {
             loaded = true;
             load();
         }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if(fragmentRequestHandle.get("Rating") != null) fragmentRequestHandle.get("Rating").cancel(true);
+        if(fragmentRequestHandle.get("RatingList") != null) fragmentRequestHandle.get("RatingList").cancel(true);
     }
 
     @Override
@@ -121,6 +135,10 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                         default: failed("Rating"); break;
                     }
                 }
+                @Override
+                public void onNewHandle(RequestHandle requestHandle) {
+                    fragmentRequestHandle.put("Rating", requestHandle);
+                }
             });
         } else {
             DeIfmoRestClient.get("index.php?node=8", null, new DeIfmoRestClientResponseHandler() {
@@ -151,6 +169,10 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                         case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED: gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED); break;
                         default: failed("RatingList"); break;
                     }
+                }
+                @Override
+                public void onNewHandle(RequestHandle requestHandle) {
+                    fragmentRequestHandle.put("RatingList", requestHandle);
                 }
             });
         }
@@ -199,7 +221,11 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
             }
             // работаем со свайпом
             SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) getActivity().findViewById(R.id.swipe_container);
-            mSwipeRefreshLayout.setColorSchemeColors(getActivity().getResources().getColor(R.color.colorPrimaryLight), getActivity().getResources().getColor(R.color.colorPrimary), getActivity().getResources().getColor(R.color.colorPrimaryDark));
+            TypedValue typedValue = new TypedValue();
+            getActivity().getTheme().resolveAttribute(R.attr.colorAccent, typedValue, true);
+            mSwipeRefreshLayout.setColorSchemeColors(typedValue.data);
+            getActivity().getTheme().resolveAttribute(R.attr.colorBackgroundRefresh, typedValue, true);
+            mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(typedValue.data);
             mSwipeRefreshLayout.setOnRefreshListener(this);
             if(dataRL == null){
                 ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.rl_list_container));
@@ -279,9 +305,13 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
         getActivity().finish();
     }
     private void draw(int layoutId){
-        ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_rating));
-        vg.removeAllViews();
-        vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        try {
+            ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_rating));
+            vg.removeAllViews();
+            vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        } catch (Exception e){
+            e.printStackTrace();
+        }
     }
 }
 

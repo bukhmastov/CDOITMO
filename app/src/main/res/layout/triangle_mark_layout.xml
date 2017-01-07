@@ -4,13 +4,13 @@
     android:layout_width="60dp">
 
     <View
-        android:background="@color/colorPrimary"
+        android:background="?attr/colorPrimary"
         android:rotation="45"
         android:layout_margin="9dp"
         android:layout_height="42dp"
         android:layout_width="42dp" />
     <View
-        android:background="@color/colorPrimary"
+        android:background="?attr/colorPrimary"
         android:layout_width="30dp"
         android:layout_height="60dp" />
 
@@ -20,7 +20,7 @@
         android:textAppearance="@style/TextAppearance.AppCompat.Button"
         android:gravity="center"
         android:textSize="18sp"
-        android:textColor="@color/colorWhite"
+        android:textColor="?android:attr/textColorPrimaryInverse"
         android:id="@+id/lvrl_number"
         android:layout_width="60dp" />
 </FrameLayout>

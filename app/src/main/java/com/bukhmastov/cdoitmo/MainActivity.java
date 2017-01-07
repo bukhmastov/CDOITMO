@@ -17,12 +17,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import com.loopj.android.http.RequestHandle;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -33,9 +36,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public static String group = null;
     public static String name = null;
     private NavigationView navigationView;
+    private boolean loaded = false;
+    private RequestHandle checkRequestHandle = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        if(PreferenceManager.getDefaultSharedPreferences(this).getBoolean("pref_dark_theme", false)) setTheme(R.style.AppTheme_Dark);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar_main));
@@ -52,14 +58,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case "rating": selectedSection = R.id.nav_rating; break;
         }
         protocolTracker = new ProtocolTracker(this);
-        protocolTracker.check();
-        check();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if(checkRequestHandle != null) checkRequestHandle.cancel(true);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         navigationView.setCheckedItem(selectedSection);
+        if(!loaded) check();
     }
 
     @Override
@@ -70,8 +81,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        ((DrawerLayout) findViewById(R.id.drawer_layout)).closeDrawer(GravityCompat.START); // закрываем меню
-        selectSection(item.getItemId()); // выполняем выбор секции меню
+        ((DrawerLayout) findViewById(R.id.drawer_layout)).closeDrawer(GravityCompat.START);
+        selectSection(item.getItemId());
         return true;
     }
 
@@ -81,11 +92,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            super.onBackPressed();
+            if(sharedPreferences.getBoolean("pref_auto_logout", false)) super.onBackPressed();
         }
     }
 
     private void check(){
+        loaded = false;
         draw(R.layout.state_loading);
         DeIfmoRestClient.check(new DeIfmoRestClientResponseHandler() {
             @Override
@@ -95,6 +107,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     user_name.setText(response);
                     user_name.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 }
+                protocolTracker.check();
+                loaded = true;
                 selectSection(selectedSection);
             }
             @Override
@@ -134,6 +148,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED: gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED); break;
                 }
             }
+            @Override
+            public void onNewHandle(RequestHandle requestHandle) {
+                checkRequestHandle = requestHandle;
+            }
         });
     }
     private void selectSection(final int section){
@@ -159,6 +177,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.nav_logout: gotoLogin(LoginActivity.SIGNAL_LOGOUT); break;
         }
         if(fragmentClass != null){
+            if(!loaded){
+                Snackbar snackbar = Snackbar.make(findViewById(R.id.content_container), "Дождитесь начальной авторизации", Snackbar.LENGTH_SHORT);
+                TypedValue typedValue = new TypedValue();
+                getTheme().resolveAttribute(R.attr.colorBackgroundSnackBar, typedValue, true);
+                snackbar.getView().setBackgroundColor(typedValue.data);
+                snackbar.show();
+                navigationView.setCheckedItem(selectedSection);
+                return;
+            }
             navigationView.setCheckedItem(section);
             ((ViewGroup) findViewById(R.id.content_container)).removeAllViews();
             selectedSection = section;
@@ -172,12 +199,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                Snackbar.make(findViewById(R.id.content_container), R.string.failed_to_open_fragment, Snackbar.LENGTH_LONG).setAction(R.string.redo, new View.OnClickListener() {
+                Snackbar snackbar = Snackbar.make(findViewById(R.id.content_container), getString(R.string.failed_to_open_fragment), Snackbar.LENGTH_SHORT);
+                TypedValue typedValue = new TypedValue();
+                getTheme().resolveAttribute(R.attr.colorBackgroundSnackBar, typedValue, true);
+                snackbar.getView().setBackgroundColor(typedValue.data);
+                snackbar.setAction(R.string.redo, new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         selectSection(section);
                     }
-                }).show();
+                });
+                snackbar.show();
             }
         }
     }

@@ -1,10 +1,47 @@
 <resources>
 
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorPrimaryLight">@color/colorPrimaryLight</item>
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorPrimaryOpacity">@color/colorPrimaryOpacity</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:textColorPrimaryInverse">@color/textColorHeader</item>
+        <item name="android:textColorPrimary">@color/textColorPrimary</item>
+        <item name="android:textColorSecondary">@color/textColorSecondary</item>
+        <item name="textColorPassed">@color/textColorSubjectPassed</item>
+        <item name="colorSeparator">@color/colorSeparator</item>
+        <item name="colorBackgroundRefresh">@color/textColorHeader</item>
+        <item name="colorBackgroundSection">@color/colorBackgroundSection</item>
+        <item name="colorBackgroundSnackBar">@color/colorBackgroundSnackBar</item>
+        <item name="colorIcXml">@color/colorIcXml</item>
+        <item name="colorIcXmlRed">@color/colorIcXmlRed</item>
+
+        <item name="ic_cdo_small">@drawable/cdo_small</item>
+        <item name="ic_security">@drawable/ic_security</item>
     </style>
+
+    <style name="AppTheme.Dark" parent="Theme.AppCompat.NoActionBar">
+        <item name="colorPrimaryLight">@color/colorPrimaryLightInverse</item>
+        <item name="colorPrimary">@color/colorPrimaryInverse</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDarkInverse</item>
+        <item name="colorPrimaryOpacity">@color/colorPrimaryOpacityInverse</item>
+        <item name="colorAccent">@color/colorAccentInverse</item>
+        <item name="android:textColorPrimaryInverse">@color/textColorHeaderInverse</item>
+        <item name="android:textColorPrimary">@color/textColorPrimaryInverse</item>
+        <item name="android:textColorSecondary">@color/textColorSecondaryInverse</item>
+        <item name="textColorPassed">@color/textColorSubjectPassedInverse</item>
+        <item name="colorSeparator">@color/colorSeparatorInverse</item>
+        <item name="colorBackgroundRefresh">@color/colorPrimaryInverse</item>
+        <item name="colorBackgroundSection">@color/colorBackgroundSectionInverse</item>
+        <item name="colorBackgroundSnackBar">@color/colorBackgroundSnackBarInverse</item>
+        <item name="colorIcXml">@color/colorIcXmlInverse</item>
+        <item name="colorIcXmlRed">@color/colorIcXmlRedInverse</item>
+
+        <item name="ic_cdo_small">@drawable/cdo_small_dark</item>
+        <item name="ic_security">@drawable/ic_security</item>
+    </style>
+
 
     <style name="SplashTheme" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowBackground">@drawable/splash_background</item>

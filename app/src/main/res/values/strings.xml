@@ -53,5 +53,10 @@
     <string name="pref_notify_vibrate">Вибрация</string>
     <string name="attention">Внимание</string>
     <string name="pref_use_cache_warning">Выключая кэширование, Вы принимаете факт того, что приложение не всегда сможет предоставить Вам запрашиваемую информацию с серверов http://de.ifmo.ru/</string>
+    <string name="action_1">событие</string>
+    <string name="action_2">события</string>
+    <string name="action_3">событий</string>
+    <string name="pref_dark_theme">Темная тема</string>
+    <string name="pref_dark_theme_summary">Приложение будет перезапущено</string>
 
 </resources>

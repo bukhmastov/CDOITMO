@@ -3,6 +3,7 @@ package com.bukhmastov.cdoitmo;
 import android.app.Activity;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
@@ -10,6 +11,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -17,6 +19,8 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import com.loopj.android.http.RequestHandle;
 
 import org.htmlcleaner.HtmlCleaner;
 import org.htmlcleaner.TagNode;
@@ -35,9 +39,11 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
     private static final String TAG = "RatingFragment";
     private String faculty = null;
     private String course = null;
+    private RequestHandle activityRequestHandle = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        if(PreferenceManager.getDefaultSharedPreferences(this).getBoolean("pref_dark_theme", false)) setTheme(R.style.AppTheme_Dark);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rating_list);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar_rating_list));
@@ -52,6 +58,12 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
         course = getIntent().getStringExtra("course");
         if(Objects.equals(faculty, "") || faculty == null || Objects.equals(course, "") || course == null) finish();
         load();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if(activityRequestHandle != null) activityRequestHandle.cancel(true);
     }
 
     @Override
@@ -123,6 +135,10 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
                     case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED: gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED); break;
                 }
             }
+            @Override
+            public void onNewHandle(RequestHandle requestHandle) {
+                activityRequestHandle = requestHandle;
+            }
         });
     }
     private void loadFailed(){
@@ -157,7 +173,11 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
             rl_list_view.setAdapter(new RatingListListView(this, users));
             // работаем со свайпом
             SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_container);
-            mSwipeRefreshLayout.setColorSchemeColors(getResources().getColor(R.color.colorPrimaryLight), getResources().getColor(R.color.colorPrimary), getResources().getColor(R.color.colorPrimaryDark));
+            TypedValue typedValue = new TypedValue();
+            getTheme().resolveAttribute(R.attr.colorAccent, typedValue, true);
+            mSwipeRefreshLayout.setColorSchemeColors(typedValue.data);
+            getTheme().resolveAttribute(R.attr.colorBackgroundRefresh, typedValue, true);
+            mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(typedValue.data);
             mSwipeRefreshLayout.setOnRefreshListener(this);
         } catch(Exception e){
             e.printStackTrace();
@@ -250,7 +270,9 @@ class RatingListListView extends ArrayAdapter<HashMap<String, String>> {
             ViewGroup vg = ((ViewGroup) rowView.findViewById(R.id.lvrl_number_layout));
             vg.removeAllViews();
             vg.addView(((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.triangle_mark_layout, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-            rowView.setBackgroundResource(R.color.colorPrimaryOpacity);
+            TypedValue typedValue = new TypedValue();
+            this.context.getTheme().resolveAttribute(R.attr.colorPrimaryOpacity, typedValue, true);
+            rowView.setBackgroundColor(typedValue.data);
             rowView.findViewById(R.id.lvrl_layout).setPadding(32, 0, 16, 0);
         }
         ((TextView) rowView.findViewById(R.id.lvrl_number)).setText(user.get("number"));

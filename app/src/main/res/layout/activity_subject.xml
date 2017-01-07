@@ -21,7 +21,7 @@
         android:id="@+id/as_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/colorPrimary"
+        android:background="?attr/colorPrimary"
         android:elevation="4dp"
         android:paddingTop="2dp"
         android:paddingBottom="20dp"
@@ -36,23 +36,23 @@
             android:layout_width="60dp"
             android:textAppearance="@style/TextAppearance.AppCompat.Button"
             android:textSize="18sp"
-            android:textColor="@color/colorWhite"
             android:text="@string/lorem_ipsum"
             android:layout_alignParentTop="true"
-            android:layout_height="20dp" />
+            android:layout_height="20dp"
+            android:textColor="?android:attr/textColorPrimaryInverse" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/as_desc"
-            android:textColor="@color/colorGray"
             android:text="@string/lorem_ipsum"
             android:layout_alignParentTop="true"
             android:layout_alignBottom="@+id/as_current_points"
             android:gravity="center_vertical"
             android:paddingEnd="10dp"
             android:paddingStart="0dp"
-            android:layout_toStartOf="@+id/as_current_points" />
+            android:layout_toStartOf="@+id/as_current_points"
+            android:textColor="?android:attr/textColorPrimaryInverse" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -64,12 +64,12 @@
             android:paddingEnd="8dp"
             android:background="@drawable/subject_result_border"
             android:textAppearance="@style/TextAppearance.AppCompat.Button"
-            android:textColor="@color/colorWhite"
             android:text="@string/lorem_ipsum"
             android:textSize="12sp"
             android:layout_below="@+id/as_desc"
             android:layout_alignParentStart="true"
-            android:layout_marginTop="10dp" />
+            android:layout_marginTop="10dp"
+            android:textColor="?android:attr/textColorPrimaryInverse" />
 
     </RelativeLayout>
 

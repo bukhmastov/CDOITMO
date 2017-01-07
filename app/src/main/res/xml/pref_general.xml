@@ -19,4 +19,10 @@
         android:title="@string/pref_auto_logout"
         android:summary="@string/pref_auto_logout_summary"/>
 
+    <SwitchPreference
+        android:key="pref_dark_theme"
+        android:defaultValue="false"
+        android:title="@string/pref_dark_theme"
+        android:summary="@string/pref_dark_theme_summary" />
+
 </PreferenceScreen>

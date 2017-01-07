@@ -17,12 +17,12 @@
         android:fontFamily="roboto"
         android:textColor="?android:attr/textColorSecondary"
         android:gravity="center_vertical"
-        android:background="@color/colorLightGray"/>
+        android:background="?attr/colorBackgroundSection"/>
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/colorGray"/>
+        android:background="?attr/colorSeparator"/>
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -47,7 +47,7 @@
                 android:layout_width="match_parent"
                 android:layout_marginLeft="5dp"
                 android:layout_marginRight="5dp"
-                android:background="@color/colorGray"/>
+                android:background="?attr/colorSeparator"/>
 
             <Spinner
                 android:layout_width="match_parent"
@@ -61,7 +61,7 @@
             android:layout_height="match_parent"
             android:layout_marginTop="5dp"
             android:layout_marginBottom="5dp"
-            android:background="@color/colorGray"
+            android:background="?attr/colorSeparator"
             android:layout_toStartOf="@+id/rl_button"/>
 
         <ImageButton
@@ -79,7 +79,7 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/colorGray"/>
+        android:background="?attr/colorSeparator"/>
 
     <TextView
         android:text="@string/your_rating"
@@ -91,12 +91,12 @@
         android:fontFamily="roboto"
         android:textColor="?android:attr/textColorSecondary"
         android:gravity="center_vertical"
-        android:background="@color/colorLightGray"/>
+        android:background="?attr/colorBackgroundSection"/>
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/colorGray"/>
+        android:background="?attr/colorSeparator"/>
 
     <android.support.v4.widget.SwipeRefreshLayout
         android:id="@+id/swipe_container"

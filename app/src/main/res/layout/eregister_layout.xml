@@ -24,7 +24,7 @@
         android:layout_above="@+id/spinners_layout"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/colorGray"/>
+        android:background="?attr/colorSeparator"/>
 
     <LinearLayout
         android:id="@+id/spinners_layout"
@@ -46,7 +46,7 @@
             android:layout_height="match_parent"
             android:layout_marginTop="5dp"
             android:layout_marginBottom="5dp"
-            android:background="@color/colorGray"/>
+            android:background="?attr/colorSeparator"/>
 
         <Spinner
             android:layout_width="match_parent"

@@ -16,6 +16,7 @@ import android.preference.PreferenceActivity;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.IntentCompat;
 import android.support.v7.app.ActionBar;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
@@ -38,6 +39,12 @@ import android.widget.ListView;
 import java.util.List;
 
 public class SettingsActivity extends AppCompatPreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        if(PreferenceManager.getDefaultSharedPreferences(this).getBoolean("pref_dark_theme", false)) setTheme(R.style.AppTheme_Dark);
+        super.onCreate(savedInstanceState);
+    }
 
     @Override
     protected void onResume() {
@@ -121,6 +128,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                     });
                     builder.create().show();
                 }
+                break;
+            case "pref_dark_theme":
+                finish();
+                Intent intent = new Intent(this, SplashActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
                 break;
         }
     }

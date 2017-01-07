@@ -14,6 +14,7 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.loopj.android.http.AsyncHttpResponseHandler;
+import com.loopj.android.http.RequestHandle;
 
 import java.util.Objects;
 
@@ -32,13 +33,15 @@ public class LoginActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        if(PreferenceManager.getDefaultSharedPreferences(this).getBoolean("pref_dark_theme", false)) setTheme(R.style.AppTheme_Dark);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar_login));
         ActionBar actionBar = getSupportActionBar();
         if(actionBar != null){
             actionBar.setTitle("  " + getString(R.string.title_activity_login));
-            actionBar.setLogo(R.drawable.ic_security);
+            int[] attrs = new int[] { R.attr.ic_security };
+            actionBar.setLogo(obtainStyledAttributes(attrs).getDrawable(0));
         }
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         // инициализация http клиента
@@ -102,6 +105,8 @@ public class LoginActivity extends AppCompatActivity {
             public void onProgress(int state) {}
             @Override
             public void onFailure(int state) {}
+            @Override
+            public void onNewHandle(RequestHandle requestHandle) {}
         });
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString("login", "");
@@ -111,6 +116,7 @@ public class LoginActivity extends AppCompatActivity {
         editor.putString("Protocol", "");
         editor.putString("Rating", "");
         editor.apply();
+        new ProtocolTracker(this).stop();
         Snackbar.make(findViewById(R.id.activity_login), R.string.logged_out, Snackbar.LENGTH_SHORT).show();
     }
 }

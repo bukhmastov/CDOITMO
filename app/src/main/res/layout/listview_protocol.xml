@@ -31,7 +31,8 @@
             android:id="@+id/lv_protocol_desc"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
-            android:textAppearance="@android:style/TextAppearance.Material.Small" />
+            android:textAppearance="@android:style/TextAppearance.Material.Small"
+            android:textColor="?android:attr/textColorSecondary" />
 
         <TextView
             android:text="@string/lorem_ipsum"
@@ -40,7 +41,8 @@
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:textAllCaps="false"
-            android:fontFamily="sans-serif" />
+            android:fontFamily="sans-serif"
+            android:textColor="?android:attr/textColorSecondary" />
 
         <Space
             android:layout_width="match_parent"

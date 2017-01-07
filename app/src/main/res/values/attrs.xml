@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="dynamic_style_attrs">
+
+        <attr name="colorPrimaryLight" format="color" />
+        <attr name="colorPrimaryOpacity" format="color" />
+        <attr name="textColorPassed" format="color" />
+        <attr name="colorSeparator" format="color" />
+        <attr name="colorBackgroundRefresh" format="color" />
+        <attr name="colorBackgroundSection" format="color" />
+        <attr name="colorBackgroundSnackBar" format="color" />
+        <attr name="colorIcXml" format="color" />
+        <attr name="colorIcXmlRed" format="color" />
+
+        <attr name="ic_cdo_small" format="reference" />
+        <attr name="ic_security" format="reference" />
+
+    </declare-styleable>
+
+</resources>

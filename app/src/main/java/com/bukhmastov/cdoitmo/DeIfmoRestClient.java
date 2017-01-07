@@ -12,6 +12,7 @@ import android.util.Log;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.JsonHttpResponseHandler;
+import com.loopj.android.http.RequestHandle;
 import com.loopj.android.http.RequestParams;
 
 import org.htmlcleaner.HtmlCleaner;
@@ -50,6 +51,7 @@ class DeIfmoRestClient {
         if(!initialized){
             context = ctx;
             sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+            httpclient.setLoggingLevel(Log.WARN);
             httpclient.addHeader("User-Agent", USER_AGENT);
             httpclient.addHeader("Cookie", "JSESSIONID=" + sharedPreferences.getString("session_cookie", "") + "; Path=/;");
             initialized = true;
@@ -71,6 +73,10 @@ class DeIfmoRestClient {
                     @Override
                     public void onFailure(int state) {
                         responseHandler.onFailure(state);
+                    }
+                    @Override
+                    public void onNewHandle(RequestHandle requestHandle) {
+                        responseHandler.onNewHandle(requestHandle);
                     }
                 });
             } else {
@@ -97,6 +103,10 @@ class DeIfmoRestClient {
                     public void onFailure(int state) {
                         responseHandler.onFailure(FAILED_TRY_AGAIN);
                     }
+                    @Override
+                    public void onNewHandle(RequestHandle requestHandle) {
+                        responseHandler.onNewHandle(requestHandle);
+                    }
                 });
             }
         } else {
@@ -115,9 +125,10 @@ class DeIfmoRestClient {
             params.put("LOGIN", login);
             params.put("PASSWD", password);
             renewSessionCookie();
-            httpclient.post(getAbsoluteUrl("servlet"), params, new AsyncHttpResponseHandler() {
+            responseHandler.onNewHandle(httpclient.post(getAbsoluteUrl("servlet"), params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                    responseHandler.onNewHandle(null);
                     for (Header header : headers) {
                         if (Objects.equals(header.getName(), "Set-Cookie")) {
                             String[] pairs = header.getValue().split(";");
@@ -166,18 +177,20 @@ class DeIfmoRestClient {
                 }
                 @Override
                 public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                    responseHandler.onNewHandle(null);
                     responseHandler.onFailure(FAILED_AUTH_TRY_AGAIN);
                 }
-            });
+            }));
         }
     }
     static void get(final String url, final RequestParams params, final DeIfmoRestClientResponseHandler responseHandler){
         if(isOnline()) {
             responseHandler.onProgress(STATE_HANDLING);
             renewSessionCookie();
-            httpclient.get(getAbsoluteUrl(url), params, new AsyncHttpResponseHandler() {
+            responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(url), params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                    responseHandler.onNewHandle(null);
                     try {
                         String data = "";
                         if (responseBody != null) data = new String((new String(responseBody, "windows-1251")).getBytes("UTF-8"));
@@ -195,6 +208,10 @@ class DeIfmoRestClient {
                                 public void onFailure(int state) {
                                     responseHandler.onFailure(state);
                                 }
+                                @Override
+                                public void onNewHandle(RequestHandle requestHandle) {
+                                    responseHandler.onNewHandle(requestHandle);
+                                }
                             });
                         } else {
                             responseHandler.onSuccess(statusCode, data);
@@ -206,9 +223,10 @@ class DeIfmoRestClient {
                 }
                 @Override
                 public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                    responseHandler.onNewHandle(null);
                     responseHandler.onFailure(FAILED_TRY_AGAIN);
                 }
-            });
+            }));
         } else {
             responseHandler.onFailure(FAILED_OFFLINE);
         }
@@ -217,9 +235,10 @@ class DeIfmoRestClient {
         if(isOnline()) {
             responseHandler.onProgress(STATE_HANDLING);
             renewSessionCookie();
-            httpclient.post(getAbsoluteUrl(url), params, new AsyncHttpResponseHandler() {
+            responseHandler.onNewHandle(httpclient.post(getAbsoluteUrl(url), params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                    responseHandler.onNewHandle(null);
                     try {
                         String data = "";
                         if (responseBody != null) data = new String((new String(responseBody, "windows-1251")).getBytes("UTF-8"));
@@ -237,6 +256,10 @@ class DeIfmoRestClient {
                                 public void onFailure(int state) {
                                     responseHandler.onFailure(state);
                                 }
+                                @Override
+                                public void onNewHandle(RequestHandle requestHandle) {
+                                    responseHandler.onNewHandle(requestHandle);
+                                }
                             });
                         } else {
                             responseHandler.onSuccess(statusCode, data);
@@ -248,9 +271,10 @@ class DeIfmoRestClient {
                 }
                 @Override
                 public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                    responseHandler.onNewHandle(null);
                     responseHandler.onFailure(FAILED_TRY_AGAIN);
                 }
-            });
+            }));
         } else {
             responseHandler.onFailure(FAILED_OFFLINE);
         }
@@ -259,17 +283,19 @@ class DeIfmoRestClient {
         if(isOnline()) {
             responseHandler.onProgress(STATE_HANDLING);
             renewSessionCookie();
-            httpclient.get(getAbsoluteUrl(url), params, new JsonHttpResponseHandler() {
+            responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(url), params, new JsonHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                    responseHandler.onNewHandle(null);
                     responseHandler.onSuccess(statusCode, response);
                 }
                 @Override
                 public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
                     super.onFailure(statusCode, headers, throwable, errorResponse);
+                    responseHandler.onNewHandle(null);
                     responseHandler.onFailure(FAILED_TRY_AGAIN);
                 }
-            });
+            }));
         } else {
             responseHandler.onFailure(FAILED_OFFLINE);
         }
@@ -332,9 +358,11 @@ interface DeIfmoRestClientResponseHandler {
     void onSuccess(int statusCode, String response);
     void onProgress(int state);
     void onFailure(int state);
+    void onNewHandle(RequestHandle requestHandle);
 }
 interface DeIfmoRestClientJsonResponseHandler {
     void onSuccess(int statusCode, JSONObject response);
     void onProgress(int state);
     void onFailure(int state);
+    void onNewHandle(RequestHandle requestHandle);
 }
