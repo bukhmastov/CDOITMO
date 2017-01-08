@@ -91,6 +91,7 @@ public class TrackingProtocolJobService extends JobService {
 
     private void analyse(JSONObject json){
         try {
+            if(json == null) throw new NullPointerException("json can't be null");
             String last_data = sharedPreferences.getString("TrackingProtocolJobServiceLASTDATA", "");
             JSONArray arr = json.getJSONArray("changes");
             JSONArray changes = new JSONArray();
@@ -101,6 +102,7 @@ public class TrackingProtocolJobService extends JobService {
                 changes.put(obj);
             }
             if(changes.length() > 0){
+                long timestamp = System.currentTimeMillis();
                 if(changes.length() > 1){
                     String text = changes.length() + " ";
                     switch (changes.length() % 100){
@@ -113,11 +115,11 @@ public class TrackingProtocolJobService extends JobService {
                             }
                             break;
                     }
-                    addNotification(getString(R.string.protocol_changes), text, true);
+                    addNotification(getString(R.string.protocol_changes), text, timestamp, true);
                 }
                 for(int i = changes.length() - 1; i >= 0; i--){
                     JSONObject obj = changes.getJSONObject(i);
-                    addNotification(obj.getString("subject"), obj.getString("field") + ": " + double2string(obj.getDouble("value")) + "/" + double2string(obj.getDouble("max")), false);
+                    addNotification(obj.getString("subject"), obj.getString("field") + ": " + double2string(obj.getDouble("value")) + "/" + double2string(obj.getDouble("max")), timestamp, false);
                 }
             }
             finish();
@@ -125,7 +127,7 @@ public class TrackingProtocolJobService extends JobService {
             finish();
         }
     }
-    private void addNotification(String title, String text, boolean isSummary){
+    private void addNotification(String title, String text, long timestamp, boolean isSummary){
         if(c > Integer.MAX_VALUE - 10) c = 0;
         Intent intent = new Intent(this, SplashActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -133,7 +135,7 @@ public class TrackingProtocolJobService extends JobService {
         Notification.Builder b = new Notification.Builder(this);
         b.setContentTitle(title).setContentText(text).setStyle(new Notification.BigTextStyle().bigText(text));
         b.setSmallIcon(R.drawable.cdo_small).setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.cdo_small_background));
-        b.setGroup("protocol").setGroupSummary(isSummary);
+        b.setGroup("protocol_" + timestamp).setGroupSummary(isSummary);
         b.setCategory(Notification.CATEGORY_EVENT);
         b.setContentIntent(pIntent);
         b.setAutoCancel(true);
@@ -211,7 +213,7 @@ class ProtocolTracker {
         if(enabled) start();
         return this;
     }
-    ProtocolTracker start(){
+    private ProtocolTracker start(){
         if(!running){
             try {
                 JobInfo.Builder builder = new JobInfo.Builder(0, new ComponentName(context, TrackingProtocolJobService.class));
