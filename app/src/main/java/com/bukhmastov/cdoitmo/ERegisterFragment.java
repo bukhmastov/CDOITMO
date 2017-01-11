@@ -86,62 +86,94 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
     }
     private void forceLoad(){
         notifyAboutDateUpdate = true;
-        DeIfmoRestClient.getJSON("api/private/eregister", null, new DeIfmoRestClientJsonResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, JSONObject response) {
-                if(statusCode == 200){
-                    eRegister.put(response);
-                    display();
-                } else {
-                    if(eRegister.is()){
+        if(!MainActivity.OFFLINE_MODE) {
+            DeIfmoRestClient.getJSON("api/private/eregister", null, new DeIfmoRestClientJsonResponseHandler() {
+                @Override
+                public void onSuccess(int statusCode, JSONObject response) {
+                    if (statusCode == 200) {
+                        eRegister.put(response);
                         display();
                     } else {
-                        loadFailed();
+                        if (eRegister.is()) {
+                            display();
+                        } else {
+                            loadFailed();
+                        }
                     }
                 }
-            }
-            @Override
-            public void onProgress(int state) {
-                draw(R.layout.state_loading);
-                TextView loading_message = (TextView) getActivity().findViewById(R.id.loading_message);
-                switch(state){
-                    case DeIfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
-                    case DeIfmoRestClient.STATE_AUTHORIZATION: loading_message.setText(R.string.authorization); break;
-                    case DeIfmoRestClient.STATE_AUTHORIZED: loading_message.setText(R.string.authorized); break;
+
+                @Override
+                public void onProgress(int state) {
+                    draw(R.layout.state_loading);
+                    TextView loading_message = (TextView) getActivity().findViewById(R.id.loading_message);
+                    switch (state) {
+                        case DeIfmoRestClient.STATE_HANDLING:
+                            loading_message.setText(R.string.loading);
+                            break;
+                        case DeIfmoRestClient.STATE_AUTHORIZATION:
+                            loading_message.setText(R.string.authorization);
+                            break;
+                        case DeIfmoRestClient.STATE_AUTHORIZED:
+                            loading_message.setText(R.string.authorized);
+                            break;
+                    }
                 }
-            }
-            @Override
-            public void onFailure(int state) {
-                switch(state){
-                    case DeIfmoRestClient.FAILED_OFFLINE:
-                        draw(R.layout.state_offline);
-                        getActivity().findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                forceLoad();
+
+                @Override
+                public void onFailure(int state) {
+                    switch (state) {
+                        case DeIfmoRestClient.FAILED_OFFLINE:
+                            if (eRegister.is()) {
+                                display();
+                            } else {
+                                draw(R.layout.state_offline);
+                                getActivity().findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        forceLoad();
+                                    }
+                                });
                             }
-                        });
-                        break;
-                    case DeIfmoRestClient.FAILED_TRY_AGAIN:
-                    case DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN:
-                        draw(R.layout.state_try_again);
-                        if(state == DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN) ((TextView) getActivity().findViewById(R.id.try_again_message)).setText(R.string.auth_failed);
-                        getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                forceLoad();
-                            }
-                        });
-                        break;
-                    case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED: gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED); break;
-                    case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED: gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED); break;
+                            break;
+                        case DeIfmoRestClient.FAILED_TRY_AGAIN:
+                        case DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN:
+                            draw(R.layout.state_try_again);
+                            if (state == DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN)
+                                ((TextView) getActivity().findViewById(R.id.try_again_message)).setText(R.string.auth_failed);
+                            getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    forceLoad();
+                                }
+                            });
+                            break;
+                        case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
+                            gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED);
+                            break;
+                        case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED:
+                            gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED);
+                            break;
+                    }
                 }
+
+                @Override
+                public void onNewHandle(RequestHandle requestHandle) {
+                    fragmentRequestHandle = requestHandle;
+                }
+            });
+        } else {
+            if(eRegister.is()){
+                display();
+            } else {
+                draw(R.layout.state_offline);
+                getActivity().findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        forceLoad();
+                    }
+                });
             }
-            @Override
-            public void onNewHandle(RequestHandle requestHandle) {
-                fragmentRequestHandle = requestHandle;
-            }
-        });
+        }
     }
     private void loadFailed(){
         draw(R.layout.state_try_again);

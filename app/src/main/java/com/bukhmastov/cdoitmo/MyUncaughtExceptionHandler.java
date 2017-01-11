@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
@@ -42,7 +43,11 @@ class MyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
         emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[] { "bukhmastov-alex@ya.ru" });
         emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "CDO ITMO - error report");
         emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, stringBuilder.toString());
-        context.startActivity(Intent.createChooser(emailIntent, context.getString(R.string.error_choose_program)));
+        try {
+            context.startActivity(Intent.createChooser(emailIntent, context.getString(R.string.error_choose_program)));
+        } catch (ActivityNotFoundException e){
+            e.printStackTrace();
+        }
         if(oldHandler != null) {
             oldHandler.uncaughtException(thread, throwable);
         } else {

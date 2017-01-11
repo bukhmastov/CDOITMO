@@ -98,78 +98,110 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
             return;
         }
         notifyAboutDateUpdate = true;
-        Calendar now = Calendar.getInstance();
-        int year = now.get(Calendar.YEAR);
-        int month = now.get(Calendar.MONTH);
-        RequestParams params = new RequestParams();
-        params.put("Rule", "eRegisterGetProtokolVariable");
-        params.put("ST_GRP", MainActivity.group);
-        params.put("PERSONID", sharedPreferences.getString("login", ""));
-        params.put("SYU_ID", "0");
-        params.put("UNIVER", "1");
-        params.put("APPRENTICESHIP", month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year);
-        params.put("PERIOD", String.valueOf(number_of_weeks * 7));
-        DeIfmoRestClient.post("servlet/distributedCDE", params, new DeIfmoRestClientResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, String response) {
-                if(statusCode == 200){
-                    new ProtocolParse(new ProtocolParse.response() {
-                        @Override
-                        public void finish(JSONObject json) {
-                            protocol.put(json, number_of_weeks);
-                            display();
-                        }
-                    }).execute(response);
-                } else {
-                    if(protocol.is(number_of_weeks)){
-                        display();
+        if(!MainActivity.OFFLINE_MODE) {
+            Calendar now = Calendar.getInstance();
+            int year = now.get(Calendar.YEAR);
+            int month = now.get(Calendar.MONTH);
+            RequestParams params = new RequestParams();
+            params.put("Rule", "eRegisterGetProtokolVariable");
+            params.put("ST_GRP", MainActivity.group);
+            params.put("PERSONID", sharedPreferences.getString("login", ""));
+            params.put("SYU_ID", "0");
+            params.put("UNIVER", "1");
+            params.put("APPRENTICESHIP", month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year);
+            params.put("PERIOD", String.valueOf(number_of_weeks * 7));
+            DeIfmoRestClient.post("servlet/distributedCDE", params, new DeIfmoRestClientResponseHandler() {
+                @Override
+                public void onSuccess(int statusCode, String response) {
+                    if (statusCode == 200) {
+                        new ProtocolParse(new ProtocolParse.response() {
+                            @Override
+                            public void finish(JSONObject json) {
+                                protocol.put(json, number_of_weeks);
+                                display();
+                            }
+                        }).execute(response);
                     } else {
-                        loadFailed();
+                        if (protocol.is(number_of_weeks)) {
+                            display();
+                        } else {
+                            loadFailed();
+                        }
                     }
                 }
-            }
-            @Override
-            public void onProgress(int state) {
-                draw(R.layout.state_loading);
-                TextView loading_message = (TextView) getActivity().findViewById(R.id.loading_message);
-                switch(state){
-                    case DeIfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
-                    case DeIfmoRestClient.STATE_AUTHORIZATION: loading_message.setText(R.string.authorization); break;
-                    case DeIfmoRestClient.STATE_AUTHORIZED: loading_message.setText(R.string.authorized); break;
+
+                @Override
+                public void onProgress(int state) {
+                    draw(R.layout.state_loading);
+                    TextView loading_message = (TextView) getActivity().findViewById(R.id.loading_message);
+                    switch (state) {
+                        case DeIfmoRestClient.STATE_HANDLING:
+                            loading_message.setText(R.string.loading);
+                            break;
+                        case DeIfmoRestClient.STATE_AUTHORIZATION:
+                            loading_message.setText(R.string.authorization);
+                            break;
+                        case DeIfmoRestClient.STATE_AUTHORIZED:
+                            loading_message.setText(R.string.authorized);
+                            break;
+                    }
                 }
-            }
-            @Override
-            public void onFailure(int state) {
-                switch(state){
-                    case DeIfmoRestClient.FAILED_OFFLINE:
-                        draw(R.layout.state_offline);
-                        getActivity().findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                forceLoad();
+
+                @Override
+                public void onFailure(int state) {
+                    switch (state) {
+                        case DeIfmoRestClient.FAILED_OFFLINE:
+                            if (protocol.is(number_of_weeks)) {
+                                display();
+                            } else {
+                                draw(R.layout.state_offline);
+                                getActivity().findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        forceLoad();
+                                    }
+                                });
                             }
-                        });
-                        break;
-                    case DeIfmoRestClient.FAILED_TRY_AGAIN:
-                    case DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN:
-                        draw(R.layout.state_try_again);
-                        if(state == DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN) ((TextView) getActivity().findViewById(R.id.try_again_message)).setText(R.string.auth_failed);
-                        getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                forceLoad();
-                            }
-                        });
-                        break;
-                    case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED: gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED); break;
-                    case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED: gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED); break;
+                            break;
+                        case DeIfmoRestClient.FAILED_TRY_AGAIN:
+                        case DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN:
+                            draw(R.layout.state_try_again);
+                            if (state == DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN)
+                                ((TextView) getActivity().findViewById(R.id.try_again_message)).setText(R.string.auth_failed);
+                            getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    forceLoad();
+                                }
+                            });
+                            break;
+                        case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
+                            gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED);
+                            break;
+                        case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED:
+                            gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED);
+                            break;
+                    }
                 }
+
+                @Override
+                public void onNewHandle(RequestHandle requestHandle) {
+                    fragmentRequestHandle = requestHandle;
+                }
+            });
+        } else {
+            if(protocol.is(number_of_weeks)){
+                display();
+            } else {
+                draw(R.layout.state_offline);
+                getActivity().findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        forceLoad();
+                    }
+                });
             }
-            @Override
-            public void onNewHandle(RequestHandle requestHandle) {
-                fragmentRequestHandle = requestHandle;
-            }
-        });
+        }
     }
     private void loadFailed(){
         draw(R.layout.state_try_again);

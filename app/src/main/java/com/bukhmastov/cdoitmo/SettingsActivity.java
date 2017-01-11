@@ -40,7 +40,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Thread.setDefaultUncaughtExceptionHandler(new MyUncaughtExceptionHandler(this));
         if(PreferenceManager.getDefaultSharedPreferences(this).getBoolean("pref_dark_theme", false)) setTheme(R.style.AppTheme_Dark);
         super.onCreate(savedInstanceState);
     }

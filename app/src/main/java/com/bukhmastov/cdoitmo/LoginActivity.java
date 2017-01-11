@@ -30,10 +30,10 @@ public class LoginActivity extends AppCompatActivity {
     static final int SIGNAL_CREDENTIALS_REQUIRED = 0;
     static final int SIGNAL_LOGOUT = 1;
     static final int SIGNAL_CREDENTIALS_FAILED = 2;
+    static final int SIGNAL_RECONNECT = 3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Thread.setDefaultUncaughtExceptionHandler(new MyUncaughtExceptionHandler(this));
         if(PreferenceManager.getDefaultSharedPreferences(this).getBoolean("pref_dark_theme", false)) setTheme(R.style.AppTheme_Dark);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
@@ -84,6 +84,7 @@ public class LoginActivity extends AppCompatActivity {
                 editor.apply();
                 Snackbar.make(findViewById(R.id.activity_login), R.string.invalid_login_password, Snackbar.LENGTH_LONG).show();
                 break;
+            case SIGNAL_RECONNECT: break;
             default:
                 if(sharedPreferences.getBoolean("pref_auto_logout", false) && !(Objects.equals(sharedPreferences.getString("login", ""), "") || Objects.equals(sharedPreferences.getString("password", ""), ""))) logOut();
                 break;

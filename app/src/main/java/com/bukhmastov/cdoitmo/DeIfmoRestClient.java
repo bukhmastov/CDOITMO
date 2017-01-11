@@ -89,7 +89,7 @@ class DeIfmoRestClient {
                                 if(result != null){
                                     MainActivity.group = result.get("group");
                                     MainActivity.name = result.get("name");
-                                    sharedPreferences.edit().putString("group", result.get("group")).apply();
+                                    sharedPreferences.edit().putString("name", result.get("name")).putString("group", result.get("group")).apply();
                                     responseHandler.onSuccess(200, result.get("name"));
                                 } else {
                                     responseHandler.onSuccess(200, "");
@@ -308,7 +308,7 @@ class DeIfmoRestClient {
         httpclient.removeHeader("Cookie");
         httpclient.addHeader("Cookie", "JSESSIONID=" + sharedPreferences.getString("session_cookie", "") + "; Path=/;");
     }
-    private static boolean isOnline() {
+    static boolean isOnline() {
         NetworkInfo networkInfo = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
         return (networkInfo != null && networkInfo.isConnected());
     }

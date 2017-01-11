@@ -13,7 +13,6 @@ public class AboutActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Thread.setDefaultUncaughtExceptionHandler(new MyUncaughtExceptionHandler(this));
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_about);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar_about));

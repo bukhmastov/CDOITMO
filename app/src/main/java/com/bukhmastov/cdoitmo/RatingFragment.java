@@ -111,76 +111,104 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
         loadPart("RatingList");
     }
     private void loadPart(String type){
-        if(Objects.equals(type, "Rating")){
-            DeIfmoRestClient.get("servlet/distributedCDE?Rule=REP_EXECUTE_PRINT&REP_ID=1441", null, new DeIfmoRestClientResponseHandler() {
-                @Override
-                public void onSuccess(int statusCode, String response) {
-                    if(statusCode == 200){
-                        new RatingParse(new RatingParse.response() {
-                            @Override
-                            public void finish(JSONObject json) {
-                                rating.put("Rating", json);
+        if(!MainActivity.OFFLINE_MODE) {
+            if (Objects.equals(type, "Rating")) {
+                DeIfmoRestClient.get("servlet/distributedCDE?Rule=REP_EXECUTE_PRINT&REP_ID=1441", null, new DeIfmoRestClientResponseHandler() {
+                    @Override
+                    public void onSuccess(int statusCode, String response) {
+                        if (statusCode == 200) {
+                            new RatingParse(new RatingParse.response() {
+                                @Override
+                                public void finish(JSONObject json) {
+                                    rating.put("Rating", json);
+                                    ready("Rating");
+                                }
+                            }).execute(response);
+                        } else {
+                            if (rating.is("Rating")) {
                                 ready("Rating");
+                            } else {
+                                failed("Rating");
                             }
-                        }).execute(response);
-                    } else {
-                        if(rating.is("Rating")){
-                            ready("Rating");
-                        } else {
-                            failed("Rating");
                         }
                     }
-                }
-                @Override
-                public void onProgress(int state) {}
-                @Override
-                public void onFailure(int state) {
-                    switch(state){
-                        case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED: gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED); break;
-                        case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED: gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED); break;
-                        default: failed("Rating"); break;
+
+                    @Override
+                    public void onProgress(int state) {
                     }
-                }
-                @Override
-                public void onNewHandle(RequestHandle requestHandle) {
-                    fragmentRequestHandle.put("Rating", requestHandle);
-                }
-            });
-        } else {
-            DeIfmoRestClient.get("index.php?node=8", null, new DeIfmoRestClientResponseHandler() {
-                @Override
-                public void onSuccess(int statusCode, String response) {
-                    if (statusCode == 200) {
-                        new RatingListParse(new RatingListParse.response() {
-                            @Override
-                            public void finish(JSONObject json) {
-                                rating.put("RatingList", json);
+
+                    @Override
+                    public void onFailure(int state) {
+                        switch (state) {
+                            case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
+                                gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED);
+                                break;
+                            case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED:
+                                gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED);
+                                break;
+                            default:
+                                failed("Rating");
+                                break;
+                        }
+                    }
+
+                    @Override
+                    public void onNewHandle(RequestHandle requestHandle) {
+                        fragmentRequestHandle.put("Rating", requestHandle);
+                    }
+                });
+            } else {
+                DeIfmoRestClient.get("index.php?node=8", null, new DeIfmoRestClientResponseHandler() {
+                    @Override
+                    public void onSuccess(int statusCode, String response) {
+                        if (statusCode == 200) {
+                            new RatingListParse(new RatingListParse.response() {
+                                @Override
+                                public void finish(JSONObject json) {
+                                    rating.put("RatingList", json);
+                                    ready("RatingList");
+                                }
+                            }).execute(response);
+                        } else {
+                            if (rating.is("RatingList")) {
                                 ready("RatingList");
+                            } else {
+                                failed("RatingList");
                             }
-                        }).execute(response);
-                    } else {
-                        if(rating.is("RatingList")){
-                            ready("RatingList");
-                        } else {
-                            failed("RatingList");
                         }
                     }
-                }
-                @Override
-                public void onProgress(int state) {}
-                @Override
-                public void onFailure(int state) {
-                    switch(state){
-                        case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED: gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED); break;
-                        case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED: gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED); break;
-                        default: failed("RatingList"); break;
+
+                    @Override
+                    public void onProgress(int state) {
                     }
-                }
-                @Override
-                public void onNewHandle(RequestHandle requestHandle) {
-                    fragmentRequestHandle.put("RatingList", requestHandle);
-                }
-            });
+
+                    @Override
+                    public void onFailure(int state) {
+                        switch (state) {
+                            case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
+                                gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED);
+                                break;
+                            case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED:
+                                gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED);
+                                break;
+                            default:
+                                failed("RatingList");
+                                break;
+                        }
+                    }
+
+                    @Override
+                    public void onNewHandle(RequestHandle requestHandle) {
+                        fragmentRequestHandle.put("RatingList", requestHandle);
+                    }
+                });
+            }
+        } else {
+            if (rating.is(type)) {
+                ready(type);
+            } else {
+                failed(type);
+            }
         }
     }
     private void failed(String type){
