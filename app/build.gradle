@@ -7,8 +7,8 @@ android {
         applicationId "com.bukhmastov.cdoitmo"
         minSdkVersion 21
         targetSdkVersion 24
-        versionCode 2
-        versionName "1.0.2b"
+        versionCode 4
+        versionName "1.0.3b"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

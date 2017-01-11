@@ -41,7 +41,7 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_margin="20dp"
-        android:background="@color/colorSeparator" />
+        android:background="?attr/colorSeparator" />
 
     <TextView
         android:text="@string/app_info_dev"
@@ -55,7 +55,7 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_margin="20dp"
-        android:background="@color/colorSeparator" />
+        android:background="?attr/colorSeparator" />
 
     <TextView
         android:text="@string/app_info_disclamer"
