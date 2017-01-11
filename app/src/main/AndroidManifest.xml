@@ -18,6 +18,7 @@
             android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -57,6 +58,16 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.bukhmastov.cdoitmo.MainActivity" />
         </activity>
+
+        <activity
+            android:name=".AboutActivity"
+            android:label="@string/about"
+            android:parentActivityName=".SettingsActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.bukhmastov.cdoitmo.SettingsActivity" />
+        </activity>
+
         <service
             android:name=".TrackingProtocolJobService"
             android:enabled="true"

@@ -74,7 +74,10 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
     @Override
     public void onPause() {
         super.onPause();
-        if(fragmentRequestHandle != null) fragmentRequestHandle.cancel(true);
+        if(fragmentRequestHandle != null) {
+            loaded = false;
+            fragmentRequestHandle.cancel(true);
+        }
     }
 
     @Override

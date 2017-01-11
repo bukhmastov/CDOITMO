@@ -15,8 +15,6 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
-import android.support.v4.content.IntentCompat;
 import android.support.v7.app.ActionBar;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
@@ -42,6 +40,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Thread.setDefaultUncaughtExceptionHandler(new MyUncaughtExceptionHandler(this));
         if(PreferenceManager.getDefaultSharedPreferences(this).getBoolean("pref_dark_theme", false)) setTheme(R.style.AppTheme_Dark);
         super.onCreate(savedInstanceState);
     }
@@ -192,10 +191,23 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         }
     }
 
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public static class AboutPreferenceFragment extends PreferenceFragment {
+
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            getActivity().finish();
+            startActivity(new Intent(getActivity(), AboutActivity.class));
+        }
+
+    }
+
     protected boolean isValidFragment(String fragmentName) {
         return PreferenceFragment.class.getName().equals(fragmentName)
                 || GeneralPreferenceFragment.class.getName().equals(fragmentName)
-                || NotificationsPreferenceFragment.class.getName().equals(fragmentName);
+                || NotificationsPreferenceFragment.class.getName().equals(fragmentName)
+                || AboutPreferenceFragment.class.getName().equals(fragmentName);
     }
 
     private static void bindPreferenceSummaryToValue(Preference preference) {

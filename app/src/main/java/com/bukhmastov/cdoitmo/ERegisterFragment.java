@@ -66,7 +66,10 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
     @Override
     public void onPause() {
         super.onPause();
-        if(fragmentRequestHandle != null) fragmentRequestHandle.cancel(true);
+        if(fragmentRequestHandle != null) {
+            loaded = false;
+            fragmentRequestHandle.cancel(true);
+        }
     }
 
     @Override

@@ -58,5 +58,9 @@
     <string name="action_3">событий</string>
     <string name="pref_dark_theme">Темная тема</string>
     <string name="pref_dark_theme_summary">Приложение будет перезапущено</string>
+    <string name="about">О приложении</string>
+    <string name="app_info_disclamer">Обратите внимание, что данное приложение не является официальным.\nhttp://www.ifmo.ru\nhttp://de.ifmo.ru</string>
+    <string name="app_info_dev">Разработка: Бухмастов Алексей\nbukhmastov-alex@ya.ru</string>
+    <string name="error_choose_program">Выберите программу для отправки отчета</string>
 
 </resources>

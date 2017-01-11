@@ -39,10 +39,12 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
     private static final String TAG = "RatingFragment";
     private String faculty = null;
     private String course = null;
+    private boolean loaded = false;
     private RequestHandle activityRequestHandle = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Thread.setDefaultUncaughtExceptionHandler(new MyUncaughtExceptionHandler(this));
         if(PreferenceManager.getDefaultSharedPreferences(this).getBoolean("pref_dark_theme", false)) setTheme(R.style.AppTheme_Dark);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rating_list);
@@ -57,13 +59,24 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
         faculty = getIntent().getStringExtra("faculty");
         course = getIntent().getStringExtra("course");
         if(Objects.equals(faculty, "") || faculty == null || Objects.equals(course, "") || course == null) finish();
-        load();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if(!loaded) {
+            loaded = true;
+            load();
+        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        if(activityRequestHandle != null) activityRequestHandle.cancel(true);
+        if(activityRequestHandle != null){
+            loaded = false;
+            activityRequestHandle.cancel(true);
+        }
     }
 
     @Override
@@ -231,7 +244,7 @@ class RatingTopListParse extends AsyncTask<String, Void, JSONObject> {
                     user.put("fio", fio);
                     user.put("group", matcher.group(3));
                     user.put("department", matcher.group(4));
-                    user.put("is_me", Objects.equals(matcher.group(2), MainActivity.name));
+                    user.put("is_me", Objects.equals(fio, MainActivity.name));
                     list.put(user);
                 }
             }

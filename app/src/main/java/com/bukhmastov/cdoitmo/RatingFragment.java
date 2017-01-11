@@ -81,8 +81,14 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
     @Override
     public void onPause() {
         super.onPause();
-        if(fragmentRequestHandle.get("Rating") != null) fragmentRequestHandle.get("Rating").cancel(true);
-        if(fragmentRequestHandle.get("RatingList") != null) fragmentRequestHandle.get("RatingList").cancel(true);
+        if(fragmentRequestHandle.get("Rating") != null){
+            loaded = false;
+            fragmentRequestHandle.get("Rating").cancel(true);
+        }
+        if(fragmentRequestHandle.get("RatingList") != null){
+            loaded = false;
+            fragmentRequestHandle.get("RatingList").cancel(true);
+        }
     }
 
     @Override

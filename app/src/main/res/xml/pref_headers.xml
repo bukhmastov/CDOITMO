@@ -2,12 +2,17 @@
 
     <header
         android:fragment="com.bukhmastov.cdoitmo.SettingsActivity$GeneralPreferenceFragment"
-        android:icon="@drawable/ic_pref_general"
+        android:icon="@drawable/ic_settings"
         android:title="@string/general" />
 
     <header
         android:fragment="com.bukhmastov.cdoitmo.SettingsActivity$NotificationsPreferenceFragment"
         android:icon="@drawable/ic_notifications"
         android:title="@string/notifications" />
+
+    <header
+        android:fragment="com.bukhmastov.cdoitmo.SettingsActivity$AboutPreferenceFragment"
+        android:icon="@drawable/ic_info"
+        android:title="@string/about" />
 
 </preference-headers>
