@@ -16,6 +16,11 @@
         <item name="colorBackgroundSnackBar">@color/colorBackgroundSnackBar</item>
         <item name="colorIcXml">@color/colorIcXml</item>
         <item name="colorIcXmlRed">@color/colorIcXmlRed</item>
+        <item name="colorScheduleFlagCommonBG">@color/colorScheduleFlagCommonBG</item>
+        <item name="colorScheduleFlagPracticeBG">@color/colorScheduleFlagPracticeBG</item>
+        <item name="colorScheduleFlagLectureBG">@color/colorScheduleFlagLectureBG</item>
+        <item name="colorScheduleFlagLabBG">@color/colorScheduleFlagLabBG</item>
+        <item name="colorScheduleFlagTEXT">@color/colorScheduleFlagTEXT</item>
 
         <item name="ic_cdo_small">@drawable/cdo_small</item>
         <item name="ic_security">@drawable/ic_security</item>
@@ -37,6 +42,11 @@
         <item name="colorBackgroundSnackBar">@color/colorBackgroundSnackBarInverse</item>
         <item name="colorIcXml">@color/colorIcXmlInverse</item>
         <item name="colorIcXmlRed">@color/colorIcXmlRedInverse</item>
+        <item name="colorScheduleFlagCommonBG">@color/colorScheduleFlagCommonBGInverse</item>
+        <item name="colorScheduleFlagPracticeBG">@color/colorScheduleFlagPracticeBGInverse</item>
+        <item name="colorScheduleFlagLectureBG">@color/colorScheduleFlagLectureBGInverse</item>
+        <item name="colorScheduleFlagLabBG">@color/colorScheduleFlagLabBGInverse</item>
+        <item name="colorScheduleFlagTEXT">@color/colorScheduleFlagTEXTInverse</item>
 
         <item name="ic_cdo_small">@drawable/cdo_small_dark</item>
         <item name="ic_security">@drawable/ic_security</item>

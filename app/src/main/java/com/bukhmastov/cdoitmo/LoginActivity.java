@@ -73,29 +73,38 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        switch(state){
-            case SIGNAL_CREDENTIALS_REQUIRED: break;
-            case SIGNAL_LOGOUT: logOut(); break;
-            case SIGNAL_CREDENTIALS_FAILED: // неверные учетные данные
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putString("group", "");
-                editor.putString("password", "");
-                editor.putString("session_cookie", "");
-                editor.apply();
-                Snackbar.make(findViewById(R.id.activity_login), R.string.invalid_login_password, Snackbar.LENGTH_LONG).show();
-                break;
-            case SIGNAL_RECONNECT: break;
-            default:
-                if(sharedPreferences.getBoolean("pref_auto_logout", false) && !(Objects.equals(sharedPreferences.getString("login", ""), "") || Objects.equals(sharedPreferences.getString("password", ""), ""))) logOut();
-                break;
-        }
-        state = -1;
-        if (!(Objects.equals(sharedPreferences.getString("login", ""), "") || Objects.equals(sharedPreferences.getString("password", ""), ""))){
-            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-            startActivity(intent);
-        } else {
-            input_login.setText(sharedPreferences.getString("login", ""));
-            input_password.setText(sharedPreferences.getString("password", ""));
+        try {
+            switch (state) {
+                case SIGNAL_CREDENTIALS_REQUIRED:
+                    break;
+                case SIGNAL_LOGOUT:
+                    logOut();
+                    break;
+                case SIGNAL_CREDENTIALS_FAILED: // неверные учетные данные
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putString("group", "");
+                    editor.putString("password", "");
+                    editor.putString("session_cookie", "");
+                    editor.apply();
+                    Snackbar.make(findViewById(R.id.activity_login), R.string.invalid_login_password, Snackbar.LENGTH_LONG).show();
+                    break;
+                case SIGNAL_RECONNECT:
+                    break;
+                default:
+                    if (sharedPreferences.getBoolean("pref_auto_logout", false) && !(Objects.equals(sharedPreferences.getString("login", ""), "") || Objects.equals(sharedPreferences.getString("password", ""), "")))
+                        logOut();
+                    break;
+            }
+            state = -1;
+            if (!(Objects.equals(sharedPreferences.getString("login", ""), "") || Objects.equals(sharedPreferences.getString("password", ""), ""))) {
+                Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                startActivity(intent);
+            } else {
+                input_login.setText(sharedPreferences.getString("login", ""));
+                input_password.setText(sharedPreferences.getString("password", ""));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -114,11 +123,13 @@ public class LoginActivity extends AppCompatActivity {
         editor.putString("login", "");
         editor.putString("password", "");
         editor.putString("session_cookie", "");
-        editor.putString("ERegister", "");
-        editor.putString("Protocol", "");
-        editor.putString("Rating", "");
         editor.apply();
+        Cache.clear(getBaseContext());
         new ProtocolTracker(this).stop();
-        Snackbar.make(findViewById(R.id.activity_login), R.string.logged_out, Snackbar.LENGTH_SHORT).show();
+        try {
+            Snackbar.make(findViewById(R.id.activity_login), R.string.logged_out, Snackbar.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

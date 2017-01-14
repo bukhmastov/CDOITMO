@@ -39,33 +39,48 @@ public class TrackingProtocolJobService extends JobService {
     @Override
     public boolean onStartJob(JobParameters params) {
         Log.i(TAG, "Executing");
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         try {
-            sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-            Calendar now = Calendar.getInstance();
-            int year = now.get(Calendar.YEAR);
-            int month = now.get(Calendar.MONTH);
-            RequestParams rParams = new RequestParams();
-            rParams.put("Rule", "eRegisterGetProtokolVariable");
-            rParams.put("ST_GRP", sharedPreferences.getString("group", ""));
-            rParams.put("PERSONID", sharedPreferences.getString("login", ""));
-            rParams.put("SYU_ID", "0");
-            rParams.put("UNIVER", "1");
-            rParams.put("APPRENTICESHIP", month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year);
-            rParams.put("PERIOD", "7");
             DeIfmoRestClient.init(getApplicationContext());
-            DeIfmoRestClient.post("servlet/distributedCDE", rParams, new DeIfmoRestClientResponseHandler() {
+            DeIfmoRestClient.authorize(new DeIfmoRestClientResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, String response) {
-                    if (statusCode == 200) {
-                        new ProtocolParse(new ProtocolParse.response() {
-                            @Override
-                            public void finish(JSONObject json) {
-                                analyse(json);
+                    Calendar now = Calendar.getInstance();
+                    int year = now.get(Calendar.YEAR);
+                    int month = now.get(Calendar.MONTH);
+                    RequestParams rParams = new RequestParams();
+                    rParams.put("Rule", "eRegisterGetProtokolVariable");
+                    rParams.put("ST_GRP", sharedPreferences.getString("group", ""));
+                    rParams.put("PERSONID", sharedPreferences.getString("login", ""));
+                    rParams.put("SYU_ID", "0");
+                    rParams.put("UNIVER", "1");
+                    rParams.put("APPRENTICESHIP", month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year);
+                    rParams.put("PERIOD", "7");
+                    DeIfmoRestClient.post("servlet/distributedCDE", rParams, new DeIfmoRestClientResponseHandler() {
+                        @Override
+                        public void onSuccess(int statusCode, String response) {
+                            if (statusCode == 200) {
+                                new ProtocolParse(new ProtocolParse.response() {
+                                    @Override
+                                    public void finish(JSONObject json) {
+                                        analyse(json);
+                                    }
+                                }).execute(response);
+                            } else {
+                                finish();
                             }
-                        }).execute(response);
-                    } else {
-                        finish();
-                    }
+                        }
+                        @Override
+                        public void onProgress(int state) {}
+                        @Override
+                        public void onFailure(int state) {
+                            finish();
+                        }
+                        @Override
+                        public void onNewHandle(RequestHandle requestHandle) {
+                            jobRequestHandle = requestHandle;
+                        }
+                    });
                 }
                 @Override
                 public void onProgress(int state) {}
@@ -86,29 +101,46 @@ public class TrackingProtocolJobService extends JobService {
 
     @Override
     public boolean onStopJob(JobParameters params) {
+        Log.i(TAG, "Stopped");
+        if(jobRequestHandle != null) jobRequestHandle.cancel(true);
         return true;
     }
 
     private void analyse(JSONObject json){
         try {
             if(json == null) throw new NullPointerException("json can't be null");
-            String last_data = sharedPreferences.getString("TrackingProtocolJobServiceLASTDATA", "");
-            JSONArray arr = json.getJSONArray("changes");
-            JSONArray changes = new JSONArray();
-            for(int i = 0; i < arr.length(); i++){
-                JSONObject obj = arr.getJSONObject(i);
-                if(Objects.equals(last_data, obj.getString("subject") + obj.getString("field") + obj.getDouble("value"))) break;
-                if(i == 0) sharedPreferences.edit().putString("TrackingProtocolJobServiceLASTDATA", obj.getString("subject") + obj.getString("field") + obj.getDouble("value")).apply();
-                changes.put(obj);
+            JSONArray history = new JSONArray();
+            try {
+                String historyStr = sharedPreferences.getString("TrackingProtocolJobServiceHISTORY", "");
+                if(!Objects.equals(historyStr, "")) history = new JSONArray(historyStr);
+            } catch(Exception e){
+                e.printStackTrace();
             }
-            if(changes.length() > 0){
+            JSONArray protocol = json.getJSONArray("changes");
+            sharedPreferences.edit().putString("TrackingProtocolJobServiceHISTORY", protocol.toString()).apply();
+            int id = 0;
+            for(int i = 0; i < history.length(); i++){
+                JSONObject historyOBJ = history.getJSONObject(i);
+                for(int j = 0; j < protocol.length(); j++){
+                    JSONObject protocolOBJ = protocol.getJSONObject(i);
+                    if(Objects.equals(historyOBJ.getString("subject"), protocolOBJ.getString("subject")) &&
+                       Objects.equals(historyOBJ.getString("field"), protocolOBJ.getString("field")) &&
+                       Objects.equals(historyOBJ.getString("value"), protocolOBJ.getString("value")) &&
+                       Objects.equals(historyOBJ.getString("date"), protocolOBJ.getString("date"))){
+                        id = j;
+                        break;
+                    }
+                }
+                if(id != 0) break;
+            }
+            if(id > 0){
                 long timestamp = System.currentTimeMillis();
-                if(changes.length() > 1){
-                    String text = changes.length() + " ";
-                    switch (changes.length() % 100){
+                if(id > 1){
+                    String text = id + " ";
+                    switch (id % 100){
                         case 10: case 11: case 12: case 13: case 14: text += getString(R.string.action_3); break;
                         default:
-                            switch (changes.length() % 10){
+                            switch (id % 10){
                                 case 1: text += getString(R.string.action_1); break;
                                 case 2: case 3: case 4: text += getString(R.string.action_2); break;
                                 default: text += getString(R.string.action_3); break;
@@ -117,9 +149,9 @@ public class TrackingProtocolJobService extends JobService {
                     }
                     addNotification(getString(R.string.protocol_changes), text, timestamp, true);
                 }
-                for(int i = changes.length() - 1; i >= 0; i--){
-                    JSONObject obj = changes.getJSONObject(i);
-                    addNotification(obj.getString("subject"), obj.getString("field") + ": " + double2string(obj.getDouble("value")) + "/" + double2string(obj.getDouble("max")), timestamp, false);
+                for(int i = id - 1; i >= 0; i--){
+                    JSONObject protocolOBJ = protocol.getJSONObject(i);
+                    addNotification(protocolOBJ.getString("subject"), protocolOBJ.getString("field") + ": " + double2string(protocolOBJ.getDouble("value")) + "/" + double2string(protocolOBJ.getDouble("max")), timestamp, false);
                 }
             }
             finish();
@@ -225,7 +257,10 @@ class ProtocolTracker {
                 jobScheduler.schedule(info);
                 jobID = info.getId();
                 running = true;
-                sharedPreferences.edit().putInt("TrackingProtocolJobServiceID", jobID).apply();
+                sharedPreferences.edit()
+                        .putInt("TrackingProtocolJobServiceID", jobID)
+                        .putString("TrackingProtocolJobServiceHISTORY", "")
+                        .apply();
                 Log.i(TAG, "Started | frequency = " + frequency + " | jobID = " + jobID);
             } catch (Exception e){
                 Log.e(TAG, "Failed to schedule job");

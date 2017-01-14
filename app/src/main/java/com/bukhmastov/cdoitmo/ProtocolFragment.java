@@ -204,13 +204,17 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
         }
     }
     private void loadFailed(){
-        draw(R.layout.state_try_again);
-        getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                forceLoad();
-            }
-        });
+        try {
+            draw(R.layout.state_try_again);
+            getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    forceLoad();
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     void display(){
         try {
@@ -354,11 +358,7 @@ class Protocol {
             json.put("protocol", data);
             protocol = json;
             Cache.put(context, "Protocol", protocol.toString());
-            JSONArray arr = data.getJSONArray("changes");
-            if(arr.length() > 0){
-                JSONObject obj = arr.getJSONObject(0);
-                PreferenceManager.getDefaultSharedPreferences(context).edit().putString("TrackingProtocolJobServiceLASTDATA", obj.getString("subject") + obj.getString("field") + obj.getDouble("value")).apply();
-            }
+            if(number_of_weeks == 7) PreferenceManager.getDefaultSharedPreferences(context).edit().putString("TrackingProtocolJobServiceHISTORY", data.getJSONArray("changes").toString()).apply();
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -5,11 +5,13 @@
         <item>@string/e_journal</item>
         <item>@string/protocol_changes</item>
         <item>@string/rating</item>
+        <item>@string/schedule_lessons</item>
     </string-array>
     <string-array name="pref_general_default_fragment_values">
         <item>e_journal</item>
         <item>protocol_changes</item>
         <item>rating</item>
+        <item>schedule_lessons</item>
     </string-array>
 
     <string-array name="pref_notifications_interval_titles">

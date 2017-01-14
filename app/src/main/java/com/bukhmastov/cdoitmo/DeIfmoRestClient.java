@@ -30,6 +30,7 @@ class DeIfmoRestClient {
 
     private static final String TAG = "DeIfmoRestClient";
     private static final String BASE_URL = "http://de.ifmo.ru/";
+    private static final String BASE_URL_IFMO = "http://www.ifmo.ru/";
     private static final String USER_AGENT = "Android Application";
     private static AsyncHttpClient httpclient = new AsyncHttpClient();
     private static SharedPreferences sharedPreferences;
@@ -113,7 +114,7 @@ class DeIfmoRestClient {
             responseHandler.onFailure(FAILED_OFFLINE);
         }
     }
-    private static void authorize(final DeIfmoRestClientResponseHandler responseHandler){
+    static void authorize(final DeIfmoRestClientResponseHandler responseHandler){
         responseHandler.onProgress(STATE_AUTHORIZATION);
         String login = sharedPreferences.getString("login", "");
         String password = sharedPreferences.getString("password", "");
@@ -125,7 +126,7 @@ class DeIfmoRestClient {
             params.put("LOGIN", login);
             params.put("PASSWD", password);
             renewSessionCookie();
-            responseHandler.onNewHandle(httpclient.post(getAbsoluteUrl("servlet"), params, new AsyncHttpResponseHandler() {
+            responseHandler.onNewHandle(httpclient.post(getAbsoluteUrl("servlet", false), params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                     responseHandler.onNewHandle(null);
@@ -153,7 +154,7 @@ class DeIfmoRestClient {
                         if (data.contains("Access is forbidden") && data.contains("Invalid login/password")) {
                             responseHandler.onFailure(FAILED_AUTH_CREDENTIALS_FAILED);
                         } else if (data.contains("Выбор группы безопасности") && data.contains("OPTION VALUE=8")) {
-                            httpclient.get(getAbsoluteUrl("servlet/distributedCDE?Rule=APPLYSECURITYGROUP&PERSON=" + sharedPreferences.getString("login", "") + "&SECURITYGROUP=8&COMPNAME="), null, new AsyncHttpResponseHandler(){
+                            httpclient.get(getAbsoluteUrl("servlet/distributedCDE?Rule=APPLYSECURITYGROUP&PERSON=" + sharedPreferences.getString("login", "") + "&SECURITYGROUP=8&COMPNAME=", false), null, new AsyncHttpResponseHandler(){
                                 @Override
                                 public void onSuccess(int statusCode, Header[] headers, byte[] response) {
                                     responseHandler.onProgress(STATE_AUTHORIZED);
@@ -183,17 +184,24 @@ class DeIfmoRestClient {
             }));
         }
     }
-    static void get(final String url, final RequestParams params, final DeIfmoRestClientResponseHandler responseHandler){
+    static void get(String url, final RequestParams params, DeIfmoRestClientResponseHandler responseHandler){
+        get(url, params, false, responseHandler);
+    }
+    static void get(final String url, final RequestParams params, final boolean is_ifmo, final DeIfmoRestClientResponseHandler responseHandler){
         if(isOnline()) {
             responseHandler.onProgress(STATE_HANDLING);
             renewSessionCookie();
-            responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(url), params, new AsyncHttpResponseHandler() {
+            responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(url, is_ifmo), params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                     responseHandler.onNewHandle(null);
                     try {
                         String data = "";
-                        if (responseBody != null) data = new String((new String(responseBody, "windows-1251")).getBytes("UTF-8"));
+                        if(is_ifmo){
+                            data = new String(responseBody, "UTF-8");
+                        } else {
+                            if (responseBody != null) data = new String((new String(responseBody, "windows-1251")).getBytes("UTF-8"));
+                        }
                         if (data.contains("Закончился интервал неактивности") || data.contains("Доступ запрещен")) {
                             authorize(new DeIfmoRestClientResponseHandler() {
                                 @Override
@@ -235,7 +243,7 @@ class DeIfmoRestClient {
         if(isOnline()) {
             responseHandler.onProgress(STATE_HANDLING);
             renewSessionCookie();
-            responseHandler.onNewHandle(httpclient.post(getAbsoluteUrl(url), params, new AsyncHttpResponseHandler() {
+            responseHandler.onNewHandle(httpclient.post(getAbsoluteUrl(url, false), params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                     responseHandler.onNewHandle(null);
@@ -283,7 +291,7 @@ class DeIfmoRestClient {
         if(isOnline()) {
             responseHandler.onProgress(STATE_HANDLING);
             renewSessionCookie();
-            responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(url), params, new JsonHttpResponseHandler() {
+            responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(url, false), params, new JsonHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                     responseHandler.onNewHandle(null);
@@ -301,8 +309,8 @@ class DeIfmoRestClient {
         }
     }
 
-    private static String getAbsoluteUrl(String relativeUrl) {
-        return BASE_URL + relativeUrl;
+    private static String getAbsoluteUrl(String relativeUrl, boolean is_ifmo) {
+        return is_ifmo ? BASE_URL_IFMO + relativeUrl : BASE_URL + relativeUrl;
     }
     private static void renewSessionCookie(){
         httpclient.removeHeader("Cookie");

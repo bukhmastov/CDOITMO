@@ -165,155 +165,169 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
             if(eRegister.is()){
                 display();
             } else {
-                draw(R.layout.state_offline);
-                getActivity().findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        forceLoad();
-                    }
-                });
+                try {
+                    draw(R.layout.state_offline);
+                    getActivity().findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            forceLoad();
+                        }
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
     private void loadFailed(){
-        draw(R.layout.state_try_again);
-        getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                forceLoad();
-            }
-        });
+        try {
+            draw(R.layout.state_try_again);
+            getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    forceLoad();
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     private void display(){
-        ParsedERegister parsedERegister = eRegister.get();
-        if(parsedERegister == null){
-            loadFailed();
-            return;
-        }
-        checkData(parsedERegister);
-        // получаем список предметов для отображения
-        final ArrayList<HashMap<String, String>> subjects = new ArrayList<>();
-        for(Group group : parsedERegister.groups){
-            if(Objects.equals(group.name, this.group)){
-                for(Term term : group.terms){
-                    if(this.term == -1 || this.term == term.number){
-                        for(Subject subject : term.subjects){
-                            HashMap<String, String> subj = new HashMap<>();
-                            subj.put("group", group.name);
-                            subj.put("name", subject.name);
-                            subj.put("semester", String.valueOf(term.number));
-                            subj.put("value", String.valueOf(subject.currentPoints));
-                            subj.put("type", String.valueOf(subject.type));
-                            subjects.add(subj);
+        try {
+            ParsedERegister parsedERegister = eRegister.get();
+            if (parsedERegister == null) throw new NullPointerException("parsedERegister cannot be null");
+            checkData(parsedERegister);
+            // получаем список предметов для отображения
+            final ArrayList<HashMap<String, String>> subjects = new ArrayList<>();
+            for (Group group : parsedERegister.groups) {
+                if (Objects.equals(group.name, this.group)) {
+                    for (Term term : group.terms) {
+                        if (this.term == -1 || this.term == term.number) {
+                            for (Subject subject : term.subjects) {
+                                HashMap<String, String> subj = new HashMap<>();
+                                subj.put("group", group.name);
+                                subj.put("name", subject.name);
+                                subj.put("semester", String.valueOf(term.number));
+                                subj.put("value", String.valueOf(subject.currentPoints));
+                                subj.put("type", String.valueOf(subject.type));
+                                subjects.add(subj);
+                            }
                         }
                     }
+                    break;
                 }
-                break;
             }
-        }
-        // отображаем интерфейс
-        draw(R.layout.eregister_layout);
-        // работаем со списком
-        ListView erl_list_view = (ListView) getActivity().findViewById(R.id.erl_list_view);
-        erl_list_view.setAdapter(new SubjectListView(getActivity(), subjects));
-        erl_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener(){
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                HashMap<String, String> subj = subjects.get(position);
-                Intent intent = new Intent(getActivity(), SubjectActivity.class);
-                intent.putExtra("group", subj.get("group"));
-                intent.putExtra("term", subj.get("semester"));
-                intent.putExtra("name", subj.get("name"));
-                startActivity(intent);
-            }
-        });
-        // работаем со свайпом
-        SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) getActivity().findViewById(R.id.swipe_container);
-        TypedValue typedValue = new TypedValue();
-        getActivity().getTheme().resolveAttribute(R.attr.colorAccent, typedValue, true);
-        mSwipeRefreshLayout.setColorSchemeColors(typedValue.data);
-        getActivity().getTheme().resolveAttribute(R.attr.colorBackgroundRefresh, typedValue, true);
-        mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(typedValue.data);
-        mSwipeRefreshLayout.setOnRefreshListener(this);
-        // работаем с раскрывающимися списками
-        // список групп
-        Spinner spinner_group = (Spinner) getActivity().findViewById(R.id.erl_group_spinner);
-        final ArrayList<String> spinner_group_arr = new ArrayList<>();
-        final ArrayList<String> spinner_group_arr_names = new ArrayList<>();
-        int selection = 0, counter = 0;
-        for(Group group : parsedERegister.groups){
-            spinner_group_arr.add(group.name + " (" + group.year[0] + "/" + group.year[1] + ")");
-            spinner_group_arr_names.add(group.name);
-            if(Objects.equals(group.name, this.group)) selection = counter;
-            counter++;
-        }
-        spinner_group.setAdapter(new ArrayAdapter<> (getActivity(), R.layout.spinner_layout, spinner_group_arr));
-        spinner_group.setSelection(selection);
-        spinner_group_blocker = true;
-        spinner_group.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
-                if(spinner_group_blocker){
-                    spinner_group_blocker = false;
-                    return;
+            // отображаем интерфейс
+            draw(R.layout.eregister_layout);
+            // работаем со списком
+            ListView erl_list_view = (ListView) getActivity().findViewById(R.id.erl_list_view);
+            erl_list_view.setAdapter(new SubjectListView(getActivity(), subjects));
+            erl_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    HashMap<String, String> subj = subjects.get(position);
+                    Intent intent = new Intent(getActivity(), SubjectActivity.class);
+                    intent.putExtra("group", subj.get("group"));
+                    intent.putExtra("term", subj.get("semester"));
+                    intent.putExtra("name", subj.get("name"));
+                    startActivity(intent);
                 }
-                group = spinner_group_arr_names.get(position);
-                load();
+            });
+            // работаем со свайпом
+            SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) getActivity().findViewById(R.id.swipe_container);
+            TypedValue typedValue = new TypedValue();
+            getActivity().getTheme().resolveAttribute(R.attr.colorAccent, typedValue, true);
+            mSwipeRefreshLayout.setColorSchemeColors(typedValue.data);
+            getActivity().getTheme().resolveAttribute(R.attr.colorBackgroundRefresh, typedValue, true);
+            mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(typedValue.data);
+            mSwipeRefreshLayout.setOnRefreshListener(this);
+            // работаем с раскрывающимися списками
+            // список групп
+            Spinner spinner_group = (Spinner) getActivity().findViewById(R.id.erl_group_spinner);
+            final ArrayList<String> spinner_group_arr = new ArrayList<>();
+            final ArrayList<String> spinner_group_arr_names = new ArrayList<>();
+            int selection = 0, counter = 0;
+            for (Group group : parsedERegister.groups) {
+                spinner_group_arr.add(group.name + " (" + group.year[0] + "/" + group.year[1] + ")");
+                spinner_group_arr_names.add(group.name);
+                if (Objects.equals(group.name, this.group)) selection = counter;
+                counter++;
             }
-            public void onNothingSelected(AdapterView<?> parent) {}
-        });
-        // список семестров
-        Spinner spinner_period = (Spinner) getActivity().findViewById(R.id.erl_period_spinner);
-        final ArrayList<String> spinner_period_arr = new ArrayList<>();
-        final ArrayList<Integer> spinner_period_arr_values = new ArrayList<>();
-        selection = 2;
-        for(Group group : parsedERegister.groups){
-            if(Objects.equals(group.name, this.group)){
-                spinner_period_arr.add(group.terms.get(0).number + " " + getString(R.string.semester));
-                spinner_period_arr.add(group.terms.get(1).number + " " + getString(R.string.semester));
-                spinner_period_arr.add(getString(R.string.year));
-                spinner_period_arr_values.add(group.terms.get(0).number);
-                spinner_period_arr_values.add(group.terms.get(1).number);
-                spinner_period_arr_values.add(-1);
-                if(this.term == group.terms.get(0).number) selection = 0;
-                if(this.term == group.terms.get(1).number) selection = 1;
-                break;
-            }
-        }
-        spinner_period.setAdapter(new ArrayAdapter<> (getActivity(), R.layout.spinner_layout, spinner_period_arr));
-        spinner_period.setSelection(selection);
-        spinner_period_blocker = true;
-        spinner_period.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
-                if(spinner_period_blocker){
-                    spinner_period_blocker = false;
-                    return;
+            spinner_group.setAdapter(new ArrayAdapter<>(getActivity(), R.layout.spinner_layout, spinner_group_arr));
+            spinner_group.setSelection(selection);
+            spinner_group_blocker = true;
+            spinner_group.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
+                    if (spinner_group_blocker) {
+                        spinner_group_blocker = false;
+                        return;
+                    }
+                    group = spinner_group_arr_names.get(position);
+                    load();
                 }
-                term = spinner_period_arr_values.get(position);
-                load();
+
+                public void onNothingSelected(AdapterView<?> parent) {
+                }
+            });
+            // список семестров
+            Spinner spinner_period = (Spinner) getActivity().findViewById(R.id.erl_period_spinner);
+            final ArrayList<String> spinner_period_arr = new ArrayList<>();
+            final ArrayList<Integer> spinner_period_arr_values = new ArrayList<>();
+            selection = 2;
+            for (Group group : parsedERegister.groups) {
+                if (Objects.equals(group.name, this.group)) {
+                    spinner_period_arr.add(group.terms.get(0).number + " " + getString(R.string.semester));
+                    spinner_period_arr.add(group.terms.get(1).number + " " + getString(R.string.semester));
+                    spinner_period_arr.add(getString(R.string.year));
+                    spinner_period_arr_values.add(group.terms.get(0).number);
+                    spinner_period_arr_values.add(group.terms.get(1).number);
+                    spinner_period_arr_values.add(-1);
+                    if (this.term == group.terms.get(0).number) selection = 0;
+                    if (this.term == group.terms.get(1).number) selection = 1;
+                    break;
+                }
             }
-            public void onNothingSelected(AdapterView<?> parent) {}
-        });
-        // показываем снекбар с датой обновления
-        if(notifyAboutDateUpdate){
-            int shift = (int)((Calendar.getInstance().getTimeInMillis() - parsedERegister.timestamp) / 1000);
-            String message;
-            if(shift < 21600){
-                if(shift < 5){
-                    message = "только что";
-                } else if(shift < 60){
-                    message = shift + " " + "сек. назад";
-                } else if(shift < 3600) {
-                    message = shift / 60 + " " + "мин. назад";
+            spinner_period.setAdapter(new ArrayAdapter<>(getActivity(), R.layout.spinner_layout, spinner_period_arr));
+            spinner_period.setSelection(selection);
+            spinner_period_blocker = true;
+            spinner_period.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
+                    if (spinner_period_blocker) {
+                        spinner_period_blocker = false;
+                        return;
+                    }
+                    term = spinner_period_arr_values.get(position);
+                    load();
+                }
+
+                public void onNothingSelected(AdapterView<?> parent) {
+                }
+            });
+            // показываем снекбар с датой обновления
+            if (notifyAboutDateUpdate) {
+                int shift = (int) ((Calendar.getInstance().getTimeInMillis() - parsedERegister.timestamp) / 1000);
+                String message;
+                if (shift < 21600) {
+                    if (shift < 5) {
+                        message = "только что";
+                    } else if (shift < 60) {
+                        message = shift + " " + "сек. назад";
+                    } else if (shift < 3600) {
+                        message = shift / 60 + " " + "мин. назад";
+                    } else {
+                        message = shift / 3600 + " " + "час. назад";
+                    }
                 } else {
-                    message = shift / 3600 + " " + "час. назад";
+                    message = parsedERegister.date;
                 }
-            } else {
-                message = parsedERegister.date;
+                Snackbar snackbar = Snackbar.make(getActivity().findViewById(R.id.eregister_layout), getString(R.string.update_date) + " " + message, Snackbar.LENGTH_SHORT);
+                getActivity().getTheme().resolveAttribute(R.attr.colorBackgroundSnackBar, typedValue, true);
+                snackbar.getView().setBackgroundColor(typedValue.data);
+                snackbar.show();
+                notifyAboutDateUpdate = false;
             }
-            Snackbar snackbar = Snackbar.make(getActivity().findViewById(R.id.eregister_layout), getString(R.string.update_date) + " " + message, Snackbar.LENGTH_SHORT);
-            getActivity().getTheme().resolveAttribute(R.attr.colorBackgroundSnackBar, typedValue, true);
-            snackbar.getView().setBackgroundColor(typedValue.data);
-            snackbar.show();
-            notifyAboutDateUpdate = false;
+        } catch (Exception e){
+            e.printStackTrace();
+            loadFailed();
         }
     }
     private void checkData(ParsedERegister parsedERegister){

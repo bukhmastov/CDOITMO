@@ -220,13 +220,17 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
         if(ready.get("Rating") != 0 && ready.get("RatingList") != 0) display();
     }
     private void loadFailed(){
-        draw(R.layout.state_try_again);
-        getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                forceLoad();
-            }
-        });
+        try {
+            draw(R.layout.state_try_again);
+            getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    forceLoad();
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     private void display(){
         try {

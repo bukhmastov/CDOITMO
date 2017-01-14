@@ -15,8 +15,8 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
-import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -29,7 +29,9 @@ import android.widget.TextView;
 
 import com.loopj.android.http.RequestHandle;
 
+import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -43,6 +45,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private boolean loaded = false;
     private RequestHandle checkRequestHandle = null;
     static boolean OFFLINE_MODE = false;
+    static Menu menu;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +65,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case "e_journal": selectedSection = R.id.nav_e_register; break;
             case "protocol_changes": selectedSection = R.id.nav_protocol_changes; break;
             case "rating": selectedSection = R.id.nav_rating; break;
+            case "schedule_lessons": selectedSection = R.id.nav_schedule; break;
         }
         protocolTracker = new ProtocolTracker(this);
     }
@@ -105,13 +109,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            if(sharedPreferences.getBoolean("pref_auto_logout", false) || OFFLINE_MODE) super.onBackPressed();
+            if(sharedPreferences.getBoolean("pref_auto_logout", false) || OFFLINE_MODE){
+                super.onBackPressed();
+            } else {
+                drawer.openDrawer(GravityCompat.START);
+            }
         }
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        if(OFFLINE_MODE) getMenuInflater().inflate(R.menu.toolbar_main, menu);
+        getMenuInflater().inflate(R.menu.toolbar_main, menu);
+        MainActivity.menu = menu;
+        if(OFFLINE_MODE) menu.findItem(R.id.offline_mode).setVisible(true);
         return true;
     }
 
@@ -233,6 +243,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 title = getString(R.string.rating);
                 fragmentClass = RatingFragment.class;
                 break;
+            case R.id.nav_schedule:
+                title = getString(R.string.schedule_lessons);
+                fragmentClass = ScheduleLessonsFragment.class;
+                break;
             case R.id.nav_settings:
                 Intent intent = new Intent(this, SettingsActivity.class);
                 startActivity(intent);
@@ -241,7 +255,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         if(fragmentClass != null){
             if(!loaded){
-                Snackbar snackbar = Snackbar.make(findViewById(R.id.content_container), "Дождитесь начальной авторизации", Snackbar.LENGTH_SHORT);
+                Snackbar snackbar = Snackbar.make(findViewById(R.id.content_container), R.string.w8m8, Snackbar.LENGTH_SHORT);
                 TypedValue typedValue = new TypedValue();
                 getTheme().resolveAttribute(R.attr.colorBackgroundSnackBar, typedValue, true);
                 snackbar.getView().setBackgroundColor(typedValue.data);
@@ -281,9 +295,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         finish();
     }
     private void draw(int layoutId){
-        ViewGroup vg = ((ViewGroup) findViewById(R.id.content_container));
-        vg.removeAllViews();
-        vg.addView(((LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        try {
+            ViewGroup vg = ((ViewGroup) findViewById(R.id.content_container));
+            vg.removeAllViews();
+            vg.addView(((LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
 
@@ -292,27 +310,26 @@ class Cache {
     static String get(Context context, String key){
         check(context);
         if(enabled){
-            return PreferenceManager.getDefaultSharedPreferences(context).getString(key, "");
+            return PreferenceManager.getDefaultSharedPreferences(context).getString("cache_" + key, "");
         } else {
             return "";
         }
     }
     static void put(Context context, String key, String value){
         check(context);
-        if(enabled){
-            PreferenceManager.getDefaultSharedPreferences(context).edit().putString(key, value).apply();
-        }
+        if(enabled) PreferenceManager.getDefaultSharedPreferences(context).edit().putString("cache_" + key, value).apply();
     }
     static void check(Context context){
+        enabled = PreferenceManager.getDefaultSharedPreferences(context).getBoolean("pref_use_cache", true);
+        if(!enabled) clear(context);
+    }
+    static void clear(Context context){
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        enabled = sharedPreferences.getBoolean("pref_use_cache", true);
-        if(!enabled){
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString("ERegister", "");
-            editor.putString("Protocol", "");
-            editor.putString("Rating", "");
-            editor.putString("RatingList", "");
-            editor.apply();
+        Map<String, ?> list = sharedPreferences.getAll();
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        for(Map.Entry<String, ?> entry : list.entrySet()) {
+            if(Pattern.compile("^cache_.*").matcher(entry.getKey()).find()) editor.remove(entry.getKey());
         }
+        editor.apply();
     }
 }

@@ -154,13 +154,17 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
         });
     }
     private void loadFailed(){
-        draw(R.layout.state_try_again);
-        findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                load();
-            }
-        });
+        try {
+            draw(R.layout.state_try_again);
+            findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    load();
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     private void display(JSONObject data){
         try {
@@ -201,9 +205,13 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
         finish();
     }
     private void draw(int layoutId){
-        ViewGroup vg = ((ViewGroup) findViewById(R.id.rating_list_container));
-        vg.removeAllViews();
-        vg.addView(((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        try {
+            ViewGroup vg = ((ViewGroup) findViewById(R.id.rating_list_container));
+            vg.removeAllViews();
+            vg.addView(((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
 

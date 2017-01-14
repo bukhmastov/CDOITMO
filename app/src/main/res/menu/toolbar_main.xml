@@ -5,6 +5,15 @@
     <item
         android:id="@+id/offline_mode"
         android:title="@string/offline_mode"
-        app:showAsAction="always" />
+        app:showAsAction="ifRoom"
+        android:visible="false"/>
+
+    <item
+        android:id="@+id/action_search"
+        android:title="@string/search"
+        android:icon="@drawable/ic_search"
+        app:showAsAction="ifRoom|collapseActionView"
+        app:actionViewClass="com.bukhmastov.cdoitmo.ScheduleLessonsSearchView"
+        android:visible="false" />
 
 </menu>

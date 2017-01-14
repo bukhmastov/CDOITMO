@@ -63,5 +63,20 @@
     <string name="app_info_dev">Разработка: Бухмастов Алексей\nbukhmastov-alex@ya.ru</string>
     <string name="error_choose_program">Выберите программу для отправки отчета</string>
     <string name="offline_mode">Offline mode</string>
+    <string name="schedule_lessons">Расписание занятий</string>
+    <string name="search">Поиск</string>
+    <string name="schedule_lessons_search_view_hint">Группа, аудитория, преподаватель…</string>
+    <string name="w8m8">Дождитесь завершения авторизации</string>
+    <string name="choose_teacher">Выберите преподавателя:</string>
+    <string name="teacher_not_found">Преподавателей не найдено</string>
+    <string name="tab_all">Все</string>
+    <string name="tab_even">Четная</string>
+    <string name="tab_odd">Нечетная</string>
+    <string name="practice">Практика</string>
+    <string name="lecture">Лекция</string>
+    <string name="lab">Лабораторная</string>
+    <string name="group">Группа</string>
+    <string name="room">Аудиотория</string>
+
 
 </resources>
