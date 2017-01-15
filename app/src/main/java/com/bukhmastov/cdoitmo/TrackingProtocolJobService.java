@@ -23,6 +23,7 @@ import com.loopj.android.http.RequestParams;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Objects;
 
@@ -104,38 +105,51 @@ public class TrackingProtocolJobService extends JobService {
     private void analyse(JSONObject json){
         try {
             if(json == null) throw new NullPointerException("json can't be null");
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
             JSONArray history = new JSONArray();
+            boolean first_init = false;
             try {
-                String historyStr = PreferenceManager.getDefaultSharedPreferences(this).getString("TrackingProtocolJobServiceHISTORY", "");
-                if(!Objects.equals(historyStr, "")) history = new JSONArray(historyStr);
+                String historyStr = sharedPreferences.getString("ProtocolTrackerHISTORY", "");
+                if(Objects.equals(historyStr, "")){
+                    first_init = true;
+                } else {
+                    history = new JSONArray(historyStr);
+                }
             } catch(Exception e){
                 e.printStackTrace();
             }
             JSONArray protocol = json.getJSONArray("changes");
-            PreferenceManager.getDefaultSharedPreferences(this).edit().putString("TrackingProtocolJobServiceHISTORY", protocol.toString()).apply();
-            int id = 0;
-            for(int i = 0; i < history.length(); i++){
-                JSONObject historyOBJ = history.getJSONObject(i);
-                for(int j = 0; j < protocol.length(); j++){
-                    JSONObject protocolOBJ = protocol.getJSONObject(i);
-                    if(Objects.equals(historyOBJ.getString("subject"), protocolOBJ.getString("subject")) &&
-                       Objects.equals(historyOBJ.getString("field"), protocolOBJ.getString("field")) &&
-                       Objects.equals(historyOBJ.getString("value"), protocolOBJ.getString("value")) &&
-                       Objects.equals(historyOBJ.getString("date"), protocolOBJ.getString("date"))){
-                        id = j;
+            sharedPreferences.edit().putString("ProtocolTrackerHISTORY", protocol.toString()).apply();
+            if(first_init){
+                finish();
+                return;
+            }
+            ArrayList<JSONObject> changes = new ArrayList<>();
+            for(int i = 0; i < protocol.length(); i++){
+                JSONObject protocolOBJ = protocol.getJSONObject(i);
+                boolean found = false;
+                for(int j = 0; j < history.length(); j++){
+                    JSONObject historyOBJ = history.getJSONObject(j);
+                    if(
+                        Objects.equals(historyOBJ.getString("subject"), protocolOBJ.getString("subject")) &&
+                        Objects.equals(historyOBJ.getString("field"), protocolOBJ.getString("field")) &&
+                        historyOBJ.getDouble("value") == protocolOBJ.getDouble("value") &&
+                        Objects.equals(historyOBJ.getString("date"), protocolOBJ.getString("date"))
+                    ){
+                        found = true;
                         break;
                     }
                 }
-                if(id != 0) break;
+                if(!found) changes.add(protocolOBJ);
             }
-            if(id > 0){
+            if(changes.size() > 0){
                 long timestamp = System.currentTimeMillis();
-                if(id > 1){
-                    String text = id + " ";
-                    switch (id % 100){
+                if(changes.size() > 1){
+                    String text = changes.size() + " ";
+                    switch (changes.size() % 100){
                         case 10: case 11: case 12: case 13: case 14: text += getString(R.string.action_3); break;
                         default:
-                            switch (id % 10){
+                            switch (changes.size() % 10){
                                 case 1: text += getString(R.string.action_1); break;
                                 case 2: case 3: case 4: text += getString(R.string.action_2); break;
                                 default: text += getString(R.string.action_3); break;
@@ -144,9 +158,9 @@ public class TrackingProtocolJobService extends JobService {
                     }
                     addNotification(getString(R.string.protocol_changes), text, timestamp, true);
                 }
-                for(int i = id - 1; i >= 0; i--){
-                    JSONObject protocolOBJ = protocol.getJSONObject(i);
-                    addNotification(protocolOBJ.getString("subject"), protocolOBJ.getString("field") + ": " + double2string(protocolOBJ.getDouble("value")) + "/" + double2string(protocolOBJ.getDouble("max")), timestamp, false);
+                for(int i = changes.size() - 1; i >= 0; i--){
+                    JSONObject changeOBJ = changes.get(i);
+                    addNotification(changeOBJ.getString("subject"), changeOBJ.getString("field") + ": " + double2string(changeOBJ.getDouble("value")) + "/" + double2string(changeOBJ.getDouble("max")), timestamp, false);
                 }
             }
             finish();
@@ -272,7 +286,8 @@ class ProtocolTracker {
             jobScheduler.cancel(jobID);
             jobID = -1;
             running = false;
-            sharedPreferences.edit().putInt("TrackingProtocolJobServiceID", jobID).apply();
+            sharedPreferences.edit().putInt("TrackingProtocolJobServiceID", jobID).remove("ProtocolTrackerHISTORY").apply();
+            //sharedPreferences.edit().putInt("TrackingProtocolJobServiceID", jobID).apply();
             Log.i(TAG, "Stopped");
         }
         return this;

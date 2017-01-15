@@ -26,6 +26,7 @@ import java.util.Objects;
 public class ScheduleLessonsAllFragment extends Fragment {
 
     private int type = 2;
+    private boolean displayed = false;
 
     public ScheduleLessonsAllFragment() {}
 
@@ -36,75 +37,26 @@ public class ScheduleLessonsAllFragment extends Fragment {
 
     @Override
     public void onResume() {
-        display();
-        try {
-            JSONArray schedule = ScheduleLessonsFragment.schedule.getJSONArray("schedule");
-            for (int i = 0; i < schedule.length(); i++) {
-                JSONArray lessons = schedule.getJSONObject(i).getJSONArray("lessons");
-                for (int j = 0; j < lessons.length(); j++) {
-                    JSONObject lesson = lessons.getJSONObject(j);
-                    if(!(type == 2 || type == lesson.getInt("week") || lesson.getInt("week") == 2)) continue;
-                    if(!(
-                            (lesson.has("room") && !Objects.equals(lesson.getString("room"), "")) ||
-                                    (lesson.has("teacher") && !Objects.equals(lesson.getString("teacher"), "")) ||
-                                    (lesson.has("group") && !Objects.equals(lesson.getString("group"), ""))
-                    )) continue;
-                    registerForContextMenu(getActivity().findViewById(Integer.parseInt(1 + "" + type + "" + i + "" + j)));
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        if(!displayed) display();
         super.onResume();
     }
 
     @Override
-    public void onPause() {
-        try {
-            JSONArray schedule = ScheduleLessonsFragment.schedule.getJSONArray("schedule");
-            for (int i = 0; i < schedule.length(); i++) {
-                JSONArray lessons = schedule.getJSONObject(i).getJSONArray("lessons");
-                for (int j = 0; j < lessons.length(); j++) {
-                    JSONObject lesson = lessons.getJSONObject(j);
-                    if(!(type == 2 || type == lesson.getInt("week") || lesson.getInt("week") == 2)) continue;
-                    if(!(
-                            (lesson.has("room") && !Objects.equals(lesson.getString("room"), "")) ||
-                                    (lesson.has("teacher") && !Objects.equals(lesson.getString("teacher"), "")) ||
-                                    (lesson.has("group") && !Objects.equals(lesson.getString("group"), ""))
-                    )) continue;
-                    unregisterForContextMenu(getActivity().findViewById(Integer.parseInt(1 + "" + type + "" + i + "" + j)));
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        super.onPause();
+    public void onDestroy() {
+        displayed = false;
+        super.onDestroy();
     }
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
-        try {
-            int id = v.getId();
-            JSONObject lesson = null;
-            JSONArray schedule = ScheduleLessonsFragment.schedule.getJSONArray("schedule");
-            for (int i = 0; i < schedule.length(); i++) {
-                JSONArray lessons = schedule.getJSONObject(i).getJSONArray("lessons");
-                for (int j = 0; j < lessons.length(); j++) {
-                    if(Integer.parseInt(1 + "" + type + "" + i + "" + j) == id){
-                        lesson = lessons.getJSONObject(j);
-                        break;
-                    }
-                }
-                if(lesson != null) break;
-            }
-            menu.setHeaderTitle("Открыть распиание");
-            if(lesson.has("group") && !Objects.equals(lesson.getString("group"), "")) menu.add(getString(R.string.group) + " " + lesson.getString("group"));
-            if(lesson.has("teacher") && !Objects.equals(lesson.getString("teacher"), "")) menu.add(lesson.getString("teacher"));
-            if(lesson.has("room") && !Objects.equals(lesson.getString("room"), "")) menu.add(getString(R.string.room) + " " + lesson.getString("room"));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        menu.setHeaderTitle("Открыть распиание");
+        String room = v.getTag(R.id.schedule_lessons_room).toString();
+        String teacher = v.getTag(R.id.schedule_lessons_teacher).toString();
+        String group = v.getTag(R.id.schedule_lessons_group).toString();
+        if(!Objects.equals(group, "")) menu.add(getString(R.string.group) + " " + group);
+        if(!Objects.equals(teacher, "")) menu.add(teacher);
+        if(!Objects.equals(room, "")) menu.add(getString(R.string.room) + " " + room);
     }
 
     @Override
@@ -141,7 +93,13 @@ public class ScheduleLessonsAllFragment extends Fragment {
             mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(typedValue.data);
             mSwipeRefreshLayout.setOnRefreshListener(ScheduleLessonsFragment.scheduleLessons);
             // отображаем расписание
-            ScheduleLessonsFragment.scheduleLessons.getSchedule(getContext(), type, (LinearLayout) getActivity().findViewById(R.id.schedule_lessons_all_content));
+            LinearLayout linearLayout = (LinearLayout) getActivity().findViewById(R.id.schedule_lessons_all_content);
+            linearLayout.removeAllViews();
+            ScheduleLessonsFragment.scheduleLessons.getSchedule(getContext(), type, linearLayout, new ScheduleLessons.contextMenu() {
+                @Override
+                public void register(View view) { registerForContextMenu(view); }
+            });
+            displayed = true;
         } catch (Exception e){
             e.printStackTrace();
             failed();

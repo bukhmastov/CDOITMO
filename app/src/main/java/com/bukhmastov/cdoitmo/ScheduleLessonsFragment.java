@@ -12,6 +12,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -171,11 +172,11 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
             schedule = json;
             schedule_tabs.setVisibility(View.GONE);
             if(Objects.equals(json.getString("type"), "teacher_picker")){
-                TextView teacher_picker_header = (TextView) getActivity().findViewById(R.id.teacher_picker_header);
-                ListView teacher_picker_list_view = (ListView) getActivity().findViewById(R.id.teacher_picker_list_view);
                 JSONArray teachers = json.getJSONArray("teachers");
                 if (teachers.length() > 0){
                     draw(R.layout.layout_schedule_lessons_teacher_picker);
+                    TextView teacher_picker_header = (TextView) getActivity().findViewById(R.id.teacher_picker_header);
+                    ListView teacher_picker_list_view = (ListView) getActivity().findViewById(R.id.teacher_picker_list_view);
                     teacher_picker_header.setText(R.string.choose_teacher);
                     final ArrayList<HashMap<String, String>> teachersMap = new ArrayList<>();
                     for(int i = 0; i < teachers.length(); i++){
@@ -265,6 +266,9 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
         void onFailure(int state);
         void onSuccess(JSONObject json);
         void onNewHandle(RequestHandle requestHandle);
+    }
+    interface contextMenu {
+        void register(View view);
     }
     private ScheduleLessons.response handler = null;
     private Context context;
@@ -532,7 +536,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
         }
     }
 
-    void getSchedule(Context context, int type, LinearLayout container){
+    void getSchedule(Context context, int type, LinearLayout container, ScheduleLessons.contextMenu contextMenu){
         try {
             JSONArray schedule = ScheduleLessonsFragment.schedule.getJSONArray("schedule");
             float destiny = context.getResources().getDisplayMetrics().density;
@@ -635,10 +639,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                     subjectTitle.setTextColor(textColorPrimary);
                     lessonTitleLayout.addView(subjectTitle);
                     // иконка
-                    if((lesson.has("room") && !Objects.equals(lesson.getString("room"), "")) ||
-                            (lesson.has("teacher") && !Objects.equals(lesson.getString("teacher"), "")) ||
-                            (lesson.has("group") && !Objects.equals(lesson.getString("group"), ""))
-                            ) {
+                    if((lesson.has("room") && !Objects.equals(lesson.getString("room"), "")) || (lesson.has("teacher") && !Objects.equals(lesson.getString("teacher"), "")) || (lesson.has("group") && !Objects.equals(lesson.getString("group"), ""))) {
                         ImageView moreIcon = new ImageView(context);
                         moreIcon.setImageDrawable(context.getResources().getDrawable(R.drawable.ic_touch, context.getTheme()));
                         moreIcon.setLayoutParams(new LinearLayout.LayoutParams((int) (24 * destiny), (int) (24 * destiny)));
@@ -765,6 +766,12 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                     lessonContentLayout.addView(descSecondary);
                     lessonLayout.addView(lessonContentLayout);
                     lessonsLayout.addView(lessonLayout);
+                    if((lesson.has("room") && !Objects.equals(lesson.getString("room"), "")) || (lesson.has("teacher") && !Objects.equals(lesson.getString("teacher"), "")) || (lesson.has("group") && !Objects.equals(lesson.getString("group"), ""))) {
+                        lessonLayout.setTag(R.id.schedule_lessons_room, lesson.has("room") ? lesson.getString("room") : "");
+                        lessonLayout.setTag(R.id.schedule_lessons_teacher, lesson.has("teacher") ? lesson.getString("teacher") : "");
+                        lessonLayout.setTag(R.id.schedule_lessons_group, lesson.has("group") ? lesson.getString("group") : "");
+                        contextMenu.register(lessonLayout);
+                    }
                 }
                 dayLayout.addView(lessonsLayout);
                 if(lessonsCount > 0){

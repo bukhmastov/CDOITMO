@@ -354,7 +354,7 @@ class Protocol {
             json.put("protocol", data);
             protocol = json;
             Cache.put(context, "Protocol", protocol.toString());
-            if(number_of_weeks == 7) PreferenceManager.getDefaultSharedPreferences(context).edit().putString("TrackingProtocolJobServiceHISTORY", data.getJSONArray("changes").toString()).apply();
+            if(number_of_weeks == 7) PreferenceManager.getDefaultSharedPreferences(context).edit().putString("ProtocolTrackerHISTORY", data.getJSONArray("changes").toString()).apply();
         } catch (Exception e) {
             e.printStackTrace();
         }
