@@ -77,6 +77,7 @@
     <string name="lab">Лабораторная</string>
     <string name="group">Группа</string>
     <string name="room">Аудиотория</string>
+    <string name="school_week">учебная неделя</string>
 
 
 </resources>

@@ -125,8 +125,12 @@ public class ScheduleLessonsOddFragment extends Fragment {
                 case "teacher": schedule_c_header.setText("Расписание преподавателя" + " " + ScheduleLessonsFragment.schedule.getString("scope")); break;
                 default: throw new Exception("Wrong ScheduleLessonsFragment.schedule.type value");
             }
-            // здесь должна быть текущая неделя
-            ((TextView) getActivity().findViewById(R.id.schedule_lessons_odd_week)).setText(new SimpleDateFormat("dd.MM.yyyy", Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis())));
+            TextView schedule_lessons_all_week = (TextView) getActivity().findViewById(R.id.schedule_lessons_odd_week);
+            if(MainActivity.week >= 0){
+                schedule_lessons_all_week.setText(MainActivity.week + " " + getString(R.string.school_week));
+            } else {
+                schedule_lessons_all_week.setText(new SimpleDateFormat("dd.MM.yyyy", Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis())));
+            }
             // работаем со свайпом
             SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) getActivity().findViewById(R.id.schedule_lessons_odd_container);
             TypedValue typedValue = new TypedValue();

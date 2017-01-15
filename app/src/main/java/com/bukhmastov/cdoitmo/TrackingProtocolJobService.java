@@ -12,7 +12,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
-import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.preference.PreferenceManager;
@@ -25,21 +24,17 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 public class TrackingProtocolJobService extends JobService {
 
     private static final String TAG = "TrackingProtocol";
     private static int c = 0;
-    private SharedPreferences sharedPreferences;
     private RequestHandle jobRequestHandle = null;
 
     @Override
     public boolean onStartJob(JobParameters params) {
         Log.i(TAG, "Executing");
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         try {
             DeIfmoRestClient.init(getApplicationContext());
             DeIfmoRestClient.authorize(new DeIfmoRestClientResponseHandler() {
@@ -50,8 +45,8 @@ public class TrackingProtocolJobService extends JobService {
                     int month = now.get(Calendar.MONTH);
                     RequestParams rParams = new RequestParams();
                     rParams.put("Rule", "eRegisterGetProtokolVariable");
-                    rParams.put("ST_GRP", sharedPreferences.getString("group", ""));
-                    rParams.put("PERSONID", sharedPreferences.getString("login", ""));
+                    rParams.put("ST_GRP", Storage.get(getBaseContext(), "group"));
+                    rParams.put("PERSONID", Storage.get(getBaseContext(), "login"));
                     rParams.put("SYU_ID", "0");
                     rParams.put("UNIVER", "1");
                     rParams.put("APPRENTICESHIP", month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year);
@@ -111,13 +106,13 @@ public class TrackingProtocolJobService extends JobService {
             if(json == null) throw new NullPointerException("json can't be null");
             JSONArray history = new JSONArray();
             try {
-                String historyStr = sharedPreferences.getString("TrackingProtocolJobServiceHISTORY", "");
+                String historyStr = PreferenceManager.getDefaultSharedPreferences(this).getString("TrackingProtocolJobServiceHISTORY", "");
                 if(!Objects.equals(historyStr, "")) history = new JSONArray(historyStr);
             } catch(Exception e){
                 e.printStackTrace();
             }
             JSONArray protocol = json.getJSONArray("changes");
-            sharedPreferences.edit().putString("TrackingProtocolJobServiceHISTORY", protocol.toString()).apply();
+            PreferenceManager.getDefaultSharedPreferences(this).edit().putString("TrackingProtocolJobServiceHISTORY", protocol.toString()).apply();
             int id = 0;
             for(int i = 0; i < history.length(); i++){
                 JSONObject historyOBJ = history.getJSONObject(i);
@@ -161,6 +156,7 @@ public class TrackingProtocolJobService extends JobService {
     }
     private void addNotification(String title, String text, long timestamp, boolean isSummary){
         if(c > Integer.MAX_VALUE - 10) c = 0;
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         Intent intent = new Intent(this, SplashActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent pIntent = PendingIntent.getActivity(this, (int) System.currentTimeMillis(), intent, 0);

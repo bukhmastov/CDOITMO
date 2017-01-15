@@ -1,29 +1,23 @@
 package com.bukhmastov.cdoitmo;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
-import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestHandle;
 
 import java.util.Objects;
 
-import cz.msebera.android.httpclient.Header;
-
 public class LoginActivity extends AppCompatActivity {
 
     private static final String TAG = "LoginActivity";
-    private SharedPreferences sharedPreferences;
     private Button btn_login;
     private EditText input_login, input_password;
     public static int state = -1;
@@ -44,7 +38,6 @@ public class LoginActivity extends AppCompatActivity {
             int[] attrs = new int[] { R.attr.ic_security };
             actionBar.setLogo(obtainStyledAttributes(attrs).getDrawable(0));
         }
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         // инициализация http клиента
         DeIfmoRestClient.init(this);
         // инициализация визуальных компонентов
@@ -57,10 +50,8 @@ public class LoginActivity extends AppCompatActivity {
                 String login = input_login.getText().toString();
                 String password = input_password.getText().toString();
                 if(!(Objects.equals(login, "") || Objects.equals(password, ""))){
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putString("login", login);
-                    editor.putString("password", password);
-                    editor.apply();
+                    Storage.put(getBaseContext(), "login", login);
+                    Storage.put(getBaseContext(), "password", password);
                     Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                     startActivity(intent);
                 } else {
@@ -75,33 +66,24 @@ public class LoginActivity extends AppCompatActivity {
         super.onResume();
         try {
             switch (state) {
-                case SIGNAL_CREDENTIALS_REQUIRED:
-                    break;
-                case SIGNAL_LOGOUT:
-                    logOut();
-                    break;
+                case SIGNAL_CREDENTIALS_REQUIRED: break;
+                case SIGNAL_LOGOUT: logOut(); break;
                 case SIGNAL_CREDENTIALS_FAILED: // неверные учетные данные
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putString("group", "");
-                    editor.putString("password", "");
-                    editor.putString("session_cookie", "");
-                    editor.apply();
+                    Storage.clear(getBaseContext());
                     Snackbar.make(findViewById(R.id.activity_login), R.string.invalid_login_password, Snackbar.LENGTH_LONG).show();
                     break;
-                case SIGNAL_RECONNECT:
-                    break;
+                case SIGNAL_RECONNECT: break;
                 default:
-                    if (sharedPreferences.getBoolean("pref_auto_logout", false) && !(Objects.equals(sharedPreferences.getString("login", ""), "") || Objects.equals(sharedPreferences.getString("password", ""), "")))
-                        logOut();
+                    if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean("pref_auto_logout", false) && !(Objects.equals(Storage.get(getBaseContext(), "login"), "") || Objects.equals(Storage.get(getBaseContext(), "password"), ""))) logOut();
                     break;
             }
             state = -1;
-            if (!(Objects.equals(sharedPreferences.getString("login", ""), "") || Objects.equals(sharedPreferences.getString("password", ""), ""))) {
+            if (!(Objects.equals(Storage.get(getBaseContext(), "login"), "") || Objects.equals(Storage.get(getBaseContext(), "password"), ""))) {
                 Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                 startActivity(intent);
             } else {
-                input_login.setText(sharedPreferences.getString("login", ""));
-                input_password.setText(sharedPreferences.getString("password", ""));
+                input_login.setText(Storage.get(getBaseContext(), "login"));
+                input_password.setText(Storage.get(getBaseContext(), "password"));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -119,11 +101,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onNewHandle(RequestHandle requestHandle) {}
         });
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString("login", "");
-        editor.putString("password", "");
-        editor.putString("session_cookie", "");
-        editor.apply();
+        Storage.clear(getBaseContext());
         Cache.clear(getBaseContext());
         new ProtocolTracker(this).stop();
         try {

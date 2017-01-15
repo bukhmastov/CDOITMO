@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TabLayout;
@@ -13,11 +12,10 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.widget.SearchView;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -69,7 +67,16 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
     public void onResume() {
         super.onResume();
         schedule_tabs = (TabLayout) getActivity().findViewById(R.id.schedule_tabs);
-        if(!MainActivity.OFFLINE_MODE) MainActivity.menu.findItem(R.id.action_search).setVisible(true);
+        if(!MainActivity.OFFLINE_MODE) {
+            MainActivity.menu.findItem(R.id.action_search).setVisible(true);
+            MainActivity.menu.findItem(R.id.action_search).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem item) {
+                    MainActivity.menu.findItem(R.id.action_search).expandActionView();
+                    return false;
+                }
+            });
+        }
         if(!loaded) {
             loaded = true;
             scheduleLessons.search(MainActivity.group, false);
@@ -164,11 +171,11 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
             schedule = json;
             schedule_tabs.setVisibility(View.GONE);
             if(Objects.equals(json.getString("type"), "teacher_picker")){
-                draw(R.layout.layout_schedule_lessons_teacher_picker);
                 TextView teacher_picker_header = (TextView) getActivity().findViewById(R.id.teacher_picker_header);
                 ListView teacher_picker_list_view = (ListView) getActivity().findViewById(R.id.teacher_picker_list_view);
                 JSONArray teachers = json.getJSONArray("teachers");
                 if (teachers.length() > 0){
+                    draw(R.layout.layout_schedule_lessons_teacher_picker);
                     teacher_picker_header.setText(R.string.choose_teacher);
                     final ArrayList<HashMap<String, String>> teachersMap = new ArrayList<>();
                     for(int i = 0; i < teachers.length(); i++){
@@ -186,7 +193,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
                         }
                     });
                 } else {
-                    teacher_picker_header.setText(R.string.teacher_not_found);
+                    notFound();
                 }
             } else {
                 if(schedule.getJSONArray("schedule").length() > 0){
@@ -195,33 +202,10 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
                     schedule_view = (ViewPager) getActivity().findViewById(R.id.schedule_pager);
                     schedule_view.setAdapter(new PagerAdapter(getFragmentManager(), getContext()));
                     schedule_tabs.setupWithViewPager(schedule_view);
+                    TabLayout.Tab tab = schedule_tabs.getTabAt(MainActivity.week >= 0 ? (MainActivity.week % 2) + 1 : 0);
+                    if(tab != null) tab.select();
                 } else {
-                    TypedValue typedValue = new TypedValue();
-                    getActivity().getTheme().resolveAttribute(android.R.attr.textColorPrimary, typedValue, true);
-                    int textColorPrimary = getActivity().obtainStyledAttributes(typedValue.data, new int[]{android.R.attr.textColorPrimary}).getColor(0, -1);
-                    float destiny = getContext().getResources().getDisplayMetrics().density;
-                    LinearLayout linearLayout = new LinearLayout(getContext());
-                    linearLayout.setOrientation(LinearLayout.VERTICAL);
-                    linearLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                    linearLayout.setPadding((int) (16 * destiny), (int) (10 * destiny), (int) (16 * destiny), (int) (10 * destiny));
-                    TextView title = new TextView(getContext());
-                    title.setText(":c");
-                    title.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                    title.setTextColor(textColorPrimary);
-                    title.setTextSize(32);
-                    title.setPadding(0, 0, 0, (int) (10 * destiny));
-                    title.setTextAlignment(TextView.TEXT_ALIGNMENT_CENTER);
-                    linearLayout.addView(title);
-                    TextView desc = new TextView(getContext());
-                    desc.setText("По запросу" + " \"" + query + "\" " + " расписания не найдено");
-                    desc.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                    desc.setTextColor(textColorPrimary);
-                    desc.setTextSize(16);
-                    desc.setTextAlignment(TextView.TEXT_ALIGNMENT_CENTER);
-                    linearLayout.addView(desc);
-                    ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_schedule));
-                    vg.removeAllViews();
-                    vg.addView(linearLayout);
+                    notFound();
                 }
             }
         } catch (Exception e) {
@@ -229,7 +213,35 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
             onFailure(ScheduleLessons.FAILED_LOAD);
         }
     }
-        
+
+    private void notFound(){
+        TypedValue typedValue = new TypedValue();
+        getActivity().getTheme().resolveAttribute(android.R.attr.textColorPrimary, typedValue, true);
+        int textColorPrimary = getActivity().obtainStyledAttributes(typedValue.data, new int[]{android.R.attr.textColorPrimary}).getColor(0, -1);
+        float destiny = getContext().getResources().getDisplayMetrics().density;
+        LinearLayout linearLayout = new LinearLayout(getContext());
+        linearLayout.setOrientation(LinearLayout.VERTICAL);
+        linearLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        linearLayout.setPadding((int) (16 * destiny), (int) (10 * destiny), (int) (16 * destiny), (int) (10 * destiny));
+        TextView title = new TextView(getContext());
+        title.setText(":c");
+        title.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        title.setTextColor(textColorPrimary);
+        title.setTextSize(32);
+        title.setPadding(0, 0, 0, (int) (10 * destiny));
+        title.setTextAlignment(TextView.TEXT_ALIGNMENT_CENTER);
+        linearLayout.addView(title);
+        TextView desc = new TextView(getContext());
+        desc.setText("По запросу" + " \"" + query + "\" " + " расписания не найдено");
+        desc.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        desc.setTextColor(textColorPrimary);
+        desc.setTextSize(16);
+        desc.setTextAlignment(TextView.TEXT_ALIGNMENT_CENTER);
+        linearLayout.addView(desc);
+        ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_schedule));
+        vg.removeAllViews();
+        vg.addView(linearLayout);
+    }
     void gotoLogin(int state){
         LoginActivity.state = state;
         getActivity().finish();
@@ -295,8 +307,14 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                         new ScheduleLessonsGroupParse(new ScheduleLessonsGroupParse.response() {
                             @Override
                             public void finish(JSONObject json) {
-                                if (toCache || Objects.equals(MainActivity.group.toUpperCase(), group)) putCache("group_" + group, json.toString());
-                                handler.onSuccess(json);
+                                try {
+                                    if (json == null) throw new NullPointerException("json cannot be null");
+                                    if (toCache || Objects.equals(MainActivity.group.toUpperCase(), group)) putCache("group_" + group, json.toString());
+                                    handler.onSuccess(json);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                    handler.onFailure(FAILED_LOAD);
+                                }
                             }
                         }).execute(response);
                     } else {
@@ -344,8 +362,14 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                         new ScheduleLessonsRoomParse(new ScheduleLessonsRoomParse.response() {
                             @Override
                             public void finish(JSONObject json) {
-                                if (toCache) putCache("room_" + room, json.toString());
-                                handler.onSuccess(json);
+                                try {
+                                    if (json == null) throw new NullPointerException("json cannot be null");
+                                    if (toCache) putCache("room_" + room, json.toString());
+                                    handler.onSuccess(json);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                    handler.onFailure(FAILED_LOAD);
+                                }
                             }
                         }).execute(response);
                     } else {
@@ -393,14 +417,15 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                         new ScheduleLessonsTeacherPickerParse(new ScheduleLessonsTeacherPickerParse.response() {
                             @Override
                             public void finish(JSONObject json) {
-                                if (toCache) putCache("teacher_picker_" + teacher, json.toString());
                                 try {
-                                    if(json.getJSONArray("teachers").length() == 1){
+                                    if (json == null) throw new NullPointerException("json cannot be null");
+                                    if (toCache) putCache("teacher_picker_" + teacher, json.toString());
+                                    if (json.getJSONArray("teachers").length() == 1){
                                         loadTeacherById(json.getJSONArray("teachers").getJSONObject(0).getString("id"), force, toCache);
                                     } else {
                                         handler.onSuccess(json);
                                     }
-                                } catch (JSONException e) {
+                                } catch (Exception e) {
                                     e.printStackTrace();
                                     handler.onFailure(FAILED_LOAD);
                                 }
@@ -461,8 +486,14 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                         new ScheduleLessonsTeacherParse(new ScheduleLessonsTeacherParse.response() {
                             @Override
                             public void finish(JSONObject json) {
-                                if (toCache) putCache("teacher_" + id, json.toString());
-                                handler.onSuccess(json);
+                                try {
+                                    if(json == null) throw new NullPointerException("json cannot be null");
+                                    if (toCache) putCache("teacher_" + id, json.toString());
+                                    handler.onSuccess(json);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                    handler.onFailure(FAILED_LOAD);
+                                }
                             }
                         }).execute(response);
                     } else {
@@ -764,25 +795,6 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
     }
     private void putCache(String token, String value){
         Cache.put(context, "schedule_lessons_" + token.replace(" ", "-"), value);
-    }
-}
-
-class ScheduleLessonsSearchView extends SearchView {
-    ScheduleLessonsSearchView(Context context){
-        super(context);
-        this.setQueryHint(context.getString(R.string.schedule_lessons_search_view_hint));
-        this.setSubmitButtonEnabled(true);
-        this.setElevation(4);
-        this.setOnQueryTextListener(new OnQueryTextListener(){
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                MainActivity.menu.findItem(R.id.action_search).collapseActionView();
-                ScheduleLessonsFragment.scheduleLessons.search(query, false);
-                return false;
-            }
-            @Override
-            public boolean onQueryTextChange(String newText) { return false; }
-        });
     }
 }
 

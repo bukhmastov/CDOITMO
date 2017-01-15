@@ -2,7 +2,6 @@ package com.bukhmastov.cdoitmo;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -10,7 +9,6 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -42,7 +40,6 @@ import java.util.Objects;
 public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "ProtocolFragment";
-    private SharedPreferences sharedPreferences;
     public static Protocol protocol = null;
     private int number_of_weeks = 1;
     private boolean notifyAboutDateUpdate = false;
@@ -54,7 +51,6 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         protocol = new Protocol(getActivity());
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
     }
 
     @Override
@@ -105,7 +101,7 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
             RequestParams params = new RequestParams();
             params.put("Rule", "eRegisterGetProtokolVariable");
             params.put("ST_GRP", MainActivity.group);
-            params.put("PERSONID", sharedPreferences.getString("login", ""));
+            params.put("PERSONID", Storage.get(getContext(), "login"));
             params.put("SYU_ID", "0");
             params.put("UNIVER", "1");
             params.put("APPRENTICESHIP", month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year);

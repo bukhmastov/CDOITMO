@@ -1,12 +1,9 @@
 package com.bukhmastov.cdoitmo;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.nfc.Tag;
 import android.os.AsyncTask;
-import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.loopj.android.http.AsyncHttpClient;
@@ -17,12 +14,16 @@ import com.loopj.android.http.RequestParams;
 
 import org.htmlcleaner.HtmlCleaner;
 import org.htmlcleaner.TagNode;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import cz.msebera.android.httpclient.Header;
 
@@ -33,7 +34,6 @@ class DeIfmoRestClient {
     private static final String BASE_URL_IFMO = "http://www.ifmo.ru/";
     private static final String USER_AGENT = "Android Application";
     private static AsyncHttpClient httpclient = new AsyncHttpClient();
-    private static SharedPreferences sharedPreferences;
     private static boolean initialized = false;
     private static Context context;
 
@@ -51,17 +51,16 @@ class DeIfmoRestClient {
     static void init(Context ctx){
         if(!initialized){
             context = ctx;
-            sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
             httpclient.setLoggingLevel(Log.WARN);
             httpclient.addHeader("User-Agent", USER_AGENT);
-            httpclient.addHeader("Cookie", "JSESSIONID=" + sharedPreferences.getString("session_cookie", "") + "; Path=/;");
+            httpclient.addHeader("Cookie", "JSESSIONID=" + Storage.get(context, "session_cookie") + "; Path=/;");
             initialized = true;
         }
     }
     static void check(final DeIfmoRestClientResponseHandler responseHandler){
         if(isOnline()){
             responseHandler.onProgress(STATE_CHECKING);
-            if (Objects.equals(sharedPreferences.getString("session_cookie", ""), "")){
+            if (Objects.equals(Storage.get(context, "session_cookie"), "")){
                 authorize(new DeIfmoRestClientResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, String response) {
@@ -88,9 +87,17 @@ class DeIfmoRestClient {
                             @Override
                             public void finish(HashMap<String, String> result) {
                                 if(result != null){
-                                    MainActivity.group = result.get("group");
-                                    MainActivity.name = result.get("name");
-                                    sharedPreferences.edit().putString("name", result.get("name")).putString("group", result.get("group")).apply();
+                                    Storage.put(context, "name", result.get("name"));
+                                    Storage.put(context, "group", result.get("group"));
+                                    try {
+                                        JSONObject jsonObject = new JSONObject();
+                                        jsonObject.put("timestamp", Calendar.getInstance().getTimeInMillis());
+                                        jsonObject.put("week", Integer.parseInt(result.get("week")));
+                                        Storage.put(context, "week", jsonObject.toString());
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                        Storage.delete(context, "week");
+                                    }
                                     responseHandler.onSuccess(200, result.get("name"));
                                 } else {
                                     responseHandler.onSuccess(200, "");
@@ -116,8 +123,8 @@ class DeIfmoRestClient {
     }
     static void authorize(final DeIfmoRestClientResponseHandler responseHandler){
         responseHandler.onProgress(STATE_AUTHORIZATION);
-        String login = sharedPreferences.getString("login", "");
-        String password = sharedPreferences.getString("password", "");
+        String login = Storage.get(context, "login");
+        String password = Storage.get(context, "password");
         if (Objects.equals(login, "") || Objects.equals(password, "")) {
             responseHandler.onFailure(FAILED_AUTH_CREDENTIALS_REQUIRED);
         } else {
@@ -137,9 +144,7 @@ class DeIfmoRestClient {
                                 String[] cookie = pair.split("=");
                                 if (Objects.equals(cookie[0], "JSESSIONID")) {
                                     if (!Objects.equals(cookie[1], "") && cookie[1] != null) {
-                                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                                        editor.putString("session_cookie", cookie[1]);
-                                        editor.apply();
+                                        Storage.put(context, "session_cookie", cookie[1]);
                                     } else {
                                         Log.w(TAG, "Got 'Set-Cookie' with empty 'JSESSIONID'");
                                         responseHandler.onFailure(FAILED_AUTH_TRY_AGAIN);
@@ -154,7 +159,7 @@ class DeIfmoRestClient {
                         if (data.contains("Access is forbidden") && data.contains("Invalid login/password")) {
                             responseHandler.onFailure(FAILED_AUTH_CREDENTIALS_FAILED);
                         } else if (data.contains("Выбор группы безопасности") && data.contains("OPTION VALUE=8")) {
-                            httpclient.get(getAbsoluteUrl("servlet/distributedCDE?Rule=APPLYSECURITYGROUP&PERSON=" + sharedPreferences.getString("login", "") + "&SECURITYGROUP=8&COMPNAME=", false), null, new AsyncHttpResponseHandler(){
+                            httpclient.get(getAbsoluteUrl("servlet/distributedCDE?Rule=APPLYSECURITYGROUP&PERSON=" + Storage.get(context, "login") + "&SECURITYGROUP=8&COMPNAME=", false), null, new AsyncHttpResponseHandler(){
                                 @Override
                                 public void onSuccess(int statusCode, Header[] headers, byte[] response) {
                                     responseHandler.onProgress(STATE_AUTHORIZED);
@@ -314,7 +319,7 @@ class DeIfmoRestClient {
     }
     private static void renewSessionCookie(){
         httpclient.removeHeader("Cookie");
-        httpclient.addHeader("Cookie", "JSESSIONID=" + sharedPreferences.getString("session_cookie", "") + "; Path=/;");
+        httpclient.addHeader("Cookie", "JSESSIONID=" + Storage.get(context, "session_cookie") + "; Path=/;");
     }
     static boolean isOnline() {
         NetworkInfo networkInfo = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
@@ -349,6 +354,14 @@ class UserDataParse extends AsyncTask<String, Void, HashMap<String, String>> {
                     response.put("group", columns.get(1).getText().toString().trim());
                     break;
                 }
+            }
+            // находим номер текущей недели
+            TagNode divCalendarIcon = root.findElementByAttValue("id", "divCalendarIcon", true, false);
+            Matcher m = Pattern.compile("^.*\\((.*) нед\\).*$").matcher(divCalendarIcon.getText().toString().trim());
+            if(m.find()){
+                response.put("week", m.group(1));
+            } else {
+                response.put("week", "-1");
             }
             return response;
         } catch (Exception e){

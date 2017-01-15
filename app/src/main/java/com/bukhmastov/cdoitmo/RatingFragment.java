@@ -3,22 +3,17 @@ package com.bukhmastov.cdoitmo;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.Spinner;
@@ -45,7 +40,6 @@ import java.util.regex.Pattern;
 public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "RatingFragment";
-    private SharedPreferences sharedPreferences;
     public static Rating rating = null;
     private boolean loaded = false;
     private HashMap<String, Integer> ready;
@@ -61,7 +55,6 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
         ready.put("RatingList", 0);
         fragmentRequestHandle.put("Rating", null);
         fragmentRequestHandle.put("RatingList", null);
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
     }
 
     @Override
@@ -279,7 +272,7 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                 final ArrayList<String> rl_spinner_faculty_arr_ids = new ArrayList<>();
                 JSONArray array = dataRL.getJSONObject("rating").getJSONArray("faculties");
                 choose = 0;
-                cache = sharedPreferences.getString("RatingListChooseF", "");
+                cache = Cache.get(getContext(), "rating_list_choose_faculty");
                 for(int i = 0; i < array.length(); i++){
                     JSONObject obj = array.getJSONObject(i);
                     rl_spinner_faculty_arr.add(obj.getString("name"));
@@ -292,9 +285,7 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                 rl_spinner_faculty.setSelection(choose);
                 rl_spinner_faculty.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                     public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.putString("RatingListChooseF", rl_spinner_faculty_arr_ids.get(position));
-                        editor.apply();
+                        Cache.put(getContext(), "rating_list_choose_faculty", rl_spinner_faculty_arr_ids.get(position));
                     }
                     public void onNothingSelected(AdapterView<?> parent) {}
                 });
@@ -303,7 +294,7 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                 final ArrayList<String> rl_spinner_course_arr = new ArrayList<>();
                 final ArrayList<String> rl_spinner_course_arr_ids = new ArrayList<>();
                 choose = 0;
-                cache = sharedPreferences.getString("RatingListChooseC", "");
+                cache = Cache.get(getContext(), "rating_list_choose_course");
                 for(int i = 1; i <= 4; i++){
                     rl_spinner_course_arr.add(i + " " + getString(R.string.course));
                     rl_spinner_course_arr_ids.add(String.valueOf(i));
@@ -315,9 +306,7 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                 rl_spinner_course.setSelection(choose);
                 rl_spinner_course.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                     public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.putString("RatingListChooseC", rl_spinner_course_arr_ids.get(position));
-                        editor.apply();
+                        Cache.put(getContext(), "rating_list_choose_course", rl_spinner_course_arr_ids.get(position));
                     }
                     public void onNothingSelected(AdapterView<?> parent) {}
                 });
@@ -327,8 +316,8 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                     @Override
                     public void onClick(View v) {
                         Intent intent = new Intent(getActivity(), RatingListActivity.class);
-                        intent.putExtra("faculty", sharedPreferences.getString("RatingListChooseF", ""));
-                        intent.putExtra("course", sharedPreferences.getString("RatingListChooseC", ""));
+                        intent.putExtra("faculty", Cache.get(getContext(), "rating_list_choose_faculty"));
+                        intent.putExtra("course", Cache.get(getContext(), "rating_list_choose_course"));
                         startActivity(intent);
                     }
                 });

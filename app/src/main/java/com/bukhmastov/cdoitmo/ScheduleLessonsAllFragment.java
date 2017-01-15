@@ -2,23 +2,20 @@ package com.bukhmastov.cdoitmo;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -129,8 +126,12 @@ public class ScheduleLessonsAllFragment extends Fragment {
                 case "teacher": schedule_c_header.setText("Расписание преподавателя" + " " + ScheduleLessonsFragment.schedule.getString("scope")); break;
                 default: throw new Exception("Wrong ScheduleLessonsFragment.schedule.type value");
             }
-            // здесь должна быть текущая неделя
-            ((TextView) getActivity().findViewById(R.id.schedule_lessons_all_week)).setText(new SimpleDateFormat("dd.MM.yyyy", Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis())));
+            TextView schedule_lessons_all_week = (TextView) getActivity().findViewById(R.id.schedule_lessons_all_week);
+            if(MainActivity.week >= 0){
+                schedule_lessons_all_week.setText(MainActivity.week + " " + getString(R.string.school_week));
+            } else {
+                schedule_lessons_all_week.setText(new SimpleDateFormat("dd.MM.yyyy", Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis())));
+            }
             // работаем со свайпом
             SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) getActivity().findViewById(R.id.schedule_lessons_all_container);
             TypedValue typedValue = new TypedValue();

@@ -3,6 +3,7 @@ package com.bukhmastov.cdoitmo;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
@@ -14,10 +15,8 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -29,6 +28,10 @@ import android.widget.TextView;
 
 import com.loopj.android.http.RequestHandle;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Calendar;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -41,6 +44,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public static ProtocolTracker protocolTracker;
     public static String group = null;
     public static String name = null;
+    public static int week = -1;
     private NavigationView navigationView;
     private boolean loaded = false;
     private RequestHandle checkRequestHandle = null;
@@ -122,6 +126,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         getMenuInflater().inflate(R.menu.toolbar_main, menu);
         MainActivity.menu = menu;
         if(OFFLINE_MODE) menu.findItem(R.id.offline_mode).setVisible(true);
+        // search view for lessons schedule
+        SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+        searchView.setQueryHint(getString(R.string.schedule_lessons_search_view_hint));
+        searchView.setSubmitButtonEnabled(true);
+        searchView.setElevation(6);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener(){
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                try {
+                    MainActivity.menu.findItem(R.id.action_search).collapseActionView();
+                    if(ScheduleLessonsFragment.scheduleLessons != null) ScheduleLessonsFragment.scheduleLessons.search(query, false);
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+                return false;
+            }
+            @Override
+            public boolean onQueryTextChange(String newText) { return false; }
+        });
         return true;
     }
 
@@ -143,7 +166,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             DeIfmoRestClient.check(new DeIfmoRestClientResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, String response) {
-                    if (!response.isEmpty()) {
+                    MainActivity.group = Storage.get(getBaseContext(), "group");
+                    MainActivity.name = Storage.get(getBaseContext(), "name");
+                    try {
+                        JSONObject jsonObject = new JSONObject(Storage.get(getBaseContext(), "week"));
+                        int week = jsonObject.getInt("week");
+                        if(week >= 0){
+                            Calendar past = Calendar.getInstance();
+                            past.setTimeInMillis(jsonObject.getLong("timestamp"));
+                            MainActivity.week = week + (Calendar.getInstance().get(Calendar.WEEK_OF_YEAR) - past.get(Calendar.WEEK_OF_YEAR));
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    if (!Objects.equals(MainActivity.name, "")) {
                         TextView user_name = (TextView) findViewById(R.id.user_name);
                         user_name.setText(response);
                         user_name.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -152,7 +188,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     loaded = true;
                     selectSection(selectedSection);
                 }
-
                 @Override
                 public void onProgress(int state) {
                     draw(R.layout.state_loading);
@@ -169,7 +204,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             break;
                     }
                 }
-
                 @Override
                 public void onFailure(int state) {
                     switch (state) {
@@ -202,25 +236,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             break;
                     }
                 }
-
                 @Override
                 public void onNewHandle(RequestHandle requestHandle) {
                     checkRequestHandle = requestHandle;
                 }
             });
         } else {
-            String name = sharedPreferences.getString("name", "");
-            String group = sharedPreferences.getString("group", "");
+            MainActivity.group = Storage.get(getBaseContext(), "group");
+            MainActivity.name = Storage.get(getBaseContext(), "name");
             if(!Objects.equals(name, "")){
-                MainActivity.name = name;
                 TextView user_name = (TextView) findViewById(R.id.user_name);
                 if(user_name != null) {
                     user_name.setText(name);
                     user_name.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 }
-            }
-            if(!Objects.equals(group, "")){
-                MainActivity.group = group;
             }
             protocolTracker.check();
             loaded = true;
@@ -306,18 +335,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 }
 
 class Cache {
+    static private final String KEY_PREFIX = "cache_";
     static boolean enabled = true;
     static String get(Context context, String key){
         check(context);
         if(enabled){
-            return PreferenceManager.getDefaultSharedPreferences(context).getString("cache_" + key, "");
+            return PreferenceManager.getDefaultSharedPreferences(context).getString(KEY_PREFIX + key, "");
         } else {
             return "";
         }
     }
     static void put(Context context, String key, String value){
         check(context);
-        if(enabled) PreferenceManager.getDefaultSharedPreferences(context).edit().putString("cache_" + key, value).apply();
+        if(enabled) PreferenceManager.getDefaultSharedPreferences(context).edit().putString(KEY_PREFIX + key, value).apply();
     }
     static void check(Context context){
         enabled = PreferenceManager.getDefaultSharedPreferences(context).getBoolean("pref_use_cache", true);
@@ -328,7 +358,30 @@ class Cache {
         Map<String, ?> list = sharedPreferences.getAll();
         SharedPreferences.Editor editor = sharedPreferences.edit();
         for(Map.Entry<String, ?> entry : list.entrySet()) {
-            if(Pattern.compile("^cache_.*").matcher(entry.getKey()).find()) editor.remove(entry.getKey());
+            if(Pattern.compile("^"+KEY_PREFIX+".*").matcher(entry.getKey()).find()) editor.remove(entry.getKey());
+        }
+        editor.apply();
+    }
+}
+
+class Storage {
+    static private final String KEY_PREFIX = "storage_";
+    static String get(Context context, String key){
+        return PreferenceManager.getDefaultSharedPreferences(context).getString(KEY_PREFIX + key, "");
+    }
+    static void put(Context context, String key, String value){
+        PreferenceManager.getDefaultSharedPreferences(context).edit().putString(KEY_PREFIX + key, value).apply();
+    }
+    static void delete(Context context, String key){
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        if(sharedPreferences.contains(key)) sharedPreferences.edit().remove(key).apply();
+    }
+    static void clear(Context context){
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        Map<String, ?> list = sharedPreferences.getAll();
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        for(Map.Entry<String, ?> entry : list.entrySet()) {
+            if(Pattern.compile("^"+KEY_PREFIX+".*").matcher(entry.getKey()).find()) editor.remove(entry.getKey());
         }
         editor.apply();
     }
