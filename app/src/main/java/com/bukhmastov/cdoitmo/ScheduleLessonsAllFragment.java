@@ -5,27 +5,20 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.TypedValue;
-import android.view.ContextMenu;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.w3c.dom.Text;
-
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
-import java.util.Objects;
 
 public class ScheduleLessonsAllFragment extends Fragment {
 
-    private int type = 2;
+    private static final int TYPE = 2;
     private boolean displayed = false;
 
     public ScheduleLessonsAllFragment() {}
@@ -47,36 +40,15 @@ public class ScheduleLessonsAllFragment extends Fragment {
         super.onDestroy();
     }
 
-    @Override
-    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-        super.onCreateContextMenu(menu, v, menuInfo);
-        menu.setHeaderTitle("Открыть распиание");
-        String room = v.getTag(R.id.schedule_lessons_room).toString();
-        String teacher = v.getTag(R.id.schedule_lessons_teacher).toString();
-        String group = v.getTag(R.id.schedule_lessons_group).toString();
-        if(!Objects.equals(group, "")) menu.add(getString(R.string.group) + " " + group);
-        if(!Objects.equals(teacher, "")) menu.add(teacher);
-        if(!Objects.equals(room, "")) menu.add(getString(R.string.room) + " " + room);
-    }
-
-    @Override
-    public boolean onContextItemSelected(MenuItem item) {
-        if(getUserVisibleHint()){
-            ScheduleLessonsFragment.scheduleLessons.search(item.getTitle().toString().replace(getString(R.string.group), "").replace(getString(R.string.room), "").trim(), false);
-            return true;
-        }
-        return super.onContextItemSelected(item);
-    }
-
     private void display(){
         try {
             if(ScheduleLessonsFragment.schedule == null) throw new NullPointerException("ScheduleLessonsFragment.schedule cannot be null");
             TextView schedule_c_header = (TextView) getActivity().findViewById(R.id.schedule_lessons_all_header);
-            switch (ScheduleLessonsFragment.schedule.getString("type")){
+            switch (ScheduleLessonsFragment.schedule.getString("TYPE")){
                 case "group": schedule_c_header.setText("Расписание группы" + " " + ScheduleLessonsFragment.schedule.getString("scope")); break;
                 case "room": schedule_c_header.setText("Расписание в аудитории" + " " + ScheduleLessonsFragment.schedule.getString("scope")); break;
                 case "teacher": schedule_c_header.setText("Расписание преподавателя" + " " + ScheduleLessonsFragment.schedule.getString("scope")); break;
-                default: throw new Exception("Wrong ScheduleLessonsFragment.schedule.type value");
+                default: throw new Exception("Wrong ScheduleLessonsFragment.schedule.TYPE value");
             }
             TextView schedule_lessons_all_week = (TextView) getActivity().findViewById(R.id.schedule_lessons_all_week);
             if(MainActivity.week >= 0){
@@ -93,13 +65,25 @@ public class ScheduleLessonsAllFragment extends Fragment {
             mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(typedValue.data);
             mSwipeRefreshLayout.setOnRefreshListener(ScheduleLessonsFragment.scheduleLessons);
             // отображаем расписание
-            LinearLayout linearLayout = (LinearLayout) getActivity().findViewById(R.id.schedule_lessons_all_content);
-            linearLayout.removeAllViews();
-            ScheduleLessonsFragment.scheduleLessons.getSchedule(getContext(), type, linearLayout, new ScheduleLessons.contextMenu() {
-                @Override
-                public void register(View view) { registerForContextMenu(view); }
-            });
-            displayed = true;
+            final ViewGroup linearLayout = (ViewGroup) getActivity().findViewById(R.id.schedule_lessons_all_content);
+            (new ScheduleLessonsBuilder(getActivity(), TYPE, new ScheduleLessonsBuilder.response(){
+                public void state(final int state, final LinearLayout layout){
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            linearLayout.removeAllViews();
+                            if(state == ScheduleLessonsBuilder.STATE_DONE) {
+                                linearLayout.addView(layout);
+                                displayed = true;
+                            } else if(state == ScheduleLessonsBuilder.STATE_LOADING){
+                                linearLayout.addView(layout);
+                            } else if(state == ScheduleLessonsBuilder.STATE_FAILED){
+                                failed();
+                            }
+                        }
+                    });
+                }
+            })).start();
         } catch (Exception e){
             e.printStackTrace();
             failed();

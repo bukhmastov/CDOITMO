@@ -144,6 +144,7 @@ public class TrackingProtocolJobService extends JobService {
             }
             if(changes.size() > 0){
                 long timestamp = System.currentTimeMillis();
+                boolean isSummary = false;
                 if(changes.size() > 1){
                     String text = changes.size() + " ";
                     switch (changes.size() % 100){
@@ -157,10 +158,12 @@ public class TrackingProtocolJobService extends JobService {
                             break;
                     }
                     addNotification(getString(R.string.protocol_changes), text, timestamp, true);
+                } else {
+                    isSummary = true;
                 }
                 for(int i = changes.size() - 1; i >= 0; i--){
                     JSONObject changeOBJ = changes.get(i);
-                    addNotification(changeOBJ.getString("subject"), changeOBJ.getString("field") + ": " + double2string(changeOBJ.getDouble("value")) + "/" + double2string(changeOBJ.getDouble("max")), timestamp, false);
+                    addNotification(changeOBJ.getString("subject"), changeOBJ.getString("field") + ": " + double2string(changeOBJ.getDouble("value")) + "/" + double2string(changeOBJ.getDouble("max")), timestamp, isSummary);
                 }
             }
             finish();
@@ -181,12 +184,14 @@ public class TrackingProtocolJobService extends JobService {
         b.setCategory(Notification.CATEGORY_EVENT);
         b.setContentIntent(pIntent);
         b.setAutoCancel(true);
-        String ringtonePath = sharedPreferences.getString("pref_notify_sound", "");
-        if(!Objects.equals(ringtonePath, "")){
-            b.setSound(Uri.parse(ringtonePath));
-        }
-        if(sharedPreferences.getBoolean("pref_notify_vibrate", false)){
-            b.setDefaults(Notification.DEFAULT_VIBRATE);
+        if(isSummary) {
+            String ringtonePath = sharedPreferences.getString("pref_notify_sound", "");
+            if (!Objects.equals(ringtonePath, "")) {
+                b.setSound(Uri.parse(ringtonePath));
+            }
+            if (sharedPreferences.getBoolean("pref_notify_vibrate", false)) {
+                b.setDefaults(Notification.DEFAULT_VIBRATE);
+            }
         }
         ((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(c++, b.build());
     }
@@ -287,7 +292,6 @@ class ProtocolTracker {
             jobID = -1;
             running = false;
             sharedPreferences.edit().putInt("TrackingProtocolJobServiceID", jobID).remove("ProtocolTrackerHISTORY").apply();
-            //sharedPreferences.edit().putInt("TrackingProtocolJobServiceID", jobID).apply();
             Log.i(TAG, "Stopped");
         }
         return this;

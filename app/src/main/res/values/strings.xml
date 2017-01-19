@@ -76,8 +76,9 @@
     <string name="lecture">Лекция</string>
     <string name="lab">Лабораторная</string>
     <string name="group">Группа</string>
-    <string name="room">Аудиотория</string>
+    <string name="room">Аудитория</string>
     <string name="school_week">учебная неделя</string>
+    <string name="open_schedule">Открыть распиание</string>
 
 
 </resources>

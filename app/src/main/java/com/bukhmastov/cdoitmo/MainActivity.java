@@ -90,6 +90,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             snackbar.getView().setBackgroundColor(typedValue.data);
             snackbar.show();
         }
+        updateWeek();
         navigationView.setCheckedItem(selectedSection);
         if(!loaded) check();
     }
@@ -168,17 +169,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 public void onSuccess(int statusCode, String response) {
                     MainActivity.group = Storage.get(getBaseContext(), "group");
                     MainActivity.name = Storage.get(getBaseContext(), "name");
-                    try {
-                        JSONObject jsonObject = new JSONObject(Storage.get(getBaseContext(), "week"));
-                        int week = jsonObject.getInt("week");
-                        if(week >= 0){
-                            Calendar past = Calendar.getInstance();
-                            past.setTimeInMillis(jsonObject.getLong("timestamp"));
-                            MainActivity.week = week + (Calendar.getInstance().get(Calendar.WEEK_OF_YEAR) - past.get(Calendar.WEEK_OF_YEAR));
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
+                    updateWeek();
                     if (!Objects.equals(MainActivity.name, "")) {
                         TextView user_name = (TextView) findViewById(R.id.user_name);
                         user_name.setText(response);
@@ -254,6 +245,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             protocolTracker.check();
             loaded = true;
             selectSection(selectedSection);
+        }
+    }
+    private void updateWeek(){
+        try {
+            JSONObject jsonObject = new JSONObject(Storage.get(getBaseContext(), "week"));
+            int week = jsonObject.getInt("week");
+            if(week >= 0){
+                Calendar past = Calendar.getInstance();
+                past.setTimeInMillis(jsonObject.getLong("timestamp"));
+                MainActivity.week = week + (Calendar.getInstance().get(Calendar.WEEK_OF_YEAR) - past.get(Calendar.WEEK_OF_YEAR));
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
     }
     private void selectSection(final int section){
