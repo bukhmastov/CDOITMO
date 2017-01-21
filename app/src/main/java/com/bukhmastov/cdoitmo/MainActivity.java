@@ -74,6 +74,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case "protocol_changes": selectedSection = R.id.nav_protocol_changes; break;
             case "rating": selectedSection = R.id.nav_rating; break;
             case "schedule_lessons": selectedSection = R.id.nav_schedule; break;
+            case "schedule_exams": selectedSection = R.id.nav_schedule_exams; break;
         }
         protocolTracker = new ProtocolTracker(this);
         typedValue = new TypedValue();
@@ -140,7 +141,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if(OFFLINE_MODE) menu.findItem(R.id.offline_mode).setVisible(true);
         // search view for lessons schedule
         SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
-        searchView.setQueryHint(getString(R.string.schedule_lessons_search_view_hint));
         searchView.setSubmitButtonEnabled(true);
         searchView.setElevation(6);
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener(){
@@ -148,7 +148,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public boolean onQueryTextSubmit(String query) {
                 try {
                     MainActivity.menu.findItem(R.id.action_search).collapseActionView();
-                    if(ScheduleLessonsFragment.scheduleLessons != null) ScheduleLessonsFragment.scheduleLessons.search(query, false);
+                    if(selectedSection == R.id.nav_schedule) {
+                        if (ScheduleLessonsFragment.scheduleLessons != null) ScheduleLessonsFragment.scheduleLessons.search(query, false);
+                    }
+                    if(selectedSection == R.id.nav_schedule_exams) {
+                        if (ScheduleExamsFragment.scheduleExams != null) ScheduleExamsFragment.scheduleExams.search(query, false);
+                    }
                 } catch (Exception e){
                     LoginActivity.errorTracker.add(e);
                 }
@@ -293,6 +298,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.nav_schedule:
                 title = getString(R.string.schedule_lessons);
                 fragmentClass = ScheduleLessonsFragment.class;
+                break;
+            case R.id.nav_schedule_exams:
+                title = getString(R.string.schedule_exams);
+                fragmentClass = ScheduleExamsFragment.class;
                 break;
             case R.id.nav_settings:
                 Intent intent = new Intent(this, SettingsActivity.class);

@@ -12,8 +12,7 @@
     <string name="e_journal">Электронный журнал</string>
     <string name="protocol_changes">Протокол изменений</string>
     <string name="rating">Рейтинг</string>
-    <string name="account">Аккаунт</string>
-    <string name="logout">Выйти</string>
+    <string name="logout">Выйти из аккаунта</string>
     <string name="navigation_drawer_open">Открыть меню</string>
     <string name="navigation_drawer_close">Закрыть меню</string>
     <string name="logged_out">Вы вышли из аккаунта</string>
@@ -66,9 +65,9 @@
     <string name="schedule_lessons">Расписание занятий</string>
     <string name="search">Поиск</string>
     <string name="schedule_lessons_search_view_hint">Группа, аудитория, преподаватель…</string>
+    <string name="schedule_exams_search_view_hint">Группа, преподаватель…</string>
     <string name="w8m8">Дождитесь завершения авторизации</string>
     <string name="choose_teacher">Выберите преподавателя:</string>
-    <string name="teacher_not_found">Преподавателей не найдено</string>
     <string name="tab_all">Все</string>
     <string name="tab_even">Четная</string>
     <string name="tab_odd">Нечетная</string>
@@ -80,6 +79,13 @@
     <string name="school_week">учебная неделя</string>
     <string name="open_schedule">Открыть расписание</string>
     <string name="load_failed_retry_in_minute">Загрузка не удалась\nПовторите попытку через минуту</string>
+    <string name="schedule_exams">Расписание сессии</string>
+    <string name="no_exams">Экзаменов нет</string>
+    <string name="no_lessons">Занятий нет</string>
+    <string name="exam">Экзамен</string>
+    <string name="consult">Консультация</string>
+    <string name="room_short">Ауд.</string>
+    <string name="place">Место</string>
 
 
 </resources>

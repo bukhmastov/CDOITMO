@@ -9,7 +9,8 @@
         android:layout_height="wrap_content"
         app:srcCompat="@drawable/ic_visibility"
         android:paddingTop="20dp"
-        android:paddingBottom="12dp"/>
+        android:paddingBottom="12dp"
+        android:contentDescription="@string/no_changes_for_period"/>
 
     <TextView
         android:text="@string/no_changes_for_period"

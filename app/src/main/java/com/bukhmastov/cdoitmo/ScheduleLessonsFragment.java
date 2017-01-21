@@ -12,6 +12,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.SearchView;
 import android.util.TypedValue;
 import android.view.ContextMenu;
 import android.view.Gravity;
@@ -71,6 +72,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
         schedule_tabs = (TabLayout) getActivity().findViewById(R.id.schedule_tabs);
         if(!MainActivity.OFFLINE_MODE) {
             MainActivity.menu.findItem(R.id.action_search).setVisible(true);
+            ((SearchView) MainActivity.menu.findItem(R.id.action_search).getActionView()).setQueryHint(getString(R.string.schedule_lessons_search_view_hint));
             MainActivity.menu.findItem(R.id.action_search).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
                 @Override
                 public boolean onMenuItemClick(MenuItem item) {
@@ -1108,7 +1110,7 @@ class ScheduleLessonsBuilder extends Thread {
                             if (Objects.equals(room, "")) {
                                 descSecondaryText = building;
                             } else {
-                                descSecondaryText = "Ауд." + " " + room;
+                                descSecondaryText = activity.getString(R.string.room_short) + " " + room;
                                 if (!Objects.equals(building, ""))
                                     descSecondaryText += " (" + building + ")";
                             }
@@ -1176,7 +1178,7 @@ class ScheduleLessonsBuilder extends Thread {
         emptyLayout.setOrientation(LinearLayout.VERTICAL);
         emptyLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
         TextView textView = new TextView(activity);
-        textView.setText("Занятий нет");
+        textView.setText(R.string.no_lessons);
         textView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
         textView.setTextColor(MainActivity.textColorPrimary);
         textView.setGravity(Gravity.CENTER);
@@ -1251,7 +1253,6 @@ class ScheduleLessonsBuilder extends Thread {
         flagContainer.addView(textView);
         return flagContainer;
     }
-
 }
 
 class TeacherPickerListView extends ArrayAdapter<HashMap<String, String>> {
