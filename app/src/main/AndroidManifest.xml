@@ -58,7 +58,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.bukhmastov.cdoitmo.MainActivity" />
         </activity>
-
         <activity
             android:name=".AboutActivity"
             android:label="@string/about"

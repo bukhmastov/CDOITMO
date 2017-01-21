@@ -751,7 +751,7 @@ class ScheduleExamsBuilder extends Thread {
                 headerContainer.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
                 headerContainer.setPadding((int) (12 * destiny), (int) (10 * destiny), (int) (12 * destiny), (int) (10 * destiny));
                 TextView headerTextCommon = new TextView(activity);
-                headerTextCommon.setText(exam.getString("subject"));
+                headerTextCommon.setText(exam.getString("subject").toUpperCase());
                 headerTextCommon.setTypeface(null, Typeface.BOLD);
                 headerTextCommon.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
                 headerTextCommon.setTextColor(MainActivity.textColorPrimary);
@@ -763,32 +763,14 @@ class ScheduleExamsBuilder extends Thread {
                 }
                 headerTextSecondary.setTypeface(null, Typeface.BOLD);
                 headerTextSecondary.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                headerTextSecondary.setTextColor(MainActivity.textColorPrimary);
+                headerTextSecondary.setTextColor(MainActivity.textColorSecondary);
                 headerContainer.addView(headerTextSecondary);
                 examContainer.addView(headerContainer);
-                // информация об экзамене
-                if(exam.has("exam") && exam.getJSONObject("exam").has("date")) {
-                    // separator
-                    View separator = new View(activity);
-                    separator.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, (int) (1 * destiny)));
-                    separator.setBackgroundColor(MainActivity.colorSeparator);
-                    examContainer.addView(separator);
-                    // информация об экзамене
-                    examContainer.addView(
-                            getUnit(
-                                    activity.getString(R.string.exam).toUpperCase(),
-                                    (exam.getJSONObject("exam").getString("date") + " " + exam.getJSONObject("exam").getString("time")).trim(),
-                                    Objects.equals(exam.getJSONObject("exam").getString("room"), "") ? "" : activity.getString(R.string.place) + ": " + exam.getJSONObject("exam").getString("room")
-                            )
-                    );
-                }
                 // информация о консультации
                 if(exam.has("consult") && exam.getJSONObject("consult").has("date")) {
                     // separator
                     View separator = new View(activity);
-                    lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, (int) (1 * destiny));
-                    lp.setMargins((int) (12 * destiny), 0, (int) (12 * destiny), 0);
-                    separator.setLayoutParams(lp);
+                    separator.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, (int) (1 * destiny)));
                     separator.setBackgroundColor(MainActivity.colorSeparator);
                     examContainer.addView(separator);
                     // информация о консультации
@@ -797,6 +779,24 @@ class ScheduleExamsBuilder extends Thread {
                                     activity.getString(R.string.consult).toUpperCase(),
                                     (exam.getJSONObject("consult").getString("date") + " " + exam.getJSONObject("consult").getString("time")).trim(),
                                     Objects.equals(exam.getJSONObject("consult").getString("room"), "") ? "" : activity.getString(R.string.place) + ": " + exam.getJSONObject("consult").getString("room")
+                            )
+                    );
+                }
+                // информация об экзамене
+                if(exam.has("exam") && exam.getJSONObject("exam").has("date")) {
+                    // separator
+                    View separator = new View(activity);
+                    lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, (int) (1 * destiny));
+                    lp.setMargins((int) (12 * destiny), 0, (int) (12 * destiny), 0);
+                    separator.setLayoutParams(lp);
+                    separator.setBackgroundColor(MainActivity.colorSeparator);
+                    examContainer.addView(separator);
+                    // информация об экзамене
+                    examContainer.addView(
+                            getUnit(
+                                    activity.getString(R.string.exam).toUpperCase(),
+                                    (exam.getJSONObject("exam").getString("date") + " " + exam.getJSONObject("exam").getString("time")).trim(),
+                                    Objects.equals(exam.getJSONObject("exam").getString("room"), "") ? "" : activity.getString(R.string.place) + ": " + exam.getJSONObject("exam").getString("room")
                             )
                     );
                 }

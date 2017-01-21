@@ -161,7 +161,7 @@ class ErrorTracker {
                     stringBuilder.append("at ").append(element.toString()).append("\n");
             }
             errorList.clear();
-            Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
+            Intent emailIntent = new Intent(Intent.ACTION_SEND);
             emailIntent.setType("message/rfc822");
             emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{"bukhmastov-alex@ya.ru"});
             emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "CDO ITMO - report");
