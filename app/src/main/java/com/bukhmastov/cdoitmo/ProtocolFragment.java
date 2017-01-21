@@ -209,7 +209,7 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
                 }
             });
         } catch (Exception e) {
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
         }
     }
     void display(){
@@ -298,7 +298,7 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
                 notifyAboutDateUpdate = false;
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
             loadFailed();
         }
     }
@@ -312,7 +312,7 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
             vg.removeAllViews();
             vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         } catch (Exception e){
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
         }
     }
     private String double2string(Double value){
@@ -341,7 +341,7 @@ class Protocol {
             try {
                 this.protocol = new JSONObject(protocol);
             } catch (Exception e) {
-                e.printStackTrace();
+                LoginActivity.errorTracker.add(e);
             }
         }
     }
@@ -354,9 +354,9 @@ class Protocol {
             json.put("protocol", data);
             protocol = json;
             Cache.put(context, "Protocol", protocol.toString());
-            if(number_of_weeks == 7) PreferenceManager.getDefaultSharedPreferences(context).edit().putString("ProtocolTrackerHISTORY", data.getJSONArray("changes").toString()).apply();
+            if(number_of_weeks == 1) PreferenceManager.getDefaultSharedPreferences(context).edit().putString("ProtocolTrackerHISTORY", data.getJSONArray("changes").toString()).apply();
         } catch (Exception e) {
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
         }
     }
     JSONObject get(){
@@ -369,7 +369,7 @@ class Protocol {
             try {
                 return protocol.getInt("number_of_weeks") == number_of_weeks;
             } catch (JSONException e) {
-                e.printStackTrace();
+                LoginActivity.errorTracker.add(e);
                 return false;
             }
         }
@@ -450,7 +450,7 @@ class ProtocolParse extends AsyncTask<String, Void, JSONObject> {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
             return null;
         }
         return null;

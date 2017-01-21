@@ -78,7 +78,8 @@
     <string name="group">Группа</string>
     <string name="room">Аудитория</string>
     <string name="school_week">учебная неделя</string>
-    <string name="open_schedule">Открыть распиание</string>
+    <string name="open_schedule">Открыть расписание</string>
+    <string name="load_failed_retry_in_minute">Загрузка не удалась\nПовторите попытку через минуту</string>
 
 
 </resources>

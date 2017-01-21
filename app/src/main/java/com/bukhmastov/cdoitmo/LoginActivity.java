@@ -1,6 +1,11 @@
 package com.bukhmastov.cdoitmo;
 
+import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
@@ -13,11 +18,15 @@ import android.widget.EditText;
 
 import com.loopj.android.http.RequestHandle;
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 public class LoginActivity extends AppCompatActivity {
 
     private static final String TAG = "LoginActivity";
+    static ErrorTracker errorTracker;
+    static String versionName;
+    static int versionCode;
     private Button btn_login;
     private EditText input_login, input_password;
     public static int state = -1;
@@ -30,6 +39,14 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         if(PreferenceManager.getDefaultSharedPreferences(this).getBoolean("pref_dark_theme", false)) setTheme(R.style.AppTheme_Dark);
         super.onCreate(savedInstanceState);
+        try {
+            PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+            versionName = pInfo.versionName;
+            versionCode = pInfo.versionCode;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        errorTracker = new ErrorTracker(this);
         setContentView(R.layout.activity_login);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar_login));
         ActionBar actionBar = getSupportActionBar();
@@ -86,7 +103,7 @@ public class LoginActivity extends AppCompatActivity {
                 input_password.setText(Storage.get(getBaseContext(), "password"));
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
         }
     }
 
@@ -107,7 +124,56 @@ public class LoginActivity extends AppCompatActivity {
         try {
             Snackbar.make(findViewById(R.id.activity_login), R.string.logged_out, Snackbar.LENGTH_SHORT).show();
         } catch (Exception e) {
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
+        }
+    }
+}
+
+class ErrorTracker {
+    private ArrayList<Throwable> errorList = new ArrayList<>();
+    private Context context;
+    ErrorTracker(Context context){
+        this.context = context;
+    }
+    void add(Throwable throwable){
+        throwable.printStackTrace();
+        errorList.add(throwable);
+    }
+    int count(){
+        return errorList.size();
+    }
+    boolean send(){
+        if(errorList.size() > 0) {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("--------Device--------").append("\n");
+            stringBuilder.append("DEVICE: ").append(Build.DEVICE).append("\n");
+            stringBuilder.append("MODEL: ").append(Build.MODEL).append("\n");
+            stringBuilder.append("PRODUCT: ").append(Build.PRODUCT).append("\n");
+            stringBuilder.append("DISPLAY: ").append(Build.DISPLAY).append("\n");
+            stringBuilder.append("SDK_INT: ").append(Build.VERSION.SDK_INT).append("\n");
+            stringBuilder.append("--------Application--------").append("\n");
+            stringBuilder.append(LoginActivity.versionName).append(" (").append(LoginActivity.versionCode).append(")").append("\n");
+            for (Throwable throwable : errorList) {
+                stringBuilder.append("--------Stack trace--------").append("\n");
+                stringBuilder.append(throwable.getMessage()).append("\n");
+                StackTraceElement[] stackTrace = throwable.getStackTrace();
+                for (StackTraceElement element : stackTrace)
+                    stringBuilder.append("at ").append(element.toString()).append("\n");
+            }
+            errorList.clear();
+            Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
+            emailIntent.setType("message/rfc822");
+            emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{"bukhmastov-alex@ya.ru"});
+            emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "CDO ITMO - report");
+            emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, stringBuilder.toString());
+            try {
+                context.startActivity(Intent.createChooser(emailIntent, context.getString(R.string.error_choose_program)));
+            } catch (ActivityNotFoundException e) {
+                e.printStackTrace();
+            }
+            return true;
+        } else {
+            return false;
         }
     }
 }

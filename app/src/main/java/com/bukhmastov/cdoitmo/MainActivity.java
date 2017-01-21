@@ -50,6 +50,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private RequestHandle checkRequestHandle = null;
     static boolean OFFLINE_MODE = false;
     static Menu menu;
+    static TypedValue typedValue;
+    static int textColorPrimary;
+    static int textColorSecondary;
+    static int colorSeparator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +76,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case "schedule_lessons": selectedSection = R.id.nav_schedule; break;
         }
         protocolTracker = new ProtocolTracker(this);
+        typedValue = new TypedValue();
+        getTheme().resolveAttribute(android.R.attr.textColorPrimary, typedValue, true);
+        textColorPrimary = obtainStyledAttributes(typedValue.data, new int[]{android.R.attr.textColorPrimary}).getColor(0, -1);
+        getTheme().resolveAttribute(android.R.attr.textColorSecondary, typedValue, true);
+        textColorSecondary = obtainStyledAttributes(typedValue.data, new int[]{android.R.attr.textColorSecondary}).getColor(0, -1);
+        getTheme().resolveAttribute(R.attr.colorSeparator, typedValue, true);
+        colorSeparator = obtainStyledAttributes(typedValue.data, new int[]{R.attr.colorSeparator}).getColor(0, -1);
     }
 
     @Override
@@ -139,7 +150,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     MainActivity.menu.findItem(R.id.action_search).collapseActionView();
                     if(ScheduleLessonsFragment.scheduleLessons != null) ScheduleLessonsFragment.scheduleLessons.search(query, false);
                 } catch (Exception e){
-                    e.printStackTrace();
+                    LoginActivity.errorTracker.add(e);
                 }
                 return false;
             }
@@ -249,15 +260,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
     private void updateWeek(){
         try {
-            JSONObject jsonObject = new JSONObject(Storage.get(getBaseContext(), "week"));
-            int week = jsonObject.getInt("week");
-            if(week >= 0){
-                Calendar past = Calendar.getInstance();
-                past.setTimeInMillis(jsonObject.getLong("timestamp"));
-                MainActivity.week = week + (Calendar.getInstance().get(Calendar.WEEK_OF_YEAR) - past.get(Calendar.WEEK_OF_YEAR));
+            String weekStr = Storage.get(getBaseContext(), "week");
+            if(!Objects.equals(weekStr, "")){
+                JSONObject jsonObject = new JSONObject(weekStr);
+                int week = jsonObject.getInt("week");
+                if(week >= 0){
+                    Calendar past = Calendar.getInstance();
+                    past.setTimeInMillis(jsonObject.getLong("timestamp"));
+                    MainActivity.week = week + (Calendar.getInstance().get(Calendar.WEEK_OF_YEAR) - past.get(Calendar.WEEK_OF_YEAR));
+                }
             }
         } catch (JSONException e) {
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
         }
     }
     private void selectSection(final int section){
@@ -308,7 +322,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     actionBar.setTitle(title);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                LoginActivity.errorTracker.add(e);
                 Snackbar snackbar = Snackbar.make(findViewById(R.id.content_container), getString(R.string.failed_to_open_fragment), Snackbar.LENGTH_SHORT);
                 TypedValue typedValue = new TypedValue();
                 getTheme().resolveAttribute(R.attr.colorBackgroundSnackBar, typedValue, true);
@@ -333,7 +347,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             vg.removeAllViews();
             vg.addView(((LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         } catch (Exception e) {
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
         }
     }
 }
@@ -367,7 +381,6 @@ class Cache {
         editor.apply();
     }
 }
-
 class Storage {
     static private final String KEY_PREFIX = "storage_";
     static String get(Context context, String key){
