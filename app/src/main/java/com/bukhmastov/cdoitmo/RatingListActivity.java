@@ -38,6 +38,7 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
     private static final String TAG = "RatingFragment";
     private String faculty = null;
     private String course = null;
+    private String years = null;
     private boolean loaded = false;
     private RequestHandle activityRequestHandle = null;
 
@@ -56,6 +57,13 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
         // получаем реквизиты рейтинга
         faculty = getIntent().getStringExtra("faculty");
         course = getIntent().getStringExtra("course");
+        years = getIntent().getStringExtra("years");
+        if(Objects.equals(years, "") || years == null){
+            Calendar now = Calendar.getInstance();
+            int year = now.get(Calendar.YEAR);
+            int month = now.get(Calendar.MONTH);
+            years = month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year;
+        }
         if(Objects.equals(faculty, "") || faculty == null || Objects.equals(course, "") || course == null) finish();
     }
 
@@ -92,10 +100,7 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
 
     private void load(){
         if(getSupportActionBar() != null) getSupportActionBar().setTitle("Топ-рейтинг");
-        Calendar now = Calendar.getInstance();
-        int year = now.get(Calendar.YEAR);
-        int month = now.get(Calendar.MONTH);
-        DeIfmoRestClient.get("index.php?doc_open=-tops.php&view=topStudent&depId=" + faculty + "&year_=" + course + "&app_=" + (month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year), null, new DeIfmoRestClientResponseHandler() {
+        DeIfmoRestClient.get("index.php?doc_open=-tops.php&view=topStudent&depId=" + faculty + "&year_=" + course + "&app_=" + years, null, new DeIfmoRestClientResponseHandler() {
             @Override
             public void onSuccess(int statusCode, String response) {
                 if(statusCode == 200){
@@ -162,7 +167,7 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
                 }
             });
         } catch (Exception e) {
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
         }
     }
     private void display(JSONObject data){
@@ -195,7 +200,7 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
             mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(typedValue.data);
             mSwipeRefreshLayout.setOnRefreshListener(this);
         } catch(Exception e){
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
             loadFailed();
         }
     }
@@ -209,7 +214,7 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
             vg.removeAllViews();
             vg.addView(((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         } catch (Exception e) {
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
         }
     }
 }
@@ -257,7 +262,7 @@ class RatingTopListParse extends AsyncTask<String, Void, JSONObject> {
             json.put("list", list);
             return json;
         } catch (Exception e) {
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
             return null;
         }
     }

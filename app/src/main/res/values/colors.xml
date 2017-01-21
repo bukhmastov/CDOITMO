@@ -28,19 +28,19 @@
     <color name="colorPrimaryDarkInverse">#090909</color>
     <color name="colorPrimaryOpacityInverse">#7e212121</color>
     <color name="colorAccentInverse">#D96629</color>
-    <color name="textColorHeaderInverse">#9e9e9e</color>
-    <color name="textColorPrimaryInverse">#9e9e9e</color>
-    <color name="textColorSecondaryInverse">#757575</color>
+    <color name="textColorHeaderInverse">#e0e0e0</color>
+    <color name="textColorPrimaryInverse">#bdbdbd</color>
+    <color name="textColorSecondaryInverse">#9e9e9e</color>
     <color name="textColorSubjectPassedInverse">#338937</color>
     <color name="colorSeparatorInverse">#424242</color>
     <color name="colorBackgroundSectionInverse">#383838</color>
     <color name="colorBackgroundSnackBarInverse">#212121</color>
-    <color name="colorIcXmlInverse">#858585</color>
+    <color name="colorIcXmlInverse">#9e9e9e</color>
     <color name="colorIcXmlRedInverse">#781212</color>
     <color name="colorScheduleFlagCommonBGInverse">#434343</color>
-    <color name="colorScheduleFlagPracticeBGInverse">#295b42</color>
-    <color name="colorScheduleFlagLectureBGInverse">#0e3d53</color>
-    <color name="colorScheduleFlagLabBGInverse">#4b310c</color>
-    <color name="colorScheduleFlagTEXTInverse">#757575</color>
+    <color name="colorScheduleFlagPracticeBGInverse">#2d6449</color>
+    <color name="colorScheduleFlagLectureBGInverse">#114a66</color>
+    <color name="colorScheduleFlagLabBGInverse">#63400f</color>
+    <color name="colorScheduleFlagTEXTInverse">#9e9e9e</color>
 
 </resources>

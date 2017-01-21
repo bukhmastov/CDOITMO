@@ -14,7 +14,6 @@ import com.loopj.android.http.RequestParams;
 
 import org.htmlcleaner.HtmlCleaner;
 import org.htmlcleaner.TagNode;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
@@ -95,7 +94,7 @@ class DeIfmoRestClient {
                                         jsonObject.put("week", Integer.parseInt(result.get("week")));
                                         Storage.put(context, "week", jsonObject.toString());
                                     } catch (Exception e) {
-                                        e.printStackTrace();
+                                        LoginActivity.errorTracker.add(e);
                                         Storage.delete(context, "week");
                                     }
                                     responseHandler.onSuccess(200, result.get("name"));
@@ -177,7 +176,7 @@ class DeIfmoRestClient {
                             responseHandler.onFailure(FAILED_AUTH_TRY_AGAIN);
                         }
                     } catch (UnsupportedEncodingException e) {
-                        e.printStackTrace();
+                        LoginActivity.errorTracker.add(e);
                         responseHandler.onFailure(FAILED_AUTH_TRY_AGAIN);
                     }
                 }
@@ -230,7 +229,7 @@ class DeIfmoRestClient {
                             responseHandler.onSuccess(statusCode, data);
                         }
                     } catch (UnsupportedEncodingException e) {
-                        e.printStackTrace();
+                        LoginActivity.errorTracker.add(e);
                         responseHandler.onFailure(FAILED_TRY_AGAIN);
                     }
                 }
@@ -278,7 +277,7 @@ class DeIfmoRestClient {
                             responseHandler.onSuccess(statusCode, data);
                         }
                     } catch (UnsupportedEncodingException e) {
-                        e.printStackTrace();
+                        LoginActivity.errorTracker.add(e);
                         responseHandler.onFailure(FAILED_TRY_AGAIN);
                     }
                 }
@@ -365,7 +364,7 @@ class UserDataParse extends AsyncTask<String, Void, HashMap<String, String>> {
             }
             return response;
         } catch (Exception e){
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
             return null;
         }
     }

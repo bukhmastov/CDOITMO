@@ -1,14 +1,15 @@
 package com.bukhmastov.cdoitmo;
 
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
+import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class AboutActivity extends AppCompatActivity {
 
@@ -23,14 +24,17 @@ public class AboutActivity extends AppCompatActivity {
             actionBar.setHomeButtonEnabled(true);
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
-        TextView app_info_version = (TextView) findViewById(R.id.app_info_version);
-        try {
-            PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
-            app_info_version.setText("v" + pInfo.versionName + " (" + pInfo.versionCode + ")");
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-            app_info_version.setText("");
-        }
+        ((TextView) findViewById(R.id.app_info_version)).setText("v" + LoginActivity.versionName + " (" + LoginActivity.versionCode + ")");
+        ((TextView) findViewById(R.id.error_count)).setText(new StringBuilder().append("Количество накопленных ошибок: ").append(LoginActivity.errorTracker.count()).toString());
+        Button send_report = (Button) findViewById(R.id.send_report);
+        send_report.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(!LoginActivity.errorTracker.send()){
+                    Toast.makeText(getBaseContext(), "Ошибок не найдено", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     @Override

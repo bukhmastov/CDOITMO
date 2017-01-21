@@ -21,7 +21,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.GridLayout;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -119,7 +119,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
                     break;
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
         }
     }
 
@@ -162,7 +162,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
                     break;
             }
         } catch (Exception e){
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
         }
     }
 
@@ -212,7 +212,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
             onFailure(ScheduleLessons.FAILED_LOAD);
         }
     }
@@ -264,7 +264,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
             vg.removeAllViews();
             vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         } catch (Exception e){
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
         }
     }
 }
@@ -330,7 +330,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                                     if (toCache || Objects.equals(MainActivity.group.toUpperCase(), group)) putCache("group_" + group, json.toString());
                                     handler.onSuccess(json);
                                 } catch (Exception e) {
-                                    e.printStackTrace();
+                                    LoginActivity.errorTracker.add(e);
                                     handler.onFailure(FAILED_LOAD);
                                 }
                             }
@@ -342,7 +342,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                             try {
                                 handler.onSuccess(new JSONObject(cache));
                             } catch (JSONException e) {
-                                e.printStackTrace();
+                                LoginActivity.errorTracker.add(e);
                                 handler.onFailure(FAILED_LOAD);
                             }
                         }
@@ -365,7 +365,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
             try {
                 handler.onSuccess(new JSONObject(cache));
             } catch (JSONException e) {
-                e.printStackTrace();
+                LoginActivity.errorTracker.add(e);
                 handler.onFailure(FAILED_LOAD);
             }
         }
@@ -385,7 +385,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                                     if (toCache) putCache("room_" + room, json.toString());
                                     handler.onSuccess(json);
                                 } catch (Exception e) {
-                                    e.printStackTrace();
+                                    LoginActivity.errorTracker.add(e);
                                     handler.onFailure(FAILED_LOAD);
                                 }
                             }
@@ -397,7 +397,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                             try {
                                 handler.onSuccess(new JSONObject(cache));
                             } catch (JSONException e) {
-                                e.printStackTrace();
+                                LoginActivity.errorTracker.add(e);
                                 handler.onFailure(FAILED_LOAD);
                             }
                         }
@@ -420,7 +420,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
             try {
                 handler.onSuccess(new JSONObject(cache));
             } catch (JSONException e) {
-                e.printStackTrace();
+                LoginActivity.errorTracker.add(e);
                 handler.onFailure(FAILED_LOAD);
             }
         }
@@ -444,7 +444,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                                         handler.onSuccess(json);
                                     }
                                 } catch (Exception e) {
-                                    e.printStackTrace();
+                                    LoginActivity.errorTracker.add(e);
                                     handler.onFailure(FAILED_LOAD);
                                 }
                             }
@@ -461,7 +461,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                                     handler.onSuccess(list);
                                 }
                             } catch (JSONException e) {
-                                e.printStackTrace();
+                                LoginActivity.errorTracker.add(e);
                                 handler.onFailure(FAILED_LOAD);
                             }
                         }
@@ -489,7 +489,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                     handler.onSuccess(list);
                 }
             } catch (JSONException e) {
-                e.printStackTrace();
+                LoginActivity.errorTracker.add(e);
                 handler.onFailure(FAILED_LOAD);
             }
         }
@@ -512,7 +512,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                                         if (toCache) putCache("teacher_" + id, json.toString());
                                         handler.onSuccess(json);
                                     } catch (Exception e) {
-                                        e.printStackTrace();
+                                        LoginActivity.errorTracker.add(e);
                                         handler.onFailure(FAILED_LOAD);
                                     }
                                 }
@@ -524,7 +524,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                                 try {
                                     handler.onSuccess(new JSONObject(cache));
                                 } catch (JSONException e) {
-                                    e.printStackTrace();
+                                    LoginActivity.errorTracker.add(e);
                                     handler.onFailure(FAILED_LOAD);
                                 }
                             }
@@ -547,7 +547,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                 try {
                     handler.onSuccess(new JSONObject(cache));
                 } catch (JSONException e) {
-                    e.printStackTrace();
+                    LoginActivity.errorTracker.add(e);
                     handler.onFailure(FAILED_LOAD);
                 }
             }
@@ -570,7 +570,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                 }
             }
         } catch (JSONException e) {
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
             return "";
         }
     }
@@ -587,7 +587,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
             json.put(token, value);
             Cache.put(context, "schedule_lessons", json.toString());
         } catch (JSONException e) {
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
         }
     }
 }
@@ -678,7 +678,7 @@ class ScheduleLessonsGroupParse extends AsyncTask<String, Void, JSONObject> {
             response.put("schedule", schedule);
             return response;
         } catch (Exception e) {
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
             return null;
         }
     }
@@ -774,7 +774,7 @@ class ScheduleLessonsRoomParse extends AsyncTask<String, Void, JSONObject> {
             response.put("schedule", schedule);
             return response;
         } catch (Exception e) {
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
             return null;
         }
     }
@@ -813,7 +813,7 @@ class ScheduleLessonsTeacherPickerParse extends AsyncTask<String, Void, JSONObje
                         teachers.put(teacher);
                     }
                 } catch (Exception e){
-                    e.printStackTrace();
+                    LoginActivity.errorTracker.add(e);
                 }
             }
             JSONObject response = new JSONObject();
@@ -821,7 +821,7 @@ class ScheduleLessonsTeacherPickerParse extends AsyncTask<String, Void, JSONObje
             response.put("teachers", teachers);
             return response;
         } catch (Exception e) {
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
             return null;
         }
     }
@@ -929,7 +929,7 @@ class ScheduleLessonsTeacherParse extends AsyncTask<String, Void, JSONObject> {
             response.put("schedule", schedule);
             return response;
         } catch (Exception e) {
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
             return null;
         }
     }
@@ -940,46 +940,32 @@ class ScheduleLessonsTeacherParse extends AsyncTask<String, Void, JSONObject> {
 }
 
 class ScheduleLessonsBuilder extends Thread {
+
     interface response {
         void state(int state, LinearLayout layout);
     }
+    private response delegate = null;
     private Activity activity;
     private int type;
-    private response delegate = null;
+    private float destiny;
+
     static final int STATE_FAILED = 0;
     static final int STATE_LOADING = 1;
     static final int STATE_DONE = 2;
+
     ScheduleLessonsBuilder(Activity activity, int type, ScheduleLessonsBuilder.response delegate){
         this.activity = activity;
         this.delegate = delegate;
         this.type = type;
+        this.destiny = activity.getResources().getDisplayMetrics().density;
     }
     public void run(){
         LinearLayout container = new LinearLayout(activity);
         container.setOrientation(LinearLayout.VERTICAL);
         container.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
         try {
-            float destiny = activity.getResources().getDisplayMetrics().density;
-            // loading screen
-            LinearLayout loadingLayout = new LinearLayout(activity);
-            loadingLayout.setOrientation(LinearLayout.VERTICAL);
-            loadingLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
-            loadingLayout.setPadding(0, (int) (24 * destiny), 0, (int) (24 * destiny));
-            ProgressBar progressBar = new ProgressBar(activity);
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            lp.gravity = Gravity.CENTER;
-            progressBar.setLayoutParams(lp);
-            loadingLayout.addView(progressBar);
-            delegate.state(STATE_LOADING, loadingLayout);
-            // build schedule
+            delegate.state(STATE_LOADING, getLoadingScreen());
             JSONArray schedule = ScheduleLessonsFragment.schedule.getJSONArray("schedule");
-            TypedValue typedValue = new TypedValue();
-            activity.getTheme().resolveAttribute(android.R.attr.textColorPrimary, typedValue, true);
-            int textColorPrimary = activity.obtainStyledAttributes(typedValue.data, new int[]{android.R.attr.textColorPrimary}).getColor(0, -1);
-            activity.getTheme().resolveAttribute(android.R.attr.textColorSecondary, typedValue, true);
-            int textColorSecondary = activity.obtainStyledAttributes(typedValue.data, new int[]{android.R.attr.textColorSecondary}).getColor(0, -1);
-            activity.getTheme().resolveAttribute(R.attr.colorSeparator, typedValue, true);
-            int colorSeparator = activity.obtainStyledAttributes(typedValue.data, new int[]{R.attr.colorSeparator}).getColor(0, -1);
             int daysCount = 0;
             for (int i = 0; i < schedule.length(); i++) {
                 int lessonsCount = 0;
@@ -994,7 +980,7 @@ class ScheduleLessonsBuilder extends Thread {
                 dayTitle.setText(day.getString("title").toUpperCase());
                 dayTitle.setTypeface(null, Typeface.BOLD);
                 dayTitle.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                dayTitle.setTextColor(textColorPrimary);
+                dayTitle.setTextColor(MainActivity.textColorPrimary);
                 dayLayout.addView(dayTitle);
                 // -- занятия
                 LinearLayout lessonsLayout = new LinearLayout(activity);
@@ -1012,7 +998,7 @@ class ScheduleLessonsBuilder extends Thread {
                     if (j != 0) {
                         View separator = new View(activity);
                         separator.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, (int) (1 * destiny)));
-                        separator.setBackgroundColor(colorSeparator);
+                        separator.setBackgroundColor(MainActivity.colorSeparator);
                         lessonsLayout.addView(separator);
                     }
                     // --- занятие
@@ -1032,7 +1018,7 @@ class ScheduleLessonsBuilder extends Thread {
                     TextView rangeStart = new TextView(activity);
                     rangeStart.setText(Objects.equals(lesson.getString("timeStart"), "") ? "∞" : lesson.getString("timeStart"));
                     rangeStart.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                    rangeStart.setTextColor(textColorPrimary);
+                    rangeStart.setTextColor(MainActivity.textColorPrimary);
                     rangeStart.setTextSize(15);
                     rangeStart.setTextAlignment(TextView.TEXT_ALIGNMENT_CENTER);
                     rangeStart.setGravity(Gravity.BOTTOM);
@@ -1046,7 +1032,7 @@ class ScheduleLessonsBuilder extends Thread {
                     TextView rangeEnd = new TextView(activity);
                     rangeEnd.setText(Objects.equals(lesson.getString("timeEnd"), "") ? "∞" : lesson.getString("timeEnd"));
                     rangeEnd.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                    rangeEnd.setTextColor(textColorPrimary);
+                    rangeEnd.setTextColor(MainActivity.textColorPrimary);
                     rangeEnd.setTextSize(15);
                     rangeEnd.setTextAlignment(TextView.TEXT_ALIGNMENT_CENTER);
                     rangeEnd.setGravity(Gravity.TOP);
@@ -1069,7 +1055,7 @@ class ScheduleLessonsBuilder extends Thread {
                     layoutParams1.gravity = Gravity.CENTER_VERTICAL;
                     layoutParams1.weight = 1;
                     subjectTitle.setLayoutParams(layoutParams1);
-                    subjectTitle.setTextColor(textColorPrimary);
+                    subjectTitle.setTextColor(MainActivity.textColorPrimary);
                     lessonTitleLayout.addView(subjectTitle);
                     // иконка
                     if((lesson.has("room") && !Objects.equals(lesson.getString("room"), "")) || (lesson.has("teacher") && !Objects.equals(lesson.getString("teacher"), "")) || (lesson.has("group") && !Objects.equals(lesson.getString("group"), ""))) {
@@ -1107,68 +1093,10 @@ class ScheduleLessonsBuilder extends Thread {
                         descMain.setHeight(0);
                     }
                     descMain.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                    descMain.setTextColor(textColorSecondary);
+                    descMain.setTextColor(MainActivity.textColorSecondary);
                     lessonContentLayout.addView(descMain);
                     // - флаги занятия
-                    GridLayout flagsContainer = new GridLayout(activity);
-                    flagsContainer.setOrientation(GridLayout.HORIZONTAL);
-                    flagsContainer.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                    int week = lesson.getInt("week");
-                    if (type == 2 && (week == 0 || week == 1)) {
-                        TextView weekFlag = new TextView(activity);
-                        weekFlag.setText(week == 0 ? activity.getString(R.string.tab_even) : activity.getString(R.string.tab_odd));
-                        LinearLayout.LayoutParams layoutParams2 = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                        layoutParams2.setMargins(0, (int) (2 * destiny), (int) (5 * destiny), (int) (2 * destiny));
-                        weekFlag.setLayoutParams(layoutParams2);
-                        weekFlag.setPadding((int) (6 * destiny), (int) (2 * destiny), (int) (6 * destiny), (int) (2 * destiny));
-                        activity.getTheme().resolveAttribute(R.attr.colorScheduleFlagCommonBG, typedValue, true);
-                        weekFlag.setBackgroundColor(typedValue.data);
-                        activity.getTheme().resolveAttribute(R.attr.colorScheduleFlagTEXT, typedValue, true);
-                        weekFlag.setTextColor(typedValue.data);
-                        flagsContainer.addView(weekFlag);
-                    }
-                    if (!Objects.equals(lesson.getString("type"), "")) {
-                        TextView typeFlag = new TextView(activity);
-                        int backgroundColor, textColor;
-                        switch (lesson.getString("type")) {
-                            case "practice":
-                                activity.getTheme().resolveAttribute(R.attr.colorScheduleFlagPracticeBG, typedValue, true);
-                                backgroundColor = typedValue.data;
-                                activity.getTheme().resolveAttribute(R.attr.colorScheduleFlagTEXT, typedValue, true);
-                                textColor = typedValue.data;
-                                typeFlag.setText(R.string.practice);
-                                break;
-                            case "lecture":
-                                activity.getTheme().resolveAttribute(R.attr.colorScheduleFlagLectureBG, typedValue, true);
-                                backgroundColor = typedValue.data;
-                                activity.getTheme().resolveAttribute(R.attr.colorScheduleFlagTEXT, typedValue, true);
-                                textColor = typedValue.data;
-                                typeFlag.setText(R.string.lecture);
-                                break;
-                            case "lab":
-                                activity.getTheme().resolveAttribute(R.attr.colorScheduleFlagLabBG, typedValue, true);
-                                backgroundColor = typedValue.data;
-                                activity.getTheme().resolveAttribute(R.attr.colorScheduleFlagTEXT, typedValue, true);
-                                textColor = typedValue.data;
-                                typeFlag.setText(R.string.lab);
-                                break;
-                            default:
-                                activity.getTheme().resolveAttribute(R.attr.colorScheduleFlagCommonBG, typedValue, true);
-                                backgroundColor = typedValue.data;
-                                activity.getTheme().resolveAttribute(R.attr.colorScheduleFlagTEXT, typedValue, true);
-                                textColor = typedValue.data;
-                                typeFlag.setText(lesson.getString("type"));
-                                break;
-                        }
-                        LinearLayout.LayoutParams layoutParams3 = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                        layoutParams3.setMargins(0, (int) (2 * destiny), (int) (5 * destiny), (int) (2 * destiny));
-                        typeFlag.setLayoutParams(layoutParams3);
-                        typeFlag.setPadding((int) (6 * destiny), (int) (2 * destiny), (int) (6 * destiny), (int) (2 * destiny));
-                        typeFlag.setBackgroundColor(backgroundColor);
-                        typeFlag.setTextColor(textColor);
-                        flagsContainer.addView(typeFlag);
-                    }
-                    lessonContentLayout.addView(flagsContainer);
+                    lessonContentLayout.addView(getFlags(lesson));
                     // - второстепенное описание занятия
                     TextView descSecondary = new TextView(activity);
                     String descSecondaryText = "";
@@ -1195,7 +1123,7 @@ class ScheduleLessonsBuilder extends Thread {
                         descSecondary.setHeight(0);
                     }
                     descSecondary.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                    descSecondary.setTextColor(textColorSecondary);
+                    descSecondary.setTextColor(MainActivity.textColorSecondary);
                     lessonContentLayout.addView(descSecondary);
                     lessonLayout.addView(lessonContentLayout);
                     lessonsLayout.addView(lessonLayout);
@@ -1223,25 +1151,107 @@ class ScheduleLessonsBuilder extends Thread {
                     daysCount++;
                 }
             }
-            if(daysCount == 0) {
-                LinearLayout scheduleEmptyLayout = new LinearLayout(activity);
-                scheduleEmptyLayout.setOrientation(LinearLayout.VERTICAL);
-                scheduleEmptyLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                TextView textView = new TextView(activity);
-                textView.setText("Занятий нет");
-                textView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                textView.setTextColor(textColorPrimary);
-                textView.setGravity(Gravity.CENTER);
-                textView.setHeight((int) (60 * destiny));
-                scheduleEmptyLayout.addView(textView);
-                container.addView(scheduleEmptyLayout);
-            }
+            if(daysCount == 0) container.addView(getEmptyScreen());
             delegate.state(STATE_DONE, container);
         } catch (Exception e){
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
             delegate.state(STATE_FAILED, container);
         }
     }
+
+    private LinearLayout getLoadingScreen() throws Exception {
+        LinearLayout loadingLayout = new LinearLayout(activity);
+        loadingLayout.setOrientation(LinearLayout.VERTICAL);
+        loadingLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
+        loadingLayout.setPadding(0, (int) (24 * destiny), 0, (int) (24 * destiny));
+        ProgressBar progressBar = new ProgressBar(activity);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lp.gravity = Gravity.CENTER;
+        progressBar.setLayoutParams(lp);
+        loadingLayout.addView(progressBar);
+        return loadingLayout;
+    }
+    private LinearLayout getEmptyScreen() throws Exception {
+        LinearLayout emptyLayout = new LinearLayout(activity);
+        emptyLayout.setOrientation(LinearLayout.VERTICAL);
+        emptyLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        TextView textView = new TextView(activity);
+        textView.setText("Занятий нет");
+        textView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        textView.setTextColor(MainActivity.textColorPrimary);
+        textView.setGravity(Gravity.CENTER);
+        textView.setHeight((int) (60 * destiny));
+        emptyLayout.addView(textView);
+        return emptyLayout;
+    }
+
+    private LinearLayout getFlags(JSONObject lesson) throws Exception {
+        int week = lesson.getInt("week");
+        int backgroundColor;
+        int textColor;
+        LinearLayout flagsContainer = new LinearLayout(activity);
+        flagsContainer.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lp.setMargins((int) (-2 * destiny), 0, (int) (-2 * destiny), 0);
+        flagsContainer.setLayoutParams(lp);
+        if (type == 2 && (week == 0 || week == 1)) {
+            activity.getTheme().resolveAttribute(R.attr.colorScheduleFlagCommonBG, MainActivity.typedValue, true);
+            backgroundColor = MainActivity.typedValue.data;
+            activity.getTheme().resolveAttribute(R.attr.colorScheduleFlagTEXT, MainActivity.typedValue, true);
+            textColor = MainActivity.typedValue.data;
+            flagsContainer.addView(getFlag(week == 0 ? activity.getString(R.string.tab_even) : activity.getString(R.string.tab_odd), textColor, backgroundColor));
+        }
+        if (!Objects.equals(lesson.getString("type"), "")) {
+            String text;
+            switch (lesson.getString("type")) {
+                case "practice":
+                    activity.getTheme().resolveAttribute(R.attr.colorScheduleFlagPracticeBG, MainActivity.typedValue, true);
+                    backgroundColor = MainActivity.typedValue.data;
+                    activity.getTheme().resolveAttribute(R.attr.colorScheduleFlagTEXT, MainActivity.typedValue, true);
+                    textColor = MainActivity.typedValue.data;
+                    text = activity.getString(R.string.practice);
+                    break;
+                case "lecture":
+                    activity.getTheme().resolveAttribute(R.attr.colorScheduleFlagLectureBG, MainActivity.typedValue, true);
+                    backgroundColor = MainActivity.typedValue.data;
+                    activity.getTheme().resolveAttribute(R.attr.colorScheduleFlagTEXT, MainActivity.typedValue, true);
+                    textColor = MainActivity.typedValue.data;
+                    text = activity.getString(R.string.lecture);
+                    break;
+                case "lab":
+                    activity.getTheme().resolveAttribute(R.attr.colorScheduleFlagLabBG, MainActivity.typedValue, true);
+                    backgroundColor = MainActivity.typedValue.data;
+                    activity.getTheme().resolveAttribute(R.attr.colorScheduleFlagTEXT, MainActivity.typedValue, true);
+                    textColor = MainActivity.typedValue.data;
+                    text = activity.getString(R.string.lab);
+                    break;
+                default:
+                    activity.getTheme().resolveAttribute(R.attr.colorScheduleFlagCommonBG, MainActivity.typedValue, true);
+                    backgroundColor = MainActivity.typedValue.data;
+                    activity.getTheme().resolveAttribute(R.attr.colorScheduleFlagTEXT, MainActivity.typedValue, true);
+                    textColor = MainActivity.typedValue.data;
+                    text = lesson.getString("type");
+                    break;
+            }
+            flagsContainer.addView(getFlag(text, textColor, backgroundColor));
+        }
+        return flagsContainer;
+    }
+    private FrameLayout getFlag(String text, int textColor, int backgroundColor) throws Exception {
+        FrameLayout flagContainer = new FrameLayout(activity);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lp.setMargins((int) (2 * destiny), (int) (5 * destiny), (int) (2 * destiny), (int) (5 * destiny));
+        flagContainer.setLayoutParams(lp);
+        TextView textView = new TextView(activity);
+        textView.setText(text);
+        textView.setPadding((int) (6 * destiny), (int) (2 * destiny), (int) (6 * destiny), (int) (2 * destiny));
+        textView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        textView.setBackgroundColor(backgroundColor);
+        textView.setTextColor(textColor);
+        flagContainer.addView(textView);
+        return flagContainer;
+    }
+
 }
 
 class TeacherPickerListView extends ArrayAdapter<HashMap<String, String>> {

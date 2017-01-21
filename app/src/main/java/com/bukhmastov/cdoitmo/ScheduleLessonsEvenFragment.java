@@ -44,7 +44,7 @@ public class ScheduleLessonsEvenFragment extends Fragment {
         try {
             if(ScheduleLessonsFragment.schedule == null) throw new NullPointerException("ScheduleLessonsFragment.schedule cannot be null");
             TextView schedule_c_header = (TextView) getActivity().findViewById(R.id.schedule_lessons_even_header);
-            switch (ScheduleLessonsFragment.schedule.getString("TYPE")){
+            switch (ScheduleLessonsFragment.schedule.getString("type")){
                 case "group": schedule_c_header.setText("Расписание группы" + " " + ScheduleLessonsFragment.schedule.getString("scope")); break;
                 case "room": schedule_c_header.setText("Расписание в аудитории" + " " + ScheduleLessonsFragment.schedule.getString("scope")); break;
                 case "teacher": schedule_c_header.setText("Расписание преподавателя" + " " + ScheduleLessonsFragment.schedule.getString("scope")); break;
@@ -68,24 +68,29 @@ public class ScheduleLessonsEvenFragment extends Fragment {
             final ViewGroup linearLayout = (ViewGroup) getActivity().findViewById(R.id.schedule_lessons_even_content);
             (new ScheduleLessonsBuilder(getActivity(), TYPE, new ScheduleLessonsBuilder.response(){
                 public void state(final int state, final LinearLayout layout){
-                    getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            linearLayout.removeAllViews();
-                            if(state == ScheduleLessonsBuilder.STATE_DONE) {
-                                linearLayout.addView(layout);
-                                displayed = true;
-                            } else if(state == ScheduleLessonsBuilder.STATE_LOADING){
-                                linearLayout.addView(layout);
-                            } else if(state == ScheduleLessonsBuilder.STATE_FAILED){
-                                failed();
+                    try {
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                linearLayout.removeAllViews();
+                                if(state == ScheduleLessonsBuilder.STATE_DONE) {
+                                    linearLayout.addView(layout);
+                                    displayed = true;
+                                } else if(state == ScheduleLessonsBuilder.STATE_LOADING){
+                                    linearLayout.addView(layout);
+                                } else if(state == ScheduleLessonsBuilder.STATE_FAILED){
+                                    failed();
+                                }
                             }
-                        }
-                    });
+                        });
+                    } catch (NullPointerException e){
+                        LoginActivity.errorTracker.add(e);
+                        failed();
+                    }
                 }
             })).start();
         } catch (Exception e){
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
             failed();
         }
     }
@@ -100,7 +105,7 @@ public class ScheduleLessonsEvenFragment extends Fragment {
                 }
             });
         } catch (Exception e){
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
         }
     }
     private void draw(int layoutId){
@@ -109,7 +114,7 @@ public class ScheduleLessonsEvenFragment extends Fragment {
             vg.removeAllViews();
             vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         } catch (Exception e){
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
         }
     }
 }

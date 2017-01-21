@@ -173,7 +173,7 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                         }
                     });
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    LoginActivity.errorTracker.add(e);
                 }
             }
         }
@@ -181,6 +181,7 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
     private void loadFailed(){
         try {
             draw(R.layout.state_try_again);
+            ((TextView) getActivity().findViewById(R.id.try_again_message)).setText(R.string.load_failed_retry_in_minute);
             getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -188,7 +189,7 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                 }
             });
         } catch (Exception e) {
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
         }
     }
     private void display(){
@@ -325,7 +326,7 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                 notifyAboutDateUpdate = false;
             }
         } catch (Exception e){
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
             loadFailed();
         }
     }
@@ -385,7 +386,7 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
             vg.removeAllViews();
             vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         } catch (Exception e){
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
         }
     }
 }
@@ -403,7 +404,7 @@ class ERegister {
             try {
                 parse(new JSONObject(eRegister));
             } catch (Exception e) {
-                e.printStackTrace();
+                LoginActivity.errorTracker.add(e);
             }
         }
     }
@@ -415,7 +416,7 @@ class ERegister {
             parse(json);
             Cache.put(context, "ERegister", json.toString());
         } catch (Exception e) {
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
         }
     }
     ParsedERegister get(){
@@ -515,7 +516,7 @@ class ERegister {
                     parsedERegister.groups.add(group);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                LoginActivity.errorTracker.add(e);
                 parsedERegister = null;
             }
         }

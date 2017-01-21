@@ -222,13 +222,13 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                 }
             });
         } catch (Exception e) {
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
         }
     }
     private void display(){
         try {
-            JSONObject dataR = rating.get("Rating");
-            JSONObject dataRL = rating.get("RatingList");
+            final JSONObject dataR = rating.get("Rating");
+            final JSONObject dataRL = rating.get("RatingList");
             // отображаем интерфейс
             draw(R.layout.rating_layout);
             if(dataR == null){
@@ -244,11 +244,39 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                     HashMap<String, String> hashMap = new HashMap<>();
                     hashMap.put("name", jsonObject.getString("faculty") + " — " + jsonObject.getInt("course") + " " + getString(R.string.course));
                     hashMap.put("position", jsonObject.getString("position"));
+                    hashMap.put("faculty", jsonObject.getString("faculty"));
+                    hashMap.put("course", String.valueOf(jsonObject.getInt("course")));
                     courses.add(hashMap);
                 }
                 // работаем со списком
                 ListView rl_list_view = (ListView) getActivity().findViewById(R.id.rl_list_view);
                 rl_list_view.setAdapter(new RatingListView(getActivity(), courses));
+                rl_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        try {
+                            HashMap<String, String> hashMap = courses.get(position);
+                            JSONArray array = dataRL.getJSONObject("rating").getJSONArray("faculties");
+                            int max_course = dataR.getJSONObject("rating").getInt("max_course");
+                            for(int i = 0; i < array.length(); i++){
+                                JSONObject obj = array.getJSONObject(i);
+                                if(obj.getString("name").contains(hashMap.get("faculty"))){
+                                    int course_delta = (max_course - Integer.parseInt(hashMap.get("course")));
+                                    Calendar now = Calendar.getInstance();
+                                    int year = now.get(Calendar.YEAR) - course_delta;
+                                    int month = now.get(Calendar.MONTH);
+                                    Intent intent = new Intent(getActivity(), RatingListActivity.class);
+                                    intent.putExtra("faculty", obj.getString("depId"));
+                                    intent.putExtra("course", hashMap.get("course"));
+                                    intent.putExtra("years", (month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year));
+                                    startActivity(intent);
+                                    break;
+                                }
+                            }
+                        } catch (Exception e) {
+                            LoginActivity.errorTracker.add(e);
+                        }
+                    }
+                });
             }
             // работаем со свайпом
             SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) getActivity().findViewById(R.id.swipe_container);
@@ -323,7 +351,7 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                 });
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
             loadFailed();
         }
     }
@@ -337,7 +365,7 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
             vg.removeAllViews();
             vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         } catch (Exception e){
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
         }
     }
 }
@@ -357,7 +385,7 @@ class Rating {
             try {
                 this.rating = new JSONObject(protocol);
             } catch (Exception e) {
-                e.printStackTrace();
+                LoginActivity.errorTracker.add(e);
             }
         }
         protocol = Cache.get(context, "RatingList");
@@ -365,7 +393,7 @@ class Rating {
             try {
                 this.ratingList = new JSONObject(protocol);
             } catch (Exception e) {
-                e.printStackTrace();
+                LoginActivity.errorTracker.add(e);
             }
         }
     }
@@ -382,7 +410,7 @@ class Rating {
             }
             Cache.put(context, type, json.toString());
         } catch (Exception e) {
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
         }
     }
     JSONObject get(String type){
@@ -419,20 +447,24 @@ class RatingParse extends AsyncTask<String, Void, JSONObject> {
             TagNode div = root.findElementByAttValue("class", "d_text", true, false);
             TagNode table = div.getElementListByAttValue("class", "d_table", true, false).get(1);
             List<? extends TagNode> rows = table.getAllElementsList(false).get(0).getAllElementsList(false);
+            int max_course = 1;
             JSONArray courses = new JSONArray();
             for(TagNode row : rows){
                 if(row.getText().toString().contains("Позиция")) continue;
                 List<? extends TagNode> columns = row.getAllElementsList(false);
                 JSONObject course = new JSONObject();
                 course.put("faculty", columns.get(0).getText().toString().trim());
-                course.put("course", Integer.parseInt(columns.get(1).getText().toString().trim()));
+                int course_value = Integer.parseInt(columns.get(1).getText().toString().trim());
+                if(course_value > max_course) max_course = course_value;
+                course.put("course", course_value);
                 course.put("position", columns.get(2).getText().toString().trim());
                 courses.put(course);
             }
             json.put("courses", courses);
+            json.put("max_course", max_course);
             return json;
         } catch (Exception e) {
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
             return null;
         }
     }
@@ -489,7 +521,7 @@ class RatingListParse extends AsyncTask<String, Void, JSONObject> {
             json.put("faculties", faculties);
             return json;
         } catch (Exception e) {
-            e.printStackTrace();
+            LoginActivity.errorTracker.add(e);
             return null;
         }
     }
