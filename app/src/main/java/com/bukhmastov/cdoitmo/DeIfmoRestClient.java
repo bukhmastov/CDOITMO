@@ -34,7 +34,7 @@ class DeIfmoRestClient {
     private static final String USER_AGENT = "Android Application";
     private static AsyncHttpClient httpclient = new AsyncHttpClient();
     private static boolean initialized = false;
-    private static Context context;
+    private static Context context = null;
 
     static final int STATE_CHECKING = 0;
     static final int STATE_AUTHORIZATION = 1;
@@ -321,8 +321,12 @@ class DeIfmoRestClient {
         httpclient.addHeader("Cookie", "JSESSIONID=" + Storage.get(context, "session_cookie") + "; Path=/;");
     }
     static boolean isOnline() {
-        NetworkInfo networkInfo = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
-        return (networkInfo != null && networkInfo.isConnected());
+        if(context != null) {
+            NetworkInfo networkInfo = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
+            return (networkInfo != null && networkInfo.isConnected());
+        } else {
+            return true;
+        }
     }
 }
 

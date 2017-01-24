@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:background="?attr/colorBackgroundSection"
+        android:id="@+id/room101_header_bar">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/add_request"
+            android:layout_weight="10"
+            android:layout_gravity="center_vertical"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="16sp" />
+
+        <ImageView
+            android:layout_height="24dp"
+            app:srcCompat="@drawable/ic_close"
+            android:layout_weight="1"
+            android:layout_width="24dp"
+            android:id="@+id/room101_close_add_request"
+            android:contentDescription="@string/close" />
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?attr/colorSeparator"
+        android:id="@+id/room101_separator_header"
+        android:layout_below="@+id/room101_header_bar"/>
+
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/room101_separator_header"
+        android:layout_above="@+id/room101_nav_bar">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:id="@+id/room101_add_request_container" >
+
+        </LinearLayout>
+    </ScrollView>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?attr/colorSeparator"
+        android:id="@+id/room101_separator_nav"
+        android:layout_above="@+id/room101_nav_bar"/>
+
+    <RelativeLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="?attr/colorBackgroundSection"
+        android:id="@+id/room101_nav_bar"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true">
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:id="@+id/room101_back"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true"
+            android:paddingStart="0dp"
+            android:paddingEnd="10dp">
+
+            <ImageView
+                android:layout_height="match_parent"
+                app:srcCompat="@drawable/ic_chevron_left"
+                android:layout_weight="1"
+                android:layout_width="40dp"
+                android:contentDescription="@string/back" />
+
+            <TextView
+                android:text="@string/lorem_ipsum"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:textAllCaps="true"
+                android:textColor="?android:attr/textColorPrimary"
+                android:id="@+id/room101_back_text" />
+
+        </LinearLayout>
+
+        <ProgressBar
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/room101_progress_bar"
+            android:layout_alignParentTop="true"
+            android:layout_toEndOf="@+id/room101_back"
+            android:layout_toStartOf="@+id/room101_forward"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:indeterminate="false"
+            android:max="100"/>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_height="match_parent"
+            android:id="@+id/room101_forward"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:layout_width="wrap_content"
+            android:paddingEnd="0dp"
+            android:paddingStart="10dp">
+
+            <TextView
+                android:text="@string/lorem_ipsum"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:textAllCaps="true"
+                android:textColor="?android:attr/textColorPrimary"
+                android:id="@+id/room101_forward_text" />
+
+            <ImageView
+                android:layout_height="match_parent"
+                app:srcCompat="@drawable/ic_chevron_right"
+                android:layout_weight="1"
+                android:layout_width="40dp"
+                android:contentDescription="@string/forward" />
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+</RelativeLayout>

@@ -7,6 +7,7 @@
         <item>@string/rating</item>
         <item>@string/schedule_lessons</item>
         <item>@string/schedule_exams</item>
+        <item>@string/room101</item>
     </string-array>
     <string-array name="pref_general_default_fragment_values">
         <item>e_journal</item>
@@ -14,6 +15,7 @@
         <item>rating</item>
         <item>schedule_lessons</item>
         <item>schedule_exams</item>
+        <item>room101</item>
     </string-array>
 
     <string-array name="pref_notifications_interval_titles">

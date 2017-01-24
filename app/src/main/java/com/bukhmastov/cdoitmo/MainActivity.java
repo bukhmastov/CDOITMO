@@ -54,6 +54,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     static int textColorPrimary;
     static int textColorSecondary;
     static int colorSeparator;
+    static float destiny;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +76,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case "rating": selectedSection = R.id.nav_rating; break;
             case "schedule_lessons": selectedSection = R.id.nav_schedule; break;
             case "schedule_exams": selectedSection = R.id.nav_schedule_exams; break;
+            case "room101": selectedSection = R.id.nav_room101; break;
         }
         protocolTracker = new ProtocolTracker(this);
         typedValue = new TypedValue();
@@ -84,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         textColorSecondary = obtainStyledAttributes(typedValue.data, new int[]{android.R.attr.textColorSecondary}).getColor(0, -1);
         getTheme().resolveAttribute(R.attr.colorSeparator, typedValue, true);
         colorSeparator = obtainStyledAttributes(typedValue.data, new int[]{R.attr.colorSeparator}).getColor(0, -1);
+        destiny = getResources().getDisplayMetrics().density;
     }
 
     @Override
@@ -172,7 +175,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 LoginActivity.state = LoginActivity.SIGNAL_RECONNECT;
                 finish();
                 return true;
-            default: return super.onOptionsItemSelected(item);
+            default: return false;
         }
     }
 
@@ -302,6 +305,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.nav_schedule_exams:
                 title = getString(R.string.schedule_exams);
                 fragmentClass = ScheduleExamsFragment.class;
+                break;
+            case R.id.nav_room101:
+                title = getString(R.string.room101);
+                fragmentClass = Room101Fragment.class;
                 break;
             case R.id.nav_settings:
                 Intent intent = new Intent(this, SettingsActivity.class);
