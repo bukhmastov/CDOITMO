@@ -36,6 +36,7 @@
                     android:layout_height="wrap_content"
                     android:src="@drawable/itmo_cdo_horizontal"
                     android:layout_margin="10dp"
+                    android:layout_gravity="center"
                     android:contentDescription="@string/cdo" />
 
             </FrameLayout>

@@ -42,6 +42,8 @@
     <string name="notifications">Уведомления</string>
     <string name="pref_default_fragment">Вкладка по умолчанию</string>
     <string name="pref_use_cache">Кэшировать данные на диске</string>
+    <string name="pref_initial_offline">Запускать в оффлайн режиме</string>
+    <string name="pref_initial_offline_summary">При старте приложения</string>
     <string name="pref_auto_logout">Автовыход</string>
     <string name="pref_auto_logout_summary">Автоматический выход из аккаунта</string>
     <string name="pref_use_notifications">Уведомления</string>
@@ -129,5 +131,6 @@
     <string name="session_date">Дата сеанса</string>
     <string name="time_start">Время начала</string>
     <string name="time_end">Время конца</string>
+    <string name="request_denied">Не удалось создать заявку</string>
 
 </resources>

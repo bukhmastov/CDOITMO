@@ -40,6 +40,7 @@ import java.util.Objects;
 public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "ProtocolFragment";
+    private boolean interrupted = false;
     public static Protocol protocol = null;
     private int number_of_weeks = 1;
     private boolean notifyAboutDateUpdate = false;
@@ -61,19 +62,13 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
     @Override
     public void onResume() {
         super.onResume();
-        if(!loaded) {
-            loaded = true;
-            forceLoad();
-        }
+        relaunch();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        if(fragmentRequestHandle != null) {
-            loaded = false;
-            fragmentRequestHandle.cancel(true);
-        }
+        interrupt();
     }
 
     @Override
@@ -106,7 +101,7 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
             params.put("UNIVER", "1");
             params.put("APPRENTICESHIP", month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year);
             params.put("PERIOD", String.valueOf(number_of_weeks * 7));
-            DeIfmoRestClient.post("servlet/distributedCDE", params, new DeIfmoRestClientResponseHandler() {
+            DeIfmoRestClient.post(getContext(), "servlet/distributedCDE", params, new DeIfmoRestClientResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, String response) {
                     if (statusCode == 200) {
@@ -125,61 +120,64 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
                         }
                     }
                 }
-
                 @Override
                 public void onProgress(int state) {
-                    draw(R.layout.state_loading);
-                    TextView loading_message = (TextView) getActivity().findViewById(R.id.loading_message);
-                    switch (state) {
-                        case DeIfmoRestClient.STATE_HANDLING:
-                            loading_message.setText(R.string.loading);
-                            break;
-                        case DeIfmoRestClient.STATE_AUTHORIZATION:
-                            loading_message.setText(R.string.authorization);
-                            break;
-                        case DeIfmoRestClient.STATE_AUTHORIZED:
-                            loading_message.setText(R.string.authorized);
-                            break;
+                    if(isLaunched()) {
+                        draw(R.layout.state_loading);
+                        TextView loading_message = (TextView) getActivity().findViewById(R.id.loading_message);
+                        if (loading_message != null) {
+                            switch (state) {
+                                case DeIfmoRestClient.STATE_HANDLING:
+                                    loading_message.setText(R.string.loading);
+                                    break;
+                                case DeIfmoRestClient.STATE_AUTHORIZATION:
+                                    loading_message.setText(R.string.authorization);
+                                    break;
+                                case DeIfmoRestClient.STATE_AUTHORIZED:
+                                    loading_message.setText(R.string.authorized);
+                                    break;
+                            }
+                        }
                     }
                 }
-
                 @Override
                 public void onFailure(int state) {
-                    switch (state) {
-                        case DeIfmoRestClient.FAILED_OFFLINE:
-                            if (protocol.is(number_of_weeks)) {
-                                display();
-                            } else {
-                                draw(R.layout.state_offline);
-                                getActivity().findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
+                    if(isLaunched()) {
+                        switch (state) {
+                            case DeIfmoRestClient.FAILED_OFFLINE:
+                                if (protocol.is(number_of_weeks)) {
+                                    display();
+                                } else {
+                                    draw(R.layout.state_offline);
+                                    getActivity().findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            forceLoad();
+                                        }
+                                    });
+                                }
+                                break;
+                            case DeIfmoRestClient.FAILED_TRY_AGAIN:
+                            case DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN:
+                                draw(R.layout.state_try_again);
+                                if (state == DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN)
+                                    ((TextView) getActivity().findViewById(R.id.try_again_message)).setText(R.string.auth_failed);
+                                getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
                                     @Override
                                     public void onClick(View v) {
                                         forceLoad();
                                     }
                                 });
-                            }
-                            break;
-                        case DeIfmoRestClient.FAILED_TRY_AGAIN:
-                        case DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN:
-                            draw(R.layout.state_try_again);
-                            if (state == DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN)
-                                ((TextView) getActivity().findViewById(R.id.try_again_message)).setText(R.string.auth_failed);
-                            getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    forceLoad();
-                                }
-                            });
-                            break;
-                        case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
-                            gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED);
-                            break;
-                        case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED:
-                            gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED);
-                            break;
+                                break;
+                            case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
+                                gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED);
+                                break;
+                            case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED:
+                                gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED);
+                                break;
+                        }
                     }
                 }
-
                 @Override
                 public void onNewHandle(RequestHandle requestHandle) {
                     fragmentRequestHandle = requestHandle;
@@ -189,31 +187,36 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
             if(protocol.is(number_of_weeks)){
                 display();
             } else {
-                draw(R.layout.state_offline);
-                getActivity().findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
+                if(isLaunched()) {
+                    draw(R.layout.state_offline);
+                    getActivity().findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            forceLoad();
+                        }
+                    });
+                }
+            }
+        }
+    }
+    private void loadFailed(){
+        try {
+            if(isLaunched()) {
+                draw(R.layout.state_try_again);
+                getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         forceLoad();
                     }
                 });
             }
-        }
-    }
-    private void loadFailed(){
-        try {
-            draw(R.layout.state_try_again);
-            getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    forceLoad();
-                }
-            });
         } catch (Exception e) {
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }
     }
     void display(){
         try {
+            if(!isLaunched()) return;
             JSONObject data = protocol.get();
             if(data == null) throw new NullPointerException("Protocol.protocol can't be null");
             // получаем список предметов для отображения
@@ -298,7 +301,7 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
                 notifyAboutDateUpdate = false;
             }
         } catch (Exception e) {
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             loadFailed();
         }
     }
@@ -308,11 +311,13 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
     }
     private void draw(int layoutId){
         try {
-            ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_protocol));
-            vg.removeAllViews();
-            vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            if(isLaunched()) {
+                ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_protocol));
+                vg.removeAllViews();
+                vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            }
         } catch (Exception e){
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }
     }
     private String double2string(Double value){
@@ -325,6 +330,23 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
             valueStr = "-";
         }
         return valueStr;
+    }
+    private void interrupt(){
+        interrupted = true;
+        if(fragmentRequestHandle != null){
+            loaded = false;
+            fragmentRequestHandle.cancel(true);
+        }
+    }
+    private void relaunch(){
+        interrupted = false;
+        if(!loaded) {
+            loaded = true;
+            forceLoad();
+        }
+    }
+    private boolean isLaunched(){
+        return !interrupted;
     }
 }
 
@@ -341,7 +363,7 @@ class Protocol {
             try {
                 this.protocol = new JSONObject(protocol);
             } catch (Exception e) {
-                LoginActivity.errorTracker.add(e);
+                if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             }
         }
     }
@@ -356,7 +378,7 @@ class Protocol {
             Cache.put(context, "Protocol", protocol.toString());
             if(number_of_weeks == 1) PreferenceManager.getDefaultSharedPreferences(context).edit().putString("ProtocolTrackerHISTORY", data.getJSONArray("changes").toString()).apply();
         } catch (Exception e) {
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }
     }
     JSONObject get(){
@@ -369,7 +391,7 @@ class Protocol {
             try {
                 return protocol.getInt("number_of_weeks") == number_of_weeks;
             } catch (JSONException e) {
-                LoginActivity.errorTracker.add(e);
+                if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                 return false;
             }
         }
@@ -450,7 +472,7 @@ class ProtocolParse extends AsyncTask<String, Void, JSONObject> {
                 }
             }
         } catch (Exception e) {
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             return null;
         }
         return null;

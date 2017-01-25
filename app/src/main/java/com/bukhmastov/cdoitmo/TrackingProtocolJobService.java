@@ -37,8 +37,8 @@ public class TrackingProtocolJobService extends JobService {
     public boolean onStartJob(JobParameters params) {
         Log.i(TAG, "Executing");
         try {
-            DeIfmoRestClient.init(getApplicationContext());
-            DeIfmoRestClient.authorize(new DeIfmoRestClientResponseHandler() {
+            DeIfmoRestClient.init();
+            DeIfmoRestClient.authorize(getApplicationContext(), new DeIfmoRestClientResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, String response) {
                     Calendar now = Calendar.getInstance();
@@ -52,7 +52,7 @@ public class TrackingProtocolJobService extends JobService {
                     rParams.put("UNIVER", "1");
                     rParams.put("APPRENTICESHIP", month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year);
                     rParams.put("PERIOD", "7");
-                    DeIfmoRestClient.post("servlet/distributedCDE", rParams, new DeIfmoRestClientResponseHandler() {
+                    DeIfmoRestClient.post(getApplicationContext(), "servlet/distributedCDE", rParams, new DeIfmoRestClientResponseHandler() {
                         @Override
                         public void onSuccess(int statusCode, String response) {
                             if (statusCode == 200) {

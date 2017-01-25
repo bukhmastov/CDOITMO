@@ -34,6 +34,7 @@ public class LoginActivity extends AppCompatActivity {
     static final int SIGNAL_LOGOUT = 1;
     static final int SIGNAL_CREDENTIALS_FAILED = 2;
     static final int SIGNAL_RECONNECT = 3;
+    static boolean is_initial = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +57,7 @@ public class LoginActivity extends AppCompatActivity {
             actionBar.setLogo(obtainStyledAttributes(attrs).getDrawable(0));
         }
         // инициализация http клиента
-        DeIfmoRestClient.init(this);
+        DeIfmoRestClient.init();
         // инициализация визуальных компонентов
         btn_login = (Button) findViewById(R.id.btn_login);
         input_login = (EditText) findViewById(R.id.input_login);
@@ -89,7 +90,9 @@ public class LoginActivity extends AppCompatActivity {
                     Storage.clear(getBaseContext());
                     Snackbar.make(findViewById(R.id.activity_login), R.string.invalid_login_password, Snackbar.LENGTH_LONG).show();
                     break;
-                case SIGNAL_RECONNECT: break;
+                case SIGNAL_RECONNECT:
+                    if(is_initial) is_initial = false;
+                    break;
                 default:
                     if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean("pref_auto_logout", false) && !(Objects.equals(Storage.get(getBaseContext(), "login"), "") || Objects.equals(Storage.get(getBaseContext(), "password"), ""))) logOut();
                     break;
@@ -103,12 +106,12 @@ public class LoginActivity extends AppCompatActivity {
                 input_password.setText(Storage.get(getBaseContext(), "password"));
             }
         } catch (Exception e) {
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }
     }
 
     private void logOut(){
-        DeIfmoRestClient.get("servlet/distributedCDE?Rule=SYSTEM_EXIT", null, new DeIfmoRestClientResponseHandler() {
+        DeIfmoRestClient.get(this, "servlet/distributedCDE?Rule=SYSTEM_EXIT", null, new DeIfmoRestClientResponseHandler() {
             @Override
             public void onSuccess(int statusCode, String response) {}
             @Override
@@ -124,7 +127,7 @@ public class LoginActivity extends AppCompatActivity {
         try {
             Snackbar.make(findViewById(R.id.activity_login), R.string.logged_out, Snackbar.LENGTH_SHORT).show();
         } catch (Exception e) {
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }
     }
 }

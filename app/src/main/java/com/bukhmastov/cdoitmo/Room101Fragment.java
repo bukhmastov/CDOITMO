@@ -36,6 +36,7 @@ import com.loopj.android.http.RequestParams;
 import org.htmlcleaner.HtmlCleaner;
 import org.htmlcleaner.TagNode;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
@@ -52,6 +53,7 @@ import cz.msebera.android.httpclient.Header;
 public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener, Room101ReviewBuilder.register {
 
     private static final String TAG = "Room101Fragment";
+    private boolean interrupted = false;
     private boolean loaded = false;
     static RequestHandle fragmentRequestHandle = null;
     private JSONObject viewRequest = null;
@@ -70,19 +72,13 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
     @Override
     public void onResume() {
         super.onResume();
-        if(!loaded) {
-            loaded = true;
-            load(true);
-        }
+        relaunch();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        if(fragmentRequestHandle != null) {
-            loaded = false;
-            fragmentRequestHandle.cancel(true);
-        }
+        interrupt();
     }
 
     @Override
@@ -91,13 +87,9 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
     }
 
     @Override
-    public void onDenyRequest(final int reid) {
+    public void onDenyRequest(final int reid, final int status) {
         if(MainActivity.OFFLINE_MODE) {
-            TypedValue typedValue = new TypedValue();
-            Snackbar snackbar = Snackbar.make(getActivity().findViewById(R.id.room101_review_swipe), R.string.device_offline_action_refused, Snackbar.LENGTH_SHORT);
-            getActivity().getTheme().resolveAttribute(R.attr.colorBackgroundSnackBar, typedValue, true);
-            snackbar.getView().setBackgroundColor(typedValue.data);
-            snackbar.show();
+            snackBar(getString(R.string.device_offline_action_refused));
         } else {
             (new AlertDialog.Builder(getContext())
                     .setTitle(R.string.request_deny)
@@ -106,7 +98,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                     .setPositiveButton(R.string.delete, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            denyRequest(reid);
+                            denyRequest(reid, status);
                             dialog.cancel();
                         }
                     })
@@ -120,32 +112,39 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
             ).show();
         }
     }
-    private void denyRequest(final int reid){
+    private void denyRequest(final int reid, final int status){
         RequestParams params = new RequestParams();
-        params.put("getFunc", "delRequest");
+        switch(status){
+            case 1: params.put("getFunc", "snatRequest"); break;
+            default: params.put("getFunc", "delRequest"); break;
+        }
         params.put("reid", reid);
         params.put("login", Storage.get(getContext(), "login"));
         params.put("password", Storage.get(getContext(), "password"));
         Room101RestClient.post(getContext(), "delRequest.php", params, new Room101RestClientResponseHandler() {
             @Override
             public void onSuccess(int statusCode, String response) {
-                draw(R.layout.state_try_again);
-                ((TextView) getActivity().findViewById(R.id.try_again_message)).setText(R.string.wrong_response_from_server);
-                getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        denyRequest(reid);
-                    }
-                });
+                if(isLaunched()) {
+                    draw(R.layout.state_try_again);
+                    ((TextView) getActivity().findViewById(R.id.try_again_message)).setText(R.string.wrong_response_from_server);
+                    getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            denyRequest(reid, status);
+                        }
+                    });
+                }
             }
             @Override
             public void onProgress(int state) {
-                draw(R.layout.state_loading);
-                TextView loading_message = (TextView) getActivity().findViewById(R.id.loading_message);
-                switch (state) {
-                    case Room101RestClient.STATE_HANDLING:
-                        loading_message.setText(R.string.deny_request);
-                        break;
+                if(isLaunched()) {
+                    draw(R.layout.state_loading);
+                    TextView loading_message = (TextView) getActivity().findViewById(R.id.loading_message);
+                    switch (state) {
+                        case Room101RestClient.STATE_HANDLING:
+                            loading_message.setText(R.string.deny_request);
+                            break;
+                    }
                 }
             }
             @Override
@@ -153,14 +152,16 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                 if(statusCode == 302){
                     load(true);
                 } else {
-                    draw(R.layout.state_try_again);
-                    ((TextView) getActivity().findViewById(R.id.try_again_message)).setText(R.string.wrong_response_from_server);
-                    getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            denyRequest(reid);
-                        }
-                    });
+                    if(isLaunched()) {
+                        draw(R.layout.state_try_again);
+                        ((TextView) getActivity().findViewById(R.id.try_again_message)).setText(R.string.wrong_response_from_server);
+                        getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                denyRequest(reid, status);
+                            }
+                        });
+                    }
                 }
             }
             @Override
@@ -172,11 +173,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
 
     private void addRequest(){
         if(MainActivity.OFFLINE_MODE) {
-            TypedValue typedValue = new TypedValue();
-            Snackbar snackbar = Snackbar.make(getActivity().findViewById(R.id.room101_review_swipe), R.string.device_offline_action_refused, Snackbar.LENGTH_SHORT);
-            getActivity().getTheme().resolveAttribute(R.attr.colorBackgroundSnackBar, typedValue, true);
-            snackbar.getView().setBackgroundColor(typedValue.data);
-            snackbar.show();
+            snackBar(getString(R.string.device_offline_action_refused));
         } else {
             draw(R.layout.layout_room101_add_request);
             final LinearLayout room101_back = (LinearLayout) getActivity().findViewById(R.id.room101_back);
@@ -227,26 +224,22 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                                 break;
                         }
                     } catch (Exception e){
-                        LoginActivity.errorTracker.add(e);
-                        Snackbar snackbar = Snackbar.make(getActivity().findViewById(R.id.room101_review_swipe), R.string.error_occurred_while_room101_request, Snackbar.LENGTH_SHORT);
-                        getActivity().getTheme().resolveAttribute(R.attr.colorBackgroundSnackBar, MainActivity.typedValue, true);
-                        snackbar.getView().setBackgroundColor(MainActivity.typedValue.data);
-                        snackbar.show();
+                        if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
+                        snackBar(getString(R.string.error_occurred_while_room101_request));
                         load(false);
                     }
                 }
                 @Override
                 public void onDraw(View view) {
                     try {
-                        ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.room101_add_request_container));
-                        vg.removeAllViews();
-                        vg.addView(view);
+                        if(isLaunched()) {
+                            ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.room101_add_request_container));
+                            vg.removeAllViews();
+                            vg.addView(view);
+                        }
                     } catch (Exception e){
-                        LoginActivity.errorTracker.add(e);
-                        Snackbar snackbar = Snackbar.make(getActivity().findViewById(R.id.room101_review_swipe), R.string.error_occurred, Snackbar.LENGTH_SHORT);
-                        getActivity().getTheme().resolveAttribute(R.attr.colorBackgroundSnackBar, MainActivity.typedValue, true);
-                        snackbar.getView().setBackgroundColor(MainActivity.typedValue.data);
-                        snackbar.show();
+                        if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
+                        snackBar(getString(R.string.error_occurred));
                         load(false);
                     }
                 }
@@ -290,7 +283,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                     return;
                 }
             } catch (Exception e){
-                LoginActivity.errorTracker.add(e);
+                if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             }
         }
         if(!MainActivity.OFFLINE_MODE) {
@@ -302,8 +295,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                             @Override
                             public void finish(JSONObject json) {
                                 viewRequest = json;
-                                if (viewRequest != null)
-                                    Cache.put(getContext(), "room101_review", viewRequest.toString());
+                                if (viewRequest != null) Cache.put(getContext(), "room101_review", viewRequest.toString());
                                 display();
                             }
                         }).execute(response);
@@ -313,12 +305,14 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                 }
                 @Override
                 public void onProgress(int state) {
-                    draw(R.layout.state_loading);
-                    TextView loading_message = (TextView) getActivity().findViewById(R.id.loading_message);
-                    switch (state) {
-                        case Room101RestClient.STATE_HANDLING:
-                            loading_message.setText(R.string.loading);
-                            break;
+                    if(isLaunched()) {
+                        draw(R.layout.state_loading);
+                        TextView loading_message = (TextView) getActivity().findViewById(R.id.loading_message);
+                        switch (state) {
+                            case Room101RestClient.STATE_HANDLING:
+                                loading_message.setText(R.string.loading);
+                                break;
+                        }
                     }
                 }
                 @Override
@@ -333,33 +327,38 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                                     return;
                                 }
                             } catch (Exception e) {
-                                LoginActivity.errorTracker.add(e);
+                                if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                             }
-                            draw(R.layout.state_offline);
-                            getActivity().findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    load(true);
-                                }
-                            });
+                            if(isLaunched()) {
+                                draw(R.layout.state_offline);
+                                getActivity().findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        load(true);
+                                    }
+                                });
+                            }
                             break;
                         case Room101RestClient.FAILED_TRY_AGAIN:
                         case Room101RestClient.FAILED_EXPECTED_REDIRECTION:
-                            draw(R.layout.state_try_again);
-                            if (state == Room101RestClient.FAILED_EXPECTED_REDIRECTION)
-                                ((TextView) getActivity().findViewById(R.id.try_again_message)).setText(R.string.wrong_response_from_server);
-                            getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    load(true);
-                                }
-                            });
+                            if(isLaunched()) {
+                                draw(R.layout.state_try_again);
+                                if (state == Room101RestClient.FAILED_EXPECTED_REDIRECTION) ((TextView) getActivity().findViewById(R.id.try_again_message)).setText(R.string.wrong_response_from_server);
+                                getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        load(true);
+                                    }
+                                });
+                            }
                             break;
                         case Room101RestClient.FAILED_AUTH:
-                            draw(R.layout.state_try_again);
-                            View try_again_reload = getActivity().findViewById(R.id.try_again_reload);
-                            ((ViewGroup) try_again_reload.getParent()).removeView(try_again_reload);
-                            ((TextView) getActivity().findViewById(R.id.try_again_message)).setText(R.string.room101_auth_failed);
+                            if(isLaunched()) {
+                                draw(R.layout.state_try_again);
+                                View try_again_reload = getActivity().findViewById(R.id.try_again_reload);
+                                ((ViewGroup) try_again_reload.getParent()).removeView(try_again_reload);
+                                ((TextView) getActivity().findViewById(R.id.try_again_message)).setText(R.string.room101_auth_failed);
+                            }
                             break;
                     }
                 }
@@ -369,17 +368,20 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                 }
             });
         } else {
-            draw(R.layout.state_offline);
-            getActivity().findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    load(true);
-                }
-            });
+            if(isLaunched()) {
+                draw(R.layout.state_offline);
+                getActivity().findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        load(true);
+                    }
+                });
+            }
         }
     }
     private void display(){
         try {
+            if(!isLaunched()) return;
             if(viewRequest == null) throw new NullPointerException("viewRequest cannot be null");
             draw(R.layout.layout_room101_review);
             ((TextView) getActivity().findViewById(R.id.room101_limit)).setText(viewRequest.getString("limit"));
@@ -401,7 +403,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                             }
                         });
                     } catch (NullPointerException e){
-                        LoginActivity.errorTracker.add(e);
+                        if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                         loadFailed();
                     }
                 }
@@ -436,36 +438,37 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                 } else {
                     message = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.ROOT).format(new Date(timestamp));
                 }
-                Snackbar snackbar = Snackbar.make(getActivity().findViewById(R.id.room101_review_swipe), getString(R.string.update_date) + " " + message, Snackbar.LENGTH_SHORT);
-                getActivity().getTheme().resolveAttribute(R.attr.colorBackgroundSnackBar, typedValue, true);
-                snackbar.getView().setBackgroundColor(typedValue.data);
-                snackbar.show();
+                snackBar(getString(R.string.update_date) + " " + message);
             }
         } catch (Exception e){
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             loadFailed();
         }
     }
     private void loadFailed(){
         try {
-            draw(R.layout.state_try_again);
-            getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    load(true);
-                }
-            });
+            if(isLaunched()) {
+                draw(R.layout.state_try_again);
+                getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        load(true);
+                    }
+                });
+            }
         } catch (Exception e) {
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }
     }
     private void draw(int layoutId){
         try {
-            ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_room101));
-            vg.removeAllViews();
-            vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            if(isLaunched()) {
+                ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_room101));
+                vg.removeAllViews();
+                vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            }
         } catch (Exception e){
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }
     }
     static void execute(final Context context, String scope, final Room101RestClientResponseHandler responseHandler){
@@ -531,6 +534,31 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
             }
         });
     }
+    private void snackBar(String text){
+        if(isLaunched()) {
+            Snackbar snackbar = Snackbar.make(getActivity().findViewById(R.id.room101_review_swipe), text, Snackbar.LENGTH_SHORT);
+            getActivity().getTheme().resolveAttribute(R.attr.colorBackgroundSnackBar, MainActivity.typedValue, true);
+            snackbar.getView().setBackgroundColor(MainActivity.typedValue.data);
+            snackbar.show();
+        }
+    }
+    private void interrupt(){
+        interrupted = true;
+        if(fragmentRequestHandle != null){
+            loaded = false;
+            fragmentRequestHandle.cancel(true);
+        }
+    }
+    private void relaunch(){
+        interrupted = false;
+        if(!loaded) {
+            loaded = true;
+            load(true);
+        }
+    }
+    private boolean isLaunched(){
+        return !interrupted;
+    }
 }
 
 class Room101RestClient {
@@ -574,7 +602,7 @@ class Room101RestClient {
                         if (responseBody != null) data = new String((new String(responseBody, "windows-1251")).getBytes("UTF-8"));
                         responseHandler.onSuccess(statusCode, data);
                     } catch (UnsupportedEncodingException e) {
-                        LoginActivity.errorTracker.add(e);
+                        if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                         responseHandler.onFailure(FAILED_TRY_AGAIN, statusCode, headers);
                     }
                 }
@@ -603,7 +631,7 @@ class Room101RestClient {
                         if (responseBody != null) data = new String((new String(responseBody, "windows-1251")).getBytes("UTF-8"));
                         responseHandler.onSuccess(statusCode, data);
                     } catch (UnsupportedEncodingException e) {
-                        LoginActivity.errorTracker.add(e);
+                        if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                         responseHandler.onFailure(FAILED_TRY_AGAIN, statusCode, headers);
                     }
                 }
@@ -709,7 +737,7 @@ class Room101ViewRequestParse extends AsyncTask<String, Void, JSONObject> {
             response.put("sessions", sessions);
             return response;
         } catch (Exception e) {
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             return null;
         }
     }
@@ -724,7 +752,7 @@ class Room101ReviewBuilder extends Thread {
         void state(int state, LinearLayout layout);
     }
     interface register {
-        void onDenyRequest(int reid);
+        void onDenyRequest(int reid, int status);
     }
     private response delegate = null;
     private register register = null;
@@ -780,6 +808,7 @@ class Room101ReviewBuilder extends Thread {
                     lp.weight = 1;
                     denyLayout.setLayoutParams(lp);
                     final int reid = request.getInt("reid");
+                    final String statusText = request.getString("status");
                     if (reid != 0){
                         ImageView denyImg = new ImageView(activity);
                         denyImg.setLayoutParams(new LinearLayout.LayoutParams((int) (40 * destiny), (int) (40 * destiny)));
@@ -788,7 +817,9 @@ class Room101ReviewBuilder extends Thread {
                         denyImg.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                register.onDenyRequest(reid);
+                                int status = 0;
+                                if(Objects.equals(statusText, "удовлетворена")) status = 1;
+                                register.onDenyRequest(reid, status);
                             }
                         });
                         denyLayout.addView(denyImg);
@@ -806,7 +837,7 @@ class Room101ReviewBuilder extends Thread {
             }
             delegate.state(STATE_DONE, container);
         } catch (Exception e){
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             delegate.state(STATE_FAILED, container);
         }
     }
@@ -1075,15 +1106,30 @@ class Room101AddRequest {
         Room101RestClient.post(context, "newRequest.php", params, new Room101RestClientResponseHandler() {
             @Override
             public void onSuccess(int statusCode, String response) {
-                failed();
+                try {
+                    data = new JSONObject();
+                    data.put("done", false);
+                    CURRENT_STAGE++;
+                    proceedStage();
+                } catch (JSONException e) {
+                    if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
+                    failed();
+                }
             }
             @Override
             public void onProgress(int state) {}
             @Override
             public void onFailure(int state, int statusCode, Header[] headers) {
                 if(statusCode == 302){
-                    CURRENT_STAGE++;
-                    proceedStage();
+                    try {
+                        data = new JSONObject();
+                        data.put("done", true);
+                        CURRENT_STAGE++;
+                        proceedStage();
+                    } catch (JSONException e) {
+                        if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
+                        failed();
+                    }
                 } else {
                     failed();
                 }
@@ -1109,7 +1155,7 @@ class Room101AddRequest {
                             try {
                                 pick_date = buttonView.getText().toString().trim();
                             } catch (Exception e) {
-                                LoginActivity.errorTracker.add(e);
+                                if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                                 failed();
                             }
                         }
@@ -1119,7 +1165,7 @@ class Room101AddRequest {
                 callback.onDraw(getEmptyLayout(context.getString(R.string.no_date_to_peek)));
             }
         } catch (Exception e){
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             failed();
         }
     }
@@ -1137,7 +1183,7 @@ class Room101AddRequest {
                             try {
                                 pick_time_start = buttonView.getText().toString().trim() + ":00";
                             } catch (Exception e) {
-                                LoginActivity.errorTracker.add(e);
+                                if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                                 failed();
                             }
                         }
@@ -1147,7 +1193,7 @@ class Room101AddRequest {
                 callback.onDraw(getEmptyLayout(context.getString(R.string.no_time_to_peek)));
             }
         } catch (Exception e){
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             failed();
         }
     }
@@ -1165,7 +1211,7 @@ class Room101AddRequest {
                             try {
                                 pick_time_end = buttonView.getText().toString().trim() + ":00";
                             } catch (Exception e) {
-                                LoginActivity.errorTracker.add(e);
+                                if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                                 failed();
                             }
                         }
@@ -1175,7 +1221,7 @@ class Room101AddRequest {
                 callback.onDraw(getEmptyLayout(context.getString(R.string.no_time_to_peek)));
             }
         } catch (Exception e){
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             failed();
         }
     }
@@ -1186,12 +1232,19 @@ class Room101AddRequest {
             if(pick_time_end == null) throw new NullPointerException("pick_time_end cannot be null");
             callback.onDraw(getChooserLayout(context.getString(R.string.attention) + "!", context.getString(R.string.room101_warning), null, null));
         } catch (Exception e){
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             failed();
         }
     }
     private void done(){
-        callback.onDraw(getChooserLayout(context.getString(R.string.request_accepted), "", null, null));
+        try {
+            if (data == null) throw new NullPointerException("data cannot be null");
+            if (!data.has("done")) throw new Exception("Empty data.done");
+            callback.onDraw(getChooserLayout(data.getBoolean("done") ? context.getString(R.string.request_accepted) : context.getString(R.string.request_denied), "", null, null));
+        } catch (Exception e){
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
+            failed();
+        }
     }
 
     private void failed(){
@@ -1205,7 +1258,7 @@ class Room101AddRequest {
             snackbar.getView().setBackgroundColor(MainActivity.typedValue.data);
             snackbar.show();
         } catch (Exception e){
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }
     }
     private LinearLayout getLoadingLayout(String text){
@@ -1306,7 +1359,7 @@ class Room101AddRequest {
                 chooser.addView(descView);
             }
         } catch (Exception e){
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             failed();
         }
         return chooser;
@@ -1360,7 +1413,7 @@ class DatePickParse extends AsyncTask<String, Void, JSONObject> {
             response.put("data", dates);
             return response;
         } catch (Exception e) {
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             return null;
         }
     }
@@ -1408,7 +1461,7 @@ class TimeStartPickParse extends AsyncTask<String, Void, JSONObject> {
             response.put("data", times);
             return response;
         } catch (Exception e) {
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             return null;
         }
     }
@@ -1456,7 +1509,7 @@ class TimeEndPickParse extends AsyncTask<String, Void, JSONObject> {
             response.put("data", times);
             return response;
         } catch (Exception e) {
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             return null;
         }
     }

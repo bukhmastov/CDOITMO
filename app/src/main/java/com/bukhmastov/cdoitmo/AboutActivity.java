@@ -13,6 +13,10 @@ import android.widget.Toast;
 
 public class AboutActivity extends AppCompatActivity {
 
+    private int counterToReport = 0;
+    private int tapsToReport = 7;
+    private Toast toast;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         if(PreferenceManager.getDefaultSharedPreferences(this).getBoolean("pref_dark_theme", false)) setTheme(R.style.AppTheme_Dark);
@@ -25,13 +29,22 @@ public class AboutActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
         ((TextView) findViewById(R.id.app_info_version)).setText("v" + LoginActivity.versionName + " (" + LoginActivity.versionCode + ")");
-        ((TextView) findViewById(R.id.error_count)).setText(new StringBuilder().append("Количество накопленных ошибок: ").append(LoginActivity.errorTracker.count()).toString());
-        Button send_report = (Button) findViewById(R.id.send_report);
-        send_report.setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.app_info_dev).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!LoginActivity.errorTracker.send()){
-                    Toast.makeText(getBaseContext(), "Ошибок не найдено", Toast.LENGTH_SHORT).show();
+                counterToReport++;
+                if(counterToReport > 2 && counterToReport < tapsToReport){
+                    if(toast != null) toast.cancel();
+                    toast = Toast.makeText(getBaseContext(), "Для отправки отчета нажмите еще " + (tapsToReport - counterToReport) + " раз", Toast.LENGTH_SHORT);
+                    toast.show();
+                }
+                if(counterToReport == tapsToReport){
+                    counterToReport = 0;
+                    if(!LoginActivity.errorTracker.send()){
+                        if(toast != null) toast.cancel();
+                        toast = Toast.makeText(getBaseContext(), "Ошибок не найдено", Toast.LENGTH_SHORT);
+                        toast.show();
+                    }
                 }
             }
         });

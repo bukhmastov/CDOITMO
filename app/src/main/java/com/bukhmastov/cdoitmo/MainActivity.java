@@ -39,6 +39,7 @@ import java.util.regex.Pattern;
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "MainActivity";
+    private boolean interrupted = false;
     public static int selectedSection = R.id.nav_e_register;
     public static SharedPreferences sharedPreferences;
     public static ProtocolTracker protocolTracker;
@@ -58,12 +59,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        if(PreferenceManager.getDefaultSharedPreferences(this).getBoolean("pref_dark_theme", false)) setTheme(R.style.AppTheme_Dark);
-        OFFLINE_MODE = !DeIfmoRestClient.isOnline();
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        if(sharedPreferences.getBoolean("pref_dark_theme", false)) setTheme(R.style.AppTheme_Dark);
+        OFFLINE_MODE = !DeIfmoRestClient.isOnline(this) || (LoginActivity.is_initial && sharedPreferences.getBoolean("pref_initial_offline" , false));
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar_main));
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        DeIfmoRestClient.init();
         DrawerLayout mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, ((Toolbar)findViewById(R.id.toolbar_main)), R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         mDrawerLayout.addDrawerListener(mDrawerToggle);
@@ -92,21 +94,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onPause() {
         super.onPause();
-        if(checkRequestHandle != null) checkRequestHandle.cancel(true);
+        interrupt();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        relaunch();
         if(OFFLINE_MODE){
-            Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content), "Приложение запущено в оффлайн режиме", Snackbar.LENGTH_LONG);
-            TypedValue typedValue = new TypedValue();
-            getTheme().resolveAttribute(R.attr.colorBackgroundSnackBar, typedValue, true);
-            snackbar.getView().setBackgroundColor(typedValue.data);
-            snackbar.show();
+            if(isLaunched()) {
+                Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content), "Приложение запущено в оффлайн режиме", Snackbar.LENGTH_LONG);
+                TypedValue typedValue = new TypedValue();
+                getTheme().resolveAttribute(R.attr.colorBackgroundSnackBar, typedValue, true);
+                snackbar.getView().setBackgroundColor(typedValue.data);
+                snackbar.show();
+            }
         }
         updateWeek();
-        navigationView.setCheckedItem(selectedSection);
+        if(isLaunched()) navigationView.setCheckedItem(selectedSection);
         if(!loaded) check();
     }
 
@@ -118,22 +123,28 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        ((DrawerLayout) findViewById(R.id.drawer_layout)).closeDrawer(GravityCompat.START);
-        selectSection(item.getItemId());
+        if(isLaunched()) {
+            ((DrawerLayout) findViewById(R.id.drawer_layout)).closeDrawer(GravityCompat.START);
+            selectSection(item.getItemId());
+        }
         return true;
     }
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
-            if(sharedPreferences.getBoolean("pref_auto_logout", false) || OFFLINE_MODE){
-                super.onBackPressed();
+        if(isLaunched()) {
+            DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+            if (drawer.isDrawerOpen(GravityCompat.START)) {
+                drawer.closeDrawer(GravityCompat.START);
             } else {
-                drawer.openDrawer(GravityCompat.START);
+                if (sharedPreferences.getBoolean("pref_auto_logout", false)) {
+                    super.onBackPressed();
+                } else {
+                    drawer.openDrawer(GravityCompat.START);
+                }
             }
+        } else {
+            super.onBackPressed();
         }
     }
 
@@ -141,30 +152,42 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.toolbar_main, menu);
         MainActivity.menu = menu;
-        if(OFFLINE_MODE) menu.findItem(R.id.offline_mode).setVisible(true);
+        MenuItem menuItem;
+        if(OFFLINE_MODE){
+            menuItem = menu.findItem(R.id.offline_mode);
+            if(menuItem != null) menuItem.setVisible(true);
+        }
         // search view for lessons schedule
-        SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
-        searchView.setSubmitButtonEnabled(true);
-        searchView.setElevation(6);
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener(){
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                try {
-                    MainActivity.menu.findItem(R.id.action_search).collapseActionView();
-                    if(selectedSection == R.id.nav_schedule) {
-                        if (ScheduleLessonsFragment.scheduleLessons != null) ScheduleLessonsFragment.scheduleLessons.search(query, false);
+        menuItem = menu.findItem(R.id.action_search);
+        if(menuItem != null) {
+            SearchView searchView = (SearchView) menuItem.getActionView();
+            if(searchView != null) {
+                searchView.setSubmitButtonEnabled(true);
+                searchView.setElevation(6);
+                searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                    @Override
+                    public boolean onQueryTextSubmit(String query) {
+                        try {
+                            MenuItem menuItem = MainActivity.menu.findItem(R.id.action_search);
+                            if(menuItem != null) menuItem.collapseActionView();
+                            if (selectedSection == R.id.nav_schedule) {
+                                if (ScheduleLessonsFragment.scheduleLessons != null) ScheduleLessonsFragment.scheduleLessons.search(query, false);
+                            }
+                            if (selectedSection == R.id.nav_schedule_exams) {
+                                if (ScheduleExamsFragment.scheduleExams != null) ScheduleExamsFragment.scheduleExams.search(query, false);
+                            }
+                        } catch (Exception e) {
+                            if (LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
+                        }
+                        return false;
                     }
-                    if(selectedSection == R.id.nav_schedule_exams) {
-                        if (ScheduleExamsFragment.scheduleExams != null) ScheduleExamsFragment.scheduleExams.search(query, false);
+                    @Override
+                    public boolean onQueryTextChange(String newText) {
+                        return false;
                     }
-                } catch (Exception e){
-                    LoginActivity.errorTracker.add(e);
-                }
-                return false;
+                });
             }
-            @Override
-            public boolean onQueryTextChange(String newText) { return false; }
-        });
+        }
         return true;
     }
 
@@ -183,7 +206,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         loaded = false;
         if(!OFFLINE_MODE) {
             draw(R.layout.state_loading);
-            DeIfmoRestClient.check(new DeIfmoRestClientResponseHandler() {
+            DeIfmoRestClient.check(this, new DeIfmoRestClientResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, String response) {
                     MainActivity.group = Storage.get(getBaseContext(), "group");
@@ -191,10 +214,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     updateWeek();
                     if (!Objects.equals(MainActivity.name, "")) {
                         TextView user_name = (TextView) findViewById(R.id.user_name);
-                        user_name.setText(response);
-                        user_name.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                        if(user_name != null) {
+                            user_name.setText(response);
+                            user_name.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                        }
                     }
-                    protocolTracker.check();
+                    if(protocolTracker != null) protocolTracker.check();
                     loaded = true;
                     selectSection(selectedSection);
                 }
@@ -202,16 +227,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 public void onProgress(int state) {
                     draw(R.layout.state_loading);
                     TextView loading_message = (TextView) findViewById(R.id.loading_message);
-                    switch (state) {
-                        case DeIfmoRestClient.STATE_CHECKING:
-                            loading_message.setText(R.string.auth_check);
-                            break;
-                        case DeIfmoRestClient.STATE_AUTHORIZATION:
-                            loading_message.setText(R.string.authorization);
-                            break;
-                        case DeIfmoRestClient.STATE_AUTHORIZED:
-                            loading_message.setText(R.string.authorized);
-                            break;
+                    if(loading_message != null) {
+                        switch (state) {
+                            case DeIfmoRestClient.STATE_CHECKING:
+                                loading_message.setText(R.string.auth_check);
+                                break;
+                            case DeIfmoRestClient.STATE_AUTHORIZATION:
+                                loading_message.setText(R.string.authorization);
+                                break;
+                            case DeIfmoRestClient.STATE_AUTHORIZED:
+                                loading_message.setText(R.string.authorized);
+                                break;
+                        }
                     }
                 }
                 @Override
@@ -229,8 +256,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         case DeIfmoRestClient.FAILED_TRY_AGAIN:
                         case DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN:
                             draw(R.layout.state_try_again);
-                            if (state == DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN)
-                                ((TextView) findViewById(R.id.try_again_message)).setText(R.string.auth_failed);
+                            if (state == DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN) ((TextView) findViewById(R.id.try_again_message)).setText(R.string.auth_failed);
                             findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
@@ -261,7 +287,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     user_name.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                 }
             }
-            protocolTracker.check();
+            if(protocolTracker != null) protocolTracker.check();
             loaded = true;
             selectSection(selectedSection);
         }
@@ -279,7 +305,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
             }
         } catch (JSONException e) {
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }
     }
     private void selectSection(final int section){
@@ -318,16 +344,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         if(fragmentClass != null){
             if(!loaded){
-                Snackbar snackbar = Snackbar.make(findViewById(R.id.content_container), R.string.w8m8, Snackbar.LENGTH_SHORT);
-                TypedValue typedValue = new TypedValue();
-                getTheme().resolveAttribute(R.attr.colorBackgroundSnackBar, typedValue, true);
-                snackbar.getView().setBackgroundColor(typedValue.data);
-                snackbar.show();
+                snackBar(getString(R.string.w8m8));
                 navigationView.setCheckedItem(selectedSection);
                 return;
             }
             navigationView.setCheckedItem(section);
-            ((ViewGroup) findViewById(R.id.content_container)).removeAllViews();
+            ViewGroup content_container = (ViewGroup) findViewById(R.id.content_container);
+            if(content_container != null) content_container.removeAllViews();
             selectedSection = section;
             try {
                 Fragment fragment = (Fragment) fragmentClass.newInstance();
@@ -338,18 +361,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     actionBar.setTitle(title);
                 }
             } catch (Exception e) {
-                LoginActivity.errorTracker.add(e);
-                Snackbar snackbar = Snackbar.make(findViewById(R.id.content_container), getString(R.string.failed_to_open_fragment), Snackbar.LENGTH_SHORT);
-                TypedValue typedValue = new TypedValue();
-                getTheme().resolveAttribute(R.attr.colorBackgroundSnackBar, typedValue, true);
-                snackbar.getView().setBackgroundColor(typedValue.data);
-                snackbar.setAction(R.string.redo, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        selectSection(section);
-                    }
-                });
-                snackbar.show();
+                if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
+                if(isLaunched()) {
+                    Snackbar snackbar = Snackbar.make(findViewById(R.id.content_container), getString(R.string.failed_to_open_fragment), Snackbar.LENGTH_SHORT);
+                    getTheme().resolveAttribute(R.attr.colorBackgroundSnackBar, typedValue, true);
+                    snackbar.getView().setBackgroundColor(typedValue.data);
+                    snackbar.setAction(R.string.redo, new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            selectSection(section);
+                        }
+                    });
+                    snackbar.show();
+                }
             }
         }
     }
@@ -359,12 +383,32 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
     private void draw(int layoutId){
         try {
-            ViewGroup vg = ((ViewGroup) findViewById(R.id.content_container));
-            vg.removeAllViews();
-            vg.addView(((LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            if(isLaunched()) {
+                ViewGroup vg = ((ViewGroup) findViewById(R.id.content_container));
+                vg.removeAllViews();
+                vg.addView(((LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            }
         } catch (Exception e) {
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }
+    }
+    private void snackBar(String text){
+        if(isLaunched()) {
+            Snackbar snackbar = Snackbar.make(findViewById(R.id.content_container), text, Snackbar.LENGTH_SHORT);
+            getTheme().resolveAttribute(R.attr.colorBackgroundSnackBar, typedValue, true);
+            snackbar.getView().setBackgroundColor(typedValue.data);
+            snackbar.show();
+        }
+    }
+    private void interrupt(){
+        interrupted = true;
+        if(checkRequestHandle != null) checkRequestHandle.cancel(true);
+    }
+    private void relaunch(){
+        interrupted = false;
+    }
+    private boolean isLaunched(){
+        return !interrupted;
     }
 }
 

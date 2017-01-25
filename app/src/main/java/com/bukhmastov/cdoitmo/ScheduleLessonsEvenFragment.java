@@ -84,13 +84,13 @@ public class ScheduleLessonsEvenFragment extends Fragment {
                             }
                         });
                     } catch (NullPointerException e){
-                        LoginActivity.errorTracker.add(e);
+                        if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                         failed();
                     }
                 }
             })).start();
         } catch (Exception e){
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             failed();
         }
     }
@@ -105,7 +105,7 @@ public class ScheduleLessonsEvenFragment extends Fragment {
                 }
             });
         } catch (Exception e){
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }
     }
     private void draw(int layoutId){
@@ -114,7 +114,7 @@ public class ScheduleLessonsEvenFragment extends Fragment {
             vg.removeAllViews();
             vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         } catch (Exception e){
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }
     }
 }

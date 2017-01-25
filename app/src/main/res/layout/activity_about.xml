@@ -49,36 +49,8 @@
         android:layout_height="wrap_content"
         android:autoLink="all"
         android:textAlignment="center"
-        android:textColor="?android:attr/textColorSecondary" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_margin="20dp"
-        android:background="?attr/colorSeparator" />
-
-    <TextView
-        android:text="В случае некорректной работы, отправьте отчет"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:autoLink="all"
-        android:textAlignment="center"
-        android:textColor="?android:attr/textColorSecondary" />
-
-    <TextView
-        android:id="@+id/error_count"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:autoLink="all"
-        android:textAlignment="center"
-        android:textColor="?android:attr/textColorSecondary" />
-
-    <Button
-        android:text="Отправить отчет"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/send_report"
-        android:layout_gravity="center_horizontal"/>
+        android:textColor="?android:attr/textColorSecondary"
+        android:id="@+id/app_info_dev" />
 
     <View
         android:layout_width="match_parent"

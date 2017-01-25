@@ -33,8 +33,6 @@ class DeIfmoRestClient {
     private static final String BASE_URL_IFMO = "http://www.ifmo.ru/";
     private static final String USER_AGENT = "Android Application";
     private static AsyncHttpClient httpclient = new AsyncHttpClient();
-    private static boolean initialized = false;
-    private static Context context = null;
 
     static final int STATE_CHECKING = 0;
     static final int STATE_AUTHORIZATION = 1;
@@ -47,23 +45,18 @@ class DeIfmoRestClient {
     static final int FAILED_AUTH_CREDENTIALS_REQUIRED = 3;
     static final int FAILED_AUTH_CREDENTIALS_FAILED = 4;
 
-    static void init(Context ctx){
-        if(!initialized){
-            context = ctx;
-            httpclient.setLoggingLevel(Log.WARN);
-            httpclient.addHeader("User-Agent", USER_AGENT);
-            httpclient.addHeader("Cookie", "JSESSIONID=" + Storage.get(context, "session_cookie") + "; Path=/;");
-            initialized = true;
-        }
+    static void init(){
+        httpclient.setLoggingLevel(Log.WARN);
     }
-    static void check(final DeIfmoRestClientResponseHandler responseHandler){
-        if(isOnline()){
+    static void check(final Context context, final DeIfmoRestClientResponseHandler responseHandler){
+        httpclient.setLoggingLevel(Log.WARN);
+        if(isOnline(context)){
             responseHandler.onProgress(STATE_CHECKING);
             if (Objects.equals(Storage.get(context, "session_cookie"), "")){
-                authorize(new DeIfmoRestClientResponseHandler() {
+                authorize(context, new DeIfmoRestClientResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, String response) {
-                        check(responseHandler);
+                        check(context, responseHandler);
                     }
                     @Override
                     public void onProgress(int state) {
@@ -79,7 +72,7 @@ class DeIfmoRestClient {
                     }
                 });
             } else {
-                DeIfmoRestClient.get("servlet/distributedCDE?Rule=editPersonProfile", null, new DeIfmoRestClientResponseHandler() {
+                DeIfmoRestClient.get(context, "servlet/distributedCDE?Rule=editPersonProfile", null, new DeIfmoRestClientResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, String response) {
                         new UserDataParse(new UserDataParse.response() {
@@ -94,7 +87,7 @@ class DeIfmoRestClient {
                                         jsonObject.put("week", Integer.parseInt(result.get("week")));
                                         Storage.put(context, "week", jsonObject.toString());
                                     } catch (Exception e) {
-                                        LoginActivity.errorTracker.add(e);
+                                        if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                                         Storage.delete(context, "week");
                                     }
                                     responseHandler.onSuccess(200, result.get("name"));
@@ -120,7 +113,7 @@ class DeIfmoRestClient {
             responseHandler.onFailure(FAILED_OFFLINE);
         }
     }
-    static void authorize(final DeIfmoRestClientResponseHandler responseHandler){
+    static void authorize(final Context context, final DeIfmoRestClientResponseHandler responseHandler){
         responseHandler.onProgress(STATE_AUTHORIZATION);
         String login = Storage.get(context, "login");
         String password = Storage.get(context, "password");
@@ -131,7 +124,7 @@ class DeIfmoRestClient {
             params.put("Rule", "LOGON");
             params.put("LOGIN", login);
             params.put("PASSWD", password);
-            renewSessionCookie();
+            renewCookie(context);
             responseHandler.onNewHandle(httpclient.post(getAbsoluteUrl("servlet", false), params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
@@ -176,7 +169,7 @@ class DeIfmoRestClient {
                             responseHandler.onFailure(FAILED_AUTH_TRY_AGAIN);
                         }
                     } catch (UnsupportedEncodingException e) {
-                        LoginActivity.errorTracker.add(e);
+                        if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                         responseHandler.onFailure(FAILED_AUTH_TRY_AGAIN);
                     }
                 }
@@ -188,13 +181,13 @@ class DeIfmoRestClient {
             }));
         }
     }
-    static void get(String url, final RequestParams params, DeIfmoRestClientResponseHandler responseHandler){
-        get(url, params, false, responseHandler);
+    static void get(final Context context, String url, final RequestParams params, DeIfmoRestClientResponseHandler responseHandler){
+        get(context, url, params, false, responseHandler);
     }
-    static void get(final String url, final RequestParams params, final boolean is_ifmo, final DeIfmoRestClientResponseHandler responseHandler){
-        if(isOnline()) {
+    static void get(final Context context, final String url, final RequestParams params, final boolean is_ifmo, final DeIfmoRestClientResponseHandler responseHandler){
+        if(isOnline(context)) {
             responseHandler.onProgress(STATE_HANDLING);
-            renewSessionCookie();
+            renewCookie(context);
             responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(url, is_ifmo), params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
@@ -207,10 +200,10 @@ class DeIfmoRestClient {
                             if (responseBody != null) data = new String((new String(responseBody, "windows-1251")).getBytes("UTF-8"));
                         }
                         if (data.contains("Закончился интервал неактивности") || data.contains("Доступ запрещен")) {
-                            authorize(new DeIfmoRestClientResponseHandler() {
+                            authorize(context, new DeIfmoRestClientResponseHandler() {
                                 @Override
                                 public void onSuccess(int statusCode, String response) {
-                                    get(url, params, responseHandler);
+                                    get(context, url, params, responseHandler);
                                 }
                                 @Override
                                 public void onProgress(int state) {
@@ -229,7 +222,7 @@ class DeIfmoRestClient {
                             responseHandler.onSuccess(statusCode, data);
                         }
                     } catch (UnsupportedEncodingException e) {
-                        LoginActivity.errorTracker.add(e);
+                        if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                         responseHandler.onFailure(FAILED_TRY_AGAIN);
                     }
                 }
@@ -243,10 +236,10 @@ class DeIfmoRestClient {
             responseHandler.onFailure(FAILED_OFFLINE);
         }
     }
-    static void post(final String url, final RequestParams params, final DeIfmoRestClientResponseHandler responseHandler){
-        if(isOnline()) {
+    static void post(final Context context, final String url, final RequestParams params, final DeIfmoRestClientResponseHandler responseHandler){
+        if(isOnline(context)) {
             responseHandler.onProgress(STATE_HANDLING);
-            renewSessionCookie();
+            renewCookie(context);
             responseHandler.onNewHandle(httpclient.post(getAbsoluteUrl(url, false), params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
@@ -255,10 +248,10 @@ class DeIfmoRestClient {
                         String data = "";
                         if (responseBody != null) data = new String((new String(responseBody, "windows-1251")).getBytes("UTF-8"));
                         if (data.contains("Закончился интервал неактивности") || data.contains("Доступ запрещен")) {
-                            authorize(new DeIfmoRestClientResponseHandler() {
+                            authorize(context, new DeIfmoRestClientResponseHandler() {
                                 @Override
                                 public void onSuccess(int statusCode, String response) {
-                                    post(url, params, responseHandler);
+                                    post(context, url, params, responseHandler);
                                 }
                                 @Override
                                 public void onProgress(int state) {
@@ -277,7 +270,7 @@ class DeIfmoRestClient {
                             responseHandler.onSuccess(statusCode, data);
                         }
                     } catch (UnsupportedEncodingException e) {
-                        LoginActivity.errorTracker.add(e);
+                        if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                         responseHandler.onFailure(FAILED_TRY_AGAIN);
                     }
                 }
@@ -291,10 +284,10 @@ class DeIfmoRestClient {
             responseHandler.onFailure(FAILED_OFFLINE);
         }
     }
-    static void getJSON(final String url, final RequestParams params, final DeIfmoRestClientJsonResponseHandler responseHandler){
-        if(isOnline()) {
+    static void getJSON(final Context context, final String url, final RequestParams params, final DeIfmoRestClientJsonResponseHandler responseHandler){
+        if(isOnline(context)) {
             responseHandler.onProgress(STATE_HANDLING);
-            renewSessionCookie();
+            renewCookie(context);
             responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(url, false), params, new JsonHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
@@ -316,11 +309,13 @@ class DeIfmoRestClient {
     private static String getAbsoluteUrl(String relativeUrl, boolean is_ifmo) {
         return is_ifmo ? BASE_URL_IFMO + relativeUrl : BASE_URL + relativeUrl;
     }
-    private static void renewSessionCookie(){
+    private static void renewCookie(Context context){
+        httpclient.removeHeader("User-Agent");
         httpclient.removeHeader("Cookie");
+        httpclient.addHeader("User-Agent", USER_AGENT);
         httpclient.addHeader("Cookie", "JSESSIONID=" + Storage.get(context, "session_cookie") + "; Path=/;");
     }
-    static boolean isOnline() {
+    static boolean isOnline(Context context) {
         if(context != null) {
             NetworkInfo networkInfo = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
             return (networkInfo != null && networkInfo.isConnected());
@@ -368,7 +363,7 @@ class UserDataParse extends AsyncTask<String, Void, HashMap<String, String>> {
             }
             return response;
         } catch (Exception e){
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             return null;
         }
     }

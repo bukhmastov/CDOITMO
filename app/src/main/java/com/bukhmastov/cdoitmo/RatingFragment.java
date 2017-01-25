@@ -40,6 +40,7 @@ import java.util.regex.Pattern;
 public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "RatingFragment";
+    private boolean interrupted = false;
     public static Rating rating = null;
     private boolean loaded = false;
     private HashMap<String, Integer> ready;
@@ -65,23 +66,13 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
     @Override
     public void onResume() {
         super.onResume();
-        if(!loaded) {
-            loaded = true;
-            load();
-        }
+        relaunch();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        if(fragmentRequestHandle.get("Rating") != null){
-            loaded = false;
-            fragmentRequestHandle.get("Rating").cancel(true);
-        }
-        if(fragmentRequestHandle.get("RatingList") != null){
-            loaded = false;
-            fragmentRequestHandle.get("RatingList").cancel(true);
-        }
+        interrupt();
     }
 
     @Override
@@ -106,7 +97,7 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
     private void loadPart(String type){
         if(!MainActivity.OFFLINE_MODE) {
             if (Objects.equals(type, "Rating")) {
-                DeIfmoRestClient.get("servlet/distributedCDE?Rule=REP_EXECUTE_PRINT&REP_ID=1441", null, new DeIfmoRestClientResponseHandler() {
+                DeIfmoRestClient.get(getContext(), "servlet/distributedCDE?Rule=REP_EXECUTE_PRINT&REP_ID=1441", null, new DeIfmoRestClientResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, String response) {
                         if (statusCode == 200) {
@@ -125,33 +116,33 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                             }
                         }
                     }
-
                     @Override
-                    public void onProgress(int state) {
-                    }
-
+                    public void onProgress(int state) {}
                     @Override
                     public void onFailure(int state) {
-                        switch (state) {
-                            case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
-                                gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED);
-                                break;
-                            case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED:
-                                gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED);
-                                break;
-                            default:
-                                failed("Rating");
-                                break;
+                        if(isLaunched()) {
+                            switch (state) {
+                                case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
+                                    gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED);
+                                    break;
+                                case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED:
+                                    gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED);
+                                    break;
+                                default:
+                                    failed("Rating");
+                                    break;
+                            }
+                        } else {
+                            failed("Rating");
                         }
                     }
-
                     @Override
                     public void onNewHandle(RequestHandle requestHandle) {
                         fragmentRequestHandle.put("Rating", requestHandle);
                     }
                 });
             } else {
-                DeIfmoRestClient.get("index.php?node=8", null, new DeIfmoRestClientResponseHandler() {
+                DeIfmoRestClient.get(getContext(), "index.php?node=8", null, new DeIfmoRestClientResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, String response) {
                         if (statusCode == 200) {
@@ -170,26 +161,26 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                             }
                         }
                     }
-
                     @Override
-                    public void onProgress(int state) {
-                    }
-
+                    public void onProgress(int state) {}
                     @Override
                     public void onFailure(int state) {
-                        switch (state) {
-                            case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
-                                gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED);
-                                break;
-                            case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED:
-                                gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED);
-                                break;
-                            default:
-                                failed("RatingList");
-                                break;
+                        if(isLaunched()) {
+                            switch (state) {
+                                case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
+                                    gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED);
+                                    break;
+                                case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED:
+                                    gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED);
+                                    break;
+                                default:
+                                    failed("RatingList");
+                                    break;
+                            }
+                        } else {
+                            failed("RatingList");
                         }
                     }
-
                     @Override
                     public void onNewHandle(RequestHandle requestHandle) {
                         fragmentRequestHandle.put("RatingList", requestHandle);
@@ -214,19 +205,22 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
     }
     private void loadFailed(){
         try {
-            draw(R.layout.state_try_again);
-            getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    forceLoad();
-                }
-            });
+            if(isLaunched()) {
+                draw(R.layout.state_try_again);
+                getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        forceLoad();
+                    }
+                });
+            }
         } catch (Exception e) {
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }
     }
     private void display(){
         try {
+            if(!isLaunched()) return;
             final JSONObject dataR = rating.get("Rating");
             final JSONObject dataRL = rating.get("RatingList");
             // отображаем интерфейс
@@ -273,7 +267,7 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                                 }
                             }
                         } catch (Exception e) {
-                            LoginActivity.errorTracker.add(e);
+                            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                         }
                     }
                 });
@@ -351,7 +345,7 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                 });
             }
         } catch (Exception e) {
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             loadFailed();
         }
     }
@@ -361,12 +355,35 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
     }
     private void draw(int layoutId){
         try {
-            ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_rating));
-            vg.removeAllViews();
-            vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            if(isLaunched()) {
+                ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_rating));
+                vg.removeAllViews();
+                vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            }
         } catch (Exception e){
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }
+    }
+    private void interrupt(){
+        interrupted = true;
+        if(fragmentRequestHandle.get("Rating") != null){
+            loaded = false;
+            fragmentRequestHandle.get("Rating").cancel(true);
+        }
+        if(fragmentRequestHandle.get("RatingList") != null){
+            loaded = false;
+            fragmentRequestHandle.get("RatingList").cancel(true);
+        }
+    }
+    private void relaunch(){
+        interrupted = false;
+        if(!loaded) {
+            loaded = true;
+            load();
+        }
+    }
+    private boolean isLaunched(){
+        return !interrupted;
     }
 }
 
@@ -385,7 +402,7 @@ class Rating {
             try {
                 this.rating = new JSONObject(protocol);
             } catch (Exception e) {
-                LoginActivity.errorTracker.add(e);
+                if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             }
         }
         protocol = Cache.get(context, "RatingList");
@@ -393,7 +410,7 @@ class Rating {
             try {
                 this.ratingList = new JSONObject(protocol);
             } catch (Exception e) {
-                LoginActivity.errorTracker.add(e);
+                if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             }
         }
     }
@@ -410,7 +427,7 @@ class Rating {
             }
             Cache.put(context, type, json.toString());
         } catch (Exception e) {
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }
     }
     JSONObject get(String type){
@@ -464,7 +481,7 @@ class RatingParse extends AsyncTask<String, Void, JSONObject> {
             json.put("max_course", max_course);
             return json;
         } catch (Exception e) {
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             return null;
         }
     }
@@ -521,7 +538,7 @@ class RatingListParse extends AsyncTask<String, Void, JSONObject> {
             json.put("faculties", faculties);
             return json;
         } catch (Exception e) {
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             return null;
         }
     }

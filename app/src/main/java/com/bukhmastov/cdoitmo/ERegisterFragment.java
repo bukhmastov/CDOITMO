@@ -34,6 +34,7 @@ import java.util.Objects;
 public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "ERegisterFragment";
+    private boolean interrupted = false;
     public static ERegister eRegister = null;
     private String group = "";
     private int term = 0;
@@ -56,19 +57,13 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
     @Override
     public void onResume() {
         super.onResume();
-        if(!loaded) {
-            loaded = true;
-            forceLoad();
-        }
+        relaunch();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        if(fragmentRequestHandle != null) {
-            loaded = false;
-            fragmentRequestHandle.cancel(true);
-        }
+        interrupt();
     }
 
     @Override
@@ -86,7 +81,7 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
     private void forceLoad(){
         notifyAboutDateUpdate = true;
         if(!MainActivity.OFFLINE_MODE) {
-            DeIfmoRestClient.getJSON("api/private/eregister", null, new DeIfmoRestClientJsonResponseHandler() {
+            DeIfmoRestClient.getJSON(getContext(), "api/private/eregister", null, new DeIfmoRestClientJsonResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, JSONObject response) {
                     if (statusCode == 200) {
@@ -100,61 +95,64 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                         }
                     }
                 }
-
                 @Override
                 public void onProgress(int state) {
-                    draw(R.layout.state_loading);
-                    TextView loading_message = (TextView) getActivity().findViewById(R.id.loading_message);
-                    switch (state) {
-                        case DeIfmoRestClient.STATE_HANDLING:
-                            loading_message.setText(R.string.loading);
-                            break;
-                        case DeIfmoRestClient.STATE_AUTHORIZATION:
-                            loading_message.setText(R.string.authorization);
-                            break;
-                        case DeIfmoRestClient.STATE_AUTHORIZED:
-                            loading_message.setText(R.string.authorized);
-                            break;
+                    if(isLaunched()) {
+                        draw(R.layout.state_loading);
+                        TextView loading_message = (TextView) getActivity().findViewById(R.id.loading_message);
+                        if (loading_message != null) {
+                            switch (state) {
+                                case DeIfmoRestClient.STATE_HANDLING:
+                                    loading_message.setText(R.string.loading);
+                                    break;
+                                case DeIfmoRestClient.STATE_AUTHORIZATION:
+                                    loading_message.setText(R.string.authorization);
+                                    break;
+                                case DeIfmoRestClient.STATE_AUTHORIZED:
+                                    loading_message.setText(R.string.authorized);
+                                    break;
+                            }
+                        }
                     }
                 }
-
                 @Override
                 public void onFailure(int state) {
-                    switch (state) {
-                        case DeIfmoRestClient.FAILED_OFFLINE:
-                            if (eRegister.is()) {
-                                display();
-                            } else {
-                                draw(R.layout.state_offline);
-                                getActivity().findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
+                    if(isLaunched()) {
+                        switch (state) {
+                            case DeIfmoRestClient.FAILED_OFFLINE:
+                                if (eRegister.is()) {
+                                    display();
+                                } else {
+                                    draw(R.layout.state_offline);
+                                    getActivity().findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            forceLoad();
+                                        }
+                                    });
+                                }
+                                break;
+                            case DeIfmoRestClient.FAILED_TRY_AGAIN:
+                            case DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN:
+                                draw(R.layout.state_try_again);
+                                if (state == DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN)
+                                    ((TextView) getActivity().findViewById(R.id.try_again_message)).setText(R.string.auth_failed);
+                                getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
                                     @Override
                                     public void onClick(View v) {
                                         forceLoad();
                                     }
                                 });
-                            }
-                            break;
-                        case DeIfmoRestClient.FAILED_TRY_AGAIN:
-                        case DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN:
-                            draw(R.layout.state_try_again);
-                            if (state == DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN)
-                                ((TextView) getActivity().findViewById(R.id.try_again_message)).setText(R.string.auth_failed);
-                            getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    forceLoad();
-                                }
-                            });
-                            break;
-                        case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
-                            gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED);
-                            break;
-                        case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED:
-                            gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED);
-                            break;
+                                break;
+                            case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
+                                gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED);
+                                break;
+                            case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED:
+                                gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED);
+                                break;
+                        }
                     }
                 }
-
                 @Override
                 public void onNewHandle(RequestHandle requestHandle) {
                     fragmentRequestHandle = requestHandle;
@@ -165,35 +163,40 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                 display();
             } else {
                 try {
-                    draw(R.layout.state_offline);
-                    getActivity().findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            forceLoad();
-                        }
-                    });
+                    if(isLaunched()) {
+                        draw(R.layout.state_offline);
+                        getActivity().findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                forceLoad();
+                            }
+                        });
+                    }
                 } catch (Exception e) {
-                    LoginActivity.errorTracker.add(e);
+                    if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                 }
             }
         }
     }
     private void loadFailed(){
         try {
-            draw(R.layout.state_try_again);
-            ((TextView) getActivity().findViewById(R.id.try_again_message)).setText(R.string.load_failed_retry_in_minute);
-            getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    forceLoad();
-                }
-            });
+            if(isLaunched()) {
+                draw(R.layout.state_try_again);
+                ((TextView) getActivity().findViewById(R.id.try_again_message)).setText(R.string.load_failed_retry_in_minute);
+                getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        forceLoad();
+                    }
+                });
+            }
         } catch (Exception e) {
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }
     }
     private void display(){
         try {
+            if(!isLaunched()) return;
             ParsedERegister parsedERegister = eRegister.get();
             if (parsedERegister == null) throw new NullPointerException("parsedERegister cannot be null");
             checkData(parsedERegister);
@@ -326,7 +329,7 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                 notifyAboutDateUpdate = false;
             }
         } catch (Exception e){
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             loadFailed();
         }
     }
@@ -382,12 +385,31 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
     }
     private void draw(int layoutId){
         try {
-            ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_eregister));
-            vg.removeAllViews();
-            vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            if(isLaunched()) {
+                ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_eregister));
+                vg.removeAllViews();
+                vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            }
         } catch (Exception e){
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }
+    }
+    private void interrupt(){
+        interrupted = true;
+        if(fragmentRequestHandle != null){
+            loaded = false;
+            fragmentRequestHandle.cancel(true);
+        }
+    }
+    private void relaunch(){
+        interrupted = false;
+        if(!loaded) {
+            loaded = true;
+            forceLoad();
+        }
+    }
+    private boolean isLaunched(){
+        return !interrupted;
     }
 }
 
@@ -404,7 +426,7 @@ class ERegister {
             try {
                 parse(new JSONObject(eRegister));
             } catch (Exception e) {
-                LoginActivity.errorTracker.add(e);
+                if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             }
         }
     }
@@ -416,7 +438,7 @@ class ERegister {
             parse(json);
             Cache.put(context, "ERegister", json.toString());
         } catch (Exception e) {
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }
     }
     ParsedERegister get(){
@@ -516,7 +538,7 @@ class ERegister {
                     parsedERegister.groups.add(group);
                 }
             } catch (Exception e) {
-                LoginActivity.errorTracker.add(e);
+                if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                 parsedERegister = null;
             }
         }

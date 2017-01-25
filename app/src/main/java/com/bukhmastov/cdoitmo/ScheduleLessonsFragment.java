@@ -46,6 +46,7 @@ import java.util.regex.Pattern;
 public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons.response {
 
     private static final String TAG = "ScheduleLessonsFragment";
+    private boolean interrupted = false;
     static ScheduleLessons scheduleLessons;
     private boolean loaded = false;
     static RequestHandle fragmentRequestHandle = null;
@@ -81,19 +82,13 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
                 }
             });
         }
-        if(!loaded) {
-            loaded = true;
-            scheduleLessons.search(MainActivity.group, false);
-        }
+        relaunch();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        if(fragmentRequestHandle != null) {
-            loaded = false;
-            fragmentRequestHandle.cancel(true);
-        }
+        interrupt();
     }
 
     @Override
@@ -106,22 +101,24 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
     @Override
     public void onProgress(int state){
         try {
-            schedule_tabs.setVisibility(View.GONE);
-            draw(R.layout.state_loading);
-            TextView loading_message = (TextView) getActivity().findViewById(R.id.loading_message);
-            switch (state) {
-                case DeIfmoRestClient.STATE_HANDLING:
-                    loading_message.setText(R.string.loading);
-                    break;
-                case DeIfmoRestClient.STATE_AUTHORIZATION:
-                    loading_message.setText(R.string.authorization);
-                    break;
-                case DeIfmoRestClient.STATE_AUTHORIZED:
-                    loading_message.setText(R.string.authorized);
-                    break;
+            if(isLaunched()) {
+                schedule_tabs.setVisibility(View.GONE);
+                draw(R.layout.state_loading);
+                TextView loading_message = (TextView) getActivity().findViewById(R.id.loading_message);
+                switch (state) {
+                    case DeIfmoRestClient.STATE_HANDLING:
+                        loading_message.setText(R.string.loading);
+                        break;
+                    case DeIfmoRestClient.STATE_AUTHORIZATION:
+                        loading_message.setText(R.string.authorization);
+                        break;
+                    case DeIfmoRestClient.STATE_AUTHORIZED:
+                        loading_message.setText(R.string.authorized);
+                        break;
+                }
             }
         } catch (Exception e) {
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }
     }
 
@@ -135,26 +132,29 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
         try {
             switch (state) {
                 case DeIfmoRestClient.FAILED_OFFLINE:
-                    draw(R.layout.state_offline);
-                    getActivity().findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            scheduleLessons.search(query, false);
-                        }
-                    });
+                    if(isLaunched()) {
+                        draw(R.layout.state_offline);
+                        getActivity().findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                scheduleLessons.search(query, false);
+                            }
+                        });
+                    }
                     break;
                 case DeIfmoRestClient.FAILED_TRY_AGAIN:
                 case DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN:
                 case ScheduleLessons.FAILED_LOAD:
-                    draw(R.layout.state_try_again);
-                    if (state == DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN)
-                        ((TextView) getActivity().findViewById(R.id.try_again_message)).setText(R.string.auth_failed);
-                    getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            scheduleLessons.search(query, false);
-                        }
-                    });
+                    if(isLaunched()) {
+                        draw(R.layout.state_try_again);
+                        if (state == DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN) ((TextView) getActivity().findViewById(R.id.try_again_message)).setText(R.string.auth_failed);
+                        getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                scheduleLessons.search(query, false);
+                            }
+                        });
+                    }
                     break;
                 case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
                     gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED);
@@ -164,13 +164,14 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
                     break;
             }
         } catch (Exception e){
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }
     }
 
     @Override
     public void onSuccess(JSONObject json){
         try {
+            if(!isLaunched()) return;
             if(json == null) throw new NullPointerException("json cannot be null");
             schedule = json;
             schedule_tabs.setVisibility(View.GONE);
@@ -214,7 +215,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
                 }
             }
         } catch (Exception e) {
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             onFailure(ScheduleLessons.FAILED_LOAD);
         }
     }
@@ -222,13 +223,14 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         if(getUserVisibleHint()){
-            ScheduleLessonsFragment.scheduleLessons.search(item.getTitle().toString().replace(getString(R.string.group), "").replace(getString(R.string.room), "").trim(), false);
+            if(ScheduleLessonsFragment.scheduleLessons != null) ScheduleLessonsFragment.scheduleLessons.search(item.getTitle().toString().replace(getString(R.string.group), "").replace(getString(R.string.room), "").trim(), false);
             return true;
         }
         return super.onContextItemSelected(item);
     }
 
     private void notFound(){
+        if(!isLaunched()) return;
         TypedValue typedValue = new TypedValue();
         getActivity().getTheme().resolveAttribute(android.R.attr.textColorPrimary, typedValue, true);
         int textColorPrimary = getActivity().obtainStyledAttributes(typedValue.data, new int[]{android.R.attr.textColorPrimary}).getColor(0, -1);
@@ -262,12 +264,31 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
     }
     private void draw(int layoutId){
         try {
-            ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_schedule));
-            vg.removeAllViews();
-            vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            if(isLaunched()) {
+                ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_schedule));
+                vg.removeAllViews();
+                vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            }
         } catch (Exception e){
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }
+    }
+    private void interrupt(){
+        interrupted = true;
+        if(fragmentRequestHandle != null){
+            loaded = false;
+            fragmentRequestHandle.cancel(true);
+        }
+    }
+    private void relaunch(){
+        interrupted = false;
+        if(!loaded) {
+            loaded = true;
+            scheduleLessons.search(MainActivity.group, false);
+        }
+    }
+    private boolean isLaunched(){
+        return !interrupted;
     }
 }
 
@@ -320,7 +341,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
     private void searchGroup(final String group, final boolean force, final boolean toCache){
         final String cache = getCache("group_" + group);
         if((force || Objects.equals(cache, "")) && !MainActivity.OFFLINE_MODE) {
-            DeIfmoRestClient.get("ru/schedule/0/" + group + "/schedule.htm", null, true, new DeIfmoRestClientResponseHandler() {
+            DeIfmoRestClient.get(context, "ru/schedule/0/" + group + "/schedule.htm", null, true, new DeIfmoRestClientResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, String response) {
                     if (statusCode == 200) {
@@ -332,7 +353,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                                     if (toCache || Objects.equals(MainActivity.group.toUpperCase(), group)) putCache("group_" + group, json.toString());
                                     handler.onSuccess(json);
                                 } catch (Exception e) {
-                                    LoginActivity.errorTracker.add(e);
+                                    if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                                     handler.onFailure(FAILED_LOAD);
                                 }
                             }
@@ -344,7 +365,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                             try {
                                 handler.onSuccess(new JSONObject(cache));
                             } catch (JSONException e) {
-                                LoginActivity.errorTracker.add(e);
+                                if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                                 handler.onFailure(FAILED_LOAD);
                             }
                         }
@@ -367,7 +388,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
             try {
                 handler.onSuccess(new JSONObject(cache));
             } catch (JSONException e) {
-                LoginActivity.errorTracker.add(e);
+                if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                 handler.onFailure(FAILED_LOAD);
             }
         }
@@ -375,7 +396,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
     private void searchRoom(final String room, final boolean force, final boolean toCache){
         final String cache = getCache("room_" + room);
         if((force || Objects.equals(cache, "")) && !MainActivity.OFFLINE_MODE) {
-            DeIfmoRestClient.get("ru/schedule/2/" + room + "/schedule.htm", null, true, new DeIfmoRestClientResponseHandler() {
+            DeIfmoRestClient.get(context, "ru/schedule/2/" + room + "/schedule.htm", null, true, new DeIfmoRestClientResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, String response) {
                     if (statusCode == 200) {
@@ -387,7 +408,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                                     if (toCache) putCache("room_" + room, json.toString());
                                     handler.onSuccess(json);
                                 } catch (Exception e) {
-                                    LoginActivity.errorTracker.add(e);
+                                    if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                                     handler.onFailure(FAILED_LOAD);
                                 }
                             }
@@ -399,7 +420,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                             try {
                                 handler.onSuccess(new JSONObject(cache));
                             } catch (JSONException e) {
-                                LoginActivity.errorTracker.add(e);
+                                if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                                 handler.onFailure(FAILED_LOAD);
                             }
                         }
@@ -422,7 +443,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
             try {
                 handler.onSuccess(new JSONObject(cache));
             } catch (JSONException e) {
-                LoginActivity.errorTracker.add(e);
+                if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                 handler.onFailure(FAILED_LOAD);
             }
         }
@@ -430,7 +451,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
     private void searchTeacher(final String teacher, final boolean force, final boolean toCache){
         final String cache = getCache("teacher_picker_" + teacher);
         if((force || Objects.equals(cache, "")) && !MainActivity.OFFLINE_MODE) {
-            DeIfmoRestClient.get("ru/schedule/1/" + teacher + "/schedule.htm", null, true, new DeIfmoRestClientResponseHandler() {
+            DeIfmoRestClient.get(context, "ru/schedule/1/" + teacher + "/schedule.htm", null, true, new DeIfmoRestClientResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, String response) {
                     if (statusCode == 200) {
@@ -446,7 +467,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                                         handler.onSuccess(json);
                                     }
                                 } catch (Exception e) {
-                                    LoginActivity.errorTracker.add(e);
+                                    if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                                     handler.onFailure(FAILED_LOAD);
                                 }
                             }
@@ -463,7 +484,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                                     handler.onSuccess(list);
                                 }
                             } catch (JSONException e) {
-                                LoginActivity.errorTracker.add(e);
+                                if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                                 handler.onFailure(FAILED_LOAD);
                             }
                         }
@@ -491,7 +512,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                     handler.onSuccess(list);
                 }
             } catch (JSONException e) {
-                LoginActivity.errorTracker.add(e);
+                if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                 handler.onFailure(FAILED_LOAD);
             }
         }
@@ -502,7 +523,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
             final String id = m.group(1);
             final String cache = getCache("teacher_" + id);
             if((force || Objects.equals(cache, "")) && !MainActivity.OFFLINE_MODE) {
-                DeIfmoRestClient.get("ru/schedule/3/" + id + "/schedule.htm", null, true, new DeIfmoRestClientResponseHandler() {
+                DeIfmoRestClient.get(context, "ru/schedule/3/" + id + "/schedule.htm", null, true, new DeIfmoRestClientResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, String response) {
                         if (statusCode == 200) {
@@ -514,7 +535,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                                         if (toCache) putCache("teacher_" + id, json.toString());
                                         handler.onSuccess(json);
                                     } catch (Exception e) {
-                                        LoginActivity.errorTracker.add(e);
+                                        if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                                         handler.onFailure(FAILED_LOAD);
                                     }
                                 }
@@ -526,7 +547,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                                 try {
                                     handler.onSuccess(new JSONObject(cache));
                                 } catch (JSONException e) {
-                                    LoginActivity.errorTracker.add(e);
+                                    if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                                     handler.onFailure(FAILED_LOAD);
                                 }
                             }
@@ -549,7 +570,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                 try {
                     handler.onSuccess(new JSONObject(cache));
                 } catch (JSONException e) {
-                    LoginActivity.errorTracker.add(e);
+                    if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                     handler.onFailure(FAILED_LOAD);
                 }
             }
@@ -572,7 +593,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                 }
             }
         } catch (JSONException e) {
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             return "";
         }
     }
@@ -589,7 +610,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
             json.put(token, value);
             Cache.put(context, "schedule_lessons", json.toString());
         } catch (JSONException e) {
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }
     }
 }
@@ -680,7 +701,7 @@ class ScheduleLessonsGroupParse extends AsyncTask<String, Void, JSONObject> {
             response.put("schedule", schedule);
             return response;
         } catch (Exception e) {
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             return null;
         }
     }
@@ -776,7 +797,7 @@ class ScheduleLessonsRoomParse extends AsyncTask<String, Void, JSONObject> {
             response.put("schedule", schedule);
             return response;
         } catch (Exception e) {
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             return null;
         }
     }
@@ -815,7 +836,7 @@ class ScheduleLessonsTeacherPickerParse extends AsyncTask<String, Void, JSONObje
                         teachers.put(teacher);
                     }
                 } catch (Exception e){
-                    LoginActivity.errorTracker.add(e);
+                    if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                 }
             }
             JSONObject response = new JSONObject();
@@ -823,7 +844,7 @@ class ScheduleLessonsTeacherPickerParse extends AsyncTask<String, Void, JSONObje
             response.put("teachers", teachers);
             return response;
         } catch (Exception e) {
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             return null;
         }
     }
@@ -931,7 +952,7 @@ class ScheduleLessonsTeacherParse extends AsyncTask<String, Void, JSONObject> {
             response.put("schedule", schedule);
             return response;
         } catch (Exception e) {
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             return null;
         }
     }
@@ -1156,7 +1177,7 @@ class ScheduleLessonsBuilder extends Thread {
             if(daysCount == 0) container.addView(getEmptyScreen());
             delegate.state(STATE_DONE, container);
         } catch (Exception e){
-            LoginActivity.errorTracker.add(e);
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             delegate.state(STATE_FAILED, container);
         }
     }
