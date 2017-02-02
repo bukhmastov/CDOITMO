@@ -12,6 +12,7 @@
         <attr name="colorBackgroundSnackBar" format="color" />
         <attr name="colorIcXml" format="color" />
         <attr name="colorIcXmlRed" format="color" />
+        <attr name="textColorDegrade" format="color" />
         <attr name="colorScheduleFlagCommonBG" format="color" />
         <attr name="colorScheduleFlagPracticeBG" format="color" />
         <attr name="colorScheduleFlagLectureBG" format="color" />

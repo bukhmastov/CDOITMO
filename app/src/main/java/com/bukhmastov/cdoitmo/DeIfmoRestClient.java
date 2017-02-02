@@ -193,11 +193,15 @@ class DeIfmoRestClient {
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                     responseHandler.onNewHandle(null);
                     try {
-                        String data = "";
-                        if(is_ifmo){
-                            data = new String(responseBody, "UTF-8");
+                        if(responseBody == null) throw new NullPointerException("responseBody cannot be null");
+                        String data;
+                        String charset = "windows-1251";
+                        Matcher m = Pattern.compile("<meta.*charset=\"?(.*)\".*>").matcher(new String(responseBody, "UTF-8"));
+                        if(m.find()) charset = m.group(1).toUpperCase();
+                        if(Objects.equals(charset, "UTF-8")){
+                            data = new String(responseBody, charset);
                         } else {
-                            if (responseBody != null) data = new String((new String(responseBody, "windows-1251")).getBytes("UTF-8"));
+                            data = new String((new String(responseBody, charset)).getBytes("UTF-8"));
                         }
                         if (data.contains("Закончился интервал неактивности") || data.contains("Доступ запрещен")) {
                             authorize(context, new DeIfmoRestClientResponseHandler() {

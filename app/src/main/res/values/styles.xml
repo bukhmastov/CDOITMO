@@ -10,6 +10,7 @@
         <item name="android:textColorPrimary">@color/textColorPrimary</item>
         <item name="android:textColorSecondary">@color/textColorSecondary</item>
         <item name="textColorPassed">@color/textColorSubjectPassed</item>
+        <item name="textColorDegrade">@color/textColorDegrade</item>
         <item name="colorSeparator">@color/colorSeparator</item>
         <item name="colorBackgroundRefresh">@color/textColorHeader</item>
         <item name="colorBackgroundSection">@color/colorBackgroundSection</item>
@@ -36,6 +37,7 @@
         <item name="android:textColorPrimary">@color/textColorPrimaryInverse</item>
         <item name="android:textColorSecondary">@color/textColorSecondaryInverse</item>
         <item name="textColorPassed">@color/textColorSubjectPassedInverse</item>
+        <item name="textColorDegrade">@color/textColorDegradeInverse</item>
         <item name="colorSeparator">@color/colorSeparatorInverse</item>
         <item name="colorBackgroundRefresh">@color/colorPrimaryInverse</item>
         <item name="colorBackgroundSection">@color/colorBackgroundSectionInverse</item>

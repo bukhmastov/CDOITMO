@@ -95,7 +95,7 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
 
     private void load(){
         if(getSupportActionBar() != null) getSupportActionBar().setTitle("Топ-рейтинг");
-        DeIfmoRestClient.get(this, "index.php?doc_open=-tops.php&view=topStudent&depId=" + faculty + "&year_=" + course + "&app_=" + years, null, new DeIfmoRestClientResponseHandler() {
+        DeIfmoRestClient.get(this, "?node=rating&std&depId=" + faculty + "&year=" + course + "&app=" + years, null, new DeIfmoRestClientResponseHandler() {
             @Override
             public void onSuccess(int statusCode, String response) {
                 if(statusCode == 200){
@@ -197,6 +197,8 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
                 hashMap.put("fio", jsonObject.getString("fio"));
                 hashMap.put("meta", jsonObject.getString("group") + " — " + jsonObject.getString("department"));
                 hashMap.put("is_me", jsonObject.getBoolean("is_me") ? "1" : "0");
+                hashMap.put("change", jsonObject.getString("change"));
+                hashMap.put("delta", jsonObject.getString("delta"));
                 users.add(hashMap);
             }
             // отображаем интерфейс
@@ -266,30 +268,52 @@ class RatingTopListParse extends AsyncTask<String, Void, JSONObject> {
             HtmlCleaner cleaner = new HtmlCleaner();
             TagNode root = cleaner.clean(response);
             JSONObject json = new JSONObject();
-            TagNode div = root.findElementByAttValue("class", "content__________document", true, false);
-            TagNode table = div.findElementByAttValue("class", "pblock", false, false);
-            String[] header = table.getAllElementsList(false).get(0).getAllElementsList(false).get(0).getAllElementsList(false).get(0).getText().toString().split("/");
-            String[] year = table.getAllElementsList(false).get(0).getAllElementsList(false).get(1).getText().toString().trim().split("\n");
-            json.put("header", header[1].trim() + " - " + header[2].trim() + " (" + year[1].trim() + ")");
-            TagNode column = table.getAllElementsList(false).get(0).getAllElementsList(false).get(2).getAllElementsList(false).get(0);
-            TagNode td = column.getAllElementsList(false).get(0).getAllElementsList(false).get(0).getAllElementsList(false).get(0).getAllElementsList(false).get(0);
-            String[] topList = td.getText().toString().split(" {3,5}");
             JSONArray list = new JSONArray();
-            for(String item : topList){
-                Pattern pattern = Pattern.compile("^(\\d{1,4})\\. (.*), гр\\. (.{1,10}), каф\\. (.{1,20})$");
-                Matcher matcher = pattern.matcher(item.trim());
-                if(matcher.find()){
-                    JSONObject user = new JSONObject();
-                    user.put("number", Integer.parseInt(matcher.group(1)));
-                    String fio = matcher.group(2).trim();
-                    Matcher m = Pattern.compile("^(.*) \\(\\)$").matcher(fio);
-                    if(m.find()) fio = m.group(1);
-                    user.put("fio", fio);
-                    user.put("group", matcher.group(3));
-                    user.put("department", matcher.group(4));
-                    user.put("is_me", Objects.equals(fio, MainActivity.name));
-                    list.put(user);
+            TagNode div = root.findElementByAttValue("class", "c-page", true, false).findElementByAttValue("class", "p-inner nobt", false, false);
+            String header = "";
+            Matcher m;
+            m = Pattern.compile("Рейтинг студентов (.*)").matcher(div.findElementByAttValue("class", "notop", false, false).getText().toString().trim());
+            if(m.find()) header = m.group(1).trim();
+            m = Pattern.compile("^(.*) учебный год, (.*)$").matcher(div.findElementByAttValue("class", "info", false, false).getText().toString().trim());
+            if(m.find()){
+                if(!Objects.equals(header, "")) header += " - ";
+                header += m.group(2) + " (" + m.group(1).replace(" ", "") + ")";
+            }
+            json.put("header", header);
+            TagNode[] trs = div.findElementByAttValue("class", "table-rating", false, false).getElementsByName("tbody", false)[0].getElementsByName("tr", false);
+            int counter = 0;
+            for(TagNode tr : trs){
+                if(counter++ == 0) continue;
+                TagNode[] tds = tr.getElementsByName("td", false);
+                if(tds == null || tds.length == 0) continue;
+                JSONObject user = new JSONObject();
+                user.put("number", Integer.parseInt(tds[0].getText().toString().trim()));
+                String fio = tds[1].getText().toString().trim();
+                user.put("fio", fio);
+                String meta = tds[3].getText().toString().trim();
+                m = Pattern.compile("гр. (.*), каф. (.*)").matcher(meta);
+                if(m.find()){
+                    user.put("group", m.group(1).trim());
+                    user.put("department", m.group(2).trim());
+                } else {
+                    user.put("group", "");
+                    user.put("department", "");
                 }
+                user.put("is_me", Objects.equals(fio, MainActivity.name));
+                TagNode[] is = tds[2].getAllElements(false);
+                if(is != null && is.length > 0){
+                    m = Pattern.compile("^icon-expand_.* (.*)$").matcher(is[0].getAttributeByName("class"));
+                    if(m.find()){
+                        user.put("change", m.group(1).trim());
+                    } else {
+                        user.put("change", "none");
+                    }
+                    user.put("delta", is[0].getAttributeByName("title"));
+                } else {
+                    user.put("change", "none");
+                    user.put("delta", "0");
+                }
+                list.put(user);
             }
             json.put("list", list);
             return json;
@@ -317,16 +341,16 @@ class RatingListListView extends ArrayAdapter<HashMap<String, String>> {
 
     @NonNull
     @Override
-    public View getView(int position, View view, @NonNull ViewGroup parent) {
+    public View getView(int position, View view, @NonNull ViewGroup parent) { //?attr/textColorPassed
         LayoutInflater inflater = context.getLayoutInflater();
         HashMap<String, String> user = users.get(position);
         View rowView;
         rowView = inflater.inflate(R.layout.listview_rating_list, null, true);
+        TypedValue typedValue = new TypedValue();
         if(Objects.equals(user.get("is_me"), "1")){
             ViewGroup vg = ((ViewGroup) rowView.findViewById(R.id.lvrl_number_layout));
             vg.removeAllViews();
             vg.addView(((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.triangle_mark_layout, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-            TypedValue typedValue = new TypedValue();
             this.context.getTheme().resolveAttribute(R.attr.colorPrimaryOpacity, typedValue, true);
             rowView.setBackgroundColor(typedValue.data);
             rowView.findViewById(R.id.lvrl_layout).setPadding(32, 0, 16, 0);
@@ -334,6 +358,20 @@ class RatingListListView extends ArrayAdapter<HashMap<String, String>> {
         ((TextView) rowView.findViewById(R.id.lvrl_number)).setText(user.get("number"));
         ((TextView) rowView.findViewById(R.id.lvrl_fio)).setText(user.get("fio"));
         ((TextView) rowView.findViewById(R.id.lvrl_meta)).setText(user.get("meta"));
+        if(!Objects.equals(user.get("change"), "none")){
+            TextView lvrl_delta = (TextView) rowView.findViewById(R.id.lvrl_delta);
+            lvrl_delta.setText(user.get("delta"));
+            switch (user.get("change")){
+                case "up":
+                    this.context.getTheme().resolveAttribute(R.attr.textColorPassed, typedValue, true);
+                    lvrl_delta.setTextColor(typedValue.data);
+                    break;
+                case "down":
+                    this.context.getTheme().resolveAttribute(R.attr.textColorDegrade, typedValue, true);
+                    lvrl_delta.setTextColor(typedValue.data);
+                    break;
+            }
+        }
         return rowView;
     }
 }

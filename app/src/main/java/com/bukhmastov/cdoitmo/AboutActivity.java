@@ -29,7 +29,7 @@ public class AboutActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
         ((TextView) findViewById(R.id.app_info_version)).setText("v" + LoginActivity.versionName + " (" + LoginActivity.versionCode + ")");
-        findViewById(R.id.app_info_dev).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.app_info_icon).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 counterToReport++;

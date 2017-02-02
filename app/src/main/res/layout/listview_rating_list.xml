@@ -9,7 +9,7 @@
         android:id="@+id/lvrl_number_layout">
 
         <TextView
-            android:text="50"
+            android:text="@string/lorem_ipsum"
             android:layout_height="60dp"
             android:id="@+id/lvrl_number"
             android:textAppearance="@style/TextAppearance.AppCompat.Button"
@@ -24,6 +24,7 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:layout_toEndOf="@+id/lvrl_number_layout"
+        android:layout_toStartOf="@+id/lvrl_delta_container"
         android:paddingEnd="16dp"
         android:paddingStart="0dp"
         android:id="@+id/lvrl_layout">
@@ -56,5 +57,21 @@
             android:layout_height="10dp" />
 
     </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/lvrl_delta_container"
+        android:layout_width="wrap_content"
+        android:layout_height="60dp"
+        android:layout_alignParentEnd="true">
+
+        <TextView
+            android:id="@+id/lvrl_delta"
+            android:layout_height="match_parent"
+            android:layout_width="wrap_content"
+            android:textAppearance="@style/TextAppearance.AppCompat.Button"
+            android:gravity="center"
+            android:padding="8dp" />
+
+    </FrameLayout>
 
 </RelativeLayout>

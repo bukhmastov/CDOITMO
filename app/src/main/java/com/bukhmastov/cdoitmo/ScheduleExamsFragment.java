@@ -367,7 +367,9 @@ class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
                             public void finish(JSONObject json) {
                                 try {
                                     if (json == null) throw new NullPointerException("json cannot be null");
-                                    if (toCache || Objects.equals(MainActivity.group.toUpperCase(), group)) putCache("group_" + group, json.toString());
+                                    if (toCache || Objects.equals(MainActivity.group.toUpperCase(), group)){
+                                        if(json.getJSONArray("schedule").length() > 0) putCache("group_" + group, json.toString());
+                                    }
                                     handler.onSuccess(json);
                                 } catch (Exception e) {
                                     if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
@@ -422,7 +424,9 @@ class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
                             public void finish(JSONObject json) {
                                 try {
                                     if (json == null) throw new NullPointerException("json cannot be null");
-                                    if (toCache) putCache("teacher_picker_" + teacher, json.toString());
+                                    if (toCache){
+                                        if(json.getJSONArray("teachers").length() > 0) putCache("teacher_picker_" + teacher, json.toString());
+                                    }
                                     if (json.getJSONArray("teachers").length() == 1){
                                         search(json.getJSONArray("teachers").getJSONObject(0).getString("scope"), force, toCache);
                                     } else {
@@ -494,7 +498,9 @@ class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
                                 public void finish(JSONObject json) {
                                     try {
                                         if(json == null) throw new NullPointerException("json cannot be null");
-                                        if (toCache) putCache("teacher_" + id, json.toString());
+                                        if (toCache) {
+                                            if(json.getJSONArray("schedule").length() > 0) putCache("teacher_" + id, json.toString());
+                                        }
                                         handler.onSuccess(json);
                                     } catch (Exception e) {
                                         if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);

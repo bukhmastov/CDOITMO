@@ -142,7 +142,7 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                     }
                 });
             } else {
-                DeIfmoRestClient.get(getContext(), "index.php?node=8", null, new DeIfmoRestClientResponseHandler() {
+                DeIfmoRestClient.get(getContext(), "index.php?node=rating", null, new DeIfmoRestClientResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, String response) {
                         if (statusCode == 200) {
@@ -504,35 +504,28 @@ class RatingListParse extends AsyncTask<String, Void, JSONObject> {
             String response = params[0].replace("&nbsp;", " ");
             HtmlCleaner cleaner = new HtmlCleaner();
             TagNode root = cleaner.clean(response);
-            TagNode div = root.findElementByAttValue("class", "content__________document", true, false);
-            TagNode table = div.findElementByAttValue("class", "pblock", false, false);
-            TagNode column = table.getAllElementsList(false).get(0).getAllElementsList(false).get(2).getAllElementsList(false).get(0); // <td class="ptext">
-            TagNode td = column.getAllElementsList(false).get(2).getAllElementsList(false).get(0).getAllElementsList(false).get(0).getAllElementsList(false).get(0);
+            TagNode div = root.findElementByAttValue("class", "c-page", true, false).findElementByAttValue("class", "p-inner nobt", false, false);
+            TagNode[] spans = div.getElementsByName("span", false);
             JSONArray faculties = new JSONArray();
-            List<? extends TagNode> elemets = td.getAllElementsList(false);
-            String lastDepId = "";
-            for(TagNode element : elemets){
-                if(Objects.equals(element.getName(), "a")){
-                    JSONObject faculty = new JSONObject();
-                    String[] attrs = element.getAttributeByName("href").replace("&amp;", "&").split("&");
+            for(TagNode span : spans){
+                JSONObject faculty = new JSONObject();
+                String name = span.getText().toString().trim();
+                Matcher matcher = Pattern.compile("^(.*) \\((.{1,10})\\)$").matcher(name);
+                if(matcher.find()) name = matcher.group(2) + " (" + matcher.group(1) + ")";
+                faculty.put("name", name);
+                faculties.put(faculty);
+            }
+            TagNode[] links = div.getElementsByAttValue("class", "big-links left", false, false);
+            for(int i = 0; i < faculties.length(); i++) {
+                TagNode link = links[i];
+                TagNode[] as = link.getElementsByName("a", false);
+                if(as != null && as.length > 0){
+                    String[] attrs = as[0].getAttributeByName("href").replace("&amp;", "&").split("&");
                     for(String attr : attrs){
                         String[] pair = attr.split("=");
-                        if(Objects.equals(pair[0], "depId")) faculty.put("depId", pair[1]);
-                    }
-                    if(!Objects.equals(lastDepId, faculty.getString("depId"))){
-                        faculties.put(faculty);
-                        lastDepId = faculty.getString("depId");
+                        if(Objects.equals(pair[0], "depId")) faculties.getJSONObject(i).put("depId", pair[1]);
                     }
                 }
-                element.removeFromTree();
-            }
-            String[] facultsStrArr = td.getText().toString().split("( {6,10})");
-            for(int i = 0; i < faculties.length(); i++) {
-                String name = facultsStrArr[i].trim();
-                Pattern pattern = Pattern.compile("^(.*) \\((.{1,10})\\)$");
-                Matcher matcher = pattern.matcher(name);
-                if(matcher.find()) name = matcher.group(2) + " (" + matcher.group(1) + ")";
-                faculties.getJSONObject(i).put("name", name);
             }
             JSONObject json = new JSONObject();
             json.put("faculties", faculties);
