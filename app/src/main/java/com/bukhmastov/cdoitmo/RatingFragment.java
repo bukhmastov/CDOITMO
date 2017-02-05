@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,11 +39,11 @@ import java.util.regex.Pattern;
 public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "RatingFragment";
-    private boolean interrupted = false;
     public static Rating rating = null;
     private boolean loaded = false;
     private HashMap<String, Integer> ready;
     private HashMap<String, RequestHandle> fragmentRequestHandle;
+    private String rating_list_choose_faculty, rating_list_choose_course;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -56,6 +55,8 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
         ready.put("RatingList", 0);
         fragmentRequestHandle.put("Rating", null);
         fragmentRequestHandle.put("RatingList", null);
+        rating_list_choose_faculty = Cache.get(getContext(), "rating_list_choose_faculty");
+        rating_list_choose_course = Cache.get(getContext(), "rating_list_choose_course");
     }
 
     @Override
@@ -66,13 +67,23 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
     @Override
     public void onResume() {
         super.onResume();
-        relaunch();
+        if (!loaded) {
+            loaded = true;
+            load();
+        }
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        interrupt();
+        if (fragmentRequestHandle.get("Rating") != null) {
+            loaded = false;
+            fragmentRequestHandle.get("Rating").cancel(true);
+        }
+        if (fragmentRequestHandle.get("RatingList") != null) {
+            loaded = false;
+            fragmentRequestHandle.get("RatingList").cancel(true);
+        }
     }
 
     @Override
@@ -83,7 +94,7 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
     private void load(){
         draw(R.layout.state_loading);
         loadPart("Rating");
-        if(!rating.is("RatingList")) {
+        if (!rating.is("RatingList")) {
             loadPart("RatingList");
         } else {
             ready("RatingList");
@@ -95,7 +106,7 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
         loadPart("RatingList");
     }
     private void loadPart(String type){
-        if(!MainActivity.OFFLINE_MODE) {
+        if (!MainActivity.OFFLINE_MODE) {
             if (Objects.equals(type, "Rating")) {
                 DeIfmoRestClient.get(getContext(), "servlet/distributedCDE?Rule=REP_EXECUTE_PRINT&REP_ID=1441", null, new DeIfmoRestClientResponseHandler() {
                     @Override
@@ -120,20 +131,10 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                     public void onProgress(int state) {}
                     @Override
                     public void onFailure(int state) {
-                        if(isLaunched()) {
-                            switch (state) {
-                                case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
-                                    gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED);
-                                    break;
-                                case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED:
-                                    gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED);
-                                    break;
-                                default:
-                                    failed("Rating");
-                                    break;
-                            }
-                        } else {
-                            failed("Rating");
+                        switch (state) {
+                            case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED: gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED); break;
+                            case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED: gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED); break;
+                            default: failed("Rating"); break;
                         }
                     }
                     @Override
@@ -165,20 +166,10 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                     public void onProgress(int state) {}
                     @Override
                     public void onFailure(int state) {
-                        if(isLaunched()) {
-                            switch (state) {
-                                case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
-                                    gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED);
-                                    break;
-                                case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED:
-                                    gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED);
-                                    break;
-                                default:
-                                    failed("RatingList");
-                                    break;
-                            }
-                        } else {
-                            failed("RatingList");
+                        switch (state) {
+                            case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED: gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED); break;
+                            case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED: gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED); break;
+                            default: failed("RatingList"); break;
                         }
                     }
                     @Override
@@ -205,9 +196,10 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
     }
     private void loadFailed(){
         try {
-            if(isLaunched()) {
-                draw(R.layout.state_try_again);
-                getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
+            draw(R.layout.state_try_again);
+            View try_again_reload = getActivity().findViewById(R.id.try_again_reload);
+            if (try_again_reload != null) {
+                try_again_reload.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         forceLoad();
@@ -220,15 +212,16 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
     }
     private void display(){
         try {
-            if(!isLaunched()) return;
             final JSONObject dataR = rating.get("Rating");
             final JSONObject dataRL = rating.get("RatingList");
             // отображаем интерфейс
             draw(R.layout.rating_layout);
             if(dataR == null){
                 ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.swipe_container));
-                vg.removeAllViews();
-                vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.state_failed_compact, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                if (vg != null) {
+                    vg.removeAllViews();
+                    vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.state_failed_compact, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                }
             } else {
                 // получаем список для отображения
                 final ArrayList<HashMap<String, String>> courses = new ArrayList<>();
@@ -244,105 +237,113 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                 }
                 // работаем со списком
                 ListView rl_list_view = (ListView) getActivity().findViewById(R.id.rl_list_view);
-                rl_list_view.setAdapter(new RatingListView(getActivity(), courses));
-                rl_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        try {
-                            HashMap<String, String> hashMap = courses.get(position);
-                            JSONArray array = dataRL.getJSONObject("rating").getJSONArray("faculties");
-                            int max_course = dataR.getJSONObject("rating").getInt("max_course");
-                            for(int i = 0; i < array.length(); i++){
-                                JSONObject obj = array.getJSONObject(i);
-                                if(obj.getString("name").contains(hashMap.get("faculty"))){
-                                    int course_delta = (max_course - Integer.parseInt(hashMap.get("course")));
-                                    Calendar now = Calendar.getInstance();
-                                    int year = now.get(Calendar.YEAR) - course_delta;
-                                    int month = now.get(Calendar.MONTH);
-                                    Intent intent = new Intent(getActivity(), RatingListActivity.class);
-                                    intent.putExtra("faculty", obj.getString("depId"));
-                                    intent.putExtra("course", hashMap.get("course"));
-                                    intent.putExtra("years", (month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year));
-                                    startActivity(intent);
-                                    break;
+                if (rl_list_view != null) {
+                    rl_list_view.setAdapter(new RatingListView(getActivity(), courses));
+                    rl_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                            try {
+                                HashMap<String, String> hashMap = courses.get(position);
+                                JSONArray array = dataRL.getJSONObject("rating").getJSONArray("faculties");
+                                int max_course = dataR.getJSONObject("rating").getInt("max_course");
+                                for (int i = 0; i < array.length(); i++) {
+                                    JSONObject obj = array.getJSONObject(i);
+                                    if (obj.getString("name").contains(hashMap.get("faculty"))) {
+                                        int course_delta = (max_course - Integer.parseInt(hashMap.get("course")));
+                                        Calendar now = Calendar.getInstance();
+                                        int year = now.get(Calendar.YEAR) - course_delta;
+                                        int month = now.get(Calendar.MONTH);
+                                        Intent intent = new Intent(getActivity(), RatingListActivity.class);
+                                        intent.putExtra("faculty", obj.getString("depId"));
+                                        intent.putExtra("course", hashMap.get("course"));
+                                        intent.putExtra("years", (month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year));
+                                        startActivity(intent);
+                                        break;
+                                    }
                                 }
+                            } catch (Exception e) {
+                                if (LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                             }
-                        } catch (Exception e) {
-                            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                         }
-                    }
-                });
+                    });
+                }
             }
             // работаем со свайпом
             SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) getActivity().findViewById(R.id.swipe_container);
-            TypedValue typedValue = new TypedValue();
-            getActivity().getTheme().resolveAttribute(R.attr.colorAccent, typedValue, true);
-            mSwipeRefreshLayout.setColorSchemeColors(typedValue.data);
-            getActivity().getTheme().resolveAttribute(R.attr.colorBackgroundRefresh, typedValue, true);
-            mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(typedValue.data);
-            mSwipeRefreshLayout.setOnRefreshListener(this);
+            if (mSwipeRefreshLayout != null) {
+                mSwipeRefreshLayout.setColorSchemeColors(MainActivity.colorAccent);
+                mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(MainActivity.colorBackgroundRefresh);
+                mSwipeRefreshLayout.setOnRefreshListener(this);
+            }
             if(dataRL == null){
                 ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.rl_list_container));
-                vg.removeAllViews();
-                vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.state_failed_compact, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                if (vg != null) {
+                    vg.removeAllViews();
+                    vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.state_failed_compact, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                }
             } else {
                 ArrayAdapter<String> adapter;
                 int choose;
-                String cache;
                 // работаем с выбором факультета
                 Spinner rl_spinner_faculty = (Spinner) getActivity().findViewById(R.id.rl_spinner_faculty);
-                final ArrayList<String> rl_spinner_faculty_arr = new ArrayList<>();
-                final ArrayList<String> rl_spinner_faculty_arr_ids = new ArrayList<>();
-                JSONArray array = dataRL.getJSONObject("rating").getJSONArray("faculties");
-                choose = 0;
-                cache = Cache.get(getContext(), "rating_list_choose_faculty");
-                for(int i = 0; i < array.length(); i++){
-                    JSONObject obj = array.getJSONObject(i);
-                    rl_spinner_faculty_arr.add(obj.getString("name"));
-                    rl_spinner_faculty_arr_ids.add(obj.getString("depId"));
-                    if(Objects.equals(cache, obj.getString("depId"))) choose = i;
-                }
-                adapter = new ArrayAdapter<>(getActivity(), R.layout.spinner_rating_layout, rl_spinner_faculty_arr);
-                adapter.setDropDownViewResource(R.layout.spinner_rating_dropdown_layout);
-                rl_spinner_faculty.setAdapter(adapter);
-                rl_spinner_faculty.setSelection(choose);
-                rl_spinner_faculty.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                    public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
-                        Cache.put(getContext(), "rating_list_choose_faculty", rl_spinner_faculty_arr_ids.get(position));
+                if (rl_spinner_faculty != null) {
+                    final ArrayList<String> rl_spinner_faculty_arr = new ArrayList<>();
+                    final ArrayList<String> rl_spinner_faculty_arr_ids = new ArrayList<>();
+                    JSONArray array = dataRL.getJSONObject("rating").getJSONArray("faculties");
+                    choose = 0;
+                    for (int i = 0; i < array.length(); i++) {
+                        JSONObject obj = array.getJSONObject(i);
+                        rl_spinner_faculty_arr.add(obj.getString("name"));
+                        rl_spinner_faculty_arr_ids.add(obj.getString("depId"));
+                        if (Objects.equals(rating_list_choose_faculty, obj.getString("depId"))) choose = i;
                     }
-                    public void onNothingSelected(AdapterView<?> parent) {}
-                });
+                    adapter = new ArrayAdapter<>(getActivity(), R.layout.spinner_rating_layout, rl_spinner_faculty_arr);
+                    adapter.setDropDownViewResource(R.layout.spinner_rating_dropdown_layout);
+                    rl_spinner_faculty.setAdapter(adapter);
+                    rl_spinner_faculty.setSelection(choose);
+                    rl_spinner_faculty.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                        public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
+                            rating_list_choose_faculty = rl_spinner_faculty_arr_ids.get(position);
+                            Cache.put(getContext(), "rating_list_choose_faculty", rating_list_choose_faculty);
+                        }
+                        public void onNothingSelected(AdapterView<?> parent) {}
+                    });
+                }
                 // работаем с выбором курса
                 Spinner rl_spinner_course = (Spinner) getActivity().findViewById(R.id.rl_spinner_course);
-                final ArrayList<String> rl_spinner_course_arr = new ArrayList<>();
-                final ArrayList<String> rl_spinner_course_arr_ids = new ArrayList<>();
-                choose = 0;
-                cache = Cache.get(getContext(), "rating_list_choose_course");
-                for(int i = 1; i <= 4; i++){
-                    rl_spinner_course_arr.add(i + " " + getString(R.string.course));
-                    rl_spinner_course_arr_ids.add(String.valueOf(i));
-                    if(Objects.equals(cache, String.valueOf(i))) choose = i - 1;
-                }
-                adapter = new ArrayAdapter<>(getActivity(), R.layout.spinner_rating_layout, rl_spinner_course_arr);
-                adapter.setDropDownViewResource(R.layout.spinner_rating_dropdown_layout);
-                rl_spinner_course.setAdapter(adapter);
-                rl_spinner_course.setSelection(choose);
-                rl_spinner_course.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                    public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
-                        Cache.put(getContext(), "rating_list_choose_course", rl_spinner_course_arr_ids.get(position));
+                if (rl_spinner_course != null) {
+                    final ArrayList<String> rl_spinner_course_arr = new ArrayList<>();
+                    final ArrayList<String> rl_spinner_course_arr_ids = new ArrayList<>();
+                    choose = 0;
+                    for (int i = 1; i <= 4; i++) {
+                        rl_spinner_course_arr.add(i + " " + getString(R.string.course));
+                        rl_spinner_course_arr_ids.add(String.valueOf(i));
+                        if (Objects.equals(rating_list_choose_course, String.valueOf(i))) choose = i - 1;
                     }
-                    public void onNothingSelected(AdapterView<?> parent) {}
-                });
+                    adapter = new ArrayAdapter<>(getActivity(), R.layout.spinner_rating_layout, rl_spinner_course_arr);
+                    adapter.setDropDownViewResource(R.layout.spinner_rating_dropdown_layout);
+                    rl_spinner_course.setAdapter(adapter);
+                    rl_spinner_course.setSelection(choose);
+                    rl_spinner_course.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                        public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
+                            rating_list_choose_course = rl_spinner_course_arr_ids.get(position);
+                            Cache.put(getContext(), "rating_list_choose_course", rating_list_choose_course);
+                        }
+                        public void onNothingSelected(AdapterView<?> parent) {}
+                    });
+                }
                 // инициализируем кнопку
                 ImageButton rl_button = (ImageButton) getActivity().findViewById(R.id.rl_button);
-                rl_button.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Intent intent = new Intent(getActivity(), RatingListActivity.class);
-                        intent.putExtra("faculty", Cache.get(getContext(), "rating_list_choose_faculty"));
-                        intent.putExtra("course", Cache.get(getContext(), "rating_list_choose_course"));
-                        startActivity(intent);
-                    }
-                });
+                if (rl_button != null) {
+                    rl_button.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Intent intent = new Intent(getActivity(), RatingListActivity.class);
+                            intent.putExtra("faculty", rating_list_choose_faculty);
+                            intent.putExtra("course", rating_list_choose_course);
+                            startActivity(intent);
+                        }
+                    });
+                }
             }
         } catch (Exception e) {
             if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
@@ -355,35 +356,14 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
     }
     private void draw(int layoutId){
         try {
-            if(isLaunched()) {
-                ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_rating));
+            ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_rating));
+            if (vg != null) {
                 vg.removeAllViews();
                 vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             }
         } catch (Exception e){
             if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }
-    }
-    private void interrupt(){
-        interrupted = true;
-        if(fragmentRequestHandle.get("Rating") != null){
-            loaded = false;
-            fragmentRequestHandle.get("Rating").cancel(true);
-        }
-        if(fragmentRequestHandle.get("RatingList") != null){
-            loaded = false;
-            fragmentRequestHandle.get("RatingList").cancel(true);
-        }
-    }
-    private void relaunch(){
-        interrupted = false;
-        if(!loaded) {
-            loaded = true;
-            load();
-        }
-    }
-    private boolean isLaunched(){
-        return !interrupted;
     }
 }
 
@@ -557,12 +537,11 @@ class RatingListView extends ArrayAdapter<HashMap<String, String>> {
     public View getView(int position, View view, @NonNull ViewGroup parent) {
         LayoutInflater inflater = context.getLayoutInflater();
         HashMap<String, String> change = courses.get(position);
-        View rowView;
-        rowView = inflater.inflate(R.layout.listview_rating, null, true);
+        View rowView = inflater.inflate(R.layout.listview_rating, null, true);
         TextView lv_rating_name = ((TextView) rowView.findViewById(R.id.lv_rating_name));
         TextView lv_rating_position = ((TextView) rowView.findViewById(R.id.lv_rating_position));
-        lv_rating_name.setText(change.get("name"));
-        lv_rating_position.setText(change.get("position"));
+        if (lv_rating_name != null) lv_rating_name.setText(change.get("name"));
+        if (lv_rating_position != null) lv_rating_position.setText(change.get("position"));
         return rowView;
     }
 }

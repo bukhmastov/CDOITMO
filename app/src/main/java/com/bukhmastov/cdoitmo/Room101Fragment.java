@@ -14,7 +14,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -53,7 +52,6 @@ import cz.msebera.android.httpclient.Header;
 public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener, Room101ReviewBuilder.register {
 
     private static final String TAG = "Room101Fragment";
-    private boolean interrupted = false;
     private boolean loaded = false;
     static RequestHandle fragmentRequestHandle = null;
     private JSONObject viewRequest = null;
@@ -72,13 +70,19 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
     @Override
     public void onResume() {
         super.onResume();
-        relaunch();
+        if (!loaded) {
+            loaded = true;
+            load(true);
+        }
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        interrupt();
+        if (fragmentRequestHandle != null) {
+            loaded = false;
+            fragmentRequestHandle.cancel(true);
+        }
     }
 
     @Override
@@ -124,10 +128,12 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
         Room101RestClient.post(getContext(), "delRequest.php", params, new Room101RestClientResponseHandler() {
             @Override
             public void onSuccess(int statusCode, String response) {
-                if(isLaunched()) {
-                    draw(R.layout.state_try_again);
-                    ((TextView) getActivity().findViewById(R.id.try_again_message)).setText(R.string.wrong_response_from_server);
-                    getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
+                draw(R.layout.state_try_again);
+                TextView try_again_message = (TextView) getActivity().findViewById(R.id.try_again_message);
+                if (try_again_message != null) try_again_message.setText(R.string.wrong_response_from_server);
+                View try_again_reload = getActivity().findViewById(R.id.try_again_reload);
+                if (try_again_reload != null) {
+                    try_again_reload.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
                             denyRequest(reid, status);
@@ -137,13 +143,11 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
             }
             @Override
             public void onProgress(int state) {
-                if(isLaunched()) {
-                    draw(R.layout.state_loading);
-                    TextView loading_message = (TextView) getActivity().findViewById(R.id.loading_message);
+                draw(R.layout.state_loading);
+                TextView loading_message = (TextView) getActivity().findViewById(R.id.loading_message);
+                if (loading_message != null) {
                     switch (state) {
-                        case Room101RestClient.STATE_HANDLING:
-                            loading_message.setText(R.string.deny_request);
-                            break;
+                        case Room101RestClient.STATE_HANDLING: loading_message.setText(R.string.deny_request); break;
                     }
                 }
             }
@@ -152,10 +156,12 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                 if(statusCode == 302){
                     load(true);
                 } else {
-                    if(isLaunched()) {
-                        draw(R.layout.state_try_again);
-                        ((TextView) getActivity().findViewById(R.id.try_again_message)).setText(R.string.wrong_response_from_server);
-                        getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
+                    draw(R.layout.state_try_again);
+                    TextView try_again_message = (TextView) getActivity().findViewById(R.id.try_again_message);
+                    if (try_again_message != null) try_again_message.setText(R.string.wrong_response_from_server);
+                    View try_again_reload = getActivity().findViewById(R.id.try_again_reload);
+                    if (try_again_reload != null) {
+                        try_again_reload.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
                                 denyRequest(reid, status);
@@ -176,6 +182,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
             snackBar(getString(R.string.device_offline_action_refused));
         } else {
             draw(R.layout.layout_room101_add_request);
+            final View room101_close_add_request = getActivity().findViewById(R.id.room101_close_add_request);
             final LinearLayout room101_back = (LinearLayout) getActivity().findViewById(R.id.room101_back);
             final LinearLayout room101_forward = (LinearLayout) getActivity().findViewById(R.id.room101_forward);
             final TextView room101_back_text = (TextView) getActivity().findViewById(R.id.room101_back_text);
@@ -232,8 +239,8 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                 @Override
                 public void onDraw(View view) {
                     try {
-                        if(isLaunched()) {
-                            ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.room101_add_request_container));
+                        ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.room101_add_request_container));
+                        if (vg != null) {
                             vg.removeAllViews();
                             vg.addView(view);
                         }
@@ -252,24 +259,30 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                     load(true);
                 }
             });
-            getActivity().findViewById(R.id.room101_close_add_request).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    room101AddRequest.close(false);
-                }
-            });
-            getActivity().findViewById(R.id.room101_back).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    room101AddRequest.back();
-                }
-            });
-            getActivity().findViewById(R.id.room101_forward).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    room101AddRequest.forward();
-                }
-            });
+            if (room101_close_add_request != null) {
+                room101_close_add_request.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        room101AddRequest.close(false);
+                    }
+                });
+            }
+            if (room101_back != null) {
+                room101_back.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        room101AddRequest.back();
+                    }
+                });
+            }
+            if (room101_forward != null) {
+                room101_forward.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        room101AddRequest.forward();
+                    }
+                });
+            }
         }
     }
 
@@ -284,6 +297,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                 }
             } catch (Exception e){
                 if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
+                loadFailed();
             }
         }
         if(!MainActivity.OFFLINE_MODE) {
@@ -305,13 +319,11 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                 }
                 @Override
                 public void onProgress(int state) {
-                    if(isLaunched()) {
-                        draw(R.layout.state_loading);
-                        TextView loading_message = (TextView) getActivity().findViewById(R.id.loading_message);
+                    draw(R.layout.state_loading);
+                    TextView loading_message = (TextView) getActivity().findViewById(R.id.loading_message);
+                    if (loading_message != null) {
                         switch (state) {
-                            case Room101RestClient.STATE_HANDLING:
-                                loading_message.setText(R.string.loading);
-                                break;
+                            case Room101RestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
                         }
                     }
                 }
@@ -329,9 +341,10 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                             } catch (Exception e) {
                                 if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                             }
-                            if(isLaunched()) {
-                                draw(R.layout.state_offline);
-                                getActivity().findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
+                            draw(R.layout.state_offline);
+                            View offline_reload = getActivity().findViewById(R.id.offline_reload);
+                            if (offline_reload != null) {
+                                offline_reload.setOnClickListener(new View.OnClickListener() {
                                     @Override
                                     public void onClick(View v) {
                                         load(true);
@@ -341,10 +354,14 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                             break;
                         case Room101RestClient.FAILED_TRY_AGAIN:
                         case Room101RestClient.FAILED_EXPECTED_REDIRECTION:
-                            if(isLaunched()) {
-                                draw(R.layout.state_try_again);
-                                if (state == Room101RestClient.FAILED_EXPECTED_REDIRECTION) ((TextView) getActivity().findViewById(R.id.try_again_message)).setText(R.string.wrong_response_from_server);
-                                getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
+                            draw(R.layout.state_try_again);
+                            if (state == Room101RestClient.FAILED_EXPECTED_REDIRECTION){
+                                TextView try_again_message = (TextView) getActivity().findViewById(R.id.try_again_message);
+                                if (try_again_message != null) try_again_message.setText(R.string.wrong_response_from_server);
+                            }
+                            View try_again_reload = getActivity().findViewById(R.id.try_again_reload);
+                            if (try_again_reload != null) {
+                                try_again_reload.setOnClickListener(new View.OnClickListener() {
                                     @Override
                                     public void onClick(View v) {
                                         load(true);
@@ -353,11 +370,12 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                             }
                             break;
                         case Room101RestClient.FAILED_AUTH:
-                            if(isLaunched()) {
-                                draw(R.layout.state_try_again);
-                                View try_again_reload = getActivity().findViewById(R.id.try_again_reload);
+                            draw(R.layout.state_try_again);
+                            try_again_reload = getActivity().findViewById(R.id.try_again_reload);
+                            if (try_again_reload != null) {
                                 ((ViewGroup) try_again_reload.getParent()).removeView(try_again_reload);
-                                ((TextView) getActivity().findViewById(R.id.try_again_message)).setText(R.string.room101_auth_failed);
+                                TextView try_again_message = (TextView) getActivity().findViewById(R.id.try_again_message);
+                                if (try_again_message != null) try_again_message.setText(R.string.room101_auth_failed);
                             }
                             break;
                     }
@@ -368,9 +386,10 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                 }
             });
         } else {
-            if(isLaunched()) {
-                draw(R.layout.state_offline);
-                getActivity().findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
+            draw(R.layout.state_offline);
+            View offline_reload = getActivity().findViewById(R.id.offline_reload);
+            if (offline_reload != null) {
+                offline_reload.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         load(true);
@@ -381,12 +400,14 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
     }
     private void display(){
         try {
-            if(!isLaunched()) return;
             if(viewRequest == null) throw new NullPointerException("viewRequest cannot be null");
             draw(R.layout.layout_room101_review);
-            ((TextView) getActivity().findViewById(R.id.room101_limit)).setText(viewRequest.getString("limit"));
-            ((TextView) getActivity().findViewById(R.id.room101_last)).setText(viewRequest.getString("left"));
-            ((TextView) getActivity().findViewById(R.id.room101_penalty)).setText(viewRequest.getString("penalty"));
+            TextView room101_limit = (TextView) getActivity().findViewById(R.id.room101_limit);
+            TextView room101_last = (TextView) getActivity().findViewById(R.id.room101_last);
+            TextView room101_penalty = (TextView) getActivity().findViewById(R.id.room101_penalty);
+            if (room101_limit != null) room101_limit.setText(viewRequest.getString("limit"));
+            if (room101_last != null) room101_last.setText(viewRequest.getString("left"));
+            if (room101_penalty != null) room101_penalty.setText(viewRequest.getString("penalty"));
             final LinearLayout room101_review_container = (LinearLayout) getActivity().findViewById(R.id.room101_review_container);
             (new Room101ReviewBuilder(getActivity(), this, viewRequest.getJSONArray("sessions"), new Room101ReviewBuilder.response(){
                 public void state(final int state, final LinearLayout layout){
@@ -394,11 +415,13 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                room101_review_container.removeAllViews();
-                                if (state == Room101ReviewBuilder.STATE_DONE || state == Room101ReviewBuilder.STATE_LOADING) {
-                                    room101_review_container.addView(layout);
-                                } else if (state == Room101ReviewBuilder.STATE_FAILED) {
-                                    loadFailed();
+                                if (room101_review_container != null) {
+                                    room101_review_container.removeAllViews();
+                                    if (state == Room101ReviewBuilder.STATE_DONE || state == Room101ReviewBuilder.STATE_LOADING) {
+                                        room101_review_container.addView(layout);
+                                    } else if (state == Room101ReviewBuilder.STATE_FAILED) {
+                                        loadFailed();
+                                    }
                                 }
                             }
                         });
@@ -410,20 +433,21 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
             })).start();
             // работаем со свайпом
             SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) getActivity().findViewById(R.id.room101_review_swipe);
-            TypedValue typedValue = new TypedValue();
-            getActivity().getTheme().resolveAttribute(R.attr.colorAccent, typedValue, true);
-            mSwipeRefreshLayout.setColorSchemeColors(typedValue.data);
-            getActivity().getTheme().resolveAttribute(R.attr.colorBackgroundRefresh, typedValue, true);
-            mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(typedValue.data);
-            mSwipeRefreshLayout.setOnRefreshListener(this);
+            if (mSwipeRefreshLayout != null) {
+                mSwipeRefreshLayout.setColorSchemeColors(MainActivity.colorAccent);
+                mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(MainActivity.colorBackgroundRefresh);
+                mSwipeRefreshLayout.setOnRefreshListener(this);
+            }
             // плавающая кнопка
             FloatingActionButton fab = (FloatingActionButton) getActivity().findViewById(R.id.fab);
-            fab.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    addRequest();
-                }
-            });
+            if (fab != null) {
+                fab.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        addRequest();
+                    }
+                });
+            }
             // показываем снекбар с датой обновления
             long timestamp = viewRequest.getLong("timestamp");
             int shift = (int) ((Calendar.getInstance().getTimeInMillis() - timestamp) / 1000);
@@ -447,9 +471,10 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
     }
     private void loadFailed(){
         try {
-            if(isLaunched()) {
-                draw(R.layout.state_try_again);
-                getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
+            draw(R.layout.state_try_again);
+            View try_again_reload = getActivity().findViewById(R.id.try_again_reload);
+            if (try_again_reload != null) {
+                try_again_reload.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         load(true);
@@ -462,8 +487,8 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
     }
     private void draw(int layoutId){
         try {
-            if(isLaunched()) {
-                ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_room101));
+            ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_room101));
+            if (vg != null) {
                 vg.removeAllViews();
                 vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             }
@@ -535,29 +560,12 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
         });
     }
     private void snackBar(String text){
-        if(isLaunched()) {
-            Snackbar snackbar = Snackbar.make(getActivity().findViewById(R.id.room101_review_swipe), text, Snackbar.LENGTH_SHORT);
-            getActivity().getTheme().resolveAttribute(R.attr.colorBackgroundSnackBar, MainActivity.typedValue, true);
-            snackbar.getView().setBackgroundColor(MainActivity.typedValue.data);
+        View room101_review_swipe = getActivity().findViewById(R.id.room101_review_swipe);
+        if (room101_review_swipe != null) {
+            Snackbar snackbar = Snackbar.make(room101_review_swipe, text, Snackbar.LENGTH_SHORT);
+            snackbar.getView().setBackgroundColor(MainActivity.colorBackgroundSnackBar);
             snackbar.show();
         }
-    }
-    private void interrupt(){
-        interrupted = true;
-        if(fragmentRequestHandle != null){
-            loaded = false;
-            fragmentRequestHandle.cancel(true);
-        }
-    }
-    private void relaunch(){
-        interrupted = false;
-        if(!loaded) {
-            loaded = true;
-            load(true);
-        }
-    }
-    private boolean isLaunched(){
-        return !interrupted;
     }
 }
 

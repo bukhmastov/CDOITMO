@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -45,25 +44,26 @@ public class ScheduleLessonsOddFragment extends Fragment {
             if(ScheduleLessonsFragment.schedule == null) throw new NullPointerException("ScheduleLessonsFragment.schedule cannot be null");
             TextView schedule_c_header = (TextView) getActivity().findViewById(R.id.schedule_lessons_odd_header);
             switch (ScheduleLessonsFragment.schedule.getString("type")){
-                case "group": schedule_c_header.setText("Расписание группы" + " " + ScheduleLessonsFragment.schedule.getString("scope")); break;
-                case "room": schedule_c_header.setText("Расписание в аудитории" + " " + ScheduleLessonsFragment.schedule.getString("scope")); break;
-                case "teacher": schedule_c_header.setText("Расписание преподавателя" + " " + ScheduleLessonsFragment.schedule.getString("scope")); break;
+                case "group": if(schedule_c_header != null) schedule_c_header.setText("Расписание группы" + " " + ScheduleLessonsFragment.schedule.getString("scope")); break;
+                case "room": if(schedule_c_header != null) schedule_c_header.setText("Расписание в аудитории" + " " + ScheduleLessonsFragment.schedule.getString("scope")); break;
+                case "teacher": if(schedule_c_header != null) schedule_c_header.setText("Расписание преподавателя" + " " + ScheduleLessonsFragment.schedule.getString("scope")); break;
                 default: throw new Exception("Wrong ScheduleLessonsFragment.schedule.TYPE value");
             }
-            TextView schedule_lessons_all_week = (TextView) getActivity().findViewById(R.id.schedule_lessons_odd_week);
-            if(MainActivity.week >= 0){
-                schedule_lessons_all_week.setText(MainActivity.week + " " + getString(R.string.school_week));
-            } else {
-                schedule_lessons_all_week.setText(new SimpleDateFormat("dd.MM.yyyy", Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis())));
+            TextView schedule_lessons_odd_week = (TextView) getActivity().findViewById(R.id.schedule_lessons_odd_week);
+            if (schedule_lessons_odd_week != null) {
+                if (MainActivity.week >= 0) {
+                    schedule_lessons_odd_week.setText(MainActivity.week + " " + getString(R.string.school_week));
+                } else {
+                    schedule_lessons_odd_week.setText(new SimpleDateFormat("dd.MM.yyyy", Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis())));
+                }
             }
             // работаем со свайпом
             SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) getActivity().findViewById(R.id.schedule_lessons_odd_container);
-            TypedValue typedValue = new TypedValue();
-            getActivity().getTheme().resolveAttribute(R.attr.colorAccent, typedValue, true);
-            mSwipeRefreshLayout.setColorSchemeColors(typedValue.data);
-            getActivity().getTheme().resolveAttribute(R.attr.colorBackgroundRefresh, typedValue, true);
-            mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(typedValue.data);
-            mSwipeRefreshLayout.setOnRefreshListener(ScheduleLessonsFragment.scheduleLessons);
+            if (mSwipeRefreshLayout != null) {
+                mSwipeRefreshLayout.setColorSchemeColors(MainActivity.colorAccent);
+                mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(MainActivity.colorBackgroundRefresh);
+                mSwipeRefreshLayout.setOnRefreshListener(ScheduleLessonsFragment.scheduleLessons);
+            }
             // отображаем расписание
             final ViewGroup linearLayout = (ViewGroup) getActivity().findViewById(R.id.schedule_lessons_odd_content);
             (new ScheduleLessonsBuilder(getActivity(), TYPE, new ScheduleLessonsBuilder.response(){
@@ -72,14 +72,16 @@ public class ScheduleLessonsOddFragment extends Fragment {
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                linearLayout.removeAllViews();
-                                if(state == ScheduleLessonsBuilder.STATE_DONE) {
-                                    linearLayout.addView(layout);
-                                    displayed = true;
-                                } else if(state == ScheduleLessonsBuilder.STATE_LOADING){
-                                    linearLayout.addView(layout);
-                                } else if(state == ScheduleLessonsBuilder.STATE_FAILED){
-                                    failed();
+                                if (linearLayout != null) {
+                                    linearLayout.removeAllViews();
+                                    if (state == ScheduleLessonsBuilder.STATE_DONE) {
+                                        linearLayout.addView(layout);
+                                        displayed = true;
+                                    } else if (state == ScheduleLessonsBuilder.STATE_LOADING) {
+                                        linearLayout.addView(layout);
+                                    } else if (state == ScheduleLessonsBuilder.STATE_FAILED) {
+                                        failed();
+                                    }
                                 }
                             }
                         });
@@ -98,12 +100,15 @@ public class ScheduleLessonsOddFragment extends Fragment {
     private void failed(){
         try {
             draw(R.layout.state_try_again);
-            getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    ScheduleLessonsFragment.scheduleLessons.search(ScheduleLessonsFragment.query, false);
-                }
-            });
+            View try_again_reload = getActivity().findViewById(R.id.try_again_reload);
+            if (try_again_reload != null) {
+                try_again_reload.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        ScheduleLessonsFragment.scheduleLessons.search(ScheduleLessonsFragment.query, false);
+                    }
+                });
+            }
         } catch (Exception e){
             if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }
@@ -111,8 +116,10 @@ public class ScheduleLessonsOddFragment extends Fragment {
     private void draw(int layoutId){
         try {
             ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_schedule_lessons_odd));
-            vg.removeAllViews();
-            vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            if (vg != null) {
+                vg.removeAllViews();
+                vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            }
         } catch (Exception e){
             if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }

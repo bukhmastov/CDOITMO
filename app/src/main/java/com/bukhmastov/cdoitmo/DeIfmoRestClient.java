@@ -49,8 +49,8 @@ class DeIfmoRestClient {
         httpclient.setLoggingLevel(Log.WARN);
     }
     static void check(final Context context, final DeIfmoRestClientResponseHandler responseHandler){
-        httpclient.setLoggingLevel(Log.WARN);
-        if(isOnline(context)){
+        init();
+        if (isOnline(context)) {
             responseHandler.onProgress(STATE_CHECKING);
             if (Objects.equals(Storage.get(context, "session_cookie"), "")){
                 authorize(context, new DeIfmoRestClientResponseHandler() {
@@ -78,7 +78,7 @@ class DeIfmoRestClient {
                         new UserDataParse(new UserDataParse.response() {
                             @Override
                             public void finish(HashMap<String, String> result) {
-                                if(result != null){
+                                if (result != null) {
                                     Storage.put(context, "name", result.get("name"));
                                     Storage.put(context, "group", result.get("group"));
                                     try {
@@ -90,7 +90,7 @@ class DeIfmoRestClient {
                                         if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
                                         Storage.delete(context, "week");
                                     }
-                                    responseHandler.onSuccess(200, result.get("name"));
+                                    responseHandler.onSuccess(200, "");
                                 } else {
                                     responseHandler.onSuccess(200, "");
                                 }
@@ -162,7 +162,7 @@ class DeIfmoRestClient {
                                     responseHandler.onFailure(FAILED_AUTH_TRY_AGAIN);
                                 }
                             });
-                        } else if(data.contains("Обучение и аттестация")){
+                        } else if (data.contains("Обучение и аттестация")) {
                             responseHandler.onProgress(STATE_AUTHORIZED);
                             responseHandler.onSuccess(statusCode, "authorized");
                         } else {
@@ -185,7 +185,7 @@ class DeIfmoRestClient {
         get(context, url, params, false, responseHandler);
     }
     static void get(final Context context, final String url, final RequestParams params, final boolean is_ifmo, final DeIfmoRestClientResponseHandler responseHandler){
-        if(isOnline(context)) {
+        if (isOnline(context)) {
             responseHandler.onProgress(STATE_HANDLING);
             renewCookie(context);
             responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(url, is_ifmo), params, new AsyncHttpResponseHandler() {
@@ -197,8 +197,8 @@ class DeIfmoRestClient {
                         String data;
                         String charset = "windows-1251";
                         Matcher m = Pattern.compile("<meta.*charset=\"?(.*)\".*>").matcher(new String(responseBody, "UTF-8"));
-                        if(m.find()) charset = m.group(1).toUpperCase();
-                        if(Objects.equals(charset, "UTF-8")){
+                        if (m.find()) charset = m.group(1).toUpperCase();
+                        if (Objects.equals(charset, "UTF-8")) {
                             data = new String(responseBody, charset);
                         } else {
                             data = new String((new String(responseBody, charset)).getBytes("UTF-8"));
@@ -241,7 +241,7 @@ class DeIfmoRestClient {
         }
     }
     static void post(final Context context, final String url, final RequestParams params, final DeIfmoRestClientResponseHandler responseHandler){
-        if(isOnline(context)) {
+        if (isOnline(context)) {
             responseHandler.onProgress(STATE_HANDLING);
             renewCookie(context);
             responseHandler.onNewHandle(httpclient.post(getAbsoluteUrl(url, false), params, new AsyncHttpResponseHandler() {
@@ -249,8 +249,15 @@ class DeIfmoRestClient {
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                     responseHandler.onNewHandle(null);
                     try {
-                        String data = "";
-                        if (responseBody != null) data = new String((new String(responseBody, "windows-1251")).getBytes("UTF-8"));
+                        String data;
+                        String charset = "windows-1251";
+                        Matcher m = Pattern.compile("<meta.*charset=\"?(.*)\".*>").matcher(new String(responseBody, "UTF-8"));
+                        if (m.find()) charset = m.group(1).toUpperCase();
+                        if (Objects.equals(charset, "UTF-8")) {
+                            data = new String(responseBody, charset);
+                        } else {
+                            data = new String((new String(responseBody, charset)).getBytes("UTF-8"));
+                        }
                         if (data.contains("Закончился интервал неактивности") || data.contains("Доступ запрещен")) {
                             authorize(context, new DeIfmoRestClientResponseHandler() {
                                 @Override
@@ -289,7 +296,7 @@ class DeIfmoRestClient {
         }
     }
     static void getJSON(final Context context, final String url, final RequestParams params, final DeIfmoRestClientJsonResponseHandler responseHandler){
-        if(isOnline(context)) {
+        if (isOnline(context)) {
             responseHandler.onProgress(STATE_HANDLING);
             renewCookie(context);
             responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(url, false), params, new JsonHttpResponseHandler() {

@@ -36,7 +36,6 @@ import java.util.regex.Pattern;
 public class RatingListActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "RatingFragment";
-    private boolean interrupted = false;
     private String faculty = null;
     private String course = null;
     private String years = null;
@@ -71,13 +70,19 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
     @Override
     public void onResume() {
         super.onResume();
-        relaunch();
+        if (!loaded) {
+            loaded = true;
+            load();
+        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        interrupt();
+        if (activityRequestHandle != null) {
+            loaded = false;
+            activityRequestHandle.cancel(true);
+        }
     }
 
     @Override
@@ -94,7 +99,7 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
     }
 
     private void load(){
-        if(getSupportActionBar() != null) getSupportActionBar().setTitle("Топ-рейтинг");
+        if (getSupportActionBar() != null) getSupportActionBar().setTitle("Топ-рейтинг");
         DeIfmoRestClient.get(this, "?node=rating&std&depId=" + faculty + "&year=" + course + "&app=" + years, null, new DeIfmoRestClientResponseHandler() {
             @Override
             public void onSuccess(int statusCode, String response) {
@@ -111,54 +116,50 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
             }
             @Override
             public void onProgress(int state) {
-                if(isLaunched()) {
-                    draw(R.layout.state_loading);
-                    TextView loading_message = (TextView) findViewById(R.id.loading_message);
+                draw(R.layout.state_loading);
+                TextView loading_message = (TextView) findViewById(R.id.loading_message);
+                if (loading_message != null) {
                     switch (state) {
-                        case DeIfmoRestClient.STATE_HANDLING:
-                            loading_message.setText(R.string.loading);
-                            break;
-                        case DeIfmoRestClient.STATE_AUTHORIZATION:
-                            loading_message.setText(R.string.authorization);
-                            break;
-                        case DeIfmoRestClient.STATE_AUTHORIZED:
-                            loading_message.setText(R.string.authorized);
-                            break;
+                        case DeIfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
+                        case DeIfmoRestClient.STATE_AUTHORIZATION: loading_message.setText(R.string.authorization); break;
+                        case DeIfmoRestClient.STATE_AUTHORIZED: loading_message.setText(R.string.authorized); break;
                     }
                 }
             }
             @Override
             public void onFailure(int state) {
-                if(isLaunched()) {
-                    switch (state) {
-                        case DeIfmoRestClient.FAILED_OFFLINE:
-                            draw(R.layout.state_offline);
-                            findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
+                switch (state) {
+                    case DeIfmoRestClient.FAILED_OFFLINE:
+                        draw(R.layout.state_offline);
+                        View offline_reload = findViewById(R.id.offline_reload);
+                        if (offline_reload != null) {
+                            offline_reload.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
                                     load();
                                 }
                             });
-                            break;
-                        case DeIfmoRestClient.FAILED_TRY_AGAIN:
-                        case DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN:
-                            draw(R.layout.state_try_again);
-                            if (state == DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN)
-                                ((TextView) findViewById(R.id.try_again_message)).setText(R.string.auth_failed);
-                            findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
+                        }
+                        break;
+                    case DeIfmoRestClient.FAILED_TRY_AGAIN:
+                    case DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN:
+                        draw(R.layout.state_try_again);
+                        if (state == DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN) {
+                            TextView try_again_message = (TextView) findViewById(R.id.try_again_message);
+                            if (try_again_message != null) try_again_message.setText(R.string.auth_failed);
+                        }
+                        View try_again_reload = findViewById(R.id.try_again_reload);
+                        if (try_again_reload != null) {
+                            try_again_reload.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
                                     load();
                                 }
                             });
-                            break;
-                        case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
-                            gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED);
-                            break;
-                        case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED:
-                            gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED);
-                            break;
-                    }
+                        }
+                        break;
+                    case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED: gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED); break;
+                    case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED: gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED); break;
                 }
             }
             @Override
@@ -169,9 +170,10 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
     }
     private void loadFailed(){
         try {
-            if(isLaunched()) {
-                draw(R.layout.state_try_again);
-                findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
+            draw(R.layout.state_try_again);
+            View try_again_reload = findViewById(R.id.try_again_reload);
+            if (try_again_reload != null) {
+                try_again_reload.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         load();
@@ -184,7 +186,6 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
     }
     private void display(JSONObject data){
         try {
-            if(!isLaunched()) return;
             if(data == null) throw new NullPointerException("display(JSONObject data) can't be null");
             if(getSupportActionBar() != null) getSupportActionBar().setTitle(data.getString("header"));
             // получаем список для отображения рейтинга
@@ -205,15 +206,14 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
             draw(R.layout.rating_list_layout);
             // работаем со списком
             ListView rl_list_view = (ListView) findViewById(R.id.rl_list_view);
-            rl_list_view.setAdapter(new RatingListListView(this, users));
+            if (rl_list_view != null) rl_list_view.setAdapter(new RatingListListView(this, users));
             // работаем со свайпом
             SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_container);
-            TypedValue typedValue = new TypedValue();
-            getTheme().resolveAttribute(R.attr.colorAccent, typedValue, true);
-            mSwipeRefreshLayout.setColorSchemeColors(typedValue.data);
-            getTheme().resolveAttribute(R.attr.colorBackgroundRefresh, typedValue, true);
-            mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(typedValue.data);
-            mSwipeRefreshLayout.setOnRefreshListener(this);
+            if (mSwipeRefreshLayout != null) {
+                mSwipeRefreshLayout.setColorSchemeColors(MainActivity.colorAccent);
+                mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(MainActivity.colorBackgroundRefresh);
+                mSwipeRefreshLayout.setOnRefreshListener(this);
+            }
         } catch(Exception e){
             if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
             loadFailed();
@@ -225,31 +225,14 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
     }
     private void draw(int layoutId){
         try {
-            if(isLaunched()) {
-                ViewGroup vg = ((ViewGroup) findViewById(R.id.rating_list_container));
+            ViewGroup vg = ((ViewGroup) findViewById(R.id.rating_list_container));
+            if (vg != null) {
                 vg.removeAllViews();
                 vg.addView(((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             }
         } catch (Exception e) {
             if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }
-    }
-    private void interrupt(){
-        interrupted = true;
-        if(activityRequestHandle != null){
-            loaded = false;
-            activityRequestHandle.cancel(true);
-        }
-    }
-    private void relaunch(){
-        interrupted = false;
-        if(!loaded) {
-            loaded = true;
-            load();
-        }
-    }
-    private boolean isLaunched(){
-        return !interrupted;
     }
 }
 
@@ -344,13 +327,14 @@ class RatingListListView extends ArrayAdapter<HashMap<String, String>> {
     public View getView(int position, View view, @NonNull ViewGroup parent) { //?attr/textColorPassed
         LayoutInflater inflater = context.getLayoutInflater();
         HashMap<String, String> user = users.get(position);
-        View rowView;
-        rowView = inflater.inflate(R.layout.listview_rating_list, null, true);
+        View rowView = inflater.inflate(R.layout.listview_rating_list, null, true);
         TypedValue typedValue = new TypedValue();
         if(Objects.equals(user.get("is_me"), "1")){
             ViewGroup vg = ((ViewGroup) rowView.findViewById(R.id.lvrl_number_layout));
-            vg.removeAllViews();
-            vg.addView(((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.triangle_mark_layout, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            if (vg != null) {
+                vg.removeAllViews();
+                vg.addView(((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.triangle_mark_layout, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            }
             this.context.getTheme().resolveAttribute(R.attr.colorPrimaryOpacity, typedValue, true);
             rowView.setBackgroundColor(typedValue.data);
             rowView.findViewById(R.id.lvrl_layout).setPadding(32, 0, 16, 0);

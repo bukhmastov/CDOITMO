@@ -1,11 +1,11 @@
 package com.bukhmastov.cdoitmo;
 
 import android.app.Activity;
+import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -85,17 +85,20 @@ public class SubjectActivity extends AppCompatActivity {
         } else {
             pointsStr = "";
         }
-        as_current_points.setText(pointsStr);
-        as_desc.setText(termSub + " " + getString(R.string.semester) + (Objects.equals(subject.type, "") ? "" : " | " + subject.type));
-        if(Objects.equals(subject.mark, "")){
-            ((ViewGroup) as_result.getParent()).removeView(as_result);
-        } else {
-            as_result.setText(subject.mark);
+        if (as_current_points != null) as_current_points.setText(pointsStr);
+        if (as_desc != null) as_desc.setText(termSub + " " + getString(R.string.semester) + (Objects.equals(subject.type, "") ? "" : " | " + subject.type));
+        if (as_result != null) {
+            if (Objects.equals(subject.mark, "")) {
+                ((ViewGroup) as_result.getParent()).removeView(as_result);
+            } else {
+                as_result.setText(subject.mark);
+            }
         }
         // отображаем список оценок
         ListView as_list_view = (ListView) findViewById(R.id.as_list_view);
-        as_list_view.setAdapter(new PointsListView(this, subject.points));
-
+        if (as_list_view != null) {
+            as_list_view.setAdapter(new PointsListView(this, subject.points));
+        }
     }
 
     @Override
@@ -127,9 +130,9 @@ class PointsListView extends ArrayAdapter<Point> {
         TextView lv_point_name = ((TextView) rowView.findViewById(R.id.lv_point_name));
         TextView lv_point_limits = ((TextView) rowView.findViewById(R.id.lv_point_limits));
         TextView lv_point_value = ((TextView) rowView.findViewById(R.id.lv_point_value));
-        lv_point_name.setText(point.name);
-        lv_point_limits.setText("0 / " + double2string(point.limit) + " / " + double2string(point.max));
-        lv_point_value.setText(double2string(point.value));
+        if (lv_point_name != null) lv_point_name.setText(point.name);
+        if (lv_point_limits != null) lv_point_limits.setText("0 / " + double2string(point.limit) + " / " + double2string(point.max));
+        if (lv_point_value != null) lv_point_value.setText(double2string(point.value));
         return rowView;
     }
 

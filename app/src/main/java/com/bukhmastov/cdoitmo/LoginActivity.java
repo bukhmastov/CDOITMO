@@ -12,6 +12,8 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -27,7 +29,6 @@ public class LoginActivity extends AppCompatActivity {
     static ErrorTracker errorTracker;
     static String versionName;
     static int versionCode;
-    private Button btn_login;
     private EditText input_login, input_password;
     public static int state = -1;
     static final int SIGNAL_CREDENTIALS_REQUIRED = 0;
@@ -53,30 +54,28 @@ public class LoginActivity extends AppCompatActivity {
         ActionBar actionBar = getSupportActionBar();
         if(actionBar != null){
             actionBar.setTitle("  " + getString(R.string.title_activity_login));
-            int[] attrs = new int[] { R.attr.ic_security };
-            actionBar.setLogo(obtainStyledAttributes(attrs).getDrawable(0));
+            actionBar.setLogo(obtainStyledAttributes(new int[] { R.attr.ic_security }).getDrawable(0));
         }
-        // инициализация http клиента
         DeIfmoRestClient.init();
-        // инициализация визуальных компонентов
-        btn_login = (Button) findViewById(R.id.btn_login);
         input_login = (EditText) findViewById(R.id.input_login);
         input_password = (EditText) findViewById(R.id.input_password);
-        btn_login.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String login = input_login.getText().toString();
-                String password = input_password.getText().toString();
-                if(!(Objects.equals(login, "") || Objects.equals(password, ""))){
-                    Storage.put(getBaseContext(), "login", login);
-                    Storage.put(getBaseContext(), "password", password);
-                    Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                    startActivity(intent);
-                } else {
-                    Snackbar.make(findViewById(R.id.activity_login), R.string.fill_fields, Snackbar.LENGTH_LONG).show();
+        Button btn_login = (Button) findViewById(R.id.btn_login);
+        if (btn_login != null) {
+            btn_login.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    String login = input_login.getText().toString();
+                    String password = input_password.getText().toString();
+                    if (!(Objects.equals(login, "") || Objects.equals(password, ""))) {
+                        Storage.put(getBaseContext(), "login", login);
+                        Storage.put(getBaseContext(), "password", password);
+                        startActivity(new Intent(getApplicationContext(), MainActivity.class));
+                    } else {
+                        snackBar(getString(R.string.fill_fields));
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     @Override
@@ -88,7 +87,7 @@ public class LoginActivity extends AppCompatActivity {
                 case SIGNAL_LOGOUT: logOut(); break;
                 case SIGNAL_CREDENTIALS_FAILED: // неверные учетные данные
                     Storage.clear(getBaseContext());
-                    Snackbar.make(findViewById(R.id.activity_login), R.string.invalid_login_password, Snackbar.LENGTH_LONG).show();
+                    snackBar(getString(R.string.invalid_login_password));
                     break;
                 case SIGNAL_RECONNECT:
                     if(is_initial) is_initial = false;
@@ -99,11 +98,10 @@ public class LoginActivity extends AppCompatActivity {
             }
             state = -1;
             if (!(Objects.equals(Storage.get(getBaseContext(), "login"), "") || Objects.equals(Storage.get(getBaseContext(), "password"), ""))) {
-                Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                startActivity(intent);
+                startActivity(new Intent(getApplicationContext(), MainActivity.class));
             } else {
-                input_login.setText(Storage.get(getBaseContext(), "login"));
-                input_password.setText(Storage.get(getBaseContext(), "password"));
+                if (input_login != null) input_login.setText(Storage.get(getBaseContext(), "login"));
+                if (input_password != null)  input_password.setText(Storage.get(getBaseContext(), "password"));
             }
         } catch (Exception e) {
             if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
@@ -124,10 +122,18 @@ public class LoginActivity extends AppCompatActivity {
         Storage.clear(getBaseContext());
         Cache.clear(getBaseContext());
         new ProtocolTracker(this).stop();
-        try {
-            Snackbar.make(findViewById(R.id.activity_login), R.string.logged_out, Snackbar.LENGTH_SHORT).show();
-        } catch (Exception e) {
-            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
+        snackBar(getString(R.string.logged_out));
+    }
+    private void snackBar(String text){
+        View activity_login = findViewById(R.id.activity_login);
+        if (activity_login != null) {
+            Snackbar snackbar = Snackbar.make(activity_login, text, Snackbar.LENGTH_SHORT);
+            TypedValue typedValue = new TypedValue();
+            getTheme().resolveAttribute(R.attr.colorBackgroundSnackBar, typedValue, true);
+            snackbar.getView().setBackgroundColor(obtainStyledAttributes(typedValue.data, new int[]{R.attr.colorBackgroundSnackBar}).getColor(0, -1));
+            snackbar.show();
+        } else {
+            Log.w(TAG, "activity_login is null");
         }
     }
 }
@@ -146,7 +152,7 @@ class ErrorTracker {
         return errorList.size();
     }
     boolean send(){
-        if(errorList.size() > 0) {
+        if(count() > 0) {
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append("--------Device--------").append("\n");
             stringBuilder.append("DEVICE: ").append(Build.DEVICE).append("\n");

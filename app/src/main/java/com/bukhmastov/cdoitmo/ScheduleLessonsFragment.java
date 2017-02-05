@@ -46,7 +46,6 @@ import java.util.regex.Pattern;
 public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons.response {
 
     private static final String TAG = "ScheduleLessonsFragment";
-    private boolean interrupted = false;
     static ScheduleLessons scheduleLessons;
     private boolean loaded = false;
     static RequestHandle fragmentRequestHandle = null;
@@ -72,49 +71,60 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
         super.onResume();
         schedule_tabs = (TabLayout) getActivity().findViewById(R.id.schedule_tabs);
         if(!MainActivity.OFFLINE_MODE) {
-            MainActivity.menu.findItem(R.id.action_search).setVisible(true);
-            ((SearchView) MainActivity.menu.findItem(R.id.action_search).getActionView()).setQueryHint(getString(R.string.schedule_lessons_search_view_hint));
-            MainActivity.menu.findItem(R.id.action_search).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-                @Override
-                public boolean onMenuItemClick(MenuItem item) {
-                    MainActivity.menu.findItem(R.id.action_search).expandActionView();
-                    return false;
+            MenuItem menuItem = MainActivity.menu.findItem(R.id.action_search);
+            if (menuItem != null){
+                menuItem.setVisible(true);
+                menuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem item) {
+                        MainActivity.menu.findItem(R.id.action_search).expandActionView();
+                        return false;
+                    }
+                });
+                SearchView searchView = (SearchView) menuItem.getActionView();
+                if(searchView != null) {
+                    searchView.setQueryHint(getString(R.string.schedule_lessons_search_view_hint));
                 }
-            });
+            }
         }
-        relaunch();
+        if (!loaded) {
+            loaded = true;
+            scheduleLessons.search(MainActivity.group, false);
+        }
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        interrupt();
+        if (fragmentRequestHandle != null) {
+            loaded = false;
+            fragmentRequestHandle.cancel(true);
+        }
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         schedule_tabs.setVisibility(View.GONE);
-        if(!MainActivity.OFFLINE_MODE) MainActivity.menu.findItem(R.id.action_search).setVisible(false);
+        if(!MainActivity.OFFLINE_MODE) {
+            MenuItem menuItem = MainActivity.menu.findItem(R.id.action_search);
+            if (menuItem != null){
+                menuItem.setVisible(false);
+            }
+        }
     }
 
     @Override
     public void onProgress(int state){
         try {
-            if(isLaunched()) {
-                schedule_tabs.setVisibility(View.GONE);
-                draw(R.layout.state_loading);
-                TextView loading_message = (TextView) getActivity().findViewById(R.id.loading_message);
+            schedule_tabs.setVisibility(View.GONE);
+            draw(R.layout.state_loading);
+            TextView loading_message = (TextView) getActivity().findViewById(R.id.loading_message);
+            if (loading_message != null) {
                 switch (state) {
-                    case DeIfmoRestClient.STATE_HANDLING:
-                        loading_message.setText(R.string.loading);
-                        break;
-                    case DeIfmoRestClient.STATE_AUTHORIZATION:
-                        loading_message.setText(R.string.authorization);
-                        break;
-                    case DeIfmoRestClient.STATE_AUTHORIZED:
-                        loading_message.setText(R.string.authorized);
-                        break;
+                    case DeIfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
+                    case DeIfmoRestClient.STATE_AUTHORIZATION: loading_message.setText(R.string.authorization); break;
+                    case DeIfmoRestClient.STATE_AUTHORIZED: loading_message.setText(R.string.authorized); break;
                 }
             }
         } catch (Exception e) {
@@ -132,9 +142,10 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
         try {
             switch (state) {
                 case DeIfmoRestClient.FAILED_OFFLINE:
-                    if(isLaunched()) {
-                        draw(R.layout.state_offline);
-                        getActivity().findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
+                    draw(R.layout.state_offline);
+                    View offline_reload = getActivity().findViewById(R.id.offline_reload);
+                    if (offline_reload != null) {
+                        offline_reload.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
                                 scheduleLessons.search(query, false);
@@ -145,10 +156,14 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
                 case DeIfmoRestClient.FAILED_TRY_AGAIN:
                 case DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN:
                 case ScheduleLessons.FAILED_LOAD:
-                    if(isLaunched()) {
-                        draw(R.layout.state_try_again);
-                        if (state == DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN) ((TextView) getActivity().findViewById(R.id.try_again_message)).setText(R.string.auth_failed);
-                        getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
+                    draw(R.layout.state_try_again);
+                    if (state == DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN) {
+                        TextView try_again_message = (TextView) getActivity().findViewById(R.id.try_again_message);
+                        if (try_again_message != null) try_again_message.setText(R.string.auth_failed);
+                    }
+                    View try_again_reload = getActivity().findViewById(R.id.try_again_reload);
+                    if (try_again_reload != null) {
+                        try_again_reload.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
                                 scheduleLessons.search(query, false);
@@ -156,12 +171,8 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
                         });
                     }
                     break;
-                case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
-                    gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED);
-                    break;
-                case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED:
-                    gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED);
-                    break;
+                case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED: gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED); break;
+                case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED: gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED); break;
             }
         } catch (Exception e){
             if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
@@ -171,7 +182,6 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
     @Override
     public void onSuccess(JSONObject json){
         try {
-            if(!isLaunched()) return;
             if(json == null) throw new NullPointerException("json cannot be null");
             schedule = json;
             schedule_tabs.setVisibility(View.GONE);
@@ -181,23 +191,25 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
                     draw(R.layout.layout_schedule_lessons_teacher_picker);
                     TextView teacher_picker_header = (TextView) getActivity().findViewById(R.id.teacher_picker_header);
                     ListView teacher_picker_list_view = (ListView) getActivity().findViewById(R.id.teacher_picker_list_view);
-                    teacher_picker_header.setText(R.string.choose_teacher);
-                    final ArrayList<HashMap<String, String>> teachersMap = new ArrayList<>();
-                    for(int i = 0; i < teachers.length(); i++){
-                        JSONObject teacher = teachers.getJSONObject(i);
-                        HashMap<String, String> teacherMap = new HashMap<>();
-                        teacherMap.put("name", teacher.getString("name"));
-                        teacherMap.put("scope", teacher.getString("scope"));
-                        teacherMap.put("id", teacher.getString("id"));
-                        teachersMap.add(teacherMap);
-                    }
-                    teacher_picker_list_view.setAdapter(new TeacherPickerListView(getActivity(), teachersMap));
-                    teacher_picker_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener(){
-                        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                            HashMap<String, String> teacherMap = teachersMap.get(position);
-                            scheduleLessons.search(teacherMap.get("scope"), false);
+                    if (teacher_picker_header != null) teacher_picker_header.setText(R.string.choose_teacher);
+                    if (teacher_picker_list_view != null) {
+                        final ArrayList<HashMap<String, String>> teachersMap = new ArrayList<>();
+                        for (int i = 0; i < teachers.length(); i++) {
+                            JSONObject teacher = teachers.getJSONObject(i);
+                            HashMap<String, String> teacherMap = new HashMap<>();
+                            teacherMap.put("name", teacher.getString("name"));
+                            teacherMap.put("scope", teacher.getString("scope"));
+                            teacherMap.put("id", teacher.getString("id"));
+                            teachersMap.add(teacherMap);
                         }
-                    });
+                        teacher_picker_list_view.setAdapter(new TeacherPickerListView(getActivity(), teachersMap));
+                        teacher_picker_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                                HashMap<String, String> teacherMap = teachersMap.get(position);
+                                scheduleLessons.search(teacherMap.get("scope"), false);
+                            }
+                        });
+                    }
                 } else {
                     notFound();
                 }
@@ -206,8 +218,10 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
                     schedule_tabs.setVisibility(View.VISIBLE);
                     draw(R.layout.layout_schedule_lessons_tabs);
                     schedule_view = (ViewPager) getActivity().findViewById(R.id.schedule_pager);
-                    schedule_view.setAdapter(new PagerAdapter(getFragmentManager(), getContext()));
-                    schedule_tabs.setupWithViewPager(schedule_view);
+                    if (schedule_view != null) {
+                        schedule_view.setAdapter(new PagerAdapter(getFragmentManager(), getContext()));
+                        schedule_tabs.setupWithViewPager(schedule_view);
+                    }
                     TabLayout.Tab tab = schedule_tabs.getTabAt(MainActivity.week >= 0 ? (MainActivity.week % 2) + 1 : 0);
                     if(tab != null) tab.select();
                 } else {
@@ -230,7 +244,6 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
     }
 
     private void notFound(){
-        if(!isLaunched()) return;
         TypedValue typedValue = new TypedValue();
         getActivity().getTheme().resolveAttribute(android.R.attr.textColorPrimary, typedValue, true);
         int textColorPrimary = getActivity().obtainStyledAttributes(typedValue.data, new int[]{android.R.attr.textColorPrimary}).getColor(0, -1);
@@ -255,8 +268,10 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
         desc.setTextAlignment(TextView.TEXT_ALIGNMENT_CENTER);
         linearLayout.addView(desc);
         ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_schedule));
-        vg.removeAllViews();
-        vg.addView(linearLayout);
+        if (vg != null) {
+            vg.removeAllViews();
+            vg.addView(linearLayout);
+        }
     }
     void gotoLogin(int state){
         LoginActivity.state = state;
@@ -264,31 +279,14 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
     }
     private void draw(int layoutId){
         try {
-            if(isLaunched()) {
-                ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_schedule));
+            ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_schedule));
+            if (vg != null) {
                 vg.removeAllViews();
                 vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             }
         } catch (Exception e){
             if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }
-    }
-    private void interrupt(){
-        interrupted = true;
-        if(fragmentRequestHandle != null){
-            loaded = false;
-            fragmentRequestHandle.cancel(true);
-        }
-    }
-    private void relaunch(){
-        interrupted = false;
-        if(!loaded) {
-            loaded = true;
-            scheduleLessons.search(MainActivity.group, false);
-        }
-    }
-    private boolean isLaunched(){
-        return !interrupted;
     }
 }
 
@@ -322,16 +320,17 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
         search(query, force, false);
     }
     void search(String query, boolean force, boolean toCache){
+        if (handler == null) return;
         query = query.trim();
         ScheduleLessonsFragment.query = query;
-        if(ScheduleLessonsFragment.fragmentRequestHandle != null) ScheduleLessonsFragment.fragmentRequestHandle.cancel(true);
-        if(Pattern.compile("^\\w{1,3}\\d{4}\\w?$").matcher(query).find()){
+        if (ScheduleLessonsFragment.fragmentRequestHandle != null) ScheduleLessonsFragment.fragmentRequestHandle.cancel(true);
+        if (Pattern.compile("^\\w{1,3}\\d{4}\\w?$").matcher(query).find()) {
             searchGroup(query.toUpperCase(), force, toCache);
         }
-        else if(Pattern.compile("^\\d+\\S*$").matcher(query).find()){
+        else if (Pattern.compile("^\\d+\\S*$").matcher(query).find()) {
             searchRoom(query, force, toCache);
         }
-        else if(Pattern.compile("^teacher\\d+$").matcher(query).find()){
+        else if (Pattern.compile("^teacher\\d+$").matcher(query).find()) {
             searchDefinedTeacher(query, force, toCache);
         }
         else {
@@ -1300,22 +1299,19 @@ class TeacherPickerListView extends ArrayAdapter<HashMap<String, String>> {
     public View getView(int position, View view, @NonNull ViewGroup parent) {
         LayoutInflater inflater = context.getLayoutInflater();
         HashMap<String, String> teacherMap = teachersMap.get(position);
-        View rowView;
-        rowView = inflater.inflate(R.layout.listview_teacher_picker, null, true);
-        ((TextView) rowView.findViewById(R.id.lv_teacher_picker_name)).setText(teacherMap.get("name"));
+        View rowView = inflater.inflate(R.layout.listview_teacher_picker, null, true);
+        TextView lv_teacher_picker_name = (TextView) rowView.findViewById(R.id.lv_teacher_picker_name);
+        if (lv_teacher_picker_name != null) lv_teacher_picker_name.setText(teacherMap.get("name"));
         return rowView;
     }
 }
 
 class PagerAdapter extends FragmentStatePagerAdapter {
-
     private Context context;
-
     PagerAdapter(FragmentManager fm, Context context) {
         super(fm);
         this.context = context;
     }
-
     @Override
     public Fragment getItem(int position) {
         switch (position){
@@ -1325,12 +1321,10 @@ class PagerAdapter extends FragmentStatePagerAdapter {
             case 0: return new ScheduleLessonsAllFragment();
         }
     }
-
     @Override
     public int getCount() {
         return 3;
     }
-
     @Override
     public CharSequence getPageTitle(int position) {
         switch (position){

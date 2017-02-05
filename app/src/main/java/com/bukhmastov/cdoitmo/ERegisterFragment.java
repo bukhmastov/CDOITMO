@@ -8,7 +8,6 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,7 +33,6 @@ import java.util.Objects;
 public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "ERegisterFragment";
-    private boolean interrupted = false;
     public static ERegister eRegister = null;
     private String group = "";
     private int term = 0;
@@ -57,13 +55,19 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
     @Override
     public void onResume() {
         super.onResume();
-        relaunch();
+        if (!loaded) {
+            loaded = true;
+            forceLoad();
+        }
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        interrupt();
+        if (fragmentRequestHandle != null) {
+            loaded = false;
+            fragmentRequestHandle.cancel(true);
+        }
     }
 
     @Override
@@ -72,7 +76,7 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
     }
 
     private void load(){
-        if(eRegister.is()){
+        if (eRegister.is()) {
             display();
         } else {
             forceLoad();
@@ -80,7 +84,7 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
     }
     private void forceLoad(){
         notifyAboutDateUpdate = true;
-        if(!MainActivity.OFFLINE_MODE) {
+        if (!MainActivity.OFFLINE_MODE) {
             DeIfmoRestClient.getJSON(getContext(), "api/private/eregister", null, new DeIfmoRestClientJsonResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, JSONObject response) {
@@ -97,60 +101,54 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                 }
                 @Override
                 public void onProgress(int state) {
-                    if(isLaunched()) {
-                        draw(R.layout.state_loading);
-                        TextView loading_message = (TextView) getActivity().findViewById(R.id.loading_message);
-                        if (loading_message != null) {
-                            switch (state) {
-                                case DeIfmoRestClient.STATE_HANDLING:
-                                    loading_message.setText(R.string.loading);
-                                    break;
-                                case DeIfmoRestClient.STATE_AUTHORIZATION:
-                                    loading_message.setText(R.string.authorization);
-                                    break;
-                                case DeIfmoRestClient.STATE_AUTHORIZED:
-                                    loading_message.setText(R.string.authorized);
-                                    break;
-                            }
+                    draw(R.layout.state_loading);
+                    TextView loading_message = (TextView) getActivity().findViewById(R.id.loading_message);
+                    if (loading_message != null) {
+                        switch (state) {
+                            case DeIfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
+                            case DeIfmoRestClient.STATE_AUTHORIZATION: loading_message.setText(R.string.authorization); break;
+                            case DeIfmoRestClient.STATE_AUTHORIZED: loading_message.setText(R.string.authorized); break;
                         }
                     }
                 }
                 @Override
                 public void onFailure(int state) {
-                    if(isLaunched()) {
-                        switch (state) {
-                            case DeIfmoRestClient.FAILED_OFFLINE:
-                                if (eRegister.is()) {
-                                    display();
-                                } else {
-                                    draw(R.layout.state_offline);
-                                    getActivity().findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
+                    switch (state) {
+                        case DeIfmoRestClient.FAILED_OFFLINE:
+                            if (eRegister.is()) {
+                                display();
+                            } else {
+                                draw(R.layout.state_offline);
+                                View offline_reload = getActivity().findViewById(R.id.offline_reload);
+                                if (offline_reload != null) {
+                                    offline_reload.setOnClickListener(new View.OnClickListener() {
                                         @Override
                                         public void onClick(View v) {
                                             forceLoad();
                                         }
                                     });
                                 }
-                                break;
-                            case DeIfmoRestClient.FAILED_TRY_AGAIN:
-                            case DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN:
-                                draw(R.layout.state_try_again);
-                                if (state == DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN)
-                                    ((TextView) getActivity().findViewById(R.id.try_again_message)).setText(R.string.auth_failed);
-                                getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
+                            }
+                            break;
+                        case DeIfmoRestClient.FAILED_TRY_AGAIN:
+                        case DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN:
+                            draw(R.layout.state_try_again);
+                            if (state == DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN) {
+                                TextView try_again_message = (TextView) getActivity().findViewById(R.id.try_again_message);
+                                if (try_again_message != null) try_again_message.setText(R.string.auth_failed);
+                            }
+                            View try_again_reload = getActivity().findViewById(R.id.try_again_reload);
+                            if (try_again_reload != null) {
+                                try_again_reload.setOnClickListener(new View.OnClickListener() {
                                     @Override
                                     public void onClick(View v) {
                                         forceLoad();
                                     }
                                 });
-                                break;
-                            case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
-                                gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED);
-                                break;
-                            case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED:
-                                gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED);
-                                break;
-                        }
+                            }
+                            break;
+                        case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_REQUIRED: gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED); break;
+                        case DeIfmoRestClient.FAILED_AUTH_CREDENTIALS_FAILED: gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED); break;
                     }
                 }
                 @Override
@@ -163,9 +161,10 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                 display();
             } else {
                 try {
-                    if(isLaunched()) {
-                        draw(R.layout.state_offline);
-                        getActivity().findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
+                    draw(R.layout.state_offline);
+                    View offline_reload = getActivity().findViewById(R.id.offline_reload);
+                    if (offline_reload != null) {
+                        offline_reload.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
                                 forceLoad();
@@ -180,10 +179,12 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
     }
     private void loadFailed(){
         try {
-            if(isLaunched()) {
-                draw(R.layout.state_try_again);
-                ((TextView) getActivity().findViewById(R.id.try_again_message)).setText(R.string.load_failed_retry_in_minute);
-                getActivity().findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
+            draw(R.layout.state_try_again);
+            TextView try_again_message = (TextView) getActivity().findViewById(R.id.try_again_message);
+            if (try_again_message != null) try_again_message.setText(R.string.load_failed_retry_in_minute);
+            View try_again_reload = getActivity().findViewById(R.id.try_again_reload);
+            if (try_again_reload != null) {
+                try_again_reload.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         forceLoad();
@@ -196,7 +197,6 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
     }
     private void display(){
         try {
-            if(!isLaunched()) return;
             ParsedERegister parsedERegister = eRegister.get();
             if (parsedERegister == null) throw new NullPointerException("parsedERegister cannot be null");
             checkData(parsedERegister);
@@ -224,87 +224,89 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
             draw(R.layout.eregister_layout);
             // работаем со списком
             ListView erl_list_view = (ListView) getActivity().findViewById(R.id.erl_list_view);
-            erl_list_view.setAdapter(new SubjectListView(getActivity(), subjects));
-            erl_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    HashMap<String, String> subj = subjects.get(position);
-                    Intent intent = new Intent(getActivity(), SubjectActivity.class);
-                    intent.putExtra("group", subj.get("group"));
-                    intent.putExtra("term", subj.get("semester"));
-                    intent.putExtra("name", subj.get("name"));
-                    startActivity(intent);
-                }
-            });
+            if (erl_list_view != null) {
+                erl_list_view.setAdapter(new SubjectListView(getActivity(), subjects));
+                erl_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        HashMap<String, String> subj = subjects.get(position);
+                        Intent intent = new Intent(getActivity(), SubjectActivity.class);
+                        intent.putExtra("group", subj.get("group"));
+                        intent.putExtra("term", subj.get("semester"));
+                        intent.putExtra("name", subj.get("name"));
+                        startActivity(intent);
+                    }
+                });
+            }
             // работаем со свайпом
             SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) getActivity().findViewById(R.id.swipe_container);
-            TypedValue typedValue = new TypedValue();
-            getActivity().getTheme().resolveAttribute(R.attr.colorAccent, typedValue, true);
-            mSwipeRefreshLayout.setColorSchemeColors(typedValue.data);
-            getActivity().getTheme().resolveAttribute(R.attr.colorBackgroundRefresh, typedValue, true);
-            mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(typedValue.data);
-            mSwipeRefreshLayout.setOnRefreshListener(this);
+            if (mSwipeRefreshLayout != null) {
+                mSwipeRefreshLayout.setColorSchemeColors(MainActivity.colorAccent);
+                mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(MainActivity.colorBackgroundRefresh);
+                mSwipeRefreshLayout.setOnRefreshListener(this);
+            }
             // работаем с раскрывающимися списками
+            int selection = 0, counter = 0;
             // список групп
             Spinner spinner_group = (Spinner) getActivity().findViewById(R.id.erl_group_spinner);
-            final ArrayList<String> spinner_group_arr = new ArrayList<>();
-            final ArrayList<String> spinner_group_arr_names = new ArrayList<>();
-            int selection = 0, counter = 0;
-            for (Group group : parsedERegister.groups) {
-                spinner_group_arr.add(group.name + " (" + group.year[0] + "/" + group.year[1] + ")");
-                spinner_group_arr_names.add(group.name);
-                if (Objects.equals(group.name, this.group)) selection = counter;
-                counter++;
-            }
-            spinner_group.setAdapter(new ArrayAdapter<>(getActivity(), R.layout.spinner_layout, spinner_group_arr));
-            spinner_group.setSelection(selection);
-            spinner_group_blocker = true;
-            spinner_group.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
-                    if (spinner_group_blocker) {
-                        spinner_group_blocker = false;
-                        return;
+            if (spinner_group != null) {
+                final ArrayList<String> spinner_group_arr = new ArrayList<>();
+                final ArrayList<String> spinner_group_arr_names = new ArrayList<>();
+                for (Group group : parsedERegister.groups) {
+                    spinner_group_arr.add(group.name + " (" + group.year[0] + "/" + group.year[1] + ")");
+                    spinner_group_arr_names.add(group.name);
+                    if (Objects.equals(group.name, this.group)) selection = counter;
+                    counter++;
+                }
+                spinner_group.setAdapter(new ArrayAdapter<>(getActivity(), R.layout.spinner_layout, spinner_group_arr));
+                spinner_group.setSelection(selection);
+                spinner_group_blocker = true;
+                spinner_group.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                    public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
+                        if (spinner_group_blocker) {
+                            spinner_group_blocker = false;
+                            return;
+                        }
+                        group = spinner_group_arr_names.get(position);
+                        load();
                     }
-                    group = spinner_group_arr_names.get(position);
-                    load();
-                }
-
-                public void onNothingSelected(AdapterView<?> parent) {
-                }
-            });
+                    public void onNothingSelected(AdapterView<?> parent) {}
+                });
+            }
             // список семестров
             Spinner spinner_period = (Spinner) getActivity().findViewById(R.id.erl_period_spinner);
-            final ArrayList<String> spinner_period_arr = new ArrayList<>();
-            final ArrayList<Integer> spinner_period_arr_values = new ArrayList<>();
-            selection = 2;
-            for (Group group : parsedERegister.groups) {
-                if (Objects.equals(group.name, this.group)) {
-                    spinner_period_arr.add(group.terms.get(0).number + " " + getString(R.string.semester));
-                    spinner_period_arr.add(group.terms.get(1).number + " " + getString(R.string.semester));
-                    spinner_period_arr.add(getString(R.string.year));
-                    spinner_period_arr_values.add(group.terms.get(0).number);
-                    spinner_period_arr_values.add(group.terms.get(1).number);
-                    spinner_period_arr_values.add(-1);
-                    if (this.term == group.terms.get(0).number) selection = 0;
-                    if (this.term == group.terms.get(1).number) selection = 1;
-                    break;
-                }
-            }
-            spinner_period.setAdapter(new ArrayAdapter<>(getActivity(), R.layout.spinner_layout, spinner_period_arr));
-            spinner_period.setSelection(selection);
-            spinner_period_blocker = true;
-            spinner_period.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
-                    if (spinner_period_blocker) {
-                        spinner_period_blocker = false;
-                        return;
+            if (spinner_period != null) {
+                final ArrayList<String> spinner_period_arr = new ArrayList<>();
+                final ArrayList<Integer> spinner_period_arr_values = new ArrayList<>();
+                selection = 2;
+                for (Group group : parsedERegister.groups) {
+                    if (Objects.equals(group.name, this.group)) {
+                        spinner_period_arr.add(group.terms.get(0).number + " " + getString(R.string.semester));
+                        spinner_period_arr.add(group.terms.get(1).number + " " + getString(R.string.semester));
+                        spinner_period_arr.add(getString(R.string.year));
+                        spinner_period_arr_values.add(group.terms.get(0).number);
+                        spinner_period_arr_values.add(group.terms.get(1).number);
+                        spinner_period_arr_values.add(-1);
+                        if (this.term == group.terms.get(0).number) selection = 0;
+                        if (this.term == group.terms.get(1).number) selection = 1;
+                        break;
                     }
-                    term = spinner_period_arr_values.get(position);
-                    load();
                 }
-
-                public void onNothingSelected(AdapterView<?> parent) {
-                }
-            });
+                spinner_period.setAdapter(new ArrayAdapter<>(getActivity(), R.layout.spinner_layout, spinner_period_arr));
+                spinner_period.setSelection(selection);
+                spinner_period_blocker = true;
+                spinner_period.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                    public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
+                        if (spinner_period_blocker) {
+                            spinner_period_blocker = false;
+                            return;
+                        }
+                        term = spinner_period_arr_values.get(position);
+                        load();
+                    }
+                    public void onNothingSelected(AdapterView<?> parent) {
+                    }
+                });
+            }
             // показываем снекбар с датой обновления
             if (notifyAboutDateUpdate) {
                 int shift = (int) ((Calendar.getInstance().getTimeInMillis() - parsedERegister.timestamp) / 1000);
@@ -322,10 +324,12 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                 } else {
                     message = parsedERegister.date;
                 }
-                Snackbar snackbar = Snackbar.make(getActivity().findViewById(R.id.eregister_layout), getString(R.string.update_date) + " " + message, Snackbar.LENGTH_SHORT);
-                getActivity().getTheme().resolveAttribute(R.attr.colorBackgroundSnackBar, typedValue, true);
-                snackbar.getView().setBackgroundColor(typedValue.data);
-                snackbar.show();
+                View eregister_layout = getActivity().findViewById(R.id.eregister_layout);
+                if (eregister_layout != null) {
+                    Snackbar snackbar = Snackbar.make(eregister_layout, getString(R.string.update_date) + " " + message, Snackbar.LENGTH_SHORT);
+                    snackbar.getView().setBackgroundColor(MainActivity.colorBackgroundSnackBar);
+                    snackbar.show();
+                }
                 notifyAboutDateUpdate = false;
             }
         } catch (Exception e){
@@ -355,17 +359,17 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                 if(!isTermOk) this.term = -1;
                 break;
             } else { // группа до сих пор не найдена
-                if(Objects.equals(currentGroup, "")){
-                    if(year == group.year[month > Calendar.AUGUST ? 0 : 1]){
+                if (Objects.equals(currentGroup, "")) {
+                    if (year == group.year[month > Calendar.AUGUST ? 0 : 1]) {
                         currentGroup = group.name;
                         currentTerm = group.terms.get(month > Calendar.AUGUST || month == Calendar.JANUARY ? 0 : 1).number;
                     }
                 }
-                if(maxYear < group.year[0]) maxYear = group.year[0];
+                if (maxYear < group.year[0]) maxYear = group.year[0];
             }
         }
-        if(Objects.equals(this.group, "")){
-            if(!Objects.equals(currentGroup, "")){
+        if (Objects.equals(this.group, "")) {
+            if (!Objects.equals(currentGroup, "")) {
                 this.group = currentGroup;
                 this.term = currentTerm;
             } else {
@@ -385,31 +389,14 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
     }
     private void draw(int layoutId){
         try {
-            if(isLaunched()) {
-                ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_eregister));
+            ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_eregister));
+            if (vg != null) {
                 vg.removeAllViews();
                 vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             }
         } catch (Exception e){
             if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }
-    }
-    private void interrupt(){
-        interrupted = true;
-        if(fragmentRequestHandle != null){
-            loaded = false;
-            fragmentRequestHandle.cancel(true);
-        }
-    }
-    private void relaunch(){
-        interrupted = false;
-        if(!loaded) {
-            loaded = true;
-            forceLoad();
-        }
-    }
-    private boolean isLaunched(){
-        return !interrupted;
     }
 }
 
@@ -589,20 +576,18 @@ class SubjectListView extends ArrayAdapter<HashMap<String, String>> {
     public View getView(int position, View view, @NonNull ViewGroup parent) {
         LayoutInflater inflater = context.getLayoutInflater();
         HashMap<String, String> sub = subj.get(position);
-        View rowView;
-        rowView = inflater.inflate(R.layout.listview_subject, null, true);
+        View rowView = inflater.inflate(R.layout.listview_subject, null, true);
         TextView lv_subject_name = ((TextView) rowView.findViewById(R.id.lv_subject_name));
         TextView lv_subject_sem = ((TextView) rowView.findViewById(R.id.lv_subject_sem));
         TextView lv_subject_points = ((TextView) rowView.findViewById(R.id.lv_point_value));
-        lv_subject_name.setText(sub.get("name"));
-        lv_subject_sem.setText(sub.get("semester") + " " + context.getString(R.string.semester) + (Objects.equals(sub.get("type"), "") ? "" : " | " + sub.get("type")));
-        lv_subject_points.setText(double2string(Double.parseDouble(sub.get("value"))));
+        if (lv_subject_name != null) lv_subject_name.setText(sub.get("name"));
+        if (lv_subject_sem != null) lv_subject_sem.setText(sub.get("semester") + " " + context.getString(R.string.semester) + (Objects.equals(sub.get("type"), "") ? "" : " | " + sub.get("type")));
+        if (lv_subject_points != null) lv_subject_points.setText(double2string(Double.parseDouble(sub.get("value"))));
         if(Double.parseDouble(sub.get("value")) >= 60.0){
-            TypedValue typedValue = new TypedValue();
-            context.getTheme().resolveAttribute(R.attr.textColorPassed, typedValue, true);
-            lv_subject_name.setTextColor(typedValue.data);
-            lv_subject_sem.setTextColor(typedValue.data);
-            lv_subject_points.setTextColor(typedValue.data);
+            context.getTheme().resolveAttribute(R.attr.textColorPassed, MainActivity.typedValue, true);
+            if (lv_subject_name != null) lv_subject_name.setTextColor(MainActivity.typedValue.data);
+            if (lv_subject_sem != null) lv_subject_sem.setTextColor(MainActivity.typedValue.data);
+            if (lv_subject_points != null) lv_subject_points.setTextColor(MainActivity.typedValue.data);
         }
         return rowView;
     }
