@@ -2,6 +2,7 @@ package com.bukhmastov.cdoitmo;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -62,7 +63,12 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
         super.onResume();
         if (!loaded) {
             loaded = true;
-            forceLoad();
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            if (sharedPreferences.getBoolean("pref_use_cache", true) && sharedPreferences.getBoolean("pref_force_load", true)) {
+                forceLoad();
+            } else {
+                load();
+            }
         }
     }
 

@@ -3,7 +3,9 @@ package com.bukhmastov.cdoitmo;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -57,7 +59,12 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
         super.onResume();
         if (!loaded) {
             loaded = true;
-            forceLoad();
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            if (sharedPreferences.getBoolean("pref_use_cache", true) && sharedPreferences.getBoolean("pref_force_load", true)) {
+                forceLoad();
+            } else {
+                load();
+            }
         }
     }
 

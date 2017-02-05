@@ -3,10 +3,12 @@ package com.bukhmastov.cdoitmo;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -72,7 +74,12 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
         super.onResume();
         if (!loaded) {
             loaded = true;
-            load(true);
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            if (sharedPreferences.getBoolean("pref_use_cache", true) && sharedPreferences.getBoolean("pref_force_load", true)) {
+                load(true);
+            } else {
+                load(false);
+            }
         }
     }
 

@@ -3,8 +3,10 @@ package com.bukhmastov.cdoitmo;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -69,7 +71,12 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
         super.onResume();
         if (!loaded) {
             loaded = true;
-            load();
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            if (sharedPreferences.getBoolean("pref_use_cache", true) && sharedPreferences.getBoolean("pref_force_load", true)) {
+                load(true);
+            } else {
+                load(false);
+            }
         }
     }
 
@@ -91,13 +98,26 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
         forceLoad();
     }
 
-    private void load(){
+    private void load(boolean force){
         draw(R.layout.state_loading);
-        loadPart("Rating");
-        if (!rating.is("RatingList")) {
-            loadPart("RatingList");
+        if (force) {
+            loadPart("Rating");
+            if (!rating.is("RatingList")) {
+                loadPart("RatingList");
+            } else {
+                ready("RatingList");
+            }
         } else {
-            ready("RatingList");
+            if (!rating.is("Rating")) {
+                loadPart("Rating");
+            } else {
+                ready("Rating");
+            }
+            if (!rating.is("RatingList")) {
+                loadPart("RatingList");
+            } else {
+                ready("RatingList");
+            }
         }
     }
     private void forceLoad(){

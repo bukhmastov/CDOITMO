@@ -132,5 +132,7 @@
     <string name="time_start">Время начала</string>
     <string name="time_end">Время конца</string>
     <string name="request_denied">Не удалось создать заявку</string>
+    <string name="pref_force_load">Обновлять данные автоматически</string>
+    <string name="pref_force_load_summary">При открытии вкладки</string>
 
 </resources>
