@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="1dp"
+    android:paddingBottom="3dp" >
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:paddingStart="6dp"
+        android:paddingEnd="6dp" >
+
+        <TextView
+            android:text="@string/lorem_ipsum"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#000000"
+            android:maxLines="1"
+            android:id="@+id/slw_item_time_start"
+            android:textSize="13sp" />
+
+        <ImageView
+            android:layout_height="12dp"
+            android:layout_width="12dp"
+            android:id="@+id/slw_item_time_icon" />
+
+        <TextView
+            android:text="@string/lorem_ipsum"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#000000"
+            android:maxLines="1"
+            android:id="@+id/slw_item_time_end"
+            android:textSize="13sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:paddingStart="0dp"
+        android:paddingEnd="6dp" >
+
+        <TextView
+            android:text="@string/lorem_ipsum"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#000000"
+            android:maxLines="1"
+            android:id="@+id/slw_item_title"
+            android:textSize="13sp" />
+
+        <TextView
+            android:text="@string/lorem_ipsum"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#000000"
+            android:maxLines="1"
+            android:id="@+id/slw_item_desc"
+            android:textSize="12sp" />
+
+        <TextView
+            android:text="@string/lorem_ipsum"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#BB000000"
+            android:maxLines="1"
+            android:id="@+id/slw_item_meta"
+            android:textSize="12sp" />
+
+    </LinearLayout>
+
+</LinearLayout>

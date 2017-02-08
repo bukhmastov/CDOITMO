@@ -21,6 +21,13 @@
         android:summary="@string/pref_force_load_summary"/>
 
     <SwitchPreference
+        android:key="pref_force_load_schedule"
+        android:dependency="pref_use_cache"
+        android:defaultValue="false"
+        android:title="@string/pref_force_load_schedule"
+        android:summary="@string/pref_force_load_schedule_summary"/>
+
+    <SwitchPreference
         android:key="pref_initial_offline"
         android:dependency="pref_use_cache"
         android:defaultValue="false"

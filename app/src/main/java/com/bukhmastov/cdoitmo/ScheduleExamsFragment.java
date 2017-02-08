@@ -2,9 +2,11 @@ package com.bukhmastov.cdoitmo;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.SearchView;
@@ -62,19 +64,24 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
     @Override
     public void onResume() {
         super.onResume();
-        if(!MainActivity.OFFLINE_MODE){
-            MenuItem action_search = MainActivity.menu.findItem(R.id.action_search);
-            if (action_search != null){
-                action_search.setVisible(true);
-                SearchView searchView = (SearchView) action_search.getActionView();
-                if (searchView != null) {
-                    searchView.setQueryHint(getString(R.string.schedule_exams_search_view_hint));
+        try {
+            if(!MainActivity.OFFLINE_MODE){
+                MenuItem action_search = MainActivity.menu.findItem(R.id.action_search);
+                if (action_search != null){
+                    action_search.setVisible(true);
+                    SearchView searchView = (SearchView) action_search.getActionView();
+                    if (searchView != null) {
+                        searchView.setQueryHint(getString(R.string.schedule_exams_search_view_hint));
+                    }
                 }
             }
+        } catch (Exception e){
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }
         if (!loaded) {
             loaded = true;
-            scheduleExams.search(MainActivity.group, false);
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            scheduleExams.search(MainActivity.group, sharedPreferences.getBoolean("pref_use_cache", true) && sharedPreferences.getBoolean("pref_force_load_schedule", false));
         }
     }
 
@@ -90,11 +97,15 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if(!MainActivity.OFFLINE_MODE) {
-            MenuItem action_search = MainActivity.menu.findItem(R.id.action_search);
-            if (action_search != null) {
-                action_search.setVisible(false);
+        try {
+            if (!MainActivity.OFFLINE_MODE) {
+                MenuItem action_search = MainActivity.menu.findItem(R.id.action_search);
+                if (action_search != null) {
+                    action_search.setVisible(false);
+                }
             }
+        } catch (Exception e){
+            if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }
     }
 

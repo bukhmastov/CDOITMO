@@ -98,7 +98,10 @@ public class LoginActivity extends AppCompatActivity {
             }
             state = -1;
             if (!(Objects.equals(Storage.get(getBaseContext(), "login"), "") || Objects.equals(Storage.get(getBaseContext(), "password"), ""))) {
-                startActivity(new Intent(getApplicationContext(), MainActivity.class));
+                Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                Bundle extras = getIntent().getExtras();
+                if (extras != null) intent.putExtras(extras);
+                startActivity(intent);
             } else {
                 if (input_login != null) input_login.setText(Storage.get(getBaseContext(), "login"));
                 if (input_password != null)  input_password.setText(Storage.get(getBaseContext(), "password"));

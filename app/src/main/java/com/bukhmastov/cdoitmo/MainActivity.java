@@ -70,13 +70,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mDrawerToggle.syncState();
         navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-        switch(sharedPreferences.getString("pref_default_fragment", "e_journal")){
+        String action = getIntent().getStringExtra("action");
+        switch(action == null ? sharedPreferences.getString("pref_default_fragment", "e_journal") : action){
             case "e_journal": selectedSection = R.id.nav_e_register; break;
             case "protocol_changes": selectedSection = R.id.nav_protocol_changes; break;
             case "rating": selectedSection = R.id.nav_rating; break;
             case "schedule_lessons": selectedSection = R.id.nav_schedule; break;
             case "schedule_exams": selectedSection = R.id.nav_schedule_exams; break;
             case "room101": selectedSection = R.id.nav_room101; break;
+            default: selectedSection = R.id.nav_e_register; break;
         }
         protocolTracker = new ProtocolTracker(this);
         typedValue = new TypedValue();
@@ -241,10 +243,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         case DeIfmoRestClient.FAILED_TRY_AGAIN:
                         case DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN:
                             draw(R.layout.state_try_again);
-                            if (state == DeIfmoRestClient.FAILED_AUTH_TRY_AGAIN){
-                                TextView try_again_message = (TextView) findViewById(R.id.try_again_message);
-                                if(try_again_message != null) try_again_message.setText(R.string.auth_failed);
-                            }
+                            TextView try_again_message = (TextView) findViewById(R.id.try_again_message);
+                            if(try_again_message != null) try_again_message.setText(getString(R.string.auth_failed) + "\n" + getString(R.string.try_again_later));
                             View try_again_reload = findViewById(R.id.try_again_reload);
                             if (try_again_reload != null) {
                                 try_again_reload.setOnClickListener(new View.OnClickListener() {
@@ -289,7 +289,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if(!Objects.equals(weekStr, "")){
                 JSONObject jsonObject = new JSONObject(weekStr);
                 int week = jsonObject.getInt("week");
-                if(week >= 0){
+                if (week >= 0){
                     Calendar past = Calendar.getInstance();
                     past.setTimeInMillis(jsonObject.getLong("timestamp"));
                     MainActivity.week = week + (Calendar.getInstance().get(Calendar.WEEK_OF_YEAR) - past.get(Calendar.WEEK_OF_YEAR));

@@ -72,6 +72,29 @@
             android:enabled="true"
             android:exported="true"
             android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <service
+            android:name=".ScheduleLessonsWidgetService"
+            android:permission="android.permission.BIND_REMOTEVIEWS">
+        </service>
+
+        <receiver android:name=".ScheduleLessonsWidget">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.bukhmastov.cdoitmo.ACTION_WIDGET_UPDATE" />
+                <action android:name="com.bukhmastov.cdoitmo.ACTION_WIDGET_OPEN" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/schedule_lessons_widget_info" />
+        </receiver>
+
+        <activity android:name=".ScheduleLessonsWidgetConfigureActivity">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
     </application>
 
 </manifest>

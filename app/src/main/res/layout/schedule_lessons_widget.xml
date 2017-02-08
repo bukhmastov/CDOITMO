@@ -1,0 +1,41 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="@dimen/widget_margin"
+    android:id="@+id/widget_content"
+    android:background="#96000000">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:id="@+id/widget_title_layout"
+        android:layout_height="18dp"
+        android:background="#96000000">
+
+        <TextView
+            android:text="@string/schedule_lessons"
+            android:layout_width="match_parent"
+            android:id="@+id/widget_title"
+            android:layout_height="match_parent"
+            android:textSize="14sp"
+            android:layout_toStartOf="@+id/widget_status"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            android:gravity="center_vertical"
+            android:textColor="#FFFFFF" />
+
+        <ImageView
+            android:layout_alignParentEnd="true"
+            android:id="@+id/widget_status"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:padding="2dp" />
+
+    </RelativeLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/widget_title_layout"
+        android:id="@+id/widget_container" />
+
+</RelativeLayout>

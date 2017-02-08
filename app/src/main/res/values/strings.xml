@@ -133,6 +133,26 @@
     <string name="time_end">Время конца</string>
     <string name="request_denied">Не удалось создать заявку</string>
     <string name="pref_force_load">Обновлять данные автоматически</string>
-    <string name="pref_force_load_summary">При открытии вкладки</string>
+    <string name="pref_force_load_summary">При открытии вкладок</string>
+    <string name="pref_force_load_schedule">Обновлять данные автоматически</string>
+    <string name="pref_force_load_schedule_summary">При открытии расписаний</string>
+    <string name="configure_widget">Настройка виджета</string>
+    <string name="add_widget">Добавить виджет</string>
+    <string name="use_dark_theme">Использовать темную тему</string>
+    <string name="schedule_not_found">Расписания не найдено</string>
+    <string name="widget_creation_failed">Не удалось создать виджет</string>
+    <string name="widget_auth_failed">Не удалось авторизироваться в системе</string>
+    <string name="failed_to_create_widget">Не удалось создать виджет</string>
+    <string name="failed_to_load_schedule">Не удалось загрузить расписание</string>
+    <string name="need_to_config_widget">Необходима настройка виджета</string>
+    <string name="failed_to_show_schedule">Не удалось отобразить распиание</string>
+    <string name="monday">Понедельник</string>
+    <string name="tuesday">Вторник</string>
+    <string name="wednesday">Среда</string>
+    <string name="thursday">Четверг</string>
+    <string name="friday">Пятница</string>
+    <string name="saturday">Суббота</string>
+    <string name="sunday">Воскресение</string>
+    <string name="try_again_later">Повторите попытку позже</string>
 
 </resources>
