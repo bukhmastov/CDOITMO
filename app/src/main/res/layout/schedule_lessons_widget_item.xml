@@ -12,7 +12,8 @@
         android:layout_height="match_parent"
         android:gravity="center"
         android:paddingStart="6dp"
-        android:paddingEnd="6dp" >
+        android:paddingEnd="6dp"
+        android:minWidth="46dp">
 
         <TextView
             android:text="@string/lorem_ipsum"

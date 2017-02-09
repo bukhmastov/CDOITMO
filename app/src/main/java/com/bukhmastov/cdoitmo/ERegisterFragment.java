@@ -59,12 +59,7 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
         super.onResume();
         if (!loaded) {
             loaded = true;
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-            if (sharedPreferences.getBoolean("pref_use_cache", true) && sharedPreferences.getBoolean("pref_force_load", true)) {
-                forceLoad();
-            } else {
-                load();
-            }
+            load();
         }
     }
 
@@ -83,10 +78,21 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
     }
 
     private void load(){
-        if (eRegister.is()) {
-            display();
-        } else {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        load(sharedPreferences.getBoolean("pref_use_cache", true) ? Integer.parseInt(sharedPreferences.getString("pref_tab_refresh", "0")) : 0);
+    }
+    private void load(int refresh_rate){
+        if (!eRegister.is() || refresh_rate == 0) {
             forceLoad();
+        } else if (refresh_rate >= 0){
+            ParsedERegister parsedERegister = eRegister.get();
+            if (parsedERegister.timestamp + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+                forceLoad();
+            } else {
+                display();
+            }
+        } else {
+            display();
         }
     }
     private void forceLoad(){

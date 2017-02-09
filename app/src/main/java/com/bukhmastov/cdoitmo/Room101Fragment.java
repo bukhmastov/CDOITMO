@@ -74,12 +74,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
         super.onResume();
         if (!loaded) {
             loaded = true;
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-            if (sharedPreferences.getBoolean("pref_use_cache", true) && sharedPreferences.getBoolean("pref_force_load", true)) {
-                load(true);
-            } else {
-                load(false);
-            }
+            load();
         }
     }
 
@@ -293,12 +288,35 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
         }
     }
 
+    private void load(){
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        load(sharedPreferences.getBoolean("pref_use_cache", true) ? Integer.parseInt(sharedPreferences.getString("pref_tab_refresh", "0")) : 0);
+    }
+    private void load(int refresh_rate){
+        String cache = Cache.get(getContext(), "room101_review");
+        if (Objects.equals(cache, "") || refresh_rate == 0) {
+            load(true);
+        } else if (refresh_rate >= 0){
+            try {
+                if (new JSONObject(cache).getLong("timestamp") + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+                    load(true);
+                } else {
+                    load(false);
+                }
+            } catch (JSONException e) {
+                if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
+                load(true);
+            }
+        } else {
+            load(false);
+        }
+    }
     private void load(boolean force){
         if(!force || MainActivity.OFFLINE_MODE){
             try {
                 final String cache = Cache.get(getContext(), "room101_review");
                 if (!Objects.equals(cache, "")) {
-                    viewRequest = new JSONObject(cache);
+                    viewRequest = new JSONObject(cache).getJSONObject("data");
                     display();
                     return;
                 }
@@ -316,7 +334,16 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                             @Override
                             public void finish(JSONObject json) {
                                 viewRequest = json;
-                                if (viewRequest != null) Cache.put(getContext(), "room101_review", viewRequest.toString());
+                                if (viewRequest != null) {
+                                    try {
+                                        JSONObject jsonObject = new JSONObject();
+                                        jsonObject.put("timestamp", Calendar.getInstance().getTimeInMillis());
+                                        jsonObject.put("data", viewRequest);
+                                        Cache.put(getContext(), "room101_review", jsonObject.toString());
+                                    } catch (JSONException e) {
+                                        if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
+                                    }
+                                }
                                 display();
                             }
                         }).execute(response);

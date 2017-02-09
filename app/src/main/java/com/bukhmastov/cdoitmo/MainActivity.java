@@ -174,10 +174,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             MenuItem menuItem = MainActivity.menu.findItem(R.id.action_search);
                             if (menuItem != null) menuItem.collapseActionView();
                             if (selectedSection == R.id.nav_schedule) {
-                                if (ScheduleLessonsFragment.scheduleLessons != null) ScheduleLessonsFragment.scheduleLessons.search(query, false);
+                                if (ScheduleLessonsFragment.scheduleLessons != null) ScheduleLessonsFragment.scheduleLessons.search(query);
                             }
                             if (selectedSection == R.id.nav_schedule_exams) {
-                                if (ScheduleExamsFragment.scheduleExams != null) ScheduleExamsFragment.scheduleExams.search(query, false);
+                                if (ScheduleExamsFragment.scheduleExams != null) ScheduleExamsFragment.scheduleExams.search(query);
                             }
                         } catch (Exception e) {
                             if (LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);

@@ -40,6 +40,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -95,10 +96,9 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
         }
         if (!loaded) {
             loaded = true;
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
             String action_extra = getActivity().getIntent().getStringExtra("action_extra");
-            getActivity().getIntent().removeExtra("action_extra");
-            scheduleLessons.search(action_extra == null ? MainActivity.group : action_extra, sharedPreferences.getBoolean("pref_use_cache", true) && sharedPreferences.getBoolean("pref_force_load_schedule", false));
+            if (action_extra != null) getActivity().getIntent().removeExtra("action_extra");
+            scheduleLessons.search(action_extra == null ? MainActivity.group : action_extra);
         }
     }
 
@@ -161,7 +161,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
                         offline_reload.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                scheduleLessons.search(query, false);
+                                scheduleLessons.search(query);
                             }
                         });
                     }
@@ -179,7 +179,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
                         try_again_reload.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                scheduleLessons.search(query, false);
+                                scheduleLessons.search(query);
                             }
                         });
                     }
@@ -202,7 +202,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
                 JSONArray teachers = json.getJSONArray("teachers");
                 if (teachers.length() > 0){
                     if (json.getJSONArray("teachers").length() == 1) {
-                        scheduleLessons.search(json.getJSONArray("teachers").getJSONObject(0).getString("scope"), false);
+                        scheduleLessons.search(json.getJSONArray("teachers").getJSONObject(0).getString("scope"));
                         return;
                     }
                     draw(R.layout.layout_schedule_lessons_teacher_picker);
@@ -223,7 +223,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
                         teacher_picker_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                                 HashMap<String, String> teacherMap = teachersMap.get(position);
-                                scheduleLessons.search(teacherMap.get("scope"), false);
+                                scheduleLessons.search(teacherMap.get("scope"));
                             }
                         });
                     }
@@ -254,7 +254,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         if(getUserVisibleHint()){
-            if(ScheduleLessonsFragment.scheduleLessons != null) ScheduleLessonsFragment.scheduleLessons.search(item.getTitle().toString().replace(getString(R.string.group), "").replace(getString(R.string.room), "").trim(), false);
+            if(ScheduleLessonsFragment.scheduleLessons != null) ScheduleLessonsFragment.scheduleLessons.search(item.getTitle().toString().replace(getString(R.string.group), "").replace(getString(R.string.room), "").trim());
             return true;
         }
         return super.onContextItemSelected(item);
@@ -326,37 +326,41 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
 
     @Override
     public void onRefresh() {
-        search(ScheduleLessonsFragment.query, true);
+        search(ScheduleLessonsFragment.query, 0);
     }
 
     void setHandler(ScheduleLessons.response handler){
         this.handler = handler;
     }
 
-    void search(String query, boolean force){
-        search(query, force, false);
+    void search(String query){
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        search(query, sharedPreferences.getBoolean("pref_use_cache", true) ? Integer.parseInt(sharedPreferences.getString("pref_schedule_refresh", "168")) : 0);
     }
-    void search(String query, boolean force, boolean toCache){
+    void search(String query, int refresh_rate){
+        search(query, refresh_rate, false);
+    }
+    void search(String query, int refresh_rate, boolean toCache){
         if (handler == null) return;
         query = query.trim();
         ScheduleLessonsFragment.query = query;
         if (ScheduleLessonsFragment.fragmentRequestHandle != null) ScheduleLessonsFragment.fragmentRequestHandle.cancel(true);
         if (Pattern.compile("^\\w{1,3}\\d{4}\\w?$").matcher(query).find()) {
-            searchGroup(query.toUpperCase(), force, toCache);
+            searchGroup(query.toUpperCase(), refresh_rate, toCache);
         }
         else if (Pattern.compile("^\\d+\\S*$").matcher(query).find()) {
-            searchRoom(query, force, toCache);
+            searchRoom(query, refresh_rate, toCache);
         }
         else if (Pattern.compile("^teacher\\d+$").matcher(query).find()) {
-            searchDefinedTeacher(query, force, toCache);
+            searchDefinedTeacher(query, refresh_rate, toCache);
         }
         else {
-            searchTeacher(query, force, toCache);
+            searchTeacher(query, refresh_rate, toCache);
         }
     }
-    private void searchGroup(final String group, final boolean force, final boolean toCache){
+    private void searchGroup(final String group, final int refresh_rate, final boolean toCache){
         final String cache = getCache("group_" + group);
-        if((force || Objects.equals(cache, "")) && !MainActivity.OFFLINE_MODE) {
+        if(getForce(cache, refresh_rate) && !MainActivity.OFFLINE_MODE) {
             DeIfmoRestClient.get(context, "ru/schedule/0/" + group + "/schedule.htm", null, true, new DeIfmoRestClientResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, String response) {
@@ -411,9 +415,9 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
             }
         }
     }
-    private void searchRoom(final String room, final boolean force, final boolean toCache){
+    private void searchRoom(final String room, final int refresh_rate, final boolean toCache){
         final String cache = getCache("room_" + room);
-        if((force || Objects.equals(cache, "")) && !MainActivity.OFFLINE_MODE) {
+        if(getForce(cache, refresh_rate) && !MainActivity.OFFLINE_MODE) {
             DeIfmoRestClient.get(context, "ru/schedule/2/" + room + "/schedule.htm", null, true, new DeIfmoRestClientResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, String response) {
@@ -468,9 +472,9 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
             }
         }
     }
-    private void searchTeacher(final String teacher, final boolean force, final boolean toCache){
+    private void searchTeacher(final String teacher, final int refresh_rate, final boolean toCache){
         final String cache = getCache("teacher_picker_" + teacher);
-        if((force || Objects.equals(cache, "")) && !MainActivity.OFFLINE_MODE) {
+        if(getForce(cache, refresh_rate) && !MainActivity.OFFLINE_MODE) {
             DeIfmoRestClient.get(context, "ru/schedule/1/" + teacher + "/schedule.htm", null, true, new DeIfmoRestClientResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, String response) {
@@ -520,7 +524,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
             try {
                 JSONObject list = new JSONObject(cache);
                 if(list.getJSONArray("teachers").length() == 1){
-                    search(list.getJSONArray("teachers").getJSONObject(0).getString("scope"), force, toCache);
+                    search(list.getJSONArray("teachers").getJSONObject(0).getString("scope"), refresh_rate, toCache);
                 } else {
                     handler.onSuccess(list);
                 }
@@ -530,12 +534,12 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
             }
         }
     }
-    private void searchDefinedTeacher(final String teacherId, final boolean force, final boolean toCache){
+    private void searchDefinedTeacher(final String teacherId, final int refresh_rate, final boolean toCache){
         Matcher m = Pattern.compile("^teacher(\\d+)$").matcher(teacherId);
         if(m.find()){
             final String id = m.group(1);
             final String cache = getCache("teacher_" + id);
-            if((force || Objects.equals(cache, "")) && !MainActivity.OFFLINE_MODE) {
+            if(getForce(cache, refresh_rate) && !MainActivity.OFFLINE_MODE) {
                 DeIfmoRestClient.get(context, "ru/schedule/3/" + id + "/schedule.htm", null, true, new DeIfmoRestClientResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, String response) {
@@ -592,6 +596,27 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
         } else {
             handler.onFailure(FAILED_LOAD);
         }
+    }
+
+    private boolean getForce(String cache, int refresh_rate){
+        boolean force;
+        if (Objects.equals(cache, "") || refresh_rate == 0) {
+            force = true;
+        } else if (refresh_rate >= 0){
+            try {
+                if (new JSONObject(cache).getLong("timestamp") + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+                    force = true;
+                } else {
+                    force = false;
+                }
+            } catch (JSONException e) {
+                if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
+                force = true;
+            }
+        } else {
+            force = false;
+        }
+        return force;
     }
 
     private String getCache(String token){
@@ -711,6 +736,7 @@ class ScheduleLessonsGroupParse extends AsyncTask<String, Void, JSONObject> {
             }
             JSONObject response = new JSONObject();
             response.put("type", "group");
+            response.put("timestamp", Calendar.getInstance().getTimeInMillis());
             TagNode[] title = root.getElementsByAttValue("class", "schedule-title", true, false);
             response.put("scope", title.length > 0 ? title[0].getText().toString().replace("Расписание группы", "").trim() : "");
             response.put("schedule", schedule);
@@ -808,6 +834,7 @@ class ScheduleLessonsRoomParse extends AsyncTask<String, Void, JSONObject> {
             }
             JSONObject response = new JSONObject();
             response.put("type", "room");
+            response.put("timestamp", Calendar.getInstance().getTimeInMillis());
             response.put("scope", root.getElementsByAttValue("class", "page-header", true, false)[0].getText().toString().replace("Расписание занятий в аудитории", "").trim());
             response.put("schedule", schedule);
             return response;
@@ -856,6 +883,7 @@ class ScheduleLessonsTeacherPickerParse extends AsyncTask<String, Void, JSONObje
             }
             JSONObject response = new JSONObject();
             response.put("type", "teacher_picker");
+            response.put("timestamp", Calendar.getInstance().getTimeInMillis());
             response.put("teachers", teachers);
             return response;
         } catch (Exception e) {
@@ -963,6 +991,7 @@ class ScheduleLessonsTeacherParse extends AsyncTask<String, Void, JSONObject> {
             }
             JSONObject response = new JSONObject();
             response.put("type", "teacher");
+            response.put("timestamp", Calendar.getInstance().getTimeInMillis());
             response.put("scope", root.getElementsByAttValue("class", "page-header", true, false)[0].getText().toString().replaceAll("Расписание занятий|\\(|\\)", "").trim());
             response.put("schedule", schedule);
             return response;

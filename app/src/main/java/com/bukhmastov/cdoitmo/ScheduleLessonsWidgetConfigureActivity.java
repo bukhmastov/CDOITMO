@@ -2,12 +2,14 @@ package com.bukhmastov.cdoitmo;
 
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.TypedValue;
@@ -15,14 +17,13 @@ import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.Spinner;
+import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -45,7 +46,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
     static ScheduleLessons scheduleLessons = null;
     private String query = null;
     private boolean darkTheme = false;
-    private int updateTime = 0;
+    private int updateTime = 168;
     private int textColorPrimary, colorBackgroundSnackBar;
     private float destiny;
 
@@ -93,7 +94,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
                 setQuery();
             }
         }
-        Switch slw_switch_theme = (Switch) findViewById(R.id.slw_switch_theme);
+        final Switch slw_switch_theme = (Switch) findViewById(R.id.slw_switch_theme);
         if (slw_switch_theme != null){
             slw_switch_theme.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
@@ -103,24 +104,59 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
             });
             slw_switch_theme.setChecked(PreferenceManager.getDefaultSharedPreferences(this).getBoolean("pref_dark_theme", false));
         }
-        Spinner slw_spinner_update_time = (Spinner) findViewById(R.id.slw_spinner_update_time);
-        if (slw_spinner_update_time != null) {
-            final ArrayList<String> spinner_labels = new ArrayList<>();
-            final ArrayList<Integer> spinner_values = new ArrayList<>();
-            spinner_labels.add("Только вручную");   spinner_values.add(0);
-            spinner_labels.add("Раз в 12 часов");   spinner_values.add(12);
-            spinner_labels.add("Раз в сутки");      spinner_values.add(24);
-            spinner_labels.add("Раз в неделю");     spinner_values.add(168);
-            spinner_labels.add("Раз в 4 недели");   spinner_values.add(672);
-            slw_spinner_update_time.setAdapter(new ArrayAdapter<>(this, R.layout.spinner_layout_normal, spinner_labels));
-            slw_spinner_update_time.setSelection(3);
-            slw_spinner_update_time.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
-                    updateTime = spinner_values.get(position);
+        final RelativeLayout slw_theme = (RelativeLayout) findViewById(R.id.slw_theme);
+        if (slw_theme != null) {
+            slw_theme.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (slw_switch_theme != null){
+                        darkTheme = !slw_switch_theme.isChecked();
+                        slw_switch_theme.setChecked(darkTheme);
+                    }
                 }
-                public void onNothingSelected(AdapterView<?> parent) {}
             });
         }
+        LinearLayout slw_update_time = (LinearLayout) findViewById(R.id.slw_update_time);
+        if (slw_update_time != null) {
+            slw_update_time.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(ScheduleLessonsWidgetConfigureActivity.this);
+                    builder.setTitle(R.string.update_interval);
+                    int select = 0;
+                    switch (updateTime){
+                        case 0: select = 0; break;
+                        case 12: select = 1; break;
+                        case 24: select = 2; break;
+                        case 168: select = 3; break;
+                        case 672: select = 4; break;
+                    }
+                    builder.setSingleChoiceItems(R.array.pref_widget_refresh_titles, select, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            switch (which){
+                                case 0: updateTime = 0; break;
+                                case 1: updateTime = 12; break;
+                                case 2: updateTime = 24; break;
+                                case 3: updateTime = 168; break;
+                                case 4: updateTime = 672; break;
+                            }
+                            updateTimeSummary();
+                            dialog.dismiss();
+                        }
+                    });
+                    builder.setCancelable(true);
+                    builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    });
+                    builder.create().show();
+                }
+            });
+        }
+        updateTimeSummary();
         findViewById(R.id.add_button).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 if (query == null) {
@@ -245,7 +281,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
             query = null;
             String search = slw_input.getText().toString().trim();
             if (!Objects.equals(search, "")) {
-                scheduleLessons.search(search, false);
+                scheduleLessons.search(search);
                 slw_input.clearFocus();
                 return true;
             } else {
@@ -298,6 +334,21 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
         }
     }
 
+    private void updateTimeSummary(){
+        TextView slw_update_time_summary = (TextView) findViewById(R.id.slw_update_time_summary);
+        if (slw_update_time_summary != null) {
+            String summary;
+            switch (updateTime){
+                case 0: summary = getString(R.string.manually); break;
+                case 12: summary = getString(R.string.once_per_12_hours); break;
+                case 24: summary = getString(R.string.once_per_1_day); break;
+                case 168: summary = getString(R.string.once_per_1_week); break;
+                case 672: summary = getString(R.string.once_per_4_weeks); break;
+                default: summary = getString(R.string.unknown); break;
+            }
+            slw_update_time_summary.setText(summary);
+        }
+    }
     private void toast(String text){
         Toast.makeText(getBaseContext(), text, Toast.LENGTH_SHORT).show();
     }

@@ -175,7 +175,7 @@ public class TrackingProtocolJobService extends JobService {
         if(c > Integer.MAX_VALUE - 10) c = 0;
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         Intent intent = new Intent(this, SplashActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra("action", "protocol_changes");
         PendingIntent pIntent = PendingIntent.getActivity(this, (int) System.currentTimeMillis(), intent, 0);
         Notification.Builder b = new Notification.Builder(this);

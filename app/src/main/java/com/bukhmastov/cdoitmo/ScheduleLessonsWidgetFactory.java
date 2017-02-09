@@ -106,9 +106,9 @@ public class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteVi
             JSONObject lesson = this.lessons.getJSONObject(position);
             if (lesson == null) throw new NullPointerException("lesson cannot be null");
             int textColor = Color.parseColor(darkTheme ? "#FFFFFF" : "#000000");
-            remoteViews.setTextViewText(R.id.slw_item_time_start, lesson.getString("timeStart"));
+            remoteViews.setTextViewText(R.id.slw_item_time_start, Objects.equals(lesson.getString("timeStart"), "") ? "∞" : lesson.getString("timeStart"));
             remoteViews.setInt(R.id.slw_item_time_start, "setTextColor", textColor);
-            remoteViews.setTextViewText(R.id.slw_item_time_end, lesson.getString("timeEnd"));
+            remoteViews.setTextViewText(R.id.slw_item_time_end, Objects.equals(lesson.getString("timeEnd"), "") ? "∞" : lesson.getString("timeEnd"));
             remoteViews.setInt(R.id.slw_item_time_end, "setTextColor", textColor);
             remoteViews.setImageViewResource(R.id.slw_item_time_icon, darkTheme ? R.drawable.ic_widget_time : R.drawable.ic_widget_time_dark);
             String title = lesson.getString("subject");
@@ -116,6 +116,13 @@ public class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteVi
                 case "practice": title += " (" + context.getString(R.string.practice) + ")"; break;
                 case "lecture": title += " (" + context.getString(R.string.lecture) + ")"; break;
                 case "lab": title += " (" + context.getString(R.string.lab) + ")"; break;
+            }
+            int week = this.week % 2;
+            if (week == -1) {
+                switch (lesson.getInt("week")){
+                    case 0: title += " (" + context.getString(R.string.tab_even) + ")"; break;
+                    case 1: title += " (" + context.getString(R.string.tab_odd) + ")"; break;
+                }
             }
             remoteViews.setTextViewText(R.id.slw_item_title, title);
             remoteViews.setInt(R.id.slw_item_title, "setTextColor", textColor);

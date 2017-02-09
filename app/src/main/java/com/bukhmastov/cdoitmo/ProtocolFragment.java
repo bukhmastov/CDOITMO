@@ -63,12 +63,7 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
         super.onResume();
         if (!loaded) {
             loaded = true;
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-            if (sharedPreferences.getBoolean("pref_use_cache", true) && sharedPreferences.getBoolean("pref_force_load", true)) {
-                forceLoad();
-            } else {
-                load();
-            }
+            load();
         }
     }
 
@@ -87,10 +82,26 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
     }
 
     private void load(){
-        if (protocol.is(number_of_weeks)) {
-            display();
-        } else {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        load(sharedPreferences.getBoolean("pref_use_cache", true) ? Integer.parseInt(sharedPreferences.getString("pref_tab_refresh", "0")) : 0);
+    }
+    private void load(int refresh_rate){
+        if (!protocol.is(number_of_weeks) || refresh_rate == 0) {
             forceLoad();
+        } else if (refresh_rate >= 0){
+            JSONObject protocol = ProtocolFragment.protocol.get();
+            try {
+                if (protocol.getLong("timestamp") + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+                    forceLoad();
+                } else {
+                    display();
+                }
+            } catch (JSONException e) {
+                if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
+                forceLoad();
+            }
+        } else {
+            display();
         }
     }
     private void forceLoad(){

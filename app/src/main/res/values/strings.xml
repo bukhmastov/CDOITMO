@@ -132,10 +132,6 @@
     <string name="time_start">Время начала</string>
     <string name="time_end">Время конца</string>
     <string name="request_denied">Не удалось создать заявку</string>
-    <string name="pref_force_load">Обновлять данные автоматически</string>
-    <string name="pref_force_load_summary">При открытии вкладок</string>
-    <string name="pref_force_load_schedule">Обновлять данные автоматически</string>
-    <string name="pref_force_load_schedule_summary">При открытии расписаний</string>
     <string name="configure_widget">Настройка виджета</string>
     <string name="add_widget">Добавить виджет</string>
     <string name="use_dark_theme">Использовать темную тему</string>
@@ -154,5 +150,22 @@
     <string name="saturday">Суббота</string>
     <string name="sunday">Воскресение</string>
     <string name="try_again_later">Повторите попытку позже</string>
+    <string name="every_15_min">Каждые 15 минут</string>
+    <string name="every_30_min">Каждые 30 минут</string>
+    <string name="every_1_hour">Каждый час</string>
+    <string name="every_6_hours">Каждые 6 часов</string>
+    <string name="every_12_hours">Каждые 12 часов</string>
+    <string name="always">Всегда</string>
+    <string name="once_per_1_hour">Раз в час</string>
+    <string name="once_per_6_hours">Раз в 6 часов</string>
+    <string name="once_per_12_hours">Раз в 12 часов</string>
+    <string name="once_per_1_day">Раз в сутки</string>
+    <string name="once_per_1_week">Раз в неделю</string>
+    <string name="once_per_4_weeks">Раз в 4 недели</string>
+    <string name="manually">Только вручную</string>
+    <string name="pref_tab_refresh">Обновление вкладок</string>
+    <string name="pref_schedule_refresh">Обновление расписаний</string>
+    <string name="update_interval">Интервал обновления</string>
+    <string name="unknown">Неизвестно</string>
 
 </resources>

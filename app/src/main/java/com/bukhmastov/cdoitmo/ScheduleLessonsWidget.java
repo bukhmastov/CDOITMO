@@ -117,7 +117,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
             public void onNewHandle(RequestHandle requestHandle) {}
         });
         try {
-            scheduleLessons.search(settings.getString("query"), true);
+            scheduleLessons.search(settings.getString("query"), 0);
         } catch (JSONException e) {
             e.printStackTrace();
             failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_load_schedule));
@@ -333,7 +333,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
             case ACTION_WIDGET_OPEN:
                 appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
                 Intent oIntent = new Intent(context, SplashActivity.class);
-                oIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                oIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 oIntent.putExtra("action", "schedule_lessons");
                 try {
                     String settings = ScheduleLessonsWidgetConfigureActivity.getPref(context, appWidgetId, "settings");

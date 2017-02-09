@@ -153,6 +153,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
             bindPreferenceSummaryToValue(findPreference("pref_default_fragment"));
+            bindPreferenceSummaryToValue(findPreference("pref_tab_refresh"));
+            bindPreferenceSummaryToValue(findPreference("pref_schedule_refresh"));
         }
 
         @Override

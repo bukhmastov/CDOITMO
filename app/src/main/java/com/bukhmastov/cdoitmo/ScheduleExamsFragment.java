@@ -80,8 +80,7 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
         }
         if (!loaded) {
             loaded = true;
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-            scheduleExams.search(MainActivity.group, sharedPreferences.getBoolean("pref_use_cache", true) && sharedPreferences.getBoolean("pref_force_load_schedule", false));
+            scheduleExams.search(MainActivity.group);
         }
     }
 
@@ -142,7 +141,7 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
                         offline_reload.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                scheduleExams.search(query, false);
+                                scheduleExams.search(query);
                             }
                         });
                     }
@@ -160,7 +159,7 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
                         try_again_reload.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                scheduleExams.search(query, false);
+                                scheduleExams.search(query);
                             }
                         });
                     }
@@ -199,7 +198,7 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
                         teacher_picker_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                                 HashMap<String, String> teacherMap = teachersMap.get(position);
-                                scheduleExams.search(teacherMap.get("scope"), false);
+                                scheduleExams.search(teacherMap.get("scope"));
                             }
                         });
                     }
@@ -267,7 +266,7 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         if (getUserVisibleHint()) {
-            if (ScheduleExamsFragment.scheduleExams != null) ScheduleExamsFragment.scheduleExams.search(item.getTitle().toString().replace(getString(R.string.group), "").trim(), false);
+            if (ScheduleExamsFragment.scheduleExams != null) ScheduleExamsFragment.scheduleExams.search(item.getTitle().toString().replace(getString(R.string.group), "").trim());
             return true;
         }
         return super.onContextItemSelected(item);
@@ -335,34 +334,38 @@ class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
 
     @Override
     public void onRefresh() {
-        search(ScheduleExamsFragment.query, true);
+        search(ScheduleExamsFragment.query, 0);
     }
 
     void setHandler(ScheduleExams.response handler){
         this.handler = handler;
     }
 
-    void search(String query, boolean force){
-        search(query, force, false);
+    void search(String query){
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        search(query, sharedPreferences.getBoolean("pref_use_cache", true) ? Integer.parseInt(sharedPreferences.getString("pref_schedule_refresh", "168")) : 0);
     }
-    void search(String query, boolean force, boolean toCache){
+    void search(String query, int refresh_rate){
+        search(query, refresh_rate, false);
+    }
+    void search(String query, int refresh_rate, boolean toCache){
         query = query.trim();
         ScheduleExamsFragment.query = query;
         if(ScheduleExamsFragment.fragmentRequestHandle != null) ScheduleExamsFragment.fragmentRequestHandle.cancel(true);
         if(Pattern.compile("^\\w{1,3}\\d{4}\\w?$").matcher(query).find()){
-            searchGroup(query.toUpperCase(), force, toCache);
+            searchGroup(query.toUpperCase(), refresh_rate, toCache);
         }
         else if(Pattern.compile("^teacher\\d+$").matcher(query).find()){
-            searchDefinedTeacher(query, force, toCache);
+            searchDefinedTeacher(query, refresh_rate, toCache);
         }
         else {
-            searchTeacher(query, force, toCache);
+            searchTeacher(query, refresh_rate, toCache);
         }
     }
 
-    private void searchGroup(final String group, final boolean force, final boolean toCache){
+    private void searchGroup(final String group, final int refresh_rate, final boolean toCache){
         final String cache = getCache("group_" + group);
-        if((force || Objects.equals(cache, "")) && !MainActivity.OFFLINE_MODE) {
+        if(getForce(cache, refresh_rate) && !MainActivity.OFFLINE_MODE) {
             DeIfmoRestClient.get(context, "ru/exam/0/" + group + "/raspisanie_sessii.htm", null, true, new DeIfmoRestClientResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, String response) {
@@ -417,9 +420,9 @@ class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
             }
         }
     }
-    private void searchTeacher(final String teacher, final boolean force, final boolean toCache){
+    private void searchTeacher(final String teacher, final int refresh_rate, final boolean toCache){
         final String cache = getCache("teacher_picker_" + teacher);
-        if((force || Objects.equals(cache, "")) && !MainActivity.OFFLINE_MODE) {
+        if(getForce(cache, refresh_rate) && !MainActivity.OFFLINE_MODE) {
             DeIfmoRestClient.get(context, "ru/exam/1/" + teacher + "/raspisanie_sessii.htm", null, true, new DeIfmoRestClientResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, String response) {
@@ -433,7 +436,7 @@ class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
                                         if(json.getJSONArray("teachers").length() > 0) putCache("teacher_picker_" + teacher, json.toString());
                                     }
                                     if (json.getJSONArray("teachers").length() == 1){
-                                        search(json.getJSONArray("teachers").getJSONObject(0).getString("scope"), force, toCache);
+                                        search(json.getJSONArray("teachers").getJSONObject(0).getString("scope"), refresh_rate, toCache);
                                     } else {
                                         handler.onSuccess(json);
                                     }
@@ -450,7 +453,7 @@ class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
                             try {
                                 JSONObject list = new JSONObject(cache);
                                 if(list.getJSONArray("teachers").length() == 1){
-                                    search(list.getJSONArray("teachers").getJSONObject(0).getString("scope"), force, toCache);
+                                    search(list.getJSONArray("teachers").getJSONObject(0).getString("scope"), refresh_rate, toCache);
                                 } else {
                                     handler.onSuccess(list);
                                 }
@@ -478,7 +481,7 @@ class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
             try {
                 JSONObject list = new JSONObject(cache);
                 if(list.getJSONArray("teachers").length() == 1){
-                    search(list.getJSONArray("teachers").getJSONObject(0).getString("scope"), force, toCache);
+                    search(list.getJSONArray("teachers").getJSONObject(0).getString("scope"), refresh_rate, toCache);
                 } else {
                     handler.onSuccess(list);
                 }
@@ -488,12 +491,12 @@ class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
             }
         }
     }
-    private void searchDefinedTeacher(final String teacherId, final boolean force, final boolean toCache){
+    private void searchDefinedTeacher(final String teacherId, final int refresh_rate, final boolean toCache){
         Matcher m = Pattern.compile("^teacher(\\d+)$").matcher(teacherId);
         if(m.find()){
             final String id = m.group(1);
             final String cache = getCache("teacher_" + id);
-            if((force || Objects.equals(cache, "")) && !MainActivity.OFFLINE_MODE) {
+            if(getForce(cache, refresh_rate) && !MainActivity.OFFLINE_MODE) {
                 DeIfmoRestClient.get(context, "ru/exam/3/" + id + "/raspisanie_sessii.htm", null, true, new DeIfmoRestClientResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, String response) {
@@ -550,6 +553,27 @@ class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
         } else {
             handler.onFailure(FAILED_LOAD);
         }
+    }
+
+    private boolean getForce(String cache, int refresh_rate){
+        boolean force;
+        if (Objects.equals(cache, "") || refresh_rate == 0) {
+            force = true;
+        } else if (refresh_rate >= 0){
+            try {
+                if (new JSONObject(cache).getLong("timestamp") + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+                    force = true;
+                } else {
+                    force = false;
+                }
+            } catch (JSONException e) {
+                if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
+                force = true;
+            }
+        } else {
+            force = false;
+        }
+        return force;
     }
 
     private String getCache(String token){
@@ -627,6 +651,7 @@ class ScheduleExamsGroupParse extends AsyncTask<String, Void, JSONObject> {
             }
             JSONObject response = new JSONObject();
             response.put("type", "group");
+            response.put("timestamp", Calendar.getInstance().getTimeInMillis());
             TagNode[] title = root.getElementsByAttValue("class", "page-header", true, false);
             response.put("scope", title.length > 0 ? title[0].getText().toString().replace("Расписание группы", "").trim() : "");
             response.put("schedule", schedule);
@@ -676,6 +701,7 @@ class ScheduleExamsTeacherPickerParse extends AsyncTask<String, Void, JSONObject
             }
             JSONObject response = new JSONObject();
             response.put("type", "teacher_picker");
+            response.put("timestamp", Calendar.getInstance().getTimeInMillis());
             response.put("teachers", teachers);
             return response;
         } catch (Exception e) {
@@ -729,6 +755,7 @@ class ScheduleExamsTeacherParse extends AsyncTask<String, Void, JSONObject> {
             }
             JSONObject response = new JSONObject();
             response.put("type", "teacher");
+            response.put("timestamp", Calendar.getInstance().getTimeInMillis());
             response.put("scope", teacher);
             response.put("schedule", schedule);
             return response;

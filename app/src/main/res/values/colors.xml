@@ -8,8 +8,8 @@
     <color name="colorPrimaryOpacity">#3c1946ba</color>
     <color name="colorAccent">#ec0b43</color>
     <color name="textColorHeader">#FFFFFF</color>
-    <color name="textColorPrimary">#000000</color>
-    <color name="textColorSecondary">#424242</color>
+    <color name="textColorPrimary">@color/text_color_primary</color>
+    <color name="textColorSecondary">@color/text_color_secondary</color>
     <color name="textColorSubjectPassed">#2e7d32</color>
     <color name="textColorDegrade">#c62828</color>
     <color name="colorSeparator">#e0e0e0</color>
@@ -30,8 +30,8 @@
     <color name="colorPrimaryOpacityInverse">#7e212121</color>
     <color name="colorAccentInverse">#D96629</color>
     <color name="textColorHeaderInverse">#e0e0e0</color>
-    <color name="textColorPrimaryInverse">#bdbdbd</color>
-    <color name="textColorSecondaryInverse">#9e9e9e</color>
+    <color name="textColorPrimaryInverse">@color/text_color_primary_inverse</color>
+    <color name="textColorSecondaryInverse">@color/text_color_secondary_inverse</color>
     <color name="textColorSubjectPassedInverse">#338937</color>
     <color name="textColorDegradeInverse">#a11717</color>
     <color name="colorSeparatorInverse">#424242</color>

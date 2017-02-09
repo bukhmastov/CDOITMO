@@ -25,6 +25,7 @@ import com.loopj.android.http.RequestHandle;
 import org.htmlcleaner.HtmlCleaner;
 import org.htmlcleaner.TagNode;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
@@ -71,12 +72,7 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
         super.onResume();
         if (!loaded) {
             loaded = true;
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-            if (sharedPreferences.getBoolean("pref_use_cache", true) && sharedPreferences.getBoolean("pref_force_load", true)) {
-                load(true);
-            } else {
-                load(false);
-            }
+            load();
         }
     }
 
@@ -98,26 +94,32 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
         forceLoad();
     }
 
-    private void load(boolean force){
+    private void load(){
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        load(sharedPreferences.getBoolean("pref_use_cache", true) ? Integer.parseInt(sharedPreferences.getString("pref_tab_refresh", "0")) : 0);
+    }
+    private void load(int refresh_rate){
         draw(R.layout.state_loading);
-        if (force) {
-            loadPart("Rating");
-            if (!rating.is("RatingList")) {
-                loadPart("RatingList");
-            } else {
-                ready("RatingList");
+        load(refresh_rate, "Rating");
+        load(refresh_rate, "RatingList");
+    }
+    private void load(int refresh_rate, String type){
+        if (!rating.is(type) || refresh_rate == 0) {
+            loadPart(type);
+        } else if (refresh_rate >= 0){
+            JSONObject rating = RatingFragment.rating.get(type);
+            try {
+                if (rating.getLong("timestamp") + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+                    loadPart(type);
+                } else {
+                    ready(type);
+                }
+            } catch (JSONException e) {
+                if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
+                loadPart(type);
             }
         } else {
-            if (!rating.is("Rating")) {
-                loadPart("Rating");
-            } else {
-                ready("Rating");
-            }
-            if (!rating.is("RatingList")) {
-                loadPart("RatingList");
-            } else {
-                ready("RatingList");
-            }
+            ready(type);
         }
     }
     private void forceLoad(){

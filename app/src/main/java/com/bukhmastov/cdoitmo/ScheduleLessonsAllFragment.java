@@ -105,7 +105,7 @@ public class ScheduleLessonsAllFragment extends Fragment {
                 try_again_reload.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        ScheduleLessonsFragment.scheduleLessons.search(ScheduleLessonsFragment.query, false);
+                        ScheduleLessonsFragment.scheduleLessons.search(ScheduleLessonsFragment.query);
                     }
                 });
             }
