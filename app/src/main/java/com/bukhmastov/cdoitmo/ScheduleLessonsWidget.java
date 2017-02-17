@@ -48,7 +48,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 update(context, appWidgetManager, appWidgetId, settings);
             } else {
                 long timestamp = cache.getLong("timestamp");
-                long shift = settings.getInt("updateTime") * 3600000;
+                long shift = settings.getInt("updateTime") * 3600000L;
                 if (shift != 0 && timestamp + shift < Calendar.getInstance().getTimeInMillis()) {
                     update(context, appWidgetManager, appWidgetId, settings);
                 } else {

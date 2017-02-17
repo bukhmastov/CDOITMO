@@ -1,0 +1,64 @@
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <shortcut
+        android:shortcutId="schedule_lessons"
+        android:icon="@drawable/ic_shortcut_schedule_lessons"
+        android:shortcutShortLabel="@string/shortcut_schedule_lessons_short"
+        android:shortcutLongLabel="@string/shortcut_schedule_lessons_long"
+        android:shortcutDisabledMessage="@string/shortcut_disabled"
+        android:enabled="true" >
+        <intent
+            android:action="com.bukhmastov.cdoitmo.SHORTCUT_OPEN"
+            android:targetPackage="com.bukhmastov.cdoitmo"
+            android:targetClass="com.bukhmastov.cdoitmo.SplashActivity" >
+            <extra android:name="action" android:value="schedule_lessons" />
+        </intent>
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="room101"
+        android:icon="@drawable/ic_shortcut_room101"
+        android:shortcutShortLabel="@string/shortcut_room101_short"
+        android:shortcutLongLabel="@string/shortcut_room101_long"
+        android:shortcutDisabledMessage="@string/shortcut_disabled"
+        android:enabled="true" >
+        <intent
+            android:action="com.bukhmastov.cdoitmo.SHORTCUT_OPEN"
+            android:targetPackage="com.bukhmastov.cdoitmo"
+            android:targetClass="com.bukhmastov.cdoitmo.SplashActivity" >
+            <extra android:name="action" android:value="room101" />
+            <extra android:name="action_extra" android:value="create" />
+        </intent>
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="protocol_changes"
+        android:icon="@drawable/ic_shortcut_protocol_changes"
+        android:shortcutShortLabel="@string/shortcut_protocol_changes_short"
+        android:shortcutLongLabel="@string/shortcut_protocol_changes_long"
+        android:shortcutDisabledMessage="@string/shortcut_disabled"
+        android:enabled="true" >
+        <intent
+            android:action="com.bukhmastov.cdoitmo.SHORTCUT_OPEN"
+            android:targetPackage="com.bukhmastov.cdoitmo"
+            android:targetClass="com.bukhmastov.cdoitmo.SplashActivity" >
+            <extra android:name="action" android:value="protocol_changes" />
+        </intent>
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="rating"
+        android:icon="@drawable/ic_shortcut_rating"
+        android:shortcutShortLabel="@string/shortcut_rating_short"
+        android:shortcutLongLabel="@string/shortcut_rating_long"
+        android:shortcutDisabledMessage="@string/shortcut_disabled"
+        android:enabled="true" >
+        <intent
+            android:action="com.bukhmastov.cdoitmo.SHORTCUT_OPEN"
+            android:targetPackage="com.bukhmastov.cdoitmo"
+            android:targetClass="com.bukhmastov.cdoitmo.SplashActivity" >
+            <extra android:name="action" android:value="rating" />
+        </intent>
+    </shortcut>
+
+</shortcuts>

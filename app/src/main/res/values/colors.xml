@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <color name="colorMaterialGrey100">#F5F5F5</color>
+
     <!-- colors for light AppTheme -->
     <color name="colorPrimaryLight">#1d50d4</color>
     <color name="colorPrimary">#1946ba</color>

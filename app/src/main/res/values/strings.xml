@@ -167,5 +167,14 @@
     <string name="pref_schedule_refresh">Обновление расписаний</string>
     <string name="update_interval">Интервал обновления</string>
     <string name="unknown">Неизвестно</string>
+    <string name="shortcut_disabled">Ярлык недоступен</string>
+    <string name="shortcut_protocol_changes_short">Протокол</string>
+    <string name="shortcut_protocol_changes_long">Протокол изменений</string>
+    <string name="shortcut_rating_short">Рейтинг</string>
+    <string name="shortcut_rating_long">Рейтинг</string>
+    <string name="shortcut_schedule_lessons_short">Расписание</string>
+    <string name="shortcut_schedule_lessons_long">Расписание занятий</string>
+    <string name="shortcut_room101_short">Подать заявку</string>
+    <string name="shortcut_room101_long">Подать заявку</string>
 
 </resources>

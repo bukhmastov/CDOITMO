@@ -57,10 +57,12 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
     private boolean loaded = false;
     static RequestHandle fragmentRequestHandle = null;
     private JSONObject viewRequest = null;
+    private String action_extra = null;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        action_extra = getActivity().getIntent().getStringExtra("action_extra");
         Room101RestClient.init();
     }
 
@@ -435,6 +437,16 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
     private void display(){
         try {
             if(viewRequest == null) throw new NullPointerException("viewRequest cannot be null");
+            String action_extra = this.action_extra;
+            if (action_extra != null) {
+                this.action_extra = null;
+                getActivity().getIntent().removeExtra("action_extra");
+                switch (action_extra) {
+                    case "create":
+                        addRequest();
+                        return;
+                }
+            }
             draw(R.layout.layout_room101_review);
             TextView room101_limit = (TextView) getActivity().findViewById(R.id.room101_limit);
             TextView room101_last = (TextView) getActivity().findViewById(R.id.room101_last);
