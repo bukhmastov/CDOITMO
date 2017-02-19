@@ -53,7 +53,6 @@
     <string name="pref_ringtone_silent">Без звука</string>
     <string name="pref_notify_vibrate">Вибрация</string>
     <string name="attention">Внимание</string>
-    <string name="pref_use_cache_warning">Выключая кэширование, Вы принимаете факт того, что приложение не всегда сможет предоставить Вам запрашиваемую информацию с серверов http://de.ifmo.ru/</string>
     <string name="action_1">событие</string>
     <string name="action_2">события</string>
     <string name="action_3">событий</string>
@@ -94,7 +93,6 @@
     <string name="last">Осталось</string>
     <string name="penalty">Штраф</string>
     <string name="no_requests">Заявок нет</string>
-    <string name="add">Добавить</string>
     <string name="deny_request">Удаляем заявку</string>
     <string name="room101_auth_failed">Не удалось авторизоваться в системе</string>
     <string name="add_request">Подача заявки</string>
@@ -176,5 +174,22 @@
     <string name="shortcut_schedule_lessons_long">Расписание занятий</string>
     <string name="shortcut_room101_short">Подать заявку</string>
     <string name="shortcut_room101_long">Подать заявку</string>
+    <string name="cache_and_refresh">Кэширование и обновление</string>
+    <string name="additional_prefs">Дополнительные настройки</string>
+    <string name="schedule_teacher_set">Установлено расписание преподавателя</string>
+    <string name="schedule_group_set">Установлено расписание группы</string>
+    <string name="schedule_room_set">Установлено расписание аудитории</string>
+    <string name="automatically">Автоматически</string>
+    <string name="both_terms">Оба семестра</string>
+    <string name="cache_cleared">Кэш очищен</string>
+    <string name="current_group">Текущая группа</string>
+    <string name="choose_schedule">Выбрать расписание</string>
+    <string name="clear_cache">Очистить кэш</string>
+    <string name="clear_schedule_cache">Очистить кэш расписаний</string>
+    <string name="term_picker">Выбор семестра</string>
+    <string name="period_picker">Период изменений за</string>
+    <string name="default_schedule">Расписание по умолчанию</string>
+    <string name="week_picker">Выбор недели</string>
+    <string name="cache_schedule">Кэшировать все расписания</string>
 
 </resources>

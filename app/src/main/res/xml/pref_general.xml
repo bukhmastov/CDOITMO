@@ -9,38 +9,16 @@
         android:defaultValue="e_journal" />
 
     <SwitchPreference
-        android:key="pref_use_cache"
-        android:defaultValue="true"
-        android:title="@string/pref_use_cache" />
-
-    <ListPreference
-        android:key="pref_tab_refresh"
-        android:dependency="pref_use_cache"
-        android:title="@string/pref_tab_refresh"
-        android:entries="@array/pref_refresh_titles"
-        android:entryValues="@array/pref_refresh_values"
-        android:defaultValue="0" />
-
-    <ListPreference
-        android:key="pref_schedule_refresh"
-        android:dependency="pref_use_cache"
-        android:title="@string/pref_schedule_refresh"
-        android:entries="@array/pref_refresh_titles"
-        android:entryValues="@array/pref_refresh_values"
-        android:defaultValue="168" />
-
-    <SwitchPreference
-        android:key="pref_initial_offline"
-        android:dependency="pref_use_cache"
-        android:defaultValue="false"
-        android:title="@string/pref_initial_offline"
-        android:summary="@string/pref_initial_offline_summary"/>
-
-    <SwitchPreference
         android:key="pref_auto_logout"
         android:defaultValue="false"
         android:title="@string/pref_auto_logout"
         android:summary="@string/pref_auto_logout_summary"/>
+
+    <SwitchPreference
+        android:key="pref_initial_offline"
+        android:defaultValue="false"
+        android:title="@string/pref_initial_offline"
+        android:summary="@string/pref_initial_offline_summary" />
 
     <SwitchPreference
         android:key="pref_dark_theme"

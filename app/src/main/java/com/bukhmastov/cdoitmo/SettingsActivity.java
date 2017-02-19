@@ -18,6 +18,7 @@ import android.preference.RingtonePreference;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatDelegate;
@@ -31,6 +32,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.List;
 
@@ -111,20 +115,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             case "pref_notify_frequency":
                 MainActivity.protocolTracker.update().restart();
                 break;
-            /*case "pref_use_cache":
-                Cache.enabled = sharedPreferences.getBoolean("pref_use_cache", true);
-                if(!sharedPreferences.getBoolean("pref_use_cache", true)){
-                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                    builder.setTitle(R.string.attention);
-                    builder.setMessage(R.string.pref_use_cache_warning);
-                    builder.setCancelable(true);
-                    builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) { dialog.dismiss(); }
-                    });
-                    builder.create().show();
-                }
-                break;*/
             case "pref_dark_theme":
                 finish();
                 Intent intent = new Intent(this, SplashActivity.class);
@@ -145,18 +135,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         loadHeadersFromResource(R.xml.pref_headers, target);
     }
 
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public static class GeneralPreferenceFragment extends PreferenceFragment {
-        @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.pref_general);
-            setHasOptionsMenu(true);
-            bindPreferenceSummaryToValue(findPreference("pref_default_fragment"));
-            bindPreferenceSummaryToValue(findPreference("pref_tab_refresh"));
-            bindPreferenceSummaryToValue(findPreference("pref_schedule_refresh"));
-        }
-
+    public static abstract class TemplatePreferenceFragment extends PreferenceFragment {
         @Override
         public boolean onOptionsItemSelected(MenuItem item) {
             int id = item.getItemId();
@@ -168,8 +147,44 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         }
     }
 
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public static class NotificationsPreferenceFragment extends PreferenceFragment {
+    public static class GeneralPreferenceFragment extends TemplatePreferenceFragment {
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.pref_general);
+            setHasOptionsMenu(true);
+            bindPreferenceSummaryToValue(findPreference("pref_default_fragment"));
+        }
+    }
+
+    public static class CachePreferenceFragment extends TemplatePreferenceFragment {
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.pref_cache);
+            setHasOptionsMenu(true);
+            bindPreferenceSummaryToValue(findPreference("pref_tab_refresh"));
+            bindPreferenceSummaryToValue(findPreference("pref_schedule_refresh"));
+            Preference pref_clear_cache = findPreference("pref_clear_cache");
+            if (pref_clear_cache != null) {
+                pref_clear_cache.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        Cache.clear(getActivity());
+                        View content_container = getActivity().findViewById(android.R.id.content);
+                        if (content_container != null) {
+                            Snackbar snackbar = Snackbar.make(content_container, R.string.cache_cleared, Snackbar.LENGTH_SHORT);
+                            snackbar.getView().setBackgroundColor(MainActivity.colorBackgroundSnackBar);
+                            snackbar.show();
+                        }
+                        return false;
+                    }
+                });
+            }
+        }
+    }
+
+    public static class NotificationsPreferenceFragment extends TemplatePreferenceFragment {
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -178,34 +193,68 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             bindPreferenceSummaryToValue(findPreference("pref_notify_frequency"));
             bindPreferenceSummaryToValue(findPreference("pref_notify_sound"));
         }
+    }
 
+    public static class AdditionalPreferenceFragment extends TemplatePreferenceFragment {
         @Override
-        public boolean onOptionsItemSelected(MenuItem item) {
-            int id = item.getItemId();
-            if (id == android.R.id.home) {
-                startActivity(new Intent(getActivity(), SettingsActivity.class));
-                return true;
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.pref_additional);
+            setHasOptionsMenu(true);
+            bindPreferenceSummaryToValue(findPreference("pref_e_journal_term"));
+            bindPreferenceSummaryToValue(findPreference("pref_protocol_changes_weeks"));
+            bindPreferenceSummaryToValue(findPreference("pref_schedule_lessons_default"));
+            bindPreferenceSummaryToValue(findPreference("pref_schedule_lessons_week"));
+            Preference pref_schedule_lessons_clear_cache = findPreference("pref_schedule_lessons_clear_cache");
+            if (pref_schedule_lessons_clear_cache != null) {
+                pref_schedule_lessons_clear_cache.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        Cache.delete(getActivity(), "schedule_lessons");
+                        View content_container = getActivity().findViewById(android.R.id.content);
+                        if (content_container != null) {
+                            Snackbar snackbar = Snackbar.make(content_container, R.string.cache_cleared, Snackbar.LENGTH_SHORT);
+                            snackbar.getView().setBackgroundColor(MainActivity.colorBackgroundSnackBar);
+                            snackbar.show();
+                        }
+                        return false;
+                    }
+                });
             }
-            return super.onOptionsItemSelected(item);
+            Preference pref_schedule_exams_clear_cache = findPreference("pref_schedule_exams_clear_cache");
+            if (pref_schedule_exams_clear_cache != null) {
+                pref_schedule_exams_clear_cache.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        Cache.delete(getActivity(), "schedule_exams");
+                        View content_container = getActivity().findViewById(android.R.id.content);
+                        if (content_container != null) {
+                            Snackbar snackbar = Snackbar.make(content_container, R.string.cache_cleared, Snackbar.LENGTH_SHORT);
+                            snackbar.getView().setBackgroundColor(MainActivity.colorBackgroundSnackBar);
+                            snackbar.show();
+                        }
+                        return false;
+                    }
+                });
+            }
         }
     }
 
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class AboutPreferenceFragment extends PreferenceFragment {
-
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             getActivity().finish();
             startActivity(new Intent(getActivity(), AboutActivity.class));
         }
-
     }
 
     protected boolean isValidFragment(String fragmentName) {
         return PreferenceFragment.class.getName().equals(fragmentName)
                 || GeneralPreferenceFragment.class.getName().equals(fragmentName)
+                || CachePreferenceFragment.class.getName().equals(fragmentName)
                 || NotificationsPreferenceFragment.class.getName().equals(fragmentName)
+                || AdditionalPreferenceFragment.class.getName().equals(fragmentName)
                 || AboutPreferenceFragment.class.getName().equals(fragmentName);
     }
 
@@ -222,6 +271,20 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                 ListPreference listPreference = (ListPreference) preference;
                 int index = listPreference.findIndexOfValue(stringValue);
                 preference.setSummary(index >= 0 ? listPreference.getEntries()[index] : null);
+            } else if (preference instanceof SchedulePreference) {
+                String summary;
+                try {
+                    JSONObject jsonValue = new JSONObject(stringValue);
+                    switch (jsonValue.getString("query")) {
+                        case "": summary = null; break;
+                        case "auto": summary = preference.getContext().getString(R.string.current_group); break;
+                        default: summary = jsonValue.getString("title"); break;
+                    }
+                } catch (JSONException e){
+                    if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
+                    summary = null;
+                }
+                preference.setSummary(summary);
             } else if (preference instanceof RingtonePreference) {
                 if (TextUtils.isEmpty(stringValue)) {
                     preference.setSummary(R.string.pref_ringtone_silent);

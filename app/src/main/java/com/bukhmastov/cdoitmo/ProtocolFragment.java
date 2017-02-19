@@ -50,6 +50,7 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        number_of_weeks = Integer.parseInt(PreferenceManager.getDefaultSharedPreferences(getActivity()).getString("pref_protocol_changes_weeks", "1"));
         protocol = new Protocol(getActivity());
     }
 

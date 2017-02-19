@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onCreate(Bundle savedInstanceState) {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         if (sharedPreferences.getBoolean("pref_dark_theme", false)) setTheme(R.style.AppTheme_Dark);
-        OFFLINE_MODE = !DeIfmoRestClient.isOnline(this) || (LoginActivity.is_initial && sharedPreferences.getBoolean("pref_use_cache", true) && sharedPreferences.getBoolean("pref_initial_offline", false));
+        OFFLINE_MODE = !DeIfmoRestClient.isOnline(this) || (LoginActivity.is_initial && sharedPreferences.getBoolean("pref_initial_offline", false));
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar_main));
@@ -413,6 +413,10 @@ class Cache {
         enabled = PreferenceManager.getDefaultSharedPreferences(context).getBoolean("pref_use_cache", true);
         if(!enabled) clear(context);
     }
+    static void delete(Context context, String key){
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        if(sharedPreferences.contains(KEY_PREFIX + key)) sharedPreferences.edit().remove(KEY_PREFIX + key).apply();
+    }
     static void clear(Context context){
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         Map<String, ?> list = sharedPreferences.getAll();
@@ -433,7 +437,7 @@ class Storage {
     }
     static void delete(Context context, String key){
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        if(sharedPreferences.contains(key)) sharedPreferences.edit().remove(key).apply();
+        if(sharedPreferences.contains(KEY_PREFIX + key)) sharedPreferences.edit().remove(KEY_PREFIX + key).apply();
     }
     static void clear(Context context){
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);

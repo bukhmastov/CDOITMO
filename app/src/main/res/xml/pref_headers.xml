@@ -6,9 +6,19 @@
         android:title="@string/general" />
 
     <header
+        android:fragment="com.bukhmastov.cdoitmo.SettingsActivity$CachePreferenceFragment"
+        android:icon="@drawable/ic_save"
+        android:title="@string/cache_and_refresh" />
+
+    <header
         android:fragment="com.bukhmastov.cdoitmo.SettingsActivity$NotificationsPreferenceFragment"
         android:icon="@drawable/ic_notifications"
         android:title="@string/notifications" />
+
+    <header
+        android:fragment="com.bukhmastov.cdoitmo.SettingsActivity$AdditionalPreferenceFragment"
+        android:icon="@drawable/ic_build"
+        android:title="@string/additional_prefs" />
 
     <header
         android:fragment="com.bukhmastov.cdoitmo.SettingsActivity$AboutPreferenceFragment"

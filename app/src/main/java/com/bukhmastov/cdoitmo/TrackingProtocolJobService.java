@@ -250,7 +250,7 @@ class ProtocolTracker {
                     JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
                     if (jobScheduler.getPendingJob(jobID) == null) throw new Exception("job is null");
                 } catch (Exception e) {
-                    restart();
+                    if (Build.VERSION.SDK_INT != Build.VERSION_CODES.N_MR1) restart();
                 }
             }
         }
@@ -275,7 +275,7 @@ class ProtocolTracker {
                 running = true;
                 sharedPreferences.edit()
                         .putInt("TrackingProtocolJobServiceID", jobID)
-                        .putString("TrackingProtocolJobServiceHISTORY", "")
+                        .putString("ProtocolTrackerHISTORY", "")
                         .apply();
                 Log.i(TAG, "Started | frequency = " + frequency + " | jobID = " + jobID);
             } catch (Exception e){

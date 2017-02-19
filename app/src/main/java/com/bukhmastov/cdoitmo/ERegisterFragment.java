@@ -37,7 +37,7 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
     private static final String TAG = "ERegisterFragment";
     public static ERegister eRegister = null;
     private String group = "";
-    private int term = 0;
+    private int term = -1;
     private boolean spinner_group_blocker = true, spinner_period_blocker = true;
     private boolean notifyAboutDateUpdate = false;
     private boolean loaded = false;
@@ -375,7 +375,12 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                 if (Objects.equals(currentGroup, "")) {
                     if (year == group.year[month > Calendar.AUGUST ? 0 : 1]) {
                         currentGroup = group.name;
-                        currentTerm = group.terms.get(month > Calendar.AUGUST || month == Calendar.JANUARY ? 0 : 1).number;
+                        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+                        if (Integer.parseInt(sharedPreferences.getString("pref_e_journal_term", "0")) == 1){
+                            currentTerm = -1;
+                        } else {
+                            currentTerm = group.terms.get(month > Calendar.AUGUST || month == Calendar.JANUARY ? 0 : 1).number;
+                        }
                     }
                 }
                 if (maxYear < group.year[0]) maxYear = group.year[0];

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <SwitchPreference
+        android:key="pref_use_cache"
+        android:defaultValue="true"
+        android:title="@string/pref_use_cache" />
+
+    <ListPreference
+        android:key="pref_tab_refresh"
+        android:dependency="pref_use_cache"
+        android:title="@string/pref_tab_refresh"
+        android:entries="@array/pref_refresh_titles"
+        android:entryValues="@array/pref_refresh_values"
+        android:defaultValue="0" />
+
+    <ListPreference
+        android:key="pref_schedule_refresh"
+        android:dependency="pref_use_cache"
+        android:title="@string/pref_schedule_refresh"
+        android:entries="@array/pref_refresh_titles"
+        android:entryValues="@array/pref_refresh_values"
+        android:defaultValue="168" />
+
+    <Preference
+        android:key="pref_clear_cache"
+        android:dependency="pref_use_cache"
+        android:title="@string/clear_cache" />
+
+</PreferenceScreen>

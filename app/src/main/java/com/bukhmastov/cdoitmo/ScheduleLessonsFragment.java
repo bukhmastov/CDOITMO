@@ -96,9 +96,15 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
         }
         if (!loaded) {
             loaded = true;
+            String scope;
             String action_extra = getActivity().getIntent().getStringExtra("action_extra");
-            if (action_extra != null) getActivity().getIntent().removeExtra("action_extra");
-            scheduleLessons.search(action_extra == null ? MainActivity.group : action_extra);
+            if (action_extra != null) {
+                getActivity().getIntent().removeExtra("action_extra");
+                scope = action_extra;
+            } else {
+                scope = scheduleLessons.getDefault();
+            }
+            scheduleLessons.search(scope);
         }
     }
 
@@ -155,6 +161,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
         try {
             switch (state) {
                 case DeIfmoRestClient.FAILED_OFFLINE:
+                case ScheduleLessons.FAILED_OFFLINE:
                     draw(R.layout.state_offline);
                     View offline_reload = getActivity().findViewById(R.id.offline_reload);
                     if (offline_reload != null) {
@@ -198,7 +205,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
             if(json == null) throw new NullPointerException("json cannot be null");
             schedule = json;
             schedule_tabs.setVisibility(View.GONE);
-            if(Objects.equals(json.getString("type"), "teacher_picker")){
+            if (Objects.equals(json.getString("type"), "teacher_picker")) {
                 JSONArray teachers = json.getJSONArray("teachers");
                 if (teachers.length() > 0){
                     if (json.getJSONArray("teachers").length() == 1) {
@@ -231,7 +238,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
                     notFound();
                 }
             } else {
-                if(schedule.getJSONArray("schedule").length() > 0){
+                if (schedule.getJSONArray("schedule").length() > 0) {
                     schedule_tabs.setVisibility(View.VISIBLE);
                     draw(R.layout.layout_schedule_lessons_tabs);
                     schedule_view = (ViewPager) getActivity().findViewById(R.id.schedule_pager);
@@ -239,8 +246,14 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
                         schedule_view.setAdapter(new PagerAdapter(getFragmentManager(), getContext()));
                         schedule_tabs.setupWithViewPager(schedule_view);
                     }
-                    TabLayout.Tab tab = schedule_tabs.getTabAt(MainActivity.week >= 0 ? (MainActivity.week % 2) + 1 : 0);
-                    if(tab != null) tab.select();
+                    TabLayout.Tab tab;
+                    int pref = Integer.parseInt(PreferenceManager.getDefaultSharedPreferences(getContext()).getString("pref_schedule_lessons_week", "-1"));
+                    if (pref == -1) {
+                        tab = schedule_tabs.getTabAt(MainActivity.week >= 0 ? (MainActivity.week % 2) + 1 : 0);
+                    } else {
+                        tab = schedule_tabs.getTabAt(pref);
+                    }
+                    if (tab != null) tab.select();
                 } else {
                     notFound();
                 }
@@ -319,6 +332,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
     private ScheduleLessons.response handler = null;
     private Context context;
     final static int FAILED_LOAD = 100;
+    final static int FAILED_OFFLINE = 101;
 
     ScheduleLessons(Context context){
         this.context = context;
@@ -338,7 +352,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
         search(query, sharedPreferences.getBoolean("pref_use_cache", true) ? Integer.parseInt(sharedPreferences.getString("pref_schedule_refresh", "168")) : 0);
     }
     void search(String query, int refresh_rate){
-        search(query, refresh_rate, false);
+        search(query, refresh_rate, PreferenceManager.getDefaultSharedPreferences(context).getBoolean("pref_schedule_lessons_use_cache", false));
     }
     void search(String query, int refresh_rate, boolean toCache){
         if (handler == null) return;
@@ -358,6 +372,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
             searchTeacher(query, refresh_rate, toCache);
         }
     }
+
     private void searchGroup(final String group, final int refresh_rate, final boolean toCache){
         final String cache = getCache("group_" + group);
         if(getForce(cache, refresh_rate) && !MainActivity.OFFLINE_MODE) {
@@ -370,9 +385,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                             public void finish(JSONObject json) {
                                 try {
                                     if (json == null) throw new NullPointerException("json cannot be null");
-                                    if (toCache || Objects.equals(Storage.get(context, "group").toUpperCase(), group)){
-                                        if(json.getJSONArray("schedule").length() > 0) putCache("group_" + group, json.toString());
-                                    }
+                                    if (json.getJSONArray("schedule").length() > 0) putCache("group_" + group, json.toString(), toCache);
                                     handler.onSuccess(json);
                                 } catch (Exception e) {
                                     if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
@@ -406,6 +419,8 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                     handler.onNewHandle(requestHandle);
                 }
             });
+        } else if (MainActivity.OFFLINE_MODE) {
+            handler.onFailure(FAILED_OFFLINE);
         } else {
             try {
                 handler.onSuccess(new JSONObject(cache));
@@ -427,9 +442,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                             public void finish(JSONObject json) {
                                 try {
                                     if (json == null) throw new NullPointerException("json cannot be null");
-                                    if (toCache){
-                                        if(json.getJSONArray("schedule").length() > 0)  putCache("room_" + room, json.toString());
-                                    }
+                                    if (json.getJSONArray("schedule").length() > 0) putCache("room_" + room, json.toString(), toCache);
                                     handler.onSuccess(json);
                                 } catch (Exception e) {
                                     if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
@@ -463,6 +476,8 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                     handler.onNewHandle(requestHandle);
                 }
             });
+        } else if (MainActivity.OFFLINE_MODE) {
+            handler.onFailure(FAILED_OFFLINE);
         } else {
             try {
                 handler.onSuccess(new JSONObject(cache));
@@ -484,9 +499,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                             public void finish(JSONObject json) {
                                 try {
                                     if (json == null) throw new NullPointerException("json cannot be null");
-                                    if (toCache){
-                                        if(json.getJSONArray("teachers").length() > 0) putCache("teacher_picker_" + teacher, json.toString());
-                                    }
+                                    if(json.getJSONArray("teachers").length() > 0) putCache("teacher_picker_" + teacher, json.toString(), toCache);
                                     handler.onSuccess(json);
                                 } catch (Exception e) {
                                     if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
@@ -520,6 +533,8 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                     handler.onNewHandle(requestHandle);
                 }
             });
+        } else if (MainActivity.OFFLINE_MODE) {
+            handler.onFailure(FAILED_OFFLINE);
         } else {
             try {
                 JSONObject list = new JSONObject(cache);
@@ -538,7 +553,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
         Matcher m = Pattern.compile("^teacher(\\d+)$").matcher(teacherId);
         if(m.find()){
             final String id = m.group(1);
-            final String cache = getCache("teacher_" + id);
+            final String cache = getCache("teacher" + id);
             if(getForce(cache, refresh_rate) && !MainActivity.OFFLINE_MODE) {
                 DeIfmoRestClient.get(context, "ru/schedule/3/" + id + "/schedule.htm", null, true, new DeIfmoRestClientResponseHandler() {
                     @Override
@@ -549,9 +564,7 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                                 public void finish(JSONObject json) {
                                     try {
                                         if(json == null) throw new NullPointerException("json cannot be null");
-                                        if (toCache){
-                                            if(json.getJSONArray("schedule").length() > 0) putCache("teacher_" + id, json.toString());
-                                        }
+                                        if(json.getJSONArray("schedule").length() > 0) putCache("teacher" + id, json.toString(), toCache);
                                         handler.onSuccess(json);
                                     } catch (Exception e) {
                                         if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
@@ -585,6 +598,8 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                         handler.onNewHandle(requestHandle);
                     }
                 });
+            } else if (MainActivity.OFFLINE_MODE) {
+                handler.onFailure(FAILED_OFFLINE);
             } else {
                 try {
                     handler.onSuccess(new JSONObject(cache));
@@ -618,6 +633,19 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
         }
         return force;
     }
+    String getDefault(){
+        String scope;
+        String pref = PreferenceManager.getDefaultSharedPreferences(context).getString("pref_schedule_lessons_default", "");
+        try {
+            if (Objects.equals(pref, "")) throw new Exception("pref_schedule_lessons_default empty");
+            JSONObject jsonObject = new JSONObject(pref);
+            scope = jsonObject.getString("query");
+            if (Objects.equals(scope, "auto")) throw new Exception("pref_schedule_lessons_default query=auto");
+        } catch (Exception e) {
+            scope = Storage.get(context, "group");
+        }
+        return scope;
+    }
 
     private String getCache(String token){
         try {
@@ -637,18 +665,20 @@ class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
             return "";
         }
     }
-    private void putCache(String token, String value){
+    private void putCache(String token, String value, boolean toCache){
         try {
-            String jsonStr = Cache.get(context, "schedule_lessons");
-            JSONObject json;
-            if(Objects.equals(jsonStr, "")){
-                json = new JSONObject();
-            } else {
-                json = new JSONObject(jsonStr);
+            if (toCache || Objects.equals(getDefault(), token) || Objects.equals("group_" + getDefault(), token) || Objects.equals("room_" + getDefault(), token) || Objects.equals("teacher_picker_" + getDefault(), token)) {
+                String jsonStr = Cache.get(context, "schedule_lessons");
+                JSONObject json;
+                if (Objects.equals(jsonStr, "")) {
+                    json = new JSONObject();
+                } else {
+                    json = new JSONObject(jsonStr);
+                }
+                if (json.has(token)) json.remove(token);
+                json.put(token, value);
+                Cache.put(context, "schedule_lessons", json.toString());
             }
-            if(json.has(token)) json.remove(token);
-            json.put(token, value);
-            Cache.put(context, "schedule_lessons", json.toString());
         } catch (JSONException e) {
             if(LoginActivity.errorTracker != null) LoginActivity.errorTracker.add(e);
         }

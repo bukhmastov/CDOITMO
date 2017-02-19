@@ -212,13 +212,13 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
     public void onSuccess(JSONObject json) {
         try {
             if (json == null) throw new NullPointerException("json cannot be null");
-            if(Objects.equals(json.getString("type"), "teacher_picker")){
+            if (Objects.equals(json.getString("type"), "teacher_picker")) {
                 JSONArray teachers = json.getJSONArray("teachers");
                 if (teachers.length() > 0) {
                     if (teachers.length() == 1) {
                         JSONObject teacher = teachers.getJSONObject(0);
                         query = teacher.getString("scope");
-                        found("Установлено расписание преподавателя" + " \"" + teacher.getString("name") + "\"");
+                        found(getString(R.string.schedule_teacher_set) + " \"" + teacher.getString("name") + "\"");
                     } else {
                         FrameLayout slw_container = (FrameLayout) findViewById(R.id.slw_container);
                         if (slw_container == null) throw new NullPointerException("slw_container cannot be null");
@@ -238,7 +238,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
                             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                                 HashMap<String, String> teacherMap = teachersMap.get(position);
                                 query = teacherMap.get("scope");
-                                found("Установлено расписание преподавателя" + " \"" + teacherMap.get("name") + "\"");
+                                found(getString(R.string.schedule_teacher_set) + " \"" + teacherMap.get("name") + "\"");
                             }
                         });
                         slw_container.removeAllViews();
@@ -252,8 +252,8 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
                 if (json.getJSONArray("schedule").length() > 0) {
                     query = json.getString("scope");
                     switch(json.getString("type")){
-                        case "group": found("Установлено расписание группы" + " \"" + query + "\""); break;
-                        case "room": found("Установлено расписание аудитории" + " \"" + query + "\""); break;
+                        case "group": found(getString(R.string.schedule_group_set) + " \"" + query + "\""); break;
+                        case "room": found(getString(R.string.schedule_room_set) + " \"" + query + "\""); break;
                         default:
                             query = null;
                             found(getString(R.string.schedule_not_found));

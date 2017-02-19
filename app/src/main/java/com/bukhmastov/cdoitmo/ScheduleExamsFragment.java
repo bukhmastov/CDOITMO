@@ -135,6 +135,7 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
         try {
             switch (state) {
                 case DeIfmoRestClient.FAILED_OFFLINE:
+                case ScheduleExams.FAILED_OFFLINE:
                     draw(R.layout.state_offline);
                     View offline_reload = getActivity().findViewById(R.id.offline_reload);
                     if (offline_reload != null) {
@@ -327,6 +328,7 @@ class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
     private ScheduleExams.response handler = null;
     private Context context;
     final static int FAILED_LOAD = 100;
+    final static int FAILED_OFFLINE = 101;
 
     ScheduleExams(Context context){
         this.context = context;
@@ -346,7 +348,7 @@ class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
         search(query, sharedPreferences.getBoolean("pref_use_cache", true) ? Integer.parseInt(sharedPreferences.getString("pref_schedule_refresh", "168")) : 0);
     }
     void search(String query, int refresh_rate){
-        search(query, refresh_rate, false);
+        search(query, refresh_rate, PreferenceManager.getDefaultSharedPreferences(context).getBoolean("pref_schedule_exams_use_cache", false));
     }
     void search(String query, int refresh_rate, boolean toCache){
         query = query.trim();
@@ -411,6 +413,8 @@ class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
                     handler.onNewHandle(requestHandle);
                 }
             });
+        } else if (MainActivity.OFFLINE_MODE) {
+            handler.onFailure(FAILED_OFFLINE);
         } else {
             try {
                 handler.onSuccess(new JSONObject(cache));
@@ -477,6 +481,8 @@ class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
                     handler.onNewHandle(requestHandle);
                 }
             });
+        } else if (MainActivity.OFFLINE_MODE) {
+            handler.onFailure(FAILED_OFFLINE);
         } else {
             try {
                 JSONObject list = new JSONObject(cache);
@@ -496,7 +502,7 @@ class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
         if(m.find()){
             final String id = m.group(1);
             final String cache = getCache("teacher_" + id);
-            if(getForce(cache, refresh_rate) && !MainActivity.OFFLINE_MODE) {
+            if (getForce(cache, refresh_rate) && !MainActivity.OFFLINE_MODE) {
                 DeIfmoRestClient.get(context, "ru/exam/3/" + id + "/raspisanie_sessii.htm", null, true, new DeIfmoRestClientResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, String response) {
@@ -542,6 +548,8 @@ class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
                         handler.onNewHandle(requestHandle);
                     }
                 });
+            } else if (MainActivity.OFFLINE_MODE) {
+                handler.onFailure(FAILED_OFFLINE);
             } else {
                 try {
                     handler.onSuccess(new JSONObject(cache));

@@ -12,7 +12,9 @@ public class SplashActivity extends AppCompatActivity {
         //Thread.setDefaultUncaughtExceptionHandler(new MyUncaughtExceptionHandler(this));
         super.onCreate(savedInstanceState);
         PreferenceManager.setDefaultValues(this, R.xml.pref_general, false);
+        PreferenceManager.setDefaultValues(this, R.xml.pref_cache, false);
         PreferenceManager.setDefaultValues(this, R.xml.pref_notifications, false);
+        PreferenceManager.setDefaultValues(this, R.xml.pref_additional, false);
         Intent intent = new Intent(this, LoginActivity.class);
         Bundle extras = getIntent().getExtras();
         if (extras != null) intent.putExtras(extras);

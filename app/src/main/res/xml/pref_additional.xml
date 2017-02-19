@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="@string/e_journal">
+        <ListPreference
+            android:key="pref_e_journal_term"
+            android:title="@string/term_picker"
+            android:entries="@array/pref_e_journal_term_titles"
+            android:entryValues="@array/pref_e_journal_term_values"
+            android:defaultValue="0" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/protocol_changes">
+        <ListPreference
+            android:key="pref_protocol_changes_weeks"
+            android:title="@string/period_picker"
+            android:entries="@array/pref_protocol_changes_weeks_titles"
+            android:entryValues="@array/pref_protocol_changes_weeks_values"
+            android:defaultValue="1" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/schedule_lessons">
+        <com.bukhmastov.cdoitmo.SchedulePreference
+            android:key="pref_schedule_lessons_default"
+            android:title="@string/default_schedule"
+            android:defaultValue='{"query":"auto","title":""}' />
+        <ListPreference
+            android:key="pref_schedule_lessons_week"
+            android:title="@string/week_picker"
+            android:entries="@array/pref_schedule_lessons_week_titles"
+            android:entryValues="@array/pref_schedule_lessons_week_values"
+            android:defaultValue="-1" />
+        <SwitchPreference
+            android:key="pref_schedule_lessons_use_cache"
+            android:defaultValue="false"
+            android:title="@string/cache_schedule" />
+        <Preference
+            android:key="pref_schedule_lessons_clear_cache"
+            android:title="@string/clear_schedule_cache" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/schedule_exams">
+        <SwitchPreference
+            android:key="pref_schedule_exams_use_cache"
+            android:defaultValue="false"
+            android:title="@string/cache_schedule" />
+        <Preference
+            android:key="pref_schedule_exams_clear_cache"
+            android:title="@string/clear_schedule_cache" />
+    </PreferenceCategory>
+
+</PreferenceScreen>
