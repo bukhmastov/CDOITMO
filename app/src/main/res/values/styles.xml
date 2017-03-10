@@ -54,9 +54,32 @@
         <item name="ic_security">@drawable/ic_security</item>
     </style>
 
-
     <style name="SplashTheme" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowBackground">@drawable/splash_background</item>
+    </style>
+
+    <style name="AppTheme.Popup" parent="AppTheme">
+
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="colorPopupBackground">@color/colorPopupBackground</item>
+        <item name="colorPopupBackgroundFill">@color/colorPopupBackgroundFill</item>
+        <item name="colorPrimaryDark">?attr/colorPopupBackground</item>
+
+    </style>
+
+    <style name="AppTheme.Popup.Dark" parent="AppTheme.Dark">
+
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="colorPopupBackground">@color/colorPopupBackgroundInverse</item>
+        <item name="colorPopupBackgroundFill">@color/colorPopupBackgroundFillInverse</item>
+        <item name="colorPrimaryDark">?attr/colorPopupBackground</item>
+
     </style>
 
 </resources>

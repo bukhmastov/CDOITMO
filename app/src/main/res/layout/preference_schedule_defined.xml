@@ -13,8 +13,9 @@
         android:textSize="16sp"
         android:hint="@string/schedule_lessons_search_view_hint"
         android:textColor="?android:attr/textColorPrimary"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp" />
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:selectAllOnFocus="true" />
 
     <FrameLayout
         android:layout_width="match_parent"

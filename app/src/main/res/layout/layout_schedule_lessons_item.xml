@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content" >
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:gravity="center_vertical"
+        android:padding="10dp"
+        android:minWidth="60dp" >
+
+        <TextView
+            android:text="10:00"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="15sp"
+            android:textAlignment="center"
+            android:gravity="bottom"
+            android:id="@+id/lesson_time_start" />
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="16dp"
+            app:srcCompat="@drawable/ic_access_time" />
+
+        <TextView
+            android:text="10:00"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="15sp"
+            android:textAlignment="center"
+            android:gravity="top"
+            android:id="@+id/lesson_time_end" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_vertical"
+        android:paddingTop="5dp"
+        android:paddingBottom="7dp"
+        android:paddingStart="0dp"
+        android:paddingEnd="3dp">
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/lesson_title"
+                android:text="@string/lorem_ipsum"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_gravity="center_vertical"
+                android:gravity="center_vertical"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="14sp" />
+
+            <ImageView
+                android:id="@+id/lesson_touch_icon"
+                app:srcCompat="@drawable/ic_touch"
+                android:layout_height="20dp"
+                android:layout_width="20dp" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/lesson_desc"
+            android:text="@string/lorem_ipsum"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:textColor="?android:attr/textColorSecondary"  />
+
+        <LinearLayout
+            android:id="@+id/lesson_flags"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/lesson_meta"
+            android:text="@string/lorem_ipsum"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:textColor="?android:attr/textColorSecondary" />
+
+    </LinearLayout>
+
+</LinearLayout>

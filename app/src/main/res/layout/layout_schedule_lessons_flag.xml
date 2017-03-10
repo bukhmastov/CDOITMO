@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:paddingTop="3dp"
+    android:paddingBottom="1dp"
+    android:paddingStart="0dp"
+    android:paddingEnd="2dp" >
+
+    <TextView
+        android:text="@string/lorem_ipsum"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingTop="1dp"
+        android:paddingBottom="1dp"
+        android:paddingStart="5dp"
+        android:paddingEnd="5dp"
+        android:textSize="13sp"
+        android:textColor="?attr/colorScheduleFlagTEXT"
+        android:background="?attr/colorScheduleFlagCommonBG"
+        android:id="@+id/flag_content" />
+
+</FrameLayout>

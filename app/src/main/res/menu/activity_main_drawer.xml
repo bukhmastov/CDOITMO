@@ -30,6 +30,10 @@
 
     <group android:id="@+id/activity_main_drawer_group2" android:checkableBehavior="none">
         <item
+            android:id="@+id/nav_shortcuts"
+            android:icon="@drawable/ic_shortcut"
+            android:title="@string/add_shortcut"/>
+        <item
             android:id="@+id/nav_settings"
             android:icon="@drawable/ic_settings"
             android:title="@string/settings"/>

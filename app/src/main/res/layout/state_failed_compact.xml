@@ -15,15 +15,16 @@
         android:layout_height="60dp" />
 
     <TextView
-        android:text="@string/load_failed"
+        android:id="@+id/state_failed_compact_message"
         android:layout_width="match_parent"
-        android:textAppearance="@style/TextAppearance.AppCompat.Button"
+        android:layout_height="60dp"
         android:layout_gravity="center_horizontal"
-        android:textAlignment="textStart"
         android:gravity="center_vertical"
-        android:paddingStart="10dp"
         android:paddingEnd="0dp"
-        android:layout_height="60dp" />
+        android:paddingStart="10dp"
+        android:text="@string/load_failed"
+        android:textAlignment="textStart"
+        android:textAppearance="@style/TextAppearance.AppCompat.Button" />
 
 
 

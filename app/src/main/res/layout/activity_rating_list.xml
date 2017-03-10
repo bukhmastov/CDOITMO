@@ -6,7 +6,7 @@
     android:id="@+id/activity_rating_list"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.bukhmastov.cdoitmo.RatingListActivity">
+    tools:context="com.bukhmastov.cdoitmo.activities.RatingListActivity">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar_rating_list"

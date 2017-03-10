@@ -20,7 +20,7 @@
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/schedule_lessons">
-        <com.bukhmastov.cdoitmo.SchedulePreference
+        <com.bukhmastov.cdoitmo.preferences.ScheduleLessonsPreference
             android:key="pref_schedule_lessons_default"
             android:title="@string/default_schedule"
             android:defaultValue='{"query":"auto","title":""}' />
@@ -31,6 +31,10 @@
             android:entryValues="@array/pref_schedule_lessons_week_values"
             android:defaultValue="-1" />
         <SwitchPreference
+            android:key="pref_schedule_lessons_scroll_to_day"
+            android:defaultValue="true"
+            android:title="@string/pref_schedule_lessons_scroll_to_day" />
+        <SwitchPreference
             android:key="pref_schedule_lessons_use_cache"
             android:defaultValue="false"
             android:title="@string/cache_schedule" />
@@ -40,6 +44,10 @@
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/schedule_exams">
+        <com.bukhmastov.cdoitmo.preferences.ScheduleExamsPreference
+            android:key="pref_schedule_exams_default"
+            android:title="@string/default_schedule"
+            android:defaultValue='{"query":"auto","title":""}' />
         <SwitchPreference
             android:key="pref_schedule_exams_use_cache"
             android:defaultValue="false"

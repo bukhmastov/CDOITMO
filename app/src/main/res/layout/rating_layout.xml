@@ -69,10 +69,11 @@
             app:srcCompat="@drawable/ic_chevron_right"
             android:layout_alignParentTop="true"
             android:layout_alignParentEnd="true"
-            android:background="@android:color/transparent"
             android:layout_height="60dp"
             android:layout_width="60dp"
-            android:contentDescription="@string/lorem_ipsum" />
+            android:contentDescription="@string/lorem_ipsum"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true" />
 
     </RelativeLayout>
 

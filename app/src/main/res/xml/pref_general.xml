@@ -26,4 +26,8 @@
         android:title="@string/pref_dark_theme"
         android:summary="@string/pref_dark_theme_summary" />
 
+    <Preference
+        android:key="pref_reset_application"
+        android:title="@string/pref_reset_application_summary" />
+
 </PreferenceScreen>
