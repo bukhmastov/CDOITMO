@@ -2,9 +2,7 @@ package com.bukhmastov.cdoitmo.fragments;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
@@ -25,8 +23,8 @@ import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoClientResponseHandler;
 import com.bukhmastov.cdoitmo.objects.Rating;
 import com.bukhmastov.cdoitmo.parse.RatingListParse;
 import com.bukhmastov.cdoitmo.parse.RatingParse;
-import com.bukhmastov.cdoitmo.utils.Cache;
 import com.bukhmastov.cdoitmo.utils.Static;
+import com.bukhmastov.cdoitmo.utils.Storage;
 import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONArray;
@@ -57,8 +55,8 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
         ready.put("RatingList", 0);
         fragmentRequestHandle.put("Rating", null);
         fragmentRequestHandle.put("RatingList", null);
-        rating_list_choose_faculty = Cache.get(getContext(), "rating_list_choose_faculty");
-        rating_list_choose_course = Cache.get(getContext(), "rating_list_choose_course");
+        rating_list_choose_faculty = Storage.file.cache.get(getContext(), "rating#choose#faculty");
+        rating_list_choose_course = Storage.file.cache.get(getContext(), "rating#choose#course");
     }
 
     @Override
@@ -94,8 +92,7 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
     }
 
     private void load(){
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        load(sharedPreferences.getBoolean("pref_use_cache", true) ? Integer.parseInt(sharedPreferences.getString("pref_tab_refresh", "0")) : 0);
+        load(Storage.pref.get(getContext(), "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(getContext(), "pref_tab_refresh", "0")) : 0);
     }
     private void load(int refresh_rate){
         draw(R.layout.state_loading);
@@ -336,7 +333,7 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                     rl_spinner_faculty.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                         public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
                             rating_list_choose_faculty = rl_spinner_faculty_arr_ids.get(position);
-                            Cache.put(getContext(), "rating_list_choose_faculty", rating_list_choose_faculty);
+                            Storage.file.cache.put(getContext(), "rating#choose#faculty", rating_list_choose_faculty);
                         }
                         public void onNothingSelected(AdapterView<?> parent) {}
                     });
@@ -359,7 +356,7 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                     rl_spinner_course.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                         public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
                             rating_list_choose_course = rl_spinner_course_arr_ids.get(position);
-                            Cache.put(getContext(), "rating_list_choose_course", rating_list_choose_course);
+                            Storage.file.cache.put(getContext(), "rating#choose#course", rating_list_choose_course);
                         }
                         public void onNothingSelected(AdapterView<?> parent) {}
                     });

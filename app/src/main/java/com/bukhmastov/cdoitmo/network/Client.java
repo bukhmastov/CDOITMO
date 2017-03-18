@@ -22,7 +22,7 @@ abstract class Client {
         httpclient.removeHeader("User-Agent");
         httpclient.removeHeader("Cookie");
         httpclient.addHeader("User-Agent", USER_AGENT);
-        httpclient.addHeader("Cookie", "JSESSIONID=" + Storage.get(context, "session_cookie") + "; Path=/;");
+        httpclient.addHeader("Cookie", "JSESSIONID=" + Storage.file.perm.get(context, "user#jsessionid") + "; Path=/;");
     }
 
 }

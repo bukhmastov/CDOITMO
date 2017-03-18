@@ -1,8 +1,6 @@
 package com.bukhmastov.cdoitmo.objects;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 import android.support.v4.widget.SwipeRefreshLayout;
 
 import com.bukhmastov.cdoitmo.fragments.ScheduleExamsFragment;
@@ -11,7 +9,6 @@ import com.bukhmastov.cdoitmo.network.interfaces.IfmoClientResponseHandler;
 import com.bukhmastov.cdoitmo.parse.ScheduleExamsGroupParse;
 import com.bukhmastov.cdoitmo.parse.ScheduleExamsTeacherParse;
 import com.bukhmastov.cdoitmo.parse.ScheduleExamsTeacherPickerParse;
-import com.bukhmastov.cdoitmo.utils.Cache;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 import com.loopj.android.http.RequestHandle;
@@ -52,11 +49,10 @@ public class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
     }
 
     public void search(String query){
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        search(query, sharedPreferences.getBoolean("pref_use_cache", true) ? Integer.parseInt(sharedPreferences.getString("pref_schedule_refresh", "168")) : 0);
+        search(query, Storage.pref.get(context, "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(context, "pref_schedule_refresh", "168")) : 0);
     }
     public void search(String query, int refresh_rate){
-        search(query, refresh_rate, PreferenceManager.getDefaultSharedPreferences(context).getBoolean("pref_schedule_exams_use_cache", false));
+        search(query, refresh_rate, Storage.pref.get(context, "pref_schedule_exams_use_cache", false));
     }
     public void search(String query, int refresh_rate, boolean toCache){
         query = query.trim();
@@ -86,7 +82,7 @@ public class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
                             public void finish(JSONObject json) {
                                 try {
                                     if (json == null) throw new NullPointerException("json cannot be null");
-                                    if (toCache || Objects.equals(Storage.get(context, "group").toUpperCase(), group)){
+                                    if (toCache || Objects.equals(Storage.file.perm.get(context, "user#group").toUpperCase(), group)){
                                         if(json.getJSONArray("schedule").length() > 0) putCache(cache_token, json.toString(), toCache);
                                     }
                                     handler.onSuccess(json);
@@ -292,82 +288,32 @@ public class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
     }
     public String getDefault(){
         String scope;
-        String pref = PreferenceManager.getDefaultSharedPreferences(context).getString("pref_schedule_exams_default", "");
+        String pref = Storage.pref.get(context, "pref_schedule_exams_default", "");
         try {
             if (Objects.equals(pref, "")) throw new Exception("pref_schedule_exams_default empty");
             JSONObject jsonObject = new JSONObject(pref);
             scope = jsonObject.getString("query");
             if (Objects.equals(scope, "auto")) throw new Exception("pref_schedule_exams_default query=auto");
         } catch (Exception e) {
-            scope = Storage.get(context, "group");
+            scope = Storage.file.perm.get(context, "user#group");
         }
         return scope;
     }
 
     private void putCache(String token, String value, boolean toCache){
-        try {
-            String def = getDefault();
-            if (toCache || hasCache(token) || Objects.equals(def, token) || Objects.equals("group_" + def, token) || Objects.equals("teacher_picker_" + def, token)) {
-                String jsonStr = Cache.get(context, "schedule_exams");
-                JSONObject json;
-                if (Objects.equals(jsonStr, "")) {
-                    json = new JSONObject();
-                } else {
-                    json = new JSONObject(jsonStr);
-                }
-                if (json.has(token)) json.remove(token);
-                json.put(token, value);
-                Cache.put(context, "schedule_exams", json.toString());
-            }
-        } catch (JSONException e) {
-            Static.error(e);
+        String def = getDefault();
+        if (toCache || hasCache(token) || Objects.equals(def, token) || Objects.equals("group_" + def, token) || Objects.equals("teacher_picker_" + def, token)) {
+            Storage.file.cache.put(context, "schedule_exams#lessons#" + token, value);
         }
     }
     private boolean hasCache(String token){
-        try {
-            String jsonStr = Cache.get(context, "schedule_exams");
-            if (Objects.equals(jsonStr, "")) {
-                return false;
-            } else {
-                return (new JSONObject(jsonStr)).has(token);
-            }
-        } catch (JSONException e) {
-            Static.error(e);
-            return false;
-        }
+        return Storage.file.cache.exists(context, "schedule_exams#lessons#" + token);
     }
     public String getCache(String token){
-        try {
-            String jsonStr = Cache.get(context, "schedule_exams");
-            if (Objects.equals(jsonStr, "")) {
-                return "";
-            } else {
-                JSONObject json = new JSONObject(jsonStr);
-                if (json.has(token)) {
-                    return json.getString(token);
-                } else {
-                    return "";
-                }
-            }
-        } catch (JSONException e) {
-            Static.error(e);
-            return "";
-        }
+        return Storage.file.cache.get(context, "schedule_exams#lessons#" + token);
     }
     private void removeCache(String token){
-        try {
-            String jsonStr = Cache.get(context, "schedule_exams");
-            JSONObject json;
-            if (Objects.equals(jsonStr, "")) {
-                json = new JSONObject();
-            } else {
-                json = new JSONObject(jsonStr);
-            }
-            if (json.has(token)) json.remove(token);
-            Cache.put(context, "schedule_exams", json.toString());
-        } catch (JSONException e) {
-            Static.error(e);
-        }
+        Storage.file.cache.delete(context, "schedule_exams#lessons#" + token);
     }
     public Boolean toggleCache(){
         try {

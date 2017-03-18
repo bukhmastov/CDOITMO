@@ -2,7 +2,6 @@ package com.bukhmastov.cdoitmo.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -19,6 +18,7 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.builders.ScheduleLessonsBuilder;
 import com.bukhmastov.cdoitmo.utils.Static;
+import com.bukhmastov.cdoitmo.utils.Storage;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -144,7 +144,7 @@ public class ScheduleLessonsTabFragment extends Fragment {
                                     if (state == ScheduleLessonsBuilder.STATE_DONE) {
                                         schedule_lessons_content.addView(layout);
                                         displayed = true;
-                                        if (PreferenceManager.getDefaultSharedPreferences(getContext()).getBoolean("pref_schedule_lessons_scroll_to_day", true)) {
+                                        if (Storage.pref.get(getContext(), "pref_schedule_lessons_scroll_to_day", true)) {
                                             final ScrollView scroll_schedule_lessons = (ScrollView) fragment_schedule_lessons.findViewById(R.id.scroll_schedule_lessons);
                                             scroll_schedule_lessons.post(new Runnable() {
                                                 @Override

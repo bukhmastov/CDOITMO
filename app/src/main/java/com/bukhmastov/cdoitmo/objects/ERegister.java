@@ -7,8 +7,8 @@ import com.bukhmastov.cdoitmo.objects.entities.ParsedERegister;
 import com.bukhmastov.cdoitmo.objects.entities.Point;
 import com.bukhmastov.cdoitmo.objects.entities.Subject;
 import com.bukhmastov.cdoitmo.objects.entities.Term;
-import com.bukhmastov.cdoitmo.utils.Cache;
 import com.bukhmastov.cdoitmo.utils.Static;
+import com.bukhmastov.cdoitmo.utils.Storage;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -27,8 +27,8 @@ public class ERegister {
 
     public ERegister(Context context){
         this.context = context;
-        String eRegister = Cache.get(context, "ERegister");
-        if(!Objects.equals(eRegister, "")){
+        String eRegister = Storage.file.cache.get(context, "eregister#core");
+        if (!eRegister.isEmpty()) {
             try {
                 parse(new JSONObject(eRegister));
             } catch (Exception e) {
@@ -42,7 +42,7 @@ public class ERegister {
             json.put("timestamp", Calendar.getInstance().getTimeInMillis());
             json.put("eregister", data);
             parse(json);
-            Cache.put(context, "ERegister", json.toString());
+            Storage.file.cache.put(context, "eregister#core", json.toString());
         } catch (Exception e) {
             Static.error(e);
         }

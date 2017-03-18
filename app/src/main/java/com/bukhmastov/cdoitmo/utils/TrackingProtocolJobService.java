@@ -6,10 +6,8 @@ import android.app.PendingIntent;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.bukhmastov.cdoitmo.R;
@@ -87,11 +85,10 @@ public class TrackingProtocolJobService extends JobService {
     private void analyse(JSONArray protocol){
         try {
             if (protocol == null) throw new NullPointerException("json can't be null");
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
             JSONArray history = new JSONArray();
             boolean first_init = false;
             try {
-                String historyStr = sharedPreferences.getString("ProtocolTrackerHISTORY", "");
+                String historyStr = Storage.file.perm.get(this, "protocol_tracker#protocol");
                 if (Objects.equals(historyStr, "")) {
                     first_init = true;
                 } else {
@@ -100,7 +97,7 @@ public class TrackingProtocolJobService extends JobService {
             } catch(Exception e) {
                 e.printStackTrace();
             }
-            sharedPreferences.edit().putString("ProtocolTrackerHISTORY", protocol.toString()).apply();
+            Storage.file.perm.put(this, "protocol_tracker#protocol", protocol.toString());
             if (first_init) {
                 finish();
                 return;
@@ -150,7 +147,6 @@ public class TrackingProtocolJobService extends JobService {
     }
     private void addNotification(String title, String text, long timestamp, boolean isSummary){
         if(c > Integer.MAX_VALUE - 10) c = 0;
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         Intent intent = new Intent(this, SplashActivity.class);
         intent.addFlags(Static.intentFlagRestart);
         intent.putExtra("action", "protocol_changes");
@@ -163,11 +159,11 @@ public class TrackingProtocolJobService extends JobService {
         b.setContentIntent(pIntent);
         b.setAutoCancel(true);
         if(isSummary) {
-            String ringtonePath = sharedPreferences.getString("pref_notify_sound", "");
+            String ringtonePath = Storage.pref.get(this, "pref_notify_sound");
             if (!Objects.equals(ringtonePath, "")) {
                 b.setSound(Uri.parse(ringtonePath));
             }
-            if (sharedPreferences.getBoolean("pref_notify_vibrate", false)) {
+            if (Storage.pref.get(this, "pref_notify_vibrate", false)) {
                 b.setDefaults(Notification.DEFAULT_VIBRATE);
             }
         }

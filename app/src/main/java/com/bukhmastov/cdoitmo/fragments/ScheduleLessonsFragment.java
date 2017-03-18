@@ -2,7 +2,6 @@ package com.bukhmastov.cdoitmo.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
@@ -24,6 +23,7 @@ import com.bukhmastov.cdoitmo.adapters.TeacherPickerListView;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
 import com.bukhmastov.cdoitmo.utils.Static;
+import com.bukhmastov.cdoitmo.utils.Storage;
 import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONArray;
@@ -226,7 +226,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
                         schedule_tabs.setupWithViewPager(schedule_view);
                     }
                     TabLayout.Tab tab;
-                    int pref = Integer.parseInt(PreferenceManager.getDefaultSharedPreferences(getContext()).getString("pref_schedule_lessons_week", "-1"));
+                    int pref = Integer.parseInt(Storage.pref.get(getContext(), "pref_schedule_lessons_week", "-1"));
                     if (pref == -1) {
                         tab = schedule_tabs.getTabAt(Static.week >= 0 ? (Static.week % 2) + 1 : 0);
                     } else {

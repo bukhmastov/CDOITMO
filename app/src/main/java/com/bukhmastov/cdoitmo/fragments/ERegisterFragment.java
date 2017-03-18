@@ -3,9 +3,7 @@ package com.bukhmastov.cdoitmo.fragments;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
@@ -30,6 +28,7 @@ import com.bukhmastov.cdoitmo.objects.entities.ParsedERegister;
 import com.bukhmastov.cdoitmo.objects.entities.Subject;
 import com.bukhmastov.cdoitmo.objects.entities.Term;
 import com.bukhmastov.cdoitmo.utils.Static;
+import com.bukhmastov.cdoitmo.utils.Storage;
 import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONArray;
@@ -85,8 +84,7 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
     }
 
     private void load(){
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        load(sharedPreferences.getBoolean("pref_use_cache", true) ? Integer.parseInt(sharedPreferences.getString("pref_tab_refresh", "0")) : 0);
+        load(Storage.pref.get(getContext(), "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(getContext(), "pref_tab_refresh", "0")) : 0);
     }
     private void load(int refresh_rate){
         if (!eRegister.is() || refresh_rate == 0) {
@@ -374,8 +372,7 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                 if (Objects.equals(currentGroup, "")) {
                     if (year == group.year[month > Calendar.AUGUST ? 0 : 1]) {
                         currentGroup = group.name;
-                        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-                        if (Integer.parseInt(sharedPreferences.getString("pref_e_journal_term", "0")) == 1){
+                        if (Integer.parseInt(Storage.pref.get(getContext(), "pref_e_journal_term", "0")) == 1){
                             currentTerm = -1;
                         } else {
                             currentTerm = group.terms.get(month > Calendar.AUGUST || month == Calendar.JANUARY ? 0 : 1).number;

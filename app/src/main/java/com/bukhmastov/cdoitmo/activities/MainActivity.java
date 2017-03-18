@@ -1,9 +1,7 @@
 package com.bukhmastov.cdoitmo.activities;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -42,14 +40,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private static final String TAG = "MainActivity";
     private static final String STATE_SELECTED_SELECTION = "selectedSection";
     public static int selectedSection = R.id.nav_e_register;
-    public static SharedPreferences sharedPreferences;
     private NavigationView navigationView;
     public static Menu menu;
     public static boolean loaded = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         if (Static.darkTheme) setTheme(R.style.AppTheme_Dark);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -62,13 +58,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        Static.OFFLINE_MODE = !Static.isOnline(this) || (Static.firstLaunch && sharedPreferences.getBoolean("pref_initial_offline", false));
+        Static.OFFLINE_MODE = !Static.isOnline(this) || (Static.firstLaunch && Storage.pref.get(this, "pref_initial_offline", false));
         Static.init(this);
         Static.firstLaunch = false;
 
         String action = getIntent().getStringExtra("action");
         if (savedInstanceState == null || action != null) {
-            switch (action == null ? sharedPreferences.getString("pref_default_fragment", "e_journal") : action) {
+            switch (action == null ? Storage.pref.get(this, "pref_default_fragment", "e_journal") : action) {
                 case "e_journal": selectedSection = R.id.nav_e_register; break;
                 case "protocol_changes": selectedSection = R.id.nav_protocol_changes; break;
                 case "rating": selectedSection = R.id.nav_rating; break;
@@ -230,8 +226,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
     private void displayUserData(){
-        String name = Storage.get(this, "name");
-        String group = Storage.get(this, "group");
+        String name = Storage.file.perm.get(this, "user#name");
+        String group = Storage.file.perm.get(this, "user#group");
         TextView user_name = (TextView) findViewById(R.id.user_name);
         TextView user_group = (TextView) findViewById(R.id.user_group);
         if (user_name != null) {

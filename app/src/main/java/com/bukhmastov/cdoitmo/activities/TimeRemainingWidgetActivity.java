@@ -2,7 +2,6 @@ package com.bukhmastov.cdoitmo.activities;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,6 +13,7 @@ import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
 import com.bukhmastov.cdoitmo.objects.TimeRemainingWidget;
 import com.bukhmastov.cdoitmo.utils.Static;
+import com.bukhmastov.cdoitmo.utils.Storage;
 import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONObject;
@@ -30,7 +30,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Static.darkTheme = PreferenceManager.getDefaultSharedPreferences(this).getBoolean("pref_dark_theme", false);
+        Static.darkTheme = Storage.pref.get(this, "pref_dark_theme", false);
         if (Static.darkTheme) setTheme(R.style.AppTheme_Popup_Dark);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_time_remaining_widget);

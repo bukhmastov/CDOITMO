@@ -4,9 +4,7 @@ import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
@@ -46,7 +44,6 @@ import java.util.Objects;
 public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity implements ScheduleLessons.response {
 
     private static final String TAG = "ScheduleLessonsWidgetC";
-    private static final String PREF_PREFIX_KEY = "widget_";
     public int mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
     public static RequestHandle widgetRequestHandle = null;
     public static ScheduleLessons scheduleLessons = null;
@@ -64,7 +61,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
         setResult(RESULT_CANCELED);
-        boolean isDarkTheme = PreferenceManager.getDefaultSharedPreferences(this).getBoolean("pref_dark_theme", false);
+        boolean isDarkTheme = Storage.pref.get(this, "pref_dark_theme", false);
         if (isDarkTheme) setTheme(R.style.AppTheme_Dark);
         setContentView(R.layout.schedule_lessons_widget_configure);
         Intent intent = getIntent();
@@ -94,7 +91,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
                     return event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER && setQuery();
                 }
             });
-            String group = Storage.get(getBaseContext(), "group");
+            String group = Storage.file.perm.get(this, "user#group");
             if (!Objects.equals(group, "")) {
                 slw_input.setText(group);
                 setQuery();
@@ -369,18 +366,13 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
     }
 
     public static void savePref(Context context, int appWidgetId, String type, String text) {
-        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
-        editor.putString(PREF_PREFIX_KEY + "_" + appWidgetId + "_" + type, text);
-        editor.apply();
+        Storage.file.general.put(context, "widget_schedule_lessons#" + appWidgetId + "#" + type, text);
     }
     public static String getPref(Context context, int appWidgetId, String type) {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        return sharedPreferences.getString(PREF_PREFIX_KEY + "_" + appWidgetId + "_" + type, null);
+        return Storage.file.general.get(context, "widget_schedule_lessons#" + appWidgetId + "#" + type);
     }
     public static void deletePref(Context context, int appWidgetId, String type) {
-        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
-        editor.remove(PREF_PREFIX_KEY + "_" + appWidgetId + "_" + type);
-        editor.apply();
+        Storage.file.general.delete(context, "widget_schedule_lessons#" + appWidgetId + "#" + type);
     }
 
 }

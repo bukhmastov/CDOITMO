@@ -1,20 +1,14 @@
 package com.bukhmastov.cdoitmo.objects;
 
 import android.content.Context;
-import android.preference.PreferenceManager;
 
-import com.bukhmastov.cdoitmo.utils.Cache;
+import com.bukhmastov.cdoitmo.converters.ProtocolConverter;
 import com.bukhmastov.cdoitmo.utils.Static;
+import com.bukhmastov.cdoitmo.utils.Storage;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
-import java.util.Objects;
 
 public class Protocol {
 
@@ -24,8 +18,8 @@ public class Protocol {
 
     public Protocol(Context context){
         this.context = context;
-        String protocol = Cache.get(context, "Protocol");
-        if(!Objects.equals(protocol, "")){
+        String protocol = Storage.file.cache.get(context, "protocol#core");
+        if (!protocol.isEmpty()) {
             try {
                 this.protocol = new JSONObject(protocol);
             } catch (Exception e) {
@@ -35,14 +29,20 @@ public class Protocol {
     }
     public void put(JSONArray data, int number_of_weeks){
         try {
-            JSONObject json = new JSONObject();
-            json.put("timestamp", Calendar.getInstance().getTimeInMillis());
-            json.put("date", new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis())));
-            json.put("number_of_weeks", number_of_weeks);
-            json.put("protocol", data);
-            protocol = json;
-            Cache.put(context, "Protocol", protocol.toString());
-            PreferenceManager.getDefaultSharedPreferences(context).edit().putString("ProtocolTrackerHISTORY", data.toString()).apply();
+            JSONArray array = new JSONArray();
+            array.put(number_of_weeks);
+            new ProtocolConverter(new ProtocolConverter.response() {
+                @Override
+                public void finish(JSONObject json) {
+                    try {
+                        protocol = json;
+                        Storage.file.cache.put(context, "protocol#core", protocol.toString());
+                        Storage.file.perm.put(context, "protocol_tracker#protocol", protocol.getJSONArray("protocol").toString());
+                    } catch (JSONException e) {
+                        Static.error(e);
+                    }
+                }
+            }).execute(data, array);
         } catch (Exception e) {
             Static.error(e);
         }

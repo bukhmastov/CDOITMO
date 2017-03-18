@@ -3,9 +3,7 @@ package com.bukhmastov.cdoitmo.fragments;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -25,7 +23,6 @@ import com.bukhmastov.cdoitmo.network.Room101Client;
 import com.bukhmastov.cdoitmo.network.interfaces.Room101ClientResponseHandler;
 import com.bukhmastov.cdoitmo.objects.Room101AddRequest;
 import com.bukhmastov.cdoitmo.parse.Room101ViewRequestParse;
-import com.bukhmastov.cdoitmo.utils.Cache;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 import com.loopj.android.http.RequestHandle;
@@ -115,8 +112,8 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
             default: params.put("getFunc", "delRequest"); break;
         }
         params.put("reid", reid);
-        params.put("login", Storage.get(getContext(), "login"));
-        params.put("password", Storage.get(getContext(), "password"));
+        params.put("login", Storage.file.perm.get(getContext(), "user#login"));
+        params.put("password", Storage.file.perm.get(getContext(), "user#password"));
         Room101Client.post(getContext(), "delRequest.php", params, new Room101ClientResponseHandler() {
             @Override
             public void onSuccess(int statusCode, String response) {
@@ -279,11 +276,10 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
     }
 
     private void load(){
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        load(sharedPreferences.getBoolean("pref_use_cache", true) ? Integer.parseInt(sharedPreferences.getString("pref_tab_refresh", "0")) : 0);
+        load(Storage.pref.get(getContext(), "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(getContext(), "pref_tab_refresh", "0")) : 0);
     }
     private void load(int refresh_rate){
-        String cache = Cache.get(getContext(), "room101_review");
+        String cache = Storage.file.cache.get(getContext(), "room101#core");
         if (Objects.equals(cache, "") || refresh_rate == 0) {
             load(true);
         } else if (refresh_rate >= 0){
@@ -304,7 +300,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
     private void load(boolean force){
         if(!force || Static.OFFLINE_MODE){
             try {
-                final String cache = Cache.get(getContext(), "room101_review");
+                final String cache = Storage.file.cache.get(getContext(), "room101#core");
                 if (!Objects.equals(cache, "")) {
                     viewRequest = new JSONObject(cache).getJSONObject("data");
                     display();
@@ -329,7 +325,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                                         JSONObject jsonObject = new JSONObject();
                                         jsonObject.put("timestamp", Calendar.getInstance().getTimeInMillis());
                                         jsonObject.put("data", viewRequest);
-                                        Cache.put(getContext(), "room101_review", jsonObject.toString());
+                                        Storage.file.cache.put(getContext(), "room101#core", jsonObject.toString());
                                     } catch (JSONException e) {
                                         Static.error(e);
                                     }
@@ -362,7 +358,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                     switch (state) {
                         case Room101Client.FAILED_OFFLINE:
                             try {
-                                final String cache = Cache.get(getContext(), "room101_review");
+                                final String cache = Storage.file.cache.get(getContext(), "room101#core");
                                 if (!Objects.equals(cache, "")) {
                                     viewRequest = new JSONObject(cache);
                                     display();
@@ -533,8 +529,8 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
         RequestParams params = new RequestParams();
         params.put("getFunc", "isLoginPassword");
         params.put("view", scope);
-        params.put("login", Storage.get(context, "login"));
-        params.put("password", Storage.get(context, "password"));
+        params.put("login", Storage.file.perm.get(context, "user#login"));
+        params.put("password", Storage.file.perm.get(context, "user#password"));
         Room101Client.post(context, "index.php", params, new Room101ClientResponseHandler() {
             @Override
             public void onSuccess(int statusCode, String response) {

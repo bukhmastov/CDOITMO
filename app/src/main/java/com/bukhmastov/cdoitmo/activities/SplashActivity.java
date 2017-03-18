@@ -2,23 +2,20 @@ package com.bukhmastov.cdoitmo.activities;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.utils.Cache;
 import com.bukhmastov.cdoitmo.utils.Static;
-
-import java.util.Map;
-import java.util.regex.Pattern;
+import com.bukhmastov.cdoitmo.utils.Storage;
 
 public class SplashActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Static.darkTheme = PreferenceManager.getDefaultSharedPreferences(this).getBoolean("pref_dark_theme", false);
+        Static.darkTheme = Storage.pref.get(this, "pref_dark_theme", false);
         super.onCreate(savedInstanceState);
     }
 
@@ -35,31 +32,26 @@ public class SplashActivity extends AppCompatActivity {
 
         Static.init(this);
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        if (sharedPreferences.getBoolean("pref_auto_logout", false)) Static.logout(this);
+        if (Storage.pref.get(this, "pref_auto_logout", false)) Static.logout(this);
 
         loaded();
     }
 
     private static class Wipe {
-        private static final int number = 2;
         static void check(Context context) {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-            if (sharedPreferences.getBoolean("wipe_" + number, true)) {
-                sharedPreferences.edit().remove("wipe_" + (number - 1)).putBoolean("wipe_" + number, false).apply();
-                apply(context);
+            try {
+                int versionCode = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode;
+                if (Storage.pref.get(context, "last_version", 0) < versionCode) {
+                    apply(context);
+                    Storage.pref.put(context, "last_version", versionCode);
+                }
+            } catch (PackageManager.NameNotFoundException e) {
+                Static.error(e);
             }
         }
         private static void apply(Context context) {
-            Cache.clear(context);
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-            Map<String, ?> list = sharedPreferences.getAll();
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.remove("ProtocolTrackerHISTORY");
-            for(Map.Entry<String, ?> entry : list.entrySet()) {
-                if(Pattern.compile("^widget_\\d+_cache.*").matcher(entry.getKey()).find()) editor.remove(entry.getKey());
-            }
-            editor.apply();
+            Static.logout(context);
+            Storage.pref.clearExceptPref(context);
         }
     }
 

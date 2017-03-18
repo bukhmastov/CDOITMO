@@ -108,7 +108,7 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
                         public void finish(JSONObject json) {
                             display(json);
                         }
-                    }).execute(response, Storage.get(getBaseContext(), "name"));
+                    }).execute(response, Storage.file.perm.get(getBaseContext(), "user#name"));
                 } else {
                     loadFailed();
                 }

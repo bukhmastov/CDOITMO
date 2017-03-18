@@ -2,9 +2,7 @@ package com.bukhmastov.cdoitmo.fragments;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
@@ -22,6 +20,7 @@ import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoRestClientResponseHandler;
 import com.bukhmastov.cdoitmo.objects.Protocol;
 import com.bukhmastov.cdoitmo.utils.Static;
+import com.bukhmastov.cdoitmo.utils.Storage;
 import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONArray;
@@ -38,7 +37,7 @@ import java.util.regex.Pattern;
 public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "ProtocolFragment";
-    public static Protocol protocol = null;
+    private Protocol protocol = null;
     private static final int maxAttempts = 3;
     private int number_of_weeks = 1;
     private boolean spinner_weeks_blocker = true;
@@ -48,7 +47,7 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        number_of_weeks = Integer.parseInt(PreferenceManager.getDefaultSharedPreferences(getActivity()).getString("pref_protocol_changes_weeks", "1"));
+        number_of_weeks = Integer.parseInt(Storage.pref.get(getContext(), "pref_protocol_changes_weeks", "1"));
         protocol = new Protocol(getActivity());
     }
 
@@ -81,16 +80,15 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
     }
 
     private void load(){
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        load(sharedPreferences.getBoolean("pref_use_cache", true) ? Integer.parseInt(sharedPreferences.getString("pref_tab_refresh", "0")) : 0);
+        load(Storage.pref.get(getContext(), "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(getContext(), "pref_tab_refresh", "0")) : 0);
     }
     private void load(int refresh_rate){
         if (!protocol.is(number_of_weeks) || refresh_rate == 0) {
             forceLoad();
         } else if (refresh_rate >= 0){
-            JSONObject protocol = ProtocolFragment.protocol.get();
+            JSONObject p = protocol.get();
             try {
-                if (protocol.getLong("timestamp") + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+                if (p.getLong("timestamp") + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
                     forceLoad();
                 } else {
                     display();

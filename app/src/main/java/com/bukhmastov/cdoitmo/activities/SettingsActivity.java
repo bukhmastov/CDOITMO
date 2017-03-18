@@ -31,15 +31,14 @@ import android.widget.ListView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.preferences.SchedulePreference;
-import com.bukhmastov.cdoitmo.utils.Cache;
 import com.bukhmastov.cdoitmo.utils.ProtocolTracker;
 import com.bukhmastov.cdoitmo.utils.Static;
+import com.bukhmastov.cdoitmo.utils.Storage;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.List;
-import java.util.Map;
 
 public class SettingsActivity extends AppCompatPreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
@@ -167,21 +166,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                                 .setPositiveButton("Продолжить", new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
-                                        Static.logout(getActivity());
-                                        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-                                        Map<String, ?> list = sharedPreferences.getAll();
-                                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                                        for (Map.Entry<String, ?> entry : list.entrySet()) editor.remove(entry.getKey());
-                                        editor.apply();
-                                        Static.firstLaunch = true;
-                                        Static.OFFLINE_MODE = false;
-                                        MainActivity.loaded = false;
-                                        Static.reLaunch(getActivity());
+                                        Static.hardReset(getActivity());
                                     }
                                 })
                                 .setNegativeButton(android.R.string.cancel, null)
                         ;
-
                         AlertDialog alert = builder.create();
                         alert.show();
                         return false;
@@ -204,7 +193,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                 pref_clear_cache.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
-                        Cache.clear(getActivity());
+                        Storage.file.cache.clear(getActivity());
                         View content_container = getActivity().findViewById(android.R.id.content);
                         if (content_container != null) {
                             Snackbar snackbar = Snackbar.make(content_container, R.string.cache_cleared, Snackbar.LENGTH_SHORT);
@@ -245,7 +234,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                 pref_schedule_lessons_clear_cache.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
-                        Cache.delete(getActivity(), "schedule_lessons");
+                        Storage.file.cache.delete(getActivity(), "schedule_lessons");
                         View content_container = getActivity().findViewById(android.R.id.content);
                         if (content_container != null) {
                             Snackbar snackbar = Snackbar.make(content_container, R.string.cache_cleared, Snackbar.LENGTH_SHORT);
@@ -261,7 +250,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                 pref_schedule_exams_clear_cache.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
-                        Cache.delete(getActivity(), "schedule_exams");
+                        Storage.file.cache.delete(getActivity(), "schedule_exams");
                         View content_container = getActivity().findViewById(android.R.id.content);
                         if (content_container != null) {
                             Snackbar snackbar = Snackbar.make(content_container, R.string.cache_cleared, Snackbar.LENGTH_SHORT);

@@ -54,14 +54,14 @@ public class LoginActivity extends AppCompatActivity {
                 show();
                 break;
             case SIGNAL_CREDENTIALS_REQUIRED:
-                Storage.delete(getBaseContext(), "session_cookie");
-                Storage.delete(getBaseContext(), "password");
+                Storage.file.perm.delete(this, "user#jsessionid");
+                Storage.file.perm.delete(this, "user#password");
                 snackBar(getString(R.string.required_login_password));
                 show();
                 break;
             case SIGNAL_CREDENTIALS_FAILED:
-                Storage.delete(getBaseContext(), "session_cookie");
-                Storage.delete(getBaseContext(), "password");
+                Storage.file.perm.delete(this, "user#jsessionid");
+                Storage.file.perm.delete(this, "user#password");
                 snackBar(getString(R.string.invalid_login_password));
                 show();
                 break;
@@ -75,9 +75,10 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void show(){
-        String login = Storage.get(getBaseContext(), "login");
-        String password = Storage.get(getBaseContext(), "password");
+        String login = Storage.file.perm.get(this, "user#login");
+        String password = Storage.file.perm.get(this, "user#password");
         if (Objects.equals(login, "") || Objects.equals(password, "")) {
+            Storage.pref.delete(this, "current_login");
             draw(R.layout.layout_login_form);
             final EditText input_login = (EditText) findViewById(R.id.input_login);
             final EditText input_password = (EditText) findViewById(R.id.input_password);
@@ -91,8 +92,9 @@ public class LoginActivity extends AppCompatActivity {
                         if (input_login != null) login = input_login.getText().toString();
                         if (input_password != null) password = input_password.getText().toString();
                         if (!(Objects.equals(login, "") || Objects.equals(password, ""))) {
-                            Storage.put(getBaseContext(), "login", login);
-                            Storage.put(getBaseContext(), "password", password);
+                            Storage.pref.put(getBaseContext(), "current_login", login);
+                            Storage.file.perm.put(getBaseContext(), "user#login", login);
+                            Storage.file.perm.put(getBaseContext(), "user#password", password);
                             check();
                         } else {
                             snackBar(getString(R.string.fill_fields));
@@ -136,8 +138,9 @@ public class LoginActivity extends AppCompatActivity {
                     case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED: snackBar(getString(R.string.required_login_password)); break;
                     case DeIfmoClient.FAILED_AUTH_CREDENTIALS_FAILED: snackBar(getString(R.string.invalid_login_password)); break;
                 }
-                Storage.delete(getBaseContext(), "session_cookie");
-                Storage.delete(getBaseContext(), "password");
+                Storage.file.perm.delete(getBaseContext(), "user#jsessionid");
+                Storage.file.perm.delete(getBaseContext(), "user#password");
+                Storage.pref.delete(getBaseContext(), "current_login");
                 show();
             }
             @Override
@@ -148,8 +151,8 @@ public class LoginActivity extends AppCompatActivity {
     }
     private void done(){
         Static.authorized = true;
-        Static.updateWeek(getBaseContext());
-        Static.protocolTracker = new ProtocolTracker(getBaseContext());
+        Static.updateWeek(this);
+        Static.protocolTracker = new ProtocolTracker(this);
         finish();
     }
     private void logOut(){

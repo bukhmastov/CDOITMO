@@ -192,7 +192,7 @@ public class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteVi
 
     private void updateWeek(Context context){
         try {
-            String weekStr = Storage.get(context, "week");
+            String weekStr = Storage.file.perm.get(context, "user#week");
             if(!Objects.equals(weekStr, "")){
                 JSONObject jsonObject = new JSONObject(weekStr);
                 int week = jsonObject.getInt("week");
@@ -207,7 +207,7 @@ public class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteVi
                 this.week = -1;
             }
         } catch (JSONException e) {
-            Storage.delete(context, "week");
+            Storage.file.perm.delete(context, "user#week");
             this.week = -1;
         }
     }

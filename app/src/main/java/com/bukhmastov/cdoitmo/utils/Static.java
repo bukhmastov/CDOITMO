@@ -13,12 +13,16 @@ import android.util.TypedValue;
 import android.view.View;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.activities.MainActivity;
 import com.bukhmastov.cdoitmo.activities.SplashActivity;
 import com.bukhmastov.cdoitmo.objects.entities.ScheduleMenuItem;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -81,6 +85,13 @@ public class Static {
         intent.addFlags(Static.intentFlagRestart);
         context.startActivity(intent);
     }
+    public static void hardReset(Context context){
+        Static.logout(context);
+        Static.firstLaunch = true;
+        Static.OFFLINE_MODE = false;
+        MainActivity.loaded = false;
+        Static.reLaunch(context);
+    }
     public static int resolveColor(Context context, int reference) throws Exception {
         TypedValue typedValue = new TypedValue();
         context.getTheme().resolveAttribute(reference, typedValue, true);
@@ -89,7 +100,7 @@ public class Static {
     }
     public static void updateWeek(Context context){
         try {
-            String weekStr = Storage.get(context, "week");
+            String weekStr = Storage.file.perm.get(context, "user#week");
             if(!Objects.equals(weekStr, "")){
                 JSONObject jsonObject = new JSONObject(weekStr);
                 int week = jsonObject.getInt("week");
@@ -101,14 +112,14 @@ public class Static {
             }
         } catch (JSONException e) {
             Static.error(e);
-            Storage.delete(context, "week");
+            Storage.file.perm.delete(context, "user#week");
         }
     }
     public static void logout(Context context){
-        Static.authorized = false;
-        Storage.clear(context);
-        Cache.clear(context);
         new ProtocolTracker(context).stop();
+        Storage.file.all.clear(context);
+        Storage.pref.delete(context, "current_login");
+        Static.authorized = false;
     }
     public static void lockOrientation(Activity activity, boolean lock){
         if (activity != null) {
@@ -162,6 +173,36 @@ public class Static {
             case "12": month = context.getString(R.string.december_genitive); break;
         }
         return month;
+    }
+    public static String crypt(String value) {
+        return crypt(value, "SHA-256");
+    }
+    public static String crypt(String value, String algorithm){
+        String hash = null;
+        try {
+            MessageDigest md = MessageDigest.getInstance(algorithm);
+            byte[] bytes = md.digest(value.getBytes("UTF-8"));
+            StringBuilder sb = new StringBuilder();
+            for (byte aByte : bytes) {
+                sb.append(Integer.toString((aByte & 0xff) + 0x100, 16).substring(1));
+            }
+            hash = sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+            switch (algorithm) {
+                case "SHA-256":
+                    hash = crypt(value, "SHA-1");
+                    break;
+                case "SHA-1":
+                    hash = crypt(value, "MD5");
+                    break;
+                case "MD5":
+                    Static.error(e);
+                    break;
+            }
+        } catch (UnsupportedEncodingException e) {
+            Static.error(e);
+        }
+        return hash;
     }
 
 }

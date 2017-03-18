@@ -4,16 +4,13 @@ import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Build;
-import android.preference.PreferenceManager;
 import android.util.Log;
 
 public class ProtocolTracker {
 
     private static final String TAG = "ProtocolTracker";
     private Context context;
-    private SharedPreferences sharedPreferences;
     private boolean enabled = true;
     private boolean running = false;
     private int frequency = 30;
@@ -21,14 +18,13 @@ public class ProtocolTracker {
 
     public ProtocolTracker(Context context){
         this.context = context;
-        this.sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         update();
     }
 
     public ProtocolTracker update(){
-        enabled = sharedPreferences.getBoolean("pref_use_notifications", true);
-        frequency = Integer.parseInt(sharedPreferences.getString("pref_notify_frequency", "30"));
-        jobID = sharedPreferences.getInt("TrackingProtocolJobServiceID", -1);
+        enabled = Storage.pref.get(context, "pref_use_notifications", true);
+        frequency = Integer.parseInt(Storage.pref.get(context, "pref_notify_frequency", "30"));
+        jobID = Integer.parseInt(Storage.file.perm.get(context, "protocol_tracker#job_service_id", "-1"));
         running = jobID != -1;
         return this;
     }
@@ -68,10 +64,8 @@ public class ProtocolTracker {
                 jobScheduler.schedule(info);
                 jobID = info.getId();
                 running = true;
-                sharedPreferences.edit()
-                        .putInt("TrackingProtocolJobServiceID", jobID)
-                        .putString("ProtocolTrackerHISTORY", "")
-                        .apply();
+                Storage.file.perm.put(context, "protocol_tracker#job_service_id", String.valueOf(jobID));
+                Storage.file.perm.put(context, "protocol_tracker#protocol", "");
                 Log.i(TAG, "Started | frequency = " + frequency + " | jobID = " + jobID);
             } catch (Exception e){
                 Log.e(TAG, "Failed to schedule job");
@@ -87,7 +81,8 @@ public class ProtocolTracker {
             jobScheduler.cancel(jobID);
             jobID = -1;
             running = false;
-            sharedPreferences.edit().putInt("TrackingProtocolJobServiceID", jobID).remove("ProtocolTrackerHISTORY").apply();
+            Storage.file.perm.put(context, "protocol_tracker#job_service_id", String.valueOf(jobID));
+            Storage.file.perm.delete(context, "protocol_tracker#protocol");
             Log.i(TAG, "Stopped");
         }
         return this;

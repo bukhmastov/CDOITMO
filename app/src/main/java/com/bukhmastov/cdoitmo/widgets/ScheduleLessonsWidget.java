@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.RemoteViews;
 
@@ -261,7 +260,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     }
     private static void needPreparations(Context context, AppWidgetManager appWidgetManager, int appWidgetId){
         int textColor, backGroundColor;
-        boolean darkTheme = PreferenceManager.getDefaultSharedPreferences(context).getBoolean("pref_dark_theme", false);
+        boolean darkTheme = Storage.pref.get(context, "pref_dark_theme", false);
         if (darkTheme) {
             textColor = Color.parseColor("#FFFFFF");
             backGroundColor = Color.parseColor("#000000");
@@ -302,7 +301,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     }
     private static int getWeek(Context context){
         try {
-            String weekStr = Storage.get(context, "week");
+            String weekStr = Storage.file.perm.get(context, "user#week");
             if(!Objects.equals(weekStr, "")){
                 JSONObject jsonObject = new JSONObject(weekStr);
                 int week = jsonObject.getInt("week");
@@ -313,7 +312,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 }
             }
         } catch (JSONException e) {
-            Storage.delete(context, "week");
+            Storage.file.perm.delete(context, "user#week");
             return -1;
         }
         return -1;

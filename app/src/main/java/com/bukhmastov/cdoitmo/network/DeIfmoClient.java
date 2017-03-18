@@ -42,7 +42,7 @@ public class DeIfmoClient extends Client {
         init();
         if (Static.isOnline(context)) {
             responseHandler.onProgress(STATE_CHECKING);
-            if (Objects.equals(Storage.get(context, "session_cookie"), "")){
+            if (Storage.file.perm.get(context, "user#jsessionid").isEmpty()) {
                 authorize(context, new DeIfmoClientResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, String response) {
@@ -64,21 +64,21 @@ public class DeIfmoClient extends Client {
             } else {
                 DeIfmoClient.get(context, "servlet/distributedCDE?Rule=editPersonProfile", null, new DeIfmoClientResponseHandler() {
                     @Override
-                    public void onSuccess(int statusCode, String response) {
+                    public void onSuccess(int statusCode, final String response) {
                         new UserDataParse(new UserDataParse.response() {
                             @Override
                             public void finish(HashMap<String, String> result) {
                                 if (result != null) {
-                                    Storage.put(context, "name", result.get("name"));
-                                    Storage.put(context, "group", result.get("group"));
+                                    Storage.file.perm.put(context, "user#name", result.get("name"));
+                                    Storage.file.perm.put(context, "user#group", result.get("group"));
                                     try {
                                         JSONObject jsonObject = new JSONObject();
                                         jsonObject.put("timestamp", Calendar.getInstance().getTimeInMillis());
                                         jsonObject.put("week", Integer.parseInt(result.get("week")));
-                                        Storage.put(context, "week", jsonObject.toString());
+                                        Storage.file.perm.put(context, "user#week", jsonObject.toString());
                                     } catch (Exception e) {
                                         Static.error(e);
-                                        Storage.delete(context, "week");
+                                        Storage.file.perm.delete(context, "user#week");
                                     }
                                     responseHandler.onSuccess(200, "");
                                 } else {
@@ -106,8 +106,8 @@ public class DeIfmoClient extends Client {
     public static void authorize(final Context context, final DeIfmoClientResponseHandler responseHandler){
         init();
         responseHandler.onProgress(STATE_AUTHORIZATION);
-        String login = Storage.get(context, "login");
-        String password = Storage.get(context, "password");
+        String login = Storage.file.perm.get(context, "user#login");
+        String password = Storage.file.perm.get(context, "user#password");
         if (Objects.equals(login, "") || Objects.equals(password, "")) {
             responseHandler.onFailure(FAILED_AUTH_CREDENTIALS_REQUIRED);
         } else {
@@ -127,7 +127,7 @@ public class DeIfmoClient extends Client {
                                 String[] cookie = pair.split("=");
                                 if (Objects.equals(cookie[0], "JSESSIONID")) {
                                     if (!Objects.equals(cookie[1], "") && cookie[1] != null) {
-                                        Storage.put(context, "session_cookie", cookie[1]);
+                                        Storage.file.perm.put(context, "user#jsessionid", cookie[1]);
                                     } else {
                                         Log.w(TAG, "Got 'Set-Cookie' with empty 'JSESSIONID'");
                                         responseHandler.onFailure(FAILED_AUTH_TRY_AGAIN);
@@ -142,7 +142,7 @@ public class DeIfmoClient extends Client {
                         if (data.contains("Access is forbidden") && data.contains("Invalid login/password")) {
                             responseHandler.onFailure(FAILED_AUTH_CREDENTIALS_FAILED);
                         } else if (data.contains("Выбор группы безопасности") && data.contains("OPTION VALUE=8")) {
-                            httpclient.get(getAbsoluteUrl("servlet/distributedCDE?Rule=APPLYSECURITYGROUP&PERSON=" + Storage.get(context, "login") + "&SECURITYGROUP=8&COMPNAME="), null, new AsyncHttpResponseHandler(){
+                            httpclient.get(getAbsoluteUrl("servlet/distributedCDE?Rule=APPLYSECURITYGROUP&PERSON=" + Storage.file.perm.get(context, "user#login") + "&SECURITYGROUP=8&COMPNAME="), null, new AsyncHttpResponseHandler(){
                                 @Override
                                 public void onSuccess(int statusCode, Header[] headers, byte[] response) {
                                     responseHandler.onProgress(STATE_AUTHORIZED);

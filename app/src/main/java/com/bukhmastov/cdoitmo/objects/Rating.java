@@ -2,8 +2,8 @@ package com.bukhmastov.cdoitmo.objects;
 
 import android.content.Context;
 
-import com.bukhmastov.cdoitmo.utils.Cache;
 import com.bukhmastov.cdoitmo.utils.Static;
+import com.bukhmastov.cdoitmo.utils.Storage;
 
 import org.json.JSONObject;
 
@@ -22,19 +22,18 @@ public class Rating {
 
     public Rating(Context context){
         this.context = context;
-        String protocol;
-        protocol = Cache.get(context, "Rating");
-        if(!Objects.equals(protocol, "")){
+        String rating = Storage.file.cache.get(context, "rating#core");
+        if (!rating.isEmpty()) {
             try {
-                this.rating = new JSONObject(protocol);
+                this.rating = new JSONObject(rating);
             } catch (Exception e) {
                 Static.error(e);
             }
         }
-        protocol = Cache.get(context, "RatingList");
-        if(!Objects.equals(protocol, "")){
+        String rating_list = Storage.file.cache.get(context, "rating#list");
+        if (!rating_list.isEmpty()) {
             try {
-                this.ratingList = new JSONObject(protocol);
+                this.ratingList = new JSONObject(rating_list);
             } catch (Exception e) {
                 Static.error(e);
             }
@@ -46,12 +45,13 @@ public class Rating {
             json.put("timestamp", Calendar.getInstance().getTimeInMillis());
             json.put("date", new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis())));
             json.put("rating", data);
-            if(Objects.equals(type, "Rating")){
+            if (Objects.equals(type, "Rating")) {
                 rating = json;
+                Storage.file.cache.put(context, "rating#core", rating.toString());
             } else {
                 ratingList = json;
+                Storage.file.cache.put(context, "rating#list", ratingList.toString());
             }
-            Cache.put(context, type, json.toString());
         } catch (Exception e) {
             Static.error(e);
         }

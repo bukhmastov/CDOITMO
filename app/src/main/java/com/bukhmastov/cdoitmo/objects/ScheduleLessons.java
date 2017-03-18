@@ -1,8 +1,6 @@
 package com.bukhmastov.cdoitmo.objects;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.widget.SwipeRefreshLayout;
 
@@ -10,7 +8,6 @@ import com.bukhmastov.cdoitmo.converters.ScheduleLessonsConverter;
 import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.IfmoRestClientResponseHandler;
-import com.bukhmastov.cdoitmo.utils.Cache;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 import com.loopj.android.http.RequestHandle;
@@ -54,7 +51,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
         search(query, getRefreshRate());
     }
     public void search(String query, int refresh_rate){
-        search(query, refresh_rate, PreferenceManager.getDefaultSharedPreferences(context).getBoolean("pref_schedule_lessons_use_cache", false));
+        search(query, refresh_rate, Storage.pref.get(context, "pref_schedule_lessons_use_cache", false));
     }
     public void search(String query, boolean toCache){
         search(query, getRefreshRate(), toCache);
@@ -344,8 +341,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
         }
     }
     private int getRefreshRate(){
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        return sharedPreferences.getBoolean("pref_use_cache", true) ? Integer.parseInt(sharedPreferences.getString("pref_schedule_refresh", "168")) : 0;
+        return Storage.pref.get(context, "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(context, "pref_schedule_refresh", "168")) : 0;
     }
     private boolean getForce(String cache, int refresh_rate){
         boolean force;
@@ -365,82 +361,32 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
     }
     public String getDefault(){
         String scope;
-        String pref = PreferenceManager.getDefaultSharedPreferences(context).getString("pref_schedule_lessons_default", "");
+        String pref = Storage.pref.get(context, "pref_schedule_lessons_default", "");
         try {
             if (Objects.equals(pref, "")) throw new Exception("pref_schedule_lessons_default empty");
             JSONObject jsonObject = new JSONObject(pref);
             scope = jsonObject.getString("query");
             if (Objects.equals(scope, "auto")) throw new Exception("pref_schedule_lessons_default query=auto");
         } catch (Exception e) {
-            scope = Storage.get(context, "group");
+            scope = Storage.file.perm.get(context, "user#group");
         }
         return scope;
     }
 
     private void putCache(String token, String value, boolean toCache){
-        try {
-            String def = getDefault();
-            if (toCache || hasCache(token) || Objects.equals(def, token) || Objects.equals("group_" + def, token) || Objects.equals("room_" + def, token) || Objects.equals("teacher_picker_" + def, token)) {
-                String jsonStr = Cache.get(context, "schedule_lessons");
-                JSONObject json;
-                if (Objects.equals(jsonStr, "")) {
-                    json = new JSONObject();
-                } else {
-                    json = new JSONObject(jsonStr);
-                }
-                if (json.has(token)) json.remove(token);
-                json.put(token, value);
-                Cache.put(context, "schedule_lessons", json.toString());
-            }
-        } catch (JSONException e) {
-            Static.error(e);
+        String def = getDefault();
+        if (toCache || hasCache(token) || Objects.equals(def, token) || Objects.equals("group_" + def, token) || Objects.equals("room_" + def, token) || Objects.equals("teacher_picker_" + def, token)) {
+            Storage.file.cache.put(context, "schedule_lessons#lessons#" + token, value);
         }
     }
     private boolean hasCache(String token){
-        try {
-            String jsonStr = Cache.get(context, "schedule_lessons");
-            if (Objects.equals(jsonStr, "")) {
-                return false;
-            } else {
-                return (new JSONObject(jsonStr)).has(token);
-            }
-        } catch (JSONException e) {
-            Static.error(e);
-            return false;
-        }
+        return Storage.file.cache.exists(context, "schedule_lessons#lessons#" + token);
     }
     public String getCache(String token){
-        try {
-            String jsonStr = Cache.get(context, "schedule_lessons");
-            if (Objects.equals(jsonStr, "")) {
-                return "";
-            } else {
-                JSONObject json = new JSONObject(jsonStr);
-                if (json.has(token)) {
-                    return json.getString(token);
-                } else {
-                    return "";
-                }
-            }
-        } catch (JSONException e) {
-            Static.error(e);
-            return "";
-        }
+        return Storage.file.cache.get(context, "schedule_lessons#lessons#" + token);
     }
     private void removeCache(String token){
-        try {
-            String jsonStr = Cache.get(context, "schedule_lessons");
-            JSONObject json;
-            if (Objects.equals(jsonStr, "")) {
-                json = new JSONObject();
-            } else {
-                json = new JSONObject(jsonStr);
-            }
-            if (json.has(token)) json.remove(token);
-            Cache.put(context, "schedule_lessons", json.toString());
-        } catch (JSONException e) {
-            Static.error(e);
-        }
+        Storage.file.cache.delete(context, "schedule_lessons#lessons#" + token);
     }
     public Boolean toggleCache(){
         try {
