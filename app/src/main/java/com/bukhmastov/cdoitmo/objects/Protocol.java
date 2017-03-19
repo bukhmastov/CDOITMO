@@ -1,6 +1,7 @@
 package com.bukhmastov.cdoitmo.objects;
 
 import android.content.Context;
+import android.os.Handler;
 
 import com.bukhmastov.cdoitmo.converters.ProtocolConverter;
 import com.bukhmastov.cdoitmo.utils.Static;
@@ -27,7 +28,7 @@ public class Protocol {
             }
         }
     }
-    public void put(JSONArray data, int number_of_weeks){
+    public void put(JSONArray data, int number_of_weeks, final Handler handler){
         try {
             JSONArray array = new JSONArray();
             array.put(number_of_weeks);
@@ -38,6 +39,7 @@ public class Protocol {
                         protocol = json;
                         Storage.file.cache.put(context, "protocol#core", protocol.toString());
                         Storage.file.perm.put(context, "protocol_tracker#protocol", protocol.getJSONArray("protocol").toString());
+                        handler.sendEmptyMessage(0);
                     } catch (JSONException e) {
                         Static.error(e);
                     }

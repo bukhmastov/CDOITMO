@@ -3,6 +3,8 @@ package com.bukhmastov.cdoitmo.fragments;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
@@ -119,8 +121,12 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
                 @Override
                 public void onSuccess(int statusCode, JSONObject responseObj, JSONArray responseArr) {
                     if (statusCode == 200 && responseArr != null) {
-                        protocol.put(responseArr, number_of_weeks);
-                        display();
+                        protocol.put(responseArr, number_of_weeks, new Handler(){
+                            @Override
+                            public void handleMessage (Message msg) {
+                                display();
+                            }
+                        });
                     } else {
                         forceLoad(finalAttempt);
                     }

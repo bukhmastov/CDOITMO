@@ -228,5 +228,9 @@
     <string name="current_lesson">Текущая пара</string>
     <string name="next_lesson">Следующая пара</string>
     <string name="lessons_day_end">Конец учебного дня</string>
+    <string name="new_user">Новый пользователь</string>
+    <string name="pass">Перейти</string>
+    <string name="something_went_wrong">Что-то пошло не так</string>
+    <string name="change_account">Сменить аккаунт</string>
 
 </resources>

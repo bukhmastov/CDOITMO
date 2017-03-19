@@ -22,6 +22,7 @@
         <item name="colorScheduleFlagLectureBG">@color/colorScheduleFlagLectureBG</item>
         <item name="colorScheduleFlagLabBG">@color/colorScheduleFlagLabBG</item>
         <item name="colorScheduleFlagTEXT">@color/colorScheduleFlagTEXT</item>
+        <item name="colorBackgroundCards">@color/colorBackgroundCards</item>
 
         <item name="ic_cdo_small">@drawable/cdo_small</item>
         <item name="ic_security">@drawable/ic_security</item>
@@ -49,6 +50,7 @@
         <item name="colorScheduleFlagLectureBG">@color/colorScheduleFlagLectureBGInverse</item>
         <item name="colorScheduleFlagLabBG">@color/colorScheduleFlagLabBGInverse</item>
         <item name="colorScheduleFlagTEXT">@color/colorScheduleFlagTEXTInverse</item>
+        <item name="colorBackgroundCards">@color/colorBackgroundCardsInverse</item>
 
         <item name="ic_cdo_small">@drawable/cdo_small_dark</item>
         <item name="ic_security">@drawable/ic_security</item>

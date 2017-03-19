@@ -31,13 +31,15 @@ public class TrackingProtocolJobService extends JobService {
     private RequestHandle jobRequestHandle = null;
     private int attempt = 0;
     private static final int maxAttempts = 3;
+    private JobParameters params;
 
     @Override
     public boolean onStartJob(JobParameters params) {
         Log.i(TAG, "Executing");
-        attempt = 0;
+        this.params = params;
+        this.attempt = 0;
         request();
-        return false;
+        return true;
     }
 
     @Override
@@ -52,25 +54,20 @@ public class TrackingProtocolJobService extends JobService {
             attempt++;
             if (attempt > maxAttempts) throw new Exception("Number of attempts exceeded the limit");
             Log.i(TAG, "Request attempt #" + attempt);
-            DeIfmoRestClient.get(this, "eregisterlog?days=7", null, new DeIfmoRestClientResponseHandler() {
+            DeIfmoRestClient.get(this, "eregisterlog?days=2", null, new DeIfmoRestClientResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, JSONObject responseObj, JSONArray responseArr) {
                     if (statusCode == 200 && responseArr != null) {
                         analyse(responseArr);
                     } else {
-                        try {
-                            Thread.sleep(1000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        request();
+                        w8andRequest();
                     }
                 }
                 @Override
                 public void onProgress(int state) {}
                 @Override
                 public void onFailure(int state) {
-                    request();
+                    w8andRequest();
                 }
                 @Override
                 public void onNewHandle(RequestHandle requestHandle) {
@@ -81,6 +78,14 @@ public class TrackingProtocolJobService extends JobService {
             Log.e(TAG, e.getMessage());
             finish();
         }
+    }
+    private void w8andRequest(){
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        request();
     }
     private void analyse(JSONArray protocol){
         try {
@@ -171,8 +176,8 @@ public class TrackingProtocolJobService extends JobService {
     }
     private void finish(){
         Log.i(TAG, "Executed");
-        if(jobRequestHandle != null) jobRequestHandle.cancel(true);
-        this.stopSelf();
+        if (jobRequestHandle != null) jobRequestHandle.cancel(true);
+        jobFinished(this.params, false);
     }
     private String markConverter(String value){
         value = value.replace(",", ".").trim();

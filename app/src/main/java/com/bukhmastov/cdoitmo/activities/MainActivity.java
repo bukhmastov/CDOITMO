@@ -33,8 +33,6 @@ import com.bukhmastov.cdoitmo.utils.ProtocolTracker;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 
-import java.util.Objects;
-
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "MainActivity";
@@ -193,22 +191,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Static.protocolTracker.check();
             checkOffline();
             selectSection(selectedSection);
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        Thread.sleep(600);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            displayUserData();
-                        }
-                    });
-                }
-            }).start();
+            displayUserData();
         }
     }
     private void checkOffline(){
@@ -226,24 +209,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
     private void displayUserData(){
-        String name = Storage.file.perm.get(this, "user#name");
-        String group = Storage.file.perm.get(this, "user#group");
-        TextView user_name = (TextView) findViewById(R.id.user_name);
-        TextView user_group = (TextView) findViewById(R.id.user_group);
-        if (user_name != null) {
-            if (!Objects.equals(name, "")) {
-                user_name.setText(name);
-                user_name.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        displayUserDataProceed(R.id.user_name, Storage.file.perm.get(this, "user#name"));
+        displayUserDataProceed(R.id.user_group, Storage.file.perm.get(this, "user#group"));
+    }
+    private void displayUserDataProceed(int id, String text){
+        if (navigationView == null) return;
+        View activity_main_nav_header = navigationView.getHeaderView(0);
+        if (activity_main_nav_header == null) return;
+        TextView textView = (TextView) activity_main_nav_header.findViewById(id);
+        if (textView != null) {
+            if (!text.isEmpty()) {
+                textView.setText(text);
+                textView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             } else {
-                user_name.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0));
-            }
-        }
-        if (user_group != null) {
-            if (!Objects.equals(group, "")) {
-                user_group.setText(group);
-                user_group.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            } else {
-                user_group.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0));
+                textView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0));
             }
         }
     }
@@ -278,7 +257,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 break;
             case R.id.nav_shortcuts: startActivity(new Intent(this, ShortcutCreateActivity.class)); break;
             case R.id.nav_settings: startActivity(new Intent(this, SettingsActivity.class)); break;
-            case R.id.nav_logout: authorize(LoginActivity.SIGNAL_LOGOUT); break;
+            case R.id.nav_change_account:
+                loaded = false;
+                authorize(LoginActivity.SIGNAL_CHANGE_ACCOUNT);
+                break;
+            case R.id.nav_logout:
+                loaded = false;
+                authorize(LoginActivity.SIGNAL_LOGOUT);
+                break;
         }
         if (fragmentClass != null) {
             navigationView.setCheckedItem(section);

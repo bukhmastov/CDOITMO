@@ -118,8 +118,12 @@ public class Static {
     public static void logout(Context context){
         new ProtocolTracker(context).stop();
         Storage.file.all.clear(context);
-        Storage.pref.delete(context, "current_login");
+        Static.logoutCurrent(context);
         Static.authorized = false;
+    }
+    public static void logoutCurrent(Context context){
+        new ProtocolTracker(context).stop();
+        Storage.file.general.delete(context, "users#current_login");
     }
     public static void lockOrientation(Activity activity, boolean lock){
         if (activity != null) {
@@ -203,6 +207,19 @@ public class Static {
             Static.error(e);
         }
         return hash;
+    }
+    public static void delay(final Activity activity, final int sleep, final Runnable runnable){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(sleep);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                activity.runOnUiThread(runnable);
+            }
+        }).start();
     }
 
 }

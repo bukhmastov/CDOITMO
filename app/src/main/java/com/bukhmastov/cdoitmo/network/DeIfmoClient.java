@@ -173,6 +173,9 @@ public class DeIfmoClient extends Client {
         }
     }
     public static void get(final Context context, final String url, final RequestParams params, final DeIfmoClientResponseHandler responseHandler){
+        get(context, url, params, responseHandler, true);
+    }
+    public static void get(final Context context, final String url, final RequestParams params, final DeIfmoClientResponseHandler responseHandler, final boolean reAuth){
         init();
         if (Static.isOnline(context)) {
             responseHandler.onProgress(STATE_HANDLING);
@@ -193,24 +196,28 @@ public class DeIfmoClient extends Client {
                             data = new String((new String(responseBody, charset)).getBytes("UTF-8"));
                         }
                         if (data.contains("Закончился интервал неактивности") || data.contains("Доступ запрещен")) {
-                            authorize(context, new DeIfmoClientResponseHandler() {
-                                @Override
-                                public void onSuccess(int statusCode, String response) {
-                                    get(context, url, params, responseHandler);
-                                }
-                                @Override
-                                public void onProgress(int state) {
-                                    responseHandler.onProgress(state);
-                                }
-                                @Override
-                                public void onFailure(int state) {
-                                    responseHandler.onFailure(state);
-                                }
-                                @Override
-                                public void onNewHandle(RequestHandle requestHandle) {
-                                    responseHandler.onNewHandle(requestHandle);
-                                }
-                            });
+                            if (reAuth) {
+                                authorize(context, new DeIfmoClientResponseHandler() {
+                                    @Override
+                                    public void onSuccess(int statusCode, String response) {
+                                        get(context, url, params, responseHandler);
+                                    }
+                                    @Override
+                                    public void onProgress(int state) {
+                                        responseHandler.onProgress(state);
+                                    }
+                                    @Override
+                                    public void onFailure(int state) {
+                                        responseHandler.onFailure(state);
+                                    }
+                                    @Override
+                                    public void onNewHandle(RequestHandle requestHandle) {
+                                        responseHandler.onNewHandle(requestHandle);
+                                    }
+                                });
+                            } else {
+                                responseHandler.onFailure(FAILED_AUTH_CREDENTIALS_REQUIRED);
+                            }
                         } else {
                             responseHandler.onSuccess(statusCode, data);
                         }

@@ -20,6 +20,7 @@
         <attr name="colorScheduleFlagTEXT" format="color" />
         <attr name="colorPopupBackground" format="color" />
         <attr name="colorPopupBackgroundFill" format="color" />
+        <attr name="colorBackgroundCards" format="color" />
 
         <attr name="ic_cdo_small" format="reference" />
         <attr name="ic_security" format="reference" />

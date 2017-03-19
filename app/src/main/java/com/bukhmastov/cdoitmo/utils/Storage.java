@@ -186,55 +186,36 @@ public class Storage {
             return getLocation(context, storage, general) + path;
         }
         private static String getLocation(Context context, STORAGE storage, boolean general) throws Exception {
-            String current_login = general ? "general" : pref.get(context, "current_login");
+            String current_login = general ? "general" : file.general.get(context, "users#current_login");
             if (current_login.isEmpty()) throw new Exception("current_login is empty");
             return (storage == STORAGE.cache ? context.getCacheDir() : context.getFilesDir()) + File.separator + APP_FOLDER + File.separator + current_login;
         }
     }
     public static class pref {
         public static synchronized void put(Context context, String key, String value){
-            Storage.proxy.push(key, value, 0.5);
             PreferenceManager.getDefaultSharedPreferences(context).edit().putString(key, value).apply();
         }
         public static synchronized void put(Context context, String key, int value){
-            Storage.proxy.push(key, String.valueOf(value), 0.5);
             PreferenceManager.getDefaultSharedPreferences(context).edit().putInt(key, value).apply();
         }
         public static synchronized void put(Context context, String key, boolean value){
-            Storage.proxy.push(key, value ? "true" : "false", 0.5);
             PreferenceManager.getDefaultSharedPreferences(context).edit().putBoolean(key, value).apply();
         }
         public static String get(Context context, String key){
             return pref.get(context, key, "");
         }
         public static String get(Context context, String key, String def){
-            Storage.proxy.access(key);
-            String proxy = Storage.proxy.get(key);
-            if (proxy != null) return proxy;
-            String data = PreferenceManager.getDefaultSharedPreferences(context).getString(key, def);
-            if (!Objects.equals(data, def)) Storage.proxy.push(key, data, 0.5);
-            return data;
+            return PreferenceManager.getDefaultSharedPreferences(context).getString(key, def);
         }
         public static int get(Context context, String key, int def){
-            Storage.proxy.access(key);
-            String proxy = Storage.proxy.get(key);
-            if (proxy != null) return Integer.parseInt(proxy);
-            int data = PreferenceManager.getDefaultSharedPreferences(context).getInt(key, def);
-            if (data != def) Storage.proxy.push(key, String.valueOf(data), 0.5);
-            return data;
+            return PreferenceManager.getDefaultSharedPreferences(context).getInt(key, def);
         }
         public static boolean get(Context context, String key, boolean def){
-            Storage.proxy.access(key);
-            String proxy = Storage.proxy.get(key);
-            if (proxy != null) return Objects.equals(proxy, "true");
-            boolean data = PreferenceManager.getDefaultSharedPreferences(context).getBoolean(key, def);
-            if (data != def) Storage.proxy.push(key, data ? "true" : "false", 0.5);
-            return data;
+            return PreferenceManager.getDefaultSharedPreferences(context).getBoolean(key, def);
         }
         public static void delete(Context context, String key){
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
             if (sharedPreferences.contains(key)) sharedPreferences.edit().remove(key).apply();
-            Storage.proxy.delete(key);
         }
         public static void clear(Context context){
             pref.clear(context, Pattern.compile(".*"));
@@ -250,7 +231,6 @@ public class Storage {
                 if (pattern.matcher(entry.getKey()).find()) {
                     String key = entry.getKey();
                     editor.remove(key);
-                    Storage.proxy.delete(key);
                 }
             }
             editor.apply();
@@ -259,7 +239,7 @@ public class Storage {
 
     private static class proxy {
         private static long requests = 0;
-        private static int maxStack = 10;
+        private static int maxStack = 8;
         private static ArrayList<element> stack = new ArrayList<>();
         private static class element {
             public String path = "";
@@ -273,7 +253,7 @@ public class Storage {
                 this.priority = priority;
             }
         }
-        static void push(String path, String data, double priority){
+        private static void push(String path, String data, double priority){
             boolean found = false;
             for (element item : stack) {
                 if (Objects.equals(item.path, path)) {
@@ -288,7 +268,7 @@ public class Storage {
             }
             empty();
         }
-        static void access(String path){
+        private static void access(String path){
             for (element item : stack) {
                 if (Objects.equals(item.path, path)) {
                     requests++;
@@ -297,13 +277,13 @@ public class Storage {
                 }
             }
         }
-        static String get(String path){
+        private static String get(String path){
             for (element item : stack) {
                 if (Objects.equals(item.path, path)) return item.data;
             }
             return null;
         }
-        static void delete(String path){
+        private static void delete(String path){
             for (int i = 0; i < stack.size(); i++) {
                 element item = stack.get(i);
                 if (Objects.equals(item.path, path)) {
@@ -313,6 +293,7 @@ public class Storage {
             }
         }
         private static void empty(){
+            if (requests + 10 > Long.MAX_VALUE) reset();
             if (stack.size() > maxStack) {
                 for (element item : stack) {
                     item.rate = ((double) item.requests / (double) requests) * item.priority;
@@ -324,10 +305,11 @@ public class Storage {
                     }
                 });
                 for (int i = maxStack; i < stack.size(); i++) stack.remove(i);
-                /*Log.d(TAG, "-------------");
-                for (element item : stack) Log.d(TAG, item.path + " " + item.rate);
-                Log.d(TAG, "-------------");*/
             }
+        }
+        static void reset(){
+            requests = 0;
+            stack.clear();
         }
     }
 

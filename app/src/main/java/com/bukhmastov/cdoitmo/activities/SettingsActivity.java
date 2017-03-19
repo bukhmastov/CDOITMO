@@ -115,8 +115,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         switch(key){
             case "pref_use_notifications":
             case "pref_notify_frequency":
-                if (Static.protocolTracker == null) Static.protocolTracker = new ProtocolTracker(this);
-                Static.protocolTracker.update().restart();
+                new ProtocolTracker(this).restart();
                 break;
             case "pref_dark_theme":
                 Static.reLaunch(this);

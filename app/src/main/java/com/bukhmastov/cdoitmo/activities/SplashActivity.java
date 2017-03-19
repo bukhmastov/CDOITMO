@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.activities;
 
+import android.app.job.JobScheduler;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -42,16 +43,19 @@ public class SplashActivity extends AppCompatActivity {
             try {
                 int versionCode = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode;
                 if (Storage.pref.get(context, "last_version", 0) < versionCode) {
-                    apply(context);
+                    apply(context, versionCode);
                     Storage.pref.put(context, "last_version", versionCode);
                 }
             } catch (PackageManager.NameNotFoundException e) {
                 Static.error(e);
             }
         }
-        private static void apply(Context context) {
-            Static.logout(context);
-            Storage.pref.clearExceptPref(context);
+        private static void apply(Context context, int versionCode) {
+            if (versionCode == 25) {
+                ((JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE)).cancelAll();
+                Static.logout(context);
+                Storage.pref.clearExceptPref(context);
+            }
         }
     }
 
