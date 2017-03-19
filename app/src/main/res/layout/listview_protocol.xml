@@ -9,7 +9,7 @@
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_toStartOf="@+id/lv_protocol_value"
+        android:layout_toStartOf="@+id/lv_protocol_value_container"
         android:gravity="center" >
 
         <Space
@@ -50,15 +50,37 @@
 
     </LinearLayout>
 
-    <TextView
-        android:text="@string/lorem_ipsum"
-        android:id="@+id/lv_protocol_value"
-        android:textAppearance="@style/TextAppearance.AppCompat.Button"
-        android:textSize="18sp"
-        android:layout_width="50dp"
-        android:gravity="center"
-        android:layout_alignParentTop="true"
+    <RelativeLayout
+        android:id="@+id/lv_protocol_value_container"
+        android:layout_width="80dp"
+        android:layout_height="75dp"
         android:layout_alignParentEnd="true"
-        android:layout_height="75dp" />
+        android:layout_alignParentTop="true"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/lv_protocol_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignTop="@+id/lv_protocol_delta"
+            android:layout_toStartOf="@+id/lv_protocol_delta"
+            android:paddingBottom="5dp"
+            android:paddingTop="5dp"
+            android:text="99.99"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/lv_protocol_delta"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:paddingEnd="0dp"
+            android:paddingStart="2dp"
+            android:text="+99.99"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="10sp" />
+
+    </RelativeLayout>
 
 </RelativeLayout>

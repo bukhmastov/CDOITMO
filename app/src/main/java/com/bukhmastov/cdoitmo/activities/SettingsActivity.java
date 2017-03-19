@@ -192,10 +192,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                 pref_clear_cache.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
-                        Storage.file.cache.clear(getActivity());
+                        boolean success = Storage.file.cache.clear(getActivity());
                         View content_container = getActivity().findViewById(android.R.id.content);
                         if (content_container != null) {
-                            Snackbar snackbar = Snackbar.make(content_container, R.string.cache_cleared, Snackbar.LENGTH_SHORT);
+                            Snackbar snackbar = Snackbar.make(content_container, getActivity().getString(success ? R.string.cache_cleared : R.string.something_went_wrong), Snackbar.LENGTH_SHORT);
                             snackbar.getView().setBackgroundColor(Static.colorBackgroundSnackBar);
                             snackbar.show();
                         }
@@ -233,10 +233,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                 pref_schedule_lessons_clear_cache.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
-                        Storage.file.cache.delete(getActivity(), "schedule_lessons");
+                        boolean success = Storage.file.cache.clear(getActivity(), "schedule_lessons");
                         View content_container = getActivity().findViewById(android.R.id.content);
                         if (content_container != null) {
-                            Snackbar snackbar = Snackbar.make(content_container, R.string.cache_cleared, Snackbar.LENGTH_SHORT);
+                            Snackbar snackbar = Snackbar.make(content_container, getActivity().getString(success ? R.string.cache_cleared : R.string.something_went_wrong), Snackbar.LENGTH_SHORT);
                             snackbar.getView().setBackgroundColor(Static.colorBackgroundSnackBar);
                             snackbar.show();
                         }
@@ -249,10 +249,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                 pref_schedule_exams_clear_cache.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
-                        Storage.file.cache.delete(getActivity(), "schedule_exams");
+                        boolean success = Storage.file.cache.clear(getActivity(), "schedule_exams");
                         View content_container = getActivity().findViewById(android.R.id.content);
                         if (content_container != null) {
-                            Snackbar snackbar = Snackbar.make(content_container, R.string.cache_cleared, Snackbar.LENGTH_SHORT);
+                            Snackbar snackbar = Snackbar.make(content_container, getActivity().getString(success ? R.string.cache_cleared : R.string.something_went_wrong), Snackbar.LENGTH_SHORT);
                             snackbar.getView().setBackgroundColor(Static.colorBackgroundSnackBar);
                             snackbar.show();
                         }

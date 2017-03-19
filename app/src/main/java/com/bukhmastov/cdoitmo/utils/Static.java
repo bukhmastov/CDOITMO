@@ -87,6 +87,7 @@ public class Static {
     }
     public static void hardReset(Context context){
         Static.logout(context);
+        Storage.file.all.reset(context);
         Static.firstLaunch = true;
         Static.OFFLINE_MODE = false;
         MainActivity.loaded = false;

@@ -12,17 +12,17 @@ import android.util.Log;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.SplashActivity;
+import com.bukhmastov.cdoitmo.converters.ProtocolConverter;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoRestClientResponseHandler;
 import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class TrackingProtocolJobService extends JobService {
 
@@ -58,7 +58,19 @@ public class TrackingProtocolJobService extends JobService {
                 @Override
                 public void onSuccess(int statusCode, JSONObject responseObj, JSONArray responseArr) {
                     if (statusCode == 200 && responseArr != null) {
-                        analyse(responseArr);
+                        JSONArray array = new JSONArray();
+                        array.put(0);
+                        new ProtocolConverter(getBaseContext(), new ProtocolConverter.response() {
+                            @Override
+                            public void finish(JSONObject json) {
+                                try {
+                                    analyse(json.getJSONArray("protocol"));
+                                } catch (JSONException e) {
+                                    Log.e(TAG, e.getMessage());
+                                    done();
+                                }
+                            }
+                        }).execute(responseArr, array);
                     } else {
                         w8andRequest();
                     }
@@ -76,12 +88,12 @@ public class TrackingProtocolJobService extends JobService {
             });
         } catch (Exception e){
             Log.e(TAG, e.getMessage());
-            finish();
+            done();
         }
     }
     private void w8andRequest(){
         try {
-            Thread.sleep(5000);
+            Thread.sleep(500);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -104,7 +116,7 @@ public class TrackingProtocolJobService extends JobService {
             }
             Storage.file.perm.put(this, "protocol_tracker#protocol", protocol.toString());
             if (first_init) {
-                finish();
+                done();
                 return;
             }
             ArrayList<JSONObject> changes = new ArrayList<>();
@@ -142,12 +154,17 @@ public class TrackingProtocolJobService extends JobService {
                 for (int i = changes.size() - 1; i >= 0; i--) {
                     JSONObject changeOBJ = changes.get(i);
                     JSONObject var = changeOBJ.getJSONObject("var");
-                    addNotification(changeOBJ.getString("subject"), var.getString("name") + ": " + markConverter(changeOBJ.getString("value")) + "/" + markConverter(var.getString("max")), timestamp, isSummary);
+                    StringBuilder text = new StringBuilder();
+                    text.append(var.getString("name")).append(": ").append(changeOBJ.getString("value")).append("/").append(var.getString("max"));
+                    if (changeOBJ.getDouble("cdoitmo_delta_double") != 0) {
+                        text.append(" (").append(changeOBJ.getString("cdoitmo_delta")).append(")");
+                    }
+                    addNotification(changeOBJ.getString("subject"), text.toString(), timestamp, isSummary);
                 }
             }
-            finish();
+            done();
         } catch (Exception e){
-            finish();
+            done();
         }
     }
     private void addNotification(String title, String text, long timestamp, boolean isSummary){
@@ -174,16 +191,10 @@ public class TrackingProtocolJobService extends JobService {
         }
         ((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(c++, b.build());
     }
-    private void finish(){
+    private void done(){
         Log.i(TAG, "Executed");
         if (jobRequestHandle != null) jobRequestHandle.cancel(true);
         jobFinished(this.params, false);
-    }
-    private String markConverter(String value){
-        value = value.replace(",", ".").trim();
-        Matcher m = Pattern.compile("^\\.(\\d+)").matcher(value);
-        if (m.find()) value = "0." + m.group(1);
-        return value;
     }
 
 }

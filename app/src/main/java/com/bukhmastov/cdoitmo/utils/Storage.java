@@ -37,6 +37,9 @@ public class Storage {
             public static boolean clear(Context context) {
                 return Storage.file.clear(context, STORAGE.cache, false);
             }
+            public static boolean clear(Context context, String path) {
+                return Storage.file.clear(context, STORAGE.cache, false);
+            }
             public static boolean exists(Context context, String path) {
                 return Storage.file.exists(context, STORAGE.cache, false, path);
             }
@@ -63,7 +66,13 @@ public class Storage {
         }
         public static class all {
             public static boolean clear(Context context) {
-                return Storage.file.clear(context, false);
+                return Storage.file.clear(context, null, false);
+            }
+            public static boolean clear(Context context, String path) {
+                return Storage.file.clear(context, null, path, false);
+            }
+            public static boolean reset(Context context){
+                return Storage.file.reset(context, null);
             }
         }
         public static class general {
@@ -92,7 +101,7 @@ public class Storage {
                 if (storage == STORAGE.cache && !pref.get(context, "pref_use_cache", true)) {
                     return false;
                 }
-                File file = new File(getFileLocation(context, storage, general, path));
+                File file = new File(getFileLocation(context, storage, general, path, true));
                 path = file.getAbsolutePath();
                 if (!file.exists()) {
                     file.getParentFile().mkdirs();
@@ -114,7 +123,7 @@ public class Storage {
         }
         private static String get(Context context, STORAGE storage, boolean general, String path, String def){
             try {
-                File file = new File(getFileLocation(context, storage, general, path));
+                File file = new File(getFileLocation(context, storage, general, path, true));
                 path = file.getAbsolutePath();
                 if (!file.exists() || file.isDirectory()) {
                     throw new Exception("File does not exist: " + file.getPath());
@@ -135,7 +144,7 @@ public class Storage {
         }
         private static boolean delete(Context context, STORAGE storage, boolean general, String path){
             try {
-                File file = new File(getFileLocation(context, storage, general, path));
+                File file = new File(getFileLocation(context, storage, general, path, true));
                 path = file.getAbsolutePath();
                 Storage.proxy.delete(path);
                 return file.exists() && deleteRecursive(file);
@@ -143,10 +152,7 @@ public class Storage {
                 return false;
             }
         }
-        private static boolean clear(Context context, boolean general){
-            return clear(context, null, general);
-        }
-        private static boolean clear(Context context, STORAGE storage, boolean general){
+         private static boolean clear(Context context, STORAGE storage, boolean general){
             try {
                 if (storage == null) {
                     return clear(context, STORAGE.cache, general) && clear(context, STORAGE.permanent, general);
@@ -157,11 +163,33 @@ public class Storage {
                 return false;
             }
         }
+        private static boolean clear(Context context, STORAGE storage, String path, boolean general){
+            try {
+                if (storage == null) {
+                    return clear(context, STORAGE.cache, path, general) && clear(context, STORAGE.permanent, path, general);
+                }
+                File file = new File(getFileLocation(context, storage, general, path, false));
+                return file.exists() && deleteRecursive(file);
+            } catch (Exception e) {
+                return false;
+            }
+        }
         private static boolean exists(Context context, STORAGE storage, boolean general, String path){
             try {
-                File file = new File(getFileLocation(context, storage, general, path));
+                File file = new File(getFileLocation(context, storage, general, path, true));
                 Storage.proxy.access(file.getAbsolutePath());
                 return file.exists();
+            } catch (Exception e) {
+                return false;
+            }
+        }
+        private static boolean reset(Context context, STORAGE storage){
+            try {
+                if (storage == null) {
+                    return reset(context, STORAGE.cache) && reset(context, STORAGE.permanent);
+                }
+                File file = new File(getCoreLocation(context, storage));
+                return file.exists() && deleteRecursive(file);
             } catch (Exception e) {
                 return false;
             }
@@ -181,14 +209,17 @@ public class Storage {
             Storage.proxy.delete(fileOrDirectory.getAbsolutePath());
             return result;
         }
-        private static String getFileLocation(Context context, STORAGE storage, boolean general, String path) throws Exception {
-            if (!path.isEmpty()) path = ("#" + path + ".txt").replace("#", File.separator);
+        private static String getFileLocation(Context context, STORAGE storage, boolean general, String path, boolean isFile) throws Exception {
+            if (!path.isEmpty()) path = ("#" + path + (isFile ? ".txt" : "")).replace("#", File.separator);
             return getLocation(context, storage, general) + path;
         }
         private static String getLocation(Context context, STORAGE storage, boolean general) throws Exception {
             String current_login = general ? "general" : file.general.get(context, "users#current_login");
             if (current_login.isEmpty()) throw new Exception("current_login is empty");
-            return (storage == STORAGE.cache ? context.getCacheDir() : context.getFilesDir()) + File.separator + APP_FOLDER + File.separator + current_login;
+            return getCoreLocation(context, storage) + File.separator + current_login;
+        }
+        private static String getCoreLocation(Context context, STORAGE storage) throws Exception {
+            return (storage == STORAGE.cache ? context.getCacheDir() : context.getFilesDir()) + File.separator + APP_FOLDER;
         }
     }
     public static class pref {

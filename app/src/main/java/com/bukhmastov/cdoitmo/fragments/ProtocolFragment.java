@@ -33,8 +33,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
@@ -235,9 +233,12 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
                 HashMap<String, String> hashMap = new HashMap<>();
                 JSONObject var = jsonObject.getJSONObject("var");
                 hashMap.put("name", jsonObject.getString("subject"));
-                hashMap.put("desc", var.getString("name") + " [" + markConverter(var.getString("min")) + "/" + markConverter(var.getString("threshold")) + "/" + markConverter(var.getString("max")) + "]");
+                hashMap.put("desc", var.getString("name") + " [" + var.getString("min") + "/" + var.getString("threshold") + "/" + var.getString("max") + "]");
                 hashMap.put("meta", (Objects.equals(jsonObject.getString("sign"), "..") ? "" : jsonObject.getString("sign") + " | ") + jsonObject.getString("date"));
-                hashMap.put("value", markConverter(jsonObject.getString("value")));
+                hashMap.put("value", jsonObject.getString("value"));
+                hashMap.put("delta", jsonObject.getString("cdoitmo_delta"));
+                hashMap.put("delta_here", jsonObject.getDouble("cdoitmo_delta_double") == 0 ? "false" : "true");
+                hashMap.put("delta_negative", jsonObject.getDouble("cdoitmo_delta_double") < 0 ? "true" : "false");
                 changes.add(hashMap);
             }
             // отображаем интерфейс
@@ -309,12 +310,6 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
         } catch (Exception e){
             Static.error(e);
         }
-    }
-    private String markConverter(String value){
-        value = value.replace(",", ".").trim();
-        Matcher m = Pattern.compile("^\\.(\\d+)").matcher(value);
-        if (m.find()) value = "0." + m.group(1);
-        return value;
     }
 
 }

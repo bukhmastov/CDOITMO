@@ -2,6 +2,7 @@ package com.bukhmastov.cdoitmo.objects;
 
 import android.content.Context;
 import android.os.Handler;
+import android.util.Log;
 
 import com.bukhmastov.cdoitmo.converters.ProtocolConverter;
 import com.bukhmastov.cdoitmo.utils.Static;
@@ -32,10 +33,11 @@ public class Protocol {
         try {
             JSONArray array = new JSONArray();
             array.put(number_of_weeks);
-            new ProtocolConverter(new ProtocolConverter.response() {
+            new ProtocolConverter(context, new ProtocolConverter.response() {
                 @Override
                 public void finish(JSONObject json) {
                     try {
+                        Log.d(TAG, json.toString());
                         protocol = json;
                         Storage.file.cache.put(context, "protocol#core", protocol.toString());
                         Storage.file.perm.put(context, "protocol_tracker#protocol", protocol.getJSONArray("protocol").toString());
