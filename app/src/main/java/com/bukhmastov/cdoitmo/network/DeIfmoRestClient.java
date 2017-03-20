@@ -2,9 +2,11 @@ package com.bukhmastov.cdoitmo.network;
 
 import android.content.Context;
 
+import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoClientResponseHandler;
 import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoRestClientResponseHandler;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.loopj.android.http.JsonHttpResponseHandler;
+import com.loopj.android.http.RequestHandle;
 import com.loopj.android.http.RequestParams;
 
 import org.json.JSONArray;
@@ -24,6 +26,27 @@ public class DeIfmoRestClient extends Client {
     public static void get(final Context context, final String url, final RequestParams params, final DeIfmoRestClientResponseHandler responseHandler){
         init();
         if (Static.isOnline(context)) {
+            if (checkJsessionId(context)) {
+                DeIfmoClient.authorize(context, new DeIfmoClientResponseHandler() {
+                    @Override
+                    public void onSuccess(int statusCode, String response) {
+                        get(context, url, params, responseHandler);
+                    }
+                    @Override
+                    public void onProgress(int state) {
+                        responseHandler.onProgress(state);
+                    }
+                    @Override
+                    public void onFailure(int state) {
+                        responseHandler.onFailure(state);
+                    }
+                    @Override
+                    public void onNewHandle(RequestHandle requestHandle) {
+                        responseHandler.onNewHandle(requestHandle);
+                    }
+                });
+                return;
+            }
             responseHandler.onProgress(STATE_HANDLING);
             renewCookie(context);
             responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(url), params, new JsonHttpResponseHandler() {

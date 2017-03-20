@@ -11,6 +11,7 @@ abstract class Client {
     private static final String USER_AGENT = "Android Application";
     static AsyncHttpClient httpclient = new AsyncHttpClient();
     private static boolean initialized = false;
+    private static final long jsessionid_ts_limit = 1200000L; // 20min // 20 * 60 * 1000
 
     static void init(){
         if (!initialized) {
@@ -23,6 +24,9 @@ abstract class Client {
         httpclient.removeHeader("Cookie");
         httpclient.addHeader("User-Agent", USER_AGENT);
         httpclient.addHeader("Cookie", "JSESSIONID=" + Storage.file.perm.get(context, "user#jsessionid") + "; Path=/;");
+    }
+    static boolean checkJsessionId(Context context){
+        return Long.parseLong(Storage.file.perm.get(context, "user#jsessionid_ts", "0")) + jsessionid_ts_limit < System.currentTimeMillis();
     }
 
 }

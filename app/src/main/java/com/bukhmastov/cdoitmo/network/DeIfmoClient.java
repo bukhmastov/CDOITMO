@@ -42,7 +42,7 @@ public class DeIfmoClient extends Client {
         init();
         if (Static.isOnline(context)) {
             responseHandler.onProgress(STATE_CHECKING);
-            if (Storage.file.perm.get(context, "user#jsessionid").isEmpty()) {
+            if (Storage.file.perm.get(context, "user#jsessionid").isEmpty() || checkJsessionId(context)) {
                 authorize(context, new DeIfmoClientResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, String response) {
@@ -178,6 +178,27 @@ public class DeIfmoClient extends Client {
     public static void get(final Context context, final String url, final RequestParams params, final DeIfmoClientResponseHandler responseHandler, final boolean reAuth){
         init();
         if (Static.isOnline(context)) {
+            if (checkJsessionId(context)) {
+                authorize(context, new DeIfmoClientResponseHandler() {
+                    @Override
+                    public void onSuccess(int statusCode, String response) {
+                        get(context, url, params, responseHandler);
+                    }
+                    @Override
+                    public void onProgress(int state) {
+                        responseHandler.onProgress(state);
+                    }
+                    @Override
+                    public void onFailure(int state) {
+                        responseHandler.onFailure(state);
+                    }
+                    @Override
+                    public void onNewHandle(RequestHandle requestHandle) {
+                        responseHandler.onNewHandle(requestHandle);
+                    }
+                });
+                return;
+            }
             responseHandler.onProgress(STATE_HANDLING);
             renewCookie(context);
             responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(url), params, new AsyncHttpResponseHandler() {
@@ -239,6 +260,27 @@ public class DeIfmoClient extends Client {
     public static void post(final Context context, final String url, final RequestParams params, final DeIfmoClientResponseHandler responseHandler){
         init();
         if (Static.isOnline(context)) {
+            if (checkJsessionId(context)) {
+                authorize(context, new DeIfmoClientResponseHandler() {
+                    @Override
+                    public void onSuccess(int statusCode, String response) {
+                        post(context, url, params, responseHandler);
+                    }
+                    @Override
+                    public void onProgress(int state) {
+                        responseHandler.onProgress(state);
+                    }
+                    @Override
+                    public void onFailure(int state) {
+                        responseHandler.onFailure(state);
+                    }
+                    @Override
+                    public void onNewHandle(RequestHandle requestHandle) {
+                        responseHandler.onNewHandle(requestHandle);
+                    }
+                });
+                return;
+            }
             responseHandler.onProgress(STATE_HANDLING);
             renewCookie(context);
             responseHandler.onNewHandle(httpclient.post(getAbsoluteUrl(url), params, new AsyncHttpResponseHandler() {

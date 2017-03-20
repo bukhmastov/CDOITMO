@@ -102,8 +102,7 @@ public class Storage {
                     return false;
                 }
                 File file = new File(getFileLocation(context, storage, general, path, true));
-                path = file.getAbsolutePath();
-                if (!file.exists()) {
+                 if (!file.exists()) {
                     file.getParentFile().mkdirs();
                     if (!file.createNewFile()) {
                         throw new Exception("Failed to create file: " + file.getPath());
@@ -112,7 +111,10 @@ public class Storage {
                 FileWriter fileWriter = new FileWriter(file);
                 fileWriter.write(data);
                 fileWriter.close();
-                Storage.proxy.push(path, data, 1);
+                Storage.proxy.push(file.getAbsolutePath(), data, 1);
+                if (storage == STORAGE.permanent && Objects.equals(path, "user#jsessionid")) {
+                    Storage.file.perm.put(context, "user#jsessionid_ts", String.valueOf(System.currentTimeMillis()));
+                }
                 return true;
             } catch (Exception e) {
                 return false;
@@ -152,7 +154,7 @@ public class Storage {
                 return false;
             }
         }
-         private static boolean clear(Context context, STORAGE storage, boolean general){
+        private static boolean clear(Context context, STORAGE storage, boolean general){
             try {
                 if (storage == null) {
                     return clear(context, STORAGE.cache, general) && clear(context, STORAGE.permanent, general);
