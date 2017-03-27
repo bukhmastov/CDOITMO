@@ -10,6 +10,8 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -38,7 +40,7 @@ public class Storage {
                 return Storage.file.clear(context, STORAGE.cache, false);
             }
             public static boolean clear(Context context, String path) {
-                return Storage.file.clear(context, STORAGE.cache, false);
+                return Storage.file.clear(context, STORAGE.cache, path, false);
             }
             public static boolean exists(Context context, String path) {
                 return Storage.file.exists(context, STORAGE.cache, false, path);
@@ -59,6 +61,9 @@ public class Storage {
             }
             public static boolean clear(Context context) {
                 return Storage.file.clear(context, STORAGE.permanent, false);
+            }
+            public static boolean clear(Context context, String path) {
+                return Storage.file.clear(context, STORAGE.permanent, path, false);
             }
             public static boolean exists(Context context, String path) {
                 return Storage.file.exists(context, STORAGE.permanent, false, path);
@@ -273,76 +278,85 @@ public class Storage {
     private static class proxy {
         private static long requests = 0;
         private static int maxStack = 8;
-        private static ArrayList<element> stack = new ArrayList<>();
-        private static class element {
-            public String path = "";
-            public String data = "";
-            public double priority = 1;
-            public long requests = 0;
-            public double rate = 0;
-            public element(String path, double priority, String data){
+        private static HashMap<String, ElementMeta> stackOfMeta = new HashMap<>();
+        private static HashMap<String, ElementData> stackOfData = new HashMap<>();
+        private static class ElementMeta {
+            String path = "";
+            double priority = 1;
+            long requests = 0;
+            double rate = 0;
+            ElementMeta(String path, double priority){
                 this.path = path;
-                this.data = data;
                 this.priority = priority;
             }
         }
+        private static class ElementData {
+            String path = "";
+            String data = "";
+            ElementData(String path, String data){
+                this.path = path;
+                this.data = data;
+            }
+        }
         private static void push(String path, String data, double priority){
-            boolean found = false;
-            for (element item : stack) {
-                if (Objects.equals(item.path, path)) {
-                    found = true;
-                    item.data = data;
-                    item.priority = priority;
-                    break;
-                }
+            if (stackOfMeta.containsKey(path)) {
+                stackOfMeta.get(path).priority = priority;
+            } else {
+                stackOfMeta.put(path, new ElementMeta(path, priority));
             }
-            if (!found) {
-                stack.add(new element(path, priority, data));
+            if (stackOfData.containsKey(path)) {
+                stackOfData.get(path).data = data;
+            } else {
+                stackOfData.put(path, new ElementData(path, data));
             }
-            empty();
+            check();
         }
         private static void access(String path){
-            for (element item : stack) {
-                if (Objects.equals(item.path, path)) {
-                    requests++;
-                    item.requests++;
-                    break;
-                }
+            if (stackOfMeta.containsKey(path)) {
+                requests++;
+                stackOfMeta.get(path).requests++;
             }
         }
         private static String get(String path){
-            for (element item : stack) {
-                if (Objects.equals(item.path, path)) return item.data;
+            if (stackOfData.containsKey(path)) {
+                return stackOfData.get(path).data;
+            } else {
+                return null;
             }
-            return null;
         }
         private static void delete(String path){
-            for (int i = 0; i < stack.size(); i++) {
-                element item = stack.get(i);
-                if (Objects.equals(item.path, path)) {
-                    stack.remove(i);
-                    break;
-                }
-            }
+            if (stackOfMeta.containsKey(path)) stackOfMeta.remove(path);
+            if (stackOfData.containsKey(path)) stackOfData.remove(path);
         }
-        private static void empty(){
+        private static void check(){
             if (requests + 10 > Long.MAX_VALUE) reset();
-            if (stack.size() > maxStack) {
-                for (element item : stack) {
-                    item.rate = ((double) item.requests / (double) requests) * item.priority;
+            if (stackOfData.size() > maxStack) {
+                for (Map.Entry<String, ElementMeta> entry : stackOfMeta.entrySet()) {
+                    ElementMeta elementMeta = entry.getValue();
+                    elementMeta.rate = ((double) elementMeta.requests / (double) requests) * elementMeta.priority;
                 }
-                Collections.sort(stack, new Comparator<element>() {
+                List<ElementMeta> elementMetas = new ArrayList<>(stackOfMeta.values());
+                Collections.sort(elementMetas, new Comparator<ElementMeta>() {
                     @Override
-                    public int compare(element s1, element s2) {
+                    public int compare(ElementMeta s1, ElementMeta s2) {
                         return s1.rate > s2.rate ? -1 : (s1.rate < s2.rate ? 1 : 0);
                     }
                 });
-                for (int i = maxStack; i < stack.size(); i++) stack.remove(i);
+                for (int i = maxStack; i < elementMetas.size(); i++) {
+                    stackOfData.remove(elementMetas.get(i).path);
+                }
+                /*Log.d(TAG, "------------------------");
+                for (Map.Entry<String, ElementData> entry : stackOfData.entrySet()) {
+                    ElementData elementData = entry.getValue();
+                    Log.d(TAG, elementData.path + " " + stackOfMeta.get(elementData.path).rate);
+                }
+                Log.d(TAG, "------------------------");*/
             }
         }
         static void reset(){
             requests = 0;
-            stack.clear();
+            stackOfMeta.clear();
+            stackOfData.clear();
         }
     }
 

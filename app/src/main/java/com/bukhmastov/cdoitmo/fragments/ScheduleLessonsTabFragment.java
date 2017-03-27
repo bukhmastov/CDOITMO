@@ -1,12 +1,12 @@
 package com.bukhmastov.cdoitmo.fragments;
 
 import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -45,25 +45,14 @@ public class ScheduleLessonsTabFragment extends Fragment {
 
     @Override
     public void onResume() {
-        if(!displayed) display();
         super.onResume();
+        if (!displayed) display();
     }
 
     @Override
     public void onDestroy() {
         displayed = false;
         super.onDestroy();
-    }
-
-    @Override
-    public boolean onContextItemSelected(MenuItem item) {
-        if (getUserVisibleHint()) {
-            if (ScheduleLessonsFragment.scheduleLessons != null) {
-                ScheduleLessonsFragment.scheduleLessons.search(Static.scheduleMenuItems.get(item.getItemId()).query);
-            }
-            return true;
-        }
-        return super.onContextItemSelected(item);
     }
 
     private void display(){
@@ -149,42 +138,56 @@ public class ScheduleLessonsTabFragment extends Fragment {
                                             scroll_schedule_lessons.post(new Runnable() {
                                                 @Override
                                                 public void run() {
-                                                    View day;
-                                                    switch (Calendar.getInstance().get(Calendar.DAY_OF_WEEK)) {
-                                                        case Calendar.MONDAY:
-                                                            day = fragment_schedule_lessons.findViewById(R.id.monday);
-                                                            if (day != null) break;
-                                                        case Calendar.TUESDAY:
-                                                            day = fragment_schedule_lessons.findViewById(R.id.tuesday);
-                                                            if (day != null) break;
-                                                        case Calendar.WEDNESDAY:
-                                                            day = fragment_schedule_lessons.findViewById(R.id.wednesday);
-                                                            if (day != null) break;
-                                                        case Calendar.THURSDAY:
-                                                            day = fragment_schedule_lessons.findViewById(R.id.thursday);
-                                                            if (day != null) break;
-                                                        case Calendar.FRIDAY:
-                                                            day = fragment_schedule_lessons.findViewById(R.id.friday);
-                                                            if (day != null) break;
-                                                        case Calendar.SATURDAY:
-                                                            day = fragment_schedule_lessons.findViewById(R.id.saturday);
-                                                            if (day != null) break;
-                                                        case Calendar.SUNDAY:
-                                                        default:
-                                                            day = null;
-                                                            break;
-                                                    }
-                                                    if (day != null) {
-                                                        int y = day.getTop();
-                                                        View header_schedule_lessons = fragment_schedule_lessons.findViewById(R.id.header_schedule_lessons);
-                                                        if (header_schedule_lessons != null)
-                                                            y += header_schedule_lessons.getMeasuredHeight();
-                                                        y += schedule_lessons_content.getPaddingTop();
-                                                        y += 1;
-                                                        scroll_schedule_lessons.scrollTo(0, y);
+                                                    Integer scroll = ScheduleLessonsFragment.scroll.get(TYPE);
+                                                    if (scroll == 0) {
+                                                        View day;
+                                                        switch (Calendar.getInstance().get(Calendar.DAY_OF_WEEK)) {
+                                                            case Calendar.MONDAY:
+                                                                day = fragment_schedule_lessons.findViewById(R.id.monday);
+                                                                if (day != null) break;
+                                                            case Calendar.TUESDAY:
+                                                                day = fragment_schedule_lessons.findViewById(R.id.tuesday);
+                                                                if (day != null) break;
+                                                            case Calendar.WEDNESDAY:
+                                                                day = fragment_schedule_lessons.findViewById(R.id.wednesday);
+                                                                if (day != null) break;
+                                                            case Calendar.THURSDAY:
+                                                                day = fragment_schedule_lessons.findViewById(R.id.thursday);
+                                                                if (day != null) break;
+                                                            case Calendar.FRIDAY:
+                                                                day = fragment_schedule_lessons.findViewById(R.id.friday);
+                                                                if (day != null) break;
+                                                            case Calendar.SATURDAY:
+                                                                day = fragment_schedule_lessons.findViewById(R.id.saturday);
+                                                                if (day != null) break;
+                                                            case Calendar.SUNDAY:
+                                                            default:
+                                                                day = null;
+                                                                break;
+                                                        }
+                                                        if (day != null) {
+                                                            int y = day.getTop();
+                                                            View header_schedule_lessons = fragment_schedule_lessons.findViewById(R.id.header_schedule_lessons);
+                                                            if (header_schedule_lessons != null) {
+                                                                y += header_schedule_lessons.getMeasuredHeight();
+                                                            }
+                                                            y += schedule_lessons_content.getPaddingTop();
+                                                            y += 1;
+                                                            scroll_schedule_lessons.scrollTo(0, y);
+                                                        }
+                                                    } else {
+                                                        scroll_schedule_lessons.scrollTo(0, scroll);
                                                     }
                                                 }
                                             });
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                                scroll_schedule_lessons.setOnScrollChangeListener(new View.OnScrollChangeListener() {
+                                                    @Override
+                                                    public void onScrollChange(View v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
+                                                        ScheduleLessonsFragment.scroll.put(TYPE, scrollY);
+                                                    }
+                                                });
+                                            }
                                         }
                                     } else if (state == ScheduleLessonsBuilder.STATE_LOADING) {
                                         schedule_lessons_content.addView(layout);
@@ -215,7 +218,7 @@ public class ScheduleLessonsTabFragment extends Fragment {
                 try_again_reload.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        ScheduleLessonsFragment.scheduleLessons.search(ScheduleLessonsFragment.query);
+                        ScheduleLessonsFragment.search(ScheduleLessonsFragment.query);
                     }
                 });
             }

@@ -87,6 +87,7 @@ public class TimeRemainingWidget {
                     long day = -1;
                     for (int i = 0; i < lessons.length(); i++) {
                         JSONObject lesson = lessons.getJSONObject(i);
+                        if (Objects.equals(lesson.getString("cdoitmo_type"), "reduced")) continue;
                         int lesson_week = lesson.getInt("week");
                         if (!(week == lesson_week || lesson_week == 2 || week < 0)) continue;
                         Matcher timeStart = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(lesson.getString("timeStart"));
@@ -115,7 +116,6 @@ public class TimeRemainingWidget {
                     }
                     day = day - ts;
                     day = day < 0 ? -1 : day;
-                    //Log.v(TAG, "Step | current=" + ts2date(current) + " | next=" + ts2date(next) + " | day=" + ts2date(day));
                     Data data = new Data();
                     if (current >= 0) data.current = ts2date(current);
                     if (next >= 0) data.next = ts2date(next);
@@ -142,7 +142,7 @@ public class TimeRemainingWidget {
         }
         private int getWeek(){
             try {
-                String weekStr = Storage.file.perm.get(context, "user#week");
+                String weekStr = Storage.file.general.get(context, "user#week");
                 if (!Objects.equals(weekStr, "")) {
                     JSONObject jsonObject = new JSONObject(weekStr);
                     int week = jsonObject.getInt("week");
@@ -153,7 +153,7 @@ public class TimeRemainingWidget {
                     }
                 }
             } catch (JSONException e) {
-                Storage.file.perm.delete(context, "user#week");
+                Storage.file.general.delete(context, "user#week");
                 return -1;
             }
             return -1;

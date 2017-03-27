@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/open_group"
+        android:title="@string/open_group_schedule" />
+
+    <item
+        android:id="@+id/open_teacher"
+        android:title="@string/open_teacher_schedule" />
+
+    <item
+        android:id="@+id/open_room"
+        android:title="@string/open_room_schedule" />
+
+    <item
+        android:id="@+id/open_location"
+        android:title="@string/open_location" />
+
+    <item
+        android:id="@+id/reduce_lesson"
+        android:title="@string/reduce_lesson" />
+
+    <item
+        android:id="@+id/restore_lesson"
+        android:title="@string/restore_lesson" />
+
+    <item
+        android:id="@+id/delete_lesson"
+        android:title="@string/delete_lesson" />
+
+</menu>

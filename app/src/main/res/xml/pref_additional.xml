@@ -17,6 +17,10 @@
             android:entries="@array/pref_protocol_changes_weeks_titles"
             android:entryValues="@array/pref_protocol_changes_weeks_values"
             android:defaultValue="1" />
+        <SwitchPreference
+            android:key="pref_protocol_changes_track"
+            android:defaultValue="true"
+            android:title="@string/pref_protocol_changes_track_title" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/schedule_lessons">
@@ -41,6 +45,9 @@
         <Preference
             android:key="pref_schedule_lessons_clear_cache"
             android:title="@string/clear_schedule_cache" />
+        <Preference
+            android:key="pref_schedule_lessons_clear_additional"
+            android:title="@string/pref_schedule_lessons_clear_additional_title" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/schedule_exams">

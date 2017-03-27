@@ -32,10 +32,33 @@ public class ProtocolConverter extends AsyncTask<JSONArray, Void, JSONObject> {
             for (int i = 0; i < protocol.length(); i++) {
                 JSONObject item = markConvert(protocol.getJSONObject(i));
                 String hash = Static.crypt(getCast(item));
-                double value = string2double(item.getString("value"));
-                double oldValue = string2double(Storage.file.cache.get(context, "rating#log#" + hash, "-1"));
-                double delta = oldValue < 0 ? 0 : value - oldValue;
-                if (oldValue != value) Storage.file.cache.put(context, "rating#log#" + hash, item.getString("value"));
+                Double value, oldValue, delta, oldDelta;
+                if (Storage.pref.get(context, "pref_protocol_changes_track_title", true)) {
+                    String changeLogItemString = Storage.file.cache.get(context, "protocol#log#" + hash, null);
+                    if (changeLogItemString == null) {
+                        oldValue = null;
+                        oldDelta = null;
+                    } else {
+                        JSONObject changeLogItem = new JSONObject(changeLogItemString);
+                        oldValue = changeLogItem.getDouble("value");
+                        oldDelta = changeLogItem.getDouble("delta");
+                    }
+                    value = string2double(item.getString("value"));
+                    if (oldValue == null) {
+                        delta = 0.0;
+                    } else {
+                        delta = value - oldValue;
+                        if (delta == 0.0) {
+                            delta = oldDelta;
+                        }
+                    }
+                    JSONObject log = new JSONObject();
+                    log.put("value", value);
+                    log.put("delta", delta);
+                    Storage.file.cache.put(context, "protocol#log#" + hash, log.toString());
+                } else {
+                    delta = 0.0;
+                }
                 item.put("cdoitmo_hash", hash);
                 item.put("cdoitmo_delta", markConverter(String.valueOf(delta), true));
                 item.put("cdoitmo_delta_double", delta);

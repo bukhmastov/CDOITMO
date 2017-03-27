@@ -1,11 +1,14 @@
 package com.bukhmastov.cdoitmo.builders;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.view.ContextMenu;
+import android.support.v7.widget.PopupMenu;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -14,7 +17,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsFragment;
-import com.bukhmastov.cdoitmo.objects.entities.ScheduleMenuItem;
+import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
 import com.bukhmastov.cdoitmo.utils.Static;
 
 import org.json.JSONArray;
@@ -33,7 +36,6 @@ public class ScheduleLessonsBuilder extends Thread {
     private int type;
     private float destiny;
     private int colorScheduleFlagTEXT = -1, colorScheduleFlagCommonBG = -1, colorScheduleFlagPracticeBG = -1, colorScheduleFlagLectureBG = -1, colorScheduleFlagLabBG = -1;
-    private int scheduleMenuItemIndex = 0;
 
     public static final int STATE_FAILED = 0;
     public static final int STATE_LOADING = 1;
@@ -51,9 +53,8 @@ public class ScheduleLessonsBuilder extends Thread {
         container.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
         try {
             delegate.state(STATE_LOADING, inflate(R.layout.state_loading_compact));
-            Static.scheduleMenuItems.clear();
-            scheduleMenuItemIndex = 0;
-            JSONArray schedule = ScheduleLessonsFragment.schedule.getJSONArray("schedule");
+            final JSONArray schedule = ScheduleLessonsFragment.schedule.getJSONArray("schedule");
+            final String cache_token = ScheduleLessonsFragment.schedule.getString("cache_token");
             int daysCount = 0;
             for (int i = 0; i < schedule.length(); i++) {
                 JSONObject day = schedule.getJSONObject(i);
@@ -61,7 +62,19 @@ public class ScheduleLessonsBuilder extends Thread {
                 int lessonsCount = 0;
                 LinearLayout dayLayout = (LinearLayout) inflate(R.layout.layout_schedule_lessons_day);
                 ((TextView) dayLayout.findViewById(R.id.day_title)).setText(day.getString("title").toUpperCase());
-                switch (day.getInt("index")) {
+                final int index = day.getInt("index");
+                dayLayout.findViewById(R.id.add_lesson).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        try {
+                            ScheduleLessons.createLesson(activity, ScheduleLessonsFragment.schedule, index, type);
+                        } catch (Exception e) {
+                            Static.error(e);
+                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        }
+                    }
+                });
+                switch (index) {
                     case 0: dayLayout.setId(R.id.monday); break;
                     case 1: dayLayout.setId(R.id.tuesday); break;
                     case 2: dayLayout.setId(R.id.wednesday); break;
@@ -74,10 +87,6 @@ public class ScheduleLessonsBuilder extends Thread {
                 for (int j = 0; j < lessons.length(); j++) {
                     final JSONObject lesson = lessons.getJSONObject(j);
                     if (!(type == 2 || type == lesson.getInt("week") || lesson.getInt("week") == 2)) continue;
-                    final String group = !Objects.equals(ScheduleLessonsFragment.schedule.getString("type"), "group") ? (lesson.has("group") ? (Objects.equals(lesson.getString("group"), "") ? null : lesson.getString("group")) : null) : null;
-                    final String teacher = !Objects.equals(ScheduleLessonsFragment.schedule.getString("type"), "teacher") ? (lesson.has("teacher") ? (Objects.equals(lesson.getString("teacher"), "") ? null : lesson.getString("teacher")) : null) : null;
-                    final String teacher_id = !Objects.equals(ScheduleLessonsFragment.schedule.getString("type"), "teacher") ? (lesson.has("teacher_id") ? (Objects.equals(lesson.getString("teacher_id"), "") ? null : lesson.getString("teacher_id")) : null) : null;
-                    final String room = !Objects.equals(ScheduleLessonsFragment.schedule.getString("type"), "room") ? (lesson.has("room") ? (Objects.equals(lesson.getString("room"), "") ? null : lesson.getString("room")) : null) : null;
                     lessonsCount++;
                     if (j != 0) {
                         View separator = new View(activity);
@@ -85,38 +94,82 @@ public class ScheduleLessonsBuilder extends Thread {
                         separator.setBackgroundColor(Static.colorSeparator);
                         lessonsLayout.addView(separator);
                     }
+                    final String cdoitmo_type = lesson.getString("cdoitmo_type");
                     final LinearLayout lessonLayout = (LinearLayout) inflate(R.layout.layout_schedule_lessons_item);
+                    if (Objects.equals(cdoitmo_type, "reduced")) {
+                        float alpha = 0.3F;
+                        lessonLayout.findViewById(R.id.time).setAlpha(alpha);
+                        lessonLayout.findViewById(R.id.data).setAlpha(alpha);
+                    } else {
+                        lessonLayout.findViewById(R.id.lesson_reduced_icon).setLayoutParams(new LinearLayout.LayoutParams(0, 0));
+                    }
+                    if (!Objects.equals(cdoitmo_type, "synthetic")) {
+                        lessonLayout.findViewById(R.id.lesson_synthetic_icon).setLayoutParams(new LinearLayout.LayoutParams(0, 0));
+                    }
+                    ((TextView) lessonLayout.findViewById(R.id.lesson_title)).setText(lesson.getString("subject"));
                     ((TextView) lessonLayout.findViewById(R.id.lesson_time_start)).setText(lesson.getString("timeStart"));
                     ((TextView) lessonLayout.findViewById(R.id.lesson_time_end)).setText(lesson.getString("timeEnd"));
-                    ((TextView) lessonLayout.findViewById(R.id.lesson_title)).setText(lesson.getString("subject"));
                     setDesc(lesson, (TextView) lessonLayout.findViewById(R.id.lesson_desc));
                     setFlags(lesson, (ViewGroup) lessonLayout.findViewById(R.id.lesson_flags));
                     setMeta(lesson, (TextView) lessonLayout.findViewById(R.id.lesson_meta));
-                    if (group != null || teacher != null || room != null) {
-                        lessonLayout.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
-                            @Override
-                            public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-                                menu.setHeaderTitle(R.string.open_schedule);
-                                if (group != null) {
-                                    Static.scheduleMenuItems.put(scheduleMenuItemIndex, new ScheduleMenuItem(activity.getString(R.string.group) + " " + group, group));
-                                    menu.add(0, scheduleMenuItemIndex, 0, Static.scheduleMenuItems.get(scheduleMenuItemIndex).label);
-                                    scheduleMenuItemIndex++;
-                                }
-                                if (teacher != null) {
-                                    Static.scheduleMenuItems.put(scheduleMenuItemIndex, new ScheduleMenuItem(teacher, teacher_id));
-                                    menu.add(0, scheduleMenuItemIndex, 0, Static.scheduleMenuItems.get(scheduleMenuItemIndex).label);
-                                    scheduleMenuItemIndex++;
-                                }
-                                if (room != null) {
-                                    Static.scheduleMenuItems.put(scheduleMenuItemIndex, new ScheduleMenuItem(activity.getString(R.string.room) + " " + room, room));
-                                    menu.add(0, scheduleMenuItemIndex, 0, Static.scheduleMenuItems.get(scheduleMenuItemIndex).label);
-                                    scheduleMenuItemIndex++;
-                                }
+                    lessonLayout.findViewById(R.id.lesson_touch_icon).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            try {
+                                final String group = getMenuTitle(lesson, "group", "group");
+                                final String teacher = getMenuTitle(lesson, "teacher", "teacher");
+                                final String teacher_id = getMenuTitle(lesson, "teacher", "teacher_id");
+                                final String room = getMenuTitle(lesson, "room", "room");
+                                final String building = getMenuTitle(lesson, "building", "building");
+                                PopupMenu popup = new PopupMenu(activity, view);
+                                Menu menu = popup.getMenu();
+                                popup.getMenuInflater().inflate(R.menu.schedule_lessons_item, menu);
+                                bindMenuItem(menu, R.id.open_group, activity.getString(R.string.group) + " " + group, group == null);
+                                bindMenuItem(menu, R.id.open_teacher, teacher, teacher == null || teacher_id == null);
+                                bindMenuItem(menu, R.id.open_room, activity.getString(R.string.room) + " " + room, room == null);
+                                bindMenuItem(menu, R.id.open_location, building, building == null);
+                                bindMenuItem(menu, R.id.reduce_lesson, activity.getString(R.string.reduce_lesson), !Objects.equals(cdoitmo_type, "normal"));
+                                bindMenuItem(menu, R.id.restore_lesson, activity.getString(R.string.restore_lesson), !Objects.equals(cdoitmo_type, "reduced"));
+                                bindMenuItem(menu, R.id.delete_lesson, activity.getString(R.string.delete_lesson), !Objects.equals(cdoitmo_type, "synthetic"));
+                                popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                                    @Override
+                                    public boolean onMenuItemClick(MenuItem item) {
+                                        switch (item.getItemId()) {
+                                            case R.id.open_group:
+                                                ScheduleLessonsFragment.searchAndClear(group);
+                                                break;
+                                            case R.id.open_teacher:
+                                                ScheduleLessonsFragment.searchAndClear(teacher_id);
+                                                break;
+                                            case R.id.open_room:
+                                                ScheduleLessonsFragment.searchAndClear(room);
+                                                break;
+                                            case R.id.open_location:
+                                                try {
+                                                    activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=Санкт-Петербург, " + building)));
+                                                } catch (ActivityNotFoundException e) {
+                                                    Static.toast(activity, activity.getString(R.string.failed_to_start_geo_activity));
+                                                }
+                                                break;
+                                            case R.id.reduce_lesson:
+                                                ScheduleLessons.reduceLesson(activity, cache_token, index, lesson);
+                                                break;
+                                            case R.id.restore_lesson:
+                                                ScheduleLessons.restoreLesson(activity, cache_token, index, lesson);
+                                                break;
+                                            case R.id.delete_lesson:
+                                                ScheduleLessons.deleteLesson(activity, cache_token, index, lesson);
+                                                break;
+                                        }
+                                        return false;
+                                    }
+                                });
+                                popup.show();
+                            } catch (Exception e){
+                                Static.error(e);
                             }
-                        });
-                    } else {
-                        lessonLayout.findViewById(R.id.lesson_touch_icon).setLayoutParams(new LinearLayout.LayoutParams(0, 0));
-                    }
+                        }
+                    });
                     lessonsLayout.addView(lessonLayout);
                 }
                 if (lessonsCount > 0) {
@@ -174,7 +227,6 @@ public class ScheduleLessonsBuilder extends Thread {
     }
     private void setMeta(final JSONObject lesson, TextView textView) throws Exception {
         String meta = null;
-        boolean isBuilding = false;
         switch (ScheduleLessonsFragment.schedule.getString("type")) {
             case "group":
             case "teacher":
@@ -182,18 +234,15 @@ public class ScheduleLessonsBuilder extends Thread {
                 String building = lesson.getString("building");
                 if (Objects.equals(room, "")) {
                     meta = building;
-                    isBuilding = true;
                 } else {
                     meta = activity.getString(R.string.room_short) + " " + room;
                     if (!Objects.equals(building, "")) {
                         meta += " (" + building + ")";
-                        isBuilding = true;
                     }
                 }
                 break;
             case "room":
                 meta = lesson.getString("building");
-                isBuilding = true;
                 break;
         }
         meta = Objects.equals(meta, "") ? null : meta;
@@ -201,18 +250,6 @@ public class ScheduleLessonsBuilder extends Thread {
             textView.setHeight(0);
         } else {
             textView.setText(meta);
-            if (isBuilding) {
-                textView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        try {
-                            activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=Санкт-Петербург, " + lesson.getString("building"))));
-                        } catch (JSONException e) {
-                            Static.error(e);
-                        }
-                    }
-                });
-            }
         }
     }
     private void setFlags(JSONObject lesson, ViewGroup viewGroup) throws Exception {
@@ -250,6 +287,16 @@ public class ScheduleLessonsBuilder extends Thread {
         flag_content.setBackgroundColor(backgroundColor);
         flag_content.setTextColor(textColor);
         return flagContainer;
+    }
+    private String getMenuTitle(JSONObject lesson, String type1, String type2) throws JSONException {
+        return !Objects.equals(ScheduleLessonsFragment.schedule.getString("type"), type1) ? (lesson.has(type2) ? (Objects.equals(lesson.getString(type2), "") ? null : lesson.getString(type2)) : null) : null;
+    }
+    private void bindMenuItem(Menu menu, int id, String text, boolean hide){
+        if (hide) {
+            menu.findItem(id).setVisible(false);
+        } else {
+            menu.findItem(id).setTitle(text);
+        }
     }
 
 }

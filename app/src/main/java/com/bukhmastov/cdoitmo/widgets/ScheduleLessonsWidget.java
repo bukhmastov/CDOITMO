@@ -13,6 +13,7 @@ import android.widget.RemoteViews;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.ScheduleLessonsWidgetConfigureActivity;
 import com.bukhmastov.cdoitmo.activities.SplashActivity;
+import com.bukhmastov.cdoitmo.converters.ScheduleLessonsAdditionalConverter;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
 import com.bukhmastov.cdoitmo.utils.Static;
@@ -117,7 +118,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
             public void onNewHandle(RequestHandle requestHandle) {}
         });
         try {
-            scheduleLessons.search(settings.getString("query"), 0);
+            scheduleLessons.search(settings.getString("query"), 0, false, false);
         } catch (JSONException e) {
             e.printStackTrace();
             failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_load_schedule));
@@ -151,7 +152,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         bindOpen(context, appWidgetId, views);
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }
-    private static void display(Context context, AppWidgetManager appWidgetManager, int appWidgetId){
+    private static void display(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId){
         JSONObject settings, cache;
         try {
             String tmp = ScheduleLessonsWidgetConfigureActivity.getPref(context, appWidgetId, "settings");
@@ -187,7 +188,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
             backGroundColor = Color.argb(150, Color.red(backGroundColor), Color.green(backGroundColor), Color.blue(backGroundColor));
             JSONObject json = cache.getJSONObject("content");
             backGroundColor = Color.argb(150, Color.red(backGroundColor), Color.green(backGroundColor), Color.blue(backGroundColor));
-            RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget);
+            final RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget);
             views.setInt(R.id.widget_content, "setBackgroundColor", backGroundColor);
             views.setInt(R.id.widget_title_layout, "setBackgroundColor", backGroundColor);
             views.setInt(R.id.widget_title, "setTextColor", textColor);
@@ -210,14 +211,20 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
             views.setTextViewText(R.id.slw_day_title, title + (week == 0 ? " (" + context.getString(R.string.tab_even) + ")" : (week == 1 ? " (" + context.getString(R.string.tab_odd) + ")" : "")).toUpperCase());
             views.setInt(R.id.slw_day_title, "setTextColor", textColor);
             views.setInt(R.id.slw_day_title, "setBackgroundColor", Color.argb(80, Color.red(backGroundColor), Color.green(backGroundColor), Color.blue(backGroundColor)));
-            Intent adapter = new Intent(context, ScheduleLessonsWidgetService.class);
-            adapter.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
-            adapter.setData(Uri.parse(adapter.toUri(Intent.URI_INTENT_SCHEME)));
-            views.setRemoteAdapter(R.id.slw_day_schedule, adapter);
-            bindRefresh(context, appWidgetId, views);
-            bindOpen(context, appWidgetId, views);
-            appWidgetManager.updateAppWidget(appWidgetId, views);
-            appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.slw_day_schedule);
+            new ScheduleLessonsAdditionalConverter(context, new ScheduleLessonsAdditionalConverter.response() {
+                @Override
+                public void finish(JSONObject content) {
+                    ScheduleLessonsWidgetConfigureActivity.savePref(context, appWidgetId, "cache_converted", content.toString());
+                    Intent adapter = new Intent(context, ScheduleLessonsWidgetService.class);
+                    adapter.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+                    adapter.setData(Uri.parse(adapter.toUri(Intent.URI_INTENT_SCHEME)));
+                    views.setRemoteAdapter(R.id.slw_day_schedule, adapter);
+                    bindRefresh(context, appWidgetId, views);
+                    bindOpen(context, appWidgetId, views);
+                    appWidgetManager.updateAppWidget(appWidgetId, views);
+                    appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.slw_day_schedule);
+                }
+            }).execute(cache.getJSONObject("content"));
         } catch (Exception e) {
             e.printStackTrace();
             if (Objects.equals(e.getMessage(), "settings cannot be null")) {
@@ -301,7 +308,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     }
     private static int getWeek(Context context){
         try {
-            String weekStr = Storage.file.perm.get(context, "user#week");
+            String weekStr = Storage.file.general.get(context, "user#week");
             if(!Objects.equals(weekStr, "")){
                 JSONObject jsonObject = new JSONObject(weekStr);
                 int week = jsonObject.getInt("week");
@@ -312,7 +319,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 }
             }
         } catch (JSONException e) {
-            Storage.file.perm.delete(context, "user#week");
+            Storage.file.general.delete(context, "user#week");
             return -1;
         }
         return -1;

@@ -7,4 +7,7 @@
     <item name="friday" type="id"/>
     <item name="saturday" type="id"/>
     <item name="sunday" type="id"/>
+
+    <item name="visible" type="id"/>
+    <item name="masked" type="id"/>
 </resources>

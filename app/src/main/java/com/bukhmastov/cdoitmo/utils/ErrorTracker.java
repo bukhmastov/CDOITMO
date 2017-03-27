@@ -37,7 +37,7 @@ public class ErrorTracker {
             }
             errorList.clear();
             Intent emailIntent = new Intent(Intent.ACTION_SEND);
-            emailIntent.setType("message/rfc822");
+            emailIntent.setType("text/plain");
             emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{"bukhmastov-alex@ya.ru"});
             emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "CDO ITMO - report");
             emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, stringBuilder.toString());

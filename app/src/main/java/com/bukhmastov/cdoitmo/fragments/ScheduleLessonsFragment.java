@@ -1,11 +1,13 @@
 package com.bukhmastov.cdoitmo.fragments;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.SearchView;
+import android.util.SparseIntArray;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -20,6 +22,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.MainActivity;
 import com.bukhmastov.cdoitmo.adapters.PagerAdapter;
 import com.bukhmastov.cdoitmo.adapters.TeacherPickerListView;
+import com.bukhmastov.cdoitmo.converters.ScheduleLessonsAdditionalConverter;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
 import com.bukhmastov.cdoitmo.utils.Static;
@@ -33,7 +36,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
 
-public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons.response {
+public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons.response, ViewPager.OnPageChangeListener {
 
     private static final String TAG = "ScheduleLessonsFragment";
     public static ScheduleLessons scheduleLessons;
@@ -43,6 +46,9 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
     private TabLayout schedule_tabs;
     public static JSONObject schedule;
     public static boolean schedule_cached = false;
+    public static SparseIntArray scroll = new SparseIntArray();
+    public static int tabSelected = -1;
+    public static boolean reScheduleRequired = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -91,13 +97,19 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
             } else {
                 scope = scheduleLessons.getDefault();
             }
-            scheduleLessons.search(scope);
+            search(scope);
+        }
+        if (reScheduleRequired) {
+            reScheduleRequired = false;
+            reSchedule(getActivity());
         }
     }
 
     @Override
     public void onPause() {
         super.onPause();
+        ScheduleLessonsFragment.scroll.clear();
+        ScheduleLessonsFragment.tabSelected = -1;
         if (fragmentRequestHandle != null) {
             loaded = false;
             fragmentRequestHandle.cancel(true);
@@ -117,6 +129,19 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
             }
         } catch (Exception e){
             Static.error(e);
+        }
+    }
+
+    public static void searchAndClear(String query){
+        ScheduleLessonsFragment.scroll.clear();
+        ScheduleLessonsFragment.tabSelected = -1;
+        search(query);
+    }
+
+    public static void search(String query){
+        if (ScheduleLessonsFragment.scheduleLessons != null) {
+            ScheduleLessonsFragment.query = query;
+            ScheduleLessonsFragment.scheduleLessons.search(query);
         }
     }
 
@@ -153,7 +178,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
                         offline_reload.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                scheduleLessons.search(query);
+                                search(query);
                             }
                         });
                     }
@@ -166,7 +191,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
                         try_again_reload.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                scheduleLessons.search(query);
+                                search(query);
                             }
                         });
                     }
@@ -188,7 +213,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
                 JSONArray teachers = json.getJSONArray("list");
                 if (teachers.length() > 0) {
                     if (teachers.length() == 1) {
-                        scheduleLessons.search(teachers.getJSONObject(0).getString("pid"));
+                        search(teachers.getJSONObject(0).getString("pid"));
                         return;
                     }
                     draw(R.layout.layout_schedule_lessons_teacher_picker);
@@ -208,7 +233,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
                         teacher_picker_list_view.setAdapter(new TeacherPickerListView(getActivity(), teachersMap));
                         teacher_picker_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                                scheduleLessons.search(teachersMap.get(position).get("pid"));
+                                search(teachersMap.get(position).get("pid"));
                             }
                         });
                     }
@@ -223,14 +248,23 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
                     ViewPager schedule_view = (ViewPager) getActivity().findViewById(R.id.schedule_pager);
                     if (schedule_view != null) {
                         schedule_view.setAdapter(new PagerAdapter(getFragmentManager(), getContext()));
+                        schedule_view.addOnPageChangeListener(this);
                         schedule_tabs.setupWithViewPager(schedule_view);
                     }
                     TabLayout.Tab tab;
-                    int pref = Integer.parseInt(Storage.pref.get(getContext(), "pref_schedule_lessons_week", "-1"));
-                    if (pref == -1) {
-                        tab = schedule_tabs.getTabAt(Static.week >= 0 ? (Static.week % 2) + 1 : 0);
+                    if (ScheduleLessonsFragment.tabSelected == -1) {
+                        int pref = Integer.parseInt(Storage.pref.get(getContext(), "pref_schedule_lessons_week", "-1"));
+                        if (pref == -1) {
+                            tab = schedule_tabs.getTabAt(Static.week >= 0 ? (Static.week % 2) + 1 : 0);
+                        } else {
+                            tab = schedule_tabs.getTabAt(pref);
+                        }
                     } else {
-                        tab = schedule_tabs.getTabAt(pref);
+                        try {
+                            tab = schedule_tabs.getTabAt(ScheduleLessonsFragment.tabSelected);
+                        } catch (Exception e) {
+                            tab = null;
+                        }
                     }
                     if (tab != null) tab.select();
                 } else {
@@ -284,5 +318,35 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
             Static.error(e);
         }
     }
+
+    public static void reSchedule(final Context context){
+        new ScheduleLessonsAdditionalConverter(context, new ScheduleLessonsAdditionalConverter.response() {
+            @Override
+            public void finish(JSONObject json) {
+                schedule = json;
+                try {
+                    Static.snackBar(((Activity) context).findViewById(android.R.id.content), context.getString(R.string.schedule_update_required), context.getString(R.string.update), new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            search(ScheduleLessonsFragment.query);
+                        }
+                    });
+                } catch (Exception e) {
+                    Static.error(e);
+                }
+            }
+        }).execute(schedule);
+    }
+
+    @Override
+    public void onPageSelected(int position) {
+        ScheduleLessonsFragment.tabSelected = position;
+    }
+
+    @Override
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
+
+    @Override
+    public void onPageScrollStateChanged(int state) {}
 
 }

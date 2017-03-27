@@ -37,7 +37,6 @@ public class DeIfmoClient extends Client {
     public static final int FAILED_AUTH_CREDENTIALS_REQUIRED = 3;
     public static final int FAILED_AUTH_CREDENTIALS_FAILED = 4;
 
-
     public static void check(final Context context, final DeIfmoClientResponseHandler responseHandler){
         init();
         if (Static.isOnline(context)) {
@@ -75,10 +74,10 @@ public class DeIfmoClient extends Client {
                                         JSONObject jsonObject = new JSONObject();
                                         jsonObject.put("timestamp", Calendar.getInstance().getTimeInMillis());
                                         jsonObject.put("week", Integer.parseInt(result.get("week")));
-                                        Storage.file.perm.put(context, "user#week", jsonObject.toString());
+                                        Storage.file.general.put(context, "user#week", jsonObject.toString());
                                     } catch (Exception e) {
                                         Static.error(e);
-                                        Storage.file.perm.delete(context, "user#week");
+                                        Storage.file.general.delete(context, "user#week");
                                     }
                                     responseHandler.onSuccess(200, "");
                                 } else {
@@ -178,7 +177,7 @@ public class DeIfmoClient extends Client {
     public static void get(final Context context, final String url, final RequestParams params, final DeIfmoClientResponseHandler responseHandler, final boolean reAuth){
         init();
         if (Static.isOnline(context)) {
-            if (checkJsessionId(context)) {
+            if (reAuth && checkJsessionId(context)) {
                 authorize(context, new DeIfmoClientResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, String response) {

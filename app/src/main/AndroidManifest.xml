@@ -59,6 +59,14 @@
                 android:value="com.bukhmastov.cdoitmo.activities.MainActivity" />
         </activity>
         <activity
+            android:name=".activities.ScheduleLessonCreateActivity"
+            android:label="@string/lesson_creation"
+            android:parentActivityName=".activities.MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.bukhmastov.cdoitmo.activities.MainActivity" />
+        </activity>
+        <activity
             android:name=".activities.SettingsActivity"
             android:label="@string/settings"
             android:parentActivityName=".activities.MainActivity" >
@@ -73,6 +81,14 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.bukhmastov.cdoitmo.activities.SettingsActivity" />
+        </activity>
+        <activity
+            android:name=".activities.PikaActivity"
+            android:theme="@style/AppTheme.Transparent"
+            android:parentActivityName=".activities.AboutActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.bukhmastov.cdoitmo.activities.AboutActivity" />
         </activity>
 
         <service

@@ -37,7 +37,6 @@ public class LoginActivity extends AppCompatActivity {
     public static final int SIGNAL_LOGOUT = 3;
     public static final int SIGNAL_CREDENTIALS_REQUIRED = 4;
     public static final int SIGNAL_CREDENTIALS_FAILED = 5;
-    private RequestHandle authRequestHandle = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,12 +89,6 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if (authRequestHandle != null) authRequestHandle.cancel(true);
-    }
-
     private void show(){
         try {
             String current_login = Storage.file.general.get(this, "users#current_login");
@@ -103,7 +96,7 @@ public class LoginActivity extends AppCompatActivity {
                 String login = Storage.file.perm.get(this, "user#login");
                 String password = Storage.file.perm.get(this, "user#password");
                 String role = Storage.file.perm.get(this, "user#role");
-                auth(login, password, role);
+                auth(login, password, role, false);
             } else {
                 LinearLayout login_tiles_container = new LinearLayout(this);
                 login_tiles_container.setOrientation(LinearLayout.VERTICAL);
@@ -118,7 +111,7 @@ public class LoginActivity extends AppCompatActivity {
                         String password = "";
                         if (input_login != null) login = input_login.getText().toString();
                         if (input_password != null) password = input_password.getText().toString();
-                        auth(login, password, "student");
+                        auth(login, password, "student", true);
                     }
                 });
                 login_tiles_container.addView(layout_login_new_user_tile);
@@ -144,7 +137,7 @@ public class LoginActivity extends AppCompatActivity {
                         layout_login_user_tile.findViewById(R.id.auth).setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                auth(login, password, role);
+                                auth(login, password, role, false);
                             }
                         });
                         login_tiles_container.addView(layout_login_user_tile);
@@ -159,8 +152,12 @@ public class LoginActivity extends AppCompatActivity {
             snackBar(getString(R.string.something_went_wrong));
         }
     }
-    private void auth(final String login, String password, String role){
+    private void auth(final String login, String password, String role, final boolean newUser){
         if (!login.isEmpty() && !password.isEmpty()) {
+            if (Objects.equals(login, "general")) {
+                snackBar(getString(R.string.wrong_login_general));
+                return;
+            }
             Storage.file.general.put(this, "users#current_login", login);
             Storage.file.perm.put(this, "user#login", login);
             Storage.file.perm.put(this, "user#password", password);
@@ -168,7 +165,7 @@ public class LoginActivity extends AppCompatActivity {
             DeIfmoClient.check(this, new DeIfmoClientResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, String response) {
-                    authorized();
+                    authorized(newUser);
                 }
                 @Override
                 public void onProgress(int state) {
@@ -187,7 +184,7 @@ public class LoginActivity extends AppCompatActivity {
                     switch (state) {
                         case DeIfmoClient.FAILED_OFFLINE:
                             Static.OFFLINE_MODE = true;
-                            authorized();
+                            authorized(newUser);
                             return;
                         case DeIfmoClient.FAILED_TRY_AGAIN:
                         case DeIfmoClient.FAILED_AUTH_TRY_AGAIN: snackBar(getString(R.string.auth_failed)); break;
@@ -197,21 +194,20 @@ public class LoginActivity extends AppCompatActivity {
                     logoutDone(login, false);
                 }
                 @Override
-                public void onNewHandle(RequestHandle requestHandle) {
-                    authRequestHandle = requestHandle;
-                }
+                public void onNewHandle(RequestHandle requestHandle) {}
             });
         } else {
             snackBar(getString(R.string.fill_fields));
         }
     }
-    private void authorized(){
+    private void authorized(boolean newUser){
         String current_login = Storage.file.general.get(this, "users#current_login");
         if (!current_login.isEmpty()) {
             accounts.push(this, current_login);
             Static.authorized = true;
             Static.updateWeek(this);
             Static.protocolTracker = new ProtocolTracker(this);
+            if (newUser) Static.protocolChangesTrackSetup(this, 0);
             finish();
         } else {
             snackBar(getString(R.string.something_went_wrong));
@@ -238,9 +234,7 @@ public class LoginActivity extends AppCompatActivity {
                 logoutDone(login, true);
             }
             @Override
-            public void onNewHandle(RequestHandle requestHandle) {
-                authRequestHandle = requestHandle;
-            }
+            public void onNewHandle(RequestHandle requestHandle) {}
         }, false);
     }
     private void logoutDone(String login, boolean showSnackBar){

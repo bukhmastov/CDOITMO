@@ -41,7 +41,6 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
     private static final String TAG = "Room101Fragment";
     private boolean loaded = false;
     public static RequestHandle fragmentRequestHandle = null;
-    private JSONObject viewRequest = null;
     private String action_extra = null;
 
     @Override
@@ -298,20 +297,13 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
         }
     }
     private void load(boolean force){
-        if(!force || Static.OFFLINE_MODE){
-            try {
-                final String cache = Storage.file.cache.get(getContext(), "room101#core");
-                if (!Objects.equals(cache, "")) {
-                    viewRequest = new JSONObject(cache).getJSONObject("data");
-                    display();
-                    return;
-                }
-            } catch (Exception e){
-                Static.error(e);
-                loadFailed();
+        if (!force || Static.OFFLINE_MODE) {
+            if (!Objects.equals(Storage.file.cache.get(getContext(), "room101#core"), "")) {
+                display();
+                return;
             }
         }
-        if(!Static.OFFLINE_MODE) {
+        if (!Static.OFFLINE_MODE) {
             execute(getContext(), "delRequest", new Room101ClientResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, String response) {
@@ -319,12 +311,11 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                         new Room101ViewRequestParse(new Room101ViewRequestParse.response() {
                             @Override
                             public void finish(JSONObject json) {
-                                viewRequest = json;
-                                if (viewRequest != null) {
+                                if (json != null) {
                                     try {
                                         JSONObject jsonObject = new JSONObject();
                                         jsonObject.put("timestamp", Calendar.getInstance().getTimeInMillis());
-                                        jsonObject.put("data", viewRequest);
+                                        jsonObject.put("data", json);
                                         Storage.file.cache.put(getContext(), "room101#core", jsonObject.toString());
                                     } catch (JSONException e) {
                                         Static.error(e);
@@ -358,9 +349,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                     switch (state) {
                         case Room101Client.FAILED_OFFLINE:
                             try {
-                                final String cache = Storage.file.cache.get(getContext(), "room101#core");
-                                if (!Objects.equals(cache, "")) {
-                                    viewRequest = new JSONObject(cache);
+                                if (!Objects.equals(Storage.file.cache.get(getContext(), "room101#core"), "")) {
                                     display();
                                     return;
                                 }
@@ -435,6 +424,11 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
     }
     private void display(){
         try {
+            JSONObject viewRequest = null;
+            String cache = Storage.file.cache.get(getContext(), "room101#core");
+            if (!cache.isEmpty()) {
+                viewRequest = new JSONObject(cache).getJSONObject("data");
+            }
             if (viewRequest == null) throw new NullPointerException("viewRequest cannot be null");
             if (action_extra != null) {
                 switch (action_extra) {
@@ -546,12 +540,12 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
             }
             @Override
             public void onFailure(int state, int statusCode, Header[] headers) {
-                if(statusCode == 302){
+                if (statusCode == 302) {
                     boolean found = false;
-                    for(Header header : headers){
-                        if(Objects.equals(header.getName(), "Location")){
+                    for (Header header : headers) {
+                        if (Objects.equals(header.getName(), "Location")) {
                             String url = header.getValue().trim();
-                            if(!url.isEmpty()){
+                            if (!url.isEmpty()) {
                                 found = true;
                                 Room101Client.get(context, url, null, new Room101ClientResponseHandler() {
                                     @Override
@@ -575,7 +569,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                             break;
                         }
                     }
-                    if(!found){
+                    if (!found) {
                         responseHandler.onFailure(Room101Client.FAILED_EXPECTED_REDIRECTION, Room101Client.STATUS_CODE_EMPTY, null);
                     }
                 } else {

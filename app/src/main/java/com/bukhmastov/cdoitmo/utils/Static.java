@@ -8,15 +8,20 @@ import android.content.pm.PackageInfo;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.support.design.widget.Snackbar;
-import android.util.SparseArray;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
+import android.widget.Toast;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.MainActivity;
 import com.bukhmastov.cdoitmo.activities.SplashActivity;
-import com.bukhmastov.cdoitmo.objects.entities.ScheduleMenuItem;
+import com.bukhmastov.cdoitmo.converters.ProtocolConverter;
+import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
+import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoRestClientResponseHandler;
+import com.loopj.android.http.RequestHandle;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -44,7 +49,6 @@ public class Static {
     public static ProtocolTracker protocolTracker = null;
     public static boolean darkTheme = false;
     public static int intentFlagRestart = 268468224;
-    public static SparseArray<ScheduleMenuItem> scheduleMenuItems = new SparseArray<>();
 
     public static void init(Context context) {
         if (Static.errorTracker == null) {
@@ -101,7 +105,7 @@ public class Static {
     }
     public static void updateWeek(Context context){
         try {
-            String weekStr = Storage.file.perm.get(context, "user#week");
+            String weekStr = Storage.file.general.get(context, "user#week");
             if(!Objects.equals(weekStr, "")){
                 JSONObject jsonObject = new JSONObject(weekStr);
                 int week = jsonObject.getInt("week");
@@ -113,7 +117,7 @@ public class Static {
             }
         } catch (JSONException e) {
             Static.error(e);
-            Storage.file.perm.delete(context, "user#week");
+            Storage.file.general.delete(context, "user#week");
         }
     }
     public static void logout(Context context){
@@ -136,12 +140,7 @@ public class Static {
         String message = getUpdateTime(activity, time);
         int shift = (int) ((Calendar.getInstance().getTimeInMillis() - time) / 1000L);
         if (show_now || shift > 4) {
-            View layout = activity.findViewById(layoutId);
-            if (layout != null) {
-                Snackbar snackbar = Snackbar.make(layout, activity.getString(R.string.update_date) + " " + message, Snackbar.LENGTH_SHORT);
-                snackbar.getView().setBackgroundColor(Static.colorBackgroundSnackBar);
-                snackbar.show();
-            }
+            Static.snackBar(activity.findViewById(layoutId), activity.getString(R.string.update_date) + " " + message);
         }
     }
     public static String getUpdateTime(Activity activity, long time) {
@@ -221,6 +220,56 @@ public class Static {
                 activity.runOnUiThread(runnable);
             }
         }).start();
+    }
+    public static void toast(Context context, String text){
+        Toast.makeText(context, text, Toast.LENGTH_SHORT).show();
+    }
+    public static void snackBar(Activity activity, String text){
+        Static.snackBar(activity.findViewById(android.R.id.content), text);
+    }
+    public static void snackBar(View layout, String text){
+        snackBar(layout, text, null, null);
+    }
+    public static void snackBar(View layout, String text, String action, View.OnClickListener onClickListener){
+        if (layout != null) {
+            Snackbar snackbar = Snackbar.make(layout, text, Snackbar.LENGTH_LONG);
+            snackbar.getView().setBackgroundColor(Static.colorBackgroundSnackBar);
+            if (action != null) snackbar.setAction(action, onClickListener);
+            snackbar.show();
+        }
+    }
+    public static void protocolChangesTrackSetup(final Context context, int attempt){
+        if (!Storage.pref.get(context, "pref_protocol_changes_track", true)) return;
+        if (attempt++ < 3) {
+            final int finalAttempt = attempt;
+            DeIfmoRestClient.get(context, "eregisterlog?days=126", null, new DeIfmoRestClientResponseHandler() {
+                @Override
+                public void onSuccess(int statusCode, JSONObject responseObj, JSONArray responseArr) {
+                    if (statusCode == 200 && responseArr != null) {
+                        try {
+                            JSONArray array = new JSONArray();
+                            array.put(18);
+                            new ProtocolConverter(context, new ProtocolConverter.response() {
+                                @Override
+                                public void finish(JSONObject json) {
+                                    Log.i("ProtocolChangesTrack", "Uploaded");
+                                }
+                            }).execute(responseArr, array);
+                        } catch (Exception e) {
+                            Static.error(e);
+                        }
+                    } else {
+                        protocolChangesTrackSetup(context, finalAttempt);
+                    }
+                }
+                @Override
+                public void onProgress(int state) {}
+                @Override
+                public void onFailure(int state) {}
+                @Override
+                public void onNewHandle(RequestHandle requestHandle) {}
+            });
+        }
     }
 
 }

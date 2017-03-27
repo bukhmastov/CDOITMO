@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -12,10 +13,15 @@ import android.widget.Toast;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.utils.Static;
 
+import java.util.Random;
+
 public class AboutActivity extends AppCompatActivity {
 
+    private final Random random = new Random();
     private int counterToReport = 0;
     private int tapsToReport = 7;
+    private int counterToPika = 0;
+    private int tapsToPika = 5;
     private Toast toast;
 
     @Override
@@ -36,8 +42,23 @@ public class AboutActivity extends AppCompatActivity {
             app_info_icon.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    if (counterToPika >= tapsToPika) {
+                        if (random.nextInt(200) % 10 == 0) {
+                            startActivity(new Intent(getBaseContext(), PikaActivity.class));
+                        }
+                    } else {
+                        counterToPika++;
+                    }
+                }
+            });
+        }
+        View toolbar_about = findViewById(R.id.toolbar_about);
+        if (toolbar_about != null) {
+            toolbar_about.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
                     counterToReport++;
-                    if (counterToReport > 2 && counterToReport < tapsToReport) {
+                    if (counterToReport > 3 && counterToReport < tapsToReport) {
                         if (toast != null) toast.cancel();
                         toast = Toast.makeText(getBaseContext(), "Для отправки отчета нажмите еще " + (tapsToReport - counterToReport) + " раз(а)", Toast.LENGTH_SHORT);
                         toast.show();
@@ -53,7 +74,6 @@ public class AboutActivity extends AppCompatActivity {
                 }
             });
         }
-
     }
 
     @Override

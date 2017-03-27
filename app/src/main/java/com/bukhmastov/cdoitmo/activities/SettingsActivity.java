@@ -15,7 +15,6 @@ import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
@@ -120,6 +119,13 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             case "pref_dark_theme":
                 Static.reLaunch(this);
                 break;
+            case "pref_protocol_changes_track":
+                if (Storage.pref.get(this, "pref_protocol_changes_track", true)) {
+                    Static.protocolChangesTrackSetup(this, 0);
+                } else {
+                    Storage.file.cache.clear(this, "rating#log");
+                }
+                break;
         }
     }
 
@@ -158,20 +164,18 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                 pref_reset_application.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                        builder .setTitle(getString(R.string.pref_reset_application_summary))
-                                .setMessage("При очистке приложения выполнятся следующие действия:\n1. Все сохраненные данные будут стерты.\n2. Все работающие виджеты прекратят свою работу.\n3. Вы выйдите из аккаунта.\n4. Приложение будет перезапущено.")
+                        new AlertDialog.Builder(getActivity())
+                                .setTitle(getString(R.string.pref_reset_application_summary))
+                                .setMessage(R.string.pref_reset_application_warning)
                                 .setIcon(R.drawable.ic_warning)
-                                .setPositiveButton("Продолжить", new DialogInterface.OnClickListener() {
+                                .setPositiveButton(R.string.proceed, new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
                                         Static.hardReset(getActivity());
                                     }
                                 })
                                 .setNegativeButton(android.R.string.cancel, null)
-                        ;
-                        AlertDialog alert = builder.create();
-                        alert.show();
+                                .create().show();
                         return false;
                     }
                 });
@@ -193,12 +197,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
                         boolean success = Storage.file.cache.clear(getActivity());
-                        View content_container = getActivity().findViewById(android.R.id.content);
-                        if (content_container != null) {
-                            Snackbar snackbar = Snackbar.make(content_container, getActivity().getString(success ? R.string.cache_cleared : R.string.something_went_wrong), Snackbar.LENGTH_SHORT);
-                            snackbar.getView().setBackgroundColor(Static.colorBackgroundSnackBar);
-                            snackbar.show();
-                        }
+                        Static.snackBar(getActivity(), getActivity().getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
                         return false;
                     }
                 });
@@ -234,12 +233,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
                         boolean success = Storage.file.cache.clear(getActivity(), "schedule_lessons");
-                        View content_container = getActivity().findViewById(android.R.id.content);
-                        if (content_container != null) {
-                            Snackbar snackbar = Snackbar.make(content_container, getActivity().getString(success ? R.string.cache_cleared : R.string.something_went_wrong), Snackbar.LENGTH_SHORT);
-                            snackbar.getView().setBackgroundColor(Static.colorBackgroundSnackBar);
-                            snackbar.show();
-                        }
+                        Static.snackBar(getActivity(), getActivity().getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
                         return false;
                     }
                 });
@@ -250,16 +244,35 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
                         boolean success = Storage.file.cache.clear(getActivity(), "schedule_exams");
-                        View content_container = getActivity().findViewById(android.R.id.content);
-                        if (content_container != null) {
-                            Snackbar snackbar = Snackbar.make(content_container, getActivity().getString(success ? R.string.cache_cleared : R.string.something_went_wrong), Snackbar.LENGTH_SHORT);
-                            snackbar.getView().setBackgroundColor(Static.colorBackgroundSnackBar);
-                            snackbar.show();
-                        }
+                        Static.snackBar(getActivity(), getActivity().getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
                         return false;
                     }
                 });
             }
+
+            Preference pref_schedule_lessons_clear_additional = findPreference("pref_schedule_lessons_clear_additional");
+            if (pref_schedule_lessons_clear_additional != null) {
+                pref_schedule_lessons_clear_additional.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        new AlertDialog.Builder(getActivity())
+                                .setTitle(getString(R.string.pref_schedule_lessons_clear_additional_title))
+                                .setMessage(R.string.pref_schedule_lessons_clear_additional_warning)
+                                .setIcon(R.drawable.ic_warning)
+                                .setPositiveButton(R.string.proceed, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        boolean success = Storage.file.perm.clear(getActivity(), "schedule_lessons");
+                                        Static.snackBar(getActivity(), getActivity().getString(success ? R.string.changes_cleared : R.string.something_went_wrong));
+                                    }
+                                })
+                                .setNegativeButton(android.R.string.cancel, null)
+                                .create().show();
+                        return false;
+                    }
+                });
+            }
+
         }
     }
 
