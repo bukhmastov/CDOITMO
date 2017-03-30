@@ -76,12 +76,7 @@
         </activity>
         <activity
             android:name=".activities.AboutActivity"
-            android:label="@string/about"
-            android:parentActivityName=".activities.SettingsActivity" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.bukhmastov.cdoitmo.activities.SettingsActivity" />
-        </activity>
+            android:label="@string/about" />
         <activity
             android:name=".activities.PikaActivity"
             android:theme="@style/AppTheme.Transparent"

@@ -61,8 +61,8 @@
     <string name="pref_dark_theme">Темная тема</string>
     <string name="pref_dark_theme_summary">Приложение будет перезапущено</string>
     <string name="about">О приложении</string>
-    <string name="app_info_disclamer">Обратите внимание, что данное приложение не является официальным.\nhttp://www.ifmo.ru\nhttp://de.ifmo.ru</string>
-    <string name="app_info_dev">Разработка: Бухмастов Алексей\nbukhmastov-alex@ya.ru</string>
+    <string name="app_info_disclaimer">Данное приложение использует и обрабатывает данные с серверов университета ИТМО. Персональные данные хранятся только на данном устройстве и передаются только на сервера университета ИТМО. Обратите внимание, что данное приложение не является официальным.</string>
+    <string name="app_info_dev">Бухмастов Алексей</string>
     <string name="error_choose_program">Выберите программу для отправки отчета</string>
     <string name="offline_mode">Offline mode</string>
     <string name="schedule_lessons">Расписание занятий</string>
@@ -263,5 +263,12 @@
     <string name="proceed">Продолжить</string>
     <string name="pref_schedule_lessons_clear_additional_warning">При очистке пользовательских изменений выполнятся следующие действия: \n1. Вы скрытые занятия будут восстановлены. \n2. Все добавленные в ручную занятия будут удалены.</string>
     <string name="wrong_login_general">Приложение не поддерживает пользователей с логином \"general\"</string>
+    <string name="send_email_to_dev">Написать письмо разработчику</string>
+    <string name="send_vk_to_dev">Написать сообщение разработчику</string>
+    <string name="send_mail">Отправить письмо</string>
+    <string name="all_of_this">Все дела</string>
+    <string name="support_dev">Поддержать разработку</string>
+    <string name="build">сборка</string>
+    <string name="version">Версия</string>
 
 </resources>
