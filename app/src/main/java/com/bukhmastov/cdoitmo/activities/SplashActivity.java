@@ -61,6 +61,10 @@ public class SplashActivity extends AppCompatActivity {
                     Storage.pref.clearExceptPref(context);
                     break;
                 }
+                case 29: {
+                    Storage.file.cache.delete(context, "eregister#core");
+                    break;
+                }
             }
         }
     }

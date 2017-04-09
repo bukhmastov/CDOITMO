@@ -28,8 +28,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
-                android:padding="4dp"
-                android:background="@drawable/shape_border_round" >
+                android:background="@drawable/shape_border_round"
+                android:padding="4dp">
 
                 <LinearLayout
                     android:id="@+id/block_pika"
@@ -76,8 +76,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
-                android:padding="4dp"
-                android:background="@drawable/shape_border_round" >
+                android:background="@drawable/shape_border_round"
+                android:padding="4dp">
 
                 <LinearLayout
                     android:id="@+id/block_send_mail"
@@ -110,7 +110,7 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/app_info_dev"
+                            android:text="@string/app_info_mail_dev"
                             android:textColor="?android:attr/textColorSecondary" />
 
                     </LinearLayout>
@@ -123,8 +123,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
-                android:padding="4dp"
-                android:background="@drawable/shape_border_round" >
+                android:background="@drawable/shape_border_round"
+                android:padding="4dp">
 
                 <LinearLayout
                     android:id="@+id/block_send_vk"
@@ -170,8 +170,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
-                android:padding="4dp"
-                android:background="@drawable/shape_border_round" >
+                android:background="@drawable/shape_border_round"
+                android:padding="4dp">
 
                 <LinearLayout
                     android:id="@+id/block_donate"
@@ -204,7 +204,7 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/all_of_this"
+                            android:text="@string/support_dev_desc"
                             android:textColor="?android:attr/textColorSecondary" />
 
                     </LinearLayout>
@@ -216,32 +216,32 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_margin="8dp" >
+                android:layout_margin="8dp"
+                android:orientation="vertical">
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:padding="1dp"
                     android:text="@string/app_info_disclaimer"
                     android:textAlignment="center"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:padding="1dp" />
+                    android:textColor="?android:attr/textColorPrimary" />
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:autoLink="web"
+                    android:padding="2dp"
                     android:text="http://www.ifmo.ru"
-                    android:textAlignment="center"
-                    android:padding="2dp" />
+                    android:textAlignment="center" />
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:autoLink="web"
+                    android:padding="2dp"
                     android:text="http://de.ifmo.ru"
-                    android:textAlignment="center"
-                    android:padding="2dp" />
+                    android:textAlignment="center" />
 
             </LinearLayout>
 

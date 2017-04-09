@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
@@ -23,15 +25,12 @@ import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoRestClientResponseHandler;
 import com.bukhmastov.cdoitmo.objects.ERegister;
-import com.bukhmastov.cdoitmo.objects.entities.Group;
-import com.bukhmastov.cdoitmo.objects.entities.ParsedERegister;
-import com.bukhmastov.cdoitmo.objects.entities.Subject;
-import com.bukhmastov.cdoitmo.objects.entities.Term;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -90,11 +89,16 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
         if (!eRegister.is() || refresh_rate == 0) {
             forceLoad();
         } else if (refresh_rate >= 0){
-            ParsedERegister parsedERegister = eRegister.get();
-            if (parsedERegister.timestamp + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+            JSONObject eregister = eRegister.get();
+            try {
+                if (eregister.getLong("timestamp") + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+                    forceLoad();
+                } else {
+                    display();
+                }
+            } catch (JSONException e) {
+                Static.error(e);
                 forceLoad();
-            } else {
-                display();
             }
         } else {
             display();
@@ -106,8 +110,12 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                 @Override
                 public void onSuccess(int statusCode, JSONObject responseObj, JSONArray responseArr) {
                     if (statusCode == 200 && responseObj != null) {
-                        eRegister.put(responseObj);
-                        display();
+                        eRegister.put(responseObj, new Handler(){
+                            @Override
+                            public void handleMessage(Message msg) {
+                                display();
+                            }
+                        });
                     } else {
                         if (eRegister.is()) {
                             display();
@@ -231,23 +239,29 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
     }
     private void display(){
         try {
-            ParsedERegister parsedERegister = eRegister.get();
-            if (parsedERegister == null) throw new NullPointerException("parsedERegister cannot be null");
-            checkData(parsedERegister);
+            JSONObject data = eRegister.get();
+            if (data == null) throw new NullPointerException("parsedERegister cannot be null");
+            checkData(data);
             // получаем список предметов для отображения
             final ArrayList<HashMap<String, String>> subjects = new ArrayList<>();
-            for (Group group : parsedERegister.groups) {
-                if (Objects.equals(group.name, this.group)) {
-                    for (Term term : group.terms) {
-                        if (this.term == -1 || this.term == term.number) {
-                            for (Subject subject : term.subjects) {
-                                HashMap<String, String> subj = new HashMap<>();
-                                subj.put("group", group.name);
-                                subj.put("name", subject.name);
-                                subj.put("semester", String.valueOf(term.number));
-                                subj.put("value", String.valueOf(subject.currentPoints));
-                                subj.put("type", String.valueOf(subject.type));
-                                subjects.add(subj);
+            JSONArray groups = data.getJSONArray("groups");
+            for (int i = 0; i < groups.length(); i++) {
+                JSONObject group = groups.getJSONObject(i);
+                if (Objects.equals(group.getString("name"), this.group)) {
+                    JSONArray terms = group.getJSONArray("terms");
+                    for (int j = 0; j < terms.length(); j++) {
+                        JSONObject term = terms.getJSONObject(j);
+                        if (this.term == -1 || this.term == term.getInt("number")) {
+                            JSONArray subjArr = term.getJSONArray("subjects");
+                            for (int k = 0; k < subjArr.length(); k++) {
+                                JSONObject subj = subjArr.getJSONObject(k);
+                                HashMap<String, String> subjObj = new HashMap<>();
+                                subjObj.put("group", group.getString("name"));
+                                subjObj.put("name", subj.getString("name"));
+                                subjObj.put("semester", String.valueOf(term.getInt("number")));
+                                subjObj.put("value", String.valueOf(subj.getDouble("currentPoints")));
+                                subjObj.put("type", subj.getString("type"));
+                                subjects.add(subjObj);
                             }
                         }
                     }
@@ -285,10 +299,11 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
             if (spinner_group != null) {
                 final ArrayList<String> spinner_group_arr = new ArrayList<>();
                 final ArrayList<String> spinner_group_arr_names = new ArrayList<>();
-                for (Group group : parsedERegister.groups) {
-                    spinner_group_arr.add(group.name + " (" + group.year[0] + "/" + group.year[1] + ")");
-                    spinner_group_arr_names.add(group.name);
-                    if (Objects.equals(group.name, this.group)) selection = counter;
+                for (int i = 0; i < groups.length(); i++) {
+                    JSONObject group = groups.getJSONObject(i);
+                    spinner_group_arr.add(group.getString("name") + " (" + group.getJSONArray("years").getInt(0) + "/" + group.getJSONArray("years").getInt(1) + ")");
+                    spinner_group_arr_names.add(group.getString("name"));
+                    if (Objects.equals(group.getString("name"), this.group)) selection = counter;
                     counter++;
                 }
                 spinner_group.setAdapter(new ArrayAdapter<>(getActivity(), R.layout.spinner_layout, spinner_group_arr));
@@ -312,16 +327,19 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                 final ArrayList<String> spinner_period_arr = new ArrayList<>();
                 final ArrayList<Integer> spinner_period_arr_values = new ArrayList<>();
                 selection = 2;
-                for (Group group : parsedERegister.groups) {
-                    if (Objects.equals(group.name, this.group)) {
-                        spinner_period_arr.add(group.terms.get(0).number + " " + getString(R.string.semester));
-                        spinner_period_arr.add(group.terms.get(1).number + " " + getString(R.string.semester));
+                for (int i = 0; i < groups.length(); i++) {
+                    JSONObject group = groups.getJSONObject(i);
+                    if (Objects.equals(group.getString("name"), this.group)) {
+                        int first = group.getJSONArray("terms").getJSONObject(0).getInt("number");
+                        int second = group.getJSONArray("terms").getJSONObject(1).getInt("number");
+                        spinner_period_arr.add(first + " " + getString(R.string.semester));
+                        spinner_period_arr.add(second + " " + getString(R.string.semester));
                         spinner_period_arr.add(getString(R.string.year));
-                        spinner_period_arr_values.add(group.terms.get(0).number);
-                        spinner_period_arr_values.add(group.terms.get(1).number);
+                        spinner_period_arr_values.add(first);
+                        spinner_period_arr_values.add(second);
                         spinner_period_arr_values.add(-1);
-                        if (this.term == group.terms.get(0).number) selection = 0;
-                        if (this.term == group.terms.get(1).number) selection = 1;
+                        if (this.term == first) selection = 0;
+                        if (this.term == second) selection = 1;
                         break;
                     }
                 }
@@ -341,45 +359,53 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                     }
                 });
             }
-            Static.showUpdateTime(getActivity(), parsedERegister.timestamp, R.id.eregister_layout, true);
+            Static.showUpdateTime(getActivity(), data.getLong("timestamp"), R.id.eregister_layout, true);
         } catch (Exception e) {
             Static.error(e);
             loadFailed();
         }
     }
-    private void checkData(ParsedERegister parsedERegister){
+    private void checkData(JSONObject data) throws Exception {
         Calendar now = Calendar.getInstance();
         int year = now.get(Calendar.YEAR);
         int month = now.get(Calendar.MONTH);
         String currentGroup = "";
         int currentTerm = -1, maxYear = 0;
-        for(Group group : parsedERegister.groups){
-            if (!Objects.equals(this.group, "") && Objects.equals(this.group, group.name)) { // мы нашли назначенную группу
-                this.group = group.name;
+        JSONArray groups = data.getJSONArray("groups");
+        for (int i = 0; i < groups.length(); i++) {
+            JSONObject group = groups.getJSONObject(i);
+            if (!Objects.equals(this.group, "") && Objects.equals(this.group, group.getString("name"))) { // мы нашли назначенную группу
+                this.group = group.getString("name");
                 // теперь проверяем семестр
+                JSONArray terms = group.getJSONArray("terms");
                 boolean isTermOk = false;
-                for (Term term : group.terms) {
-                    if (this.term != -1 && this.term == term.number) { // мы нашли семестр в найденной группе
-                        this.term = term.number;
+                for (int j = 0; j < terms.length(); j++) {
+                    JSONObject term = terms.getJSONObject(j);
+                    if (this.term != -1 && this.term == term.getInt("number")) { // мы нашли семестр в найденной группе
+                        this.term = term.getInt("number");
                         isTermOk = true;
                         break;
                     }
                 }
-                // семестр неверен, выбираем весь год
-                if(!isTermOk) this.term = -1;
+                if (!isTermOk) { // семестр неверен, выбираем весь год
+                    this.term = -1;
+                }
                 break;
             } else { // группа до сих пор не найдена
+                JSONArray years = group.getJSONArray("years");
                 if (Objects.equals(currentGroup, "")) {
-                    if (year == group.year[month > Calendar.AUGUST ? 0 : 1]) {
-                        currentGroup = group.name;
-                        if (Integer.parseInt(Storage.pref.get(getContext(), "pref_e_journal_term", "0")) == 1){
+                    if (year == years.getInt(month > Calendar.AUGUST ? 0 : 1)) {
+                        currentGroup = group.getString("name");
+                        if (Integer.parseInt(Storage.pref.get(getContext(), "pref_e_journal_term", "0")) == 1) {
                             currentTerm = -1;
                         } else {
-                            currentTerm = group.terms.get(month > Calendar.AUGUST || month == Calendar.JANUARY ? 0 : 1).number;
+                            currentTerm = group.getJSONArray("terms").getJSONObject(month > Calendar.AUGUST || month == Calendar.JANUARY ? 0 : 1).getInt("number");
                         }
                     }
                 }
-                if (maxYear < group.year[0]) maxYear = group.year[0];
+                if (maxYear < years.getInt(0)) {
+                    maxYear = years.getInt(0);
+                }
             }
         }
         if (Objects.equals(this.group, "")) {
@@ -387,9 +413,10 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                 this.group = currentGroup;
                 this.term = currentTerm;
             } else {
-                for(Group group : parsedERegister.groups){
-                    if(group.year[0] == maxYear){
-                        this.group = group.name;
+                for (int i = 0; i < groups.length(); i++) {
+                    JSONObject group = groups.getJSONObject(i);
+                    if (group.getJSONArray("years").getInt(0) == maxYear) {
+                        this.group = group.getString("name");
                         break;
                     }
                 }
@@ -413,4 +440,5 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
             Static.error(e);
         }
     }
+
 }

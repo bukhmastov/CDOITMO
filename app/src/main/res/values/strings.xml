@@ -63,6 +63,7 @@
     <string name="about">О приложении</string>
     <string name="app_info_disclaimer">Данное приложение использует и обрабатывает данные с серверов университета ИТМО. Персональные данные хранятся только на данном устройстве и передаются только на сервера университета ИТМО. Обратите внимание, что данное приложение не является официальным.</string>
     <string name="app_info_dev">Бухмастов Алексей</string>
+    <string name="app_info_mail_dev">bukhmastov-alex@ya.ru</string>
     <string name="error_choose_program">Выберите программу для отправки отчета</string>
     <string name="offline_mode">Offline mode</string>
     <string name="schedule_lessons">Расписание занятий</string>
@@ -266,9 +267,9 @@
     <string name="send_email_to_dev">Написать письмо разработчику</string>
     <string name="send_vk_to_dev">Написать сообщение разработчику</string>
     <string name="send_mail">Отправить письмо</string>
-    <string name="all_of_this">Все дела</string>
     <string name="support_dev">Поддержать разработку</string>
     <string name="build">сборка</string>
     <string name="version">Версия</string>
+    <string name="support_dev_desc">Ну а вдруг</string>
 
 </resources>
