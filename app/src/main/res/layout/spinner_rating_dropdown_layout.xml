@@ -4,12 +4,11 @@
     android:layout_width="match_parent"
     android:textAppearance="@style/TextAppearance.AppCompat.Button"
     android:layout_height="wrap_content"
-    android:gravity="center"
+    android:gravity="center_vertical"
     android:textSize="14sp"
     android:text="@string/lorem_ipsum"
     android:textAllCaps="false"
     android:paddingTop="15dp"
     android:paddingBottom="15dp"
     android:paddingStart="10dp"
-    android:paddingEnd="10dp"
-    android:textAlignment="textStart" />
+    android:paddingEnd="10dp" />
