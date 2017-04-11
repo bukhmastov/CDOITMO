@@ -49,6 +49,7 @@ public class Static {
     public static ProtocolTracker protocolTracker = null;
     public static boolean darkTheme = false;
     public static int intentFlagRestart = 268468224;
+    private static final String USER_AGENT = "CDOITMO/{versionName}/{versionCode} Android/java (market://details?id=com.bukhmastov.cdoitmo)";
 
     public static void init(Context context) {
         if (Static.errorTracker == null) {
@@ -269,6 +270,14 @@ public class Static {
                 @Override
                 public void onNewHandle(RequestHandle requestHandle) {}
             });
+        }
+    }
+    public static String getUserAgent(Context context){
+        try {
+            PackageInfo pInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
+            return Static.USER_AGENT.replace("{versionName}", pInfo.versionName).replace("{versionCode}", String.valueOf(pInfo.versionCode));
+        } catch (Exception e) {
+            return Static.USER_AGENT.replace("{versionName}", "-").replace("{versionCode}", "-");
         }
     }
 

@@ -19,7 +19,6 @@ public class Room101Client {
 
     private static final String TAG = "Room101RestClient";
     private static final String BASE_URL = "http://de.ifmo.ru/m/";
-    private static final String USER_AGENT = "Android Application";
     private static AsyncHttpClient httpclient = new AsyncHttpClient();
     private static boolean initialized = false;
 
@@ -117,7 +116,7 @@ public class Room101Client {
     }
     private static void renewCookie(Context context){
         httpclient.removeHeader("Cookie");
-        httpclient.addHeader("User-Agent", USER_AGENT);
+        httpclient.addHeader("User-Agent", Static.getUserAgent(context));
         httpclient.addHeader("Cookie", "PHPSESSID=" + Storage.file.perm.get(context, "user#phpsessid") + "; autoexit=true;");
     }
 }
