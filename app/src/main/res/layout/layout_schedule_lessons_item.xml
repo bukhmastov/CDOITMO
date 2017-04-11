@@ -25,6 +25,7 @@
             android:textSize="15sp" />
 
         <ImageView
+            android:id="@+id/lesson_time_icon"
             android:layout_width="match_parent"
             android:layout_height="16dp"
             app:srcCompat="@drawable/ic_access_time" />

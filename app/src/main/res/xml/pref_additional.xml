@@ -39,6 +39,10 @@
             android:defaultValue="true"
             android:title="@string/pref_schedule_lessons_scroll_to_day" />
         <SwitchPreference
+            android:key="pref_schedule_lessons_compact_view_of_reduced_lesson"
+            android:defaultValue="true"
+            android:title="@string/pref_schedule_lessons_compact_view_of_reduced_lesson_title" />
+        <SwitchPreference
             android:key="pref_schedule_lessons_use_cache"
             android:defaultValue="false"
             android:title="@string/cache_schedule" />

@@ -19,6 +19,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
 import com.bukhmastov.cdoitmo.utils.Static;
+import com.bukhmastov.cdoitmo.utils.Storage;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -100,6 +101,17 @@ public class ScheduleLessonsBuilder extends Thread {
                         float alpha = 0.3F;
                         lessonLayout.findViewById(R.id.time).setAlpha(alpha);
                         lessonLayout.findViewById(R.id.data).setAlpha(alpha);
+                        if (Storage.pref.get(activity, "pref_schedule_lessons_compact_view_of_reduced_lesson", true)) {
+                            try {
+                                lessonLayout.findViewById(R.id.lesson_time_icon).setVisibility(View.GONE);
+                                lessonLayout.findViewById(R.id.lesson_time_end).setVisibility(View.GONE);
+                                lessonLayout.findViewById(R.id.lesson_desc).setVisibility(View.GONE);
+                                lessonLayout.findViewById(R.id.lesson_flags).setVisibility(View.GONE);
+                                lessonLayout.findViewById(R.id.lesson_meta).setVisibility(View.GONE);
+                            } catch (Exception e) {
+                                Static.error(e);
+                            }
+                        }
                     } else {
                         lessonLayout.findViewById(R.id.lesson_reduced_icon).setLayoutParams(new LinearLayout.LayoutParams(0, 0));
                     }
