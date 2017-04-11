@@ -125,6 +125,20 @@ public class ScheduleLessonCreateActivity extends AppCompatActivity {
                 @Override
                 public void afterTextChanged(Editable s) {
                     lessonUnit.timeEnd = s.toString();
+                    TextInputEditText lesson_time_start = (TextInputEditText) findViewById(R.id.lesson_time_start);
+                    if (lesson_time_start.getText().toString().isEmpty()) {
+                        Matcher time = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(s.toString());
+                        if (time.find()) {
+                            Calendar calendar = Calendar.getInstance();
+                            calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(time.group(1)));
+                            calendar.set(Calendar.MINUTE, Integer.parseInt(time.group(2)));
+                            calendar.set(Calendar.SECOND, 0);
+                            long timestamp = calendar.getTimeInMillis();
+                            calendar = Calendar.getInstance();
+                            calendar.setTime(new Date(timestamp - 5400000));
+                            lesson_time_start.setText(ldgZero(calendar.get(Calendar.HOUR_OF_DAY)) + ":" + ldgZero(calendar.get(Calendar.MINUTE)));
+                        }
+                    }
                 }
             });
 
@@ -246,6 +260,7 @@ public class ScheduleLessonCreateActivity extends AppCompatActivity {
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     try {
                         JSONObject item = teacherPickerAdapter.getItem(position);
+                        if (item == null)  throw new Exception("Teacher item is null");
                         lessonUnit.teacher = item.getString("person");
                         lessonUnit.teacher_id = String.valueOf(item.getInt("pid"));
                         Log.d(TAG, lessonUnit.teacher + " | " + lessonUnit.teacher_id);
@@ -328,7 +343,7 @@ public class ScheduleLessonCreateActivity extends AppCompatActivity {
         }
 
         private static RequestHandle request = null;
-        public static boolean blocked = false;
+        static boolean blocked = false;
 
         public static void search(final Context context, final String query, final TeacherSearch.response delegate){
             if (request != null) {

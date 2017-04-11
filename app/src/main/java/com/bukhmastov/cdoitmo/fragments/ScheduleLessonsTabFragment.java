@@ -161,6 +161,8 @@ public class ScheduleLessonsTabFragment extends Fragment {
                                                                 day = fragment_schedule_lessons.findViewById(R.id.saturday);
                                                                 if (day != null) break;
                                                             case Calendar.SUNDAY:
+                                                                day = fragment_schedule_lessons.findViewById(R.id.sunday);
+                                                                if (day != null) break;
                                                             default:
                                                                 day = null;
                                                                 break;
