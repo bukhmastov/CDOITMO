@@ -2,11 +2,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.bukhmastov.cdoitmo">
 
+    <permission
+        android:name="com.bukhmastov.cdoitmo.permission.RECEIVE_SHORTCUT_STATE"
+        android:protectionLevel="normal" />
+
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
+    <uses-permission android:name="com.bukhmastov.cdoitmo.permission.RECEIVE_SHORTCUT_STATE" />
 
     <application
         android:allowBackup="true"
@@ -103,12 +108,12 @@
         </activity>
         <receiver
             android:name=".receivers.ShortcutReceiver"
+            android:permission="com.bukhmastov.cdoitmo.permission.RECEIVE_SHORTCUT_STATE"
             android:exported="true" >
             <intent-filter>
                 <action android:name="com.bukhmastov.cdoitmo.CLICK_SHORTCUT" />
                 <action android:name="com.bukhmastov.cdoitmo.ADD_SHORTCUT" />
                 <action android:name="com.bukhmastov.cdoitmo.REMOVE_SHORTCUT" />
-                <action android:name="com.android.launcher.action.INSTALL_SHORTCUT" />
             </intent-filter>
         </receiver>
 

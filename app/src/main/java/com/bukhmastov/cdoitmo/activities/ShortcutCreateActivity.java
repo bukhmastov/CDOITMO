@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.activities;
 
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -10,12 +11,14 @@ import android.view.ViewGroup;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.objects.ShortcutCreator;
+import com.bukhmastov.cdoitmo.receivers.ShortcutReceiver;
 import com.bukhmastov.cdoitmo.utils.Static;
 
 public class ShortcutCreateActivity extends AppCompatActivity implements ShortcutCreator.response {
 
     private static final String TAG = "ShortcutCreateActivity";
     private ShortcutCreator shortcutCreator = null;
+    private ShortcutReceiver receiver = new ShortcutReceiver();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +38,7 @@ public class ShortcutCreateActivity extends AppCompatActivity implements Shortcu
     @Override
     protected void onResume() {
         super.onResume();
+        registerReceiver(receiver, new IntentFilter(ShortcutReceiver.ACTION_INSTALL_SHORTCUT));
         if (shortcutCreator == null) shortcutCreator = new ShortcutCreator(this, this);
         shortcutCreator.onResume();
     }
@@ -42,6 +46,7 @@ public class ShortcutCreateActivity extends AppCompatActivity implements Shortcu
     @Override
     protected void onPause() {
         super.onPause();
+        unregisterReceiver(receiver);
         shortcutCreator.onPause();
     }
 
