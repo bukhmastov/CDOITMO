@@ -58,28 +58,35 @@ public class ScheduleLessonCreateActivity extends AppCompatActivity {
             }
 
             lessonUnit = new LessonUnit();
-
             Bundle extras = getIntent().getExtras();
-            ((TextView) findViewById(R.id.slc_title)).setText(extras.getString("title"));
-            lessonUnit.cache_token = extras.getString("cache_token");
+
             lessonUnit.day = extras.getInt("day");
             lessonUnit.week = extras.getInt("week");
-            if (extras.getString("group") != null) {
-                lessonUnit.group = extras.getString("group");
-                ((TextView) findViewById(R.id.lesson_group)).setText(lessonUnit.group);
-            }
-            if (extras.getString("teacher") != null) {
-                lessonUnit.teacher = extras.getString("teacher");
-                lessonUnit.teacher_id = extras.getString("teacher_id");
-                TeacherSearch.blocked = true;
-                ((TextView) findViewById(R.id.lesson_teacher)).setText(lessonUnit.teacher);
-            }
-            if (extras.getString("room") != null) {
-                lessonUnit.room = extras.getString("room");
-                ((TextView) findViewById(R.id.lesson_room)).setText(lessonUnit.room);
+            if (extras.getString("header") != null) {
+                ((TextView) findViewById(R.id.slc_title)).setText(extras.getString("header"));
+            } else throw new Exception("Missed header extra");
+            if (extras.getString("cache_token") != null) {
+                lessonUnit.cache_token = extras.getString("cache_token");
+            } else throw new Exception("Missed cache_token extra");
+            if (extras.getString("title") != null) lessonUnit.title = extras.getString("title");
+            if (extras.getString("timeStart") != null) lessonUnit.timeStart = extras.getString("timeStart");
+            if (extras.getString("timeEnd") != null) lessonUnit.timeEnd = extras.getString("timeEnd");
+            if (extras.getString("type") != null) lessonUnit.type = extras.getString("type");
+            if (extras.getString("group") != null) lessonUnit.group = extras.getString("group");
+            if (extras.getString("teacher") != null) lessonUnit.teacher = extras.getString("teacher");
+            if (extras.getString("teacher_id") != null) lessonUnit.teacher_id = extras.getString("teacher_id");
+            if (extras.getString("room") != null) lessonUnit.room = extras.getString("room");
+            if (extras.getString("building") != null) lessonUnit.building = extras.getString("building");
+            if (lessonUnit.type != null) {
+                switch (lessonUnit.type) {
+                    case "practice": lessonUnit.type = getString(R.string.practice); break;
+                    case "lecture": lessonUnit.type = getString(R.string.lecture); break;
+                    case "lab": lessonUnit.type = getString(R.string.lab); break;
+                }
             }
 
             TextInputEditText lesson_title = (TextInputEditText) findViewById(R.id.lesson_title);
+            if (lessonUnit.title != null) lesson_title.setText(lessonUnit.title);
             lesson_title.requestFocus();
             lesson_title.addTextChangedListener(new TextWatcher() {
                 @Override
@@ -92,7 +99,9 @@ public class ScheduleLessonCreateActivity extends AppCompatActivity {
                 }
             });
 
-            ((TextInputEditText) findViewById(R.id.lesson_time_start)).addTextChangedListener(new TextWatcher() {
+            TextInputEditText lesson_time_start = (TextInputEditText) findViewById(R.id.lesson_time_start);
+            if (lessonUnit.timeStart != null) lesson_time_start.setText(lessonUnit.timeStart);
+            lesson_time_start.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
                 @Override
@@ -117,7 +126,9 @@ public class ScheduleLessonCreateActivity extends AppCompatActivity {
                 }
             });
 
-            ((TextInputEditText) findViewById(R.id.lesson_time_end)).addTextChangedListener(new TextWatcher() {
+            TextInputEditText lesson_time_end = (TextInputEditText) findViewById(R.id.lesson_time_end);
+            if (lessonUnit.timeEnd != null) lesson_time_end.setText(lessonUnit.timeEnd);
+            lesson_time_end.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
                 @Override
@@ -173,6 +184,7 @@ public class ScheduleLessonCreateActivity extends AppCompatActivity {
             });
 
             final AutoCompleteTextView lesson_type = (AutoCompleteTextView) findViewById(R.id.lesson_type);
+            if (lessonUnit.type != null) lesson_type.setText(lessonUnit.type);
             String[] types = {getString(R.string.lecture), getString(R.string.practice), getString(R.string.lab)};
             lesson_type.setThreshold(1);
             lesson_type.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, types));
@@ -183,21 +195,13 @@ public class ScheduleLessonCreateActivity extends AppCompatActivity {
                 public void onTextChanged(CharSequence s, int start, int before, int count) {}
                 @Override
                 public void afterTextChanged(Editable s) {
-                    String type = s.toString();
-                    if (Objects.equals(type.toLowerCase(), getString(R.string.lecture).toLowerCase())) {
-                        type = "lecture";
-                    }
-                    if (Objects.equals(type.toLowerCase(), getString(R.string.practice).toLowerCase())) {
-                        type = "practice";
-                    }
-                    if (Objects.equals(type.toLowerCase(), getString(R.string.lab).toLowerCase())) {
-                        type = "lab";
-                    }
-                    lessonUnit.type = type;
+                    lessonUnit.type = s.toString();
                 }
             });
 
-            ((TextInputEditText) findViewById(R.id.lesson_group)).addTextChangedListener(new TextWatcher() {
+            TextInputEditText lesson_group = (TextInputEditText) findViewById(R.id.lesson_group);
+            if (lessonUnit.group != null) lesson_group.setText(lessonUnit.group);
+            lesson_group.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
                 @Override
@@ -210,8 +214,12 @@ public class ScheduleLessonCreateActivity extends AppCompatActivity {
 
             final AutoCompleteTextView lesson_teacher = (AutoCompleteTextView) findViewById(R.id.lesson_teacher);
             final TeacherPickerAdapter teacherPickerAdapter = new TeacherPickerAdapter(this, new ArrayList<JSONObject>());
+            if (lessonUnit.teacher != null) {
+                TeacherSearch.blocked = true;
+                lesson_teacher.setText(lessonUnit.teacher);
+            }
             teacherPickerAdapter.setNotifyOnChange(true);
-            lesson_teacher.setThreshold(2);
+            lesson_teacher.setThreshold(1);
             lesson_teacher.setAdapter(teacherPickerAdapter);
             lesson_teacher.addTextChangedListener(new TextWatcher() {
                 @Override
@@ -273,7 +281,9 @@ public class ScheduleLessonCreateActivity extends AppCompatActivity {
                 }
             });
 
-            ((TextInputEditText) findViewById(R.id.lesson_room)).addTextChangedListener(new TextWatcher() {
+            TextInputEditText lesson_room = (TextInputEditText) findViewById(R.id.lesson_room);
+            if (lessonUnit.room != null) lesson_room.setText(lessonUnit.room);
+            lesson_room.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
                 @Override
@@ -284,7 +294,11 @@ public class ScheduleLessonCreateActivity extends AppCompatActivity {
                 }
             });
 
-            ((TextInputEditText) findViewById(R.id.lesson_building)).addTextChangedListener(new TextWatcher() {
+            AutoCompleteTextView lesson_building = (AutoCompleteTextView) findViewById(R.id.lesson_building);
+            if (lessonUnit.building != null) lesson_building.setText(lessonUnit.building);
+            lesson_building.setThreshold(1);
+            lesson_building.setAdapter(ArrayAdapter.createFromResource(this, R.array.buildings, android.R.layout.simple_dropdown_item_1line));
+            lesson_building.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
                 @Override
@@ -306,6 +320,9 @@ public class ScheduleLessonCreateActivity extends AppCompatActivity {
                         Static.snackBar(self, "Необходимо указать время начала занятия");
                         return;
                     }
+                    if (Objects.equals(lessonUnit.type.toLowerCase(), getString(R.string.lecture).toLowerCase())) lessonUnit.type = "lecture";
+                    if (Objects.equals(lessonUnit.type.toLowerCase(), getString(R.string.practice).toLowerCase())) lessonUnit.type = "practice";
+                    if (Objects.equals(lessonUnit.type.toLowerCase(), getString(R.string.lab).toLowerCase())) lessonUnit.type = "lab";
                     if (ScheduleLessons.createLesson(self, lessonUnit)) {
                         ScheduleLessonsFragment.reScheduleRequired = true;
                         finish();

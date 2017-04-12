@@ -139,6 +139,7 @@
     <string name="add_widget">Добавить виджет</string>
     <string name="use_dark_theme">Использовать темную тему</string>
     <string name="schedule_not_found">Расписание не найдено</string>
+    <string name="schedule_not_found_2">расписания не найдено</string>
     <string name="widget_creation_failed">Не удалось создать виджет</string>
     <string name="failed_to_create_widget">Не удалось создать виджет</string>
     <string name="failed_to_load_schedule">Не удалось загрузить расписание</string>
@@ -236,11 +237,13 @@
     <string name="delete_lesson">Удалить занятие</string>
     <string name="reduce_lesson">Скрыть занятие</string>
     <string name="restore_lesson">Восстановить занятие</string>
+    <string name="copy_lesson">Создать копию занятия</string>
     <string name="open_group_schedule">Открыть расписание группы</string>
     <string name="open_teacher_schedule">Открыть расписание преподавателя</string>
     <string name="open_room_schedule">Открыть расписание аудитории</string>
     <string name="open_location">Показать местоположение</string>
     <string name="schedule_update_required">Необходимо обновить расписание</string>
+    <string name="schedule_refresh">Отобразить изменения</string>
     <string name="update">Обновить</string>
     <string name="pref_schedule_lessons_clear_additional_title">Очистить пользовательские изменения</string>
     <string name="changes_cleared">Изменения очищены</string>
@@ -272,5 +275,6 @@
     <string name="version">Версия</string>
     <string name="support_dev_desc">Ну а вдруг</string>
     <string name="pref_schedule_lessons_compact_view_of_reduced_lesson_title">Компактный вид скрытого занятия</string>
+    <string name="on_demand">По запросу</string>
 
 </resources>

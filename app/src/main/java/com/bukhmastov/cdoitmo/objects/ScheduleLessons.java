@@ -43,9 +43,6 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
 
     public ScheduleLessons(Context context){
         this.context = context;
-
-        //Storage.file.perm.put(context, "schedule_lessons#added#group_K3220", "[{\"index\":2,\"title\":\"Среда\",\"titleShort\":\"Ср\",\"lessons\":[{\"subject\":\"Первый предмет\",\"week\":2,\"timeStart\":\"7:00\",\"timeEnd\":\"8:30\",\"group\":\"K3220\",\"teacher\":\"Горшков Константин Сергеевич\",\"teacher_id\":\"209111\",\"room\":\"331\",\"building\":\"Кронверкский пр., д.49, лит.А\",\"type\":\"lecture\",\"cdoitmo_type\":\"synthetic\"},{\"subject\":\"Второй предмет\",\"week\":2,\"timeStart\":\"11:40\",\"timeEnd\":\"\",\"group\":\"K3220\",\"teacher\":\"Макарченко Марина Арнольдовна\",\"teacher_id\":\"165264\",\"room\":\"331\",\"building\":\"Кронверкский пр., д.49, лит.А\",\"type\":\"lecture\",\"cdoitmo_type\":\"synthetic\"},{\"subject\":\"Третий предмет\",\"week\":2,\"timeStart\":\"15:30\",\"timeEnd\":\"17:00\",\"group\":\"K3220\",\"teacher\":\"Горшков Константин Сергеевич\",\"teacher_id\":\"209111\",\"room\":\"566\",\"building\":\"Кронверкский пр., д.49, лит.А\",\"type\":\"practice\",\"cdoitmo_type\":\"synthetic\"},{\"subject\":\"Четвертый предмет\",\"week\":2,\"timeStart\":\"17:00\",\"timeEnd\":\"18:30\",\"group\":\"K3220\",\"teacher\":\"Антонов Артём Александрович\",\"teacher_id\":\"173019\",\"room\":\"429\",\"building\":\"Кронверкский пр., д.49, лит.А\",\"type\":\"practice\",\"cdoitmo_type\":\"synthetic\"},{\"subject\":\"Пятый предмет\",\"week\":2,\"timeStart\":\"22:00\",\"timeEnd\":\"23:30\",\"group\":\"K3220\",\"teacher\":\"Антонов Артём Александрович\",\"teacher_id\":\"173019\",\"room\":\"422\",\"building\":\"Кронверкский пр., д.49, лит.А\",\"type\":\"practice\",\"cdoitmo_type\":\"synthetic\"},{\"subject\":\"Дневной предмет 1\",\"week\":2,\"timeStart\":\"День\",\"timeEnd\":\"\",\"group\":\"K3220\",\"teacher\":\"Кубенский Михаил Николаевич\",\"teacher_id\":\"135230\",\"room\":\"422\",\"building\":\"Кронверкский пр., д.49, лит.А\",\"type\":\"practice\",\"cdoitmo_type\":\"synthetic\"},{\"subject\":\"Дневной предмет 2\",\"week\":2,\"timeStart\":\"Привет\",\"timeEnd\":\"Пока\",\"group\":\"K3220\",\"teacher\":\"Кубенский Михаил Николаевич\",\"teacher_id\":\"135230\",\"room\":\"422\",\"building\":\"Кронверкский пр., д.49, лит.А\",\"type\":\"practice\",\"cdoitmo_type\":\"synthetic\"}]}]");
-
     }
 
     @Override
@@ -599,7 +596,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
     }
     public static void createLesson(Context context, JSONObject schedule, int dayIndex, int week) throws JSONException {
         Intent intent = new Intent(context, ScheduleLessonCreateActivity.class);
-        intent.putExtra("title", schedule.getString("title") + " " + schedule.getString("label"));
+        intent.putExtra("header", schedule.getString("title") + " " + schedule.getString("label"));
         intent.putExtra("cache_token", schedule.getString("cache_token"));
         intent.putExtra("day", dayIndex);
         intent.putExtra("week", week);
@@ -615,6 +612,23 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                 intent.putExtra("room", schedule.getString("label"));
                 break;
         }
+        context.startActivity(intent);
+    }
+    public static void createLesson(Context context, JSONObject schedule, JSONObject lesson, int dayIndex, int week) throws JSONException {
+        Intent intent = new Intent(context, ScheduleLessonCreateActivity.class);
+        intent.putExtra("header", schedule.getString("title") + " " + schedule.getString("label"));
+        intent.putExtra("cache_token", schedule.getString("cache_token"));
+        intent.putExtra("day", dayIndex);
+        intent.putExtra("week", week);
+        if (lesson.getString("subject") != null) intent.putExtra("title", lesson.getString("subject"));
+        if (lesson.getString("timeStart") != null) intent.putExtra("timeStart", lesson.getString("timeStart"));
+        if (lesson.getString("timeEnd") != null) intent.putExtra("timeEnd", lesson.getString("timeEnd"));
+        if (lesson.getString("type") != null) intent.putExtra("type", lesson.getString("type"));
+        if (lesson.getString("group") != null) intent.putExtra("group", lesson.getString("group"));
+        if (lesson.getString("teacher") != null) intent.putExtra("teacher", lesson.getString("teacher"));
+        if (lesson.getString("teacher_id") != null) intent.putExtra("teacher_id", lesson.getString("teacher_id"));
+        if (lesson.getString("room") != null) intent.putExtra("room", lesson.getString("room"));
+        if (lesson.getString("building") != null) intent.putExtra("building", lesson.getString("building"));
         context.startActivity(intent);
     }
     public static boolean createLesson(Context context, LessonUnit lessonUnit){

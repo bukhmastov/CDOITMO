@@ -29,4 +29,8 @@
         android:id="@+id/delete_lesson"
         android:title="@string/delete_lesson" />
 
+    <item
+        android:id="@+id/copy_lesson"
+        android:title="@string/copy_lesson" />
+
 </menu>

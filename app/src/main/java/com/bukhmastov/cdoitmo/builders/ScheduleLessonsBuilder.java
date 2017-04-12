@@ -172,6 +172,14 @@ public class ScheduleLessonsBuilder extends Thread {
                                             case R.id.delete_lesson:
                                                 ScheduleLessons.deleteLesson(activity, cache_token, index, lesson);
                                                 break;
+                                            case R.id.copy_lesson:
+                                                try {
+                                                    ScheduleLessons.createLesson(activity, ScheduleLessonsFragment.schedule, lesson, index, type);
+                                                } catch (Exception e) {
+                                                    Static.error(e);
+                                                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                                }
+                                                break;
                                         }
                                         return false;
                                     }

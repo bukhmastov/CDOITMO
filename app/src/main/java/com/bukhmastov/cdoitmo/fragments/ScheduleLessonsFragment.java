@@ -295,7 +295,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
         title.setTextAlignment(TextView.TEXT_ALIGNMENT_CENTER);
         linearLayout.addView(title);
         TextView desc = new TextView(getContext());
-        desc.setText("По запросу" + " \"" + query + "\" " + " расписания не найдено");
+        desc.setText(getString(R.string.on_demand) + " \"" + query + "\" " + getString(R.string.schedule_not_found_2));
         desc.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
         desc.setTextColor(textColorPrimary);
         desc.setTextSize(16);
@@ -325,7 +325,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
             public void finish(JSONObject json) {
                 schedule = json;
                 try {
-                    Static.snackBar(((Activity) context).findViewById(android.R.id.content), context.getString(R.string.schedule_update_required), context.getString(R.string.update), new View.OnClickListener() {
+                    Static.snackBar(((Activity) context).findViewById(android.R.id.content), context.getString(R.string.schedule_refresh), context.getString(R.string.update), new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
                             search(ScheduleLessonsFragment.query);
