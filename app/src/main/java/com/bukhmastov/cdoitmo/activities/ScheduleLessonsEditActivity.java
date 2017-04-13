@@ -15,6 +15,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -24,6 +25,7 @@ import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
 import com.bukhmastov.cdoitmo.objects.entities.LessonUnit;
 import com.bukhmastov.cdoitmo.utils.Static;
+import com.bukhmastov.cdoitmo.utils.Storage;
 import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONArray;
@@ -39,11 +41,14 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ScheduleLessonCreateActivity extends AppCompatActivity {
+public class ScheduleLessonsEditActivity extends AppCompatActivity {
 
-    private static final String TAG = "ScheduleLessonCreate";
+    private static final String TAG = "ScheduleLessonsEdit";
     private LessonUnit lessonUnit;
     private Activity self;
+    private String cache_token;
+    private int index;
+    private String oldHash;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,26 +79,58 @@ public class ScheduleLessonCreateActivity extends AppCompatActivity {
                         slc_desc.setText(new SimpleDateFormat("dd.MM.yyyy", Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis())));
                     }
                 }
+                ((Button) findViewById(R.id.lesson_create_button)).setText(R.string.save);
             } else throw new Exception("Missed header extra");
             if (extras.getString("cache_token") != null) {
                 lessonUnit.cache_token = extras.getString("cache_token");
             } else throw new Exception("Missed cache_token extra");
-            if (extras.getString("title") != null) lessonUnit.title = extras.getString("title");
-            if (extras.getString("timeStart") != null) lessonUnit.timeStart = extras.getString("timeStart");
-            if (extras.getString("timeEnd") != null) lessonUnit.timeEnd = extras.getString("timeEnd");
-            if (extras.getString("type") != null) lessonUnit.type = extras.getString("type");
-            if (extras.getString("group") != null) lessonUnit.group = extras.getString("group");
-            if (extras.getString("teacher") != null) lessonUnit.teacher = extras.getString("teacher");
-            if (extras.getString("teacher_id") != null) lessonUnit.teacher_id = extras.getString("teacher_id");
-            if (extras.getString("room") != null) lessonUnit.room = extras.getString("room");
-            if (extras.getString("building") != null) lessonUnit.building = extras.getString("building");
-            if (lessonUnit.type != null) {
-                switch (lessonUnit.type) {
-                    case "practice": lessonUnit.type = getString(R.string.practice); break;
-                    case "lecture": lessonUnit.type = getString(R.string.lecture); break;
-                    case "lab": lessonUnit.type = getString(R.string.lab); break;
+            final String hash;
+            if (extras.getString("hash") != null) {
+                hash = extras.getString("hash");
+            } else throw new Exception("Missed hash extra");
+
+            cache_token = lessonUnit.cache_token;
+            index = lessonUnit.day;
+            oldHash = hash;
+
+            String addedStr = Storage.file.perm.get(this, "schedule_lessons#added#" + lessonUnit.cache_token, "");
+            JSONArray added;
+            if (addedStr.isEmpty()) {
+                added = new JSONArray();
+            } else {
+                added = new JSONArray(addedStr);
+            }
+            boolean found = false;
+            for (int i = 0; i < added.length(); i++) {
+                JSONObject day = added.getJSONObject(i);
+                if (day.getInt("index") == lessonUnit.day) {
+                    JSONArray lessons = day.getJSONArray("lessons");
+                    for (int j = 0; j < lessons.length(); j++) {
+                        JSONObject lesson = lessons.getJSONObject(j);
+                        if (Objects.equals(hash, Static.crypt(lesson.toString()))) {
+                            if (lesson.getString("subject") != null) lessonUnit.title = lesson.getString("subject");
+                            if (lesson.getString("timeStart") != null) lessonUnit.timeStart = lesson.getString("timeStart");
+                            if (lesson.getString("timeEnd") != null) lessonUnit.timeEnd = lesson.getString("timeEnd");
+                            if (lesson.getString("type") != null) lessonUnit.type = lesson.getString("type");
+                            if (lesson.getString("group") != null) lessonUnit.group = lesson.getString("group");
+                            if (lesson.getString("teacher") != null) lessonUnit.teacher = lesson.getString("teacher");
+                            if (lesson.getString("teacher_id") != null) lessonUnit.teacher_id = lesson.getString("teacher_id");
+                            if (lesson.getString("room") != null) lessonUnit.room = lesson.getString("room");
+                            if (lesson.getString("building") != null) lessonUnit.building = lesson.getString("building");
+                            if (lessonUnit.type != null) {
+                                switch (lessonUnit.type) {
+                                    case "practice": lessonUnit.type = getString(R.string.practice); break;
+                                    case "lecture": lessonUnit.type = getString(R.string.lecture); break;
+                                    case "lab": lessonUnit.type = getString(R.string.lab); break;
+                                }
+                            }
+                            found = true;
+                            break;
+                        }
+                    }
                 }
             }
+            if (!found) throw new Exception("Custom lesson not found");
 
             TextInputEditText lesson_title = (TextInputEditText) findViewById(R.id.lesson_title);
             if (lessonUnit.title != null) lesson_title.setText(lessonUnit.title);
@@ -225,7 +262,7 @@ public class ScheduleLessonCreateActivity extends AppCompatActivity {
             final AutoCompleteTextView lesson_teacher = (AutoCompleteTextView) findViewById(R.id.lesson_teacher);
             final TeacherPickerAdapter teacherPickerAdapter = new TeacherPickerAdapter(this, new ArrayList<JSONObject>());
             if (lessonUnit.teacher != null) {
-                TeacherSearch.blocked = true;
+                ScheduleLessonsEditActivity.TeacherSearch.blocked = true;
                 lesson_teacher.setText(lessonUnit.teacher);
             }
             teacherPickerAdapter.setNotifyOnChange(true);
@@ -242,7 +279,7 @@ public class ScheduleLessonCreateActivity extends AppCompatActivity {
                     teacherPickerAdapter.clear();
                     lesson_teacher.dismissDropDown();
                     if (!query.isEmpty()) {
-                        TeacherSearch.search(getBaseContext(), query, new TeacherSearch.response() {
+                        ScheduleLessonsEditActivity.TeacherSearch.search(getBaseContext(), query, new ScheduleLessonsEditActivity.TeacherSearch.response() {
                             @Override
                             public void onSuccess(JSONObject json) {
                                 teacherPickerAdapter.clear();
@@ -282,7 +319,7 @@ public class ScheduleLessonCreateActivity extends AppCompatActivity {
                         lessonUnit.teacher = item.getString("person");
                         lessonUnit.teacher_id = String.valueOf(item.getInt("pid"));
                         Log.d(TAG, lessonUnit.teacher + " | " + lessonUnit.teacher_id);
-                        TeacherSearch.blocked = true;
+                        ScheduleLessonsEditActivity.TeacherSearch.blocked = true;
                         lesson_teacher.setText(lessonUnit.teacher);
                     } catch (Exception e) {
                         Static.error(e);
@@ -333,7 +370,7 @@ public class ScheduleLessonCreateActivity extends AppCompatActivity {
                     if (Objects.equals(lessonUnit.type.toLowerCase(), getString(R.string.lecture).toLowerCase())) lessonUnit.type = "lecture";
                     if (Objects.equals(lessonUnit.type.toLowerCase(), getString(R.string.practice).toLowerCase())) lessonUnit.type = "practice";
                     if (Objects.equals(lessonUnit.type.toLowerCase(), getString(R.string.lab).toLowerCase())) lessonUnit.type = "lab";
-                    if (ScheduleLessons.createLesson(self, lessonUnit)) {
+                    if (ScheduleLessons.editLesson(self, cache_token, index, oldHash, lessonUnit)) {
                         ScheduleLessonsFragment.reScheduleRequired = true;
                         finish();
                     } else {
@@ -372,7 +409,7 @@ public class ScheduleLessonCreateActivity extends AppCompatActivity {
         private static RequestHandle request = null;
         static boolean blocked = false;
 
-        public static void search(final Context context, final String query, final TeacherSearch.response delegate){
+        public static void search(final Context context, final String query, final ScheduleLessonsEditActivity.TeacherSearch.response delegate){
             if (request != null) {
                 request.cancel(true);
                 request = null;

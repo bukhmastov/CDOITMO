@@ -79,6 +79,14 @@
                 android:value="com.bukhmastov.cdoitmo.activities.MainActivity" />
         </activity>
         <activity
+            android:name=".activities.ScheduleLessonsEditActivity"
+            android:label="@string/lesson_editing"
+            android:parentActivityName=".activities.MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.bukhmastov.cdoitmo.activities.MainActivity" />
+        </activity>
+        <activity
             android:name=".activities.SettingsActivity"
             android:label="@string/settings"
             android:parentActivityName=".activities.MainActivity" >

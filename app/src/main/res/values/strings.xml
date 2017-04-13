@@ -112,6 +112,7 @@
     <string name="do_cancel">Отменить</string>
     <string name="next">Далее</string>
     <string name="create">Создать</string>
+    <string name="save">Сохранить</string>
     <string name="error_occurred_while_room101_request">Произошла ошибка во время подачи заявки</string>
     <string name="right_now">только что</string>
     <string name="sec_past">сек. назад</string>
@@ -238,6 +239,7 @@
     <string name="reduce_lesson">Скрыть занятие</string>
     <string name="restore_lesson">Восстановить занятие</string>
     <string name="copy_lesson">Создать копию занятия</string>
+    <string name="edit_lesson">Редактировать занятие</string>
     <string name="open_group_schedule">Открыть расписание группы</string>
     <string name="open_teacher_schedule">Открыть расписание преподавателя</string>
     <string name="open_room_schedule">Открыть расписание аудитории</string>
@@ -249,7 +251,7 @@
     <string name="changes_cleared">Изменения очищены</string>
     <string name="pref_protocol_changes_track_title">Отображать изменения количества баллов</string>
     <string name="lesson_creation">Создание занятия</string>
-    <string name="create_custom_lesson">Создание пользовательского занятия</string>
+    <string name="lesson_editing">Редактирование занятия</string>
     <string name="week_both">Любая неделя</string>
     <string name="week_even">Четная неделя</string>
     <string name="week_odd">Нечетная неделя</string>

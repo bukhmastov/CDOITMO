@@ -143,6 +143,7 @@ public class ScheduleLessonsBuilder extends Thread {
                                 bindMenuItem(menu, R.id.reduce_lesson, activity.getString(R.string.reduce_lesson), !Objects.equals(cdoitmo_type, "normal"));
                                 bindMenuItem(menu, R.id.restore_lesson, activity.getString(R.string.restore_lesson), !Objects.equals(cdoitmo_type, "reduced"));
                                 bindMenuItem(menu, R.id.delete_lesson, activity.getString(R.string.delete_lesson), !Objects.equals(cdoitmo_type, "synthetic"));
+                                bindMenuItem(menu, R.id.edit_lesson, activity.getString(R.string.edit_lesson), !Objects.equals(cdoitmo_type, "synthetic"));
                                 popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                                     @Override
                                     public boolean onMenuItemClick(MenuItem item) {
@@ -175,6 +176,14 @@ public class ScheduleLessonsBuilder extends Thread {
                                             case R.id.copy_lesson:
                                                 try {
                                                     ScheduleLessons.createLesson(activity, ScheduleLessonsFragment.schedule, lesson, index, type);
+                                                } catch (Exception e) {
+                                                    Static.error(e);
+                                                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                                }
+                                                break;
+                                            case R.id.edit_lesson:
+                                                try {
+                                                    ScheduleLessons.editLesson(activity, ScheduleLessonsFragment.schedule, lesson, index, type);
                                                 } catch (Exception e) {
                                                     Static.error(e);
                                                     Static.snackBar(activity, activity.getString(R.string.something_went_wrong));

@@ -46,9 +46,10 @@
                     android:textColor="?android:attr/textColorPrimary" />
 
                 <TextView
+                    android:id="@+id/slc_desc"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/create_custom_lesson"
+                    android:text="@string/lorem_ipsum"
                     android:textColor="?android:attr/textColorSecondary" />
 
             </LinearLayout>

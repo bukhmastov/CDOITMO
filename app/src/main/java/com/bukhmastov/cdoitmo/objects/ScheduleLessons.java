@@ -4,10 +4,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.Nullable;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.util.Log;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.ScheduleLessonCreateActivity;
+import com.bukhmastov.cdoitmo.activities.ScheduleLessonsEditActivity;
 import com.bukhmastov.cdoitmo.converters.ScheduleLessonsAdditionalConverter;
 import com.bukhmastov.cdoitmo.converters.ScheduleLessonsConverter;
 import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsFragment;
@@ -555,6 +555,15 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
     public static void deleteLesson(Context context, String cache_token, int index, JSONObject lesson){
         try {
             if (!Objects.equals(lesson.getString("cdoitmo_type"), "synthetic")) throw new Exception("Wrong cdoitmo_type type");
+            if (!deleteLesson(context, cache_token, index, Static.crypt(lesson.toString()))) throw new Exception("Failed to delete lesson");
+            ScheduleLessonsFragment.reSchedule(context);
+        } catch (Exception e) {
+            Static.error(e);
+            Static.toast(context, context.getString(R.string.something_went_wrong));
+        }
+    }
+    public static boolean deleteLesson(Context context, String cache_token, int index, String hash){
+        try {
             String addedStr = Storage.file.perm.get(context, "schedule_lessons#added#" + cache_token, "");
             JSONArray added;
             if (addedStr.isEmpty()) {
@@ -562,12 +571,13 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
             } else {
                 added = new JSONArray(addedStr);
             }
+            // remove
             for (int i = 0; i < added.length(); i++) {
                 JSONObject day = added.getJSONObject(i);
                 if (day.getInt("index") == index) {
                     JSONArray lessons = day.getJSONArray("lessons");
                     for (int j = 0; j < lessons.length(); j++) {
-                        if (lesson.toString().equals(lessons.getJSONObject(j).toString())) {
+                        if (Objects.equals(hash, Static.crypt(lessons.getJSONObject(j).toString()))) {
                             lessons.remove(j);
                             break;
                         }
@@ -583,10 +593,10 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
             } else {
                 Storage.file.perm.put(context, "schedule_lessons#added#" + cache_token, added.toString());
             }
-            ScheduleLessonsFragment.reSchedule(context);
+            return true;
         } catch (Exception e) {
             Static.error(e);
-            Static.toast(context, context.getString(R.string.something_went_wrong));
+            return false;
         }
     }
     public static String getCast(JSONObject lesson) throws JSONException {
@@ -669,13 +679,25 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                 day.put("lessons", lessons);
                 added.put(day);
             }
-            Log.d(TAG, added.toString());
             Storage.file.perm.put(context, "schedule_lessons#added#" + lessonUnit.cache_token, added.toString());
         } catch (Exception e) {
             Static.error(e);
             result = false;
         }
         return result;
+    }
+    public static void editLesson(Context context, JSONObject schedule, JSONObject lesson, int dayIndex, int week) throws Exception {
+        if (!Objects.equals(lesson.getString("cdoitmo_type"), "synthetic")) throw new Exception("Wrong cdoitmo_type type");
+        Intent intent = new Intent(context, ScheduleLessonsEditActivity.class);
+        intent.putExtra("header", schedule.getString("title") + " " + schedule.getString("label"));
+        intent.putExtra("cache_token", schedule.getString("cache_token"));
+        intent.putExtra("day", dayIndex);
+        intent.putExtra("week", week);
+        intent.putExtra("hash", Static.crypt(lesson.toString()));
+        context.startActivity(intent);
+    }
+    public static boolean editLesson(Context context, String cache_token, int index, String hash, LessonUnit lessonUnit){
+        return deleteLesson(context, cache_token, index, hash) && createLesson(context, lessonUnit);
     }
     private static String getLessonField(String field, String def){
         return field == null || field.isEmpty() ? def : field;
