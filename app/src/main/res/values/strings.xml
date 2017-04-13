@@ -276,5 +276,6 @@
     <string name="support_dev_desc">Ну а вдруг</string>
     <string name="pref_schedule_lessons_compact_view_of_reduced_lesson_title">Компактный вид скрытого занятия</string>
     <string name="on_demand">По запросу</string>
+    <string name="interrupt_auth">Отменить авторизацию\nперейти в оффлайн режим</string>
 
 </resources>

@@ -13,6 +13,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
@@ -40,6 +41,7 @@ public class LoginActivity extends AppCompatActivity {
     public static final int SIGNAL_LOGOUT = 3;
     public static final int SIGNAL_CREDENTIALS_REQUIRED = 4;
     public static final int SIGNAL_CREDENTIALS_FAILED = 5;
+    private RequestHandle loginRequestHandle = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -189,6 +191,20 @@ public class LoginActivity extends AppCompatActivity {
                 @Override
                 public void onProgress(int state) {
                     draw(R.layout.state_auth);
+                    Button interrupt_auth = (Button) findViewById(R.id.interrupt_auth);
+                    if (interrupt_auth != null) {
+                        interrupt_auth.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                if (loginRequestHandle != null) {
+                                    loginRequestHandle.cancel(true);
+                                    loginRequestHandle = null;
+                                }
+                                Static.OFFLINE_MODE = true;
+                                authorized(newUser);
+                            }
+                        });
+                    }
                     TextView loading_message = (TextView) findViewById(R.id.loading_message);
                     if (loading_message != null) {
                         switch (state) {
@@ -213,7 +229,9 @@ public class LoginActivity extends AppCompatActivity {
                     logoutDone(login, false);
                 }
                 @Override
-                public void onNewHandle(RequestHandle requestHandle) {}
+                public void onNewHandle(RequestHandle requestHandle) {
+                    loginRequestHandle = requestHandle;
+                }
             });
         } else {
             snackBar(getString(R.string.fill_fields));
@@ -243,6 +261,10 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onProgress(int state) {
                 draw(R.layout.state_auth);
+                Button interrupt_auth = (Button) findViewById(R.id.interrupt_auth);
+                if (interrupt_auth != null) {
+                    interrupt_auth.setLayoutParams(new LinearLayout.LayoutParams(0, 0));
+                }
                 TextView loading_message = (TextView) findViewById(R.id.loading_message);
                 if (loading_message != null) {
                     loading_message.setText(getString(R.string.exiting) + "\n" + Storage.file.perm.get(getBaseContext(), "user#name"));
