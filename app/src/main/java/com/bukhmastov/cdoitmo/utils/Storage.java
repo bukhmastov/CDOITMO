@@ -45,6 +45,9 @@ public class Storage {
             public static boolean exists(Context context, String path) {
                 return Storage.file.exists(context, STORAGE.cache, false, path);
             }
+            public static ArrayList<String> list(Context context, String path){
+                return Storage.file.list(context, STORAGE.cache, false, path);
+            }
         }
         public static class perm {
             public static boolean put(Context context, String path, String data) {
@@ -67,6 +70,9 @@ public class Storage {
             }
             public static boolean exists(Context context, String path) {
                 return Storage.file.exists(context, STORAGE.permanent, false, path);
+            }
+            public static ArrayList<String> list(Context context, String path){
+                return Storage.file.list(context, STORAGE.permanent, false, path);
             }
         }
         public static class all {
@@ -98,6 +104,9 @@ public class Storage {
             }
             public static boolean exists(Context context, String path) {
                 return Storage.file.exists(context, STORAGE.permanent, true, path);
+            }
+            public static ArrayList<String> list(Context context, String path){
+                return Storage.file.list(context, STORAGE.permanent, true, path);
             }
         }
 
@@ -200,6 +209,21 @@ public class Storage {
             } catch (Exception e) {
                 return false;
             }
+        }
+        private static ArrayList<String> list(Context context, STORAGE storage, boolean general, String path){
+            ArrayList<String> response = new ArrayList<>();
+            try {
+                File file = new File(getFileLocation(context, storage, general, path, false));
+                if (file.exists()) {
+                    File[] files = file.listFiles();
+                    for (File f : files) {
+                        response.add(f.getName().replaceAll("\\.txt$", ""));
+                    }
+                }
+            } catch (Exception e) {
+                Static.error(e);
+            }
+            return response;
         }
         private static boolean deleteRecursive(File fileOrDirectory) {
             boolean result = true;

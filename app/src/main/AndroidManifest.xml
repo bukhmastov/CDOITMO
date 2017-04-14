@@ -105,6 +105,8 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.bukhmastov.cdoitmo.activities.AboutActivity" />
         </activity>
+        <activity android:name=".activities.ScheduleLessonsSearchActivity" />
+        <activity android:name=".activities.ScheduleExamsSearchActivity" />
 
         <service
             android:name=".utils.TrackingProtocolJobService"

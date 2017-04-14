@@ -98,4 +98,20 @@
 
     </style>
 
+    <style name="AppTheme.Search" parent="AppTheme">
+
+        <item name="colorSearchBackgroundToolbar">@color/colorSearchBackgroundToolbar</item>
+        <item name="colorSearchBackground">@color/colorSearchBackground</item>
+        <item name="colorPrimaryDark">@color/colorSearchPrimaryDark</item>
+
+    </style>
+
+    <style name="AppTheme.Search.Dark" parent="AppTheme.Dark" >
+
+        <item name="colorSearchBackgroundToolbar">@color/colorSearchBackgroundToolbarInverse</item>
+        <item name="colorSearchBackground">@color/colorSearchBackgroundInverse</item>
+        <item name="colorPrimaryDark">@color/colorSearchPrimaryDarkInverse</item>
+
+    </style>
+
 </resources>

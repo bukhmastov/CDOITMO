@@ -27,6 +27,9 @@
     <color name="colorPopupBackground">#99000000</color>
     <color name="colorPopupBackgroundFill">#f0f0f0</color>
     <color name="colorBackgroundCards">#f5f5f5</color>
+    <color name="colorSearchBackgroundToolbar">#ffffff</color>
+    <color name="colorSearchBackground">#f5f5f5</color>
+    <color name="colorSearchPrimaryDark">#eeeeee</color>
 
     <!-- colors for dark AppTheme.Dark -->
     <color name="colorPrimaryLightInverse">#282828</color>
@@ -52,5 +55,8 @@
     <color name="colorPopupBackgroundInverse">#AA000000</color>
     <color name="colorPopupBackgroundFillInverse">#212121</color>
     <color name="colorBackgroundCardsInverse">#212121</color>
+    <color name="colorSearchBackgroundToolbarInverse">#212121</color>
+    <color name="colorSearchBackgroundInverse">#323232</color>
+    <color name="colorSearchPrimaryDarkInverse">#090909</color>
 
 </resources>

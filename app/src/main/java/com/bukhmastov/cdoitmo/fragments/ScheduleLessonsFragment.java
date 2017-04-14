@@ -2,11 +2,11 @@ package com.bukhmastov.cdoitmo.fragments;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
-import android.support.v7.widget.SearchView;
 import android.util.SparseIntArray;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -20,6 +20,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.MainActivity;
+import com.bukhmastov.cdoitmo.activities.ScheduleLessonsSearchActivity;
 import com.bukhmastov.cdoitmo.adapters.PagerAdapter;
 import com.bukhmastov.cdoitmo.adapters.TeacherPickerListView;
 import com.bukhmastov.cdoitmo.converters.ScheduleLessonsAdditionalConverter;
@@ -43,7 +44,6 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
     private boolean loaded = false;
     public static RequestHandle fragmentRequestHandle = null;
     public static String query = null;
-    private TabLayout schedule_tabs;
     public static JSONObject schedule;
     public static boolean schedule_cached = false;
     public static SparseIntArray scroll = new SparseIntArray();
@@ -55,6 +55,11 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
         super.onCreate(savedInstanceState);
         scheduleLessons = new ScheduleLessons(getContext());
         scheduleLessons.setHandler(this);
+        try {
+            getActivity().findViewById(R.id.schedule_tabs).setVisibility(View.VISIBLE);
+        } catch (Exception e){
+            Static.error(e);
+        }
     }
 
     @Override
@@ -66,22 +71,17 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
     public void onResume() {
         super.onResume();
         try {
-            schedule_tabs = (TabLayout) getActivity().findViewById(R.id.schedule_tabs);
-            if (!Static.OFFLINE_MODE) {
-                MenuItem menuItem = MainActivity.menu.findItem(R.id.action_search);
-                if (menuItem != null) {
+            if (MainActivity.menu != null && !Static.OFFLINE_MODE) {
+                MenuItem menuItem = MainActivity.menu.findItem(R.id.action_schedule_lessons_search);
+                if (menuItem != null && !menuItem.isVisible()) {
                     menuItem.setVisible(true);
                     menuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
                         @Override
                         public boolean onMenuItemClick(MenuItem item) {
-                            MainActivity.menu.findItem(R.id.action_search).expandActionView();
+                            startActivity(new Intent(getContext(), ScheduleLessonsSearchActivity.class));
                             return false;
                         }
                     });
-                    SearchView searchView = (SearchView) menuItem.getActionView();
-                    if (searchView != null) {
-                        searchView.setQueryHint(getString(R.string.schedule_lessons_search_view_hint));
-                    }
                 }
             }
         } catch (Exception e){
@@ -120,11 +120,12 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
     public void onDestroy() {
         super.onDestroy();
         try {
-            schedule_tabs.setVisibility(View.GONE);
-            if (!Static.OFFLINE_MODE) {
-                MenuItem menuItem = MainActivity.menu.findItem(R.id.action_search);
-                if (menuItem != null) {
+            getActivity().findViewById(R.id.schedule_tabs).setVisibility(View.GONE);
+            if (MainActivity.menu != null) {
+                MenuItem menuItem = MainActivity.menu.findItem(R.id.action_schedule_lessons_search);
+                if (menuItem != null && menuItem.isVisible()) {
                     menuItem.setVisible(false);
+                    menuItem.setOnMenuItemClickListener(null);
                 }
             }
         } catch (Exception e){
@@ -148,7 +149,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
     @Override
     public void onProgress(int state){
         try {
-            schedule_tabs.setVisibility(View.GONE);
+            getActivity().findViewById(R.id.schedule_tabs).setVisibility(View.GONE);
             draw(R.layout.state_loading);
             TextView loading_message = (TextView) getActivity().findViewById(R.id.loading_message);
             if (loading_message != null) {
@@ -207,7 +208,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
         try {
             if (json == null) throw new NullPointerException("json cannot be null");
             schedule = json;
-            schedule_tabs.setVisibility(View.GONE);
+            getActivity().findViewById(R.id.schedule_tabs).setVisibility(View.GONE);
             if (Objects.equals(json.getString("type"), "teacher_picker")) {
                 schedule_cached = false;
                 JSONArray teachers = json.getJSONArray("list");
@@ -243,25 +244,25 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
             } else {
                 schedule_cached = !Objects.equals(scheduleLessons.getCache(schedule.getString("cache_token")), "");
                 if (schedule.getJSONArray("schedule").length() > 0) {
-                    schedule_tabs.setVisibility(View.VISIBLE);
+                    getActivity().findViewById(R.id.schedule_tabs).setVisibility(View.VISIBLE);
                     draw(R.layout.layout_schedule_lessons_tabs);
                     ViewPager schedule_view = (ViewPager) getActivity().findViewById(R.id.schedule_pager);
                     if (schedule_view != null) {
                         schedule_view.setAdapter(new PagerAdapter(getFragmentManager(), getContext()));
                         schedule_view.addOnPageChangeListener(this);
-                        schedule_tabs.setupWithViewPager(schedule_view);
+                        ((TabLayout) getActivity().findViewById(R.id.schedule_tabs)).setupWithViewPager(schedule_view);
                     }
                     TabLayout.Tab tab;
                     if (ScheduleLessonsFragment.tabSelected == -1) {
                         int pref = Integer.parseInt(Storage.pref.get(getContext(), "pref_schedule_lessons_week", "-1"));
                         if (pref == -1) {
-                            tab = schedule_tabs.getTabAt(Static.week >= 0 ? (Static.week % 2) + 1 : 0);
+                            tab = ((TabLayout) getActivity().findViewById(R.id.schedule_tabs)).getTabAt(Static.week >= 0 ? (Static.week % 2) + 1 : 0);
                         } else {
-                            tab = schedule_tabs.getTabAt(pref);
+                            tab = ((TabLayout) getActivity().findViewById(R.id.schedule_tabs)).getTabAt(pref);
                         }
                     } else {
                         try {
-                            tab = schedule_tabs.getTabAt(ScheduleLessonsFragment.tabSelected);
+                            tab = ((TabLayout) getActivity().findViewById(R.id.schedule_tabs)).getTabAt(ScheduleLessonsFragment.tabSelected);
                         } catch (Exception e) {
                             tab = null;
                         }

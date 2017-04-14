@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.widget.SearchView;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -21,6 +20,7 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.LoginActivity;
 import com.bukhmastov.cdoitmo.activities.MainActivity;
+import com.bukhmastov.cdoitmo.activities.ScheduleExamsSearchActivity;
 import com.bukhmastov.cdoitmo.adapters.TeacherPickerListView;
 import com.bukhmastov.cdoitmo.builders.ScheduleExamsBuilder;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
@@ -65,14 +65,17 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
     public void onResume() {
         super.onResume();
         try {
-            if(!Static.OFFLINE_MODE){
-                MenuItem action_search = MainActivity.menu.findItem(R.id.action_search);
-                if (action_search != null){
-                    action_search.setVisible(true);
-                    SearchView searchView = (SearchView) action_search.getActionView();
-                    if (searchView != null) {
-                        searchView.setQueryHint(getString(R.string.schedule_exams_search_view_hint));
-                    }
+            if (MainActivity.menu != null && !Static.OFFLINE_MODE) {
+                MenuItem menuItem = MainActivity.menu.findItem(R.id.action_schedule_exams_search);
+                if (menuItem != null && !menuItem.isVisible()) {
+                    menuItem.setVisible(true);
+                    menuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                        @Override
+                        public boolean onMenuItemClick(MenuItem item) {
+                            startActivity(new Intent(getContext(), ScheduleExamsSearchActivity.class));
+                            return false;
+                        }
+                    });
                 }
             }
         } catch (Exception e){
@@ -105,10 +108,12 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
     public void onDestroy() {
         super.onDestroy();
         try {
-            if (!Static.OFFLINE_MODE) {
-                MenuItem action_search = MainActivity.menu.findItem(R.id.action_search);
-                if (action_search != null) {
-                    action_search.setVisible(false);
+            getActivity().findViewById(R.id.schedule_tabs).setVisibility(View.GONE);
+            if (MainActivity.menu != null) {
+                MenuItem menuItem = MainActivity.menu.findItem(R.id.action_schedule_exams_search);
+                if (menuItem != null && menuItem.isVisible()) {
+                    menuItem.setVisible(false);
+                    menuItem.setOnMenuItemClickListener(null);
                 }
             }
         } catch (Exception e){

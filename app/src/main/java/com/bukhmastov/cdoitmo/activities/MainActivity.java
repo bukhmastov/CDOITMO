@@ -12,7 +12,6 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -126,39 +125,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.toolbar_main, menu);
         MainActivity.menu = menu;
-        MenuItem menuItem;
         checkOffline();
-        // search view for lessons schedule
-        menuItem = menu.findItem(R.id.action_search);
-        if (menuItem != null) {
-            SearchView searchView = (SearchView) menuItem.getActionView();
-            if (searchView != null) {
-                searchView.setSubmitButtonEnabled(true);
-                searchView.setElevation(6);
-                searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-                    @Override
-                    public boolean onQueryTextSubmit(String query) {
-                        try {
-                            MenuItem menuItem = MainActivity.menu.findItem(R.id.action_search);
-                            if (menuItem != null) menuItem.collapseActionView();
-                            if (selectedSection == R.id.nav_schedule) {
-                                if (ScheduleLessonsFragment.scheduleLessons != null) ScheduleLessonsFragment.searchAndClear(query);
-                            }
-                            if (selectedSection == R.id.nav_schedule_exams) {
-                                if (ScheduleExamsFragment.scheduleExams != null) ScheduleExamsFragment.scheduleExams.search(query);
-                            }
-                        } catch (Exception e) {
-                            Static.error(e);
-                        }
-                        return false;
-                    }
-                    @Override
-                    public boolean onQueryTextChange(String newText) {
-                        return false;
-                    }
-                });
-            }
-        }
         return true;
     }
 
@@ -196,16 +163,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
     private void checkOffline(){
         if (Static.OFFLINE_MODE) {
-            View content =  findViewById(android.R.id.content);
-            if (content != null) {
-                Snackbar snackbar = Snackbar.make(content, R.string.offline_mode_on, Snackbar.LENGTH_LONG);
-                snackbar.getView().setBackgroundColor(Static.colorBackgroundSnackBar);
-                snackbar.show();
-            }
+            Static.snackBar(this, getString(R.string.offline_mode_on));
         }
         if (MainActivity.menu != null) {
+            if (Static.OFFLINE_MODE) {
+                for (int i = 0; i < MainActivity.menu.size(); i++) {
+                    MainActivity.menu.getItem(i).setVisible(false);
+                }
+            }
             MenuItem menuItem = MainActivity.menu.findItem(R.id.offline_mode);
-            if (menuItem != null) menuItem.setVisible(Static.OFFLINE_MODE);
+            if (menuItem != null) {
+                menuItem.setVisible(Static.OFFLINE_MODE);
+            }
         }
     }
     private void displayUserData(){
