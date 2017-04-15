@@ -82,24 +82,31 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
     private void load(){
         load(Storage.pref.get(getContext(), "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(getContext(), "pref_tab_refresh", "0")) : 0);
     }
-    private void load(int refresh_rate){
-        if (!protocol.is(number_of_weeks) || refresh_rate == 0) {
-            forceLoad();
-        } else if (refresh_rate >= 0){
-            JSONObject p = protocol.get();
-            try {
-                if (p.getLong("timestamp") + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+    private void load(final int refresh_rate){
+        protocol.is(new Protocol.Callback() {
+            void onChecked(boolean is){
+                if (!is || refresh_rate == 0) {
                     forceLoad();
+                } else if (refresh_rate >= 0){
+                    protocol.get(new Protocol.Callback() {
+                        void onDone(JSONObject p){
+                            try {
+                                if (p.getLong("timestamp") + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+                                    forceLoad();
+                                } else {
+                                    display();
+                                }
+                            } catch (JSONException e) {
+                                Static.error(e);
+                                forceLoad();
+                            }
+                        }
+                    });
                 } else {
                     display();
                 }
-            } catch (JSONException e) {
-                Static.error(e);
-                forceLoad();
             }
-        } else {
-            display();
-        }
+        }, number_of_weeks);
     }
     private void forceLoad(){
         forceLoad(0);
@@ -107,11 +114,15 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
     private void forceLoad(int attempt){
         if (!Static.OFFLINE_MODE) {
             if (++attempt > maxAttempts) {
-                if (protocol.is()) {
-                    display();
-                } else {
-                    loadFailed();
-                }
+                protocol.is(new Protocol.Callback() {
+                    void onChecked(boolean is) {
+                        if (is) {
+                            display();
+                        } else {
+                            loadFailed();
+                        }
+                    }
+                });
                 return;
             }
             final int finalAttempt = attempt;
@@ -141,25 +152,29 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
                 }
                 @Override
                 public void onFailure(int state) {
-                    Activity activity = getActivity();
+                    final Activity activity = getActivity();
                     switch (state) {
                         case DeIfmoRestClient.FAILED_OFFLINE:
-                            if (protocol.is(number_of_weeks)) {
-                                display();
-                            } else {
-                                draw(R.layout.state_offline);
-                                if (activity != null) {
-                                    View offline_reload = activity.findViewById(R.id.offline_reload);
-                                    if (offline_reload != null) {
-                                        offline_reload.setOnClickListener(new View.OnClickListener() {
-                                            @Override
-                                            public void onClick(View v) {
-                                                forceLoad();
+                            protocol.is(new Protocol.Callback() {
+                                void onChecked(boolean is){
+                                    if (is) {
+                                        display();
+                                    } else {
+                                        draw(R.layout.state_offline);
+                                        if (activity != null) {
+                                            View offline_reload = activity.findViewById(R.id.offline_reload);
+                                            if (offline_reload != null) {
+                                                offline_reload.setOnClickListener(new View.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(View v) {
+                                                        forceLoad();
+                                                    }
+                                                });
                                             }
-                                        });
+                                        }
                                     }
                                 }
-                            }
+                            }, number_of_weeks);
                             break;
                         case DeIfmoRestClient.FAILED_TRY_AGAIN:
                             draw(R.layout.state_try_again);
@@ -183,23 +198,27 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
                 }
             });
         } else {
-            if (protocol.is()) {
-                display();
-            } else {
-                draw(R.layout.state_offline);
-                Activity activity = getActivity();
-                if (activity != null) {
-                    View offline_reload = activity.findViewById(R.id.offline_reload);
-                    if (offline_reload != null) {
-                        offline_reload.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                forceLoad();
+            protocol.is(new Protocol.Callback() {
+                void onChecked(boolean is) {
+                    if (is) {
+                        display();
+                    } else {
+                        draw(R.layout.state_offline);
+                        Activity activity = getActivity();
+                        if (activity != null) {
+                            View offline_reload = activity.findViewById(R.id.offline_reload);
+                            if (offline_reload != null) {
+                                offline_reload.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        forceLoad();
+                                    }
+                                });
                             }
-                        });
+                        }
                     }
                 }
-            }
+            });
         }
     }
     private void loadFailed(){
@@ -221,84 +240,88 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
         }
     }
     private void display(){
-        try {
-            JSONObject data = protocol.get();
-            if (data == null) throw new NullPointerException("Protocol.protocol can't be null");
-            // получаем список предметов для отображения
-            number_of_weeks = data.getInt("number_of_weeks");
-            JSONArray jsonArray = data.getJSONArray("protocol");
-            final ArrayList<HashMap<String, String>> changes = new ArrayList<>();
-            for(int i = 0; i < jsonArray.length(); i++){
-                JSONObject jsonObject = jsonArray.getJSONObject(i);
-                HashMap<String, String> hashMap = new HashMap<>();
-                JSONObject var = jsonObject.getJSONObject("var");
-                hashMap.put("name", jsonObject.getString("subject"));
-                hashMap.put("desc", var.getString("name") + " [" + var.getString("min") + "/" + var.getString("threshold") + "/" + var.getString("max") + "]");
-                hashMap.put("meta", (Objects.equals(jsonObject.getString("sign"), "..") ? "" : jsonObject.getString("sign") + " | ") + jsonObject.getString("date"));
-                hashMap.put("value", jsonObject.getString("value"));
-                hashMap.put("delta", jsonObject.getString("cdoitmo_delta"));
-                hashMap.put("delta_here", jsonObject.getDouble("cdoitmo_delta_double") == 0 ? "false" : "true");
-                hashMap.put("delta_negative", jsonObject.getDouble("cdoitmo_delta_double") < 0 ? "true" : "false");
-                changes.add(hashMap);
-            }
-            // отображаем интерфейс
-            draw(R.layout.protocol_layout);
-            // работаем со списком
-            ListView pl_list_view = (ListView) getActivity().findViewById(R.id.pl_list_view);
-            if (pl_list_view != null) {
-                if (changes.size() > 0) {
-                    pl_list_view.setAdapter(new ProtocolListView(getActivity(), changes));
-                } else {
-                    ViewGroup mSwipeRefreshLayout = (SwipeRefreshLayout) getActivity().findViewById(R.id.swipe_container);
-                    if (mSwipeRefreshLayout != null) {
-                        mSwipeRefreshLayout.removeView(pl_list_view);
-                        mSwipeRefreshLayout.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.state_protocol_empty, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        final ProtocolFragment self = this;
+        protocol.get(new Protocol.Callback() {
+            void onDone(JSONObject data){
+                try {
+                    if (data == null) throw new NullPointerException("Protocol.protocol can't be null");
+                    // получаем список предметов для отображения
+                    number_of_weeks = data.getInt("number_of_weeks");
+                    JSONArray jsonArray = data.getJSONArray("protocol");
+                    final ArrayList<HashMap<String, String>> changes = new ArrayList<>();
+                    for(int i = 0; i < jsonArray.length(); i++){
+                        JSONObject jsonObject = jsonArray.getJSONObject(i);
+                        HashMap<String, String> hashMap = new HashMap<>();
+                        JSONObject var = jsonObject.getJSONObject("var");
+                        hashMap.put("name", jsonObject.getString("subject"));
+                        hashMap.put("desc", var.getString("name") + " [" + var.getString("min") + "/" + var.getString("threshold") + "/" + var.getString("max") + "]");
+                        hashMap.put("meta", (Objects.equals(jsonObject.getString("sign"), "..") ? "" : jsonObject.getString("sign") + " | ") + jsonObject.getString("date"));
+                        hashMap.put("value", jsonObject.getString("value"));
+                        hashMap.put("delta", jsonObject.getString("cdoitmo_delta"));
+                        hashMap.put("delta_here", jsonObject.getDouble("cdoitmo_delta_double") == 0 ? "false" : "true");
+                        hashMap.put("delta_negative", jsonObject.getDouble("cdoitmo_delta_double") < 0 ? "true" : "false");
+                        changes.add(hashMap);
                     }
-                }
-            }
-            // работаем со свайпом
-            SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) getActivity().findViewById(R.id.swipe_container);
-            if (mSwipeRefreshLayout != null) {
-                mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
-                mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
-                mSwipeRefreshLayout.setOnRefreshListener(this);
-            }
-            // работаем с раскрывающимся списком
-            Spinner spinner_weeks = (Spinner) getActivity().findViewById(R.id.pl_weeks_spinner);
-            if (spinner_weeks != null) {
-                final ArrayList<String> spinner_weeks_arr = new ArrayList<>();
-                final ArrayList<Integer> spinner_weeks_arr_values = new ArrayList<>();
-                for(int i = 1; i <= 4; i++){
-                    String value = getString(R.string.for_the) + " ";
-                    switch (i){
-                        case 1: value += getString(R.string.last_week); break;
-                        case 2: value += getString(R.string.last_2_weeks); break;
-                        case 3: value += getString(R.string.last_3_weeks); break;
-                        case 4: value += getString(R.string.last_4_weeks); break;
-                    }
-                    spinner_weeks_arr.add(value);
-                    spinner_weeks_arr_values.add(i);
-                }
-                spinner_weeks.setAdapter(new ArrayAdapter<>(getActivity(), R.layout.spinner_layout, spinner_weeks_arr));
-                spinner_weeks.setSelection(data.getInt("number_of_weeks") - 1);
-                spinner_weeks_blocker = true;
-                spinner_weeks.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                    public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
-                        if (spinner_weeks_blocker) {
-                            spinner_weeks_blocker = false;
-                            return;
+                    // отображаем интерфейс
+                    draw(R.layout.protocol_layout);
+                    // работаем со списком
+                    ListView pl_list_view = (ListView) getActivity().findViewById(R.id.pl_list_view);
+                    if (pl_list_view != null) {
+                        if (changes.size() > 0) {
+                            pl_list_view.setAdapter(new ProtocolListView(getActivity(), changes));
+                        } else {
+                            ViewGroup mSwipeRefreshLayout = (SwipeRefreshLayout) getActivity().findViewById(R.id.swipe_container);
+                            if (mSwipeRefreshLayout != null) {
+                                mSwipeRefreshLayout.removeView(pl_list_view);
+                                mSwipeRefreshLayout.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.state_protocol_empty, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                            }
                         }
-                        number_of_weeks = spinner_weeks_arr_values.get(position);
-                        forceLoad();
                     }
-                    public void onNothingSelected(AdapterView<?> parent) {}
-                });
+                    // работаем со свайпом
+                    SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) getActivity().findViewById(R.id.swipe_container);
+                    if (mSwipeRefreshLayout != null) {
+                        mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
+                        mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
+                        mSwipeRefreshLayout.setOnRefreshListener(self);
+                    }
+                    // работаем с раскрывающимся списком
+                    Spinner spinner_weeks = (Spinner) getActivity().findViewById(R.id.pl_weeks_spinner);
+                    if (spinner_weeks != null) {
+                        final ArrayList<String> spinner_weeks_arr = new ArrayList<>();
+                        final ArrayList<Integer> spinner_weeks_arr_values = new ArrayList<>();
+                        for(int i = 1; i <= 4; i++){
+                            String value = getString(R.string.for_the) + " ";
+                            switch (i){
+                                case 1: value += getString(R.string.last_week); break;
+                                case 2: value += getString(R.string.last_2_weeks); break;
+                                case 3: value += getString(R.string.last_3_weeks); break;
+                                case 4: value += getString(R.string.last_4_weeks); break;
+                            }
+                            spinner_weeks_arr.add(value);
+                            spinner_weeks_arr_values.add(i);
+                        }
+                        spinner_weeks.setAdapter(new ArrayAdapter<>(getActivity(), R.layout.spinner_layout, spinner_weeks_arr));
+                        spinner_weeks.setSelection(data.getInt("number_of_weeks") - 1);
+                        spinner_weeks_blocker = true;
+                        spinner_weeks.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                            public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
+                                if (spinner_weeks_blocker) {
+                                    spinner_weeks_blocker = false;
+                                    return;
+                                }
+                                number_of_weeks = spinner_weeks_arr_values.get(position);
+                                forceLoad();
+                            }
+                            public void onNothingSelected(AdapterView<?> parent) {}
+                        });
+                    }
+                    Static.showUpdateTime(getActivity(), data.getLong("timestamp"), R.id.protocol_layout, false);
+                } catch (Exception e) {
+                    Static.error(e);
+                    loadFailed();
+                }
             }
-            Static.showUpdateTime(getActivity(), data.getLong("timestamp"), R.id.protocol_layout, false);
-        } catch (Exception e) {
-            Static.error(e);
-            loadFailed();
-        }
+        });
     }
     private void draw(int layoutId){
         try {

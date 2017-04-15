@@ -87,7 +87,7 @@ public class AboutActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     try {
-                        Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
+                        Intent emailIntent = new Intent(Intent.ACTION_SEND);
                         emailIntent.setType("message/rfc822");
                         emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{"bukhmastov-alex@ya.ru"});
                         startActivity(Intent.createChooser(emailIntent, getString(R.string.send_mail) + "..."));

@@ -1,6 +1,6 @@
 package com.bukhmastov.cdoitmo.objects;
 
-import android.content.Context;
+import android.app.Activity;
 import android.os.Handler;
 
 import com.bukhmastov.cdoitmo.converters.ProtocolConverter;
@@ -14,31 +14,44 @@ import org.json.JSONObject;
 public class Protocol {
 
     private static final String TAG = "Protocol";
-    private Context context;
+    private Activity activity;
     private JSONObject protocol = null;
-
-    public Protocol(Context context){
-        this.context = context;
-        String protocol = Storage.file.cache.get(context, "protocol#core");
-        if (!protocol.isEmpty()) {
-            try {
-                this.protocol = new JSONObject(protocol);
-            } catch (Exception e) {
-                Static.error(e);
-            }
+    private boolean accessed = false;
+    public abstract static class Callback {
+        void onDone(JSONObject protocol){}
+        void onChecked(boolean is){}
+        private void done(final Activity activity, final Callback callback, final JSONObject protocol){
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    callback.onDone(protocol);
+                }
+            });
         }
+        private void checked(final Activity activity, final Callback callback, final boolean is){
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    callback.onChecked(is);
+                }
+            });
+        }
+    }
+
+    public Protocol(Activity activity){
+        this.activity = activity;
     }
     public void put(JSONArray data, int number_of_weeks, final Handler handler){
         try {
             JSONArray array = new JSONArray();
             array.put(number_of_weeks);
-            new ProtocolConverter(context, new ProtocolConverter.response() {
+            new ProtocolConverter(activity, new ProtocolConverter.response() {
                 @Override
                 public void finish(JSONObject json) {
                     try {
                         protocol = json;
-                        Storage.file.cache.put(context, "protocol#core", protocol.toString());
-                        Storage.file.perm.put(context, "protocol_tracker#protocol", protocol.getJSONArray("protocol").toString());
+                        Storage.file.cache.put(activity, "protocol#core", protocol.toString());
+                        Storage.file.perm.put(activity, "protocol_tracker#protocol", protocol.getJSONArray("protocol").toString());
                         handler.sendEmptyMessage(0);
                     } catch (JSONException e) {
                         Static.error(e);
@@ -49,23 +62,49 @@ public class Protocol {
             Static.error(e);
         }
     }
-    public JSONObject get(){
-        return protocol;
-    }
-    public boolean is(){
-        return protocol != null;
-    }
-    public boolean is(int number_of_weeks){
-        if (protocol == null) {
-            return false;
+    public void get(final Callback callback){
+        if (accessed) {
+            callback.done(activity, callback, protocol);
         } else {
-            try {
-                return protocol.getInt("number_of_weeks") == number_of_weeks;
-            } catch (JSONException e) {
-                Static.error(e);
-                return false;
-            }
+            access(callback, -1);
         }
+    }
+    public void is(final Callback callback){
+        is(callback, -1);
+    }
+    public void is(final Callback callback, int number_of_weeks){
+        if (accessed) {
+            callback.checked(activity, callback, protocol != null);
+        } else {
+            access(callback, number_of_weeks);
+        }
+    }
+    private void access(final Callback callback, final int number_of_weeks){
+        (new Thread(new Runnable() {
+            @Override
+            public void run() {
+                accessed = true;
+                final String cProtocol = Storage.file.cache.get(activity, "protocol#core");
+                if (!cProtocol.isEmpty()) {
+                    try {
+                        protocol = new JSONObject(cProtocol);
+                    } catch (Exception e) {
+                        Static.error(e);
+                    }
+                }
+                if (number_of_weeks == -1) {
+                    callback.checked(activity, callback, protocol != null);
+                } else {
+                    try {
+                        callback.checked(activity, callback, protocol != null && protocol.getInt("number_of_weeks") == number_of_weeks);
+                    } catch (JSONException e) {
+                        Static.error(e);
+                        callback.checked(activity, callback, false);
+                    }
+                }
+                callback.done(activity, callback, protocol);
+            }
+        })).start();
     }
 
 }

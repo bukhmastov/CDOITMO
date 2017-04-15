@@ -23,6 +23,7 @@ public class ScheduleExamsSearchActivity extends SearchActivity {
 
     @Override
     ArrayList<Suggestion> getSuggestions(String query) {
+        String queryTranslit = Static.Translit.cyr2lat(query);
         try {
             ArrayList<Suggestion> suggestions = new ArrayList<>();
             String recentString = Storage.file.perm.get(this, "schedule_exams#recent");
@@ -35,7 +36,7 @@ public class ScheduleExamsSearchActivity extends SearchActivity {
             int counter = 0;
             for (int i = 0; i < recent.length(); i++) {
                 String item = recent.getString(i);
-                if (query.isEmpty() || item.contains(query)) {
+                if (query.isEmpty() || contains(item, query)) {
                     counter++;
                     suggestions.add(new Suggestion(item, item, R.drawable.ic_access_time));
                 }
@@ -47,7 +48,7 @@ public class ScheduleExamsSearchActivity extends SearchActivity {
                 if (!cachedFile.isEmpty()) {
                     try {
                         JSONObject object = new JSONObject(cachedFile);
-                        if (query.isEmpty() || object.getString("scope").contains(query)) {
+                        if (query.isEmpty() || contains(object.getString("scope"), query)) {
                             suggestions.add(new Suggestion(object.getString("scope"), object.getString("scope"), R.drawable.ic_save));
                         }
                     } catch (Exception e) {
@@ -96,4 +97,9 @@ public class ScheduleExamsSearchActivity extends SearchActivity {
             ScheduleExamsFragment.scheduleExams.search(query);
         }
     }
+
+    private boolean contains(String first, String second){
+        return first.toLowerCase().contains(second.toLowerCase()) || Static.Translit.cyr2lat(first).toLowerCase().contains(Static.Translit.cyr2lat(second).toLowerCase());
+    }
+
 }

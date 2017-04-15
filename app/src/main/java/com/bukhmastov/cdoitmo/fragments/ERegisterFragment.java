@@ -85,24 +85,31 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
     private void load(){
         load(Storage.pref.get(getContext(), "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(getContext(), "pref_tab_refresh", "0")) : 0);
     }
-    private void load(int refresh_rate){
-        if (!eRegister.is() || refresh_rate == 0) {
-            forceLoad();
-        } else if (refresh_rate >= 0){
-            JSONObject eregister = eRegister.get();
-            try {
-                if (eregister.getLong("timestamp") + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+    private void load(final int refresh_rate){
+        eRegister.is(new ERegister.Callback(){
+            void onChecked(boolean is){
+                if (!is || refresh_rate == 0) {
                     forceLoad();
+                } else if (refresh_rate >= 0){
+                    eRegister.get(new ERegister.Callback() {
+                        void onDone(JSONObject eregister){
+                            try {
+                                if (eregister.getLong("timestamp") + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+                                    forceLoad();
+                                } else {
+                                    display();
+                                }
+                            } catch (JSONException e) {
+                                Static.error(e);
+                                forceLoad();
+                            }
+                        }
+                    });
                 } else {
                     display();
                 }
-            } catch (JSONException e) {
-                Static.error(e);
-                forceLoad();
             }
-        } else {
-            display();
-        }
+        });
     }
     private void forceLoad(){
         if (!Static.OFFLINE_MODE) {
@@ -117,11 +124,15 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                             }
                         });
                     } else {
-                        if (eRegister.is()) {
-                            display();
-                        } else {
-                            loadFailed();
-                        }
+                        eRegister.is(new ERegister.Callback() {
+                            void onChecked(boolean is) {
+                                if (is) {
+                                    display();
+                                } else {
+                                    loadFailed();
+                                }
+                            }
+                        });
                     }
                 }
                 @Override
@@ -147,25 +158,30 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                 }
                 @Override
                 public void onFailure(int state) {
-                    Activity activity = getActivity();
+                    final Activity activity = getActivity();
                     switch (state) {
                         case DeIfmoClient.FAILED_OFFLINE:
-                            if (eRegister.is()) {
-                                display();
-                            } else {
-                                draw(R.layout.state_offline);
-                                if (activity != null) {
-                                    View offline_reload = activity.findViewById(R.id.offline_reload);
-                                    if (offline_reload != null) {
-                                        offline_reload.setOnClickListener(new View.OnClickListener() {
-                                            @Override
-                                            public void onClick(View v) {
-                                                forceLoad();
+                            eRegister.is(new ERegister.Callback() {
+                                void onChecked(boolean is) {
+                                    if (is) {
+                                        display();
+                                    } else {
+                                        draw(R.layout.state_offline);
+                                        if (activity != null) {
+                                            View offline_reload = activity.findViewById(R.id.offline_reload);
+                                            if (offline_reload != null) {
+                                                offline_reload.setOnClickListener(new View.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(View v) {
+                                                        forceLoad();
+                                                    }
+                                                });
                                             }
-                                        });
+                                        }
                                     }
                                 }
-                            }
+                            });
+
                             break;
                         case DeIfmoClient.FAILED_TRY_AGAIN:
                         case DeIfmoClient.FAILED_AUTH_TRY_AGAIN:
@@ -196,27 +212,31 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                 }
             });
         } else {
-            if(eRegister.is()){
-                display();
-            } else {
-                try {
-                    draw(R.layout.state_offline);
-                    Activity activity = getActivity();
-                    if (activity != null) {
-                        View offline_reload = activity.findViewById(R.id.offline_reload);
-                        if (offline_reload != null) {
-                            offline_reload.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    forceLoad();
+            eRegister.is(new ERegister.Callback() {
+                void onChecked(boolean is) {
+                    if (is) {
+                        display();
+                    } else {
+                        try {
+                            draw(R.layout.state_offline);
+                            Activity activity = getActivity();
+                            if (activity != null) {
+                                View offline_reload = activity.findViewById(R.id.offline_reload);
+                                if (offline_reload != null) {
+                                    offline_reload.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            forceLoad();
+                                        }
+                                    });
                                 }
-                            });
+                            }
+                        } catch (Exception e) {
+                            Static.error(e);
                         }
                     }
-                } catch (Exception e) {
-                    Static.error(e);
                 }
-            }
+            });
         }
     }
     private void loadFailed(){
@@ -238,132 +258,136 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
         }
     }
     private void display(){
-        try {
-            JSONObject data = eRegister.get();
-            if (data == null) throw new NullPointerException("parsedERegister cannot be null");
-            checkData(data);
-            // получаем список предметов для отображения
-            final ArrayList<HashMap<String, String>> subjects = new ArrayList<>();
-            JSONArray groups = data.getJSONArray("groups");
-            for (int i = 0; i < groups.length(); i++) {
-                JSONObject group = groups.getJSONObject(i);
-                if (Objects.equals(group.getString("name"), this.group)) {
-                    JSONArray terms = group.getJSONArray("terms");
-                    for (int j = 0; j < terms.length(); j++) {
-                        JSONObject term = terms.getJSONObject(j);
-                        if (this.term == -1 || this.term == term.getInt("number")) {
-                            JSONArray subjArr = term.getJSONArray("subjects");
-                            for (int k = 0; k < subjArr.length(); k++) {
-                                JSONObject subj = subjArr.getJSONObject(k);
-                                HashMap<String, String> subjObj = new HashMap<>();
-                                subjObj.put("group", group.getString("name"));
-                                subjObj.put("name", subj.getString("name"));
-                                subjObj.put("semester", String.valueOf(term.getInt("number")));
-                                subjObj.put("value", String.valueOf(subj.getDouble("currentPoints")));
-                                subjObj.put("type", subj.getString("type"));
-                                subjects.add(subjObj);
+        final ERegisterFragment self = this;
+        eRegister.get(new ERegister.Callback() {
+            void onDone(JSONObject data){
+                try {
+                    if (data == null) throw new NullPointerException("parsedERegister cannot be null");
+                    checkData(data);
+                    // получаем список предметов для отображения
+                    final ArrayList<HashMap<String, String>> subjects = new ArrayList<>();
+                    JSONArray groups = data.getJSONArray("groups");
+                    for (int i = 0; i < groups.length(); i++) {
+                        JSONObject group = groups.getJSONObject(i);
+                        if (Objects.equals(group.getString("name"), self.group)) {
+                            JSONArray terms = group.getJSONArray("terms");
+                            for (int j = 0; j < terms.length(); j++) {
+                                JSONObject term = terms.getJSONObject(j);
+                                if (self.term == -1 || self.term == term.getInt("number")) {
+                                    JSONArray subjArr = term.getJSONArray("subjects");
+                                    for (int k = 0; k < subjArr.length(); k++) {
+                                        JSONObject subj = subjArr.getJSONObject(k);
+                                        HashMap<String, String> subjObj = new HashMap<>();
+                                        subjObj.put("group", group.getString("name"));
+                                        subjObj.put("name", subj.getString("name"));
+                                        subjObj.put("semester", String.valueOf(term.getInt("number")));
+                                        subjObj.put("value", String.valueOf(subj.getDouble("currentPoints")));
+                                        subjObj.put("type", subj.getString("type"));
+                                        subjects.add(subjObj);
+                                    }
+                                }
+                            }
+                            break;
+                        }
+                    }
+                    // отображаем интерфейс
+                    draw(R.layout.eregister_layout);
+                    // работаем со списком
+                    ListView erl_list_view = (ListView) getActivity().findViewById(R.id.erl_list_view);
+                    if (erl_list_view != null) {
+                        erl_list_view.setAdapter(new SubjectListView(getActivity(), subjects));
+                        erl_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                                HashMap<String, String> subj = subjects.get(position);
+                                Intent intent = new Intent(getActivity(), SubjectActivity.class);
+                                intent.putExtra("group", subj.get("group"));
+                                intent.putExtra("term", subj.get("semester"));
+                                intent.putExtra("name", subj.get("name"));
+                                startActivity(intent);
+                            }
+                        });
+                    }
+                    // работаем со свайпом
+                    SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) getActivity().findViewById(R.id.swipe_container);
+                    if (mSwipeRefreshLayout != null) {
+                        mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
+                        mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
+                        mSwipeRefreshLayout.setOnRefreshListener(self);
+                    }
+                    // работаем с раскрывающимися списками
+                    int selection = 0, counter = 0;
+                    // список групп
+                    Spinner spinner_group = (Spinner) getActivity().findViewById(R.id.erl_group_spinner);
+                    if (spinner_group != null) {
+                        final ArrayList<String> spinner_group_arr = new ArrayList<>();
+                        final ArrayList<String> spinner_group_arr_names = new ArrayList<>();
+                        for (int i = 0; i < groups.length(); i++) {
+                            JSONObject group = groups.getJSONObject(i);
+                            spinner_group_arr.add(group.getString("name") + " (" + group.getJSONArray("years").getInt(0) + "/" + group.getJSONArray("years").getInt(1) + ")");
+                            spinner_group_arr_names.add(group.getString("name"));
+                            if (Objects.equals(group.getString("name"), self.group)) selection = counter;
+                            counter++;
+                        }
+                        spinner_group.setAdapter(new ArrayAdapter<>(getActivity(), R.layout.spinner_layout, spinner_group_arr));
+                        spinner_group.setSelection(selection);
+                        spinner_group_blocker = true;
+                        spinner_group.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                            public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
+                                if (spinner_group_blocker) {
+                                    spinner_group_blocker = false;
+                                    return;
+                                }
+                                group = spinner_group_arr_names.get(position);
+                                load(-1);
+                            }
+                            public void onNothingSelected(AdapterView<?> parent) {}
+                        });
+                    }
+                    // список семестров
+                    Spinner spinner_period = (Spinner) getActivity().findViewById(R.id.erl_period_spinner);
+                    if (spinner_period != null) {
+                        final ArrayList<String> spinner_period_arr = new ArrayList<>();
+                        final ArrayList<Integer> spinner_period_arr_values = new ArrayList<>();
+                        selection = 2;
+                        for (int i = 0; i < groups.length(); i++) {
+                            JSONObject group = groups.getJSONObject(i);
+                            if (Objects.equals(group.getString("name"), self.group)) {
+                                int first = group.getJSONArray("terms").getJSONObject(0).getInt("number");
+                                int second = group.getJSONArray("terms").getJSONObject(1).getInt("number");
+                                spinner_period_arr.add(first + " " + getString(R.string.semester));
+                                spinner_period_arr.add(second + " " + getString(R.string.semester));
+                                spinner_period_arr.add(getString(R.string.year));
+                                spinner_period_arr_values.add(first);
+                                spinner_period_arr_values.add(second);
+                                spinner_period_arr_values.add(-1);
+                                if (self.term == first) selection = 0;
+                                if (self.term == second) selection = 1;
+                                break;
                             }
                         }
+                        spinner_period.setAdapter(new ArrayAdapter<>(getActivity(), R.layout.spinner_layout, spinner_period_arr));
+                        spinner_period.setSelection(selection);
+                        spinner_period_blocker = true;
+                        spinner_period.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                            public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
+                                if (spinner_period_blocker) {
+                                    spinner_period_blocker = false;
+                                    return;
+                                }
+                                term = spinner_period_arr_values.get(position);
+                                load(-1);
+                            }
+                            public void onNothingSelected(AdapterView<?> parent) {
+                            }
+                        });
                     }
-                    break;
+                    Static.showUpdateTime(getActivity(), data.getLong("timestamp"), R.id.eregister_layout, true);
+                } catch (Exception e) {
+                    Static.error(e);
+                    loadFailed();
                 }
             }
-            // отображаем интерфейс
-            draw(R.layout.eregister_layout);
-            // работаем со списком
-            ListView erl_list_view = (ListView) getActivity().findViewById(R.id.erl_list_view);
-            if (erl_list_view != null) {
-                erl_list_view.setAdapter(new SubjectListView(getActivity(), subjects));
-                erl_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        HashMap<String, String> subj = subjects.get(position);
-                        Intent intent = new Intent(getActivity(), SubjectActivity.class);
-                        intent.putExtra("group", subj.get("group"));
-                        intent.putExtra("term", subj.get("semester"));
-                        intent.putExtra("name", subj.get("name"));
-                        startActivity(intent);
-                    }
-                });
-            }
-            // работаем со свайпом
-            SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) getActivity().findViewById(R.id.swipe_container);
-            if (mSwipeRefreshLayout != null) {
-                mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
-                mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
-                mSwipeRefreshLayout.setOnRefreshListener(this);
-            }
-            // работаем с раскрывающимися списками
-            int selection = 0, counter = 0;
-            // список групп
-            Spinner spinner_group = (Spinner) getActivity().findViewById(R.id.erl_group_spinner);
-            if (spinner_group != null) {
-                final ArrayList<String> spinner_group_arr = new ArrayList<>();
-                final ArrayList<String> spinner_group_arr_names = new ArrayList<>();
-                for (int i = 0; i < groups.length(); i++) {
-                    JSONObject group = groups.getJSONObject(i);
-                    spinner_group_arr.add(group.getString("name") + " (" + group.getJSONArray("years").getInt(0) + "/" + group.getJSONArray("years").getInt(1) + ")");
-                    spinner_group_arr_names.add(group.getString("name"));
-                    if (Objects.equals(group.getString("name"), this.group)) selection = counter;
-                    counter++;
-                }
-                spinner_group.setAdapter(new ArrayAdapter<>(getActivity(), R.layout.spinner_layout, spinner_group_arr));
-                spinner_group.setSelection(selection);
-                spinner_group_blocker = true;
-                spinner_group.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                    public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
-                        if (spinner_group_blocker) {
-                            spinner_group_blocker = false;
-                            return;
-                        }
-                        group = spinner_group_arr_names.get(position);
-                        load(-1);
-                    }
-                    public void onNothingSelected(AdapterView<?> parent) {}
-                });
-            }
-            // список семестров
-            Spinner spinner_period = (Spinner) getActivity().findViewById(R.id.erl_period_spinner);
-            if (spinner_period != null) {
-                final ArrayList<String> spinner_period_arr = new ArrayList<>();
-                final ArrayList<Integer> spinner_period_arr_values = new ArrayList<>();
-                selection = 2;
-                for (int i = 0; i < groups.length(); i++) {
-                    JSONObject group = groups.getJSONObject(i);
-                    if (Objects.equals(group.getString("name"), this.group)) {
-                        int first = group.getJSONArray("terms").getJSONObject(0).getInt("number");
-                        int second = group.getJSONArray("terms").getJSONObject(1).getInt("number");
-                        spinner_period_arr.add(first + " " + getString(R.string.semester));
-                        spinner_period_arr.add(second + " " + getString(R.string.semester));
-                        spinner_period_arr.add(getString(R.string.year));
-                        spinner_period_arr_values.add(first);
-                        spinner_period_arr_values.add(second);
-                        spinner_period_arr_values.add(-1);
-                        if (this.term == first) selection = 0;
-                        if (this.term == second) selection = 1;
-                        break;
-                    }
-                }
-                spinner_period.setAdapter(new ArrayAdapter<>(getActivity(), R.layout.spinner_layout, spinner_period_arr));
-                spinner_period.setSelection(selection);
-                spinner_period_blocker = true;
-                spinner_period.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                    public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
-                        if (spinner_period_blocker) {
-                            spinner_period_blocker = false;
-                            return;
-                        }
-                        term = spinner_period_arr_values.get(position);
-                        load(-1);
-                    }
-                    public void onNothingSelected(AdapterView<?> parent) {
-                    }
-                });
-            }
-            Static.showUpdateTime(getActivity(), data.getLong("timestamp"), R.id.eregister_layout, true);
-        } catch (Exception e) {
-            Static.error(e);
-            loadFailed();
-        }
+        });
     }
     private void checkData(JSONObject data) throws Exception {
         Calendar now = Calendar.getInstance();

@@ -1,6 +1,6 @@
 package com.bukhmastov.cdoitmo.objects;
 
-import android.content.Context;
+import android.app.Activity;
 import android.os.Handler;
 
 import com.bukhmastov.cdoitmo.converters.ERegisterConverter;
@@ -12,35 +12,74 @@ import org.json.JSONObject;
 public class ERegister {
 
     private static final String TAG = "ERegister";
-    private Context context;
+    private Activity activity;
     private JSONObject eregister = null;
-
-    public ERegister(Context context){
-        this.context = context;
-        String eRegister = Storage.file.cache.get(context, "eregister#core");
-        if (!eRegister.isEmpty()) {
-            try {
-                this.eregister = new JSONObject(eRegister);
-            } catch (Exception e) {
-                Static.error(e);
-            }
+    private boolean accessed = false;
+    public abstract static class Callback {
+        void onDone(JSONObject eregister){}
+        void onChecked(boolean is){}
+        private void done(final Activity activity, final Callback callback, final JSONObject protocol){
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    callback.onDone(protocol);
+                }
+            });
         }
+        private void checked(final Activity activity, final Callback callback, final boolean is){
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    callback.onChecked(is);
+                }
+            });
+        }
+    }
+
+    public ERegister(final Activity activity){
+        this.activity = activity;
     }
     public void put(JSONObject data, final Handler handler){
         new ERegisterConverter(new ERegisterConverter.response() {
             @Override
             public void finish(JSONObject json) {
                 eregister = json;
-                Storage.file.cache.put(context, "eregister#core", eregister.toString());
+                Storage.file.cache.put(activity, "eregister#core", eregister.toString());
                 handler.sendEmptyMessage(0);
             }
         }).execute(data);
     }
-    public JSONObject get(){
-        return eregister;
+    public void get(final Callback callback){
+        if (accessed) {
+            callback.done(activity, callback, eregister);
+        } else {
+            access(callback);
+        }
     }
-    public boolean is(){
-        return eregister != null;
+    public void is(final Callback callback){
+        if (accessed) {
+            callback.checked(activity, callback, eregister != null);
+        } else {
+            access(callback);
+        }
+    }
+    private void access(final Callback callback){
+        (new Thread(new Runnable() {
+            @Override
+            public void run() {
+                accessed = true;
+                final String eRegister = Storage.file.cache.get(activity, "eregister#core");
+                if (!eRegister.isEmpty()) {
+                    try {
+                        eregister = new JSONObject(eRegister);
+                    } catch (Exception e) {
+                        Static.error(e);
+                    }
+                }
+                callback.checked(activity, callback, eregister != null);
+                callback.done(activity, callback, eregister);
+            }
+        })).start();
     }
 
 }

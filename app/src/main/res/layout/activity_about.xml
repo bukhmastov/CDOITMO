@@ -57,6 +57,8 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/app_name"
+                            android:maxLines="1"
+                            android:ellipsize="end"
                             android:textColor="?android:attr/textColorPrimary" />
 
                         <TextView
@@ -64,6 +66,8 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/lorem_ipsum"
+                            android:maxLines="1"
+                            android:ellipsize="end"
                             android:textColor="?android:attr/textColorSecondary" />
 
                     </LinearLayout>
@@ -105,12 +109,16 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/send_email_to_dev"
+                            android:maxLines="1"
+                            android:ellipsize="end"
                             android:textColor="?android:attr/textColorPrimary" />
 
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/app_info_mail_dev"
+                            android:maxLines="1"
+                            android:ellipsize="end"
                             android:textColor="?android:attr/textColorSecondary" />
 
                     </LinearLayout>
@@ -152,12 +160,16 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/send_vk_to_dev"
+                            android:maxLines="1"
+                            android:ellipsize="end"
                             android:textColor="?android:attr/textColorPrimary" />
 
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/app_info_dev"
+                            android:maxLines="1"
+                            android:ellipsize="end"
                             android:textColor="?android:attr/textColorSecondary" />
 
                     </LinearLayout>
@@ -199,12 +211,16 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/support_dev"
+                            android:maxLines="1"
+                            android:ellipsize="end"
                             android:textColor="?android:attr/textColorPrimary" />
 
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/support_dev_desc"
+                            android:maxLines="1"
+                            android:ellipsize="end"
                             android:textColor="?android:attr/textColorSecondary" />
 
                     </LinearLayout>

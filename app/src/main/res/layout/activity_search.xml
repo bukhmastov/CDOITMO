@@ -48,7 +48,7 @@
 
         <FrameLayout
             android:id="@+id/search_extra_action"
-            android:layout_width="54dp"
+            android:layout_width="wrap_content"
             android:layout_height="54dp"
             android:layout_alignParentEnd="true"
             android:background="?attr/selectableItemBackgroundBorderless" />

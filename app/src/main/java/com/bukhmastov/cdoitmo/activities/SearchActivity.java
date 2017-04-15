@@ -71,36 +71,38 @@ public abstract class SearchActivity extends AppCompatActivity {
         if (search_extra_action != null) {
             search_extra_action.removeAllViews();
             search_extra_action.setOnClickListener(null);
-            ImageView imageView = new ImageView(this);
-            imageView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-            imageView.setPaddingRelative(padding, padding, padding, padding);
-            switch (mode) {
-                case Speech_recognition: {
-                    if (!checkVoiceRecognition()) {
-                        setMode(EXTRA_ACTION_MODE.None);
-                        return;
+            if (mode != EXTRA_ACTION_MODE.None) {
+                ImageView imageView = new ImageView(this);
+                imageView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                imageView.setPaddingRelative(padding, padding, padding, padding);
+                switch (mode) {
+                    case Speech_recognition: {
+                        if (!checkVoiceRecognition()) {
+                            setMode(EXTRA_ACTION_MODE.None);
+                            return;
+                        }
+                        imageView.setImageDrawable(getDrawable(R.drawable.ic_keyboard_voice));
+                        search_extra_action.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                startRecognition();
+                            }
+                        });
+                        break;
                     }
-                    imageView.setImageDrawable(getDrawable(R.drawable.ic_keyboard_voice));
-                    search_extra_action.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            startRecognition();
-                        }
-                    });
-                    break;
+                    case Clear: {
+                        imageView.setImageDrawable(getDrawable(R.drawable.ic_close));
+                        search_extra_action.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                search_edit_text.setText("");
+                            }
+                        });
+                        break;
+                    }
                 }
-                case Clear: {
-                    imageView.setImageDrawable(getDrawable(R.drawable.ic_close));
-                    search_extra_action.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            search_edit_text.setText("");
-                        }
-                    });
-                    break;
-                }
+                search_extra_action.addView(imageView);
             }
-            search_extra_action.addView(imageView);
         }
     }
     private void setSuggestions(final ArrayList<Suggestion> suggestions){

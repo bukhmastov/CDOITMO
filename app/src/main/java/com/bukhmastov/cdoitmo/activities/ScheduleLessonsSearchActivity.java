@@ -35,7 +35,7 @@ public class ScheduleLessonsSearchActivity extends SearchActivity {
             int counter = 0;
             for (int i = 0; i < recent.length(); i++) {
                 String item = recent.getString(i);
-                if (query.isEmpty() || item.contains(query)) {
+                if (query.isEmpty() || contains(item, query)) {
                     counter++;
                     suggestions.add(new Suggestion(item, item, R.drawable.ic_access_time));
                 }
@@ -47,7 +47,7 @@ public class ScheduleLessonsSearchActivity extends SearchActivity {
                 if (!cachedFile.isEmpty()) {
                     try {
                         JSONObject object = new JSONObject(cachedFile);
-                        if (query.isEmpty() || object.getString("label").contains(query)) {
+                        if (query.isEmpty() || contains(object.getString("label"), query)) {
                             suggestions.add(new Suggestion(object.getString("query"), object.getString("label"), R.drawable.ic_save));
                         }
                     } catch (Exception e) {
@@ -93,6 +93,10 @@ public class ScheduleLessonsSearchActivity extends SearchActivity {
             Storage.file.perm.delete(this, "schedule_lessons#recent");
         }
         ScheduleLessonsFragment.searchAndClear(query);
+    }
+
+    private boolean contains(String first, String second){
+        return first.toLowerCase().contains(second.toLowerCase()) || Static.Translit.cyr2lat(first).toLowerCase().contains(Static.Translit.cyr2lat(second).toLowerCase());
     }
 
 }
