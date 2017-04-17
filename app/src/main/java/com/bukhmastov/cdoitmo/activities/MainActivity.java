@@ -13,7 +13,6 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -28,6 +27,7 @@ import com.bukhmastov.cdoitmo.fragments.RatingFragment;
 import com.bukhmastov.cdoitmo.fragments.Room101Fragment;
 import com.bukhmastov.cdoitmo.fragments.ScheduleExamsFragment;
 import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsFragment;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.ProtocolTracker;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onCreate(Bundle savedInstanceState) {
         if (Static.darkTheme) setTheme(R.style.AppTheme_Dark);
         super.onCreate(savedInstanceState);
+        Log.i(TAG, "Activity created");
         setContentView(R.layout.activity_main);
 
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar_main));
@@ -59,9 +60,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Static.init(this);
         Static.firstLaunch = false;
 
+        Log.i(TAG, "mode=" + (Static.OFFLINE_MODE ? "offline" : "normal"));
+
         String action = getIntent().getStringExtra("action");
         if (savedInstanceState == null || action != null) {
-            switch (action == null ? Storage.pref.get(this, "pref_default_fragment", "e_journal") : action) {
+            String act = action == null ? Storage.pref.get(this, "pref_default_fragment", "e_journal") : action;
+            Log.v(TAG, "Section = " + act + " from " + (action == null ? "preference" : "intent's extras"));
+            switch (act) {
                 case "e_journal": selectedSection = R.id.nav_e_register; break;
                 case "protocol_changes": selectedSection = R.id.nav_protocol_changes; break;
                 case "rating": selectedSection = R.id.nav_rating; break;
@@ -82,6 +87,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onResume() {
         super.onResume();
+        Log.v(TAG, "Activity resumed");
         if (Static.OFFLINE_MODE) {
             authorized();
         } else {
@@ -94,13 +100,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        Log.v(TAG, "Activity paused");
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
+        Log.i(TAG, "Activity destroyed");
         loaded = false;
     }
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        Log.v(TAG, "NavigationItemSelected " + item.getTitle());
         DrawerLayout drawer_layout = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer_layout != null) drawer_layout.closeDrawer(GravityCompat.START);
         selectSection(item.getItemId());
@@ -109,6 +123,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onBackPressed() {
+        Log.v(TAG, "BackPressed");
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer != null) {
             if (drawer.isDrawerOpen(GravityCompat.START)) {
@@ -146,12 +161,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void authorize(int state){
+        Log.v(TAG, "authorize");
         loaded = false;
         Intent intent = new Intent(this, LoginActivity.class);
         intent.putExtra("state", state);
         startActivity(intent);
     }
     private void authorized(){
+        Log.v(TAG, "authorized");
         if (!loaded) {
             loaded = true;
             if (Static.protocolTracker == null) Static.protocolTracker = new ProtocolTracker(this);
@@ -162,6 +179,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
     private void checkOffline(){
+        Log.v(TAG, "checkOffline " + (Static.OFFLINE_MODE ? "offline" : "normal"));
         if (Static.OFFLINE_MODE) {
             Static.snackBar(this, getString(R.string.offline_mode_on));
         }
@@ -178,10 +196,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
     private void displayUserData(){
-        displayUserDataProceed(R.id.user_name, Storage.file.perm.get(this, "user#name"));
-        displayUserDataProceed(R.id.user_group, Storage.file.perm.get(this, "user#group"));
+        displayUserData(R.id.user_name, Storage.file.perm.get(this, "user#name"));
+        displayUserData(R.id.user_group, Storage.file.perm.get(this, "user#group"));
     }
-    private void displayUserDataProceed(int id, String text){
+    private void displayUserData(int id, String text){
+        Log.v(TAG, "displayUserData " + text);
         if (navigationView == null) return;
         View activity_main_nav_header = navigationView.getHeaderView(0);
         if (activity_main_nav_header == null) return;
@@ -236,6 +255,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 break;
         }
         if (fragmentClass != null) {
+            Log.v(TAG, "selectSection | fragmentClass != null | " + title);
             navigationView.setCheckedItem(section);
             selectedSection = section;
             ViewGroup content_container = (ViewGroup) findViewById(R.id.content_container);
@@ -261,7 +281,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     });
                     snackbar.show();
                 } else {
-                    Log.w(TAG, "content_container is null");
+                    Log.w(TAG, "selectSection | content_container is null");
                 }
             }
         }

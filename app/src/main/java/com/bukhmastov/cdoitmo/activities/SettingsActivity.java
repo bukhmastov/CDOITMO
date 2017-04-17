@@ -30,6 +30,7 @@ import android.widget.ListView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.preferences.SchedulePreference;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.ProtocolTracker;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
@@ -41,10 +42,19 @@ import java.util.List;
 
 public class SettingsActivity extends AppCompatPreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
+    private static final String TAG = "SettingsActivity";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         if (Static.darkTheme) setTheme(R.style.AppTheme_Dark);
         super.onCreate(savedInstanceState);
+        Log.i(TAG, "Activity created");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.i(TAG, "Activity destroyed");
     }
 
     @Override
@@ -61,12 +71,13 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
 
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
+        Log.v(TAG, "onPostCreate");
         super.onPostCreate(savedInstanceState);
         Toolbar bar;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
             LinearLayout root = (LinearLayout) findViewById(android.R.id.list).getParent().getParent().getParent();
             bar = (Toolbar) LayoutInflater.from(this).inflate(R.layout.toolbar_settings, root, false);
-            root.addView(bar, 0); // insert at top
+            root.addView(bar, 0);
         } else {
             ViewGroup root = (ViewGroup) findViewById(android.R.id.content);
             ListView content = (ListView) root.getChildAt(0);
@@ -76,7 +87,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             TypedValue tv = new TypedValue();
             if (getTheme().resolveAttribute(R.attr.actionBarSize, tv, true)) {
                 height = TypedValue.complexToDimensionPixelSize(tv.data, getResources().getDisplayMetrics());
-            }else{
+            } else {
                 height = bar.getHeight();
             }
             content.setPadding(0, height, 0, 0);
@@ -85,7 +96,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         }
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar_settings));
         ActionBar actionBar = getSupportActionBar();
-        if(actionBar != null){
+        if (actionBar != null) {
             actionBar.setHomeButtonEnabled(true);
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
@@ -99,8 +110,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
 
     @Override
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
-        int id = item.getItemId();
-        if (id == android.R.id.home) {
+        if (item.getItemId() == android.R.id.home) {
             if (!super.onMenuItemSelected(featureId, item)) {
                 NavUtils.navigateUpFromSameTask(this);
             }
@@ -111,6 +121,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
 
     @Override
     public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, String key) {
+        Log.v(TAG, "onSharedPreferenceChanged | key="+key);
         switch(key){
             case "pref_use_notifications":
             case "pref_notify_frequency":
@@ -156,6 +167,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
+            Log.v(TAG, "GeneralPreferenceFragment created");
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
             bindPreferenceSummaryToValue(findPreference("pref_default_fragment"));
@@ -164,6 +176,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                 pref_reset_application.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
+                        Log.v(TAG, "pref_reset_application clicked");
                         new AlertDialog.Builder(getActivity())
                                 .setTitle(getString(R.string.pref_reset_application_summary))
                                 .setMessage(R.string.pref_reset_application_warning)
@@ -171,6 +184,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                                 .setPositiveButton(R.string.proceed, new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
+                                        Log.v(TAG, "pref_reset_application dialog accepted");
                                         Static.hardReset(getActivity());
                                     }
                                 })
@@ -181,12 +195,18 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                 });
             }
         }
+        @Override
+        public void onDestroy() {
+            super.onDestroy();
+            Log.i(TAG, "GeneralPreferenceFragment destroyed");
+        }
     }
 
     public static class CachePreferenceFragment extends TemplatePreferenceFragment {
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
+            Log.v(TAG, "CachePreferenceFragment created");
             addPreferencesFromResource(R.xml.pref_cache);
             setHasOptionsMenu(true);
             bindPreferenceSummaryToValue(findPreference("pref_tab_refresh"));
@@ -196,6 +216,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                 pref_clear_cache.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
+                        Log.v(TAG, "pref_clear_cache clicked");
                         boolean success = Storage.file.cache.clear(getActivity());
                         Static.snackBar(getActivity(), getActivity().getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
                         return false;
@@ -203,16 +224,27 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                 });
             }
         }
+        @Override
+        public void onDestroy() {
+            super.onDestroy();
+            Log.i(TAG, "CachePreferenceFragment destroyed");
+        }
     }
 
     public static class NotificationsPreferenceFragment extends TemplatePreferenceFragment {
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
+            Log.v(TAG, "NotificationsPreferenceFragment created");
             addPreferencesFromResource(R.xml.pref_notifications);
             setHasOptionsMenu(true);
             bindPreferenceSummaryToValue(findPreference("pref_notify_frequency"));
             bindPreferenceSummaryToValue(findPreference("pref_notify_sound"));
+        }
+        @Override
+        public void onDestroy() {
+            super.onDestroy();
+            Log.i(TAG, "NotificationsPreferenceFragment destroyed");
         }
     }
 
@@ -220,6 +252,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
+            Log.v(TAG, "AdditionalPreferenceFragment created");
             addPreferencesFromResource(R.xml.pref_additional);
             setHasOptionsMenu(true);
             bindPreferenceSummaryToValue(findPreference("pref_e_journal_term"));
@@ -232,6 +265,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                 pref_schedule_lessons_clear_cache.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
+                        Log.v(TAG, "pref_schedule_lessons_clear_cache clicked");
                         boolean success = Storage.file.cache.clear(getActivity(), "schedule_lessons");
                         Static.snackBar(getActivity(), getActivity().getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
                         return false;
@@ -243,6 +277,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                 pref_schedule_exams_clear_cache.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
+                        Log.v(TAG, "pref_schedule_exams_clear_cache clicked");
                         boolean success = Storage.file.cache.clear(getActivity(), "schedule_exams");
                         Static.snackBar(getActivity(), getActivity().getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
                         return false;
@@ -255,6 +290,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                 pref_schedule_lessons_clear_additional.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
+                        Log.v(TAG, "pref_schedule_lessons_clear_additional clicked");
                         new AlertDialog.Builder(getActivity())
                                 .setTitle(getString(R.string.pref_schedule_lessons_clear_additional_title))
                                 .setMessage(R.string.pref_schedule_lessons_clear_additional_warning)
@@ -262,6 +298,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                                 .setPositiveButton(R.string.proceed, new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
+                                        Log.v(TAG, "pref_schedule_lessons_clear_additional dialog accepted");
                                         boolean success = Storage.file.perm.clear(getActivity(), "schedule_lessons");
                                         Static.snackBar(getActivity(), getActivity().getString(success ? R.string.changes_cleared : R.string.something_went_wrong));
                                     }
@@ -273,6 +310,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                 });
             }
 
+        }
+        @Override
+        public void onDestroy() {
+            super.onDestroy();
+            Log.i(TAG, "AdditionalPreferenceFragment destroyed");
         }
     }
 
@@ -303,6 +345,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         @Override
         public boolean onPreferenceChange(Preference preference, Object value) {
             String stringValue = value.toString();
+            Log.v(TAG, "onPreferenceChange | title=" + preference.getTitle() + " | value=" + stringValue);
             if (preference instanceof ListPreference) {
                 ListPreference listPreference = (ListPreference) preference;
                 int index = listPreference.findIndexOfValue(stringValue);
@@ -339,4 +382,5 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             return true;
         }
     };
+
 }

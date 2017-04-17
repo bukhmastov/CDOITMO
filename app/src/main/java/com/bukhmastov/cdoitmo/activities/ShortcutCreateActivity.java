@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.objects.ShortcutCreator;
 import com.bukhmastov.cdoitmo.receivers.ShortcutReceiver;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 
 public class ShortcutCreateActivity extends AppCompatActivity implements ShortcutCreator.response {
@@ -24,6 +25,7 @@ public class ShortcutCreateActivity extends AppCompatActivity implements Shortcu
     protected void onCreate(Bundle savedInstanceState) {
         if (Static.darkTheme) setTheme(R.style.AppTheme_Dark);
         super.onCreate(savedInstanceState);
+        Log.i(TAG, "Activity created");
         setContentView(R.layout.activity_shortcut_create);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar_shortcut_create));
         ActionBar actionBar = getSupportActionBar();
@@ -32,12 +34,18 @@ public class ShortcutCreateActivity extends AppCompatActivity implements Shortcu
             actionBar.setDisplayHomeAsUpEnabled(true);
             actionBar.setTitle(R.string.add_shortcut);
         }
+    }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.i(TAG, "Activity destroyed");
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        Log.v(TAG, "Activity resumed");
         registerReceiver(receiver, new IntentFilter(ShortcutReceiver.ACTION_INSTALL_SHORTCUT));
         if (shortcutCreator == null) shortcutCreator = new ShortcutCreator(this, this);
         shortcutCreator.onResume();
@@ -46,6 +54,7 @@ public class ShortcutCreateActivity extends AppCompatActivity implements Shortcu
     @Override
     protected void onPause() {
         super.onPause();
+        Log.v(TAG, "Activity paused");
         unregisterReceiver(receiver);
         shortcutCreator.onPause();
     }
@@ -60,11 +69,18 @@ public class ShortcutCreateActivity extends AppCompatActivity implements Shortcu
 
     @Override
     public void onDisplay(View view) {
+        Log.v(TAG, "onDisplay");
         ViewGroup shortcut_create_content = (ViewGroup) findViewById(R.id.shortcut_create_content);
         if (shortcut_create_content != null) {
             shortcut_create_content.removeAllViews();
             shortcut_create_content.addView(view);
         }
+    }
+
+    @Override
+    public void onError() {
+        Log.v(TAG, "onError");
+        finish();
     }
 
 }

@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.os.Handler;
 
 import com.bukhmastov.cdoitmo.converters.ERegisterConverter;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 
@@ -19,6 +20,7 @@ public class ERegister {
         void onDone(JSONObject eregister){}
         void onChecked(boolean is){}
         private void done(final Activity activity, final Callback callback, final JSONObject protocol){
+            Log.v(TAG, "done");
             activity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -27,6 +29,7 @@ public class ERegister {
             });
         }
         private void checked(final Activity activity, final Callback callback, final boolean is){
+            Log.v(TAG, "checked");
             activity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -37,12 +40,15 @@ public class ERegister {
     }
 
     public ERegister(final Activity activity){
+        Log.v(TAG, "initialized");
         this.activity = activity;
     }
     public void put(JSONObject data, final Handler handler){
+        Log.v(TAG, "put");
         new ERegisterConverter(new ERegisterConverter.response() {
             @Override
             public void finish(JSONObject json) {
+                Log.v(TAG, "put | ERegisterConverter.finish");
                 eregister = json;
                 Storage.file.cache.put(activity, "eregister#core", eregister.toString());
                 handler.sendEmptyMessage(0);
@@ -50,6 +56,7 @@ public class ERegister {
         }).execute(data);
     }
     public void get(final Callback callback){
+        Log.v(TAG, "get");
         if (accessed) {
             callback.done(activity, callback, eregister);
         } else {
@@ -57,6 +64,7 @@ public class ERegister {
         }
     }
     public void is(final Callback callback){
+        Log.v(TAG, "is");
         if (accessed) {
             callback.checked(activity, callback, eregister != null);
         } else {
@@ -64,6 +72,7 @@ public class ERegister {
         }
     }
     private void access(final Callback callback){
+        Log.v(TAG, "access");
         (new Thread(new Runnable() {
             @Override
             public void run() {

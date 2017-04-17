@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.os.Handler;
 
 import com.bukhmastov.cdoitmo.converters.ProtocolConverter;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 
@@ -21,6 +22,7 @@ public class Protocol {
         void onDone(JSONObject protocol){}
         void onChecked(boolean is){}
         private void done(final Activity activity, final Callback callback, final JSONObject protocol){
+            Log.v(TAG, "done");
             activity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -29,6 +31,7 @@ public class Protocol {
             });
         }
         private void checked(final Activity activity, final Callback callback, final boolean is){
+            Log.v(TAG, "checked");
             activity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -39,15 +42,18 @@ public class Protocol {
     }
 
     public Protocol(Activity activity){
+        Log.v(TAG, "initialized");
         this.activity = activity;
     }
     public void put(JSONArray data, int number_of_weeks, final Handler handler){
+        Log.v(TAG, "put");
         try {
             JSONArray array = new JSONArray();
             array.put(number_of_weeks);
             new ProtocolConverter(activity, new ProtocolConverter.response() {
                 @Override
                 public void finish(JSONObject json) {
+                    Log.v(TAG, "put | ProtocolConverter.finish");
                     try {
                         protocol = json;
                         Storage.file.cache.put(activity, "protocol#core", protocol.toString());
@@ -63,6 +69,7 @@ public class Protocol {
         }
     }
     public void get(final Callback callback){
+        Log.v(TAG, "get");
         if (accessed) {
             callback.done(activity, callback, protocol);
         } else {
@@ -73,6 +80,7 @@ public class Protocol {
         is(callback, -1);
     }
     public void is(final Callback callback, int number_of_weeks){
+        Log.v(TAG, "is | number_of_weeks=" + number_of_weeks);
         if (accessed) {
             callback.checked(activity, callback, protocol != null);
         } else {
@@ -80,6 +88,7 @@ public class Protocol {
         }
     }
     private void access(final Callback callback, final int number_of_weeks){
+        Log.v(TAG, "access");
         (new Thread(new Runnable() {
             @Override
             public void run() {

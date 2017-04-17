@@ -25,6 +25,7 @@ import com.bukhmastov.cdoitmo.adapters.TeacherPickerListView;
 import com.bukhmastov.cdoitmo.builders.ScheduleExamsBuilder;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.objects.ScheduleExams;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.loopj.android.http.RequestHandle;
 
@@ -41,7 +42,7 @@ import java.util.Objects;
 
 public class ScheduleExamsFragment extends Fragment implements ScheduleExams.response {
 
-    private static final String TAG = "ScheduleExamsFragment";
+    private static final String TAG = "SEFragment";
     public static ScheduleExams scheduleExams;
     private boolean loaded = false;
     public static RequestHandle fragmentRequestHandle = null;
@@ -52,6 +53,7 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.v(TAG, "Fragment created");
         scheduleExams = new ScheduleExams(getContext());
         scheduleExams.setHandler(this);
     }
@@ -64,14 +66,17 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
     @Override
     public void onResume() {
         super.onResume();
+        Log.v(TAG, "resumed");
         try {
             if (MainActivity.menu != null && !Static.OFFLINE_MODE) {
-                MenuItem menuItem = MainActivity.menu.findItem(R.id.action_schedule_exams_search);
-                if (menuItem != null && !menuItem.isVisible()) {
-                    menuItem.setVisible(true);
-                    menuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                MenuItem action_schedule_exams_search = MainActivity.menu.findItem(R.id.action_schedule_exams_search);
+                if (action_schedule_exams_search != null && !action_schedule_exams_search.isVisible()) {
+                    Log.v(TAG, "Revealing action_schedule_exams_search");
+                    action_schedule_exams_search.setVisible(true);
+                    action_schedule_exams_search.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
                         @Override
                         public boolean onMenuItemClick(MenuItem item) {
+                            Log.v(TAG, "action_schedule_exams_search clicked");
                             startActivity(new Intent(getContext(), ScheduleExamsSearchActivity.class));
                             return false;
                         }
@@ -91,6 +96,7 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
             } else {
                 scope = scheduleExams.getDefault();
             }
+            Log.v(TAG, "scheduleExams.search(" + scope + ")");
             scheduleExams.search(scope);
         }
     }
@@ -98,6 +104,7 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
     @Override
     public void onPause() {
         super.onPause();
+        Log.v(TAG, "paused");
         if (fragmentRequestHandle != null) {
             loaded = false;
             fragmentRequestHandle.cancel(true);
@@ -107,13 +114,15 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
     @Override
     public void onDestroy() {
         super.onDestroy();
+        Log.v(TAG, "Fragment destroyed");
         try {
             getActivity().findViewById(R.id.schedule_tabs).setVisibility(View.GONE);
             if (MainActivity.menu != null) {
-                MenuItem menuItem = MainActivity.menu.findItem(R.id.action_schedule_exams_search);
-                if (menuItem != null && menuItem.isVisible()) {
-                    menuItem.setVisible(false);
-                    menuItem.setOnMenuItemClickListener(null);
+                MenuItem action_schedule_exams_search = MainActivity.menu.findItem(R.id.action_schedule_exams_search);
+                if (action_schedule_exams_search != null && action_schedule_exams_search.isVisible()) {
+                    Log.v(TAG, "Hiding action_schedule_exams_search");
+                    action_schedule_exams_search.setVisible(false);
+                    action_schedule_exams_search.setOnMenuItemClickListener(null);
                 }
             }
         } catch (Exception e){
@@ -123,6 +132,7 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
 
     @Override
     public void onProgress(int state){
+        Log.v(TAG, "progress " + state);
         try {
             draw(R.layout.state_loading);
             TextView loading_message = (TextView) getActivity().findViewById(R.id.loading_message);
@@ -145,6 +155,7 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
 
     @Override
     public void onFailure(int state){
+        Log.v(TAG, "failure " + state);
         try {
             switch (state) {
                 case DeIfmoClient.FAILED_OFFLINE:
@@ -188,13 +199,14 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
 
     @Override
     public void onSuccess(JSONObject json){
+        Log.v(TAG, "success | json=" + (json == null ? "null" : "notnull"));
         try {
             if (json == null) throw new NullPointerException("json cannot be null");
             schedule = json;
             if (Objects.equals(json.getString("type"), "teacher_picker")) {
                 schedule_cached = false;
                 JSONArray teachers = json.getJSONArray("teachers");
-                if (teachers.length() > 0){
+                if (teachers.length() > 0) {
                     draw(R.layout.layout_schedule_lessons_teacher_picker);
                     TextView teacher_picker_header = (TextView) getActivity().findViewById(R.id.teacher_picker_header);
                     ListView teacher_picker_list_view = (ListView) getActivity().findViewById(R.id.teacher_picker_list_view);
@@ -213,6 +225,7 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
                         teacher_picker_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                                 HashMap<String, String> teacherMap = teachersMap.get(position);
+                                Log.v(TAG, "teacher_picker_list_view clicked | scope=" + teacherMap.get("scope"));
                                 scheduleExams.search(teacherMap.get("scope"));
                             }
                         });
@@ -228,7 +241,10 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
                     switch (schedule.getString("type")){
                         case "group": if (schedule_exams_header != null) schedule_exams_header.setText("Расписание группы" + " " + schedule.getString("scope")); break;
                         case "teacher": if (schedule_exams_header != null) schedule_exams_header.setText("Расписание преподавателя" + " " + schedule.getString("scope")); break;
-                        default: throw new Exception("Wrong ScheduleExamsFragment.schedule.TYPE value");
+                        default:
+                            String exception = "Wrong ScheduleExamsFragment.schedule.TYPE value: " + schedule.getString("type");
+                            Log.wtf(TAG, exception);
+                            throw new Exception(exception);
                     }
                     TextView schedule_exams_week = (TextView) getActivity().findViewById(R.id.schedule_exams_week);
                     if (schedule_exams_week != null) {
@@ -249,9 +265,11 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
                         schedule_exams_cache.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
+                                Log.v(TAG, "schedule_exams_cache clicked");
                                 if (ScheduleExamsFragment.scheduleExams != null) {
                                     Boolean result = ScheduleExamsFragment.scheduleExams.toggleCache();
                                     if (result == null) {
+                                        Log.w(TAG, "failed to toggle cache");
                                         snackBar(getString(R.string.cache_failed));
                                     } else {
                                         snackBar(result ? getString(R.string.cache_true) : getString(R.string.cache_false));
@@ -266,6 +284,8 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
                                             schedule_exams_cache.addView(cacheImage);
                                         }
                                     }
+                                } else {
+                                    Log.v(TAG, "schedule_exams_cache clicked | ScheduleExamsFragment.scheduleExams is null");
                                 }
                             }
                         });
@@ -313,6 +333,7 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
+        Log.v(TAG, "onContextItemSelected | item=" + item.getTitle().toString());
         if (getUserVisibleHint()) {
             if (ScheduleExamsFragment.scheduleExams != null) ScheduleExamsFragment.scheduleExams.search(item.getTitle().toString().replace(getString(R.string.group), "").trim());
             return true;
@@ -321,6 +342,7 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
     }
 
     private void notFound(){
+        Log.v(TAG, "notFound");
         LinearLayout linearLayout = new LinearLayout(getContext());
         linearLayout.setOrientation(LinearLayout.VERTICAL);
         linearLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
@@ -334,7 +356,7 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
         title.setTextAlignment(TextView.TEXT_ALIGNMENT_CENTER);
         linearLayout.addView(title);
         TextView desc = new TextView(getContext());
-        desc.setText("По запросу" + " \"" + query + "\" " + " расписания не найдено");
+        desc.setText(getString(R.string.on_demand) + " \"" + query + "\" " + getString(R.string.schedule_not_found_2));
         desc.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
         desc.setTextColor(Static.textColorPrimary);
         desc.setTextSize(16);
@@ -347,6 +369,7 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
         }
     }
     public void gotoLogin(int state){
+        Log.v(TAG, "gotoLogin | state=" + state);
         Intent intent = new Intent(getContext(), LoginActivity.class);
         intent.putExtra("state", state);
         startActivity(intent);

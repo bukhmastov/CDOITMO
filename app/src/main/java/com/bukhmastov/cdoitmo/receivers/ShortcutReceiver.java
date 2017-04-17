@@ -4,13 +4,13 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Toast;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.ShortcutReceiverActivity;
 import com.bukhmastov.cdoitmo.activities.SplashActivity;
 import com.bukhmastov.cdoitmo.activities.TimeRemainingWidgetActivity;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 
 import org.json.JSONObject;
@@ -30,6 +30,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         try {
             String action = intent.getAction();
+            Log.i(TAG, "onReceive | action=" + action);
             switch (action) {
                 case ACTION_ADD_SHORTCUT: {
                     Bundle extras = intent.getExtras();
@@ -59,7 +60,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
                     break;
                 }
                 default: {
-                    Log.e(TAG, "Unsupported intent action: " + action);
+                    Log.e(TAG, "unsupported intent action: " + action);
                     break;
                 }
             }
@@ -69,6 +70,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
     }
 
     private void resolve(Context context, String shortcut_type, String shortcut_data){
+        Log.v(TAG, "resolve | shortcut_type=" + shortcut_type + " | shortcut_data=" + shortcut_data);
         try {
             switch (shortcut_type) {
                 case "tab": {
@@ -108,6 +110,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
         }
     }
     private void addShortcut(Context context, String type, String data) {
+        Log.v(TAG, "addShortcut | type=" + type + " | data=" + data);
         try {
             switch (type) {
                 case "tab": {
@@ -152,6 +155,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
         }
     }
     private void installShortcut(Context context, String type, String data, String label, int icon){
+        Log.v(TAG, "installShortcut | type=" + type + " | data=" + data);
         try {
             Intent shortcutIntent = new Intent(context, ShortcutReceiverActivity.class);
             shortcutIntent.setAction(ShortcutReceiver.ACTION_CLICK_SHORTCUT);

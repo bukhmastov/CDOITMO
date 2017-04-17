@@ -21,12 +21,12 @@ import com.bukhmastov.cdoitmo.adapters.ProtocolListView;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoRestClientResponseHandler;
 import com.bukhmastov.cdoitmo.objects.Protocol;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -47,8 +47,15 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.v(TAG, "Fragment created");
         number_of_weeks = Integer.parseInt(Storage.pref.get(getContext(), "pref_protocol_changes_weeks", "1"));
         protocol = new Protocol(getActivity());
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.v(TAG, "Fragment destroyed");
     }
 
     @Override
@@ -59,6 +66,7 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
     @Override
     public void onResume() {
         super.onResume();
+        Log.v(TAG, "resumed");
         if (!loaded) {
             loaded = true;
             load();
@@ -68,6 +76,7 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
     @Override
     public void onPause() {
         super.onPause();
+        Log.v(TAG, "paused");
         if (fragmentRequestHandle != null) {
             loaded = false;
             fragmentRequestHandle.cancel(true);
@@ -76,6 +85,7 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
 
     @Override
     public void onRefresh() {
+        Log.v(TAG, "refreshed");
         forceLoad();
     }
 
@@ -83,20 +93,24 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
         load(Storage.pref.get(getContext(), "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(getContext(), "pref_tab_refresh", "0")) : 0);
     }
     private void load(final int refresh_rate){
+        Log.v(TAG, "load | refresh_rate=" + refresh_rate);
         protocol.is(new Protocol.Callback() {
             void onChecked(boolean is){
+                Log.v(TAG, "load | protocol.is=" + (is ? "true" : "false"));
                 if (!is || refresh_rate == 0) {
                     forceLoad();
                 } else if (refresh_rate >= 0){
                     protocol.get(new Protocol.Callback() {
                         void onDone(JSONObject p){
+                            Log.v(TAG, "load | protocol.get=" + (p == null ? "null" : "notnull"));
                             try {
+                                if (p == null) throw new Exception("protocol is null");
                                 if (p.getLong("timestamp") + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
                                     forceLoad();
                                 } else {
                                     display();
                                 }
-                            } catch (JSONException e) {
+                            } catch (Exception e) {
                                 Static.error(e);
                                 forceLoad();
                             }
@@ -112,10 +126,12 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
         forceLoad(0);
     }
     private void forceLoad(int attempt){
+        Log.v(TAG, "forceLoad | attempt=" + attempt);
         if (!Static.OFFLINE_MODE) {
             if (++attempt > maxAttempts) {
                 protocol.is(new Protocol.Callback() {
                     void onChecked(boolean is) {
+                        Log.v(TAG, "forceLoad | protocol.is=" + (is ? "true" : "false"));
                         if (is) {
                             display();
                         } else {
@@ -129,6 +145,7 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
             DeIfmoRestClient.get(getContext(), "eregisterlog?days=" + String.valueOf(number_of_weeks * 7), null, new DeIfmoRestClientResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, JSONObject responseObj, JSONArray responseArr) {
+                    Log.v(TAG, "forceLoad | success | statusCode=" + statusCode + " | responseArr=" + (responseArr == null ? "null" : "notnull"));
                     if (statusCode == 200 && responseArr != null) {
                         protocol.put(responseArr, number_of_weeks, new Handler(){
                             @Override
@@ -142,6 +159,7 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
                 }
                 @Override
                 public void onProgress(int state) {
+                    Log.v(TAG, "forceLoad | progress " + state);
                     draw(R.layout.state_loading);
                     TextView loading_message = (TextView) getActivity().findViewById(R.id.loading_message);
                     if (loading_message != null) {
@@ -152,6 +170,7 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
                 }
                 @Override
                 public void onFailure(int state) {
+                    Log.v(TAG, "forceLoad | failure " + state);
                     final Activity activity = getActivity();
                     switch (state) {
                         case DeIfmoRestClient.FAILED_OFFLINE:
@@ -200,6 +219,7 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
         } else {
             protocol.is(new Protocol.Callback() {
                 void onChecked(boolean is) {
+                    Log.v(TAG, "forceLoad | protocol.is=" + (is ? "true" : "false"));
                     if (is) {
                         display();
                     } else {
@@ -222,6 +242,7 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
         }
     }
     private void loadFailed(){
+        Log.v(TAG, "loadFailed");
         try {
             draw(R.layout.state_try_again);
             TextView try_again_message = (TextView) getActivity().findViewById(R.id.try_again_message);
@@ -240,9 +261,11 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
         }
     }
     private void display(){
+        Log.v(TAG, "display");
         final ProtocolFragment self = this;
         protocol.get(new Protocol.Callback() {
             void onDone(JSONObject data){
+                Log.v(TAG, "display | protocol.get=" + (data == null ? "null" : "notnull"));
                 try {
                     if (data == null) throw new NullPointerException("Protocol.protocol can't be null");
                     // получаем список предметов для отображения
@@ -310,6 +333,7 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
                                     return;
                                 }
                                 number_of_weeks = spinner_weeks_arr_values.get(position);
+                                Log.v(TAG, "spinner_weeks clicked | number_of_weeks=" + number_of_weeks);
                                 forceLoad();
                             }
                             public void onNothingSelected(AdapterView<?> parent) {}

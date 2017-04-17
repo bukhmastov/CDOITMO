@@ -2,6 +2,7 @@ package com.bukhmastov.cdoitmo.objects;
 
 import android.content.Context;
 
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 
@@ -21,6 +22,7 @@ public class Rating {
     private JSONObject ratingList = null;
 
     public Rating(Context context){
+        Log.v(TAG, "initialized");
         this.context = context;
         String rating = Storage.file.cache.get(context, "rating#core");
         if (!rating.isEmpty()) {
@@ -40,6 +42,7 @@ public class Rating {
         }
     }
     public void put(String type, JSONObject data){
+        Log.v(TAG, "put");
         try {
             JSONObject json = new JSONObject();
             json.put("timestamp", Calendar.getInstance().getTimeInMillis());
@@ -57,6 +60,7 @@ public class Rating {
         }
     }
     public JSONObject get(String type){
+        Log.v(TAG, "get");
         if(Objects.equals(type, "Rating")){
             return rating;
         } else {
@@ -64,6 +68,7 @@ public class Rating {
         }
     }
     public boolean is(String type){
+        Log.v(TAG, "is");
         if(Objects.equals(type, "Rating")){
             return this.rating != null;
         } else {

@@ -16,10 +16,12 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapters.TeacherPickerListView;
 import com.bukhmastov.cdoitmo.receivers.ShortcutReceiver;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.loopj.android.http.RequestHandle;
 
@@ -32,8 +34,10 @@ import java.util.Objects;
 
 public class ShortcutCreator {
 
+    private static final String TAG = "ShortcutCreator";
     public interface response {
         void onDisplay(View view);
+        void onError();
     }
     private Context context;
     private response delegate;
@@ -45,34 +49,41 @@ public class ShortcutCreator {
     private Additional additional = null;
 
     public ShortcutCreator(Context context, response response){
+        Log.v(TAG, "initialized");
         this.context = context;
         this.delegate = response;
     }
 
     public void onResume(){
+        Log.v(TAG, "resumed");
         if (!displayed) {
             start();
             displayed = true;
         }
     }
     public void onPause(){
+        Log.v(TAG, "paused");
         if (shortcutRequestHandle != null) shortcutRequestHandle.cancel(true);
         displayed = false;
     }
 
     private void start(){
+        Log.v(TAG, "start");
         step = 0;
         next();
     }
     private void next(){
+        Log.v(TAG, "next");
         step++;
         proceedStep();
     }
     private void back(){
+        Log.v(TAG, "back");
         step--;
         proceedStep();
     }
     private void proceedStep(){
+        Log.v(TAG, "proceedStep | step=" + step);
         switch (step) {
             case 1: step1(); break;
             case 2: step2(); break;
@@ -81,6 +92,7 @@ public class ShortcutCreator {
         }
     }
     private void step1(){
+        Log.v(TAG, "step1");
         try {
             LinearLayout content = new LinearLayout(context);
             content.setOrientation(LinearLayout.VERTICAL);
@@ -115,6 +127,7 @@ public class ShortcutCreator {
         }
     }
     private void step2(){
+        Log.v(TAG, "step2");
         try {
             final LinearLayout content = new LinearLayout(context);
             content.setOrientation(LinearLayout.VERTICAL);
@@ -361,6 +374,7 @@ public class ShortcutCreator {
         }
     }
     private void step3(){
+        Log.v(TAG, "step3");
         try {
             LinearLayout content = new LinearLayout(context);
             content.setOrientation(LinearLayout.VERTICAL);
@@ -384,6 +398,7 @@ public class ShortcutCreator {
         }
     }
     private void complete(){
+        Log.v(TAG, "complete");
         switch (type) {
             case e_journal: {
                 addShortcut("tab", "e_journal");
@@ -428,6 +443,11 @@ public class ShortcutCreator {
             }
         }
         start();
+    }
+    private void error(){
+        Log.v(TAG, "error");
+        Toast.makeText(context, R.string.error_occurred, Toast.LENGTH_SHORT).show();
+        delegate.onError();
     }
 
     private class ScheduleLessonsProvider {
@@ -502,9 +522,6 @@ public class ShortcutCreator {
             this.query = query;
         }
     }
-    private void error(){
-
-    }
 
     @Nullable
     private String getTypeLabel(TYPES type){
@@ -545,6 +562,7 @@ public class ShortcutCreator {
     }
 
     private void addShortcut(String type, String data){
+        Log.v(TAG, "addShortcut | type=" + type + " | data=" + data);
         Intent intent = new Intent(ShortcutReceiver.ACTION_ADD_SHORTCUT);
         intent.putExtra(ShortcutReceiver.EXTRA_TYPE, type);
         intent.putExtra(ShortcutReceiver.EXTRA_DATA, data);

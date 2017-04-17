@@ -1,7 +1,6 @@
 package com.bukhmastov.cdoitmo.network;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
@@ -16,7 +15,7 @@ abstract class Client {
     static void init(){
         if (!initialized) {
             initialized = true;
-            httpclient.setLoggingLevel(Log.WARN);
+            httpclient.setLoggingLevel(android.util.Log.WARN);
         }
     }
     static void renewCookie(Context context){

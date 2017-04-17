@@ -3,6 +3,7 @@ package com.bukhmastov.cdoitmo.converters;
 import android.content.Context;
 import android.os.AsyncTask;
 
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 
@@ -15,17 +16,23 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ProtocolConverter extends AsyncTask<JSONArray, Void, JSONObject> {
+
+    private static final String TAG = "ProtocolConverter";
     public interface response {
         void finish(JSONObject json);
     }
     private Context context;
     private response delegate = null;
+
     public ProtocolConverter(Context context, response delegate){
+        Log.i(TAG, "initialized");
         this.context = context;
         this.delegate = delegate;
     }
+
     @Override
     protected JSONObject doInBackground(JSONArray... params) {
+        Log.i(TAG, "started");
         JSONObject response = new JSONObject();
         try {
             JSONArray protocol = params[0];
@@ -72,6 +79,7 @@ public class ProtocolConverter extends AsyncTask<JSONArray, Void, JSONObject> {
         }
         return response;
     }
+
     private String getCast(JSONObject item) throws JSONException {
         final String separator = "#";
         JSONObject var = item.getJSONObject("var");
@@ -114,8 +122,11 @@ public class ProtocolConverter extends AsyncTask<JSONArray, Void, JSONObject> {
             return 0;
         }
     }
+
     @Override
     protected void onPostExecute(JSONObject json) {
+        Log.i(TAG, "finished");
         delegate.finish(json);
     }
+
 }

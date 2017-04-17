@@ -3,6 +3,7 @@ package com.bukhmastov.cdoitmo.network;
 import android.content.Context;
 
 import com.bukhmastov.cdoitmo.network.interfaces.IfmoClientResponseHandler;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
@@ -23,6 +24,7 @@ public class IfmoClient extends Client {
     public static final int FAILED_TRY_AGAIN = 1;
 
     public static void get(final Context context, final String url, final RequestParams params, final IfmoClientResponseHandler responseHandler){
+        Log.v(TAG, "get | url=" + url + " | params=" + Static.getSafetyRequestParams(params));
         init();
         if (Static.isOnline(context)) {
             responseHandler.onProgress(STATE_HANDLING);
@@ -30,6 +32,7 @@ public class IfmoClient extends Client {
             responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(url), params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                    Log.v(TAG, "get | success");
                     responseHandler.onNewHandle(null);
                     try {
                         if (responseBody == null) throw new NullPointerException("responseBody cannot be null");
@@ -50,11 +53,13 @@ public class IfmoClient extends Client {
                 }
                 @Override
                 public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                    Log.v(TAG, "get | failure | statusCode=" + statusCode);
                     responseHandler.onNewHandle(null);
                     responseHandler.onFailure(FAILED_TRY_AGAIN);
                 }
             }));
         } else {
+            Log.v(TAG, "get | offline");
             responseHandler.onFailure(FAILED_OFFLINE);
         }
     }

@@ -1,8 +1,8 @@
 package com.bukhmastov.cdoitmo.objects;
 
 import android.content.Context;
-import android.util.Log;
 
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 
@@ -17,6 +17,7 @@ import java.util.regex.Pattern;
 
 public class TimeRemainingWidget {
 
+    private static final String TAG = "TRWidget";
     public interface response {
         void onAction(TimeRemainingWidget.Data json);
         void onCancelled();
@@ -26,19 +27,21 @@ public class TimeRemainingWidget {
         public String next = null;
         public String day = null;
     }
-    private static final String TAG = "TimeRemainingWidget";
     private response delegate;
     private Executor executor;
 
     public TimeRemainingWidget(response delegate){
+        Log.v(TAG, "initialized");
         this.delegate = delegate;
     }
 
     public void start(Context context, JSONObject schedule){
+        Log.v(TAG, "start");
         executor = new Executor(context, schedule);
     }
 
     public void stop(){
+        Log.v(TAG, "stop");
         if (executor != null) {
             executor.cancel();
         }
@@ -46,6 +49,7 @@ public class TimeRemainingWidget {
 
     private class Executor extends Thread {
 
+        private static final String TAG = "TRWidget.Executor";
         private boolean running = false;
         private long delay = 1000;
         private JSONObject full_schedule;
@@ -56,7 +60,7 @@ public class TimeRemainingWidget {
         private int day_of_the_week = -1;
 
         Executor(Context context, JSONObject full_schedule){
-            Log.i(TAG, "Executor thread started");
+            Log.i(TAG, "started");
             this.context = context;
             this.full_schedule = full_schedule;
             this.running = true;
@@ -67,7 +71,7 @@ public class TimeRemainingWidget {
                 try {
                     long ts = System.currentTimeMillis();
                     if (ts % 3600000L <= 1000 || first_init) {
-                        Log.d(TAG, "Update data");
+                        Log.v(TAG, "update data");
                         first_init = false;
                         week = getWeek() % 2;
                         day_of_the_week = getDayOfTheWeek(Calendar.getInstance().get(Calendar.DAY_OF_WEEK));
@@ -138,7 +142,7 @@ public class TimeRemainingWidget {
             running = false;
             interrupt();
             delegate.onCancelled();
-            Log.i(TAG, "Executor thread interrupted");
+            Log.i(TAG, "interrupted");
         }
         private int getWeek(){
             try {

@@ -5,7 +5,11 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 
+import com.bukhmastov.cdoitmo.utils.Log;
+
 public class ShortcutReceiverActivity extends AppCompatActivity {
+
+    private static final String TAG = "ShortcutReceiverActivity";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -17,6 +21,7 @@ public class ShortcutReceiverActivity extends AppCompatActivity {
         if (extras != null) remoteIntent.putExtras(extras);
         sendBroadcast(remoteIntent);
         finish();
+        Log.v(TAG, "onCreate | action=" + remoteIntent.getAction() + " | " + remoteIntent.toString());
     }
 
 }

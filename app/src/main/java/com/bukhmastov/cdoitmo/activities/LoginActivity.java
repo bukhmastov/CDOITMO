@@ -7,7 +7,6 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -22,6 +21,7 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoClientResponseHandler;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.ProtocolTracker;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
@@ -47,6 +47,7 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         if (Static.darkTheme) setTheme(R.style.AppTheme_Dark);
         super.onCreate(savedInstanceState);
+        Log.i(TAG, "Activity created");
         setContentView(R.layout.activity_login);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar_login));
         ActionBar actionBar = getSupportActionBar();
@@ -55,7 +56,9 @@ public class LoginActivity extends AppCompatActivity {
             actionBar.setLogo(obtainStyledAttributes(new int[] { R.attr.ic_security }).getDrawable(0));
         }
         Static.OFFLINE_MODE = false;
-        switch (getIntent().getIntExtra("state", SIGNAL_LOGIN)) {
+        int signal = getIntent().getIntExtra("state", SIGNAL_LOGIN);
+        Log.i(TAG, "signal = " + signal);
+        switch (signal) {
             case SIGNAL_LOGIN:
                 show();
                 break;
@@ -95,6 +98,12 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.i(TAG, "Activity destroyed");
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.toolbar_login, menu);
         MenuItem action_about = menu.findItem(R.id.action_about);
@@ -111,6 +120,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void show(){
+        Log.v(TAG, "show");
         try {
             String current_login = Storage.file.general.get(this, "users#current_login");
             if (!current_login.isEmpty()) {
@@ -128,6 +138,7 @@ public class LoginActivity extends AppCompatActivity {
                 layout_login_new_user_tile.findViewById(R.id.login).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        Log.v(TAG, "new_user_tile login clicked");
                         String login = "";
                         String password = "";
                         if (input_login != null) login = input_login.getText().toString();
@@ -139,6 +150,7 @@ public class LoginActivity extends AppCompatActivity {
                 JSONArray accounts = LoginActivity.accounts.get(this);
                 for (int i = 0; i < accounts.length(); i++) {
                     try {
+                        Log.v(TAG, "account in accounts " + accounts.getString(i));
                         Storage.file.general.put(this, "users#current_login", accounts.getString(i));
                         final String login = Storage.file.perm.get(this, "user#login");
                         final String password = Storage.file.perm.get(this, "user#password");
@@ -152,12 +164,14 @@ public class LoginActivity extends AppCompatActivity {
                         layout_login_user_tile.findViewById(R.id.logout).setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
+                                Log.v(TAG, "user_tile logout clicked");
                                 logout(login);
                             }
                         });
                         layout_login_user_tile.findViewById(R.id.auth).setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
+                                Log.v(TAG, "user_tile login clicked");
                                 auth(login, password, role, false);
                             }
                         });
@@ -174,8 +188,10 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
     private void auth(final String login, String password, String role, final boolean newUser){
+        Log.v(TAG, "auth | login=" + login + " role=" + role + " newUser=" + (newUser ? "true" : "false"));
         if (!login.isEmpty() && !password.isEmpty()) {
             if (Objects.equals(login, "general")) {
+                Log.w(TAG, "auth | got login=general that does not supported");
                 snackBar(getString(R.string.wrong_login_general));
                 return;
             }
@@ -186,16 +202,19 @@ public class LoginActivity extends AppCompatActivity {
             DeIfmoClient.check(this, new DeIfmoClientResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, String response) {
+                    Log.v(TAG, "auth | check | success");
                     authorized(newUser);
                 }
                 @Override
                 public void onProgress(int state) {
+                    Log.v(TAG, "auth | check | progress " + state);
                     draw(R.layout.state_auth);
                     Button interrupt_auth = (Button) findViewById(R.id.interrupt_auth);
                     if (interrupt_auth != null) {
                         interrupt_auth.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
+                                Log.v(TAG, "auth | auth interrupted, going offline");
                                 if (loginRequestHandle != null) {
                                     loginRequestHandle.cancel(true);
                                     loginRequestHandle = null;
@@ -216,6 +235,7 @@ public class LoginActivity extends AppCompatActivity {
                 }
                 @Override
                 public void onFailure(int state) {
+                    Log.v(TAG, "auth | check | failure " + state);
                     switch (state) {
                         case DeIfmoClient.FAILED_OFFLINE:
                             Static.OFFLINE_MODE = true;
@@ -234,10 +254,12 @@ public class LoginActivity extends AppCompatActivity {
                 }
             });
         } else {
+            Log.v(TAG, "auth | empty fields");
             snackBar(getString(R.string.fill_fields));
         }
     }
     private void authorized(boolean newUser){
+        Log.v(TAG, "authorized | newUser=" + (newUser ? "true" : "false"));
         String current_login = Storage.file.general.get(this, "users#current_login");
         if (!current_login.isEmpty()) {
             accounts.push(this, current_login);
@@ -247,19 +269,23 @@ public class LoginActivity extends AppCompatActivity {
             if (newUser) Static.protocolChangesTrackSetup(this, 0);
             finish();
         } else {
+            Log.w(TAG, "authorized | current_login is empty");
             snackBar(getString(R.string.something_went_wrong));
             show();
         }
     }
     private void logout(final String login){
+        Log.v(TAG, "logout | login=" + login);
         Storage.file.general.put(this, "users#current_login", login);
         DeIfmoClient.get(this, "servlet/distributedCDE?Rule=SYSTEM_EXIT", null, new DeIfmoClientResponseHandler() {
             @Override
             public void onSuccess(int statusCode, String response) {
+                Log.v(TAG, "logout | success");
                 logoutDone(login, true);
             }
             @Override
             public void onProgress(int state) {
+                Log.v(TAG, "logout | progress " + state);
                 draw(R.layout.state_auth);
                 Button interrupt_auth = (Button) findViewById(R.id.interrupt_auth);
                 if (interrupt_auth != null) {
@@ -272,6 +298,7 @@ public class LoginActivity extends AppCompatActivity {
             }
             @Override
             public void onFailure(int state) {
+                Log.v(TAG, "logout | failure " + state);
                 logoutDone(login, true);
             }
             @Override
@@ -279,6 +306,7 @@ public class LoginActivity extends AppCompatActivity {
         }, false);
     }
     private void logoutDone(String login, boolean showSnackBar){
+        Log.v(TAG, "logoutDone | login=" + login);
         accounts.remove(this, login);
         Storage.file.general.put(this, "users#current_login", login);
         Static.logout(this);
@@ -287,7 +315,9 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private static class accounts {
+        private static final String TAG = "LoginActivity.accounts";
         private static void push(Context context, String login){
+            Log.v(TAG, "push | login=" + login);
             String list = Storage.file.general.get(context, "users#list");
             try {
                 JSONArray accounts;
@@ -310,6 +340,7 @@ public class LoginActivity extends AppCompatActivity {
             }
         }
         private static void remove(Context context, String login){
+            Log.v(TAG, "remove | login=" + login);
             String list = Storage.file.general.get(context, "users#list");
             try {
                 JSONArray accounts;
@@ -330,6 +361,7 @@ public class LoginActivity extends AppCompatActivity {
             }
         }
         private static JSONArray get(Context context){
+            Log.v(TAG, "get");
             String list = Storage.file.general.get(context, "users#list");
             JSONArray accounts = new JSONArray();
             try {
@@ -342,9 +374,11 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private View inflate(int layout) throws Exception {
+        Log.v(TAG, "inflate | layout=" + layout);
         return ((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layout, null);
     }
     private void draw(int layoutId){
+        Log.v(TAG, "draw | layout=" + layoutId);
         try {
             ViewGroup vg = ((ViewGroup) findViewById(R.id.login_content));
             if (vg != null) {
@@ -356,6 +390,7 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
     private void draw(View view){
+        Log.v(TAG, "draw | view");
         try {
             ViewGroup vg = ((ViewGroup) findViewById(R.id.login_content));
             if (vg != null) {
@@ -367,6 +402,7 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
     private void snackBar(String text){
+        Log.v(TAG, "snackBar | text=" + text);
         View activity_login = findViewById(R.id.activity_login);
         if (activity_login != null) {
             Snackbar snackbar = Snackbar.make(activity_login, text, Snackbar.LENGTH_SHORT);

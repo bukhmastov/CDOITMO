@@ -18,6 +18,7 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 
@@ -29,6 +30,7 @@ import java.util.Objects;
 
 public class ScheduleLessonsBuilder extends Thread {
 
+    private static final String TAG = "ScheduleLessonsBuilder";
     public interface response {
         void state(int state, View layout);
     }
@@ -43,12 +45,14 @@ public class ScheduleLessonsBuilder extends Thread {
     public static final int STATE_DONE = 2;
 
     public ScheduleLessonsBuilder(Activity activity, int type, ScheduleLessonsBuilder.response delegate){
+        Log.i(TAG, "created");
         this.activity = activity;
         this.delegate = delegate;
         this.type = type;
         this.destiny = activity.getResources().getDisplayMetrics().density;
     }
     public void run(){
+        Log.v(TAG, "started");
         LinearLayout container = new LinearLayout(activity);
         container.setOrientation(LinearLayout.VERTICAL);
         container.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
@@ -67,6 +71,7 @@ public class ScheduleLessonsBuilder extends Thread {
                 dayLayout.findViewById(R.id.add_lesson).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        Log.v(TAG, "add_lesson clicked");
                         try {
                             ScheduleLessons.createLesson(activity, ScheduleLessonsFragment.schedule, index, type);
                         } catch (Exception e) {
@@ -127,6 +132,7 @@ public class ScheduleLessonsBuilder extends Thread {
                     lessonLayout.findViewById(R.id.lesson_touch_icon).setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
+                            Log.v(TAG, "lesson_touch_icon clicked");
                             try {
                                 final String group = getMenuTitle(lesson, "group", "group");
                                 final String teacher = getMenuTitle(lesson, "teacher", "teacher");
@@ -147,6 +153,7 @@ public class ScheduleLessonsBuilder extends Thread {
                                 popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                                     @Override
                                     public boolean onMenuItemClick(MenuItem item) {
+                                        Log.v(TAG, "popup.MenuItem clicked | " + item.getTitle().toString());
                                         switch (item.getItemId()) {
                                             case R.id.open_group:
                                                 ScheduleLessonsFragment.searchAndClear(group);
@@ -207,6 +214,7 @@ public class ScheduleLessonsBuilder extends Thread {
                 }
             }
             if (daysCount == 0) {
+                Log.v(TAG, "daysCount == 0");
                 container.addView(inflate(R.layout.layout_schedule_lessons_without_lessons));
             } else {
                 TextView textView = new TextView(activity);
@@ -222,6 +230,7 @@ public class ScheduleLessonsBuilder extends Thread {
             Static.error(e);
             delegate.state(STATE_FAILED, container);
         }
+        Log.v(TAG, "finished");
     }
 
     private View inflate(int layout) throws Exception {

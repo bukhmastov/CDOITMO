@@ -11,6 +11,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.fragments.ScheduleExamsFragment;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 
 import org.json.JSONArray;
@@ -20,6 +21,7 @@ import java.util.Objects;
 
 public class ScheduleExamsBuilder extends Thread {
 
+    private static final String TAG = "ScheduleExamsBuilder";
     public interface response {
         void state(int state, View layout);
     }
@@ -32,11 +34,13 @@ public class ScheduleExamsBuilder extends Thread {
     public static final int STATE_DONE = 2;
 
     public ScheduleExamsBuilder(Activity activity, ScheduleExamsBuilder.response delegate){
+        Log.i(TAG, "created");
         this.activity = activity;
         this.delegate = delegate;
         this.destiny = activity.getResources().getDisplayMetrics().density;
     }
     public void run(){
+        Log.v(TAG, "started");
         LinearLayout container = new LinearLayout(activity);
         container.setOrientation(LinearLayout.VERTICAL);
         container.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
@@ -79,6 +83,7 @@ public class ScheduleExamsBuilder extends Thread {
                     examsLayout.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
                         @Override
                         public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+                            Log.v(TAG, "onCreateContextMenu");
                             menu.setHeaderTitle(R.string.open_schedule);
                             if (group != null) menu.add(activity.getString(R.string.group) + " " + group);
                             if (teacher != null) menu.add(teacher);
@@ -88,6 +93,7 @@ public class ScheduleExamsBuilder extends Thread {
                 container.addView(examsLayout);
             }
             if (schedule.length() == 0) {
+                Log.v(TAG, "schedule.length() == 0");
                 container.addView(inflate(R.layout.layout_schedule_exams_without_exams));
             } else {
                 TextView textView = new TextView(activity);
@@ -103,6 +109,7 @@ public class ScheduleExamsBuilder extends Thread {
             Static.error(e);
             delegate.state(STATE_FAILED, container);
         }
+        Log.v(TAG, "finished");
     }
 
     private View inflate(int layout) throws Exception {

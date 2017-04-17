@@ -9,7 +9,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -23,6 +22,7 @@ import com.bukhmastov.cdoitmo.adapters.TeacherPickerAdapter;
 import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
 import com.bukhmastov.cdoitmo.objects.entities.LessonUnit;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.loopj.android.http.RequestHandle;
 
@@ -41,7 +41,7 @@ import java.util.regex.Pattern;
 
 public class ScheduleLessonCreateActivity extends AppCompatActivity {
 
-    private static final String TAG = "ScheduleLessonCreate";
+    private static final String TAG = "SLCreateActivity";
     private LessonUnit lessonUnit;
     private Activity self;
 
@@ -49,6 +49,7 @@ public class ScheduleLessonCreateActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         if (Static.darkTheme) setTheme(R.style.AppTheme_Dark);
         super.onCreate(savedInstanceState);
+        Log.i(TAG, "Activity created");
         setContentView(R.layout.activity_schedule_lesson_create);
         self = this;
         try {
@@ -322,12 +323,15 @@ public class ScheduleLessonCreateActivity extends AppCompatActivity {
             findViewById(R.id.lesson_create_button).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    Log.v(TAG, "create_button clicked");
                     if (lessonUnit.title == null || lessonUnit.title.isEmpty()) {
-                        Static.snackBar(self, "Необходимо указать название предмета");
+                        Log.v(TAG, "lessonUnit.title required");
+                        Static.snackBar(self, getString(R.string.lesson_title_required));
                         return;
                     }
                     if (lessonUnit.timeStart == null || lessonUnit.timeStart.isEmpty()) {
-                        Static.snackBar(self, "Необходимо указать время начала занятия");
+                        Log.v(TAG, "lessonUnit.timeStart required");
+                        Static.snackBar(self, getString(R.string.lesson_time_start_required));
                         return;
                     }
                     if (Objects.equals(lessonUnit.type.toLowerCase(), getString(R.string.lecture).toLowerCase())) lessonUnit.type = "lecture";
@@ -337,6 +341,7 @@ public class ScheduleLessonCreateActivity extends AppCompatActivity {
                         ScheduleLessonsFragment.reScheduleRequired = true;
                         finish();
                     } else {
+                        Log.w(TAG, "failed to create lesson");
                         Static.snackBar(self, getString(R.string.something_went_wrong));
                     }
                 }
@@ -347,6 +352,12 @@ public class ScheduleLessonCreateActivity extends AppCompatActivity {
             Static.snackBar(this, getString(R.string.something_went_wrong));
             finish();
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.i(TAG, "Activity destroyed");
     }
 
     @Override
@@ -363,6 +374,7 @@ public class ScheduleLessonCreateActivity extends AppCompatActivity {
 
     private static class TeacherSearch {
 
+        private static final String TAG = "SLCreateActivity.TS";
         interface response {
             void onProgress(int state);
             void onFailure(int state);
@@ -373,6 +385,7 @@ public class ScheduleLessonCreateActivity extends AppCompatActivity {
         static boolean blocked = false;
 
         public static void search(final Context context, final String query, final TeacherSearch.response delegate){
+            Log.v(TAG, "search | query=" + query);
             if (request != null) {
                 request.cancel(true);
                 request = null;
@@ -385,14 +398,17 @@ public class ScheduleLessonCreateActivity extends AppCompatActivity {
             scheduleLessons.setHandler(new ScheduleLessons.response() {
                 @Override
                 public void onProgress(int state) {
+                    Log.v(TAG, "search | progress " + state);
                     delegate.onProgress(state);
                 }
                 @Override
                 public void onFailure(int state) {
+                    Log.v(TAG, "search | failure " + state);
                     delegate.onFailure(state);
                 }
                 @Override
                 public void onSuccess(JSONObject json) {
+                    Log.v(TAG, "search | success");
                     delegate.onSuccess(json);
                 }
                 @Override

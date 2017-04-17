@@ -3,6 +3,7 @@ package com.bukhmastov.cdoitmo.converters;
 import android.content.Context;
 import android.os.AsyncTask;
 
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 
 import org.json.JSONArray;
@@ -12,17 +13,23 @@ import org.json.JSONObject;
 import java.util.Objects;
 
 public class ScheduleLessonsConverter extends AsyncTask<JSONObject, Void, JSONObject> {
+
+    private static final String TAG = "SLConverter";
     public interface response {
         void finish(JSONObject json);
     }
     private Context context;
     private response delegate = null;
+
     public ScheduleLessonsConverter(Context context, response delegate){
+        Log.i(TAG, "initialized");
         this.context = context;
         this.delegate = delegate;
     }
+
     @Override
     protected JSONObject doInBackground(JSONObject... params) {
+        Log.i(TAG, "started");
         JSONObject response = params[1];
         try {
             JSONArray remoteSchedule = params[0].getJSONArray("schedule");
@@ -83,11 +90,15 @@ public class ScheduleLessonsConverter extends AsyncTask<JSONObject, Void, JSONOb
         }
         return response;
     }
+
     private String get(JSONObject json, String key, String replace) throws JSONException {
         return json.has(key) && json.get(key).toString() != null && !Objects.equals(json.get(key).toString(), "") && !Objects.equals(json.get(key).toString(), "null") ? json.get(key).toString() : replace;
     }
+
     @Override
     protected void onPostExecute(JSONObject json) {
+        Log.i(TAG, "finished");
         delegate.finish(json);
     }
+
 }

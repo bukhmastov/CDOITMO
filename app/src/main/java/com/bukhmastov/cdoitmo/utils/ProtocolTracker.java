@@ -5,7 +5,6 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 import android.os.Build;
-import android.util.Log;
 
 import java.util.Objects;
 
@@ -20,6 +19,7 @@ public class ProtocolTracker {
     }
 
     public ProtocolTracker check(){
+        Log.v(TAG, "check");
         boolean enabled = Storage.pref.get(context, "pref_use_notifications", true);
         boolean running = Objects.equals(Storage.file.perm.get(context, "protocol_tracker#job_service_running", "false"), "true");
         if (enabled && !running) {
@@ -33,6 +33,7 @@ public class ProtocolTracker {
                 try {
                     if (((JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE)).getPendingJob(jobID) == null) throw new Exception("job is null");
                 } catch (Exception e) {
+                    Log.w(TAG, e.getMessage());
                     if (Build.VERSION.SDK_INT != Build.VERSION_CODES.N_MR1) restart();
                 }
             }
@@ -40,11 +41,13 @@ public class ProtocolTracker {
         return this;
     }
     public ProtocolTracker restart(){
+        Log.v(TAG, "restart");
         stop();
         start();
         return this;
     }
     private ProtocolTracker start(){
+        Log.v(TAG, "start");
         boolean enabled = Storage.pref.get(context, "pref_use_notifications", true);
         boolean running = Objects.equals(Storage.file.perm.get(context, "protocol_tracker#job_service_running", "false"), "true");
         int frequency = Integer.parseInt(Storage.pref.get(context, "pref_notify_frequency", "30"));
@@ -60,13 +63,14 @@ public class ProtocolTracker {
                 Log.i(TAG, "Started | user = " + Storage.file.general.get(context, "users#current_login") + " | frequency = " + frequency);
             } catch (Exception e){
                 Log.e(TAG, "Failed to schedule job");
-                e.printStackTrace();
+                Static.error(e);
                 stop();
             }
         }
         return this;
     }
     public ProtocolTracker stop(){
+        Log.v(TAG, "stop");
         boolean running = Objects.equals(Storage.file.perm.get(context, "protocol_tracker#job_service_running", "false"), "true");
         if (running) {
             ((JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE)).cancel(jobID);

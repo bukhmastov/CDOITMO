@@ -280,5 +280,16 @@
     <string name="on_demand">По запросу</string>
     <string name="interrupt_auth">Отменить авторизацию\nперейти в оффлайн режим</string>
     <string name="speech_recognition_is_not_supported">Распознавание речи не поддерживается</string>
+    <string name="lesson_title_required">Необходимо указать название предмета</string>
+    <string name="lesson_time_start_required">Необходимо указать время начала занятия</string>
+    <string name="need_to_pick_schedule">Необходимо выбрать расписание для показа</string>
+    <string name="log">Лог-журнал</string>
+    <string name="warn">warn</string>
+    <string name="error">error</string>
+    <string name="exception">exception</string>
+    <string name="wtf">wtf</string>
+    <string name="share">Поделиться</string>
+    <string name="download_file">Выгрузить файл</string>
+    <string name="send_log">Отправить лог разработчику</string>
 
 </resources>

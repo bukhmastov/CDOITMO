@@ -18,19 +18,17 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activities.LoginActivity;
 import com.bukhmastov.cdoitmo.activities.SubjectActivity;
 import com.bukhmastov.cdoitmo.adapters.SubjectListView;
-import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoRestClientResponseHandler;
 import com.bukhmastov.cdoitmo.objects.ERegister;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -51,7 +49,14 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.v(TAG, "Fragment created");
         eRegister = new ERegister(getActivity());
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.v(TAG, "Fragment destroyed");
     }
 
     @Override
@@ -62,6 +67,7 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
     @Override
     public void onResume() {
         super.onResume();
+        Log.v(TAG, "resumed");
         if (!loaded) {
             loaded = true;
             load();
@@ -71,6 +77,7 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
     @Override
     public void onPause() {
         super.onPause();
+        Log.v(TAG, "paused");
         if (fragmentRequestHandle != null) {
             loaded = false;
             fragmentRequestHandle.cancel(true);
@@ -79,6 +86,7 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
 
     @Override
     public void onRefresh() {
+        Log.v(TAG, "refreshed");
         forceLoad();
     }
 
@@ -86,20 +94,24 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
         load(Storage.pref.get(getContext(), "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(getContext(), "pref_tab_refresh", "0")) : 0);
     }
     private void load(final int refresh_rate){
+        Log.v(TAG, "load | refresh_rate=" + refresh_rate);
         eRegister.is(new ERegister.Callback(){
             void onChecked(boolean is){
+                Log.v(TAG, "load | eRegister.is=" + (is ? "true" : "false"));
                 if (!is || refresh_rate == 0) {
                     forceLoad();
                 } else if (refresh_rate >= 0){
                     eRegister.get(new ERegister.Callback() {
                         void onDone(JSONObject eregister){
+                            Log.v(TAG, "load | eRegister.get=" + (eregister == null ? "null" : "notnull"));
                             try {
+                                if (eregister == null) throw new Exception("eregister is null");
                                 if (eregister.getLong("timestamp") + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
                                     forceLoad();
                                 } else {
                                     display();
                                 }
-                            } catch (JSONException e) {
+                            } catch (Exception e) {
                                 Static.error(e);
                                 forceLoad();
                             }
@@ -112,10 +124,12 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
         });
     }
     private void forceLoad(){
+        Log.v(TAG, "forceLoad");
         if (!Static.OFFLINE_MODE) {
             DeIfmoRestClient.get(getContext(), "eregister", null, new DeIfmoRestClientResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, JSONObject responseObj, JSONArray responseArr) {
+                    Log.v(TAG, "forceLoad | success | statusCode=" + statusCode + " | responseObj=" + (responseObj == null ? "null" : "notnull"));
                     if (statusCode == 200 && responseObj != null) {
                         eRegister.put(responseObj, new Handler(){
                             @Override
@@ -126,6 +140,7 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                     } else {
                         eRegister.is(new ERegister.Callback() {
                             void onChecked(boolean is) {
+                                Log.v(TAG, "forceLoad | eRegister.is=" + (is ? "true" : "false"));
                                 if (is) {
                                     display();
                                 } else {
@@ -137,32 +152,27 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                 }
                 @Override
                 public void onProgress(int state) {
+                    Log.v(TAG, "forceLoad | progress " + state);
                     draw(R.layout.state_loading);
                     Activity activity = getActivity();
                     if (activity != null) {
                         TextView loading_message = (TextView) activity.findViewById(R.id.loading_message);
                         if (loading_message != null) {
                             switch (state) {
-                                case DeIfmoClient.STATE_HANDLING:
-                                    loading_message.setText(R.string.loading);
-                                    break;
-                                case DeIfmoClient.STATE_AUTHORIZATION:
-                                    loading_message.setText(R.string.authorization);
-                                    break;
-                                case DeIfmoClient.STATE_AUTHORIZED:
-                                    loading_message.setText(R.string.authorized);
-                                    break;
+                                case DeIfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
                             }
                         }
                     }
                 }
                 @Override
                 public void onFailure(int state) {
+                    Log.v(TAG, "forceLoad | failure " + state);
                     final Activity activity = getActivity();
                     switch (state) {
-                        case DeIfmoClient.FAILED_OFFLINE:
+                        case DeIfmoRestClient.FAILED_OFFLINE:
                             eRegister.is(new ERegister.Callback() {
                                 void onChecked(boolean is) {
+                                    Log.v(TAG, "forceLoad | eRegister.is=" + (is ? "true" : "false"));
                                     if (is) {
                                         display();
                                     } else {
@@ -183,14 +193,9 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                             });
 
                             break;
-                        case DeIfmoClient.FAILED_TRY_AGAIN:
-                        case DeIfmoClient.FAILED_AUTH_TRY_AGAIN:
+                        case DeIfmoRestClient.FAILED_TRY_AGAIN:
                             draw(R.layout.state_try_again);
                             if (activity != null) {
-                                if (state == DeIfmoClient.FAILED_AUTH_TRY_AGAIN) {
-                                    TextView try_again_message = (TextView) activity.findViewById(R.id.try_again_message);
-                                    if (try_again_message != null) try_again_message.setText(R.string.auth_failed);
-                                }
                                 View try_again_reload = activity.findViewById(R.id.try_again_reload);
                                 if (try_again_reload != null) {
                                     try_again_reload.setOnClickListener(new View.OnClickListener() {
@@ -202,8 +207,6 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                                 }
                             }
                             break;
-                        case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED: gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED); break;
-                        case DeIfmoClient.FAILED_AUTH_CREDENTIALS_FAILED: gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED); break;
                     }
                 }
                 @Override
@@ -214,6 +217,7 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
         } else {
             eRegister.is(new ERegister.Callback() {
                 void onChecked(boolean is) {
+                    Log.v(TAG, "forceLoad | eRegister.is=" + (is ? "true" : "false"));
                     if (is) {
                         display();
                     } else {
@@ -240,6 +244,7 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
         }
     }
     private void loadFailed(){
+        Log.v(TAG, "loadFailed");
         try {
             draw(R.layout.state_try_again);
             TextView try_again_message = (TextView) getActivity().findViewById(R.id.try_again_message);
@@ -258,9 +263,11 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
         }
     }
     private void display(){
+        Log.v(TAG, "display");
         final ERegisterFragment self = this;
         eRegister.get(new ERegister.Callback() {
             void onDone(JSONObject data){
+                Log.v(TAG, "display | eRegister.get=" + (data == null ? "null" : "notnull"));
                 try {
                     if (data == null) throw new NullPointerException("parsedERegister cannot be null");
                     checkData(data);
@@ -298,6 +305,7 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                         erl_list_view.setAdapter(new SubjectListView(getActivity(), subjects));
                         erl_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                                Log.v(TAG, "erl_list_view clicked");
                                 HashMap<String, String> subj = subjects.get(position);
                                 Intent intent = new Intent(getActivity(), SubjectActivity.class);
                                 intent.putExtra("group", subj.get("group"));
@@ -338,6 +346,7 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                                     return;
                                 }
                                 group = spinner_group_arr_names.get(position);
+                                Log.v(TAG, "spinner_group clicked | group=" + group);
                                 load(-1);
                             }
                             public void onNothingSelected(AdapterView<?> parent) {}
@@ -375,10 +384,10 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                                     return;
                                 }
                                 term = spinner_period_arr_values.get(position);
+                                Log.v(TAG, "spinner_period clicked | term=" + term);
                                 load(-1);
                             }
-                            public void onNothingSelected(AdapterView<?> parent) {
-                            }
+                            public void onNothingSelected(AdapterView<?> parent) {}
                         });
                     }
                     Static.showUpdateTime(getActivity(), data.getLong("timestamp"), R.id.eregister_layout, true);
@@ -390,6 +399,7 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
         });
     }
     private void checkData(JSONObject data) throws Exception {
+        Log.v(TAG, "checkData");
         Calendar now = Calendar.getInstance();
         int year = now.get(Calendar.YEAR);
         int month = now.get(Calendar.MONTH);
@@ -447,11 +457,6 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                 this.term = -1;
             }
         }
-    }
-    void gotoLogin(int state){
-        Intent intent = new Intent(getContext(), LoginActivity.class);
-        intent.putExtra("state", state);
-        startActivity(intent);
     }
     private void draw(int layoutId){
         try {

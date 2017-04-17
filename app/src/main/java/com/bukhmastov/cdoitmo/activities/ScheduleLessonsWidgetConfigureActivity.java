@@ -30,6 +30,8 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapters.TeacherPickerListView;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
+import com.bukhmastov.cdoitmo.utils.Log;
+import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 import com.bukhmastov.cdoitmo.widgets.ScheduleLessonsWidget;
 import com.loopj.android.http.RequestHandle;
@@ -43,7 +45,7 @@ import java.util.Objects;
 
 public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity implements ScheduleLessons.response {
 
-    private static final String TAG = "ScheduleLessonsWidgetC";
+    private static final String TAG = "SLWidgetConfigureActivity";
     public int mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
     public static RequestHandle widgetRequestHandle = null;
     public static ScheduleLessons scheduleLessons = null;
@@ -60,6 +62,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
+        Log.i(TAG, "Activity created");
         setResult(RESULT_CANCELED);
         boolean isDarkTheme = Storage.pref.get(this, "pref_dark_theme", false);
         if (isDarkTheme) setTheme(R.style.AppTheme_Dark);
@@ -68,6 +71,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
         Bundle extras = intent.getExtras();
         if (extras != null) mAppWidgetId = extras.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
         if (mAppWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
+            Log.w(TAG, "wrong AppWidgetId provided by intent's extra");
             close(RESULT_CANCELED, null);
             return;
         }
@@ -102,6 +106,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
             slw_switch_theme.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    Log.v(TAG, "switch_theme clicked | darkTheme=" + (isChecked ? "true" : "false"));
                     darkTheme = isChecked;
                 }
             });
@@ -112,9 +117,12 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
             slw_theme.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    Log.v(TAG, "slw_theme clicked");
                     if (slw_switch_theme != null){
                         darkTheme = !slw_switch_theme.isChecked();
                         slw_switch_theme.setChecked(darkTheme);
+                    } else {
+                        Log.w(TAG, "slw_switch_theme is null");
                     }
                 }
             });
@@ -124,6 +132,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
             slw_update_time.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    Log.v(TAG, "slw_update_time clicked");
                     AlertDialog.Builder builder = new AlertDialog.Builder(ScheduleLessonsWidgetConfigureActivity.this);
                     builder.setTitle(R.string.update_interval);
                     int select = 0;
@@ -137,6 +146,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
                     builder.setSingleChoiceItems(R.array.pref_widget_refresh_titles, select, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
+                            Log.v(TAG, "slw_update_time dialog selected " + which);
                             switch (which){
                                 case 0: updateTime = 0; break;
                                 case 1: updateTime = 12; break;
@@ -152,6 +162,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
                     builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
+                            Log.v(TAG, "slw_update_time dialog dismissed");
                             dialog.dismiss();
                         }
                     });
@@ -162,8 +173,9 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
         updateTimeSummary();
         findViewById(R.id.add_button).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                Log.v(TAG, "add_button clicked");
                 if (query == null) {
-                    snackBar("Необходимо выбрать расписание для показа");
+                    snackBar(getString(R.string.need_to_pick_schedule));
                 } else {
                     try {
                         JSONObject jsonObject = new JSONObject();
@@ -177,6 +189,8 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
                         resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
                         close(RESULT_OK, resultValue);
                     } catch (Exception e) {
+                        Log.w(TAG, "failed to create widget");
+                        Static.error(e);
                         snackBar(getString(R.string.failed_to_create_widget));
                     }
                 }
@@ -185,7 +199,14 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.i(TAG, "Activity destroyed");
+    }
+
+    @Override
     public void onProgress(int state) {
+        Log.v(TAG, "progress " + state);
         switch (state) {
             case IfmoRestClient.STATE_HANDLING: loading(getString(R.string.loading)); break;
         }
@@ -193,6 +214,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
 
     @Override
     public void onFailure(int state) {
+        Log.v(TAG, "failure " + state);
         switch (state) {
             case IfmoRestClient.FAILED_OFFLINE:
             case IfmoRestClient.FAILED_TRY_AGAIN:
@@ -205,14 +227,17 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
 
     @Override
     public void onSuccess(JSONObject json) {
+        Log.v(TAG, "success");
         try {
             if (json == null) throw new NullPointerException("json cannot be null");
             if (Objects.equals(json.getString("type"), "teacher_picker")) {
+                Log.v(TAG, "type=teacher_picker");
                 JSONArray teachers = json.getJSONArray("list");
                 if (teachers.length() > 0) {
                     if (teachers.length() == 1) {
                         JSONObject teacher = teachers.getJSONObject(0);
                         query = teacher.getString("pid");
+                        Log.v(TAG, "found query=" + query);
                         found(getString(R.string.schedule_teacher_set) + " \"" + teacher.getString("person") + " (" + teacher.getString("post") + ")" + "\"");
                     } else {
                         FrameLayout slw_container = (FrameLayout) findViewById(R.id.slw_container);
@@ -233,6 +258,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
                             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                                 HashMap<String, String> teacherMap = teachersMap.get(position);
                                 query = teacherMap.get("pid");
+                                Log.v(TAG, "found query=" + query);
                                 found(getString(R.string.schedule_teacher_set) + " \"" + teacherMap.get("person") + " (" + teacherMap.get("post") + ")" + "\"");
                             }
                         });
@@ -244,11 +270,18 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
                     found(getString(R.string.schedule_not_found));
                 }
             } else {
+                Log.v(TAG, "type=" + json.getString("type"));
                 if (json.getJSONArray("schedule").length() > 0) {
                     query = json.getString("query");
-                    switch(json.getString("type")){
-                        case "group": found(getString(R.string.schedule_group_set) + " \"" + json.getString("label") + "\""); break;
-                        case "room": found(getString(R.string.schedule_room_set) + " \"" + json.getString("label") + "\""); break;
+                    switch (json.getString("type")) {
+                        case "group":
+                            Log.v(TAG, "found query=" + query);
+                            found(getString(R.string.schedule_group_set) + " \"" + json.getString("label") + "\"");
+                            break;
+                        case "room":
+                            Log.v(TAG, "found query=" + query);
+                            found(getString(R.string.schedule_room_set) + " \"" + json.getString("label") + "\"");
+                            break;
                         default:
                             query = null;
                             found(getString(R.string.schedule_not_found));
@@ -260,6 +293,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
                 }
             }
         } catch (Exception e){
+            Log.w(TAG, "failed to find schedule");
             query = null;
             found(getString(R.string.schedule_not_found));
         }
@@ -271,11 +305,13 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
     }
 
     private boolean setQuery(){
+        Log.v(TAG, "setQuery");
         EditText slw_input = (EditText) findViewById(R.id.slw_input);
         if (slw_input != null) {
             query = null;
             String search = slw_input.getText().toString().trim();
             if (!Objects.equals(search, "")) {
+                Log.v(TAG, "setQuery and search | " + search);
                 scheduleLessons.search(search);
                 slw_input.clearFocus();
                 return true;
@@ -288,6 +324,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
     }
 
     private void loading(String text){
+        Log.v(TAG, "loading | " + text);
         FrameLayout slw_container = (FrameLayout) findViewById(R.id.slw_container);
         if (slw_container != null){
             LinearLayout linearLayout = new LinearLayout(this);
@@ -311,6 +348,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
         }
     }
     private void found(String text){
+        Log.v(TAG, "found | " + text);
         FrameLayout slw_container = (FrameLayout) findViewById(R.id.slw_container);
         if (slw_container != null){
             LinearLayout linearLayout = new LinearLayout(this);
@@ -345,9 +383,11 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
         }
     }
     private void toast(String text){
+        Log.v(TAG, "toast | " + text);
         Toast.makeText(getBaseContext(), text, Toast.LENGTH_SHORT).show();
     }
     private void snackBar(String text){
+        Log.v(TAG, "snackBar | " + text);
         View content = findViewById(android.R.id.content);
         if (content != null) {
             Snackbar snackbar = Snackbar.make(content, text, Snackbar.LENGTH_SHORT);
@@ -356,6 +396,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
         }
     }
     private void close(int result, Intent intent){
+        Log.v(TAG, "close | result=" + result);
         if (intent == null){
             setResult(result);
         } else {
@@ -366,12 +407,15 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
     }
 
     public static void savePref(Context context, int appWidgetId, String type, String text) {
+        Log.v(TAG, "savePref | appWidgetId=" + appWidgetId + " | type=" + type);
         Storage.file.general.put(context, "widget_schedule_lessons#" + appWidgetId + "#" + type, text);
     }
     public static String getPref(Context context, int appWidgetId, String type) {
+        Log.v(TAG, "getPref | appWidgetId=" + appWidgetId + " | type=" + type);
         return Storage.file.general.get(context, "widget_schedule_lessons#" + appWidgetId + "#" + type);
     }
     public static void deletePref(Context context, int appWidgetId, String type) {
+        Log.v(TAG, "deletePref | appWidgetId=" + appWidgetId + " | type=" + type);
         Storage.file.general.delete(context, "widget_schedule_lessons#" + appWidgetId + "#" + type);
     }
 

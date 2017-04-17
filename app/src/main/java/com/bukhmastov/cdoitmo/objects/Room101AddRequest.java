@@ -18,6 +18,7 @@ import com.bukhmastov.cdoitmo.network.interfaces.Room101ClientResponseHandler;
 import com.bukhmastov.cdoitmo.parse.Room101DatePickParse;
 import com.bukhmastov.cdoitmo.parse.Room101TimeEndPickParse;
 import com.bukhmastov.cdoitmo.parse.Room101TimeStartPickParse;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 import com.loopj.android.http.RequestHandle;
@@ -63,12 +64,14 @@ public class Room101AddRequest {
     private String pick_time_end = null;
 
     public Room101AddRequest(Activity context, callback callback){
+        Log.v(TAG, "initialized");
         this.callback = callback;
         this.context = context;
         proceedStage();
     }
 
     public void back(){
+        Log.v(TAG, "back");
         switch (CURRENT_STAGE){
             case STAGE_PICK_DATE_LOAD:
             case STAGE_PICK_TIME_START_LOAD:
@@ -87,6 +90,7 @@ public class Room101AddRequest {
         }
     }
     public void forward(){
+        Log.v(TAG, "forward");
         switch (CURRENT_STAGE){
             case STAGE_PICK_DATE_LOAD:
             case STAGE_PICK_TIME_START_LOAD:
@@ -105,14 +109,16 @@ public class Room101AddRequest {
         proceedStage();
     }
     public void close(boolean done){
-        if(ARequestHandle != null) ARequestHandle.cancel(true);
-        if(done){
+        Log.v(TAG, "close | done=" + (done ? "true" : "false"));
+        if (ARequestHandle != null) ARequestHandle.cancel(true);
+        if (done) {
             callback.onDone();
         } else {
             callback.onClose();
         }
     }
     private void proceedStage(){
+        Log.v(TAG, "proceedStage | CURRENT_STAGE=" + CURRENT_STAGE);
         callback.onProgress(CURRENT_STAGE);
         switch (CURRENT_STAGE){
             case STAGE_PICK_DATE_LOAD: loadDatePick(0); break;
@@ -129,6 +135,7 @@ public class Room101AddRequest {
     }
 
     private void loadDatePick(int stage){
+        Log.v(TAG, "loadDatePick | stage=" + stage);
         if (stage == 0) {
             callback.onDraw(getLoadingLayout(context.getString(R.string.data_loading)));
             data = null;
@@ -214,6 +221,7 @@ public class Room101AddRequest {
         }
     }
     private void loadTimeStartPick(){
+        Log.v(TAG, "loadTimeStartPick");
         callback.onDraw(getLoadingLayout(context.getString(R.string.data_handling)));
         data = null;
         pick_time_start = null;
@@ -227,11 +235,11 @@ public class Room101AddRequest {
         Room101Client.post(context, "newRequest.php", params, new Room101ClientResponseHandler() {
             @Override
             public void onSuccess(int statusCode, String response) {
-                if(statusCode == 200){
+                if (statusCode == 200) {
                     new Room101TimeStartPickParse(new Room101TimeStartPickParse.response() {
                         @Override
                         public void finish(JSONObject json) {
-                            if(json != null){
+                            if (json != null) {
                                 data = json;
                                 CURRENT_STAGE++;
                                 proceedStage();
@@ -257,6 +265,7 @@ public class Room101AddRequest {
         });
     }
     private void loadTimeEndPick(){
+        Log.v(TAG, "loadTimeEndPick");
         callback.onDraw(getLoadingLayout(context.getString(R.string.data_handling)));
         data = null;
         pick_time_end = null;
@@ -270,11 +279,11 @@ public class Room101AddRequest {
         Room101Client.post(context, "newRequest.php", params, new Room101ClientResponseHandler() {
             @Override
             public void onSuccess(int statusCode, String response) {
-                if(statusCode == 200){
+                if (statusCode == 200) {
                     new Room101TimeEndPickParse(new Room101TimeEndPickParse.response() {
                         @Override
                         public void finish(JSONObject json) {
-                            if(json != null){
+                            if (json != null) {
                                 data = json;
                                 CURRENT_STAGE++;
                                 proceedStage();
@@ -300,11 +309,13 @@ public class Room101AddRequest {
         });
     }
     private void loadConfirmation(){
+        Log.v(TAG, "loadConfirmation");
         data = null;
         CURRENT_STAGE++;
         proceedStage();
     }
     private void create(){
+        Log.v(TAG, "create");
         callback.onDraw(getLoadingLayout(context.getString(R.string.add_request)));
         data = null;
         RequestParams params = new RequestParams();
@@ -331,7 +342,7 @@ public class Room101AddRequest {
             public void onProgress(int state) {}
             @Override
             public void onFailure(int state, int statusCode, Header[] headers) {
-                if(statusCode == 302){
+                if (statusCode == 302) {
                     try {
                         data = new JSONObject();
                         data.put("done", true);
@@ -353,12 +364,13 @@ public class Room101AddRequest {
     }
 
     private void datePick(){
+        Log.v(TAG, "datePick | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
         try {
             if (data == null) throw new NullPointerException("data cannot be null");
             if (!Objects.equals(data.getString("type"), "date_pick")) throw new Exception("Wrong data.type. Expected 'date_pick', got '" + data.getString("type") + "'");
             if (!data.has("data")) throw new Exception("Empty data.data");
             final JSONArray date_pick = data.getJSONArray("data");
-            if(date_pick.length() > 0){
+            if (date_pick.length() > 0) {
                 callback.onDraw(getChooserLayout(context.getString(R.string.peek_date), "", date_pick, new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -381,12 +393,13 @@ public class Room101AddRequest {
         }
     }
     private void timeStartPick(){
+        Log.v(TAG, "timeStartPick | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
         try {
             if (data == null) throw new NullPointerException("data cannot be null");
             if (!Objects.equals(data.getString("type"), "time_start_pick")) throw new Exception("Wrong data.type. Expected 'time_start_pick', got '" + data.getString("type") + "'");
             if (!data.has("data")) throw new Exception("Empty data.data");
             final JSONArray time_pick = data.getJSONArray("data");
-            if(time_pick.length() > 0){
+            if (time_pick.length() > 0) {
                 callback.onDraw(getChooserLayout(context.getString(R.string.peek_time_start), "", time_pick, new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -409,12 +422,13 @@ public class Room101AddRequest {
         }
     }
     private void timeEndPick(){
+        Log.v(TAG, "timeEndPick | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
         try {
             if (data == null) throw new NullPointerException("data cannot be null");
             if (!Objects.equals(data.getString("type"), "time_end_pick")) throw new Exception("Wrong data.type. Expected 'time_end_pick', got '" + data.getString("type") + "'");
             if (!data.has("data")) throw new Exception("Empty data.data");
             final JSONArray time_pick = data.getJSONArray("data");
-            if(time_pick.length() > 0){
+            if (time_pick.length() > 0) {
                 callback.onDraw(getChooserLayout(context.getString(R.string.peek_time_end), context.getString(R.string.peek_time_end_desc), time_pick, new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -437,10 +451,11 @@ public class Room101AddRequest {
         }
     }
     private void confirmation(){
+        Log.v(TAG, "confirmation | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
         try {
-            if(pick_date == null) throw new NullPointerException("pick_date cannot be null");
-            if(pick_time_start == null) throw new NullPointerException("pick_time_start cannot be null");
-            if(pick_time_end == null) throw new NullPointerException("pick_time_end cannot be null");
+            if (pick_date == null) throw new NullPointerException("pick_date cannot be null");
+            if (pick_time_start == null) throw new NullPointerException("pick_time_start cannot be null");
+            if (pick_time_end == null) throw new NullPointerException("pick_time_end cannot be null");
             callback.onDraw(getChooserLayout(context.getString(R.string.attention) + "!", context.getString(R.string.room101_warning), null, null));
         } catch (Exception e){
             Static.error(e);
@@ -448,6 +463,7 @@ public class Room101AddRequest {
         }
     }
     private void done(){
+        Log.v(TAG, "done | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
         try {
             if (data == null) throw new NullPointerException("data cannot be null");
             if (!data.has("done")) throw new Exception("Empty data.done");
@@ -459,6 +475,7 @@ public class Room101AddRequest {
     }
 
     private void failed(){
+        Log.v(TAG, "failed");
         snackBar(context.getString(R.string.error_occurred));
         close(false);
     }

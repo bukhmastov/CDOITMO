@@ -21,6 +21,7 @@ import android.widget.Toast;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapters.SuggestionsListView;
 import com.bukhmastov.cdoitmo.objects.entities.Suggestion;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 
 import java.util.ArrayList;
@@ -41,15 +42,18 @@ public abstract class SearchActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         setTheme(Static.darkTheme ? R.style.AppTheme_Search_Dark : R.style.AppTheme_Search);
         super.onCreate(savedInstanceState);
+        Log.i(TAG, "Activity created");
         setContentView(R.layout.activity_search);
     }
 
     @Override
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
+        Log.v(TAG, "onPostCreate");
         findViewById(R.id.search_close).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Log.v(TAG, "search_close clicked");
                 finish();
             }
         });
@@ -60,12 +64,20 @@ public abstract class SearchActivity extends AppCompatActivity {
         setMode(EXTRA_ACTION_MODE.Speech_recognition);
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.i(TAG, "Activity destroyed");
+    }
+
     private void done(String query, String label){
+        Log.v(TAG, "done | query=" + query + " | label=" + label);
         onDone(query, label);
         finish();
     }
 
     private void setMode(EXTRA_ACTION_MODE mode){
+        Log.v(TAG, "setMode | mode=" + mode.toString());
         ViewGroup search_extra_action = (ViewGroup) findViewById(R.id.search_extra_action);
         int padding = (int) (Static.destiny * 14);
         if (search_extra_action != null) {
@@ -78,6 +90,7 @@ public abstract class SearchActivity extends AppCompatActivity {
                 switch (mode) {
                     case Speech_recognition: {
                         if (!checkVoiceRecognition()) {
+                            Log.v(TAG, "voice recognition not supported");
                             setMode(EXTRA_ACTION_MODE.None);
                             return;
                         }
@@ -85,6 +98,7 @@ public abstract class SearchActivity extends AppCompatActivity {
                         search_extra_action.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
+                                Log.v(TAG, "speech_recognition clicked");
                                 startRecognition();
                             }
                         });
@@ -95,6 +109,7 @@ public abstract class SearchActivity extends AppCompatActivity {
                         search_extra_action.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
+                                Log.v(TAG, "clear clicked");
                                 search_edit_text.setText("");
                             }
                         });
@@ -106,6 +121,7 @@ public abstract class SearchActivity extends AppCompatActivity {
         }
     }
     private void setSuggestions(final ArrayList<Suggestion> suggestions){
+        Log.v(TAG, "setSuggestions");
         try {
             ListView search_suggestions = (ListView) findViewById(R.id.search_suggestions);
             if (search_suggestions == null) throw new Exception("search_suggestions listview is null");
@@ -123,6 +139,7 @@ public abstract class SearchActivity extends AppCompatActivity {
     }
 
     public boolean checkVoiceRecognition() {
+        Log.v(TAG, "checkVoiceRecognition");
         try {
             return getPackageManager().queryIntentActivities(new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH), 0).size() != 0;
         } catch (Exception e) {
@@ -130,6 +147,7 @@ public abstract class SearchActivity extends AppCompatActivity {
         }
     }
     private void startRecognition(){
+        Log.v(TAG, "startRecognition");
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
@@ -137,6 +155,7 @@ public abstract class SearchActivity extends AppCompatActivity {
         try {
             startActivityForResult(intent, REQ_CODE_SPEECH_INPUT);
         } catch (ActivityNotFoundException a) {
+            Log.v(TAG, "voice recognition not supported");
             Toast.makeText(getApplicationContext(), R.string.speech_recognition_is_not_supported, Toast.LENGTH_SHORT).show();
         }
     }
@@ -145,9 +164,11 @@ public abstract class SearchActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
             case REQ_CODE_SPEECH_INPUT: {
+                Log.v(TAG, "doneRecognition");
                 if (resultCode == RESULT_OK && data != null) {
                     ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                     if (result.size() > 0) {
+                        Log.v(TAG, "resultRecognition | " + result.get(0));
                         search_edit_text.setText(result.get(0));
                     }
                 }

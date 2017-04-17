@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
-import android.util.Log;
 import android.widget.RemoteViews;
 
 import com.bukhmastov.cdoitmo.R;
@@ -16,6 +15,7 @@ import com.bukhmastov.cdoitmo.activities.SplashActivity;
 import com.bukhmastov.cdoitmo.converters.ScheduleLessonsAdditionalConverter;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 import com.loopj.android.http.RequestHandle;
@@ -28,12 +28,26 @@ import java.util.Objects;
 
 public class ScheduleLessonsWidget extends AppWidgetProvider {
 
-    private static final String TAG = "ScheduleLessonsWidget";
+    private static final String TAG = "SLWidget";
     public static final String ACTION_WIDGET_UPDATE = "com.bukhmastov.cdoitmo.ACTION_WIDGET_UPDATE";
     public static final String ACTION_WIDGET_OPEN = "com.bukhmastov.cdoitmo.ACTION_WIDGET_OPEN";
 
+    @Override
+    public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+        for (int appWidgetId : appWidgetIds) {
+            updateAppWidget(context, appWidgetManager, appWidgetId, false);
+        }
+    }
+
+    @Override
+    public void onDeleted(Context context, int[] appWidgetIds) {
+        for (int appWidgetId : appWidgetIds) {
+            deleteAppWidget(context, appWidgetId);
+        }
+    }
+
     public static void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId, boolean force) {
-        Log.i(TAG, "Widget update " + appWidgetId);
+        Log.i(TAG, "Widget update | appWidgetId=" + appWidgetId);
         try {
             JSONObject settings, cache;
             try {
@@ -53,38 +67,28 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
             if (settings == null) {
                 needPreparations(context, appWidgetManager, appWidgetId);
             } else if (cache == null || force) {
-                update(context, appWidgetManager, appWidgetId, settings);
+                refresh(context, appWidgetManager, appWidgetId, settings);
             } else {
                 long timestamp = cache.getLong("timestamp");
                 long shift = settings.getInt("updateTime") * 3600000L;
                 if (shift != 0 && timestamp + shift < Calendar.getInstance().getTimeInMillis()) {
-                    update(context, appWidgetManager, appWidgetId, settings);
+                    refresh(context, appWidgetManager, appWidgetId, settings);
                 } else {
                     display(context, appWidgetManager, appWidgetId);
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Static.error(e);
         }
     }
-
-    @Override
-    public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
-        for (int appWidgetId : appWidgetIds) {
-            updateAppWidget(context, appWidgetManager, appWidgetId, false);
-        }
+    public static void deleteAppWidget(Context context, int appWidgetId){
+        Log.i(TAG, "Widget delete | appWidgetId=" + appWidgetId);
+        ScheduleLessonsWidgetConfigureActivity.deletePref(context, appWidgetId, "settings");
+        ScheduleLessonsWidgetConfigureActivity.deletePref(context, appWidgetId, "cache");
     }
 
-    @Override
-    public void onDeleted(Context context, int[] appWidgetIds) {
-        for (int appWidgetId : appWidgetIds) {
-            ScheduleLessonsWidgetConfigureActivity.deletePref(context, appWidgetId, "settings");
-            ScheduleLessonsWidgetConfigureActivity.deletePref(context, appWidgetId, "cache");
-        }
-    }
-
-    private static void update(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final JSONObject settings){
-        Log.i(TAG, "Widget refresh " + appWidgetId);
+    private static void refresh(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final JSONObject settings){
+        Log.i(TAG, "Widget refresh | appWidgetId=" + appWidgetId);
         ScheduleLessons scheduleLessons = new ScheduleLessons(context);
         scheduleLessons.setHandler(new ScheduleLessons.response(){
             @Override
@@ -110,7 +114,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                     ScheduleLessonsWidgetConfigureActivity.savePref(context, appWidgetId, "cache", jsonObject.toString());
                     display(context, appWidgetManager, appWidgetId);
                 } catch (Exception e){
-                    e.printStackTrace();
+                    Static.error(e);
                     failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_show_schedule));
                 }
             }
@@ -120,12 +124,12 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         try {
             scheduleLessons.search(settings.getString("query"), 0, false, false);
         } catch (JSONException e) {
-            e.printStackTrace();
+            Static.error(e);
             failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_load_schedule));
         }
     }
-
     private static void progress(Context context, AppWidgetManager appWidgetManager, int appWidgetId, JSONObject settings){
+        Log.v(TAG, "Widget progress | appWidgetId=" + appWidgetId);
         int textColor, backGroundColor;
         boolean darkTheme;
         try {
@@ -153,6 +157,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }
     private static void display(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId){
+        Log.v(TAG, "Widget display | appWidgetId=" + appWidgetId);
         JSONObject settings, cache;
         try {
             String tmp = ScheduleLessonsWidgetConfigureActivity.getPref(context, appWidgetId, "settings");
@@ -226,7 +231,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 }
             }).execute(cache.getJSONObject("content"));
         } catch (Exception e) {
-            e.printStackTrace();
+            Static.error(e);
             if (Objects.equals(e.getMessage(), "settings cannot be null")) {
                 needPreparations(context, appWidgetManager, appWidgetId);
             } else {
@@ -235,6 +240,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         }
     }
     private static void failed(Context context, AppWidgetManager appWidgetManager, int appWidgetId, JSONObject settings, String text){
+        Log.v(TAG, "Widget failed | appWidgetId=" + appWidgetId + " | text=" + text);
         int textColor, backGroundColor;
         boolean darkTheme;
         try {
@@ -266,6 +272,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }
     private static void needPreparations(Context context, AppWidgetManager appWidgetManager, int appWidgetId){
+        Log.v(TAG, "Widget needPreparations | appWidgetId=" + appWidgetId);
         int textColor, backGroundColor;
         boolean darkTheme = Storage.pref.get(context, "pref_dark_theme", false);
         if (darkTheme) {
@@ -326,6 +333,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     }
 
     public void onReceive(Context context, Intent intent) {
+        Log.v(TAG, "Widget onReceive | action=" + intent.getAction());
         int appWidgetId;
         switch(intent.getAction()){
             case ACTION_WIDGET_UPDATE:
@@ -343,7 +351,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                     if (settings == null) throw new NullPointerException("settings is null");
                     oIntent.putExtra("action_extra", new JSONObject(settings).getString("query"));
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    Static.error(e);
                 }
                 context.startActivity(oIntent);
                 break;

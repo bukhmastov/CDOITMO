@@ -98,6 +98,9 @@
             android:name=".activities.AboutActivity"
             android:label="@string/about" />
         <activity
+            android:name=".activities.LogActivity"
+            android:label="@string/log" />
+        <activity
             android:name=".activities.PikaActivity"
             android:theme="@style/AppTheme.Transparent"
             android:parentActivityName=".activities.AboutActivity" >
@@ -158,6 +161,16 @@
             android:theme="@style/AppTheme.Popup"
             android:launchMode="singleTop"
             android:noHistory="true" />
+
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="com.bukhmastov.cdoitmo.fileprovider"
+            android:grantUriPermissions="true"
+            android:exported="false">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/filepaths" />
+        </provider>
 
     </application>
 

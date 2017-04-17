@@ -7,8 +7,8 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Build;
 import android.support.design.widget.Snackbar;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.Toast;
@@ -20,6 +20,7 @@ import com.bukhmastov.cdoitmo.converters.ProtocolConverter;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoRestClientResponseHandler;
 import com.loopj.android.http.RequestHandle;
+import com.loopj.android.http.RequestParams;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -36,7 +37,7 @@ import java.util.Objects;
 
 public class Static {
 
-    public static ErrorTracker errorTracker;
+    private static final String TAG = "Static";
     public static String versionName;
     public static int versionCode;
     public static int textColorPrimary, textColorSecondary, colorSeparator, colorBackgroundSnackBar, colorAccent, colorBackgroundRefresh;
@@ -49,12 +50,11 @@ public class Static {
     public static ProtocolTracker protocolTracker = null;
     public static boolean darkTheme = false;
     public static int intentFlagRestart = 268468224;
-    private static final String USER_AGENT = "CDOITMO/{versionName}/{versionCode} Android/java (market://details?id=com.bukhmastov.cdoitmo)";
+    private static final String USER_AGENT_TEMPLATE = "CDOITMO/{versionName}/{versionCode} Java/Android/{sdkInt}";
+    private static String USER_AGENT = null;
 
     public static void init(Context context) {
-        if (Static.errorTracker == null) {
-            Static.errorTracker = new ErrorTracker();
-        }
+        Log.i(TAG, "init");
         try {
             PackageInfo pInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
             Static.versionName = pInfo.versionName;
@@ -72,13 +72,14 @@ public class Static {
         }
     }
     public static void error(Throwable throwable){
-        if (Static.errorTracker == null) {
-            Static.errorTracker = new ErrorTracker();
-        }
-        Static.errorTracker.add(throwable);
+        Log.exception(throwable);
     }
     public static boolean isOnline(Context context) {
-        if(context != null) {
+        Log.v(TAG, "isOnline");
+        if (Static.OFFLINE_MODE) {
+            return false;
+        }
+        if (context != null) {
             NetworkInfo networkInfo = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
             return (networkInfo != null && networkInfo.isConnected());
         } else {
@@ -86,11 +87,13 @@ public class Static {
         }
     }
     public static void reLaunch(Context context){
+        Log.i(TAG, "reLaunch");
         Intent intent = new Intent(context, SplashActivity.class);
         intent.addFlags(Static.intentFlagRestart);
         context.startActivity(intent);
     }
     public static void hardReset(Context context){
+        Log.i(TAG, "hardReset");
         Static.logout(context);
         Storage.file.all.reset(context);
         Static.firstLaunch = true;
@@ -101,20 +104,22 @@ public class Static {
     public static int resolveColor(Context context, int reference) throws Exception {
         TypedValue typedValue = new TypedValue();
         context.getTheme().resolveAttribute(reference, typedValue, true);
-        //return typedValue.data;
         return context.obtainStyledAttributes(typedValue.data, new int[]{reference}).getColor(0, -1);
     }
     public static void updateWeek(Context context){
+        Log.v(TAG, "updateWeek");
         try {
             String weekStr = Storage.file.general.get(context, "user#week");
-            if(!Objects.equals(weekStr, "")){
+            if (!Objects.equals(weekStr, "")) {
                 JSONObject jsonObject = new JSONObject(weekStr);
                 int week = jsonObject.getInt("week");
-                if (week >= 0){
+                if (week >= 0) {
                     Calendar past = Calendar.getInstance();
                     past.setTimeInMillis(jsonObject.getLong("timestamp"));
                     Static.week = week + (Calendar.getInstance().get(Calendar.WEEK_OF_YEAR) - past.get(Calendar.WEEK_OF_YEAR));
                 }
+            } else {
+                Log.v(TAG, "updateWeek | general user#week is empty");
             }
         } catch (JSONException e) {
             Static.error(e);
@@ -122,21 +127,25 @@ public class Static {
         }
     }
     public static void logout(Context context){
+        Log.i(TAG, "logout");
         new ProtocolTracker(context).stop();
         Storage.file.all.clear(context);
         Static.logoutCurrent(context);
         Static.authorized = false;
     }
     public static void logoutCurrent(Context context){
+        Log.i(TAG, "logoutCurrent");
         new ProtocolTracker(context).stop();
         Storage.file.general.delete(context, "users#current_login");
     }
     public static void lockOrientation(Activity activity, boolean lock){
+        Log.v(TAG, "lockOrientation | lock=" + (lock ? "true" : "false"));
         if (activity != null) {
             activity.setRequestedOrientation(lock ? ActivityInfo.SCREEN_ORIENTATION_LOCKED : ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
         }
     }
     public static void showUpdateTime(Activity activity, long time, int layoutId, boolean show_now){
+        Log.v(TAG, "showUpdateTime");
         if (activity == null) return;
         String message = getUpdateTime(activity, time);
         int shift = (int) ((Calendar.getInstance().getTimeInMillis() - time) / 1000L);
@@ -145,6 +154,7 @@ public class Static {
         }
     }
     public static String getUpdateTime(Activity activity, long time) {
+        Log.v(TAG, "getUpdateTime");
         int shift = (int) ((Calendar.getInstance().getTimeInMillis() - time) / 1000L);
         String message;
         if (shift < 21600) {
@@ -163,6 +173,7 @@ public class Static {
         return message;
     }
     public static String getGenitiveMonth(Context context, String month) {
+        Log.v(TAG, "getGenitiveMonth");
         switch (month) {
             case "01": month = context.getString(R.string.january_genitive); break;
             case "02": month = context.getString(R.string.february_genitive); break;
@@ -210,19 +221,21 @@ public class Static {
         return hash;
     }
     public static void delay(final Activity activity, final int sleep, final Runnable runnable){
+        Log.v(TAG, "delay | sleep=" + sleep);
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
                     Thread.sleep(sleep);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    Log.w(TAG, "delay | interrupted");
                 }
                 activity.runOnUiThread(runnable);
             }
         }).start();
     }
     public static void toast(Context context, String text){
+        Log.v(TAG, "toast | text=" + text);
         Toast.makeText(context, text, Toast.LENGTH_SHORT).show();
     }
     public static void snackBar(Activity activity, String text){
@@ -232,6 +245,7 @@ public class Static {
         snackBar(layout, text, null, null);
     }
     public static void snackBar(View layout, String text, String action, View.OnClickListener onClickListener){
+        Log.v(TAG, "snackBar | text=" + text);
         if (layout != null) {
             Snackbar snackbar = Snackbar.make(layout, text, Snackbar.LENGTH_LONG);
             snackbar.getView().setBackgroundColor(Static.colorBackgroundSnackBar);
@@ -240,7 +254,11 @@ public class Static {
         }
     }
     public static void protocolChangesTrackSetup(final Context context, int attempt){
-        if (!Storage.pref.get(context, "pref_protocol_changes_track", true)) return;
+        Log.v(TAG, "protocolChangesTrackSetup | attempt=" + attempt);
+        if (!Storage.pref.get(context, "pref_protocol_changes_track", true)) {
+            Log.v(TAG, "protocolChangesTrackSetup | pref_protocol_changes_track=false");
+            return;
+        }
         if (attempt++ < 3) {
             final int finalAttempt = attempt;
             DeIfmoRestClient.get(context, "eregisterlog?days=126", null, new DeIfmoRestClientResponseHandler() {
@@ -253,7 +271,7 @@ public class Static {
                             new ProtocolConverter(context, new ProtocolConverter.response() {
                                 @Override
                                 public void finish(JSONObject json) {
-                                    Log.i("ProtocolChangesTrack", "Uploaded");
+                                    Log.i(TAG, "protocolChangesTrackSetup | uploaded");
                                 }
                             }).execute(responseArr, array);
                         } catch (Exception e) {
@@ -273,12 +291,25 @@ public class Static {
         }
     }
     public static String getUserAgent(Context context){
+        Log.v(TAG, "getUserAgent");
         try {
-            PackageInfo pInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
-            return Static.USER_AGENT.replace("{versionName}", pInfo.versionName).replace("{versionCode}", String.valueOf(pInfo.versionCode));
+            if (Static.USER_AGENT == null) {
+                PackageInfo pInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
+                Static.USER_AGENT = Static.USER_AGENT_TEMPLATE
+                        .replace("{versionName}", pInfo.versionName)
+                        .replace("{versionCode}", String.valueOf(pInfo.versionCode))
+                        .replace("{sdkInt}", String.valueOf(Build.VERSION.SDK_INT));
+            }
+            return Static.USER_AGENT;
         } catch (Exception e) {
-            return Static.USER_AGENT.replace("{versionName}", "-").replace("{versionCode}", "-");
+            return Static.USER_AGENT_TEMPLATE
+                    .replace("{versionName}", "-")
+                    .replace("{versionCode}", "-")
+                    .replace("{sdkInt}", "-");
         }
+    }
+    public static String getSafetyRequestParams(RequestParams params){
+        return (params == null ? "null" : (params.has("password") ? "<HIDDEN due to presence of the password>" : params.toString()));
     }
     public static class Translit {
         public static String cyr2lat(char ch) {

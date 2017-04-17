@@ -13,6 +13,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapters.PointsListView;
 import com.bukhmastov.cdoitmo.fragments.ERegisterFragment;
 import com.bukhmastov.cdoitmo.objects.ERegister;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 
 import org.json.JSONArray;
@@ -23,12 +24,14 @@ import java.util.Objects;
 
 public class SubjectActivity extends AppCompatActivity {
 
+    private static final String TAG = "SubjectActivity";
     private JSONObject subject = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         if (Static.darkTheme) setTheme(R.style.AppTheme_Dark);
         super.onCreate(savedInstanceState);
+        Log.i(TAG, "Activity created");
         setContentView(R.layout.activity_subject);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar_subject));
         final ActionBar actionBar = getSupportActionBar();
@@ -41,23 +44,25 @@ public class SubjectActivity extends AppCompatActivity {
         final String groupSub = getIntent().getStringExtra("group");
         final int termSub = Integer.parseInt(getIntent().getStringExtra("term"));
         final String nameSub = getIntent().getStringExtra("name");
+        Log.v(TAG, "groupSub=" + groupSub + " | termSub=" + termSub + " | nameSub=" + nameSub);
         // проверяем целостность данных
         try {
             if (ERegisterFragment.eRegister == null) throw new Exception("ERegisterFragment.eRegister is null");
             final SubjectActivity self = this;
             ERegisterFragment.eRegister.get(new ERegister.Callback() {
                 void onDone(JSONObject data){
+                    Log.v(TAG, "ERegisterFragment.eRegister.onDone");
                     try {
                         boolean groupFound = false;
                         JSONArray groups = data.getJSONArray("groups");
                         for (int i = 0; i < groups.length(); i++) {
                             JSONObject group = groups.getJSONObject(i);
-                            if(Objects.equals(group.getString("name"), groupSub)){
+                            if (Objects.equals(group.getString("name"), groupSub)) {
                                 boolean termFound = false;
                                 JSONArray terms = group.getJSONArray("terms");
                                 for (int j = 0; j < terms.length(); j++) {
                                     JSONObject term = terms.getJSONObject(j);
-                                    if(term.getInt("number") == termSub){
+                                    if (term.getInt("number") == termSub) {
                                         boolean subjectFound = false;
                                         JSONArray subjects = term.getJSONArray("subjects");
                                         for (int k = 0; k < subjects.length(); k++) {
@@ -124,6 +129,12 @@ public class SubjectActivity extends AppCompatActivity {
             Static.error(e);
             finish();
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.i(TAG, "Activity destroyed");
     }
 
     @Override

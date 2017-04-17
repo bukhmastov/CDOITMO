@@ -23,6 +23,7 @@ import com.bukhmastov.cdoitmo.network.Room101Client;
 import com.bukhmastov.cdoitmo.network.interfaces.Room101ClientResponseHandler;
 import com.bukhmastov.cdoitmo.objects.Room101AddRequest;
 import com.bukhmastov.cdoitmo.parse.Room101ViewRequestParse;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 import com.loopj.android.http.RequestHandle;
@@ -46,8 +47,15 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.v(TAG, "Fragment created");
         action_extra = getActivity().getIntent().getStringExtra("action_extra");
         if (action_extra != null) getActivity().getIntent().removeExtra("action_extra");
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.v(TAG, "Fragment destroyed");
     }
 
     @Override
@@ -58,6 +66,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
     @Override
     public void onResume() {
         super.onResume();
+        Log.v(TAG, "resumed");
         if (!loaded) {
             loaded = true;
             load();
@@ -67,6 +76,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
     @Override
     public void onPause() {
         super.onPause();
+        Log.v(TAG, "paused");
         if (fragmentRequestHandle != null) {
             loaded = false;
             fragmentRequestHandle.cancel(true);
@@ -75,12 +85,15 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
 
     @Override
     public void onRefresh() {
+        Log.v(TAG, "refreshed");
         load(true);
     }
 
     @Override
     public void onDenyRequest(final int reid, final int status) {
-        if(Static.OFFLINE_MODE) {
+        Log.v(TAG, "onDenyRequest | reid=" + reid + " | status=" + status);
+        if (Static.OFFLINE_MODE) {
+            Log.v(TAG, "onDenyRequest rejected: offline mode");
             snackBar(getString(R.string.device_offline_action_refused));
         } else {
             (new AlertDialog.Builder(getContext())
@@ -105,6 +118,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
         }
     }
     private void denyRequest(final int reid, final int status){
+        Log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status);
         RequestParams params = new RequestParams();
         switch(status){
             case 1: params.put("getFunc", "snatRequest"); break;
@@ -116,6 +130,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
         Room101Client.post(getContext(), "delRequest.php", params, new Room101ClientResponseHandler() {
             @Override
             public void onSuccess(int statusCode, String response) {
+                Log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status + " | success(not really) | statusCode=" + statusCode);
                 draw(R.layout.state_try_again);
                 TextView try_again_message = (TextView) getActivity().findViewById(R.id.try_again_message);
                 if (try_again_message != null) try_again_message.setText(R.string.wrong_response_from_server);
@@ -131,6 +146,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
             }
             @Override
             public void onProgress(int state) {
+                Log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status + " | progress " + state);
                 draw(R.layout.state_loading);
                 TextView loading_message = (TextView) getActivity().findViewById(R.id.loading_message);
                 if (loading_message != null) {
@@ -141,7 +157,8 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
             }
             @Override
             public void onFailure(int state, int statusCode, Header[] headers) {
-                if(statusCode == 302){
+                Log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status + " | failure(rather success) | statusCode=" + statusCode);
+                if (statusCode == 302) {
                     load(true);
                 } else {
                     draw(R.layout.state_try_again);
@@ -166,7 +183,9 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
     }
 
     private void addRequest(){
-        if(Static.OFFLINE_MODE) {
+        Log.v(TAG, "addRequest");
+        if (Static.OFFLINE_MODE) {
+            Log.v(TAG, "addRequest rejected: offline mode");
             snackBar(getString(R.string.device_offline_action_refused));
         } else {
             draw(R.layout.layout_room101_add_request);
@@ -251,6 +270,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                 room101_close_add_request.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        Log.v(TAG, "room101_close_add_request clicked");
                         room101AddRequest.close(false);
                     }
                 });
@@ -259,6 +279,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                 room101_back.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        Log.v(TAG, "room101_back clicked");
                         room101AddRequest.back();
                     }
                 });
@@ -267,6 +288,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                 room101_forward.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        Log.v(TAG, "room101_forward clicked");
                         room101AddRequest.forward();
                     }
                 });
@@ -278,6 +300,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
         load(Storage.pref.get(getContext(), "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(getContext(), "pref_tab_refresh", "0")) : 0);
     }
     private void load(int refresh_rate){
+        Log.v(TAG, "load | refresh_rate=" + refresh_rate);
         String cache = Storage.file.cache.get(getContext(), "room101#core");
         if (Objects.equals(cache, "") || refresh_rate == 0) {
             load(true);
@@ -297,6 +320,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
         }
     }
     private void load(boolean force){
+        Log.v(TAG, "load | force=" + (force ? "true" : "false"));
         if (!force || Static.OFFLINE_MODE) {
             if (!Objects.equals(Storage.file.cache.get(getContext(), "room101#core"), "")) {
                 display();
@@ -307,6 +331,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
             execute(getContext(), "delRequest", new Room101ClientResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, String response) {
+                    Log.v(TAG, "load | success | statusCode=" + statusCode);
                     if (statusCode == 200) {
                         new Room101ViewRequestParse(new Room101ViewRequestParse.response() {
                             @Override
@@ -330,6 +355,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                 }
                 @Override
                 public void onProgress(int state) {
+                    Log.v(TAG, "load | progress " + state);
                     draw(R.layout.state_loading);
                     Activity activity = getActivity();
                     if (activity != null) {
@@ -345,6 +371,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                 }
                 @Override
                 public void onFailure(int state, int statusCode, Header[] headers) {
+                    Log.v(TAG, "load | failure " + state);
                     Activity activity = getActivity();
                     switch (state) {
                         case Room101Client.FAILED_OFFLINE:
@@ -423,6 +450,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
         }
     }
     private void display(){
+        Log.v(TAG, "display");
         try {
             JSONObject viewRequest = null;
             String cache = Storage.file.cache.get(getContext(), "room101#core");
@@ -482,6 +510,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                 fab.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
+                        Log.v(TAG, "fab button clicked");
                         addRequest();
                     }
                 });
@@ -493,6 +522,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
         }
     }
     private void loadFailed(){
+        Log.v(TAG, "loadFailed");
         try {
             draw(R.layout.state_try_again);
             View try_again_reload = getActivity().findViewById(R.id.try_again_reload);
@@ -519,7 +549,8 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
             Static.error(e);
         }
     }
-    public static void execute(final Context context, String scope, final Room101ClientResponseHandler responseHandler){
+    public static void execute(final Context context, final String scope, final Room101ClientResponseHandler responseHandler){
+        Log.v(TAG, "execute | scope=" + scope);
         RequestParams params = new RequestParams();
         params.put("getFunc", "isLoginPassword");
         params.put("view", scope);
@@ -528,6 +559,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
         Room101Client.post(context, "index.php", params, new Room101ClientResponseHandler() {
             @Override
             public void onSuccess(int statusCode, String response) {
+                Log.v(TAG, "execute | scope=" + scope + " | success(not really) | statusCode=" + statusCode);
                 if (response.contains("Доступ запрещен") || (response.contains("Неверный") && response.contains("логин/пароль"))) {
                     responseHandler.onFailure(Room101Client.FAILED_AUTH, Room101Client.STATUS_CODE_EMPTY, null);
                 } else {
@@ -536,10 +568,12 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
             }
             @Override
             public void onProgress(int state) {
+                Log.v(TAG, "execute | scope=" + scope + " | progress " + state);
                 responseHandler.onProgress(state);
             }
             @Override
             public void onFailure(int state, int statusCode, Header[] headers) {
+                Log.v(TAG, "execute | scope=" + scope + " | failure(rather success) | statusCode=" + statusCode);
                 if (statusCode == 302) {
                     boolean found = false;
                     for (Header header : headers) {

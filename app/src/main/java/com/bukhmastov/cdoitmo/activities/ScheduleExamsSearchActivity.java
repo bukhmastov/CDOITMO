@@ -3,6 +3,7 @@ package com.bukhmastov.cdoitmo.activities;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.fragments.ScheduleExamsFragment;
 import com.bukhmastov.cdoitmo.objects.entities.Suggestion;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 
@@ -13,17 +14,19 @@ import java.util.ArrayList;
 
 public class ScheduleExamsSearchActivity extends SearchActivity {
 
+    private static final String TAG = "SESearchActivity";
     private static final int numberOfSuggestions = 3;
     private static final int maxCountOfSuggestionsToStore = 100;
 
     @Override
     String getHint() {
+        Log.v(TAG, "getHint");
         return getString(R.string.schedule_exams_search_view_hint);
     }
 
     @Override
     ArrayList<Suggestion> getSuggestions(String query) {
-        String queryTranslit = Static.Translit.cyr2lat(query);
+        Log.v(TAG, "getSuggestions | query=" + query);
         try {
             ArrayList<Suggestion> suggestions = new ArrayList<>();
             String recentString = Storage.file.perm.get(this, "schedule_exams#recent");
@@ -65,6 +68,7 @@ public class ScheduleExamsSearchActivity extends SearchActivity {
 
     @Override
     void onDone(String query, String label) {
+        Log.v(TAG, "onDone | query=" + query + " | label=" + label);
         try {
             String recentString = Storage.file.perm.get(this, "schedule_exams#recent");
             JSONArray recent;
@@ -95,6 +99,8 @@ public class ScheduleExamsSearchActivity extends SearchActivity {
         }
         if (ScheduleExamsFragment.scheduleExams != null) {
             ScheduleExamsFragment.scheduleExams.search(query);
+        } else {
+            Log.w(TAG, "ScheduleExamsFragment.scheduleExams is null");
         }
     }
 

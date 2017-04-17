@@ -26,6 +26,7 @@ import com.bukhmastov.cdoitmo.adapters.TeacherPickerListView;
 import com.bukhmastov.cdoitmo.converters.ScheduleLessonsAdditionalConverter;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 import com.loopj.android.http.RequestHandle;
@@ -39,7 +40,7 @@ import java.util.Objects;
 
 public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons.response, ViewPager.OnPageChangeListener {
 
-    private static final String TAG = "ScheduleLessonsFragment";
+    private static final String TAG = "SLFragment";
     public static ScheduleLessons scheduleLessons;
     private boolean loaded = false;
     public static RequestHandle fragmentRequestHandle = null;
@@ -53,6 +54,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.v(TAG, "Fragment created");
         scheduleLessons = new ScheduleLessons(getContext());
         scheduleLessons.setHandler(this);
         try {
@@ -70,14 +72,16 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
     @Override
     public void onResume() {
         super.onResume();
+        Log.v(TAG, "resumed");
         try {
             if (MainActivity.menu != null && !Static.OFFLINE_MODE) {
-                MenuItem menuItem = MainActivity.menu.findItem(R.id.action_schedule_lessons_search);
-                if (menuItem != null && !menuItem.isVisible()) {
-                    menuItem.setVisible(true);
-                    menuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                MenuItem action_schedule_lessons_search = MainActivity.menu.findItem(R.id.action_schedule_lessons_search);
+                if (action_schedule_lessons_search != null && !action_schedule_lessons_search.isVisible()) {
+                    action_schedule_lessons_search.setVisible(true);
+                    action_schedule_lessons_search.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
                         @Override
                         public boolean onMenuItemClick(MenuItem item) {
+                            Log.v(TAG, "action_schedule_lessons_search clicked");
                             startActivity(new Intent(getContext(), ScheduleLessonsSearchActivity.class));
                             return false;
                         }
@@ -97,6 +101,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
             } else {
                 scope = scheduleLessons.getDefault();
             }
+            Log.v(TAG, "search(" + scope + ")");
             search(scope);
         }
         if (reScheduleRequired) {
@@ -108,6 +113,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
     @Override
     public void onPause() {
         super.onPause();
+        Log.v(TAG, "paused");
         ScheduleLessonsFragment.scroll.clear();
         ScheduleLessonsFragment.tabSelected = -1;
         if (fragmentRequestHandle != null) {
@@ -119,13 +125,15 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
     @Override
     public void onDestroy() {
         super.onDestroy();
+        Log.v(TAG, "Fragment destroyed");
         try {
             getActivity().findViewById(R.id.schedule_tabs).setVisibility(View.GONE);
             if (MainActivity.menu != null) {
-                MenuItem menuItem = MainActivity.menu.findItem(R.id.action_schedule_lessons_search);
-                if (menuItem != null && menuItem.isVisible()) {
-                    menuItem.setVisible(false);
-                    menuItem.setOnMenuItemClickListener(null);
+                MenuItem action_schedule_lessons_search = MainActivity.menu.findItem(R.id.action_schedule_lessons_search);
+                if (action_schedule_lessons_search != null && action_schedule_lessons_search.isVisible()) {
+                    Log.v(TAG, "Hiding action_schedule_lessons_search");
+                    action_schedule_lessons_search.setVisible(false);
+                    action_schedule_lessons_search.setOnMenuItemClickListener(null);
                 }
             }
         } catch (Exception e){
@@ -134,12 +142,14 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
     }
 
     public static void searchAndClear(String query){
+        Log.v(TAG, "searchAndClear | query=" + query);
         ScheduleLessonsFragment.scroll.clear();
         ScheduleLessonsFragment.tabSelected = -1;
         search(query);
     }
 
     public static void search(String query){
+        Log.v(TAG, "search | query=" + query);
         if (ScheduleLessonsFragment.scheduleLessons != null) {
             ScheduleLessonsFragment.query = query;
             ScheduleLessonsFragment.scheduleLessons.search(query);
@@ -148,6 +158,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
 
     @Override
     public void onProgress(int state){
+        Log.v(TAG, "progress " + state);
         try {
             getActivity().findViewById(R.id.schedule_tabs).setVisibility(View.GONE);
             draw(R.layout.state_loading);
@@ -169,6 +180,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
 
     @Override
     public void onFailure(int state){
+        Log.v(TAG, "failure " + state);
         try {
             switch (state) {
                 case IfmoRestClient.FAILED_OFFLINE:
@@ -205,6 +217,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
 
     @Override
     public void onSuccess(JSONObject json){
+        Log.v(TAG, "success | json=" + (json == null ? "null" : "notnull"));
         try {
             if (json == null) throw new NullPointerException("json cannot be null");
             schedule = json;
@@ -234,6 +247,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
                         teacher_picker_list_view.setAdapter(new TeacherPickerListView(getActivity(), teachersMap));
                         teacher_picker_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                                Log.v(TAG, "teacher_picker_list_view clicked | scope=" + teachersMap.get(position).get("pid"));
                                 search(teachersMap.get(position).get("pid"));
                             }
                         });
@@ -279,6 +293,7 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
     }
 
     private void notFound(){
+        Log.v(TAG, "notFound");
         TypedValue typedValue = new TypedValue();
         getActivity().getTheme().resolveAttribute(android.R.attr.textColorPrimary, typedValue, true);
         int textColorPrimary = getActivity().obtainStyledAttributes(typedValue.data, new int[]{android.R.attr.textColorPrimary}).getColor(0, -1);
@@ -321,9 +336,11 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
     }
 
     public static void reSchedule(final Context context){
+        Log.v(TAG, "reSchedule");
         new ScheduleLessonsAdditionalConverter(context, new ScheduleLessonsAdditionalConverter.response() {
             @Override
             public void finish(JSONObject json) {
+                Log.v(TAG, "reScheduled");
                 schedule = json;
                 try {
                     Static.snackBar(((Activity) context).findViewById(android.R.id.content), context.getString(R.string.schedule_refresh), context.getString(R.string.update), new View.OnClickListener() {

@@ -3,6 +3,7 @@ package com.bukhmastov.cdoitmo.activities;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.objects.entities.Suggestion;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 
@@ -13,16 +14,19 @@ import java.util.ArrayList;
 
 public class ScheduleLessonsSearchActivity extends SearchActivity {
 
+    private static final String TAG = "SLSearchActivity";
     private static final int numberOfSuggestions = 3;
     private static final int maxCountOfSuggestionsToStore = 100;
 
     @Override
     String getHint() {
+        Log.v(TAG, "getHint");
         return getString(R.string.schedule_lessons_search_view_hint);
     }
 
     @Override
     ArrayList<Suggestion> getSuggestions(String query) {
+        Log.v(TAG, "getSuggestions | query=" + query);
         try {
             ArrayList<Suggestion> suggestions = new ArrayList<>();
             String recentString = Storage.file.perm.get(this, "schedule_lessons#recent");
@@ -64,6 +68,7 @@ public class ScheduleLessonsSearchActivity extends SearchActivity {
 
     @Override
     void onDone(String query, String label) {
+        Log.v(TAG, "onDone | query=" + query + " | label=" + label);
         try {
             String recentString = Storage.file.perm.get(this, "schedule_lessons#recent");
             JSONArray recent;

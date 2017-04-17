@@ -1,7 +1,6 @@
 package com.bukhmastov.cdoitmo.activities;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
@@ -20,6 +19,7 @@ import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.IfmoClient;
 import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoClientResponseHandler;
 import com.bukhmastov.cdoitmo.parse.RatingTopListParse;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 import com.loopj.android.http.RequestHandle;
@@ -34,7 +34,7 @@ import java.util.Objects;
 
 public class RatingListActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener {
 
-    private static final String TAG = "RatingFragment";
+    private static final String TAG = "RatingListActivity";
     private String faculty = null;
     private String course = null;
     private String years = null;
@@ -45,6 +45,7 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
     protected void onCreate(Bundle savedInstanceState) {
         if (Static.darkTheme) setTheme(R.style.AppTheme_Dark);
         super.onCreate(savedInstanceState);
+        Log.i(TAG, "Activity created");
         setContentView(R.layout.activity_rating_list);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar_rating_list));
         ActionBar actionBar = getSupportActionBar();
@@ -57,18 +58,29 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
         faculty = getIntent().getStringExtra("faculty");
         course = getIntent().getStringExtra("course");
         years = getIntent().getStringExtra("years");
-        if(Objects.equals(years, "") || years == null){
+        if (Objects.equals(years, "") || years == null) {
             Calendar now = Calendar.getInstance();
             int year = now.get(Calendar.YEAR);
             int month = now.get(Calendar.MONTH);
             years = month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year;
         }
-        if(Objects.equals(faculty, "") || faculty == null || Objects.equals(course, "") || course == null) finish();
+        Log.v(TAG, "faculty=" + faculty + " | course=" + course + " | years=" + years);
+        if (Objects.equals(faculty, "") || faculty == null || Objects.equals(course, "") || course == null) {
+            Log.w(TAG, "wrong intent extras provided | faculty=" + faculty + " | course=" + course);
+            finish();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.i(TAG, "Activity destroyed");
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        Log.v(TAG, "Activity resumed");
         if (!loaded) {
             loaded = true;
             load();
@@ -78,6 +90,7 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
     @Override
     protected void onPause() {
         super.onPause();
+        Log.v(TAG, "Activity paused");
         if (activityRequestHandle != null) {
             loaded = false;
             activityRequestHandle.cancel(true);
@@ -98,11 +111,13 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
     }
 
     private void load(){
+        Log.v(TAG, "load");
         if (getSupportActionBar() != null) getSupportActionBar().setTitle("Топ-рейтинг");
         DeIfmoClient.get(this, "?node=rating&std&depId=" + faculty + "&year=" + course + "&app=" + years, null, new DeIfmoClientResponseHandler() {
             @Override
             public void onSuccess(int statusCode, String response) {
-                if(statusCode == 200){
+                Log.v(TAG, "load | success | statusCode=" + statusCode);
+                if (statusCode == 200) {
                     new RatingTopListParse(new RatingTopListParse.response() {
                         @Override
                         public void finish(JSONObject json) {
@@ -115,6 +130,7 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
             }
             @Override
             public void onProgress(int state) {
+                Log.v(TAG, "load | progress " + state);
                 draw(R.layout.state_loading);
                 TextView loading_message = (TextView) findViewById(R.id.loading_message);
                 if (loading_message != null) {
@@ -125,6 +141,7 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
             }
             @Override
             public void onFailure(int state) {
+                Log.v(TAG, "load | failure " + state);
                 switch (state) {
                     case IfmoClient.FAILED_OFFLINE:
                         draw(R.layout.state_offline);
@@ -140,10 +157,6 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
                         break;
                     case IfmoClient.FAILED_TRY_AGAIN:
                         draw(R.layout.state_try_again);
-                        if (state == DeIfmoClient.FAILED_AUTH_TRY_AGAIN) {
-                            TextView try_again_message = (TextView) findViewById(R.id.try_again_message);
-                            if (try_again_message != null) try_again_message.setText(R.string.auth_failed);
-                        }
                         View try_again_reload = findViewById(R.id.try_again_reload);
                         if (try_again_reload != null) {
                             try_again_reload.setOnClickListener(new View.OnClickListener() {
@@ -163,6 +176,7 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
         });
     }
     private void loadFailed(){
+        Log.v(TAG, "loadFailed");
         try {
             draw(R.layout.state_try_again);
             View try_again_reload = findViewById(R.id.try_again_reload);
@@ -179,13 +193,14 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
         }
     }
     private void display(JSONObject data){
+        Log.v(TAG, "display");
         try {
-            if(data == null) throw new NullPointerException("display(JSONObject data) can't be null");
-            if(getSupportActionBar() != null) getSupportActionBar().setTitle(data.getString("header"));
+            if (data == null) throw new NullPointerException("display(JSONObject data) can't be null");
+            if (getSupportActionBar() != null) getSupportActionBar().setTitle(data.getString("header"));
             // получаем список для отображения рейтинга
             final ArrayList<HashMap<String, String>> users = new ArrayList<>();
             JSONArray jsonArray = data.getJSONArray("list");
-            for(int i = 0; i < jsonArray.length(); i++){
+            for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject jsonObject = jsonArray.getJSONObject(i);
                 HashMap<String, String> hashMap = new HashMap<>();
                 hashMap.put("number", String.valueOf(jsonObject.getInt("number")));
@@ -213,13 +228,8 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
             loadFailed();
         }
     }
-    public void gotoLogin(int state){
-        Intent intent = new Intent(this, LoginActivity.class);
-        intent.putExtra("state", state);
-        startActivity(intent);
-        finish();
-    }
     private void draw(int layoutId){
+        Log.v(TAG, "draw | layout=" + layoutId);
         try {
             ViewGroup vg = ((ViewGroup) findViewById(R.id.rating_list_container));
             if (vg != null) {
@@ -230,4 +240,5 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
             Static.error(e);
         }
     }
+
 }

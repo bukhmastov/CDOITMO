@@ -2,6 +2,7 @@ package com.bukhmastov.cdoitmo.converters;
 
 import android.os.AsyncTask;
 
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 
 import org.json.JSONArray;
@@ -13,15 +14,21 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ERegisterConverter extends AsyncTask<JSONObject, Void, JSONObject> {
+
+    private static final String TAG = "ERegisterConverter";
     public interface response {
         void finish(JSONObject json);
     }
     private response delegate = null;
+
     public ERegisterConverter(response delegate){
+        Log.i(TAG, "initialized");
         this.delegate = delegate;
     }
+
     @Override
     protected JSONObject doInBackground(JSONObject... params) {
+        Log.i(TAG, "started");
         JSONObject response = new JSONObject();
         try {
             JSONObject eregister = params[0];
@@ -122,6 +129,7 @@ public class ERegisterConverter extends AsyncTask<JSONObject, Void, JSONObject> 
         }
         return response;
     }
+
     private double mark2double(String string){
         return string2double(markConverter(string));
     }
@@ -141,8 +149,11 @@ public class ERegisterConverter extends AsyncTask<JSONObject, Void, JSONObject> 
         if (m.find()) value = m.group(1);
         return value;
     }
+
     @Override
     protected void onPostExecute(JSONObject json) {
+        Log.i(TAG, "finished");
         delegate.finish(json);
     }
+
 }

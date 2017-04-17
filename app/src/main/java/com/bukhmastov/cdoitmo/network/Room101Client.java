@@ -1,9 +1,9 @@
 package com.bukhmastov.cdoitmo.network;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.bukhmastov.cdoitmo.network.interfaces.Room101ClientResponseHandler;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 import com.loopj.android.http.AsyncHttpClient;
@@ -32,18 +32,20 @@ public class Room101Client {
     private static void init(){
         if (!initialized) {
             initialized = true;
-            httpclient.setLoggingLevel(Log.WARN);
+            httpclient.setLoggingLevel(android.util.Log.WARN);
         }
     }
 
     public static void get(final Context context, final String url, final RequestParams params, final Room101ClientResponseHandler responseHandler){
+        Log.v(TAG, "get | url=" + url + " | params=" + Static.getSafetyRequestParams(params));
         init();
-        if(Static.isOnline(context)) {
+        if (Static.isOnline(context)) {
             responseHandler.onProgress(STATE_HANDLING);
             renewCookie(context);
             responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(url), params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                    Log.v(TAG, "get | success");
                     responseHandler.onNewHandle(null);
                     analyseCookie(context, headers);
                     try {
@@ -57,23 +59,27 @@ public class Room101Client {
                 }
                 @Override
                 public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                    Log.v(TAG, "get | failure | statusCode=" + statusCode);
                     responseHandler.onNewHandle(null);
                     analyseCookie(context, headers);
                     responseHandler.onFailure(FAILED_TRY_AGAIN, statusCode, headers);
                 }
             }));
         } else {
+            Log.v(TAG, "get | offline");
             responseHandler.onFailure(FAILED_OFFLINE, STATUS_CODE_EMPTY, null);
         }
     }
     public static void post(final Context context, final String url, final RequestParams params, final Room101ClientResponseHandler responseHandler){
+        Log.v(TAG, "post | url=" + url + " | params=" + Static.getSafetyRequestParams(params));
         init();
-        if(Static.isOnline(context)) {
+        if (Static.isOnline(context)) {
             responseHandler.onProgress(STATE_HANDLING);
             renewCookie(context);
             responseHandler.onNewHandle(httpclient.post(getAbsoluteUrl(url), params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                    Log.v(TAG, "post | success");
                     responseHandler.onNewHandle(null);
                     analyseCookie(context, headers);
                     try {
@@ -87,12 +93,14 @@ public class Room101Client {
                 }
                 @Override
                 public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                    Log.v(TAG, "post | failure | statusCode=" + statusCode);
                     responseHandler.onNewHandle(null);
                     analyseCookie(context, headers);
                     responseHandler.onFailure(FAILED_TRY_AGAIN, statusCode, headers);
                 }
             }));
         } else {
+            Log.v(TAG, "post | offline");
             responseHandler.onFailure(FAILED_OFFLINE, STATUS_CODE_EMPTY, null);
         }
     }

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.AsyncTask;
 
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 
@@ -20,17 +21,23 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ScheduleLessonsAdditionalConverter extends AsyncTask<JSONObject, Void, JSONObject> {
+
+    private static final String TAG = "SLAdditionalConverter";
     public interface response {
         void finish(JSONObject json);
     }
     private Context context;
     private response delegate = null;
+
     public ScheduleLessonsAdditionalConverter(Context context, response delegate){
+        Log.i(TAG, "initialized");
         this.context = context;
         this.delegate = delegate;
     }
+
     @Override
     protected JSONObject doInBackground(JSONObject... params) {
+        Log.i(TAG, "started");
         JSONObject response = params[0];
         try {
             String cache_token = response.getString("cache_token");
@@ -88,6 +95,7 @@ public class ScheduleLessonsAdditionalConverter extends AsyncTask<JSONObject, Vo
         }
         return response;
     }
+
     private JSONArray string2json(String text) throws JSONException {
         JSONArray json;
         if (text.isEmpty()) {
@@ -128,8 +136,11 @@ public class ScheduleLessonsAdditionalConverter extends AsyncTask<JSONObject, Vo
             this.lesson = lesson;
         }
     }
+
     @Override
     protected void onPostExecute(JSONObject json) {
+        Log.i(TAG, "finished");
         delegate.finish(json);
     }
+
 }

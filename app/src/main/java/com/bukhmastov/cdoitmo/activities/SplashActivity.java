@@ -3,21 +3,35 @@ package com.bukhmastov.cdoitmo.activities;
 import android.app.job.JobScheduler;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 
 public class SplashActivity extends AppCompatActivity {
 
+    private static final String TAG = "SplashActivity";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Static.darkTheme = Storage.pref.get(this, "pref_dark_theme", false);
         super.onCreate(savedInstanceState);
+        try {
+            Log.i(TAG, "App | launched");
+            PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+            Log.i(TAG, "App | version code = " + pInfo.versionCode);
+            Log.i(TAG, "App | sdk = " + Build.VERSION.SDK_INT);
+            Log.i(TAG, "App | dark theme = " + (Storage.pref.get(this, "pref_dark_theme", false) ? "true" : "false"));
+        } catch (Exception e) {
+            Static.error(e);
+        }
     }
 
     @Override
@@ -54,6 +68,7 @@ public class SplashActivity extends AppCompatActivity {
             }
         }
         private static void apply(Context context, int versionCode) {
+            Log.i(TAG, "Wipe apply for versionCode " + versionCode);
             switch (versionCode) {
                 case 26: {
                     ((JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE)).cancelAll();

@@ -23,12 +23,12 @@ import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoClientResponseHandler;
 import com.bukhmastov.cdoitmo.objects.Rating;
 import com.bukhmastov.cdoitmo.parse.RatingListParse;
 import com.bukhmastov.cdoitmo.parse.RatingParse;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -48,6 +48,7 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.v(TAG, "Fragment created");
         rating = new Rating(getActivity());
         ready = new HashMap<>();
         fragmentRequestHandle = new HashMap<>();
@@ -60,6 +61,12 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
     }
 
     @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.v(TAG, "Fragment destroyed");
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_rating, container, false);
     }
@@ -67,6 +74,7 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
     @Override
     public void onResume() {
         super.onResume();
+        Log.v(TAG, "resumed");
         if (!loaded) {
             loaded = true;
             load();
@@ -76,6 +84,7 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
     @Override
     public void onPause() {
         super.onPause();
+        Log.v(TAG, "paused");
         if (fragmentRequestHandle.get("Rating") != null) {
             loaded = false;
             fragmentRequestHandle.get("Rating").cancel(true);
@@ -88,6 +97,7 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
 
     @Override
     public void onRefresh() {
+        Log.v(TAG, "refreshed");
         forceLoad();
     }
 
@@ -100,17 +110,19 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
         load(refresh_rate, "RatingList");
     }
     private void load(int refresh_rate, String type){
+        Log.v(TAG, "load | refresh_rate=" + refresh_rate + " | type=" + type);
         if (!rating.is(type) || refresh_rate == 0) {
             loadPart(type);
         } else if (refresh_rate >= 0){
             JSONObject rating = RatingFragment.rating.get(type);
             try {
+                if (rating == null) throw new Exception("rating is null");
                 if (rating.getLong("timestamp") + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
                     loadPart(type);
                 } else {
                     ready(type);
                 }
-            } catch (JSONException e) {
+            } catch (Exception e) {
                 Static.error(e);
                 loadPart(type);
             }
@@ -119,16 +131,19 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
         }
     }
     private void forceLoad(){
+        Log.v(TAG, "forceLoad");
         draw(R.layout.state_loading);
         loadPart("Rating");
         loadPart("RatingList");
     }
-    private void loadPart(String type){
+    private void loadPart(final String type){
+        Log.v(TAG, "loadPart | type=" + type);
         if (!Static.OFFLINE_MODE) {
             if (Objects.equals(type, "Rating")) {
                 DeIfmoClient.get(getContext(), "servlet/distributedCDE?Rule=REP_EXECUTE_PRINT&REP_ID=1441", null, new DeIfmoClientResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, String response) {
+                        Log.v(TAG, "loadPart | type=" + type + " | success | statusCode=" + statusCode + " | response=" + (response == null ? "null" : "notnull"));
                         if (statusCode == 200) {
                             new RatingParse(new RatingParse.response() {
                                 @Override
@@ -154,9 +169,12 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                         }
                     }
                     @Override
-                    public void onProgress(int state) {}
+                    public void onProgress(int state) {
+                        Log.v(TAG, "loadPart | type=" + type + " | progress " + state);
+                    }
                     @Override
                     public void onFailure(int state) {
+                        Log.v(TAG, "loadPart | type=" + type + " | failure " + state);
                         switch (state) {
                             case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED: gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED); break;
                             case DeIfmoClient.FAILED_AUTH_CREDENTIALS_FAILED: gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED); break;
@@ -172,6 +190,7 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                 DeIfmoClient.get(getContext(), "index.php?node=rating", null, new DeIfmoClientResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, String response) {
+                        Log.v(TAG, "loadPart | type=" + type + " | success | statusCode=" + statusCode + " | response=" + (response == null ? "null" : "notnull"));
                         if (statusCode == 200) {
                             new RatingListParse(new RatingListParse.response() {
                                 @Override
@@ -197,9 +216,12 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                         }
                     }
                     @Override
-                    public void onProgress(int state) {}
+                    public void onProgress(int state) {
+                        Log.v(TAG, "loadPart | type=" + type + " | progress " + state);
+                    }
                     @Override
                     public void onFailure(int state) {
+                        Log.v(TAG, "loadPart | type=" + type + " | failure " + state);
                         failed("RatingList");
                     }
                     @Override
@@ -217,14 +239,17 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
         }
     }
     private void failed(String type){
+        Log.v(TAG, "failed | type=" + type);
         ready.put(type, 1);
-        if(ready.get("Rating") != 0 && ready.get("RatingList") != 0) display();
+        if (ready.get("Rating") != 0 && ready.get("RatingList") != 0) display();
     }
     private void ready(String type){
+        Log.v(TAG, "ready | type=" + type);
         ready.put(type, 2);
-        if(ready.get("Rating") != 0 && ready.get("RatingList") != 0) display();
+        if (ready.get("Rating") != 0 && ready.get("RatingList") != 0) display();
     }
     private void loadFailed(){
+        Log.v(TAG, "loadFailed");
         try {
             draw(R.layout.state_try_again);
             View try_again_reload = getActivity().findViewById(R.id.try_again_reload);
@@ -241,6 +266,7 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
         }
     }
     private void display(){
+        Log.v(TAG, "display");
         try {
             final JSONObject dataR = rating.get("Rating");
             final JSONObject dataRL = rating.get("RatingList");
@@ -271,6 +297,7 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                     rl_list_view.setAdapter(new RatingListView(getActivity(), courses));
                     rl_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                            Log.v(TAG, "rl_list_view clicked");
                             try {
                                 HashMap<String, String> hashMap = courses.get(position);
                                 JSONArray array = dataRL.getJSONObject("rating").getJSONArray("faculties");
@@ -282,11 +309,13 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                                         Calendar now = Calendar.getInstance();
                                         int year = now.get(Calendar.YEAR) - course_delta;
                                         int month = now.get(Calendar.MONTH);
+                                        String years = month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year;
                                         Intent intent = new Intent(getActivity(), RatingListActivity.class);
                                         intent.putExtra("faculty", obj.getString("depId"));
                                         intent.putExtra("course", hashMap.get("course"));
-                                        intent.putExtra("years", (month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year));
+                                        intent.putExtra("years", years);
                                         startActivity(intent);
+                                        Log.v(TAG, "rl_list_view clicked and found | faculty=" + obj.getString("depId") + " | course=" + hashMap.get("course") + " | years=" + years);
                                         break;
                                     }
                                 }
@@ -333,6 +362,7 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                     rl_spinner_faculty.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                         public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
                             rating_list_choose_faculty = rl_spinner_faculty_arr_ids.get(position);
+                            Log.v(TAG, "rl_spinner_faculty clicked | rating_list_choose_faculty=" + rating_list_choose_faculty);
                             Storage.file.cache.put(getContext(), "rating#choose#faculty", rating_list_choose_faculty);
                         }
                         public void onNothingSelected(AdapterView<?> parent) {}
@@ -356,6 +386,7 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                     rl_spinner_course.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                         public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
                             rating_list_choose_course = rl_spinner_course_arr_ids.get(position);
+                            Log.v(TAG, "rl_spinner_course clicked | rating_list_choose_course=" + rating_list_choose_course);
                             Storage.file.cache.put(getContext(), "rating#choose#course", rating_list_choose_course);
                         }
                         public void onNothingSelected(AdapterView<?> parent) {}
@@ -371,6 +402,7 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                             intent.putExtra("faculty", rating_list_choose_faculty);
                             intent.putExtra("course", rating_list_choose_course);
                             startActivity(intent);
+                            Log.v(TAG, "rl_button clicked | faculty=" + rating_list_choose_faculty + " | course=" + rating_list_choose_course);
                         }
                     });
                 }
@@ -381,6 +413,7 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
         }
     }
     private void gotoLogin(int state){
+        Log.v(TAG, "gotoLogin | state=" + state);
         Intent intent = new Intent(getContext(), LoginActivity.class);
         intent.putExtra("state", state);
         startActivity(intent);

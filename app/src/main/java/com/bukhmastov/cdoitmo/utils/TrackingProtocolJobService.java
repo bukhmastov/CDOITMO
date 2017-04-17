@@ -8,7 +8,6 @@ import android.app.job.JobService;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.util.Log;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.SplashActivity;
@@ -26,7 +25,7 @@ import java.util.Objects;
 
 public class TrackingProtocolJobService extends JobService {
 
-    private static final String TAG = "TrackingProtocol";
+    private static final String TAG = "ProtocolTrackerJS";
     private static int c = 0;
     private RequestHandle jobRequestHandle = null;
     private int attempt = 0;
@@ -50,6 +49,7 @@ public class TrackingProtocolJobService extends JobService {
     }
 
     private void request(){
+        Log.v(TAG, "request");
         try {
             attempt++;
             if (attempt > maxAttempts) throw new Exception("Number of attempts exceeded the limit");
@@ -92,6 +92,7 @@ public class TrackingProtocolJobService extends JobService {
         }
     }
     private void w8andRequest(){
+        Log.v(TAG, "w8andRequest");
         try {
             Thread.sleep(500);
         } catch (InterruptedException e) {
@@ -100,6 +101,7 @@ public class TrackingProtocolJobService extends JobService {
         request();
     }
     private void analyse(JSONArray protocol){
+        Log.v(TAG, "analyse");
         try {
             if (protocol == null) throw new NullPointerException("json can't be null");
             JSONArray history = new JSONArray();
@@ -168,7 +170,8 @@ public class TrackingProtocolJobService extends JobService {
         }
     }
     private void addNotification(String title, String text, long timestamp, boolean isSummary){
-        if(c > Integer.MAX_VALUE - 10) c = 0;
+        Log.v(TAG, "addNotification | title=" + title + " | text=" + text + " | timestamp=" + timestamp + " | isSummary=" + (isSummary ? "true" : "false"));
+        if (c > Integer.MAX_VALUE - 10) c = 0;
         Intent intent = new Intent(this, SplashActivity.class);
         intent.addFlags(Static.intentFlagRestart);
         intent.putExtra("action", "protocol_changes");
@@ -180,7 +183,7 @@ public class TrackingProtocolJobService extends JobService {
         b.setCategory(Notification.CATEGORY_EVENT);
         b.setContentIntent(pIntent);
         b.setAutoCancel(true);
-        if(isSummary) {
+        if (isSummary) {
             String ringtonePath = Storage.pref.get(this, "pref_notify_sound");
             if (!Objects.equals(ringtonePath, "")) {
                 b.setSound(Uri.parse(ringtonePath));

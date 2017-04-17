@@ -3,6 +3,7 @@ package com.bukhmastov.cdoitmo.fragments;
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -17,6 +18,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.builders.ScheduleLessonsBuilder;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 
@@ -27,6 +29,7 @@ import java.util.Locale;
 
 public class ScheduleLessonsTabFragment extends Fragment {
 
+    private static final String TAG = "SLTabFragment";
     private int TYPE = -1;
     private boolean displayed = false;
     private View fragment_schedule_lessons = null;
@@ -36,9 +39,23 @@ public class ScheduleLessonsTabFragment extends Fragment {
     }
 
     @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Log.v(TAG, "Fragment created");
+    }
+
+    @Override
+    public void onDestroy() {
+        displayed = false;
+        Log.v(TAG, "Fragment destroyed");
+        super.onDestroy();
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         Bundle bundle = getArguments();
         TYPE = bundle.getInt("type");
+        Log.v(TAG, "onCreateView | TYPE=" + TYPE);
         fragment_schedule_lessons = inflater.inflate(R.layout.fragment_tab_schedule_lessons, container, false);
         return fragment_schedule_lessons;
     }
@@ -46,16 +63,18 @@ public class ScheduleLessonsTabFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        Log.v(TAG, "resumed");
         if (!displayed) display();
     }
 
     @Override
-    public void onDestroy() {
-        displayed = false;
-        super.onDestroy();
+    public void onPause() {
+        super.onPause();
+        Log.v(TAG, "paused");
     }
 
     private void display(){
+        Log.v(TAG, "display");
         try {
             if (TYPE < 0) throw new NullPointerException("ScheduleLessonsTabFragment.TYPE negative");
             if (fragment_schedule_lessons == null) throw new NullPointerException("ScheduleLessonsTabFragment.fragment_schedule_lessons cannot be null");
@@ -69,7 +88,10 @@ public class ScheduleLessonsTabFragment extends Fragment {
                         schedule_c_header.setText(ScheduleLessonsFragment.schedule.getString("title") + " " + ScheduleLessonsFragment.schedule.getString("label"));
                     }
                     break;
-                default: throw new Exception("Wrong ScheduleLessonsFragment.schedule.TYPE value");
+                default:
+                    String exception = "Wrong ScheduleLessonsFragment.schedule.TYPE value: " + ScheduleLessonsFragment.schedule.getString("type");
+                    Log.wtf(TAG, exception);
+                    throw new Exception(exception);
             }
             TextView schedule_lessons_all_week = (TextView) fragment_schedule_lessons.findViewById(R.id.schedule_lessons_week);
             if (schedule_lessons_all_week != null) {
@@ -90,9 +112,11 @@ public class ScheduleLessonsTabFragment extends Fragment {
                 schedule_lessons_cache.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        Log.v(TAG, "schedule_lessons_cache clicked");
                         if (ScheduleLessonsFragment.scheduleLessons != null) {
                             Boolean result = ScheduleLessonsFragment.scheduleLessons.toggleCache();
                             if (result == null) {
+                                Log.w(TAG, "failed to toggle cache");
                                 snackBar(getString(R.string.cache_failed));
                             } else {
                                 snackBar(result ? getString(R.string.cache_true) : getString(R.string.cache_false));
@@ -109,6 +133,8 @@ public class ScheduleLessonsTabFragment extends Fragment {
                                     }
                                 }
                             }
+                        } else {
+                            Log.v(TAG, "schedule_lessons_cache clicked | ScheduleLessonsFragment.scheduleLessons is null");
                         }
                     }
                 });
@@ -212,6 +238,7 @@ public class ScheduleLessonsTabFragment extends Fragment {
     }
 
     private void failed(){
+        Log.v(TAG, "failed");
         try {
             if (fragment_schedule_lessons == null) throw new NullPointerException("ScheduleLessonsTabFragment.fragment_schedule_lessons cannot be null");
             draw(R.layout.state_try_again);

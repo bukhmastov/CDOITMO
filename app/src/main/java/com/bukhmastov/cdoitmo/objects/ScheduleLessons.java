@@ -14,6 +14,7 @@ import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.IfmoRestClientResponseHandler;
 import com.bukhmastov.cdoitmo.objects.entities.LessonUnit;
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 import com.loopj.android.http.RequestHandle;
@@ -42,15 +43,18 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
     public static final int FAILED_OFFLINE = 101;
 
     public ScheduleLessons(Context context){
+        Log.v(TAG, "initialized");
         this.context = context;
     }
 
     @Override
     public void onRefresh() {
+        Log.v(TAG, "refreshed");
         search(ScheduleLessonsFragment.query, 0);
     }
 
     public void setHandler(ScheduleLessons.response handler){
+        Log.v(TAG, "handler set");
         this.handler = handler;
     }
 
@@ -67,6 +71,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
         search(query, refresh_rate, toCache, true);
     }
     public void search(String query, int refresh_rate, boolean toCache, boolean additionalConversion){
+        Log.v(TAG, "search | query=" + query + " | refresh_rate=" + refresh_rate + " | toCache=" + (toCache ? "true" : "false") + " | additionalConversion=" + (additionalConversion ? "true" : "false"));
         if (handler == null) return;
         query = query.trim();
         if (ScheduleLessonsFragment.fragmentRequestHandle != null) ScheduleLessonsFragment.fragmentRequestHandle.cancel(true);
@@ -86,6 +91,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
     }
 
     private void searchGroup(final String group, final int refresh_rate, final boolean toCache, final boolean additionalConversion){
+        Log.v(TAG, "searchGroup | group=" + group + " | refresh_rate=" + refresh_rate + " | toCache=" + (toCache ? "true" : "false") + " | additionalConversion=" + (additionalConversion ? "true" : "false"));
         final String cache_token = "group_" + group;
         final String cache = getCache(cache_token);
         if (getForce(cache, refresh_rate) && !Static.OFFLINE_MODE) {
@@ -146,9 +152,11 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                 }
             });
         } else if (Static.OFFLINE_MODE && Objects.equals(cache, "")) {
+            Log.v(TAG, "searchGroup | offline");
             handler.onFailure(FAILED_OFFLINE);
         } else {
             try {
+                Log.v(TAG, "searchGroup | from cache");
                 if (additionalConversion) {
                     new ScheduleLessonsAdditionalConverter(context, new ScheduleLessonsAdditionalConverter.response() {
                         @Override
@@ -166,6 +174,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
         }
     }
     private void searchRoom(final String room, final int refresh_rate, final boolean toCache, final boolean additionalConversion){
+        Log.v(TAG, "searchRoom | room=" + room + " | refresh_rate=" + refresh_rate + " | toCache=" + (toCache ? "true" : "false") + " | additionalConversion=" + (additionalConversion ? "true" : "false"));
         final String cache_token = "room_" + room;
         final String cache = getCache(cache_token);
         if (getForce(cache, refresh_rate) && !Static.OFFLINE_MODE) {
@@ -226,9 +235,11 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                 }
             });
         } else if (Static.OFFLINE_MODE && Objects.equals(cache, "")) {
+            Log.v(TAG, "searchRoom | offline");
             handler.onFailure(FAILED_OFFLINE);
         } else {
             try {
+                Log.v(TAG, "searchRoom | from cache");
                 if (additionalConversion) {
                     new ScheduleLessonsAdditionalConverter(context, new ScheduleLessonsAdditionalConverter.response() {
                         @Override
@@ -246,6 +257,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
         }
     }
     private void searchDefinedTeacher(final String teacherId, final int refresh_rate, final boolean toCache, final boolean additionalConversion){
+        Log.v(TAG, "searchDefinedTeacher | teacherId=" + teacherId + " | refresh_rate=" + refresh_rate + " | toCache=" + (toCache ? "true" : "false") + " | additionalConversion=" + (additionalConversion ? "true" : "false"));
         final String cache_token = teacherId;
         final String cache = getCache(cache_token);
         if(getForce(cache, refresh_rate) && !Static.OFFLINE_MODE) {
@@ -306,9 +318,11 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                 }
             });
         } else if (Static.OFFLINE_MODE && Objects.equals(cache, "")) {
+            Log.v(TAG, "searchDefinedTeacher | offline");
             handler.onFailure(FAILED_OFFLINE);
         } else {
             try {
+                Log.v(TAG, "searchDefinedTeacher | from cache");
                 if (additionalConversion) {
                     new ScheduleLessonsAdditionalConverter(context, new ScheduleLessonsAdditionalConverter.response() {
                         @Override
@@ -326,6 +340,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
         }
     }
     private void searchTeacher(final String teacher, final int refresh_rate, final boolean toCache){
+        Log.v(TAG, "searchTeacher | teacher=" + teacher + " | refresh_rate=" + refresh_rate + " | toCache=" + (toCache ? "true" : "false"));
         final String cache_token = "teacher_picker_" + teacher;
         final String cache = getCache(cache_token);
         if (getForce(cache, refresh_rate) && !Static.OFFLINE_MODE) {
@@ -371,9 +386,11 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                 }
             });
         } else if (Static.OFFLINE_MODE && Objects.equals(cache, "")) {
+            Log.v(TAG, "searchTeacher | offline");
             handler.onFailure(FAILED_OFFLINE);
         } else {
             try {
+                Log.v(TAG, "searchTeacher | from cache");
                 JSONObject list = new JSONObject(cache);
                 if (list.getJSONArray("teachers").length() == 1) {
                     search(list.getJSONArray("teachers").getJSONObject(0).getString("scope"), refresh_rate, toCache);
@@ -409,6 +426,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
         return Storage.pref.get(context, "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(context, "pref_schedule_refresh", "168")) : 0;
     }
     private boolean getForce(String cache, int refresh_rate){
+        Log.v(TAG, "getForce | refresh_rate=" + refresh_rate);
         boolean force;
         if (Objects.equals(cache, "") || refresh_rate == 0) {
             force = true;
@@ -425,6 +443,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
         return force;
     }
     public String getDefault(){
+        Log.v(TAG, "getDefault");
         String scope;
         String pref = Storage.pref.get(context, "pref_schedule_lessons_default", "");
         try {
@@ -439,21 +458,26 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
     }
 
     private void putCache(String token, String value, boolean toCache){
+        Log.v(TAG, "putCache | token=" + token);
         String def = getDefault();
         if (toCache || hasCache(token) || Objects.equals(def, token) || Objects.equals("group_" + def, token) || Objects.equals("room_" + def, token) || Objects.equals("teacher_picker_" + def, token)) {
             Storage.file.cache.put(context, "schedule_lessons#lessons#" + token, value);
         }
     }
     private boolean hasCache(String token){
+        Log.v(TAG, "hasCache | token=" + token);
         return Storage.file.cache.exists(context, "schedule_lessons#lessons#" + token);
     }
     public String getCache(String token){
+        Log.v(TAG, "getCache | token=" + token);
         return Storage.file.cache.get(context, "schedule_lessons#lessons#" + token);
     }
     private void removeCache(String token){
+        Log.v(TAG, "removeCache | token=" + token);
         Storage.file.cache.delete(context, "schedule_lessons#lessons#" + token);
     }
     public Boolean toggleCache(){
+        Log.v(TAG, "toggleCache");
         try {
             String token = ScheduleLessonsFragment.schedule.getString("cache_token");
             if (Objects.equals(getCache(token), "")) {
@@ -472,6 +496,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
     }
 
     public static void reduceLesson(Context context, String cache_token, int index, JSONObject lesson) {
+        Log.v(TAG, "reduceLesson | cache_token=" + cache_token);
         try {
             if (!Objects.equals(lesson.getString("cdoitmo_type"), "normal")) throw new Exception("Wrong cdoitmo_type type");
             String hash = Static.crypt(ScheduleLessons.getCast(lesson));
@@ -515,6 +540,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
         }
     }
     public static void restoreLesson(Context context, String cache_token, int index, JSONObject lesson) {
+        Log.v(TAG, "restoreLesson | cache_token=" + cache_token);
         try {
             if (!Objects.equals(lesson.getString("cdoitmo_type"), "reduced")) throw new Exception("Wrong cdoitmo_type type");
             String hash = Static.crypt(ScheduleLessons.getCast(lesson));
@@ -553,6 +579,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
         }
     }
     public static void deleteLesson(Context context, String cache_token, int index, JSONObject lesson){
+        Log.v(TAG, "deleteLesson | cache_token=" + cache_token);
         try {
             if (!Objects.equals(lesson.getString("cdoitmo_type"), "synthetic")) throw new Exception("Wrong cdoitmo_type type");
             if (!deleteLesson(context, cache_token, index, Static.crypt(lesson.toString()))) throw new Exception("Failed to delete lesson");
@@ -563,6 +590,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
         }
     }
     public static boolean deleteLesson(Context context, String cache_token, int index, String hash){
+        Log.v(TAG, "deleteLesson(hash) | cache_token=" + cache_token);
         try {
             String addedStr = Storage.file.perm.get(context, "schedule_lessons#added#" + cache_token, "");
             JSONArray added;
@@ -605,6 +633,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
         return replica.toString();
     }
     public static void createLesson(Context context, JSONObject schedule, int dayIndex, int week) throws JSONException {
+        Log.v(TAG, "createLesson | cache_token=" + schedule.getString("cache_token"));
         Intent intent = new Intent(context, ScheduleLessonCreateActivity.class);
         intent.putExtra("header", schedule.getString("title") + " " + schedule.getString("label"));
         intent.putExtra("cache_token", schedule.getString("cache_token"));
@@ -625,6 +654,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
         context.startActivity(intent);
     }
     public static void createLesson(Context context, JSONObject schedule, JSONObject lesson, int dayIndex, int week) throws JSONException {
+        Log.v(TAG, "createLesson(JSONObject) | cache_token=" + schedule.getString("cache_token"));
         Intent intent = new Intent(context, ScheduleLessonCreateActivity.class);
         intent.putExtra("header", schedule.getString("title") + " " + schedule.getString("label"));
         intent.putExtra("cache_token", schedule.getString("cache_token"));
@@ -642,6 +672,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
         context.startActivity(intent);
     }
     public static boolean createLesson(Context context, LessonUnit lessonUnit){
+        Log.v(TAG, "createLesson(lessonUnit) | cache_token=" + lessonUnit.cache_token);
         boolean result = true;
         try {
             JSONObject lesson = new JSONObject();
@@ -687,6 +718,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
         return result;
     }
     public static void editLesson(Context context, JSONObject schedule, JSONObject lesson, int dayIndex, int week) throws Exception {
+        Log.v(TAG, "editLesson | cache_token=" + schedule.getString("cache_token"));
         if (!Objects.equals(lesson.getString("cdoitmo_type"), "synthetic")) throw new Exception("Wrong cdoitmo_type type");
         Intent intent = new Intent(context, ScheduleLessonsEditActivity.class);
         intent.putExtra("header", schedule.getString("title") + " " + schedule.getString("label"));
@@ -697,6 +729,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
         context.startActivity(intent);
     }
     public static boolean editLesson(Context context, String cache_token, int index, String hash, LessonUnit lessonUnit){
+        Log.v(TAG, "editLesson(LessonUnit) | cache_token=" + cache_token);
         return deleteLesson(context, cache_token, index, hash) && createLesson(context, lessonUnit);
     }
     private static String getLessonField(String field, String def){

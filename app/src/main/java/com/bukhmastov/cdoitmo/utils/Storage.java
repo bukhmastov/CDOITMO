@@ -111,12 +111,13 @@ public class Storage {
         }
 
         private static synchronized boolean put(Context context, STORAGE storage, boolean general, String path, String data){
+            Log.v(TAG, "file | put | storage=" + (storage == null ? "both" : storage.toString()) + " | general=" + (general ? "true" : "false") + " | path=" + path);
             try {
                 if (storage == STORAGE.cache && !pref.get(context, "pref_use_cache", true)) {
                     return false;
                 }
                 File file = new File(getFileLocation(context, storage, general, path, true));
-                 if (!file.exists()) {
+                if (!file.exists()) {
                     file.getParentFile().mkdirs();
                     if (!file.createNewFile()) {
                         throw new Exception("Failed to create file: " + file.getPath());
@@ -138,6 +139,7 @@ public class Storage {
             return get(context, storage, general, path, "");
         }
         private static String get(Context context, STORAGE storage, boolean general, String path, String def){
+            Log.v(TAG, "file | get | storage=" + (storage == null ? "both" : storage.toString()) + " | general=" + (general ? "true" : "false") + " | path=" + path);
             try {
                 File file = new File(getFileLocation(context, storage, general, path, true));
                 path = file.getAbsolutePath();
@@ -159,6 +161,7 @@ public class Storage {
             }
         }
         private static boolean delete(Context context, STORAGE storage, boolean general, String path){
+            Log.v(TAG, "file | delete | storage=" + (storage == null ? "both" : storage.toString()) + " | general=" + (general ? "true" : "false") + " | path=" + path);
             try {
                 File file = new File(getFileLocation(context, storage, general, path, true));
                 path = file.getAbsolutePath();
@@ -169,6 +172,7 @@ public class Storage {
             }
         }
         private static boolean clear(Context context, STORAGE storage, boolean general){
+            Log.v(TAG, "file | clear | storage=" + (storage == null ? "both" : storage.toString()) + " | general=" + (general ? "true" : "false"));
             try {
                 if (storage == null) {
                     return clear(context, STORAGE.cache, general) && clear(context, STORAGE.permanent, general);
@@ -180,6 +184,7 @@ public class Storage {
             }
         }
         private static boolean clear(Context context, STORAGE storage, String path, boolean general){
+            Log.v(TAG, "file | clear | storage=" + (storage == null ? "both" : storage.toString()) + " | general=" + (general ? "true" : "false") + " | path=" + path);
             try {
                 if (storage == null) {
                     return clear(context, STORAGE.cache, path, general) && clear(context, STORAGE.permanent, path, general);
@@ -191,6 +196,7 @@ public class Storage {
             }
         }
         private static boolean exists(Context context, STORAGE storage, boolean general, String path){
+            Log.v(TAG, "file | exists | storage=" + (storage == null ? "both" : storage.toString()) + " | general=" + (general ? "true" : "false") + " | path=" + path);
             try {
                 File file = new File(getFileLocation(context, storage, general, path, true));
                 Storage.proxy.access(file.getAbsolutePath());
@@ -200,6 +206,7 @@ public class Storage {
             }
         }
         private static boolean reset(Context context, STORAGE storage){
+            Log.v(TAG, "file | reset | storage=" + (storage == null ? "both" : storage.toString()));
             try {
                 if (storage == null) {
                     return reset(context, STORAGE.cache) && reset(context, STORAGE.permanent);
@@ -211,6 +218,7 @@ public class Storage {
             }
         }
         private static ArrayList<String> list(Context context, STORAGE storage, boolean general, String path){
+            Log.v(TAG, "file | list | storage=" + (storage == null ? "both" : storage.toString()) + " | general=" + (general ? "true" : "false") + " | path=" + path);
             ArrayList<String> response = new ArrayList<>();
             try {
                 File file = new File(getFileLocation(context, storage, general, path, false));
@@ -369,12 +377,6 @@ public class Storage {
                 for (int i = maxStack; i < elementMetas.size(); i++) {
                     stackOfData.remove(elementMetas.get(i).path);
                 }
-                /*Log.d(TAG, "------------------------");
-                for (Map.Entry<String, ElementData> entry : stackOfData.entrySet()) {
-                    ElementData elementData = entry.getValue();
-                    Log.d(TAG, elementData.path + " " + stackOfMeta.get(elementData.path).rate);
-                }
-                Log.d(TAG, "------------------------");*/
             }
         }
         static void reset(){
