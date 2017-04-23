@@ -41,13 +41,13 @@ public class ScheduleLessonsTabFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.v(TAG, "Fragment created");
+        Log.v(TAG, "Fragment created | TYPE=" + TYPE);
     }
 
     @Override
     public void onDestroy() {
         displayed = false;
-        Log.v(TAG, "Fragment destroyed");
+        Log.v(TAG, "Fragment destroyed | TYPE=" + TYPE);
         super.onDestroy();
     }
 
@@ -63,18 +63,18 @@ public class ScheduleLessonsTabFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        Log.v(TAG, "resumed");
+        Log.v(TAG, "resumed | TYPE=" + TYPE);
         if (!displayed) display();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        Log.v(TAG, "paused");
+        Log.v(TAG, "paused | TYPE=" + TYPE);
     }
 
     private void display(){
-        Log.v(TAG, "display");
+        Log.v(TAG, "display | TYPE=" + TYPE);
         try {
             if (TYPE < 0) throw new NullPointerException("ScheduleLessonsTabFragment.TYPE negative");
             if (fragment_schedule_lessons == null) throw new NullPointerException("ScheduleLessonsTabFragment.fragment_schedule_lessons cannot be null");
@@ -238,7 +238,7 @@ public class ScheduleLessonsTabFragment extends Fragment {
     }
 
     private void failed(){
-        Log.v(TAG, "failed");
+        Log.v(TAG, "failed | TYPE=" + TYPE);
         try {
             if (fragment_schedule_lessons == null) throw new NullPointerException("ScheduleLessonsTabFragment.fragment_schedule_lessons cannot be null");
             draw(R.layout.state_try_again);

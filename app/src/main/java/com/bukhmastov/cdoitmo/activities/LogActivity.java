@@ -68,7 +68,7 @@ public class LogActivity extends AppCompatActivity implements SwipeRefreshLayout
                         Uri tempUri = FileProvider.getUriForFile(this, "com.bukhmastov.cdoitmo.fileprovider", logFile);
                         Intent intent = new Intent(Intent.ACTION_SEND);
                         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                        intent.setDataAndType(tempUri, getContentResolver().getType(tempUri));
+                        intent.setType(getContentResolver().getType(tempUri));
                         intent.putExtra(Intent.EXTRA_STREAM, tempUri);
                         startActivity(Intent.createChooser(intent, getString(R.string.share) + "..."));
                     }
@@ -83,7 +83,7 @@ public class LogActivity extends AppCompatActivity implements SwipeRefreshLayout
                         intent.putExtra(Intent.EXTRA_EMAIL, new String[] {"bukhmastov-alex@ya.ru"});
                         intent.putExtra(Intent.EXTRA_SUBJECT, "CDOITMO - log report");
                         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                        intent.setDataAndType(tempUri, getContentResolver().getType(tempUri));
+                        intent.setType(getContentResolver().getType(tempUri));
                         intent.putExtra(Intent.EXTRA_STREAM, tempUri);
                         startActivity(Intent.createChooser(intent, getString(R.string.send_mail) + "..."));
                     }
@@ -122,7 +122,7 @@ public class LogActivity extends AppCompatActivity implements SwipeRefreshLayout
             ((TextView) findViewById(R.id.error)).setText(String.valueOf(extraLog.error));
             ((TextView) findViewById(R.id.exception)).setText(String.valueOf(extraLog.exception));
             ((TextView) findViewById(R.id.wtf)).setText(String.valueOf(extraLog.wtf));
-            ((TextView) findViewById(R.id.log_container)).setText(extraLog.log);
+            ((TextView) findViewById(R.id.log_container)).setText(extraLog.log_reverse);
             SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_container);
             if (mSwipeRefreshLayout != null) {
                 if (mSwipeRefreshLayout.isRefreshing()) {

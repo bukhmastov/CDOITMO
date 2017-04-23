@@ -34,7 +34,7 @@ public class ProtocolTracker {
                     if (((JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE)).getPendingJob(jobID) == null) throw new Exception("job is null");
                 } catch (Exception e) {
                     Log.w(TAG, e.getMessage());
-                    if (Build.VERSION.SDK_INT != Build.VERSION_CODES.N_MR1) restart();
+                    /*if (Build.VERSION.SDK_INT != Build.VERSION_CODES.N_MR1) */restart();
                 }
             }
         }

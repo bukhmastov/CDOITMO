@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/open_group"
+        android:title="@string/open_group_schedule" />
+
+    <item
+        android:id="@+id/open_teacher"
+        android:title="@string/open_teacher_schedule" />
+
+</menu>

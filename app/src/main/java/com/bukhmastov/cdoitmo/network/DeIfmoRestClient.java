@@ -37,10 +37,21 @@ public class DeIfmoRestClient extends Client {
                     }
                     @Override
                     public void onProgress(int state) {
-                        responseHandler.onProgress(state);
+                        responseHandler.onProgress(STATE_HANDLING);
                     }
                     @Override
                     public void onFailure(int state) {
+                        switch (state) {
+                            case DeIfmoClient.FAILED_OFFLINE:
+                                state = FAILED_OFFLINE;
+                                break;
+                            case DeIfmoClient.FAILED_TRY_AGAIN:
+                            case DeIfmoClient.FAILED_AUTH_TRY_AGAIN:
+                            case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
+                            case DeIfmoClient.FAILED_AUTH_CREDENTIALS_FAILED:
+                                state = FAILED_TRY_AGAIN;
+                                break;
+                        }
                         responseHandler.onFailure(state);
                     }
                     @Override

@@ -95,14 +95,19 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
     }
     private void load(final int refresh_rate){
         Log.v(TAG, "load | refresh_rate=" + refresh_rate);
+        draw(R.layout.state_loading);
         eRegister.is(new ERegister.Callback(){
-            void onChecked(boolean is){
+            @Override
+            public void onDone(JSONObject eregister) {}
+            @Override
+            public void onChecked(boolean is){
                 Log.v(TAG, "load | eRegister.is=" + (is ? "true" : "false"));
                 if (!is || refresh_rate == 0) {
                     forceLoad();
                 } else if (refresh_rate >= 0){
                     eRegister.get(new ERegister.Callback() {
-                        void onDone(JSONObject eregister){
+                        @Override
+                        public void onDone(JSONObject eregister){
                             Log.v(TAG, "load | eRegister.get=" + (eregister == null ? "null" : "notnull"));
                             try {
                                 if (eregister == null) throw new Exception("eregister is null");
@@ -116,6 +121,8 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                                 forceLoad();
                             }
                         }
+                        @Override
+                        public void onChecked(boolean is) {}
                     });
                 } else {
                     display();
@@ -139,7 +146,10 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                         });
                     } else {
                         eRegister.is(new ERegister.Callback() {
-                            void onChecked(boolean is) {
+                            @Override
+                            public void onDone(JSONObject eregister) {}
+                            @Override
+                            public void onChecked(boolean is) {
                                 Log.v(TAG, "forceLoad | eRegister.is=" + (is ? "true" : "false"));
                                 if (is) {
                                     display();
@@ -171,7 +181,10 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                     switch (state) {
                         case DeIfmoRestClient.FAILED_OFFLINE:
                             eRegister.is(new ERegister.Callback() {
-                                void onChecked(boolean is) {
+                                @Override
+                                public void onDone(JSONObject eregister) {}
+                                @Override
+                                public void onChecked(boolean is) {
                                     Log.v(TAG, "forceLoad | eRegister.is=" + (is ? "true" : "false"));
                                     if (is) {
                                         display();
@@ -191,7 +204,6 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                                     }
                                 }
                             });
-
                             break;
                         case DeIfmoRestClient.FAILED_TRY_AGAIN:
                             draw(R.layout.state_try_again);
@@ -216,7 +228,10 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
             });
         } else {
             eRegister.is(new ERegister.Callback() {
-                void onChecked(boolean is) {
+                @Override
+                public void onDone(JSONObject eregister) {}
+                @Override
+                public void onChecked(boolean is) {
                     Log.v(TAG, "forceLoad | eRegister.is=" + (is ? "true" : "false"));
                     if (is) {
                         display();
@@ -266,7 +281,8 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
         Log.v(TAG, "display");
         final ERegisterFragment self = this;
         eRegister.get(new ERegister.Callback() {
-            void onDone(JSONObject data){
+            @Override
+            public void onDone(JSONObject data){
                 Log.v(TAG, "display | eRegister.get=" + (data == null ? "null" : "notnull"));
                 try {
                     if (data == null) throw new NullPointerException("parsedERegister cannot be null");
@@ -396,6 +412,8 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                     loadFailed();
                 }
             }
+            @Override
+            public void onChecked(boolean is) {}
         });
     }
     private void checkData(JSONObject data) throws Exception {

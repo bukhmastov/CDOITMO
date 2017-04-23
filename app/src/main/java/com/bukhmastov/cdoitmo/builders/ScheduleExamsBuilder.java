@@ -2,10 +2,13 @@ package com.bukhmastov.cdoitmo.builders;
 
 import android.app.Activity;
 import android.content.Context;
-import android.view.ContextMenu;
+import android.support.v7.widget.PopupMenu;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -50,14 +53,18 @@ public class ScheduleExamsBuilder extends Thread {
             String type = ScheduleExamsFragment.schedule.getString("type");
             for (int i = 0; i < schedule.length(); i++) {
                 JSONObject exam = schedule.getJSONObject(i);
-                LinearLayout examsLayout = (LinearLayout) inflate(R.layout.layout_schedule_exams_item);
+                FrameLayout examsLayout = (FrameLayout) inflate(R.layout.layout_schedule_exams_item);
                 ((TextView) examsLayout.findViewById(R.id.exam_header)).setText(exam.getString("subject").toUpperCase());
                 String desc = null;
                 switch (type) {
                     case "group": desc = exam.getString("teacher"); break;
                     case "teacher": desc = exam.getString("group"); break;
                 }
-                ((TextView) examsLayout.findViewById(R.id.exam_desc)).setText(desc);
+                if (desc == null || desc.trim().isEmpty()) {
+                    examsLayout.findViewById(R.id.exam_desc).setLayoutParams(new LinearLayout.LayoutParams(0, 0));
+                } else {
+                    ((TextView) examsLayout.findViewById(R.id.exam_desc)).setText(desc);
+                }
                 int count = 2;
                 if (exam.has("consult") && exam.getJSONObject("consult").has("date")) {
                     ((TextView) examsLayout.findViewById(R.id.exam_ie_title)).setText(activity.getString(R.string.consult).toUpperCase());
@@ -77,18 +84,47 @@ public class ScheduleExamsBuilder extends Thread {
                 }
                 if (count == 1) examsLayout.removeView(examsLayout.findViewById(R.id.separator_small));
                 if (count == 0) examsLayout.removeView(examsLayout.findViewById(R.id.separator_big));
+
                 final String group = exam.has("group") ? (Objects.equals(exam.getString("group"), "") ? null : exam.getString("group")) : null;
                 final String teacher = exam.has("teacher") ? (Objects.equals(exam.getString("teacher"), "") ? null : exam.getString("teacher")) : null;
                 if (group != null || teacher != null) {
-                    examsLayout.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
+                    examsLayout.findViewById(R.id.lesson_touch_icon).setOnClickListener(new View.OnClickListener() {
                         @Override
-                        public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-                            Log.v(TAG, "onCreateContextMenu");
-                            menu.setHeaderTitle(R.string.open_schedule);
-                            if (group != null) menu.add(activity.getString(R.string.group) + " " + group);
-                            if (teacher != null) menu.add(teacher);
+                        public void onClick(View view) {
+                            Log.v(TAG, "lesson_touch_icon clicked");
+                            try {
+                                PopupMenu popup = new PopupMenu(activity, view);
+                                Menu menu = popup.getMenu();
+                                popup.getMenuInflater().inflate(R.menu.schedule_exams_item, menu);
+                                bindMenuItem(menu, R.id.open_group, activity.getString(R.string.group) + " " + group, group == null);
+                                bindMenuItem(menu, R.id.open_teacher, teacher, teacher == null);
+                                popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                                    @Override
+                                    public boolean onMenuItemClick(MenuItem item) {
+                                        Log.v(TAG, "popup.MenuItem clicked | " + item.getTitle().toString());
+                                        switch (item.getItemId()) {
+                                            case R.id.open_group:
+                                                if (ScheduleExamsFragment.scheduleExams != null) {
+                                                    ScheduleExamsFragment.scheduleExams.search(group);
+                                                }
+                                                break;
+                                            case R.id.open_teacher:
+                                                if (ScheduleExamsFragment.scheduleExams != null) {
+                                                    ScheduleExamsFragment.scheduleExams.search(teacher);
+                                                }
+                                                break;
+                                        }
+                                        return false;
+                                    }
+                                });
+                                popup.show();
+                            } catch (Exception e){
+                                Static.error(e);
+                            }
                         }
                     });
+                } else {
+                    examsLayout.findViewById(R.id.lesson_touch_icon).setLayoutParams(new LinearLayout.LayoutParams(0, 0));
                 }
                 container.addView(examsLayout);
             }
@@ -114,6 +150,13 @@ public class ScheduleExamsBuilder extends Thread {
 
     private View inflate(int layout) throws Exception {
         return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layout, null);
+    }
+    private void bindMenuItem(Menu menu, int id, String text, boolean hide){
+        if (hide) {
+            menu.findItem(id).setVisible(false);
+        } else {
+            menu.findItem(id).setTitle(text);
+        }
     }
 
 }

@@ -371,9 +371,11 @@ public class ScheduleLessonsEditActivity extends AppCompatActivity {
                         Static.snackBar(self, getString(R.string.lesson_time_start_required));
                         return;
                     }
-                    if (Objects.equals(lessonUnit.type.toLowerCase(), getString(R.string.lecture).toLowerCase())) lessonUnit.type = "lecture";
-                    if (Objects.equals(lessonUnit.type.toLowerCase(), getString(R.string.practice).toLowerCase())) lessonUnit.type = "practice";
-                    if (Objects.equals(lessonUnit.type.toLowerCase(), getString(R.string.lab).toLowerCase())) lessonUnit.type = "lab";
+                    if (lessonUnit.type != null) {
+                        if (Objects.equals(lessonUnit.type.toLowerCase(), getString(R.string.lecture).toLowerCase())) lessonUnit.type = "lecture";
+                        if (Objects.equals(lessonUnit.type.toLowerCase(), getString(R.string.practice).toLowerCase())) lessonUnit.type = "practice";
+                        if (Objects.equals(lessonUnit.type.toLowerCase(), getString(R.string.lab).toLowerCase())) lessonUnit.type = "lab";
+                    }
                     if (ScheduleLessons.editLesson(self, cache_token, index, oldHash, lessonUnit)) {
                         ScheduleLessonsFragment.reScheduleRequired = true;
                         finish();

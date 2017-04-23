@@ -16,27 +16,9 @@ public class ERegister {
     private Activity activity;
     private JSONObject eregister = null;
     private boolean accessed = false;
-    public abstract static class Callback {
-        void onDone(JSONObject eregister){}
-        void onChecked(boolean is){}
-        private void done(final Activity activity, final Callback callback, final JSONObject protocol){
-            Log.v(TAG, "done");
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    callback.onDone(protocol);
-                }
-            });
-        }
-        private void checked(final Activity activity, final Callback callback, final boolean is){
-            Log.v(TAG, "checked");
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    callback.onChecked(is);
-                }
-            });
-        }
+    public interface Callback {
+        void onDone(JSONObject eregister);
+        void onChecked(boolean is);
     }
 
     public ERegister(final Activity activity){
@@ -58,7 +40,7 @@ public class ERegister {
     public void get(final Callback callback){
         Log.v(TAG, "get");
         if (accessed) {
-            callback.done(activity, callback, eregister);
+            done(activity, callback, eregister);
         } else {
             access(callback);
         }
@@ -66,7 +48,7 @@ public class ERegister {
     public void is(final Callback callback){
         Log.v(TAG, "is");
         if (accessed) {
-            callback.checked(activity, callback, eregister != null);
+            checked(activity, callback, eregister != null);
         } else {
             access(callback);
         }
@@ -85,10 +67,29 @@ public class ERegister {
                         Static.error(e);
                     }
                 }
-                callback.checked(activity, callback, eregister != null);
-                callback.done(activity, callback, eregister);
+                checked(activity, callback, eregister != null);
+                done(activity, callback, eregister);
             }
         })).start();
+    }
+
+    private void done(final Activity activity, final Callback callback, final JSONObject protocol){
+        Log.v(TAG, "done");
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                callback.onDone(protocol);
+            }
+        });
+    }
+    private void checked(final Activity activity, final Callback callback, final boolean is){
+        Log.v(TAG, "checked");
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                callback.onChecked(is);
+            }
+        });
     }
 
 }

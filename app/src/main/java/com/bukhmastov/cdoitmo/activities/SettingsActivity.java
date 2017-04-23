@@ -223,6 +223,30 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                     }
                 });
             }
+            Preference pref_schedule_lessons_clear_cache = findPreference("pref_schedule_lessons_clear_cache");
+            if (pref_schedule_lessons_clear_cache != null) {
+                pref_schedule_lessons_clear_cache.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        Log.v(TAG, "pref_schedule_lessons_clear_cache clicked");
+                        boolean success = Storage.file.cache.clear(getActivity(), "schedule_lessons");
+                        Static.snackBar(getActivity(), getActivity().getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
+                        return false;
+                    }
+                });
+            }
+            Preference pref_schedule_exams_clear_cache = findPreference("pref_schedule_exams_clear_cache");
+            if (pref_schedule_exams_clear_cache != null) {
+                pref_schedule_exams_clear_cache.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        Log.v(TAG, "pref_schedule_exams_clear_cache clicked");
+                        boolean success = Storage.file.cache.clear(getActivity(), "schedule_exams");
+                        Static.snackBar(getActivity(), getActivity().getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
+                        return false;
+                    }
+                });
+            }
         }
         @Override
         public void onDestroy() {

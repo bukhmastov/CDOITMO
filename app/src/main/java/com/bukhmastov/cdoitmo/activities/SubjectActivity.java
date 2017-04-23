@@ -50,7 +50,8 @@ public class SubjectActivity extends AppCompatActivity {
             if (ERegisterFragment.eRegister == null) throw new Exception("ERegisterFragment.eRegister is null");
             final SubjectActivity self = this;
             ERegisterFragment.eRegister.get(new ERegister.Callback() {
-                void onDone(JSONObject data){
+                @Override
+                public void onDone(JSONObject data){
                     Log.v(TAG, "ERegisterFragment.eRegister.onDone");
                     try {
                         boolean groupFound = false;
@@ -124,6 +125,8 @@ public class SubjectActivity extends AppCompatActivity {
                         finish();
                     }
                 }
+                @Override
+                public void onChecked(boolean is) {}
             });
         } catch (Exception e) {
             Static.error(e);

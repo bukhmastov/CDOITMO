@@ -157,7 +157,7 @@ public class TrackingProtocolJobService extends JobService {
                     JSONObject changeOBJ = changes.get(i);
                     JSONObject var = changeOBJ.getJSONObject("var");
                     StringBuilder text = new StringBuilder();
-                    text.append(var.getString("name")).append(": ").append(changeOBJ.getString("value")).append("/").append(var.getString("max"));
+                    text.append(changeOBJ.getString("value")).append("/").append(var.getString("max")).append(" — ").append(var.getString("name"));
                     if (changeOBJ.getDouble("cdoitmo_delta_double") != 0) {
                         text.append(" (").append(changeOBJ.getString("cdoitmo_delta")).append(")");
                     }

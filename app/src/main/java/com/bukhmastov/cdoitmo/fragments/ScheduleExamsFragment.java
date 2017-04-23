@@ -3,7 +3,6 @@ package com.bukhmastov.cdoitmo.fragments;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
@@ -270,9 +269,9 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
                                     Boolean result = ScheduleExamsFragment.scheduleExams.toggleCache();
                                     if (result == null) {
                                         Log.w(TAG, "failed to toggle cache");
-                                        snackBar(getString(R.string.cache_failed));
+                                        Static.snackBar(getActivity(), getString(R.string.cache_failed));
                                     } else {
-                                        snackBar(result ? getString(R.string.cache_true) : getString(R.string.cache_false));
+                                        Static.snackBar(getActivity(), result ? getString(R.string.cache_true) : getString(R.string.cache_false));
                                         FrameLayout schedule_exams_cache = (FrameLayout) getActivity().findViewById(R.id.schedule_exams_cache);
                                         if (schedule_exams_cache != null) {
                                             ImageView cacheImage = new ImageView(getContext());
@@ -331,16 +330,6 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
         }
     }
 
-    @Override
-    public boolean onContextItemSelected(MenuItem item) {
-        Log.v(TAG, "onContextItemSelected | item=" + item.getTitle().toString());
-        if (getUserVisibleHint()) {
-            if (ScheduleExamsFragment.scheduleExams != null) ScheduleExamsFragment.scheduleExams.search(item.getTitle().toString().replace(getString(R.string.group), "").trim());
-            return true;
-        }
-        return super.onContextItemSelected(item);
-    }
-
     private void notFound(){
         Log.v(TAG, "notFound");
         LinearLayout linearLayout = new LinearLayout(getContext());
@@ -380,18 +369,6 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
             if (vg != null) {
                 vg.removeAllViews();
                 vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-            }
-        } catch (Exception e){
-            Static.error(e);
-        }
-    }
-    private void snackBar(String text){
-        try {
-            View content_container = getActivity().findViewById(R.id.container_schedule_lessons);
-            if (content_container != null) {
-                Snackbar snackbar = Snackbar.make(content_container, text, Snackbar.LENGTH_SHORT);
-                snackbar.getView().setBackgroundColor(Static.colorBackgroundSnackBar);
-                snackbar.show();
             }
         } catch (Exception e){
             Static.error(e);

@@ -76,11 +76,8 @@ public class Log {
         return stringBuilder.toString();
     }
     public static ExtraLog getExtraLog(){
-        return getExtraLog(true);
-    }
-    public static ExtraLog getExtraLog(boolean reverse){
         ExtraLog extraLog = new ExtraLog();
-        for (int i = reverse ? (logList.size() - 1) : 0; reverse ? (i >= 0) : (i < logList.size()); i = reverse ? (i - 1) : (i + 1)) {
+        for (int i = 0; i < logList.size(); i++) {
             LogItem logItem = logList.get(i);
             switch (logItem.type) {
                 case WARN: extraLog.warn++; break;
@@ -89,7 +86,8 @@ public class Log {
                 case WTF: case WTF_EXCEPTION: extraLog.wtf++; break;
             }
         }
-        extraLog.log = getLog(reverse);
+        extraLog.log = getLog(false);
+        extraLog.log_reverse = getLog(true);
         return extraLog;
     }
     private static void addLog(LogItem logItem){
@@ -160,6 +158,7 @@ public class Log {
         public int exception = 0;
         public int wtf = 0;
         public String log = "";
+        public String log_reverse = "";
     }
 
 }

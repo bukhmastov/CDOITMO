@@ -1,142 +1,169 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="16dp"
-    android:layout_marginBottom="0dp"
-    android:layout_marginStart="16dp"
-    android:layout_marginEnd="16dp"
-    android:background="@drawable/shape_border_round" >
+    android:paddingTop="16dp"
+    android:paddingBottom="0dp"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp">
 
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp" >
-
-        <TextView
-            android:text="@string/lorem_ipsum"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textStyle="normal|bold"
-            android:textColor="?android:attr/textColorPrimary"
-            android:textAllCaps="true"
-            android:id="@+id/exam_header" />
-
-        <TextView
-            android:text="@string/lorem_ipsum"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textStyle="normal|bold"
-            android:textColor="?android:attr/textColorSecondary"
-            android:id="@+id/exam_desc" />
-
-    </LinearLayout>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="?attr/colorSeparator"
-        android:id="@+id/separator_big" />
-
-    <LinearLayout
-        android:orientation="vertical"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
-        android:id="@+id/exam_info_exam">
-
-        <TextView
-            android:text="@string/lorem_ipsum"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="13sp"
-            android:textAllCaps="true"
-            android:textColor="?android:attr/textColorPrimary"
-            android:id="@+id/exam_ie_title" />
+        android:background="@drawable/shape_border_round" >
 
         <LinearLayout
-            android:orientation="horizontal"
+            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp" >
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingStart="12dp"
+                android:paddingEnd="6dp" >
+
+                <TextView
+                    android:id="@+id/exam_header"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_gravity="center_vertical"
+                    android:gravity="center_vertical"
+                    android:text="@string/lorem_ipsum"
+                    android:textStyle="normal|bold"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textAllCaps="true"
+                    android:paddingStart="0dp"
+                    android:paddingEnd="4dp"/>
+
+                <ImageView
+                    android:id="@+id/lesson_touch_icon"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    app:srcCompat="@drawable/ic_more_vert" />
+
+            </LinearLayout>
 
             <TextView
                 android:text="@string/lorem_ipsum"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:textColor="?android:attr/textColorPrimary"
-                android:id="@+id/exam_ie_date" />
-
-            <TextView
-                android:text="@string/lorem_ipsum"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="20"
+                android:textStyle="normal|bold"
                 android:textColor="?android:attr/textColorSecondary"
-                android:id="@+id/exam_ie_place" />
+                android:id="@+id/exam_desc"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp" />
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="?attr/colorSeparator"
+            android:id="@+id/separator_big" />
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:id="@+id/exam_info_exam">
+
+            <TextView
+                android:text="@string/lorem_ipsum"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                android:textAllCaps="true"
+                android:textColor="?android:attr/textColorPrimary"
+                android:id="@+id/exam_ie_title" />
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:text="@string/lorem_ipsum"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:id="@+id/exam_ie_date" />
+
+                <TextView
+                    android:text="@string/lorem_ipsum"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="20"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:id="@+id/exam_ie_place" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:background="?attr/colorSeparator"
+            android:id="@+id/separator_small" />
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:id="@+id/exam_info_consult">
+
+            <TextView
+                android:text="@string/lorem_ipsum"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                android:textAllCaps="true"
+                android:textColor="?android:attr/textColorPrimary"
+                android:id="@+id/exam_ic_title" />
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:text="@string/lorem_ipsum"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:id="@+id/exam_ic_date" />
+
+                <TextView
+                    android:text="@string/lorem_ipsum"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="20"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:id="@+id/exam_ic_place" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
     </LinearLayout>
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginStart="12dp"
-        android:layout_marginEnd="12dp"
-        android:background="?attr/colorSeparator"
-        android:id="@+id/separator_small" />
-
-    <LinearLayout
-        android:orientation="vertical"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
-        android:id="@+id/exam_info_consult">
-
-        <TextView
-            android:text="@string/lorem_ipsum"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="13sp"
-            android:textAllCaps="true"
-            android:textColor="?android:attr/textColorPrimary"
-            android:id="@+id/exam_ic_title" />
-
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <TextView
-                android:text="@string/lorem_ipsum"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:textColor="?android:attr/textColorPrimary"
-                android:id="@+id/exam_ic_date" />
-
-            <TextView
-                android:text="@string/lorem_ipsum"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="20"
-                android:textColor="?android:attr/textColorSecondary"
-                android:id="@+id/exam_ic_place" />
-
-        </LinearLayout>
-
-    </LinearLayout>
-
-</LinearLayout>
+</FrameLayout>

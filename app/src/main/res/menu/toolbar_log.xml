@@ -10,7 +10,7 @@
     <item
         android:id="@+id/action_log_send_mail"
         android:title="@string/send_log"
-        android:icon="@drawable/ic_mail_outline_white"
+        android:icon="@drawable/ic_mail_white"
         app:showAsAction="ifRoom" />
 
 </menu>

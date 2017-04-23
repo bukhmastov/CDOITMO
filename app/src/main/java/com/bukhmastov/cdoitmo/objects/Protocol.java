@@ -18,27 +18,9 @@ public class Protocol {
     private Activity activity;
     private JSONObject protocol = null;
     private boolean accessed = false;
-    public abstract static class Callback {
-        void onDone(JSONObject protocol){}
-        void onChecked(boolean is){}
-        private void done(final Activity activity, final Callback callback, final JSONObject protocol){
-            Log.v(TAG, "done");
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    callback.onDone(protocol);
-                }
-            });
-        }
-        private void checked(final Activity activity, final Callback callback, final boolean is){
-            Log.v(TAG, "checked");
-            activity.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    callback.onChecked(is);
-                }
-            });
-        }
+    public interface Callback {
+        void onDone(JSONObject protocol);
+        void onChecked(boolean is);
     }
 
     public Protocol(Activity activity){
@@ -71,7 +53,7 @@ public class Protocol {
     public void get(final Callback callback){
         Log.v(TAG, "get");
         if (accessed) {
-            callback.done(activity, callback, protocol);
+            done(activity, callback, protocol);
         } else {
             access(callback, -1);
         }
@@ -82,7 +64,7 @@ public class Protocol {
     public void is(final Callback callback, int number_of_weeks){
         Log.v(TAG, "is | number_of_weeks=" + number_of_weeks);
         if (accessed) {
-            callback.checked(activity, callback, protocol != null);
+            checked(activity, callback, protocol != null);
         } else {
             access(callback, number_of_weeks);
         }
@@ -102,18 +84,37 @@ public class Protocol {
                     }
                 }
                 if (number_of_weeks == -1) {
-                    callback.checked(activity, callback, protocol != null);
+                    checked(activity, callback, protocol != null);
                 } else {
                     try {
-                        callback.checked(activity, callback, protocol != null && protocol.getInt("number_of_weeks") == number_of_weeks);
+                        checked(activity, callback, protocol != null && protocol.getInt("number_of_weeks") == number_of_weeks);
                     } catch (JSONException e) {
                         Static.error(e);
-                        callback.checked(activity, callback, false);
+                        checked(activity, callback, false);
                     }
                 }
-                callback.done(activity, callback, protocol);
+                done(activity, callback, protocol);
             }
         })).start();
+    }
+
+    private void done(final Activity activity, final Callback callback, final JSONObject protocol){
+        Log.v(TAG, "done");
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                callback.onDone(protocol);
+            }
+        });
+    }
+    private void checked(final Activity activity, final Callback callback, final boolean is){
+        Log.v(TAG, "checked");
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                callback.onChecked(is);
+            }
+        });
     }
 
 }

@@ -189,8 +189,10 @@
     <string name="cache_cleared">Кэш очищен</string>
     <string name="current_group">Текущая группа</string>
     <string name="choose_schedule">Выбрать расписание</string>
-    <string name="clear_cache">Очистить кэш</string>
+    <string name="clear_cache">Очистить весь кэш</string>
     <string name="clear_schedule_cache">Очистить кэш расписаний</string>
+    <string name="clear_schedule_lessons_cache">Очистить кэш расписаний занятий</string>
+    <string name="clear_schedule_exams_cache">Очистить кэш расписаний сессии</string>
     <string name="term_picker">Выбор семестра</string>
     <string name="period_picker">Период изменений за</string>
     <string name="default_schedule">Расписание по умолчанию</string>

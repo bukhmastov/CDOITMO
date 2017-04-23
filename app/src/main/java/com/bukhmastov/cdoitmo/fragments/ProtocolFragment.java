@@ -94,14 +94,19 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
     }
     private void load(final int refresh_rate){
         Log.v(TAG, "load | refresh_rate=" + refresh_rate);
+        draw(R.layout.state_loading);
         protocol.is(new Protocol.Callback() {
-            void onChecked(boolean is){
+            @Override
+            public void onDone(JSONObject protocol) {}
+            @Override
+            public void onChecked(boolean is){
                 Log.v(TAG, "load | protocol.is=" + (is ? "true" : "false"));
                 if (!is || refresh_rate == 0) {
                     forceLoad();
                 } else if (refresh_rate >= 0){
                     protocol.get(new Protocol.Callback() {
-                        void onDone(JSONObject p){
+                        @Override
+                        public void onDone(JSONObject p){
                             Log.v(TAG, "load | protocol.get=" + (p == null ? "null" : "notnull"));
                             try {
                                 if (p == null) throw new Exception("protocol is null");
@@ -115,6 +120,8 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
                                 forceLoad();
                             }
                         }
+                        @Override
+                        public void onChecked(boolean is) {}
                     });
                 } else {
                     display();
@@ -130,7 +137,10 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
         if (!Static.OFFLINE_MODE) {
             if (++attempt > maxAttempts) {
                 protocol.is(new Protocol.Callback() {
-                    void onChecked(boolean is) {
+                    @Override
+                    public void onDone(JSONObject protocol) {}
+                    @Override
+                    public void onChecked(boolean is) {
                         Log.v(TAG, "forceLoad | protocol.is=" + (is ? "true" : "false"));
                         if (is) {
                             display();
@@ -175,7 +185,10 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
                     switch (state) {
                         case DeIfmoRestClient.FAILED_OFFLINE:
                             protocol.is(new Protocol.Callback() {
-                                void onChecked(boolean is){
+                                @Override
+                                public void onDone(JSONObject protocol) {}
+                                @Override
+                                public void onChecked(boolean is){
                                     if (is) {
                                         display();
                                     } else {
@@ -218,7 +231,10 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
             });
         } else {
             protocol.is(new Protocol.Callback() {
-                void onChecked(boolean is) {
+                @Override
+                public void onDone(JSONObject protocol) {}
+                @Override
+                public void onChecked(boolean is) {
                     Log.v(TAG, "forceLoad | protocol.is=" + (is ? "true" : "false"));
                     if (is) {
                         display();
@@ -264,7 +280,8 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
         Log.v(TAG, "display");
         final ProtocolFragment self = this;
         protocol.get(new Protocol.Callback() {
-            void onDone(JSONObject data){
+            @Override
+            public void onDone(JSONObject data){
                 Log.v(TAG, "display | protocol.get=" + (data == null ? "null" : "notnull"));
                 try {
                     if (data == null) throw new NullPointerException("Protocol.protocol can't be null");
@@ -345,6 +362,8 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
                     loadFailed();
                 }
             }
+            @Override
+            public void onChecked(boolean is) {}
         });
     }
     private void draw(int layoutId){

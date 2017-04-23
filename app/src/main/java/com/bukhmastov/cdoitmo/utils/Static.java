@@ -76,9 +76,6 @@ public class Static {
     }
     public static boolean isOnline(Context context) {
         Log.v(TAG, "isOnline");
-        if (Static.OFFLINE_MODE) {
-            return false;
-        }
         if (context != null) {
             NetworkInfo networkInfo = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
             return (networkInfo != null && networkInfo.isConnected());
