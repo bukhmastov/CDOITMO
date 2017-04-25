@@ -58,9 +58,9 @@ public class Log {
                 case INFO: stringBuilder.append("INFO").append("/"); break;
                 case WARN: stringBuilder.append("WARN").append("/"); break;
                 case ERROR: stringBuilder.append("ERROR").append("/"); break;
-                case EXCEPTION: stringBuilder.append("EXCEPTION"); break;
+                case EXCEPTION: stringBuilder.append("EXCEPTION").append(": "); break;
                 case WTF: stringBuilder.append("WTF").append("/"); break;
-                case WTF_EXCEPTION: stringBuilder.append("WTF_EXCEPTION"); break;
+                case WTF_EXCEPTION: stringBuilder.append("WTF_EXCEPTION").append(": "); break;
             }
             if ((logItem.type == EXCEPTION || logItem.type == WTF_EXCEPTION) && logItem.throwable != null) {
                 stringBuilder.append(logItem.throwable.getMessage());
