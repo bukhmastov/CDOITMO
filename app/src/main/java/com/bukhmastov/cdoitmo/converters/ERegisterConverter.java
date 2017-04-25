@@ -6,9 +6,11 @@ import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -43,8 +45,10 @@ public class ERegisterConverter extends AsyncTask<JSONObject, Void, JSONObject> 
                 yearsDataOut.put(0, year1 < year2 ? year1 : year2);
                 yearsDataOut.put(1, year1 < year2 ? year2 : year1);
                 JSONArray termsOut = new JSONArray();
-                JSONObject firstTermOut = new JSONObject();
-                JSONObject secondTermOut = new JSONObject();
+                HashMap<String, Integer> hashMap = new HashMap<>();
+                hashMap.put("number", -1);
+                JSONObject firstTermOut = new JSONObject(hashMap);
+                JSONObject secondTermOut = new JSONObject(hashMap);
                 int t1 = 0, t2 = 0;
                 JSONArray subjects = year.getJSONArray("subjects");
                 for (int j = 0; j < subjects.length(); j++) {
@@ -61,6 +65,8 @@ public class ERegisterConverter extends AsyncTask<JSONObject, Void, JSONObject> 
                         break;
                     }
                 }
+                fixTerm(firstTermOut, secondTermOut);
+                fixTerm(secondTermOut, firstTermOut);
                 JSONArray firstTermSubjectsOut = new JSONArray();
                 JSONArray secondTermSubjectsOut = new JSONArray();
                 for (int j = 0; j < subjects.length(); j++) {
@@ -148,6 +154,15 @@ public class ERegisterConverter extends AsyncTask<JSONObject, Void, JSONObject> 
         m = Pattern.compile("(.+)\\.0$").matcher(value);
         if (m.find()) value = m.group(1);
         return value;
+    }
+    private void fixTerm(JSONObject firstTerm, JSONObject secondTerm) throws JSONException {
+        if (firstTerm.getInt("number") == -1 && secondTerm.getInt("number") != -1) {
+            if (secondTerm.getInt("number") % 2 == 0) {
+                firstTerm.put("number", secondTerm.getInt("number") - 1);
+            } else {
+                firstTerm.put("number", secondTerm.getInt("number") + 1);
+            }
+        }
     }
 
     @Override
