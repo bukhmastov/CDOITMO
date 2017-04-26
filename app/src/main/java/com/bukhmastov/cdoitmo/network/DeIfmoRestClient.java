@@ -18,7 +18,7 @@ import cz.msebera.android.httpclient.Header;
 public class DeIfmoRestClient extends Client {
 
     private static final String TAG = "DeIfmoRestClient";
-    private static final String BASE_URL = "http://de.ifmo.ru/api/private/";
+    private static final String BASE_URL = "https://de.ifmo.ru/api/private/";
 
     public static final int STATE_HANDLING = 0;
     public static final int FAILED_OFFLINE = 0;

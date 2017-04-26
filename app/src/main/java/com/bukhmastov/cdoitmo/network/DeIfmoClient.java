@@ -25,7 +25,7 @@ import cz.msebera.android.httpclient.Header;
 public class DeIfmoClient extends Client {
 
     private static final String TAG = "DeIfmoClient";
-    private static final String BASE_URL = "http://de.ifmo.ru/";
+    private static final String BASE_URL = "https://de.ifmo.ru/";
 
     public static final int STATE_CHECKING = 0;
     public static final int STATE_AUTHORIZATION = 1;

@@ -16,7 +16,7 @@ import cz.msebera.android.httpclient.Header;
 public class IfmoRestClient extends Client {
 
     private static final String TAG = "IfmoRestClient";
-    private static final String BASE_URL = "http://mountain.ifmo.ru/api.ifmo.ru/public/v1/";
+    private static final String BASE_URL = "https://mountain.ifmo.ru/api.ifmo.ru/public/v1/";
 
     public static final int STATE_HANDLING = 0;
     public static final int FAILED_OFFLINE = 0;

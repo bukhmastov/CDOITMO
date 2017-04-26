@@ -18,7 +18,7 @@ import cz.msebera.android.httpclient.Header;
 public class Room101Client {
 
     private static final String TAG = "Room101RestClient";
-    private static final String BASE_URL = "http://de.ifmo.ru/m/";
+    private static final String BASE_URL = "https://de.ifmo.ru/m/";
     private static AsyncHttpClient httpclient = new AsyncHttpClient();
     private static boolean initialized = false;
 
