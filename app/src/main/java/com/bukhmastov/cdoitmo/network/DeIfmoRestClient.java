@@ -66,40 +66,46 @@ public class DeIfmoRestClient extends Client {
             responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(url), params, new JsonHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                    Log.v(TAG, "get | success(JSONObject)");
+                    Log.v(TAG, "get | url=" + url + " | success(JSONObject) | statusCode=" + statusCode);
                     responseHandler.onNewHandle(null);
                     responseHandler.onSuccess(statusCode, response, null);
                 }
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
-                    Log.v(TAG, "get | success(JSONArray)");
+                    Log.v(TAG, "get | url=" + url + " | success(JSONArray) | statusCode=" + statusCode);
                     responseHandler.onNewHandle(null);
                     responseHandler.onSuccess(statusCode, null, response);
                 }
                 @Override
+                public void onSuccess(int statusCode, Header[] headers, String responseString) {
+                    Log.v(TAG, "get | url=" + url + " | success(String)(rather failure) | statusCode=" + statusCode + " | responseString=" + responseString);
+                    responseHandler.onNewHandle(null);
+                    responseHandler.onFailure(FAILED_TRY_AGAIN);
+                }
+                @Override
                 public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
                     super.onFailure(statusCode, headers, throwable, errorResponse);
-                    Log.v(TAG, "get | failure(JSONObject)");
+                    Log.v(TAG, "get | url=" + url + " | failure(JSONObject) | statusCode=" + statusCode + (throwable != null ? " | throwable=" + throwable.getMessage() : "") + (errorResponse != null ? " | response=" + errorResponse.toString() : ""));
                     responseHandler.onNewHandle(null);
                     responseHandler.onFailure(FAILED_TRY_AGAIN);
                 }
                 @Override
                 public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONArray errorResponse) {
                     super.onFailure(statusCode, headers, throwable, errorResponse);
-                    Log.v(TAG, "get | failure(JSONArray) | statusCode=" + statusCode);
+                    Log.v(TAG, "get | url=" + url + " | failure(JSONArray) | statusCode=" + statusCode + (throwable != null ? " | throwable=" + throwable.getMessage() : "") + (errorResponse != null ? " | response=" + errorResponse.toString() : ""));
                     responseHandler.onNewHandle(null);
                     responseHandler.onFailure(FAILED_TRY_AGAIN);
                 }
                 @Override
                 public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
                     super.onFailure(statusCode, headers, responseString, throwable);
-                    Log.v(TAG, "get | failure(String) | statusCode=" + statusCode);
+                    Log.v(TAG, "get | url=" + url + " | failure(String) | statusCode=" + statusCode + (throwable != null ? " | throwable=" + throwable.getMessage() : "") + (responseString != null ? " | response=" + responseString : ""));
                     responseHandler.onNewHandle(null);
                     responseHandler.onFailure(FAILED_TRY_AGAIN);
                 }
             }));
         } else {
-            Log.v(TAG, "get | offline");
+            Log.v(TAG, "get | url=" + url + " | offline");
             responseHandler.onFailure(FAILED_OFFLINE);
         }
     }

@@ -13,12 +13,9 @@ import com.loopj.android.http.RequestParams;
 
 import org.json.JSONObject;
 
-import java.io.UnsupportedEncodingException;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import cz.msebera.android.httpclient.Header;
 
@@ -62,10 +59,10 @@ public class DeIfmoClient extends Client {
                     }
                 });
             } else {
-                DeIfmoClient.get(context, "servlet/distributedCDE?Rule=editPersonProfile", null, new DeIfmoClientResponseHandler() {
+                get(context, "servlet/distributedCDE?Rule=editPersonProfile", null, new DeIfmoClientResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, final String response) {
-                        Log.v(TAG, "check | success, going to parse user data");
+                        Log.v(TAG, "check | success | going to parse user data");
                         new UserDataParse(new UserDataParse.response() {
                             @Override
                             public void finish(HashMap<String, String> result) {
@@ -125,10 +122,10 @@ public class DeIfmoClient extends Client {
             responseHandler.onNewHandle(httpclient.post(getAbsoluteUrl("servlet"), params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                    Log.v(TAG, "authorize | success");
+                    Log.v(TAG, "authorize | success | statusCode=" + statusCode);
                     responseHandler.onNewHandle(null);
                     for (Header header : headers) {
-                        if (Objects.equals(header.getName(), "Set-Cookie")) {
+                        if (Objects.equals(header.getName().toLowerCase(), "set-cookie")) {
                             String[] pairs = header.getValue().split(";");
                             for (String pair : pairs) {
                                 String[] cookie = pair.split("=");
@@ -145,7 +142,8 @@ public class DeIfmoClient extends Client {
                         }
                     }
                     try {
-                        String data = new String((new String(responseBody, "windows-1251")).getBytes("UTF-8"));
+                        String data = convert2UTF8(headers, responseBody);
+                        if (data == null) throw new NullPointerException("data cannot be null");
                         if (data.contains("Access is forbidden") && data.contains("Invalid login/password")) {
                             Log.v(TAG, "authorize | success | FAILED_AUTH_CREDENTIALS_FAILED");
                             responseHandler.onFailure(FAILED_AUTH_CREDENTIALS_FAILED);
@@ -154,13 +152,13 @@ public class DeIfmoClient extends Client {
                             httpclient.get(getAbsoluteUrl("servlet/distributedCDE?Rule=APPLYSECURITYGROUP&PERSON=" + Storage.file.perm.get(context, "user#login") + "&SECURITYGROUP=8&COMPNAME="), null, new AsyncHttpResponseHandler(){
                                 @Override
                                 public void onSuccess(int statusCode, Header[] headers, byte[] response) {
-                                    Log.v(TAG, "authorize | success | security group | authorized");
+                                    Log.v(TAG, "authorize | success | security group | authorized | statusCode=" + statusCode);
                                     responseHandler.onProgress(STATE_AUTHORIZED);
                                     responseHandler.onSuccess(statusCode, "authorized");
                                 }
                                 @Override
-                                public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
-                                    Log.v(TAG, "authorize | success | security group | FAILED_AUTH_TRY_AGAIN | statusCode=" + statusCode);
+                                public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable throwable) {
+                                    Log.v(TAG, "authorize | success | security group | FAILED_AUTH_TRY_AGAIN | statusCode=" + statusCode + (throwable != null ? " | throwable=" + throwable.getMessage() : "") + (errorResponse != null ? " | response=" + convert2UTF8(headers, errorResponse) : ""));
                                     responseHandler.onFailure(FAILED_AUTH_TRY_AGAIN);
                                 }
                             });
@@ -172,14 +170,14 @@ public class DeIfmoClient extends Client {
                             Log.v(TAG, "authorize | success | FAILED_AUTH_TRY_AGAIN");
                             responseHandler.onFailure(FAILED_AUTH_TRY_AGAIN);
                         }
-                    } catch (UnsupportedEncodingException e) {
+                    } catch (Exception e) {
                         Static.error(e);
                         responseHandler.onFailure(FAILED_AUTH_TRY_AGAIN);
                     }
                 }
                 @Override
-                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                    Log.v(TAG, "authorize | failure | statusCode=" + statusCode);
+                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable throwable) {
+                    Log.v(TAG, "authorize | failure | statusCode=" + statusCode + (throwable != null ? " | throwable=" + throwable.getMessage() : "") + (responseBody != null ? " | response=" + convert2UTF8(headers, responseBody) : ""));
                     responseHandler.onNewHandle(null);
                     responseHandler.onFailure(FAILED_AUTH_TRY_AGAIN);
                 }
@@ -219,21 +217,13 @@ public class DeIfmoClient extends Client {
             responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(url), params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                    Log.v(TAG, "get | success");
+                    Log.v(TAG, "get | url=" + url + " | success | statusCode=" + statusCode);
                     responseHandler.onNewHandle(null);
                     try {
-                        if (responseBody == null) throw new NullPointerException("responseBody cannot be null");
-                        String data;
-                        String charset = "windows-1251";
-                        Matcher m = Pattern.compile("<meta.*charset=\"?(.*)\".*>").matcher(new String(responseBody, "UTF-8"));
-                        if (m.find()) charset = m.group(1).toUpperCase();
-                        if (Objects.equals(charset, "UTF-8")) {
-                            data = new String(responseBody, charset);
-                        } else {
-                            data = new String((new String(responseBody, charset)).getBytes("UTF-8"));
-                        }
+                        String data = convert2UTF8(headers, responseBody);
+                        if (data == null) throw new NullPointerException("data cannot be null");
                         if (data.contains("Закончился интервал неактивности") || data.contains("Доступ запрещен")) {
-                            Log.v(TAG, "get | success | auth required");
+                            Log.v(TAG, "get | url=" + url + " | success | auth required");
                             if (reAuth) {
                                 authorize(context, new DeIfmoClientResponseHandler() {
                                     @Override
@@ -265,8 +255,8 @@ public class DeIfmoClient extends Client {
                     }
                 }
                 @Override
-                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                    Log.v(TAG, "get | failure | statusCode=" + statusCode);
+                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable throwable) {
+                    Log.v(TAG, "get | url=" + url + " | failure | statusCode=" + statusCode + (throwable != null ? " | throwable=" + throwable.getMessage() : "") + (responseBody != null ? " | response=" + convert2UTF8(headers, responseBody) : ""));
                     responseHandler.onNewHandle(null);
                     responseHandler.onFailure(FAILED_TRY_AGAIN);
                 }
@@ -306,19 +296,11 @@ public class DeIfmoClient extends Client {
             responseHandler.onNewHandle(httpclient.post(getAbsoluteUrl(url), params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                    Log.v(TAG, "post | success");
+                    Log.v(TAG, "post | url=" + url + " | success | statusCode=" + statusCode);
                     responseHandler.onNewHandle(null);
                     try {
-                        if (responseBody == null) throw new NullPointerException("responseBody cannot be null");
-                        String data;
-                        String charset = "windows-1251";
-                        Matcher m = Pattern.compile("<meta.*charset=\"?(.*)\".*>").matcher(new String(responseBody, "UTF-8"));
-                        if (m.find()) charset = m.group(1).toUpperCase();
-                        if (Objects.equals(charset, "UTF-8")) {
-                            data = new String(responseBody, charset);
-                        } else {
-                            data = new String((new String(responseBody, charset)).getBytes("UTF-8"));
-                        }
+                        String data = convert2UTF8(headers, responseBody);
+                        if (data == null) throw new NullPointerException("data cannot be null");
                         if (data.contains("Закончился интервал неактивности") || data.contains("Доступ запрещен")) {
                             Log.v(TAG, "post | success | auth required");
                             authorize(context, new DeIfmoClientResponseHandler() {
@@ -348,8 +330,8 @@ public class DeIfmoClient extends Client {
                     }
                 }
                 @Override
-                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                    Log.v(TAG, "post | failure | statusCode=" + statusCode);
+                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable throwable) {
+                    Log.v(TAG, "post | url=" + url + " | failure | statusCode=" + statusCode + (throwable != null ? " | throwable=" + throwable.getMessage() : "") + (responseBody != null ? " | response=" + convert2UTF8(headers, responseBody) : ""));
                     responseHandler.onNewHandle(null);
                     responseHandler.onFailure(FAILED_TRY_AGAIN);
                 }

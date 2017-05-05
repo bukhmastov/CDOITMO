@@ -10,8 +10,9 @@ import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
-import java.io.UnsupportedEncodingException;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import cz.msebera.android.httpclient.Header;
 
@@ -45,28 +46,28 @@ public class Room101Client {
             responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(url), params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                    Log.v(TAG, "get | success");
+                    Log.v(TAG, "get | url=" + url + " | success | statusCode=" + statusCode);
                     responseHandler.onNewHandle(null);
                     analyseCookie(context, headers);
                     try {
-                        String data = "";
-                        if (responseBody != null) data = new String((new String(responseBody, "windows-1251")).getBytes("UTF-8"));
+                        String data = convert2UTF8(headers, responseBody);
+                        if (data == null) throw new NullPointerException("data cannot be null");
                         responseHandler.onSuccess(statusCode, data);
-                    } catch (UnsupportedEncodingException e) {
+                    } catch (Exception e) {
                         Static.error(e);
                         responseHandler.onFailure(FAILED_TRY_AGAIN, statusCode, headers);
                     }
                 }
                 @Override
-                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                    Log.v(TAG, "get | failure | statusCode=" + statusCode);
+                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable throwable) {
+                    Log.v(TAG, "get | url=" + url + " | failure | statusCode=" + statusCode + (throwable != null ? " | throwable=" + throwable.getMessage() : "") + (responseBody != null ? " | response=" + convert2UTF8(headers, responseBody) : ""));
                     responseHandler.onNewHandle(null);
                     analyseCookie(context, headers);
                     responseHandler.onFailure(FAILED_TRY_AGAIN, statusCode, headers);
                 }
             }));
         } else {
-            Log.v(TAG, "get | offline");
+            Log.v(TAG, "get | url=" + url + " | offline");
             responseHandler.onFailure(FAILED_OFFLINE, STATUS_CODE_EMPTY, null);
         }
     }
@@ -79,28 +80,28 @@ public class Room101Client {
             responseHandler.onNewHandle(httpclient.post(getAbsoluteUrl(url), params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                    Log.v(TAG, "post | success");
+                    Log.v(TAG, "post | url=" + url + " | success | statusCode=" + statusCode);
                     responseHandler.onNewHandle(null);
                     analyseCookie(context, headers);
                     try {
-                        String data = "";
-                        if (responseBody != null) data = new String((new String(responseBody, "windows-1251")).getBytes("UTF-8"));
+                        String data = convert2UTF8(headers, responseBody);
+                        if (data == null) throw new NullPointerException("data cannot be null");
                         responseHandler.onSuccess(statusCode, data);
-                    } catch (UnsupportedEncodingException e) {
+                    } catch (Exception e) {
                         Static.error(e);
                         responseHandler.onFailure(FAILED_TRY_AGAIN, statusCode, headers);
                     }
                 }
                 @Override
-                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                    Log.v(TAG, "post | failure | statusCode=" + statusCode);
+                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable throwable) {
+                    Log.v(TAG, "post | url=" + url + " | failure | statusCode=" + statusCode + (throwable != null ? " | throwable=" + throwable.getMessage() : "") + (responseBody != null ? " | response=" + convert2UTF8(headers, responseBody) : ""));
                     responseHandler.onNewHandle(null);
                     analyseCookie(context, headers);
                     responseHandler.onFailure(FAILED_TRY_AGAIN, statusCode, headers);
                 }
             }));
         } else {
-            Log.v(TAG, "post | offline");
+            Log.v(TAG, "post | url=" + url + " | offline");
             responseHandler.onFailure(FAILED_OFFLINE, STATUS_CODE_EMPTY, null);
         }
     }
@@ -111,7 +112,7 @@ public class Room101Client {
     private static void analyseCookie(Context context, Header[] headers){
         if (headers == null) return;
         for (Header header : headers) {
-            if (Objects.equals(header.getName(), "Cookie") || Objects.equals(header.getName(), "Set-Cookie")) {
+            if (Objects.equals(header.getName().toLowerCase(), "cookie") || Objects.equals(header.getName().toLowerCase(), "set-cookie")) {
                 String[] pairs = header.getValue().trim().split(";");
                 for (String pair : pairs) {
                     String[] cookie = pair.split("=");
@@ -127,4 +128,42 @@ public class Room101Client {
         httpclient.addHeader("User-Agent", Static.getUserAgent(context));
         httpclient.addHeader("Cookie", "PHPSESSID=" + Storage.file.perm.get(context, "user#phpsessid") + "; autoexit=true;");
     }
+    static String convert2UTF8(Header[] headers, byte[] content){
+        try {
+            if (content == null) throw new NullPointerException("content cannot be null");
+            String charset = "windows-1251";
+            boolean foundAtHeaders = false;
+            for (Header header : headers) {
+                if (Objects.equals(header.getName().toLowerCase(), "content-type")) {
+                    String[] entities = header.getValue().split(";");
+                    for (String entity : entities) {
+                        String[] pair = entity.trim().split("=");
+                        if (pair.length >= 2) {
+                            if (Objects.equals(pair[0].trim().toLowerCase(), "charset")) {
+                                charset = pair[1].trim().toUpperCase();
+                                foundAtHeaders = true;
+                            }
+                        }
+                        if (foundAtHeaders) break;
+                    }
+                    if (foundAtHeaders) break;
+                }
+            }
+            if (!foundAtHeaders) {
+                Matcher m = Pattern.compile("<meta.*charset=\"?(.*)\".*>").matcher(new String(content, "UTF-8"));
+                if (m.find()) {
+                    charset = m.group(1).trim().toUpperCase();
+                }
+            }
+            if (Objects.equals(charset, "UTF-8")) {
+                return new String(content, charset);
+            } else {
+                return new String((new String(content, charset)).getBytes("UTF-8"));
+            }
+        } catch (Exception e) {
+            Static.error(e);
+            return null;
+        }
+    }
+
 }

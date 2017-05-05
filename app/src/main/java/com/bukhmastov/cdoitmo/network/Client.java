@@ -6,6 +6,12 @@ import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 import com.loopj.android.http.AsyncHttpClient;
 
+import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import cz.msebera.android.httpclient.Header;
+
 abstract class Client {
 
     static AsyncHttpClient httpclient = new AsyncHttpClient();
@@ -26,6 +32,43 @@ abstract class Client {
     }
     static boolean checkJsessionId(Context context){
         return Long.parseLong(Storage.file.perm.get(context, "user#jsessionid_ts", "0")) + jsessionid_ts_limit < System.currentTimeMillis();
+    }
+    static String convert2UTF8(Header[] headers, byte[] content){
+        try {
+            if (content == null) throw new NullPointerException("content cannot be null");
+            String charset = "windows-1251";
+            boolean foundAtHeaders = false;
+            for (Header header : headers) {
+                if (Objects.equals(header.getName().toLowerCase(), "content-type")) {
+                    String[] entities = header.getValue().split(";");
+                    for (String entity : entities) {
+                        String[] pair = entity.trim().split("=");
+                        if (pair.length >= 2) {
+                            if (Objects.equals(pair[0].trim().toLowerCase(), "charset")) {
+                                charset = pair[1].trim().toUpperCase();
+                                foundAtHeaders = true;
+                            }
+                        }
+                        if (foundAtHeaders) break;
+                    }
+                    if (foundAtHeaders) break;
+                }
+            }
+            if (!foundAtHeaders) {
+                Matcher m = Pattern.compile("<meta.*charset=\"?(.*)\".*>").matcher(new String(content, "UTF-8"));
+                if (m.find()) {
+                    charset = m.group(1).trim().toUpperCase();
+                }
+            }
+            if (Objects.equals(charset, "UTF-8")) {
+                return new String(content, charset);
+            } else {
+                return new String((new String(content, charset)).getBytes("UTF-8"));
+            }
+        } catch (Exception e) {
+            Static.error(e);
+            return null;
+        }
     }
 
 }

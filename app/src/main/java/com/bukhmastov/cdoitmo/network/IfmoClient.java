@@ -8,10 +8,6 @@ import com.bukhmastov.cdoitmo.utils.Static;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
-import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import cz.msebera.android.httpclient.Header;
 
 public class IfmoClient extends Client {
@@ -32,19 +28,11 @@ public class IfmoClient extends Client {
             responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(url), params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                    Log.v(TAG, "get | success");
+                    Log.v(TAG, "get | url=" + url + " | success | statusCode=" + statusCode);
                     responseHandler.onNewHandle(null);
                     try {
-                        if (responseBody == null) throw new NullPointerException("responseBody cannot be null");
-                        String data;
-                        String charset = "windows-1251";
-                        Matcher m = Pattern.compile("<meta.*charset=\"?(.*)\".*>").matcher(new String(responseBody, "UTF-8"));
-                        if (m.find()) charset = m.group(1).toUpperCase();
-                        if (Objects.equals(charset, "UTF-8")) {
-                            data = new String(responseBody, charset);
-                        } else {
-                            data = new String((new String(responseBody, charset)).getBytes("UTF-8"));
-                        }
+                        String data = convert2UTF8(headers, responseBody);
+                        if (data == null) throw new NullPointerException("data cannot be null");
                         responseHandler.onSuccess(statusCode, data);
                     } catch (Exception e) {
                         Static.error(e);
@@ -52,14 +40,15 @@ public class IfmoClient extends Client {
                     }
                 }
                 @Override
-                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                    Log.v(TAG, "get | failure | statusCode=" + statusCode);
+                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable throwable) {
+
+                    Log.v(TAG, "get | url=" + url + " | failure | statusCode=" + statusCode + (responseBody != null ? convert2UTF8(headers, responseBody) : "") + (throwable != null ? " | throwable=" + throwable.getMessage() : ""));
                     responseHandler.onNewHandle(null);
                     responseHandler.onFailure(FAILED_TRY_AGAIN);
                 }
             }));
         } else {
-            Log.v(TAG, "get | offline");
+            Log.v(TAG, "get | url=" + url + " | offline");
             responseHandler.onFailure(FAILED_OFFLINE);
         }
     }
