@@ -50,8 +50,8 @@ public class Room101ReviewBuilder extends Thread {
         try {
             Log.v(TAG, "started");
             delegate.state(STATE_LOADING, inflate(R.layout.state_loading_compact));
-            LinearLayout container = (LinearLayout) inflate(R.layout.layout_room101_review_requests);
             if (sessions.length() > 0) {
+                LinearLayout container = (LinearLayout) inflate(R.layout.layout_room101_review_requests);
                 Log.v(TAG, "sessions.length() == " + sessions.length());
                 LinearLayout review_requests_container = (LinearLayout) container.findViewById(R.id.review_requests_container);
                 for (int i = sessions.length() - 1; i >= 0; i--) {
@@ -82,11 +82,11 @@ public class Room101ReviewBuilder extends Thread {
                         review_requests_container.addView(separator);
                     }
                 }
+                delegate.state(STATE_DONE, container);
             } else {
                 Log.v(TAG, "sessions.length() == 0");
-                container.addView(inflate(R.layout.layout_room101_review_without_requests));
+                delegate.state(STATE_DONE, inflate(R.layout.layout_room101_review_without_requests));
             }
-            delegate.state(STATE_DONE, container);
         } catch (Exception e){
             Static.error(e);
             delegate.state(STATE_FAILED, null);

@@ -42,42 +42,44 @@ public class Room101ViewRequestParse extends AsyncTask<String, Void, JSONObject>
             response.put("penalty", tds[3].getText().toString().trim());
             TagNode[] trs = d_table[1].getAllElements(false)[0].getAllElements(false);
             JSONArray sessions = new JSONArray();
-            for(int i = 1; i < trs.length; i++){
+            for (int i = 1; i < trs.length; i++) {
                 tds = trs[i].getAllElements(false);
-                JSONObject session = new JSONObject();
-                String date = tds[1].getText().toString().trim();
-                m = Pattern.compile("(\\d)(\\d).(\\d{2}).(\\d{2,4})").matcher(date);
-                if (m.find()) {
-                    date = (Objects.equals(m.group(1), "0") ? "" : m.group(1)) + m.group(2) + " " + Static.getGenitiveMonth(context, m.group(3)) + " " + m.group(4);
-                }
-                String time = tds[2].getText().toString().trim();
-                String[] times = time.split("-");
-                session.put("number", tds[0].getText().toString().trim());
-                session.put("date", date);
-                session.put("time", time);
-                session.put("timeStart", times[0].trim());
-                session.put("timeEnd", times[1].trim());
-                TagNode[] inputs = tds[3].getElementsByName("input", false);
-                if(inputs.length > 0){
-                    session.put("status", inputs[0].getAttributeByName("value").trim());
-                    m = Pattern.compile(".*document\\.fn\\.reid\\.value=(\\d+).*").matcher(inputs[0].getAttributeByName("onclick").trim());
-                    if(m.find()){
-                        int reid = 0;
-                        try {
-                            reid = Integer.parseInt(m.group(1));
-                        } catch (Exception e){
-                            e.printStackTrace();
+                if (tds.length >= 5) {
+                    JSONObject session = new JSONObject();
+                    String date = tds[1].getText().toString().trim();
+                    m = Pattern.compile("(\\d)(\\d).(\\d{2}).(\\d{2,4})").matcher(date);
+                    if (m.find()) {
+                        date = (Objects.equals(m.group(1), "0") ? "" : m.group(1)) + m.group(2) + " " + Static.getGenitiveMonth(context, m.group(3)) + " " + m.group(4);
+                    }
+                    String time = tds[2].getText().toString().trim();
+                    String[] times = time.split("-");
+                    session.put("number", tds[0].getText().toString().trim());
+                    session.put("date", date);
+                    session.put("time", time);
+                    session.put("timeStart", times[0].trim());
+                    session.put("timeEnd", times[1].trim());
+                    TagNode[] inputs = tds[3].getElementsByName("input", false);
+                    if (inputs.length > 0) {
+                        session.put("status", inputs[0].getAttributeByName("value").trim());
+                        m = Pattern.compile(".*document\\.fn\\.reid\\.value=(\\d+).*").matcher(inputs[0].getAttributeByName("onclick").trim());
+                        if (m.find()) {
+                            int reid = 0;
+                            try {
+                                reid = Integer.parseInt(m.group(1));
+                            } catch (Exception e){
+                                e.printStackTrace();
+                            }
+                            session.put("reid", reid);
+                        } else {
+                            session.put("reid", 0);
                         }
-                        session.put("reid", reid);
                     } else {
+                        session.put("status", tds[3].getText().toString().trim());
                         session.put("reid", 0);
                     }
-                } else {
-                    session.put("status", tds[3].getText().toString().trim());
-                    session.put("reid", 0);
+                    session.put("requested", tds[4].getText().toString().trim());
+                    sessions.put(session);
                 }
-                session.put("requested", tds[4].getText().toString().trim());
-                sessions.put(session);
             }
             response.put("sessions", sessions);
             return response;
