@@ -38,7 +38,7 @@ public class PointsListView extends ArrayAdapter<JSONObject> {
         TextView lv_point_value = ((TextView) rowView.findViewById(R.id.lv_point_value));
         try {
             if (lv_point_name != null) lv_point_name.setText(point.getString("name"));
-            if (lv_point_limits != null) lv_point_limits.setText("0 / " + mark2double(String.valueOf(point.getDouble("limit"))) + " / " + mark2double(String.valueOf(point.getDouble("max"))));
+            if (lv_point_limits != null) lv_point_limits.setText("0 / " + markConverter(String.valueOf(point.getDouble("limit"))) + " / " + markConverter(String.valueOf(point.getDouble("max"))));
             if (lv_point_value != null) lv_point_value.setText(markConverter(String.valueOf(point.getDouble("value"))));
         } catch (Exception e) {
             Static.error(e);
@@ -46,16 +46,6 @@ public class PointsListView extends ArrayAdapter<JSONObject> {
         return rowView;
     }
 
-    private double mark2double(String string){
-        return string2double(markConverter(string));
-    }
-    private double string2double(String string){
-        try {
-            return Double.parseDouble(string);
-        } catch (NumberFormatException e) {
-            return 0;
-        }
-    }
     private String markConverter(String value){
         Matcher m;
         value = value.replace(",", ".").trim();
