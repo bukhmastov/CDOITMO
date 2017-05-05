@@ -27,6 +27,8 @@
 
         <item name="ic_cdo_small">@drawable/cdo_small</item>
         <item name="ic_security">@drawable/ic_security</item>
+
+        <item name="windowActionModeOverlay">true</item>
     </style>
 
     <style name="AppTheme.Dark" parent="Theme.AppCompat.NoActionBar">
@@ -56,6 +58,8 @@
 
         <item name="ic_cdo_small">@drawable/cdo_small_dark</item>
         <item name="ic_security">@drawable/ic_security</item>
+
+        <item name="windowActionModeOverlay">true</item>
     </style>
 
     <style name="SplashTheme" parent="Theme.AppCompat.NoActionBar">
