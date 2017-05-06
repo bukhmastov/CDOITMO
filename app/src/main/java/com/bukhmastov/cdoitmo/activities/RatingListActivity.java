@@ -15,6 +15,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapters.RatingTopListView;
+import com.bukhmastov.cdoitmo.network.Client;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.IfmoClient;
 import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoClientResponseHandler;
@@ -113,7 +114,7 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
     private void load(){
         Log.v(TAG, "load");
         if (getSupportActionBar() != null) getSupportActionBar().setTitle("Топ-рейтинг");
-        DeIfmoClient.get(this, "?node=rating&std&depId=" + faculty + "&year=" + course + "&app=" + years, null, new DeIfmoClientResponseHandler() {
+        DeIfmoClient.get(this, Client.Protocol.HTTP, "?node=rating&std&depId=" + faculty + "&year=" + course + "&app=" + years, null, new DeIfmoClientResponseHandler() {
             @Override
             public void onSuccess(int statusCode, String response) {
                 Log.v(TAG, "load | success | statusCode=" + statusCode);
