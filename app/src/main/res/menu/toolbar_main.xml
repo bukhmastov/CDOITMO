@@ -22,4 +22,18 @@
         app:showAsAction="ifRoom"
         android:visible="false" />
 
+    <item
+        android:id="@+id/action_protocol_changes_switch_to_simple"
+        android:title="@string/protocol_changes_mode_simple"
+        android:icon="@drawable/ic_protocol_changes_simple"
+        app:showAsAction="ifRoom"
+        android:visible="false" />
+
+    <item
+        android:id="@+id/action_protocol_changes_switch_to_advanced"
+        android:title="@string/protocol_changes_mode_advanced"
+        android:icon="@drawable/ic_protocol_changes_advanced"
+        app:showAsAction="ifRoom"
+        android:visible="false" />
+
 </menu>

@@ -82,6 +82,15 @@
         <item>4</item>
     </string-array>
 
+    <string-array name="pref_protocol_changes_mode_titles">
+        <item>@string/protocol_changes_mode_simple</item>
+        <item>@string/protocol_changes_mode_advanced</item>
+    </string-array>
+    <string-array name="pref_protocol_changes_mode_values">
+        <item>simple</item>
+        <item>advanced</item>
+    </string-array>
+
     <string-array name="pref_schedule_lessons_week_titles">
         <item>@string/automatically</item>
         <item>@string/tab_all</item>

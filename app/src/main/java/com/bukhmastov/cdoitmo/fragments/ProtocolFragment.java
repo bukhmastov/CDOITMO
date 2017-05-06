@@ -7,16 +7,20 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.view.InflateException;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.activities.MainActivity;
 import com.bukhmastov.cdoitmo.adapters.ProtocolListView;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoRestClientResponseHandler;
@@ -50,12 +54,57 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
         Log.v(TAG, "Fragment created");
         number_of_weeks = Integer.parseInt(Storage.pref.get(getContext(), "pref_protocol_changes_weeks", "1"));
         protocol = new Protocol(getActivity());
+        try {
+            if (MainActivity.menu != null) {
+                final MenuItem simple = MainActivity.menu.findItem(R.id.action_protocol_changes_switch_to_simple);
+                final MenuItem advanced = MainActivity.menu.findItem(R.id.action_protocol_changes_switch_to_advanced);
+                if (simple != null && advanced != null) {
+                    switch (Storage.pref.get(getContext(), "pref_protocol_changes_mode", "advanced")) {
+                        case "simple": advanced.setVisible(true); break;
+                        case "advanced": simple.setVisible(true); break;
+                    }
+                    simple.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                        @Override
+                        public boolean onMenuItemClick(MenuItem item) {
+                            Storage.pref.put(getContext(), "pref_protocol_changes_mode", "simple");
+                            simple.setVisible(false);
+                            advanced.setVisible(true);
+                            load(168);
+                            return false;
+                        }
+                    });
+                    advanced.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                        @Override
+                        public boolean onMenuItemClick(MenuItem item) {
+                            Storage.pref.put(getContext(), "pref_protocol_changes_mode", "advanced");
+                            simple.setVisible(true);
+                            advanced.setVisible(false);
+                            load(168);
+                            return false;
+                        }
+                    });
+                }
+            }
+        } catch (Exception e){
+            Static.error(e);
+        }
+
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         Log.v(TAG, "Fragment destroyed");
+        try {
+            if (MainActivity.menu != null) {
+                MenuItem simple = MainActivity.menu.findItem(R.id.action_protocol_changes_switch_to_simple);
+                MenuItem advanced = MainActivity.menu.findItem(R.id.action_protocol_changes_switch_to_advanced);
+                if (simple != null) simple.setVisible(false);
+                if (advanced != null) advanced.setVisible(false);
+            }
+        } catch (Exception e){
+            Static.error(e);
+        }
     }
 
     @Override
@@ -171,10 +220,13 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
                 public void onProgress(int state) {
                     Log.v(TAG, "forceLoad | progress " + state);
                     draw(R.layout.state_loading);
-                    TextView loading_message = (TextView) getActivity().findViewById(R.id.loading_message);
-                    if (loading_message != null) {
-                        switch (state) {
-                            case DeIfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
+                    Activity activity = getActivity();
+                    if (activity != null) {
+                        TextView loading_message = (TextView) activity.findViewById(R.id.loading_message);
+                        if (loading_message != null) {
+                            switch (state) {
+                                case DeIfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
+                            }
                         }
                     }
                 }
@@ -285,36 +337,105 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
                 Log.v(TAG, "display | protocol.get=" + (data == null ? "null" : "notnull"));
                 try {
                     if (data == null) throw new NullPointerException("Protocol.protocol can't be null");
-                    // получаем список предметов для отображения
-                    number_of_weeks = data.getInt("number_of_weeks");
-                    JSONArray jsonArray = data.getJSONArray("protocol");
-                    final ArrayList<HashMap<String, String>> changes = new ArrayList<>();
-                    for(int i = 0; i < jsonArray.length(); i++){
-                        JSONObject jsonObject = jsonArray.getJSONObject(i);
-                        HashMap<String, String> hashMap = new HashMap<>();
-                        JSONObject var = jsonObject.getJSONObject("var");
-                        hashMap.put("name", jsonObject.getString("subject"));
-                        hashMap.put("desc", var.getString("name") + " [" + var.getString("min") + "/" + var.getString("threshold") + "/" + var.getString("max") + "]");
-                        hashMap.put("meta", (Objects.equals(jsonObject.getString("sign"), "..") ? "" : jsonObject.getString("sign") + " | ") + jsonObject.getString("date"));
-                        hashMap.put("value", jsonObject.getString("value"));
-                        hashMap.put("delta", jsonObject.getString("cdoitmo_delta"));
-                        hashMap.put("delta_here", jsonObject.getDouble("cdoitmo_delta_double") == 0 ? "false" : "true");
-                        hashMap.put("delta_negative", jsonObject.getDouble("cdoitmo_delta_double") < 0 ? "true" : "false");
-                        changes.add(hashMap);
-                    }
                     // отображаем интерфейс
                     draw(R.layout.protocol_layout);
-                    // работаем со списком
-                    ListView pl_list_view = (ListView) getActivity().findViewById(R.id.pl_list_view);
-                    if (pl_list_view != null) {
-                        if (changes.size() > 0) {
-                            pl_list_view.setAdapter(new ProtocolListView(getActivity(), changes));
-                        } else {
-                            ViewGroup mSwipeRefreshLayout = (SwipeRefreshLayout) getActivity().findViewById(R.id.swipe_container);
-                            if (mSwipeRefreshLayout != null) {
-                                mSwipeRefreshLayout.removeView(pl_list_view);
-                                mSwipeRefreshLayout.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.state_protocol_empty, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                    // отображаем нужный режим
+                    switch (Storage.pref.get(getContext(), "pref_protocol_changes_mode", "advanced")) {
+                        case "simple": {
+                            ViewGroup protocol_container = (ViewGroup) getActivity().findViewById(R.id.protocol_container);
+                            if (protocol_container == null) throw new NullPointerException("");
+                            protocol_container.addView(inflate(R.layout.protocol_layout_mode_simple));
+                            // получаем список предметов для отображения
+                            number_of_weeks = data.getInt("number_of_weeks");
+                            JSONArray jsonArray = data.getJSONArray("protocol");
+                            final ArrayList<HashMap<String, String>> changes = new ArrayList<>();
+                            for (int i = 0; i < jsonArray.length(); i++) {
+                                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                                HashMap<String, String> hashMap = new HashMap<>();
+                                JSONObject var = jsonObject.getJSONObject("var");
+                                hashMap.put("name", jsonObject.getString("subject"));
+                                hashMap.put("desc", var.getString("name") + " [" + var.getString("min") + "/" + var.getString("threshold") + "/" + var.getString("max") + "]");
+                                hashMap.put("meta", (Objects.equals(jsonObject.getString("sign"), "..") ? "" : jsonObject.getString("sign") + " | ") + jsonObject.getString("date"));
+                                hashMap.put("value", jsonObject.getString("value"));
+                                hashMap.put("delta", jsonObject.getString("cdoitmo_delta"));
+                                hashMap.put("delta_here", jsonObject.getDouble("cdoitmo_delta_double") == 0 ? "false" : "true");
+                                hashMap.put("delta_negative", jsonObject.getDouble("cdoitmo_delta_double") < 0 ? "true" : "false");
+                                changes.add(hashMap);
                             }
+                            // работаем со списком
+                            ListView pl_list_view = (ListView) getActivity().findViewById(R.id.pl_list_view);
+                            if (pl_list_view != null) {
+                                if (changes.size() > 0) {
+                                    pl_list_view.setAdapter(new ProtocolListView(getActivity(), changes));
+                                } else {
+                                    ViewGroup mSwipeRefreshLayout = (SwipeRefreshLayout) getActivity().findViewById(R.id.swipe_container);
+                                    if (mSwipeRefreshLayout != null) {
+                                        mSwipeRefreshLayout.removeView(pl_list_view);
+                                        mSwipeRefreshLayout.addView(inflate(R.layout.state_protocol_empty), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                                    }
+                                }
+                            }
+                            break;
+                        }
+                        case "advanced": {
+                            ViewGroup protocol_container = (ViewGroup) getActivity().findViewById(R.id.protocol_container);
+                            if (protocol_container == null) throw new NullPointerException("");
+                            protocol_container.addView(inflate(R.layout.protocol_layout_mode_advanced));
+                            JSONArray protocol = data.getJSONArray("protocol");
+                            String title = "";
+                            ArrayList<JSONObject> changes = new ArrayList<>();
+                            ViewGroup pl_advanced_container = (ViewGroup) getActivity().findViewById(R.id.pl_advanced_container);
+                            if (protocol.length() == 0) {
+                                ViewGroup mSwipeRefreshLayout = (SwipeRefreshLayout) getActivity().findViewById(R.id.swipe_container);
+                                if (mSwipeRefreshLayout != null) {
+                                    mSwipeRefreshLayout.removeAllViews();
+                                    mSwipeRefreshLayout.addView(inflate(R.layout.state_protocol_empty), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                                }
+                            }
+                            for (int i = 0; i < protocol.length(); i++) {
+                                JSONObject item = protocol.getJSONObject(i);
+                                String subject = item.getString("subject");
+                                if (!Objects.equals(subject, title) || i == protocol.length() - 1) {
+                                    if (changes.size() > 0) {
+                                        LinearLayout header = (LinearLayout) inflate(R.layout.protocol_layout_mode_advanced_header);
+                                        ((TextView) header.findViewById(R.id.lv_protocol_name)).setText(title);
+                                        pl_advanced_container.addView(header);
+                                        for (int j = 0; j < changes.size(); j++) {
+                                            JSONObject change = changes.get(j);
+                                            JSONObject var = change.getJSONObject("var");
+                                            LinearLayout element = (LinearLayout) inflate(R.layout.protocol_layout_mode_advanced_change);
+                                            ((TextView) element.findViewById(R.id.lv_protocol_desc)).setText(var.getString("name") + " [" + var.getString("min") + "/" + var.getString("threshold") + "/" + var.getString("max") + "]");
+                                            ((TextView) element.findViewById(R.id.lv_protocol_meta)).setText(Objects.equals(change.getString("sign"), "..") ? "" : change.getString("sign") + " | " + change.getString("date"));
+                                            ((TextView) element.findViewById(R.id.lv_protocol_value)).setText(change.getString("value"));
+                                            TextView lv_protocol_delta = ((TextView) element.findViewById(R.id.lv_protocol_delta));
+                                            if (change.getDouble("cdoitmo_delta_double") != 0.0) {
+                                                lv_protocol_delta.setText(change.getString("cdoitmo_delta"));
+                                                try {
+                                                    lv_protocol_delta.setTextColor(Static.resolveColor(getContext(), change.getDouble("cdoitmo_delta_double") < 0.0 ? R.attr.textColorDegrade : R.attr.textColorPassed));
+                                                } catch (Exception e) {
+                                                    Static.error(e);
+                                                }
+                                            } else {
+                                                lv_protocol_delta.setWidth(0);
+                                                lv_protocol_delta.setHeight(0);
+                                            }
+                                            pl_advanced_container.addView(element);
+                                        }
+                                    }
+                                    title = subject;
+                                    changes.clear();
+                                    changes.add(item);
+                                } else {
+                                    changes.add(item);
+                                }
+                            }
+                            break;
+                        }
+                        default: {
+                            Log.wtf(TAG, "preference pref_protocol_changes_mode with wrong value: " + Storage.pref.get(getContext(), "pref_protocol_changes_mode", "simple") + ". Going to reset preference.");
+                            Storage.pref.put(getContext(), "pref_protocol_changes_mode", "advanced");
+                            display();
+                            break;
                         }
                     }
                     // работаем со свайпом
@@ -366,16 +487,20 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
             public void onChecked(boolean is) {}
         });
     }
+
     private void draw(int layoutId){
         try {
             ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_protocol));
             if (vg != null) {
                 vg.removeAllViews();
-                vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             }
         } catch (Exception e){
             Static.error(e);
         }
+    }
+    private View inflate(int layoutId) throws InflateException {
+        return ((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
 
 }

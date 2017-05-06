@@ -4,20 +4,13 @@
     android:layout_height="match_parent"
     android:id="@+id/protocol_layout">
 
-    <android.support.v4.widget.SwipeRefreshLayout
-        android:id="@+id/swipe_container"
+    <FrameLayout
+        android:id="@+id/protocol_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentTop="true"
         android:layout_alignParentStart="true"
-        android:layout_above="@+id/spinners_layout">
-
-        <ListView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:id="@+id/pl_list_view" />
-
-    </android.support.v4.widget.SwipeRefreshLayout>
+        android:layout_above="@+id/spinners_layout" />
 
     <View
         android:id="@+id/pl_separator"

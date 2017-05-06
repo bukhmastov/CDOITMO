@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical" >
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="16dp"
+        android:paddingEnd="4dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp" >
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="55dp"
+            android:layout_toStartOf="@+id/lv_protocol_value_container"
+            android:gravity="center" >
+
+            <TextView
+                android:id="@+id/lv_protocol_desc"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/lorem_ipsum"
+                android:textColor="?android:attr/textColorPrimary" />
+
+            <TextView
+                android:id="@+id/lv_protocol_meta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/lorem_ipsum"
+                android:textColor="?android:attr/textColorSecondary" />
+
+        </LinearLayout>
+
+        <RelativeLayout
+            android:id="@+id/lv_protocol_value_container"
+            android:layout_width="90dp"
+            android:layout_height="55dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/lv_protocol_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignTop="@+id/lv_protocol_delta"
+                android:layout_toStartOf="@+id/lv_protocol_delta"
+                android:paddingBottom="5dp"
+                android:paddingTop="5dp"
+                android:text="99.99"
+                android:textAppearance="@style/TextAppearance.AppCompat.Button"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/lv_protocol_delta"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:paddingEnd="0dp"
+                android:paddingStart="2dp"
+                android:text="+99.99"
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="12sp" />
+
+        </RelativeLayout>
+
+    </RelativeLayout>
+
+    <View
+    android:layout_width="match_parent"
+    android:layout_height="1dp"
+    android:background="?attr/colorSeparator"/>
+
+</LinearLayout>

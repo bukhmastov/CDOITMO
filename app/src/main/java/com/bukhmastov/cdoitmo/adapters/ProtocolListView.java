@@ -1,7 +1,9 @@
 package com.bukhmastov.cdoitmo.adapters;
 
 import android.app.Activity;
+import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,31 +30,33 @@ public class ProtocolListView extends ArrayAdapter<HashMap<String, String>> {
 
     @NonNull
     @Override
-    public View getView(int position, View view, @NonNull ViewGroup parent) {
-        LayoutInflater inflater = context.getLayoutInflater();
-        HashMap<String, String> change = changes.get(position);
-        View rowView;
-        rowView = inflater.inflate(R.layout.listview_protocol, null, true);
-        TextView lv_protocol_name = ((TextView) rowView.findViewById(R.id.lv_protocol_name));
-        TextView lv_protocol_desc = ((TextView) rowView.findViewById(R.id.lv_protocol_desc));
-        TextView lv_protocol_meta = ((TextView) rowView.findViewById(R.id.lv_protocol_meta));
-        TextView lv_protocol_value = ((TextView) rowView.findViewById(R.id.lv_protocol_value));
-        TextView lv_protocol_delta = ((TextView) rowView.findViewById(R.id.lv_protocol_delta));
-        lv_protocol_name.setText(change.get("name"));
-        lv_protocol_desc.setText(change.get("desc"));
-        lv_protocol_meta.setText(change.get("meta"));
-        lv_protocol_value.setText(change.get("value"));
-        if (Objects.equals(change.get("delta_here"), "true")) {
-            lv_protocol_delta.setText(change.get("delta"));
-            try {
-                lv_protocol_delta.setTextColor(Static.resolveColor(context, Objects.equals(change.get("delta_negative"), "true") ? R.attr.textColorDegrade : R.attr.textColorPassed));
-            } catch (Exception e) {
-                Static.error(e);
+    public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+        try {
+            if (convertView == null) {
+                LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                convertView = inflater.inflate(R.layout.listview_protocol, parent, false);
             }
-        } else {
-            lv_protocol_delta.setWidth(0);
-            lv_protocol_delta.setHeight(0);
+            HashMap<String, String> change = changes.get(position);
+            ((TextView) convertView.findViewById(R.id.lv_protocol_name)).setText(change.get("name"));
+            ((TextView) convertView.findViewById(R.id.lv_protocol_desc)).setText(change.get("desc"));
+            ((TextView) convertView.findViewById(R.id.lv_protocol_meta)).setText(change.get("meta"));
+            ((TextView) convertView.findViewById(R.id.lv_protocol_value)).setText(change.get("value"));
+            TextView lv_protocol_delta = ((TextView) convertView.findViewById(R.id.lv_protocol_delta));
+            if (Objects.equals(change.get("delta_here"), "true")) {
+                lv_protocol_delta.setText(change.get("delta"));
+                try {
+                    lv_protocol_delta.setTextColor(Static.resolveColor(context, Objects.equals(change.get("delta_negative"), "true") ? R.attr.textColorDegrade : R.attr.textColorPassed));
+                } catch (Exception e) {
+                    Static.error(e);
+                }
+            } else {
+                lv_protocol_delta.setWidth(0);
+                lv_protocol_delta.setHeight(0);
+            }
+            return convertView;
+        } catch (Exception e) {
+            Static.error(e);
+            return super.getView(position, convertView, parent);
         }
-        return rowView;
     }
 }

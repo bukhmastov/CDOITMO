@@ -281,6 +281,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             setHasOptionsMenu(true);
             bindPreferenceSummaryToValue(findPreference("pref_e_journal_term"));
             bindPreferenceSummaryToValue(findPreference("pref_protocol_changes_weeks"));
+            bindPreferenceSummaryToValue(findPreference("pref_protocol_changes_mode"));
             bindPreferenceSummaryToValue(findPreference("pref_schedule_lessons_default"));
             bindPreferenceSummaryToValue(findPreference("pref_schedule_lessons_week"));
             bindPreferenceSummaryToValue(findPreference("pref_schedule_exams_default"));

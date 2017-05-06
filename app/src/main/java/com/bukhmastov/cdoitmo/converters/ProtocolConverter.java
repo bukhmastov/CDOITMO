@@ -80,7 +80,13 @@ public class ProtocolConverter extends AsyncTask<JSONArray, Void, JSONObject> {
         return response;
     }
 
-    private String getCast(JSONObject item) throws JSONException {
+    @Override
+    protected void onPostExecute(JSONObject json) {
+        Log.i(TAG, "finished");
+        delegate.finish(json);
+    }
+
+    private static String getCast(JSONObject item) throws JSONException {
         final String separator = "#";
         JSONObject var = item.getJSONObject("var");
         return (new StringBuilder())
@@ -88,7 +94,7 @@ public class ProtocolConverter extends AsyncTask<JSONArray, Void, JSONObject> {
                 .append(var.getString("name")).append(separator)
                 .toString();
     }
-    private JSONObject markConvert(JSONObject item) throws JSONException {
+    private static JSONObject markConvert(JSONObject item) throws JSONException {
         item.put("value", markConverter(item.getString("value")));
         JSONObject var = item.getJSONObject("var");
         var.put("min", markConverter(var.getString("min")));
@@ -97,10 +103,10 @@ public class ProtocolConverter extends AsyncTask<JSONArray, Void, JSONObject> {
         item.put("var", var);
         return item;
     }
-    private String markConverter(String value){
+    public static String markConverter(String value){
         return markConverter(value, false);
     }
-    private String markConverter(String value, boolean withSign){
+    public static String markConverter(String value, boolean withSign){
         Matcher m;
         value = value.replace(",", ".").trim();
         m = Pattern.compile("^\\.(.+)").matcher(value);
@@ -115,18 +121,12 @@ public class ProtocolConverter extends AsyncTask<JSONArray, Void, JSONObject> {
         }
         return value;
     }
-    private double string2double(String string){
+    public static double string2double(String string){
         try {
             return Double.parseDouble(string);
         } catch (NumberFormatException e) {
             return 0;
         }
-    }
-
-    @Override
-    protected void onPostExecute(JSONObject json) {
-        Log.i(TAG, "finished");
-        delegate.finish(json);
     }
 
 }
