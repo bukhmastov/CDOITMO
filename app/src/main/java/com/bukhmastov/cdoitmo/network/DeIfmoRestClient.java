@@ -18,13 +18,17 @@ import cz.msebera.android.httpclient.Header;
 public class DeIfmoRestClient extends Client {
 
     private static final String TAG = "DeIfmoRestClient";
-    private static final String BASE_URL = "https://de.ifmo.ru/api/private/";
+    private static final String BASE_URL = "de.ifmo.ru/api/private";
+    private static final Protocol DEFAULT_PROTOCOL = Protocol.HTTPS;
 
     public static final int STATE_HANDLING = 0;
     public static final int FAILED_OFFLINE = 0;
     public static final int FAILED_TRY_AGAIN = 1;
 
     public static void get(final Context context, final String url, final RequestParams params, final DeIfmoRestClientResponseHandler responseHandler){
+        get(context, DEFAULT_PROTOCOL, url, params, responseHandler);
+    }
+    public static void get(final Context context, final Protocol protocol, final String url, final RequestParams params, final DeIfmoRestClientResponseHandler responseHandler){
         Log.v(TAG, "get | url=" + url + " | params=" + Static.getSafetyRequestParams(params));
         init();
         if (Static.isOnline(context)) {
@@ -63,7 +67,7 @@ public class DeIfmoRestClient extends Client {
             }
             responseHandler.onProgress(STATE_HANDLING);
             renewCookie(context);
-            responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(url), params, new JsonHttpResponseHandler() {
+            responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(protocol, url), params, new JsonHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                     Log.v(TAG, "get | url=" + url + " | success(JSONObject) | statusCode=" + statusCode);
@@ -110,8 +114,8 @@ public class DeIfmoRestClient extends Client {
         }
     }
 
-    private static String getAbsoluteUrl(String relativeUrl) {
-        return BASE_URL + relativeUrl;
+    private static String getAbsoluteUrl(Protocol protocol, String relativeUrl) {
+        return getProtocol(protocol) + BASE_URL + "/" + relativeUrl;
     }
 
 }

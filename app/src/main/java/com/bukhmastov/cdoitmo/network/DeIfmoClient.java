@@ -22,7 +22,9 @@ import cz.msebera.android.httpclient.Header;
 public class DeIfmoClient extends Client {
 
     private static final String TAG = "DeIfmoClient";
-    private static final String BASE_URL = "https://de.ifmo.ru/";
+    private static final String BASE_URL = "de.ifmo.ru";
+    private static final Protocol DEFAULT_PROTOCOL = Protocol.HTTPS;
+    private static final boolean DEFAULT_RE_AUTH = true;
 
     public static final int STATE_CHECKING = 0;
     public static final int STATE_AUTHORIZATION = 1;
@@ -119,7 +121,7 @@ public class DeIfmoClient extends Client {
             params.put("LOGIN", login);
             params.put("PASSWD", password);
             renewCookie(context);
-            responseHandler.onNewHandle(httpclient.post(getAbsoluteUrl("servlet"), params, new AsyncHttpResponseHandler() {
+            responseHandler.onNewHandle(httpclient.post(getAbsoluteUrl(DEFAULT_PROTOCOL, "servlet"), params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                     Log.v(TAG, "authorize | success | statusCode=" + statusCode);
@@ -149,7 +151,7 @@ public class DeIfmoClient extends Client {
                             responseHandler.onFailure(FAILED_AUTH_CREDENTIALS_FAILED);
                         } else if (data.contains("Выбор группы безопасности") && data.contains("OPTION VALUE=8")) {
                             Log.v(TAG, "authorize | success | going to select security group");
-                            httpclient.get(getAbsoluteUrl("servlet/distributedCDE?Rule=APPLYSECURITYGROUP&PERSON=" + Storage.file.perm.get(context, "user#login") + "&SECURITYGROUP=8&COMPNAME="), null, new AsyncHttpResponseHandler(){
+                            httpclient.get(getAbsoluteUrl(DEFAULT_PROTOCOL, "servlet/distributedCDE?Rule=APPLYSECURITYGROUP&PERSON=" + Storage.file.perm.get(context, "user#login") + "&SECURITYGROUP=8&COMPNAME="), null, new AsyncHttpResponseHandler(){
                                 @Override
                                 public void onSuccess(int statusCode, Header[] headers, byte[] response) {
                                     Log.v(TAG, "authorize | success | security group | authorized | statusCode=" + statusCode);
@@ -185,9 +187,15 @@ public class DeIfmoClient extends Client {
         }
     }
     public static void get(final Context context, final String url, final RequestParams params, final DeIfmoClientResponseHandler responseHandler){
-        get(context, url, params, responseHandler, true);
+        get(context, DEFAULT_PROTOCOL, url, params, responseHandler, DEFAULT_RE_AUTH);
+    }
+    public static void get(final Context context, final Protocol protocol, final String url, final RequestParams params, final DeIfmoClientResponseHandler responseHandler){
+        get(context, protocol, url, params, responseHandler, DEFAULT_RE_AUTH);
     }
     public static void get(final Context context, final String url, final RequestParams params, final DeIfmoClientResponseHandler responseHandler, final boolean reAuth){
+        get(context, DEFAULT_PROTOCOL, url, params, responseHandler, reAuth);
+    }
+    public static void get(final Context context, final Protocol protocol, final String url, final RequestParams params, final DeIfmoClientResponseHandler responseHandler, final boolean reAuth){
         Log.v(TAG, "get | url=" + url + " | params=" + Static.getSafetyRequestParams(params));
         init();
         if (Static.isOnline(context)) {
@@ -214,7 +222,7 @@ public class DeIfmoClient extends Client {
             }
             responseHandler.onProgress(STATE_HANDLING);
             renewCookie(context);
-            responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(url), params, new AsyncHttpResponseHandler() {
+            responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(protocol, url), params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                     Log.v(TAG, "get | url=" + url + " | success | statusCode=" + statusCode);
@@ -267,6 +275,9 @@ public class DeIfmoClient extends Client {
         }
     }
     public static void post(final Context context, final String url, final RequestParams params, final DeIfmoClientResponseHandler responseHandler){
+        post(context, DEFAULT_PROTOCOL, url, params, responseHandler);
+    }
+    public static void post(final Context context, final Protocol protocol, final String url, final RequestParams params, final DeIfmoClientResponseHandler responseHandler){
         Log.v(TAG, "post | url=" + url + " | params=" + Static.getSafetyRequestParams(params));
         init();
         if (Static.isOnline(context)) {
@@ -293,7 +304,7 @@ public class DeIfmoClient extends Client {
             }
             responseHandler.onProgress(STATE_HANDLING);
             renewCookie(context);
-            responseHandler.onNewHandle(httpclient.post(getAbsoluteUrl(url), params, new AsyncHttpResponseHandler() {
+            responseHandler.onNewHandle(httpclient.post(getAbsoluteUrl(protocol, url), params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                     Log.v(TAG, "post | url=" + url + " | success | statusCode=" + statusCode);
@@ -341,8 +352,8 @@ public class DeIfmoClient extends Client {
             responseHandler.onFailure(FAILED_OFFLINE);
         }
     }
-    private static String getAbsoluteUrl(String relativeUrl) {
-        return BASE_URL + relativeUrl;
+    private static String getAbsoluteUrl(Protocol protocol, String relativeUrl) {
+        return getProtocol(protocol) + BASE_URL + "/" + relativeUrl;
     }
 
 }

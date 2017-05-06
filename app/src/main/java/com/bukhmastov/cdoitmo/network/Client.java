@@ -2,6 +2,7 @@ package com.bukhmastov.cdoitmo.network;
 
 import android.content.Context;
 
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 import com.loopj.android.http.AsyncHttpClient;
@@ -12,11 +13,13 @@ import java.util.regex.Pattern;
 
 import cz.msebera.android.httpclient.Header;
 
-abstract class Client {
+public abstract class Client {
 
+    private static final String TAG = "Client";
     static AsyncHttpClient httpclient = new AsyncHttpClient();
     private static boolean initialized = false;
     private static final long jsessionid_ts_limit = 1200000L; // 20min // 20 * 60 * 1000
+    public enum Protocol {HTTP, HTTPS}
 
     static void init(){
         if (!initialized) {
@@ -68,6 +71,15 @@ abstract class Client {
         } catch (Exception e) {
             Static.error(e);
             return null;
+        }
+    }
+    static String getProtocol(Protocol protocol) {
+        switch (protocol) {
+            case HTTP: return "http://";
+            case HTTPS: return "https://";
+            default:
+                Log.wtf(TAG, "getProtocol | undefined protocol, going to use HTTP");
+                return "http://";
         }
     }
 

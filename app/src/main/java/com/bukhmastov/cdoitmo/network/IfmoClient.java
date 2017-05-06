@@ -13,19 +13,23 @@ import cz.msebera.android.httpclient.Header;
 public class IfmoClient extends Client {
 
     private static final String TAG = "IfmoClient";
-    private static final String BASE_URL = "http://www.ifmo.ru/";
+    private static final String BASE_URL = "www.ifmo.ru";
+    private static final Protocol DEFAULT_PROTOCOL = Protocol.HTTP;
 
     public static final int STATE_HANDLING = 0;
     public static final int FAILED_OFFLINE = 0;
     public static final int FAILED_TRY_AGAIN = 1;
 
     public static void get(final Context context, final String url, final RequestParams params, final IfmoClientResponseHandler responseHandler){
+        get(context, DEFAULT_PROTOCOL, url, params, responseHandler);
+    }
+    public static void get(final Context context, final Protocol protocol, final String url, final RequestParams params, final IfmoClientResponseHandler responseHandler){
         Log.v(TAG, "get | url=" + url + " | params=" + Static.getSafetyRequestParams(params));
         init();
         if (Static.isOnline(context)) {
             responseHandler.onProgress(STATE_HANDLING);
             renewCookie(context);
-            responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(url), params, new AsyncHttpResponseHandler() {
+            responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(protocol, url), params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                     Log.v(TAG, "get | url=" + url + " | success | statusCode=" + statusCode);
@@ -41,7 +45,6 @@ public class IfmoClient extends Client {
                 }
                 @Override
                 public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable throwable) {
-
                     Log.v(TAG, "get | url=" + url + " | failure | statusCode=" + statusCode + (responseBody != null ? convert2UTF8(headers, responseBody) : "") + (throwable != null ? " | throwable=" + throwable.getMessage() : ""));
                     responseHandler.onNewHandle(null);
                     responseHandler.onFailure(FAILED_TRY_AGAIN);
@@ -53,8 +56,8 @@ public class IfmoClient extends Client {
         }
     }
 
-    private static String getAbsoluteUrl(String relativeUrl) {
-        return BASE_URL + relativeUrl;
+    private static String getAbsoluteUrl(Protocol protocol, String relativeUrl) {
+        return getProtocol(protocol) + BASE_URL + "/" + relativeUrl;
     }
 
 }
