@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/days_remaining_widget"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorPopupBackground"
+    android:elevation="0dp"
+    android:keepScreenOn="true" >
+
+    <FrameLayout
+        android:id="@+id/drw_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:elevation="6dp" />
+
+</FrameLayout>

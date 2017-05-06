@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.widget.Toast;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.activities.DaysRemainingWidgetActivity;
 import com.bukhmastov.cdoitmo.activities.ShortcutReceiverActivity;
 import com.bukhmastov.cdoitmo.activities.SplashActivity;
 import com.bukhmastov.cdoitmo.activities.TimeRemainingWidgetActivity;
@@ -104,6 +105,13 @@ public class ShortcutReceiver extends BroadcastReceiver {
                     context.startActivity(intent);
                     break;
                 }
+                case "days_remaining_widget": {
+                    Intent intent = new Intent(context, DaysRemainingWidgetActivity.class);
+                    intent.addFlags(Static.intentFlagRestart);
+                    intent.putExtra("shortcut_data", shortcut_data);
+                    context.startActivity(intent);
+                    break;
+                }
             }
         } catch (Exception e) {
             Static.error(e);
@@ -147,6 +155,11 @@ public class ShortcutReceiver extends BroadcastReceiver {
                 case "time_remaining_widget": {
                     JSONObject json = new JSONObject(data);
                     installShortcut(context, type, data, json.getString("label"), R.drawable.ic_shortcut_time_remaining_widget);
+                    break;
+                }
+                case "days_remaining_widget": {
+                    JSONObject json = new JSONObject(data);
+                    installShortcut(context, type, data, json.getString("label"), R.drawable.ic_shortcut_days_remaining_widget);
                     break;
                 }
             }

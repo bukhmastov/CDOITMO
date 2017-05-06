@@ -293,5 +293,11 @@
     <string name="share">Поделиться</string>
     <string name="download_file">Выгрузить файл</string>
     <string name="send_log">Отправить лог разработчику</string>
+    <string name="exams_gone">Экзаменов нет</string>
+    <string name="days">Дни</string>
+    <string name="hours">Часы</string>
+    <string name="minutes">Минуты</string>
+    <string name="seconds">Секунды</string>
+    <string name="days_remaining_widget">Виджет дней до сессии</string>
 
 </resources>

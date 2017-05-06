@@ -44,7 +44,7 @@ public class ShortcutCreator {
     private int step = 0;
     private boolean displayed = false;
     public static RequestHandle shortcutRequestHandle = null;
-    private enum TYPES {none, e_journal, protocol_changes, rating, room101, room101create, schedule_lessons, schedule_exams, time_remaining_widget}
+    private enum TYPES {none, e_journal, protocol_changes, rating, room101, room101create, schedule_lessons, schedule_exams, time_remaining_widget, days_remaining_widget}
     private TYPES type = TYPES.none;
     private Additional additional = null;
 
@@ -256,7 +256,8 @@ public class ShortcutCreator {
                     });
                     break;
                 }
-                case schedule_exams: {
+                case schedule_exams:
+                case days_remaining_widget: {
                     additional = null;
                     final ScheduleExamsProvider scheduleExamsProvider = new ScheduleExamsProvider(context);
                     View layout_vertical_stepper_item = inflate(R.layout.layout_vertical_stepper_item);
@@ -422,7 +423,8 @@ public class ShortcutCreator {
             }
             case schedule_lessons:
             case time_remaining_widget:
-            case schedule_exams: {
+            case schedule_exams:
+            case days_remaining_widget: {
                 try {
                     JSONObject json = new JSONObject();
                     json.put("label", additional.label);
@@ -431,6 +433,7 @@ public class ShortcutCreator {
                         case schedule_lessons: addShortcut("schedule_lessons", json.toString()); break;
                         case time_remaining_widget: addShortcut("time_remaining_widget", json.toString()); break;
                         case schedule_exams: addShortcut("schedule_exams", json.toString()); break;
+                        case days_remaining_widget: addShortcut("days_remaining_widget", json.toString()); break;
                     }
                 } catch (Exception e) {
                     Static.error(e);
@@ -535,6 +538,7 @@ public class ShortcutCreator {
             case schedule_lessons: return context.getString(R.string.schedule_lessons);
             case schedule_exams: return context.getString(R.string.schedule_exams);
             case time_remaining_widget: return context.getString(R.string.time_remaining_widget);
+            case days_remaining_widget: return context.getString(R.string.days_remaining_widget);
             default: return null;
         }
     }

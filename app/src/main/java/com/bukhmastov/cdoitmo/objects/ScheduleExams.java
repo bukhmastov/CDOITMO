@@ -53,10 +53,13 @@ public class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
     }
 
     public void search(String query){
-        search(query, Storage.pref.get(context, "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(context, "pref_schedule_refresh", "168")) : 0);
+        search(query, getRefreshRate());
     }
     public void search(String query, int refresh_rate){
         search(query, refresh_rate, Storage.pref.get(context, "pref_schedule_exams_use_cache", false));
+    }
+    public void search(String query, boolean toCache){
+        search(query, getRefreshRate(), toCache);
     }
     public void search(String query, int refresh_rate, boolean toCache){
         Log.v(TAG, "search | query=" + query + " | refresh_rate=" + refresh_rate + " | toCache=" + (toCache ? "true" : "false"));
@@ -285,6 +288,9 @@ public class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
         }
     }
 
+    private int getRefreshRate(){
+        return Storage.pref.get(context, "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(context, "pref_schedule_refresh", "168")) : 0;
+    }
     private boolean getForce(String cache, int refresh_rate){
         Log.v(TAG, "getForce | refresh_rate=" + refresh_rate);
         boolean force;

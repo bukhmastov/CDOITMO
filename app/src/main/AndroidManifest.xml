@@ -4,7 +4,7 @@
 
     <permission
         android:name="com.bukhmastov.cdoitmo.permission.RECEIVE_SHORTCUT_STATE"
-        android:protectionLevel="normal" />
+        android:protectionLevel="signature" />
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -20,6 +20,11 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme" >
+
+        <meta-data
+            android:name="android.max_aspect"
+            android:value="2.1" />
+
         <activity
             android:name=".activities.SplashActivity"
             android:theme="@style/SplashTheme"
@@ -158,6 +163,11 @@
 
         <activity
             android:name=".activities.TimeRemainingWidgetActivity"
+            android:theme="@style/AppTheme.Popup"
+            android:launchMode="singleTop"
+            android:noHistory="true" />
+        <activity
+            android:name=".activities.DaysRemainingWidgetActivity"
             android:theme="@style/AppTheme.Popup"
             android:launchMode="singleTop"
             android:noHistory="true" />
