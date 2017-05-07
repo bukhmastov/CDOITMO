@@ -4,6 +4,14 @@
     android:layout_height="wrap_content"
     android:orientation="vertical" >
 
+    <View
+        android:id="@+id/lv_protocol_separator"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:background="?attr/colorSeparator"/>
+
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -71,10 +79,5 @@
         </RelativeLayout>
 
     </RelativeLayout>
-
-    <View
-    android:layout_width="match_parent"
-    android:layout_height="1dp"
-    android:background="?attr/colorSeparator"/>
 
 </LinearLayout>

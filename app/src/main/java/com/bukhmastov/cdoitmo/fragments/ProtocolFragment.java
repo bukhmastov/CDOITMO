@@ -399,10 +399,15 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
                                         LinearLayout header = (LinearLayout) inflate(R.layout.protocol_layout_mode_advanced_header);
                                         ((TextView) header.findViewById(R.id.lv_protocol_name)).setText(title);
                                         pl_advanced_container.addView(header);
+                                        boolean remove_separator = true;
                                         for (int j = 0; j < changes.size(); j++) {
                                             JSONObject change = changes.get(j);
                                             JSONObject var = change.getJSONObject("var");
                                             LinearLayout element = (LinearLayout) inflate(R.layout.protocol_layout_mode_advanced_change);
+                                            if (remove_separator) {
+                                                remove_separator = false;
+                                                element.findViewById(R.id.lv_protocol_separator).setLayoutParams(new LinearLayout.LayoutParams(0, 0));
+                                            }
                                             ((TextView) element.findViewById(R.id.lv_protocol_desc)).setText(var.getString("name") + " [" + var.getString("min") + "/" + var.getString("threshold") + "/" + var.getString("max") + "]");
                                             ((TextView) element.findViewById(R.id.lv_protocol_meta)).setText(Objects.equals(change.getString("sign"), "..") ? "" : change.getString("sign") + " | " + change.getString("date"));
                                             ((TextView) element.findViewById(R.id.lv_protocol_value)).setText(change.getString("value"));

@@ -22,6 +22,8 @@ import com.bukhmastov.cdoitmo.utils.Static;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -126,12 +128,14 @@ public class SubjectActivity extends AppCompatActivity {
                                 as_container.addView(view);
                             } else {
                                 boolean remove_separator_blocker, remove_separator = false;
+                                List<String> exams = Arrays.asList("экзамен", "зачет", "промежуточная аттестация");
                                 for (int i = 0; i < points.length(); i++) {
                                     try {
                                         JSONObject point = points.getJSONObject(i);
                                         String name = point.getString("name");
+                                        String name_lc = name.trim().toLowerCase();
                                         View view;
-                                        if (Pattern.compile("^модуль\\s\\d+$").matcher(name.trim().toLowerCase()).find()) {
+                                        if (Pattern.compile("^модуль\\s\\d+$").matcher(name_lc).find() || exams.contains(name_lc)) {
                                             view = inflate(R.layout.layout_subject_point_header);
                                             remove_separator = true;
                                             remove_separator_blocker = false;
@@ -143,6 +147,8 @@ public class SubjectActivity extends AppCompatActivity {
                                             remove_separator = false;
                                             view.findViewById(R.id.sp_separator).setLayoutParams(new LinearLayout.LayoutParams(0, 0));
                                         }
+                                        Matcher m = Pattern.compile("^(.*)\\(мод(уль)?.?\\d+\\)(.*)$").matcher(name);
+                                        if (m.find()) name = m.group(1) + m.group(3);
                                         ((TextView) view.findViewById(R.id.sp_title)).setText(name);
                                         ((TextView) view.findViewById(R.id.sp_desc)).setText("[0 / " + markConverter(String.valueOf(point.getDouble("limit"))) + " / " + markConverter(String.valueOf(point.getDouble("max"))) + "]");
                                         ((TextView) view.findViewById(R.id.sp_value)).setText(markConverter(String.valueOf(point.getDouble("value"))));
