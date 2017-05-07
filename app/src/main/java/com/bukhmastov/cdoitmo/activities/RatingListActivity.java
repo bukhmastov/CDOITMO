@@ -114,6 +114,24 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
     private void load(){
         Log.v(TAG, "load");
         if (getSupportActionBar() != null) getSupportActionBar().setTitle("Топ-рейтинг");
+        if (Static.OFFLINE_MODE) {
+            try {
+                Static.snackBar(this, getString(R.string.offline_mode_on));
+                draw(R.layout.state_offline);
+                View offline_reload = findViewById(R.id.offline_reload);
+                if (offline_reload != null) {
+                    offline_reload.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            load();
+                        }
+                    });
+                }
+            } catch (Exception e) {
+                Static.error(e);
+            }
+            return;
+        }
         DeIfmoClient.get(this, Client.Protocol.HTTP, "?node=rating&std&depId=" + faculty + "&year=" + course + "&app=" + years, null, new DeIfmoClientResponseHandler() {
             @Override
             public void onSuccess(int statusCode, String response) {
