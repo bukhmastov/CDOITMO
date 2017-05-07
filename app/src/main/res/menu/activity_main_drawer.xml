@@ -41,6 +41,16 @@
 
     <group android:id="@+id/activity_main_drawer_group3" android:checkableBehavior="none">
         <item
+            android:id="@+id/nav_enable_offline_mode"
+            android:icon="@drawable/ic_disconnected"
+            android:visible="false"
+            android:title="@string/enable_offline_mode"/>
+        <item
+            android:id="@+id/nav_disable_offline_mode"
+            android:icon="@drawable/ic_disconnected"
+            android:visible="false"
+            android:title="@string/disable_offline_mode"/>
+        <item
             android:id="@+id/nav_change_account"
             android:icon="@drawable/ic_multi_account"
             android:title="@string/change_account"/>

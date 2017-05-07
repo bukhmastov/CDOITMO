@@ -92,18 +92,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onResume();
         Log.v(TAG, "Activity resumed");
         if (navigationView != null) {
-            View activity_main_nav_header = navigationView.getHeaderView(0);
-            if (activity_main_nav_header != null) {
-                View go_offline_mode = activity_main_nav_header.findViewById(R.id.go_offline_mode);
-                if (go_offline_mode != null) {
-                    go_offline_mode.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            Log.v(TAG, "go_offline_mode clicked | offline=" + (Static.OFFLINE_MODE ? "true" : "false"));
-                            authorize(Static.OFFLINE_MODE ? LoginActivity.SIGNAL_RECONNECT : LoginActivity.SIGNAL_GO_OFFLINE);
-                        }
-                    });
+            try {
+                Menu menu = navigationView.getMenu();
+                MenuItem nav_enable_offline_mode = menu.findItem(R.id.nav_enable_offline_mode);
+                MenuItem nav_disable_offline_mode = menu.findItem(R.id.nav_disable_offline_mode);
+                if (Static.OFFLINE_MODE) {
+                    nav_enable_offline_mode.setVisible(false);
+                    nav_disable_offline_mode.setVisible(true);
+                } else {
+                    nav_enable_offline_mode.setVisible(true);
+                    nav_disable_offline_mode.setVisible(false);
                 }
+            } catch (Exception e) {
+                Static.error(e);
             }
         }
         if (Static.OFFLINE_MODE) {
@@ -262,6 +263,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 break;
             case R.id.nav_shortcuts: startActivity(new Intent(this, ShortcutCreateActivity.class)); break;
             case R.id.nav_settings: startActivity(new Intent(this, SettingsActivity.class)); break;
+            case R.id.nav_enable_offline_mode:
+                loaded = false;
+                authorize(LoginActivity.SIGNAL_GO_OFFLINE);
+                break;
+            case R.id.nav_disable_offline_mode:
+                loaded = false;
+                authorize(LoginActivity.SIGNAL_RECONNECT);
+                break;
             case R.id.nav_change_account:
                 loaded = false;
                 authorize(LoginActivity.SIGNAL_CHANGE_ACCOUNT);

@@ -302,5 +302,7 @@
     <string name="pref_protocol_changes_mode_title">Режим отображения</string>
     <string name="protocol_changes_mode_simple">Простой список изменений</string>
     <string name="protocol_changes_mode_advanced">Группированный список изменений</string>
+    <string name="enable_offline_mode">Перейти в оффлайн режим</string>
+    <string name="disable_offline_mode">Выйти из оффлайн режима</string>
 
 </resources>
