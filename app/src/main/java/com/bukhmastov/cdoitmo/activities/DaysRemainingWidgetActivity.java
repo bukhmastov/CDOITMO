@@ -1,6 +1,7 @@
 package com.bukhmastov.cdoitmo.activities;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
@@ -51,6 +52,21 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
         } catch (Exception e) {
             Static.error(e);
             close();
+        }
+        View drw_container = findViewById(R.id.drw_container);
+        if (drw_container != null) {
+            drw_container.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.v(TAG, "drw_container clicked");
+                    Intent intent = new Intent(getBaseContext(), SplashActivity.class);
+                    intent.addFlags(Static.intentFlagRestart);
+                    intent.putExtra("action", "schedule_exams");
+                    intent.putExtra("action_extra", query);
+                    startActivity(intent);
+                    close();
+                }
+            });
         }
         View days_remaining_widget = findViewById(R.id.days_remaining_widget);
         if (days_remaining_widget != null) {

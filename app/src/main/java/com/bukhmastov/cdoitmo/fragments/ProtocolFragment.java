@@ -54,6 +54,33 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
         Log.v(TAG, "Fragment created");
         number_of_weeks = Integer.parseInt(Storage.pref.get(getContext(), "pref_protocol_changes_weeks", "1"));
         protocol = new Protocol(getActivity());
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.v(TAG, "Fragment destroyed");
+        try {
+            if (MainActivity.menu != null) {
+                MenuItem simple = MainActivity.menu.findItem(R.id.action_protocol_changes_switch_to_simple);
+                MenuItem advanced = MainActivity.menu.findItem(R.id.action_protocol_changes_switch_to_advanced);
+                if (simple != null) simple.setVisible(false);
+                if (advanced != null) advanced.setVisible(false);
+            }
+        } catch (Exception e){
+            Static.error(e);
+        }
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_protocol, container, false);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.v(TAG, "resumed");
         try {
             if (MainActivity.menu != null) {
                 final MenuItem simple = MainActivity.menu.findItem(R.id.action_protocol_changes_switch_to_simple);
@@ -88,34 +115,6 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
         } catch (Exception e){
             Static.error(e);
         }
-
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Log.v(TAG, "Fragment destroyed");
-        try {
-            if (MainActivity.menu != null) {
-                MenuItem simple = MainActivity.menu.findItem(R.id.action_protocol_changes_switch_to_simple);
-                MenuItem advanced = MainActivity.menu.findItem(R.id.action_protocol_changes_switch_to_advanced);
-                if (simple != null) simple.setVisible(false);
-                if (advanced != null) advanced.setVisible(false);
-            }
-        } catch (Exception e){
-            Static.error(e);
-        }
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_protocol, container, false);
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        Log.v(TAG, "resumed");
         if (!loaded) {
             loaded = true;
             load();

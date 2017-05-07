@@ -1,6 +1,7 @@
 package com.bukhmastov.cdoitmo.activities;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
@@ -45,6 +46,21 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
         } catch (Exception e) {
             Static.error(e);
             close();
+        }
+        View trw_container = findViewById(R.id.trw_container);
+        if (trw_container != null) {
+            trw_container.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.v(TAG, "trw_container clicked");
+                    Intent intent = new Intent(getBaseContext(), SplashActivity.class);
+                    intent.addFlags(Static.intentFlagRestart);
+                    intent.putExtra("action", "schedule_lessons");
+                    intent.putExtra("action_extra", query);
+                    startActivity(intent);
+                    close();
+                }
+            });
         }
         View time_remaining_widget = findViewById(R.id.time_remaining_widget);
         if (time_remaining_widget != null) {
