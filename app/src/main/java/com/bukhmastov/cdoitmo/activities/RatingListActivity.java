@@ -230,7 +230,6 @@ public class RatingListActivity extends AppCompatActivity implements SwipeRefres
         }
     }
     private void draw(int layoutId){
-        Log.v(TAG, "draw | layout=" + layoutId);
         try {
             ViewGroup vg = ((ViewGroup) findViewById(R.id.rating_list_container));
             if (vg != null) {

@@ -31,7 +31,6 @@ public class TimeRemainingWidget {
     private Executor executor;
 
     public TimeRemainingWidget(response delegate){
-        Log.v(TAG, "initialized");
         this.delegate = delegate;
     }
 

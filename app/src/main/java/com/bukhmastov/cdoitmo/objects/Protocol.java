@@ -24,7 +24,6 @@ public class Protocol {
     }
 
     public Protocol(Activity activity){
-        Log.v(TAG, "initialized");
         this.activity = activity;
     }
     public void put(JSONArray data, int number_of_weeks, final Handler handler){

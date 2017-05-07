@@ -24,7 +24,6 @@ public class ERegisterConverter extends AsyncTask<JSONObject, Void, JSONObject> 
     private response delegate = null;
 
     public ERegisterConverter(response delegate){
-        Log.i(TAG, "initialized");
         this.delegate = delegate;
     }
 

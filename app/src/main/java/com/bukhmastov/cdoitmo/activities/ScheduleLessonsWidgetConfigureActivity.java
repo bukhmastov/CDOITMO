@@ -383,11 +383,9 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
         }
     }
     private void toast(String text){
-        Log.v(TAG, "toast | " + text);
         Toast.makeText(getBaseContext(), text, Toast.LENGTH_SHORT).show();
     }
     private void snackBar(String text){
-        Log.v(TAG, "snackBar | " + text);
         View content = findViewById(android.R.id.content);
         if (content != null) {
             Snackbar snackbar = Snackbar.make(content, text, Snackbar.LENGTH_SHORT);

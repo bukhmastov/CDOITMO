@@ -39,7 +39,6 @@ public class Room101ReviewBuilder extends Thread {
     public static final int STATE_DONE = 2;
 
     public Room101ReviewBuilder(Activity activity, register register, JSONArray sessions, response delegate){
-        Log.i(TAG, "created");
         this.activity = activity;
         this.register = register;
         this.delegate = delegate;

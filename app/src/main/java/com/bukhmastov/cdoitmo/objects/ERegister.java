@@ -22,7 +22,6 @@ public class ERegister {
     }
 
     public ERegister(final Activity activity){
-        Log.v(TAG, "initialized");
         this.activity = activity;
     }
     public void put(JSONObject data, final Handler handler){

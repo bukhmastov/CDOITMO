@@ -45,7 +45,6 @@ public class ScheduleLessonsBuilder extends Thread {
     public static final int STATE_DONE = 2;
 
     public ScheduleLessonsBuilder(Activity activity, int type, ScheduleLessonsBuilder.response delegate){
-        Log.i(TAG, "created");
         this.activity = activity;
         this.delegate = delegate;
         this.type = type;

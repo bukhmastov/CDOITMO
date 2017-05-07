@@ -30,7 +30,6 @@ public class ScheduleLessonsAdditionalConverter extends AsyncTask<JSONObject, Vo
     private response delegate = null;
 
     public ScheduleLessonsAdditionalConverter(Context context, response delegate){
-        Log.i(TAG, "initialized");
         this.context = context;
         this.delegate = delegate;
     }

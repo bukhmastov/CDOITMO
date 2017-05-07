@@ -64,7 +64,6 @@ public class Room101AddRequest {
     private String pick_time_end = null;
 
     public Room101AddRequest(Activity context, callback callback){
-        Log.v(TAG, "initialized");
         this.callback = callback;
         this.context = context;
         proceedStage();

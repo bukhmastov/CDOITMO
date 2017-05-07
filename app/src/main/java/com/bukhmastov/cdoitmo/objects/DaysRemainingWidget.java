@@ -35,7 +35,6 @@ public class DaysRemainingWidget {
     private Executor executor;
 
     public DaysRemainingWidget(response delegate){
-        Log.v(TAG, "initialized");
         this.delegate = delegate;
     }
 

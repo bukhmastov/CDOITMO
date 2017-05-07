@@ -25,7 +25,6 @@ public class ProtocolConverter extends AsyncTask<JSONArray, Void, JSONObject> {
     private response delegate = null;
 
     public ProtocolConverter(Context context, response delegate){
-        Log.i(TAG, "initialized");
         this.context = context;
         this.delegate = delegate;
     }

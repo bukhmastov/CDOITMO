@@ -94,6 +94,10 @@ public class LoginActivity extends AppCompatActivity {
                 snackBar(getString(R.string.invalid_login_password));
                 show();
                 break;
+            default:
+                Log.wtf(TAG, "unsupported signal: signal=" + signal);
+                show();
+                break;
         }
     }
 
@@ -374,11 +378,9 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private View inflate(int layout) throws Exception {
-        Log.v(TAG, "inflate | layout=" + layout);
         return ((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layout, null);
     }
     private void draw(int layoutId){
-        Log.v(TAG, "draw | layout=" + layoutId);
         try {
             ViewGroup vg = ((ViewGroup) findViewById(R.id.login_content));
             if (vg != null) {
@@ -390,7 +392,6 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
     private void draw(View view){
-        Log.v(TAG, "draw | view");
         try {
             ViewGroup vg = ((ViewGroup) findViewById(R.id.login_content));
             if (vg != null) {
@@ -402,7 +403,6 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
     private void snackBar(String text){
-        Log.v(TAG, "snackBar | text=" + text);
         View activity_login = findViewById(R.id.activity_login);
         if (activity_login != null) {
             Snackbar snackbar = Snackbar.make(activity_login, text, Snackbar.LENGTH_SHORT);

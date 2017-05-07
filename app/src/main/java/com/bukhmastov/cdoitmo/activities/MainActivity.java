@@ -73,7 +73,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 case "schedule_lessons": selectedSection = R.id.nav_schedule; break;
                 case "schedule_exams": selectedSection = R.id.nav_schedule_exams; break;
                 case "room101": selectedSection = R.id.nav_room101; break;
-                default: selectedSection = R.id.nav_e_register; break;
+                default:
+                    Log.wtf(TAG, "unsupported act: '" + act + "'. Going to select 'e_journal' instead");
+                    selectedSection = R.id.nav_e_register;
+                    break;
             }
             if (action != null) getIntent().removeExtra("action");
         } else {
@@ -123,7 +126,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onBackPressed() {
-        Log.v(TAG, "BackPressed");
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer != null) {
             if (drawer.isDrawerOpen(GravityCompat.START)) {
@@ -161,7 +163,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void authorize(int state){
-        Log.v(TAG, "authorize");
+        Log.v(TAG, "authorize | state=" + state);
         loaded = false;
         Intent intent = new Intent(this, LoginActivity.class);
         intent.putExtra("state", state);
@@ -255,7 +257,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 break;
         }
         if (fragmentClass != null) {
-            Log.v(TAG, "selectSection | fragmentClass != null | " + title);
+            Log.v(TAG, "selectSection | " + title);
             navigationView.setCheckedItem(section);
             selectedSection = section;
             ViewGroup content_container = (ViewGroup) findViewById(R.id.content_container);

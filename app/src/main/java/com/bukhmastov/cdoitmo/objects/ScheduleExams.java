@@ -37,7 +37,6 @@ public class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
     public static final int FAILED_OFFLINE = 101;
 
     public ScheduleExams(Context context){
-        Log.v(TAG, "initialized");
         this.context = context;
     }
 

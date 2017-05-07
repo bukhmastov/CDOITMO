@@ -49,7 +49,6 @@ public class ShortcutCreator {
     private Additional additional = null;
 
     public ShortcutCreator(Context context, response response){
-        Log.v(TAG, "initialized");
         this.context = context;
         this.delegate = response;
     }

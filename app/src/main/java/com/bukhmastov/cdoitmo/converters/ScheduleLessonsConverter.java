@@ -22,7 +22,6 @@ public class ScheduleLessonsConverter extends AsyncTask<JSONObject, Void, JSONOb
     private response delegate = null;
 
     public ScheduleLessonsConverter(Context context, response delegate){
-        Log.i(TAG, "initialized");
         this.context = context;
         this.delegate = delegate;
     }

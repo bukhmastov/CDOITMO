@@ -37,7 +37,6 @@ public class ScheduleExamsBuilder extends Thread {
     public static final int STATE_DONE = 2;
 
     public ScheduleExamsBuilder(Activity activity, ScheduleExamsBuilder.response delegate){
-        Log.i(TAG, "created");
         this.activity = activity;
         this.delegate = delegate;
         this.destiny = activity.getResources().getDisplayMetrics().density;

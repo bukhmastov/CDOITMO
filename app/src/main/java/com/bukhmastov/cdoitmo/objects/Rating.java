@@ -22,7 +22,6 @@ public class Rating {
     private JSONObject ratingList = null;
 
     public Rating(Context context){
-        Log.v(TAG, "initialized");
         this.context = context;
         String rating = Storage.file.cache.get(context, "rating#core");
         if (!rating.isEmpty()) {

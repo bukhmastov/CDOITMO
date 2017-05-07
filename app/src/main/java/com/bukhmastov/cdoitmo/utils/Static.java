@@ -142,7 +142,7 @@ public class Static {
         }
     }
     public static void showUpdateTime(Activity activity, long time, int layoutId, boolean show_now){
-        Log.v(TAG, "showUpdateTime");
+        Log.v(TAG, "showUpdateTime | time=" + time);
         if (activity == null) return;
         String message = getUpdateTime(activity, time);
         int shift = (int) ((Calendar.getInstance().getTimeInMillis() - time) / 1000L);
@@ -151,7 +151,7 @@ public class Static {
         }
     }
     public static String getUpdateTime(Activity activity, long time) {
-        Log.v(TAG, "getUpdateTime");
+        Log.v(TAG, "getUpdateTime | time=" + time);
         int shift = (int) ((Calendar.getInstance().getTimeInMillis() - time) / 1000L);
         String message;
         if (shift < 21600) {
@@ -170,7 +170,7 @@ public class Static {
         return message;
     }
     public static String getGenitiveMonth(Context context, String month) {
-        Log.v(TAG, "getGenitiveMonth");
+        Log.v(TAG, "getGenitiveMonth | month=" + month);
         switch (month) {
             case "01": month = context.getString(R.string.january_genitive); break;
             case "02": month = context.getString(R.string.february_genitive); break;
@@ -232,7 +232,6 @@ public class Static {
         }).start();
     }
     public static void toast(Context context, String text){
-        Log.v(TAG, "toast | text=" + text);
         Toast.makeText(context, text, Toast.LENGTH_SHORT).show();
     }
     public static void snackBar(Activity activity, String text){
@@ -242,7 +241,6 @@ public class Static {
         snackBar(layout, text, null, null);
     }
     public static void snackBar(View layout, String text, String action, View.OnClickListener onClickListener){
-        Log.v(TAG, "snackBar | text=" + text);
         if (layout != null) {
             Snackbar snackbar = Snackbar.make(layout, text, Snackbar.LENGTH_LONG);
             snackbar.getView().setBackgroundColor(Static.colorBackgroundSnackBar);
@@ -288,7 +286,6 @@ public class Static {
         }
     }
     public static String getUserAgent(Context context){
-        Log.v(TAG, "getUserAgent");
         try {
             if (Static.USER_AGENT == null) {
                 PackageInfo pInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
