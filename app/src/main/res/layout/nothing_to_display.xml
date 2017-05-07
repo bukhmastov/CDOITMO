@@ -12,11 +12,12 @@
         app:srcCompat="@drawable/ic_visibility" />
 
     <TextView
-        android:text="@string/no_requests"
+        android:id="@+id/ntd_text"
         android:layout_width="match_parent"
         android:layout_height="24dp"
         android:gravity="center"
-        android:textColor="?android:attr/textColorPrimary"
-        android:textAllCaps="true" />
+        android:text="@string/lorem_ipsum"
+        android:textAllCaps="true"
+        android:textColor="?android:attr/textColorPrimary" />
 
 </LinearLayout>

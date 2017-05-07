@@ -25,21 +25,20 @@
         android:elevation="4dp"
         android:paddingTop="2dp"
         android:paddingBottom="20dp"
-        android:paddingStart="15dp"
-        android:paddingEnd="11dp"
-        >
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp" >
 
         <TextView
-            android:layout_alignParentEnd="true"
             android:id="@+id/as_current_points"
-            android:gravity="center"
-            android:layout_width="60dp"
-            android:textAppearance="@style/TextAppearance.AppCompat.Button"
-            android:textSize="18sp"
-            android:text="@string/lorem_ipsum"
-            android:layout_alignParentTop="true"
+            android:layout_width="50dp"
             android:layout_height="20dp"
-            android:textColor="?android:attr/textColorPrimaryInverse" />
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            android:gravity="center"
+            android:text="@string/lorem_ipsum"
+            android:textAppearance="@style/TextAppearance.AppCompat.Button"
+            android:textColor="?android:attr/textColorPrimaryInverse"
+            android:textSize="18sp" />
 
         <TextView
             android:layout_width="match_parent"
@@ -73,9 +72,21 @@
 
     </RelativeLayout>
 
-    <ListView
+    <!--<ListView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/as_list_view" />
+        android:id="@+id/as_list_view" />-->
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:id="@+id/as_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
+    </ScrollView>
 
 </LinearLayout>

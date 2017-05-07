@@ -129,7 +129,9 @@ public class ScheduleExamsBuilder extends Thread {
             }
             if (schedule.length() == 0) {
                 Log.v(TAG, "schedule.length() == 0");
-                container.addView(inflate(R.layout.layout_schedule_exams_without_exams));
+                View view = inflate(R.layout.nothing_to_display);
+                ((TextView) view.findViewById(R.id.ntd_text)).setText(activity.getString(R.string.no_exams));
+                container.addView(view);
             } else {
                 TextView textView = new TextView(activity);
                 textView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));

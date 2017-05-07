@@ -64,7 +64,6 @@
     <string name="app_info_disclaimer">Данное приложение использует и обрабатывает данные с серверов университета ИТМО. Персональные данные хранятся только на данном устройстве и передаются только на сервера университета ИТМО. Обратите внимание, что данное приложение не является официальным.</string>
     <string name="app_info_dev">Бухмастов Алексей</string>
     <string name="app_info_mail_dev">bukhmastov-alex@ya.ru</string>
-    <string name="error_choose_program">Выберите программу для отправки отчета</string>
     <string name="offline_mode">Offline mode</string>
     <string name="schedule_lessons">Расписание занятий</string>
     <string name="search">Поиск</string>
@@ -80,7 +79,6 @@
     <string name="group">Группа</string>
     <string name="room">Аудитория</string>
     <string name="school_week">учебная неделя</string>
-    <string name="open_schedule">Открыть расписание</string>
     <string name="load_failed_retry_in_minute">Загрузка не удалась\nПовторите попытку через минуту</string>
     <string name="schedule_exams">Расписание сессии</string>
     <string name="no_exams">Экзаменов нет</string>
@@ -246,7 +244,6 @@
     <string name="open_teacher_schedule">Открыть расписание преподавателя</string>
     <string name="open_room_schedule">Открыть расписание аудитории</string>
     <string name="open_location">Показать местоположение</string>
-    <string name="schedule_update_required">Необходимо обновить расписание</string>
     <string name="schedule_refresh">Отобразить изменения</string>
     <string name="update">Обновить</string>
     <string name="pref_schedule_lessons_clear_additional_title">Очистить пользовательские изменения</string>
@@ -304,5 +301,6 @@
     <string name="protocol_changes_mode_advanced">Группированный список изменений</string>
     <string name="enable_offline_mode">Перейти в оффлайн режим</string>
     <string name="disable_offline_mode">Выйти из оффлайн режима</string>
+    <string name="no_points">Баллов нет</string>
 
 </resources>

@@ -22,7 +22,7 @@ public class SuggestionsListView extends ArrayAdapter<Suggestion> {
     private final ArrayList<Suggestion> suggestions;
 
     public SuggestionsListView(Context context, ArrayList<Suggestion> suggestions) {
-        super(context, R.layout.listview_point, suggestions);
+        super(context, R.layout.layout_search_suggestion, suggestions);
         this.context = context;
         this.suggestions = suggestions;
     }

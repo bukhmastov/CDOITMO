@@ -84,7 +84,9 @@ public class Room101ReviewBuilder extends Thread {
                 delegate.state(STATE_DONE, container);
             } else {
                 Log.v(TAG, "sessions.length() == 0");
-                delegate.state(STATE_DONE, inflate(R.layout.layout_room101_review_without_requests));
+                View view = inflate(R.layout.nothing_to_display);
+                ((TextView) view.findViewById(R.id.ntd_text)).setText(activity.getString(R.string.no_requests));
+                delegate.state(STATE_DONE, view);
             }
         } catch (Exception e){
             Static.error(e);

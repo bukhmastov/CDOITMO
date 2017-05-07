@@ -214,7 +214,9 @@ public class ScheduleLessonsBuilder extends Thread {
             }
             if (daysCount == 0) {
                 Log.v(TAG, "daysCount == 0");
-                container.addView(inflate(R.layout.layout_schedule_lessons_without_lessons));
+                View view = inflate(R.layout.nothing_to_display);
+                ((TextView) view.findViewById(R.id.ntd_text)).setText(activity.getString(R.string.no_lessons));
+                container.addView(view);
             } else {
                 TextView textView = new TextView(activity);
                 textView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
