@@ -56,7 +56,7 @@
         <item name="colorBackgroundCards">@color/colorBackgroundCardsInverse</item>
         <item name="android:textColorHint">@color/textColorSecondaryInverse</item>
 
-        <item name="ic_cdo_small">@drawable/cdo_small_dark</item>
+        <item name="ic_cdo_small">@drawable/cdo_small</item>
         <item name="ic_security">@drawable/ic_security</item>
 
         <item name="windowActionModeOverlay">true</item>

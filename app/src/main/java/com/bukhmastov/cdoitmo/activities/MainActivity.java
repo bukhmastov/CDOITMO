@@ -91,6 +91,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onResume() {
         super.onResume();
         Log.v(TAG, "Activity resumed");
+        if (navigationView != null) {
+            View activity_main_nav_header = navigationView.getHeaderView(0);
+            if (activity_main_nav_header != null) {
+                View go_offline_mode = activity_main_nav_header.findViewById(R.id.go_offline_mode);
+                if (go_offline_mode != null) {
+                    go_offline_mode.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Log.v(TAG, "go_offline_mode clicked | offline=" + (Static.OFFLINE_MODE ? "true" : "false"));
+                            authorize(Static.OFFLINE_MODE ? LoginActivity.SIGNAL_RECONNECT : LoginActivity.SIGNAL_GO_OFFLINE);
+                        }
+                    });
+                }
+            }
+        }
         if (Static.OFFLINE_MODE) {
             authorized();
         } else {

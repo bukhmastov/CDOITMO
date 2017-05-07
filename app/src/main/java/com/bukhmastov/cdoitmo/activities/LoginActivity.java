@@ -37,10 +37,11 @@ public class LoginActivity extends AppCompatActivity {
     private static final String TAG = "LoginActivity";
     public static final int SIGNAL_LOGIN = 0;
     public static final int SIGNAL_RECONNECT = 1;
-    public static final int SIGNAL_CHANGE_ACCOUNT = 2;
-    public static final int SIGNAL_LOGOUT = 3;
-    public static final int SIGNAL_CREDENTIALS_REQUIRED = 4;
-    public static final int SIGNAL_CREDENTIALS_FAILED = 5;
+    public static final int SIGNAL_GO_OFFLINE = 2;
+    public static final int SIGNAL_CHANGE_ACCOUNT = 3;
+    public static final int SIGNAL_LOGOUT = 4;
+    public static final int SIGNAL_CREDENTIALS_REQUIRED = 5;
+    public static final int SIGNAL_CREDENTIALS_FAILED = 6;
     private RequestHandle loginRequestHandle = null;
 
     @Override
@@ -51,54 +52,11 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar_login));
         ActionBar actionBar = getSupportActionBar();
-        if(actionBar != null){
+        if (actionBar != null) {
             actionBar.setTitle("  " + getString(R.string.title_activity_login));
             actionBar.setLogo(obtainStyledAttributes(new int[] { R.attr.ic_security }).getDrawable(0));
         }
-        Static.OFFLINE_MODE = false;
-        int signal = getIntent().getIntExtra("state", SIGNAL_LOGIN);
-        Log.i(TAG, "signal = " + signal);
-        switch (signal) {
-            case SIGNAL_LOGIN:
-                show();
-                break;
-            case SIGNAL_RECONNECT:
-                Static.authorized = false;
-                show();
-                break;
-            case SIGNAL_CHANGE_ACCOUNT:
-                Static.logoutCurrent(this);
-                Static.authorized = false;
-                show();
-                break;
-            case SIGNAL_LOGOUT:
-                String current_login = Storage.file.general.get(this, "users#current_login");
-                if (!current_login.isEmpty()) {
-                    logout(current_login);
-                } else {
-                    show();
-                }
-                break;
-            case SIGNAL_CREDENTIALS_REQUIRED:
-                Storage.file.perm.delete(this, "user#jsessionid");
-                Static.logoutCurrent(this);
-                Static.authorized = false;
-                snackBar(getString(R.string.required_login_password));
-                show();
-                break;
-            case SIGNAL_CREDENTIALS_FAILED:
-                Storage.file.perm.delete(this, "user#jsessionid");
-                Storage.file.perm.delete(this, "user#password");
-                Static.logoutCurrent(this);
-                Static.authorized = false;
-                snackBar(getString(R.string.invalid_login_password));
-                show();
-                break;
-            default:
-                Log.wtf(TAG, "unsupported signal: signal=" + signal);
-                show();
-                break;
-        }
+        route(getIntent().getIntExtra("state", SIGNAL_LOGIN));
     }
 
     @Override
@@ -121,6 +79,62 @@ public class LoginActivity extends AppCompatActivity {
             });
         }
         return true;
+    }
+
+    private void route(int signal){
+        Log.i(TAG, "signal = " + signal);
+        switch (signal) {
+            case SIGNAL_LOGIN:
+                Static.OFFLINE_MODE = false;
+                show();
+                break;
+            case SIGNAL_RECONNECT:
+                Static.OFFLINE_MODE = false;
+                Static.authorized = false;
+                show();
+                break;
+            case SIGNAL_GO_OFFLINE:
+                Static.OFFLINE_MODE = true;
+                authorized(false);
+                break;
+            case SIGNAL_CHANGE_ACCOUNT:
+                Static.OFFLINE_MODE = false;
+                Static.logoutCurrent(this);
+                Static.authorized = false;
+                show();
+                break;
+            case SIGNAL_LOGOUT:
+                Static.OFFLINE_MODE = false;
+                String current_login = Storage.file.general.get(this, "users#current_login");
+                if (!current_login.isEmpty()) {
+                    logout(current_login);
+                } else {
+                    show();
+                }
+                break;
+            case SIGNAL_CREDENTIALS_REQUIRED:
+                Static.OFFLINE_MODE = false;
+                Storage.file.perm.delete(this, "user#jsessionid");
+                Static.logoutCurrent(this);
+                Static.authorized = false;
+                snackBar(getString(R.string.required_login_password));
+                show();
+                break;
+            case SIGNAL_CREDENTIALS_FAILED:
+                Static.OFFLINE_MODE = false;
+                Storage.file.perm.delete(this, "user#jsessionid");
+                Storage.file.perm.delete(this, "user#password");
+                Static.logoutCurrent(this);
+                Static.authorized = false;
+                snackBar(getString(R.string.invalid_login_password));
+                show();
+                break;
+            default:
+                Static.OFFLINE_MODE = false;
+                Log.wtf(TAG, "unsupported signal: signal=" + signal);
+                show();
+                break;
+        }
     }
 
     private void show(){
@@ -223,8 +237,7 @@ public class LoginActivity extends AppCompatActivity {
                                     loginRequestHandle.cancel(true);
                                     loginRequestHandle = null;
                                 }
-                                Static.OFFLINE_MODE = true;
-                                authorized(newUser);
+                                route(SIGNAL_GO_OFFLINE);
                             }
                         });
                     }
@@ -241,10 +254,7 @@ public class LoginActivity extends AppCompatActivity {
                 public void onFailure(int state) {
                     Log.v(TAG, "auth | check | failure " + state);
                     switch (state) {
-                        case DeIfmoClient.FAILED_OFFLINE:
-                            Static.OFFLINE_MODE = true;
-                            authorized(newUser);
-                            return;
+                        case DeIfmoClient.FAILED_OFFLINE: route(SIGNAL_GO_OFFLINE); return;
                         case DeIfmoClient.FAILED_TRY_AGAIN:
                         case DeIfmoClient.FAILED_AUTH_TRY_AGAIN: snackBar(getString(R.string.auth_failed)); break;
                         case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED: snackBar(getString(R.string.required_login_password)); break;

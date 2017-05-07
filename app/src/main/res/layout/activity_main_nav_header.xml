@@ -12,11 +12,36 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     android:theme="@style/ThemeOverlay.AppCompat.Dark">
 
-    <ImageView
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:contentDescription="@string/cdo"
-        app:srcCompat="?attr/ic_cdo_small" />
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:contentDescription="@string/cdo"
+            app:srcCompat="?attr/ic_cdo_small" />
+
+        <!--
+        android:layout_marginTop="9dp"
+        android:layout_marginBottom="9dp"
+        -->
+        <FrameLayout
+            android:id="@+id/go_offline_mode"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_alignParentEnd="true"
+            android:background="@drawable/shape_white_circle">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_margin="7dp"
+                app:srcCompat="@drawable/ic_offline_button" />
+
+        </FrameLayout>
+
+    </RelativeLayout>
 
     <TextView
         android:id="@+id/user_name"
