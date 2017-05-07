@@ -126,7 +126,7 @@ public class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
                     handler.onNewHandle(requestHandle);
                 }
             });
-        } else if (Static.OFFLINE_MODE) {
+        } else if (Static.OFFLINE_MODE && Objects.equals(cache, "")) {
             Log.v(TAG, "searchGroup | offline");
             handler.onFailure(FAILED_OFFLINE);
         } else {
@@ -198,7 +198,7 @@ public class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
                     handler.onNewHandle(requestHandle);
                 }
             });
-        } else if (Static.OFFLINE_MODE) {
+        } else if (Static.OFFLINE_MODE && Objects.equals(cache, "")) {
             Log.v(TAG, "searchTeacher | offline");
             handler.onFailure(FAILED_OFFLINE);
         } else {
@@ -269,7 +269,7 @@ public class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
                         handler.onNewHandle(requestHandle);
                     }
                 });
-            } else if (Static.OFFLINE_MODE) {
+            } else if (Static.OFFLINE_MODE && Objects.equals(cache, "")) {
                 Log.v(TAG, "searchDefinedTeacher | offline");
                 handler.onFailure(FAILED_OFFLINE);
             } else {
