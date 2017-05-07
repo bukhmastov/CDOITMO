@@ -145,7 +145,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
                 case "group":
                 case "room":
                 case "teacher": break;
-                default: throw new NullPointerException("json.type wrong value: " + type);
+                default: throw new Exception("json.type wrong value: " + type);
             }
             schedule = json;
             begin();
@@ -162,7 +162,6 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
 
     @Override
     public void onAction(TimeRemainingWidget.Data data) {
-        Log.v(TAG, "onAction | data.current=" + data.current + " | data.next=" + data.next + " | data.day=" + data.day);
         if (data.current == null && data.next == null && data.day == null) {
             message(getString(R.string.lessons_gone));
         } else {

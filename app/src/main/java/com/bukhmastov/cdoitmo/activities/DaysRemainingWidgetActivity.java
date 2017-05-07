@@ -150,7 +150,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
             switch (type) {
                 case "group":
                 case "teacher": break;
-                default: throw new NullPointerException("json.type wrong value: " + type);
+                default: throw new Exception("json.type wrong value: " + type);
             }
             schedule = json;
             begin();

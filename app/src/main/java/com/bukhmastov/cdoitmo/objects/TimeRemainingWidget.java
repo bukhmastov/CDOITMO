@@ -84,7 +84,7 @@ public class TimeRemainingWidget {
                             }
                         }
                     }
-                    if (lessons == null) throw new Exception("lessons is null");
+                    if (lessons == null) throw new NullPointerException("lessons is null");
                     long current = -1;
                     long next = -1;
                     long day = -1;
@@ -195,7 +195,6 @@ public class TimeRemainingWidget {
             int hours = time / 3600;
             int minutes = (time - hours * 3600) / 60;
             int seconds = (time - hours * 3600 - minutes * 60) % 60;
-
             String response;
             if (minutes > 0 || hours > 0) {
                 response = ldgZero(seconds);
