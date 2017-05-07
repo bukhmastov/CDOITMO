@@ -1,7 +1,9 @@
 package com.bukhmastov.cdoitmo.adapters;
 
 import android.app.Activity;
+import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,21 +31,28 @@ public class PointsListView extends ArrayAdapter<JSONObject> {
 
     @NonNull
     @Override
-    public View getView(int position, View view, @NonNull ViewGroup parent) {
-        LayoutInflater inflater = context.getLayoutInflater();
-        JSONObject point = points.get(position);
-        View rowView = inflater.inflate(R.layout.listview_point, null, true);
-        TextView lv_point_name = ((TextView) rowView.findViewById(R.id.lv_point_name));
-        TextView lv_point_limits = ((TextView) rowView.findViewById(R.id.lv_point_limits));
-        TextView lv_point_value = ((TextView) rowView.findViewById(R.id.lv_point_value));
+    public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
         try {
-            if (lv_point_name != null) lv_point_name.setText(point.getString("name"));
-            if (lv_point_limits != null) lv_point_limits.setText("0 / " + markConverter(String.valueOf(point.getDouble("limit"))) + " / " + markConverter(String.valueOf(point.getDouble("max"))));
-            if (lv_point_value != null) lv_point_value.setText(markConverter(String.valueOf(point.getDouble("value"))));
+            if (convertView == null) {
+                LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                convertView = inflater.inflate(R.layout.listview_point, parent, false);
+            }
+            JSONObject point = points.get(position);
+            TextView lv_point_name = ((TextView) convertView.findViewById(R.id.lv_point_name));
+            TextView lv_point_limits = ((TextView) convertView.findViewById(R.id.lv_point_limits));
+            TextView lv_point_value = ((TextView) convertView.findViewById(R.id.lv_point_value));
+            try {
+                if (lv_point_name != null) lv_point_name.setText(point.getString("name"));
+                if (lv_point_limits != null) lv_point_limits.setText("0 / " + markConverter(String.valueOf(point.getDouble("limit"))) + " / " + markConverter(String.valueOf(point.getDouble("max"))));
+                if (lv_point_value != null) lv_point_value.setText(markConverter(String.valueOf(point.getDouble("value"))));
+            } catch (Exception e) {
+                Static.error(e);
+            }
+            return convertView;
         } catch (Exception e) {
             Static.error(e);
+            return super.getView(position, convertView, parent);
         }
-        return rowView;
     }
 
     private String markConverter(String value){

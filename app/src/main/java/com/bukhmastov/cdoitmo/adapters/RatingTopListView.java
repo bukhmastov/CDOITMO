@@ -3,7 +3,7 @@ package com.bukhmastov.cdoitmo.adapters;
 import android.app.Activity;
 import android.content.Context;
 import android.support.annotation.NonNull;
-import android.util.TypedValue;
+import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +11,7 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.utils.Static;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,38 +30,37 @@ public class RatingTopListView extends ArrayAdapter<HashMap<String, String>> {
 
     @NonNull
     @Override
-    public View getView(int position, View view, @NonNull ViewGroup parent) { //?attr/textColorPassed
-        LayoutInflater inflater = context.getLayoutInflater();
-        HashMap<String, String> user = users.get(position);
-        View rowView = inflater.inflate(R.layout.listview_rating_list, null, true);
-        TypedValue typedValue = new TypedValue();
-        if(Objects.equals(user.get("is_me"), "1")){
-            ViewGroup vg = ((ViewGroup) rowView.findViewById(R.id.lvrl_number_layout));
-            if (vg != null) {
-                vg.removeAllViews();
-                vg.addView(((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.triangle_mark_layout, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+    public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) { //?attr/textColorPassed
+        try {
+            LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            convertView = inflater.inflate(R.layout.listview_rating_list, parent, false);
+            HashMap<String, String> user = users.get(position);
+            if (Objects.equals(user.get("is_me"), "1")) {
+                ViewGroup vg = ((ViewGroup) convertView.findViewById(R.id.lvrl_number_layout));
+                if (vg != null) {
+                    vg.removeAllViews();
+                    vg.addView(((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.triangle_mark_layout, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                }
+                convertView.setBackgroundColor(Static.resolveColor(context, R.attr.colorPrimaryOpacity));
+                convertView.findViewById(R.id.lvrl_layout).setPaddingRelative(32, 0, 16, 0);
             }
-            this.context.getTheme().resolveAttribute(R.attr.colorPrimaryOpacity, typedValue, true);
-            rowView.setBackgroundColor(typedValue.data);
-            rowView.findViewById(R.id.lvrl_layout).setPadding(32, 0, 16, 0);
-        }
-        ((TextView) rowView.findViewById(R.id.lvrl_number)).setText(user.get("number"));
-        ((TextView) rowView.findViewById(R.id.lvrl_fio)).setText(user.get("fio"));
-        ((TextView) rowView.findViewById(R.id.lvrl_meta)).setText(user.get("meta"));
-        if(!Objects.equals(user.get("change"), "none")){
-            TextView lvrl_delta = (TextView) rowView.findViewById(R.id.lvrl_delta);
-            lvrl_delta.setText(user.get("delta"));
-            switch (user.get("change")){
-                case "up":
-                    this.context.getTheme().resolveAttribute(R.attr.textColorPassed, typedValue, true);
-                    lvrl_delta.setTextColor(typedValue.data);
-                    break;
-                case "down":
-                    this.context.getTheme().resolveAttribute(R.attr.textColorDegrade, typedValue, true);
-                    lvrl_delta.setTextColor(typedValue.data);
-                    break;
+            ((TextView) convertView.findViewById(R.id.lvrl_number)).setText(user.get("number"));
+            ((TextView) convertView.findViewById(R.id.lvrl_fio)).setText(user.get("fio"));
+            ((TextView) convertView.findViewById(R.id.lvrl_meta)).setText(user.get("meta"));
+            if (!Objects.equals(user.get("change"), "none")) {
+                TextView lvrl_delta = (TextView) convertView.findViewById(R.id.lvrl_delta);
+                if (lvrl_delta != null) {
+                    lvrl_delta.setText(user.get("delta"));
+                    switch (user.get("change")) {
+                        case "up": lvrl_delta.setTextColor(Static.resolveColor(context, R.attr.textColorPassed)); break;
+                        case "down": lvrl_delta.setTextColor(Static.resolveColor(context, R.attr.textColorDegrade)); break;
+                    }
+                }
             }
+            return convertView;
+        } catch (Exception e) {
+            Static.error(e);
+            return super.getView(position, convertView, parent);
         }
-        return rowView;
     }
 }
