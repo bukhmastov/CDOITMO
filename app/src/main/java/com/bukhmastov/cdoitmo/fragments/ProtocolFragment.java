@@ -370,7 +370,9 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
                                     ViewGroup mSwipeRefreshLayout = (SwipeRefreshLayout) getActivity().findViewById(R.id.swipe_container);
                                     if (mSwipeRefreshLayout != null) {
                                         mSwipeRefreshLayout.removeView(pl_list_view);
-                                        mSwipeRefreshLayout.addView(inflate(R.layout.state_protocol_empty), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                                        View view = inflate(R.layout.nothing_to_display);
+                                        ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_changes_for_period);
+                                        mSwipeRefreshLayout.addView(view);
                                     }
                                 }
                             }
@@ -388,7 +390,9 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
                                 ViewGroup mSwipeRefreshLayout = (SwipeRefreshLayout) getActivity().findViewById(R.id.swipe_container);
                                 if (mSwipeRefreshLayout != null) {
                                     mSwipeRefreshLayout.removeAllViews();
-                                    mSwipeRefreshLayout.addView(inflate(R.layout.state_protocol_empty), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                                    View view = inflate(R.layout.nothing_to_display);
+                                    ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_changes_for_period);
+                                    mSwipeRefreshLayout.addView(view);
                                 }
                             }
                             for (int i = 0; i < protocol.length(); i++) {

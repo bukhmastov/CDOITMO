@@ -11,6 +11,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class ScheduleExamsSearchActivity extends SearchActivity {
 
@@ -51,6 +52,7 @@ public class ScheduleExamsSearchActivity extends SearchActivity {
                 if (!cachedFile.isEmpty()) {
                     try {
                         JSONObject object = new JSONObject(cachedFile);
+                        if (Objects.equals(object.getString("type"), "teacher_picker")) continue;
                         if (query.isEmpty() || contains(object.getString("scope"), query)) {
                             suggestions.add(new Suggestion(object.getString("scope"), object.getString("scope"), R.drawable.ic_save));
                         }

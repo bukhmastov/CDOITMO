@@ -22,7 +22,7 @@ public class DaysRemainingWidget {
     }
     public class Data {
         public String subject = null;
-        public String teacher = null;
+        public String desc = null;
         public Time time = null;
     }
     public class Time {
@@ -77,7 +77,7 @@ public class DaysRemainingWidget {
                             JSONObject exam = fullExam.getJSONObject("exam");
                             Data data = new Data();
                             data.subject = fullExam.getString("subject");
-                            data.teacher = fullExam.getString("teacher");
+                            data.desc = fullExam.getString(fullExam.has("teacher") ? "teacher" : "group");
                             String timeString = exam.getString("time");
                             String dateString = exam.getString("date");
                             Matcher originDateMatcher = Pattern.compile("^(\\d{1,2})(.*)$").matcher(dateString);

@@ -176,7 +176,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
             }
             DaysRemainingWidget.Data currentData = data.get(0);
             setText(R.id.exam_subject, currentData.subject);
-            setText(R.id.exam_teacher, currentData.teacher);
+            setText(R.id.exam_teacher, currentData.desc);
             setText(R.id.exam_time_day, R.id.exam_time_day_value, currentData.time.day);
             setText(R.id.exam_time_hour, R.id.exam_time_hour_value, currentData.time.hour);
             setText(R.id.exam_time_min, R.id.exam_time_min_value, currentData.time.min);
