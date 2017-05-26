@@ -3,8 +3,8 @@ package com.bukhmastov.cdoitmo.fragments;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -39,7 +39,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Objects;
 
-public class ScheduleExamsFragment extends Fragment implements ScheduleExams.response {
+public class ScheduleExamsFragment extends ConnectedFragment implements ScheduleExams.response {
 
     private static final String TAG = "SEFragment";
     public static ScheduleExams scheduleExams;
@@ -215,17 +215,17 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
                         for (int i = 0; i < teachers.length(); i++) {
                             JSONObject teacher = teachers.getJSONObject(i);
                             HashMap<String, String> teacherMap = new HashMap<>();
-                            teacherMap.put("name", teacher.getString("name"));
-                            teacherMap.put("scope", teacher.getString("scope"));
-                            teacherMap.put("id", teacher.getString("id"));
+                            teacherMap.put("pid", "teacher" + teacher.getString("id"));
+                            teacherMap.put("person", teacher.getString("name"));
+                            teacherMap.put("post", "");
                             teachersMap.add(teacherMap);
                         }
                         teacher_picker_list_view.setAdapter(new TeacherPickerListView(getActivity(), teachersMap));
                         teacher_picker_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                                 HashMap<String, String> teacherMap = teachersMap.get(position);
-                                Log.v(TAG, "teacher_picker_list_view clicked | scope=" + teacherMap.get("scope"));
-                                scheduleExams.search(teacherMap.get("scope"));
+                                Log.v(TAG, "teacher_picker_list_view clicked | scope=" + teacherMap.get("pid"));
+                                scheduleExams.search(teacherMap.get("pid"));
                             }
                         });
                     }
@@ -332,29 +332,12 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
 
     private void notFound(){
         Log.v(TAG, "notFound");
-        LinearLayout linearLayout = new LinearLayout(getContext());
-        linearLayout.setOrientation(LinearLayout.VERTICAL);
-        linearLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-        linearLayout.setPadding((int) (16 * Static.destiny), (int) (10 * Static.destiny), (int) (16 * Static.destiny), (int) (10 * Static.destiny));
-        TextView title = new TextView(getContext());
-        title.setText(":c");
-        title.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-        title.setTextColor(Static.textColorPrimary);
-        title.setTextSize(32);
-        title.setPadding(0, 0, 0, (int) (10 * Static.destiny));
-        title.setTextAlignment(TextView.TEXT_ALIGNMENT_CENTER);
-        linearLayout.addView(title);
-        TextView desc = new TextView(getContext());
-        desc.setText(getString(R.string.on_demand) + " \"" + query + "\" " + getString(R.string.schedule_not_found_2));
-        desc.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-        desc.setTextColor(Static.textColorPrimary);
-        desc.setTextSize(16);
-        desc.setTextAlignment(TextView.TEXT_ALIGNMENT_CENTER);
-        linearLayout.addView(desc);
-        ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_schedule_exams));
-        if (vg != null) {
-            vg.removeAllViews();
-            vg.addView(linearLayout);
+        ViewGroup container_schedule = ((ViewGroup) getActivity().findViewById(R.id.container_schedule_exams));
+        if (container_schedule != null) {
+            container_schedule.removeAllViews();
+            View view = inflate(R.layout.nothing_to_display);
+            ((TextView) view.findViewById(R.id.ntd_text)).setText(getString(R.string.on_demand) + " \"" + query + "\" " + getString(R.string.schedule_not_found_2));
+            container_schedule.addView(view);
         }
     }
     public void gotoLogin(int state){
@@ -363,16 +346,20 @@ public class ScheduleExamsFragment extends Fragment implements ScheduleExams.res
         intent.putExtra("state", state);
         startActivity(intent);
     }
+
     private void draw(int layoutId){
         try {
             ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_schedule_exams));
             if (vg != null) {
                 vg.removeAllViews();
-                vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             }
         } catch (Exception e){
             Static.error(e);
         }
+    }
+    private View inflate(int layoutId) throws InflateException {
+        return ((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
 
 }

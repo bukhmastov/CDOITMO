@@ -42,7 +42,8 @@
                 android:ems="10"
                 android:inputType="textPersonName"
                 android:maxLines="1"
-                android:selectAllOnFocus="true" />
+                android:selectAllOnFocus="true"
+                android:textSize="@dimen/font_size_16" />
 
         </FrameLayout>
 

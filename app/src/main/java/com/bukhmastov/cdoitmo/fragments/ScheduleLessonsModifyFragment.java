@@ -1,16 +1,14 @@
-package com.bukhmastov.cdoitmo.activities;
+package com.bukhmastov.cdoitmo.fragments;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.TextInputEditText;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.MenuItem;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
@@ -20,7 +18,6 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapters.TeacherPickerAdapter;
-import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
 import com.bukhmastov.cdoitmo.objects.entities.LessonUnit;
 import com.bukhmastov.cdoitmo.utils.Log;
@@ -41,99 +38,55 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ScheduleLessonsEditActivity extends AppCompatActivity {
+public class ScheduleLessonsModifyFragment extends ConnectedFragment {
 
-    private static final String TAG = "SLEditActivity";
+    private static final String TAG = "SLModifyFragment";
+    public enum TYPE {create, edit}
+    private TYPE type;
     private LessonUnit lessonUnit;
-    private Activity self;
-    private String cache_token;
-    private int index;
-    private String oldHash;
+    private int index = 0;
+    private String hash = null;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        if (Static.darkTheme) setTheme(R.style.AppTheme_Dark);
-        super.onCreate(savedInstanceState);
-        Log.i(TAG, "Activity created");
-        setContentView(R.layout.activity_schedule_lesson_create);
-        self = this;
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_schedule_lessons_modify, container, false);
+    }
+
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
         try {
-            setSupportActionBar((Toolbar) findViewById(R.id.toolbar_lesson_create));
-            ActionBar actionBar = getSupportActionBar();
-            if (actionBar != null) {
-                actionBar.setHomeButtonEnabled(true);
-                actionBar.setDisplayHomeAsUpEnabled(true);
+            Bundle extras = getArguments();
+            if (extras == null) {
+                throw new NullPointerException("extras cannot be null");
+            }
+            type = (TYPE) extras.getSerializable("action_type");
+            if (type == null) {
+                throw new NullPointerException("type cannot be null");
+            }
+            switch (type) {
+                case create: activity.updateToolbar(getString(R.string.lesson_creation), R.drawable.ic_schedule_lessons); break;
+                case edit: activity.updateToolbar(getString(R.string.lesson_editing), R.drawable.ic_schedule_lessons); break;
+                default:
+                    Exception exception = new Exception("got wrong type from arguments bundle: " + type.toString());
+                    Log.wtf(exception);
+                    throw exception;
+            }
+            display();
+        } catch (Exception e) {
+            Static.error(e);
+            activity.back();
+        }
+    }
+
+    private void display() {
+        try {
+            lessonUnit = retrieveExtras(getArguments());
+            if (type == TYPE.edit) {
+                retrieveEditingLesson();
             }
 
-            lessonUnit = new LessonUnit();
-            Bundle extras = getIntent().getExtras();
-
-            lessonUnit.day = extras.getInt("day");
-            lessonUnit.week = extras.getInt("week");
-            if (extras.getString("header") != null) {
-                ((TextView) findViewById(R.id.slc_title)).setText(extras.getString("header"));
-                TextView slc_desc = (TextView) findViewById(R.id.slc_desc);
-                if (slc_desc != null) {
-                    if (Static.week >= 0) {
-                        slc_desc.setText(Static.week + " " + getString(R.string.school_week));
-                    } else {
-                        slc_desc.setText(new SimpleDateFormat("dd.MM.yyyy", Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis())));
-                    }
-                }
-                ((Button) findViewById(R.id.lesson_create_button)).setText(R.string.save);
-            } else throw new Exception("Missed header extra");
-            if (extras.getString("cache_token") != null) {
-                lessonUnit.cache_token = extras.getString("cache_token");
-            } else throw new Exception("Missed cache_token extra");
-            final String hash;
-            if (extras.getString("hash") != null) {
-                hash = extras.getString("hash");
-            } else throw new Exception("Missed hash extra");
-
-            cache_token = lessonUnit.cache_token;
-            index = lessonUnit.day;
-            oldHash = hash;
-
-            String addedStr = Storage.file.perm.get(this, "schedule_lessons#added#" + lessonUnit.cache_token, "");
-            JSONArray added;
-            if (addedStr.isEmpty()) {
-                added = new JSONArray();
-            } else {
-                added = new JSONArray(addedStr);
-            }
-            boolean found = false;
-            for (int i = 0; i < added.length(); i++) {
-                JSONObject day = added.getJSONObject(i);
-                if (day.getInt("index") == lessonUnit.day) {
-                    JSONArray lessons = day.getJSONArray("lessons");
-                    for (int j = 0; j < lessons.length(); j++) {
-                        JSONObject lesson = lessons.getJSONObject(j);
-                        if (Objects.equals(hash, Static.crypt(lesson.toString()))) {
-                            if (lesson.getString("subject") != null) lessonUnit.title = lesson.getString("subject");
-                            if (lesson.getString("timeStart") != null) lessonUnit.timeStart = lesson.getString("timeStart");
-                            if (lesson.getString("timeEnd") != null) lessonUnit.timeEnd = lesson.getString("timeEnd");
-                            if (lesson.getString("type") != null) lessonUnit.type = lesson.getString("type");
-                            if (lesson.getString("group") != null) lessonUnit.group = lesson.getString("group");
-                            if (lesson.getString("teacher") != null) lessonUnit.teacher = lesson.getString("teacher");
-                            if (lesson.getString("teacher_id") != null) lessonUnit.teacher_id = lesson.getString("teacher_id");
-                            if (lesson.getString("room") != null) lessonUnit.room = lesson.getString("room");
-                            if (lesson.getString("building") != null) lessonUnit.building = lesson.getString("building");
-                            if (lessonUnit.type != null) {
-                                switch (lessonUnit.type) {
-                                    case "practice": lessonUnit.type = getString(R.string.practice); break;
-                                    case "lecture": lessonUnit.type = getString(R.string.lecture); break;
-                                    case "lab": lessonUnit.type = getString(R.string.lab); break;
-                                }
-                            }
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-            }
-            if (!found) throw new Exception("Custom lesson not found");
-
-            TextInputEditText lesson_title = (TextInputEditText) findViewById(R.id.lesson_title);
+            TextInputEditText lesson_title = (TextInputEditText) activity.findViewById(R.id.lesson_title);
             if (lessonUnit.title != null) lesson_title.setText(lessonUnit.title);
             lesson_title.requestFocus();
             lesson_title.addTextChangedListener(new TextWatcher() {
@@ -147,7 +100,7 @@ public class ScheduleLessonsEditActivity extends AppCompatActivity {
                 }
             });
 
-            TextInputEditText lesson_time_start = (TextInputEditText) findViewById(R.id.lesson_time_start);
+            TextInputEditText lesson_time_start = (TextInputEditText) activity.findViewById(R.id.lesson_time_start);
             if (lessonUnit.timeStart != null) lesson_time_start.setText(lessonUnit.timeStart);
             lesson_time_start.addTextChangedListener(new TextWatcher() {
                 @Override
@@ -157,7 +110,7 @@ public class ScheduleLessonsEditActivity extends AppCompatActivity {
                 @Override
                 public void afterTextChanged(Editable s) {
                     lessonUnit.timeStart = s.toString();
-                    TextInputEditText lesson_time_end = (TextInputEditText) findViewById(R.id.lesson_time_end);
+                    TextInputEditText lesson_time_end = (TextInputEditText) activity.findViewById(R.id.lesson_time_end);
                     if (lesson_time_end.getText().toString().isEmpty()) {
                         Matcher time = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(s.toString());
                         if (time.find()) {
@@ -174,7 +127,7 @@ public class ScheduleLessonsEditActivity extends AppCompatActivity {
                 }
             });
 
-            TextInputEditText lesson_time_end = (TextInputEditText) findViewById(R.id.lesson_time_end);
+            TextInputEditText lesson_time_end = (TextInputEditText) activity.findViewById(R.id.lesson_time_end);
             if (lessonUnit.timeEnd != null) lesson_time_end.setText(lessonUnit.timeEnd);
             lesson_time_end.addTextChangedListener(new TextWatcher() {
                 @Override
@@ -184,7 +137,7 @@ public class ScheduleLessonsEditActivity extends AppCompatActivity {
                 @Override
                 public void afterTextChanged(Editable s) {
                     lessonUnit.timeEnd = s.toString();
-                    TextInputEditText lesson_time_start = (TextInputEditText) findViewById(R.id.lesson_time_start);
+                    TextInputEditText lesson_time_start = (TextInputEditText) activity.findViewById(R.id.lesson_time_start);
                     if (lesson_time_start.getText().toString().isEmpty()) {
                         Matcher time = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(s.toString());
                         if (time.find()) {
@@ -201,8 +154,8 @@ public class ScheduleLessonsEditActivity extends AppCompatActivity {
                 }
             });
 
-            Spinner lesson_week = (Spinner) findViewById(R.id.lesson_week);
-            ArrayAdapter<?> lesson_week_adapter = ArrayAdapter.createFromResource(this, R.array.week_types_titles, R.layout.spinner_layout_simple);
+            Spinner lesson_week = (Spinner) activity.findViewById(R.id.lesson_week);
+            ArrayAdapter<?> lesson_week_adapter = ArrayAdapter.createFromResource(getContext(), R.array.week_types_titles, R.layout.spinner_layout_simple);
             lesson_week_adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             lesson_week.setAdapter(lesson_week_adapter);
             switch (lessonUnit.week) {
@@ -218,8 +171,8 @@ public class ScheduleLessonsEditActivity extends AppCompatActivity {
                 public void onNothingSelected(AdapterView<?> parent) {}
             });
 
-            Spinner lesson_day_of_week = (Spinner) findViewById(R.id.lesson_day_of_week);
-            ArrayAdapter<?> lesson_day_of_week_adapter = ArrayAdapter.createFromResource(this, R.array.days_of_week_titles, R.layout.spinner_layout_simple);
+            Spinner lesson_day_of_week = (Spinner) activity.findViewById(R.id.lesson_day_of_week);
+            ArrayAdapter<?> lesson_day_of_week_adapter = ArrayAdapter.createFromResource(getContext(), R.array.days_of_week_titles, R.layout.spinner_layout_simple);
             lesson_day_of_week_adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             lesson_day_of_week.setAdapter(lesson_day_of_week_adapter);
             lesson_day_of_week.setSelection(lessonUnit.day);
@@ -231,11 +184,10 @@ public class ScheduleLessonsEditActivity extends AppCompatActivity {
                 public void onNothingSelected(AdapterView<?> parent) {}
             });
 
-            final AutoCompleteTextView lesson_type = (AutoCompleteTextView) findViewById(R.id.lesson_type);
+            final AutoCompleteTextView lesson_type = (AutoCompleteTextView) activity.findViewById(R.id.lesson_type);
             if (lessonUnit.type != null) lesson_type.setText(lessonUnit.type);
-            String[] types = {getString(R.string.lecture), getString(R.string.practice), getString(R.string.lab)};
             lesson_type.setThreshold(1);
-            lesson_type.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, types));
+            lesson_type.setAdapter(ArrayAdapter.createFromResource(getContext(), R.array.lessons_types, android.R.layout.simple_dropdown_item_1line));
             lesson_type.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -247,7 +199,7 @@ public class ScheduleLessonsEditActivity extends AppCompatActivity {
                 }
             });
 
-            TextInputEditText lesson_group = (TextInputEditText) findViewById(R.id.lesson_group);
+            TextInputEditText lesson_group = (TextInputEditText) activity.findViewById(R.id.lesson_group);
             if (lessonUnit.group != null) lesson_group.setText(lessonUnit.group);
             lesson_group.addTextChangedListener(new TextWatcher() {
                 @Override
@@ -260,10 +212,10 @@ public class ScheduleLessonsEditActivity extends AppCompatActivity {
                 }
             });
 
-            final AutoCompleteTextView lesson_teacher = (AutoCompleteTextView) findViewById(R.id.lesson_teacher);
-            final TeacherPickerAdapter teacherPickerAdapter = new TeacherPickerAdapter(this, new ArrayList<JSONObject>());
+            final AutoCompleteTextView lesson_teacher = (AutoCompleteTextView) activity.findViewById(R.id.lesson_teacher);
+            final TeacherPickerAdapter teacherPickerAdapter = new TeacherPickerAdapter(getContext(), new ArrayList<JSONObject>());
             if (lessonUnit.teacher != null) {
-                ScheduleLessonsEditActivity.TeacherSearch.blocked = true;
+                TeacherSearch.blocked = true;
                 lesson_teacher.setText(lessonUnit.teacher);
             }
             teacherPickerAdapter.setNotifyOnChange(true);
@@ -280,7 +232,7 @@ public class ScheduleLessonsEditActivity extends AppCompatActivity {
                     teacherPickerAdapter.clear();
                     lesson_teacher.dismissDropDown();
                     if (!query.isEmpty()) {
-                        ScheduleLessonsEditActivity.TeacherSearch.search(getBaseContext(), query, new ScheduleLessonsEditActivity.TeacherSearch.response() {
+                        TeacherSearch.search(getContext(), query, new TeacherSearch.response() {
                             @Override
                             public void onSuccess(JSONObject json) {
                                 teacherPickerAdapter.clear();
@@ -319,17 +271,16 @@ public class ScheduleLessonsEditActivity extends AppCompatActivity {
                         if (item == null)  throw new Exception("Teacher item is null");
                         lessonUnit.teacher = item.getString("person");
                         lessonUnit.teacher_id = String.valueOf(item.getInt("pid"));
-                        Log.d(TAG, lessonUnit.teacher + " | " + lessonUnit.teacher_id);
-                        ScheduleLessonsEditActivity.TeacherSearch.blocked = true;
+                        TeacherSearch.blocked = true;
                         lesson_teacher.setText(lessonUnit.teacher);
                     } catch (Exception e) {
                         Static.error(e);
-                        Static.snackBar(self, getString(R.string.something_went_wrong));
+                        Static.snackBar(activity, getString(R.string.something_went_wrong));
                     }
                 }
             });
 
-            TextInputEditText lesson_room = (TextInputEditText) findViewById(R.id.lesson_room);
+            TextInputEditText lesson_room = (TextInputEditText) activity.findViewById(R.id.lesson_room);
             if (lessonUnit.room != null) lesson_room.setText(lessonUnit.room);
             lesson_room.addTextChangedListener(new TextWatcher() {
                 @Override
@@ -342,10 +293,10 @@ public class ScheduleLessonsEditActivity extends AppCompatActivity {
                 }
             });
 
-            AutoCompleteTextView lesson_building = (AutoCompleteTextView) findViewById(R.id.lesson_building);
+            AutoCompleteTextView lesson_building = (AutoCompleteTextView) activity.findViewById(R.id.lesson_building);
             if (lessonUnit.building != null) lesson_building.setText(lessonUnit.building);
             lesson_building.setThreshold(1);
-            lesson_building.setAdapter(ArrayAdapter.createFromResource(this, R.array.buildings, android.R.layout.simple_dropdown_item_1line));
+            lesson_building.setAdapter(ArrayAdapter.createFromResource(getContext(), R.array.buildings, android.R.layout.simple_dropdown_item_1line));
             lesson_building.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -357,18 +308,23 @@ public class ScheduleLessonsEditActivity extends AppCompatActivity {
                 }
             });
 
-            findViewById(R.id.lesson_create_button).setOnClickListener(new View.OnClickListener() {
+            Button lesson_create_button = (Button) activity.findViewById(R.id.lesson_create_button);
+            switch (type) {
+                case create: lesson_create_button.setText(getString(R.string.create)); break;
+                case edit: lesson_create_button.setText(getString(R.string.save)); break;
+            }
+            lesson_create_button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     Log.v(TAG, "create_button clicked");
                     if (lessonUnit.title == null || lessonUnit.title.isEmpty()) {
                         Log.v(TAG, "lessonUnit.title required");
-                        Static.snackBar(self, getString(R.string.lesson_title_required));
+                        Static.snackBar(activity, getString(R.string.lesson_title_required));
                         return;
                     }
                     if (lessonUnit.timeStart == null || lessonUnit.timeStart.isEmpty()) {
                         Log.v(TAG, "lessonUnit.timeStart required");
-                        Static.snackBar(self, getString(R.string.lesson_time_start_required));
+                        Static.snackBar(activity, getString(R.string.lesson_time_start_required));
                         return;
                     }
                     if (lessonUnit.type != null) {
@@ -376,54 +332,144 @@ public class ScheduleLessonsEditActivity extends AppCompatActivity {
                         if (Objects.equals(lessonUnit.type.toLowerCase(), getString(R.string.practice).toLowerCase())) lessonUnit.type = "practice";
                         if (Objects.equals(lessonUnit.type.toLowerCase(), getString(R.string.lab).toLowerCase())) lessonUnit.type = "lab";
                     }
-                    if (ScheduleLessons.editLesson(self, cache_token, index, oldHash, lessonUnit)) {
-                        ScheduleLessonsFragment.reScheduleRequired = true;
-                        finish();
-                    } else {
-                        Log.w(TAG, "failed to create lesson");
-                        Static.snackBar(self, getString(R.string.something_went_wrong));
+                    switch (type) {
+                        case create: {
+                            if (ScheduleLessons.createLesson(activity, lessonUnit)) {
+                                ScheduleLessonsFragment.reScheduleRequired = true;
+                                activity.back();
+                            } else {
+                                Log.w(TAG, "failed to create lesson");
+                                Static.snackBar(activity, getString(R.string.something_went_wrong));
+                            }
+                            break;
+                        }
+                        case edit: {
+                            if (ScheduleLessons.editLesson(activity, lessonUnit.cache_token, index, hash, lessonUnit)) {
+                                ScheduleLessonsFragment.reScheduleRequired = true;
+                                activity.back();
+                            } else {
+                                Log.w(TAG, "failed to edit lesson");
+                                Static.snackBar(activity, getString(R.string.something_went_wrong));
+                            }
+                            break;
+                        }
                     }
                 }
             });
-
         } catch (Exception e) {
             Static.error(e);
-            Static.snackBar(this, getString(R.string.something_went_wrong));
-            finish();
+            Static.snackBar(activity, getString(R.string.something_went_wrong));
+            activity.back();
         }
     }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        Log.i(TAG, "Activity destroyed");
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home: finish(); return true;
-            default: return super.onOptionsItemSelected(item);
+    private LessonUnit retrieveExtras(Bundle extras) throws Exception {
+        if (extras == null) {
+            throw new NullPointerException("extras cannot be null");
         }
+        String header = getStringExtra(extras, "header", true);
+        TextView slc_title = (TextView) activity.findViewById(R.id.slc_title);
+        TextView slc_desc = (TextView) activity.findViewById(R.id.slc_desc);
+        if (slc_title != null) {
+            slc_title.setText(header);
+        }
+        if (slc_desc != null) {
+            if (Static.week >= 0) {
+                slc_desc.setText(Static.week + " " + getString(R.string.school_week));
+            } else {
+                slc_desc.setText(new SimpleDateFormat("dd.MM.yyyy", Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis())));
+            }
+        }
+        if (type == TYPE.edit) {
+            hash = getStringExtra(extras, "hash", true);
+            index = extras.getInt("day");
+        }
+        LessonUnit lessonUnit = new LessonUnit();
+        lessonUnit.day = extras.getInt("day");
+        lessonUnit.week = extras.getInt("week");
+        lessonUnit.cache_token = getStringExtra(extras, "cache_token", true);
+        lessonUnit.title = getStringExtra(extras, "title", false);
+        lessonUnit.timeStart = getStringExtra(extras, "timeStart", false);
+        lessonUnit.timeEnd = getStringExtra(extras, "timeEnd", false);
+        lessonUnit.type = getStringExtra(extras, "type", false);
+        lessonUnit.group = getStringExtra(extras, "group", false);
+        lessonUnit.teacher = getStringExtra(extras, "teacher", false);
+        lessonUnit.teacher_id = getStringExtra(extras, "teacher_id", false);
+        lessonUnit.room = getStringExtra(extras, "room", false);
+        lessonUnit.building = getStringExtra(extras, "building", false);
+        switch (lessonUnit.type) {
+            case "practice": lessonUnit.type = getString(R.string.practice); break;
+            case "lecture": lessonUnit.type = getString(R.string.lecture); break;
+            case "lab": lessonUnit.type = getString(R.string.lab); break;
+        }
+        return lessonUnit;
     }
-
+    private String getStringExtra(Bundle extras, String key, boolean restrict) throws Exception {
+        String value = extras.getString(key);
+        if (value == null) {
+            if (restrict) {
+                throw new Exception("Missed extra for key: " + key);
+            } else {
+                value = "";
+            }
+        }
+        return value;
+    }
+    private void retrieveEditingLesson() throws Exception {
+        String addedStr = Storage.file.perm.get(getContext(), "schedule_lessons#added#" + lessonUnit.cache_token, "");
+        JSONArray added;
+        if (addedStr.isEmpty()) {
+            added = new JSONArray();
+        } else {
+            added = new JSONArray(addedStr);
+        }
+        boolean found = false;
+        for (int i = 0; i < added.length(); i++) {
+            JSONObject day = added.getJSONObject(i);
+            if (day.getInt("index") == lessonUnit.day) {
+                JSONArray lessons = day.getJSONArray("lessons");
+                for (int j = 0; j < lessons.length(); j++) {
+                    JSONObject lesson = lessons.getJSONObject(j);
+                    if (Objects.equals(hash, Static.crypt(lesson.toString()))) {
+                        if (lesson.getString("subject") != null) lessonUnit.title = lesson.getString("subject");
+                        if (lesson.getString("timeStart") != null) lessonUnit.timeStart = lesson.getString("timeStart");
+                        if (lesson.getString("timeEnd") != null) lessonUnit.timeEnd = lesson.getString("timeEnd");
+                        if (lesson.getString("type") != null) lessonUnit.type = lesson.getString("type");
+                        if (lesson.getString("group") != null) lessonUnit.group = lesson.getString("group");
+                        if (lesson.getString("teacher") != null) lessonUnit.teacher = lesson.getString("teacher");
+                        if (lesson.getString("teacher_id") != null) lessonUnit.teacher_id = lesson.getString("teacher_id");
+                        if (lesson.getString("room") != null) lessonUnit.room = lesson.getString("room");
+                        if (lesson.getString("building") != null) lessonUnit.building = lesson.getString("building");
+                        if (lessonUnit.type != null) {
+                            switch (lessonUnit.type) {
+                                case "practice": lessonUnit.type = getString(R.string.practice); break;
+                                case "lecture": lessonUnit.type = getString(R.string.lecture); break;
+                                case "lab": lessonUnit.type = getString(R.string.lab); break;
+                            }
+                        }
+                        found = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if (!found) throw new Exception("Custom lesson not found");
+    }
     private String ldgZero(int time){
         return time % 10 == time ? "0" + String.valueOf(time) : String.valueOf(time);
     }
 
     private static class TeacherSearch {
 
-        private static final String TAG = "SLEditActivity.TS";
+        private static final String TAG = "SLModifyFragment.TS";
         interface response {
             void onProgress(int state);
             void onFailure(int state);
             void onSuccess(JSONObject json);
         }
-
         private static RequestHandle request = null;
         static boolean blocked = false;
 
-        public static void search(final Context context, final String query, final ScheduleLessonsEditActivity.TeacherSearch.response delegate){
+        public static void search(final Context context, final String query, final response delegate){
             Log.v(TAG, "search | query=" + query);
             if (request != null) {
                 request.cancel(true);

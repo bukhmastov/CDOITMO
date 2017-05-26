@@ -19,17 +19,18 @@
         android:layout_height="match_parent">
 
         <LinearLayout
+            android:id="@+id/about_content"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="8dp">
+            android:padding="@dimen/item_padding_half">
 
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="8dp"
+                android:layout_margin="@dimen/item_padding_half"
                 android:background="@drawable/shape_border_round"
-                android:padding="4dp">
+                android:padding="@dimen/item_padding_quarter">
 
                 <LinearLayout
                     android:id="@+id/block_pika"
@@ -37,13 +38,13 @@
                     android:layout_height="wrap_content"
                     android:background="?attr/selectableItemBackground"
                     android:orientation="horizontal"
-                    android:padding="8dp">
+                    android:padding="@dimen/item_padding_half">
 
                     <ImageView
-                        android:layout_width="50dp"
-                        android:layout_height="50dp"
-                        android:layout_marginEnd="8dp"
+                        android:layout_width="@dimen/about_icon_width"
+                        android:layout_height="@dimen/about_icon_width"
                         android:layout_marginStart="0dp"
+                        android:layout_marginEnd="@dimen/item_padding_half"
                         android:contentDescription="@string/app_name"
                         app:srcCompat="@drawable/cdo_small_background" />
 
@@ -56,19 +57,21 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/app_name"
-                            android:maxLines="1"
                             android:ellipsize="end"
-                            android:textColor="?android:attr/textColorPrimary" />
+                            android:maxLines="1"
+                            android:text="@string/app_name"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="@dimen/font_size_14" />
 
                         <TextView
                             android:id="@+id/app_version"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/lorem_ipsum"
-                            android:maxLines="1"
                             android:ellipsize="end"
-                            android:textColor="?android:attr/textColorSecondary" />
+                            android:maxLines="1"
+                            android:text="@string/lorem_ipsum"
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:textSize="@dimen/font_size_14" />
 
                     </LinearLayout>
 
@@ -79,9 +82,9 @@
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="8dp"
+                android:layout_margin="@dimen/item_padding_half"
                 android:background="@drawable/shape_border_round"
-                android:padding="4dp">
+                android:padding="@dimen/item_padding_quarter">
 
                 <LinearLayout
                     android:id="@+id/block_send_mail"
@@ -89,14 +92,14 @@
                     android:layout_height="wrap_content"
                     android:background="?attr/selectableItemBackground"
                     android:orientation="horizontal"
-                    android:padding="8dp">
+                    android:padding="@dimen/item_padding_half">
 
                     <ImageView
-                        android:layout_width="50dp"
-                        android:layout_height="50dp"
-                        android:layout_marginEnd="8dp"
+                        android:layout_width="@dimen/about_icon_width"
+                        android:layout_height="@dimen/about_icon_width"
                         android:layout_marginStart="0dp"
-                        android:padding="12dp"
+                        android:layout_marginEnd="@dimen/item_padding_half"
+                        android:padding="@dimen/about_icon_padding"
                         app:srcCompat="@drawable/ic_mail_outline" />
 
                     <LinearLayout
@@ -108,18 +111,20 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/send_email_to_dev"
-                            android:maxLines="1"
                             android:ellipsize="end"
-                            android:textColor="?android:attr/textColorPrimary" />
+                            android:maxLines="1"
+                            android:text="@string/send_email_to_dev"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="@dimen/font_size_14" />
 
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/app_info_mail_dev"
-                            android:maxLines="1"
                             android:ellipsize="end"
-                            android:textColor="?android:attr/textColorSecondary" />
+                            android:maxLines="1"
+                            android:text="@string/app_info_mail_dev"
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:textSize="@dimen/font_size_14" />
 
                     </LinearLayout>
 
@@ -130,9 +135,9 @@
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="8dp"
+                android:layout_margin="@dimen/item_padding_half"
                 android:background="@drawable/shape_border_round"
-                android:padding="4dp">
+                android:padding="@dimen/item_padding_quarter">
 
                 <LinearLayout
                     android:id="@+id/block_send_vk"
@@ -140,14 +145,14 @@
                     android:layout_height="wrap_content"
                     android:background="?attr/selectableItemBackground"
                     android:orientation="horizontal"
-                    android:padding="8dp">
+                    android:padding="@dimen/item_padding_half">
 
                     <ImageView
-                        android:layout_width="50dp"
-                        android:layout_height="50dp"
-                        android:layout_marginEnd="8dp"
+                        android:layout_width="@dimen/about_icon_width"
+                        android:layout_height="@dimen/about_icon_width"
                         android:layout_marginStart="0dp"
-                        android:padding="12dp"
+                        android:layout_marginEnd="@dimen/item_padding_half"
+                        android:padding="@dimen/about_icon_padding"
                         app:srcCompat="@drawable/ic_vk" />
 
                     <LinearLayout
@@ -159,18 +164,20 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/send_vk_to_dev"
-                            android:maxLines="1"
                             android:ellipsize="end"
-                            android:textColor="?android:attr/textColorPrimary" />
+                            android:maxLines="1"
+                            android:text="@string/send_vk_to_dev"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="@dimen/font_size_14" />
 
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/app_info_dev"
-                            android:maxLines="1"
                             android:ellipsize="end"
-                            android:textColor="?android:attr/textColorSecondary" />
+                            android:maxLines="1"
+                            android:text="@string/app_info_dev"
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:textSize="@dimen/font_size_14" />
 
                     </LinearLayout>
 
@@ -181,9 +188,9 @@
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="8dp"
+                android:layout_margin="@dimen/item_padding_half"
                 android:background="@drawable/shape_border_round"
-                android:padding="4dp">
+                android:padding="@dimen/item_padding_quarter">
 
                 <LinearLayout
                     android:id="@+id/block_donate"
@@ -191,14 +198,14 @@
                     android:layout_height="wrap_content"
                     android:background="?attr/selectableItemBackground"
                     android:orientation="horizontal"
-                    android:padding="8dp">
+                    android:padding="@dimen/item_padding_half">
 
                     <ImageView
-                        android:layout_width="50dp"
-                        android:layout_height="50dp"
-                        android:layout_marginEnd="8dp"
+                        android:layout_width="@dimen/about_icon_width"
+                        android:layout_height="@dimen/about_icon_width"
                         android:layout_marginStart="0dp"
-                        android:padding="12dp"
+                        android:layout_marginEnd="@dimen/item_padding_half"
+                        android:padding="@dimen/about_icon_padding"
                         app:srcCompat="@drawable/ic_monetization" />
 
                     <LinearLayout
@@ -210,18 +217,20 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/support_dev"
-                            android:maxLines="1"
                             android:ellipsize="end"
-                            android:textColor="?android:attr/textColorPrimary" />
+                            android:maxLines="1"
+                            android:text="@string/support_dev"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="@dimen/font_size_14" />
 
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/support_dev_desc"
-                            android:maxLines="1"
                             android:ellipsize="end"
-                            android:textColor="?android:attr/textColorSecondary" />
+                            android:maxLines="1"
+                            android:text="@string/support_dev_desc"
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:textSize="@dimen/font_size_14" />
 
                     </LinearLayout>
 
@@ -232,7 +241,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="8dp"
+                android:layout_margin="@dimen/item_padding_half"
                 android:orientation="vertical">
 
                 <TextView
@@ -241,7 +250,8 @@
                     android:padding="1dp"
                     android:text="@string/app_info_disclaimer"
                     android:textAlignment="center"
-                    android:textColor="?android:attr/textColorPrimary" />
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="@dimen/font_size_14" />
 
                 <TextView
                     android:layout_width="match_parent"
@@ -249,7 +259,8 @@
                     android:autoLink="web"
                     android:padding="2dp"
                     android:text="http://www.ifmo.ru"
-                    android:textAlignment="center" />
+                    android:textAlignment="center"
+                    android:textSize="@dimen/font_size_14" />
 
                 <TextView
                     android:layout_width="match_parent"
@@ -257,7 +268,8 @@
                     android:autoLink="web"
                     android:padding="2dp"
                     android:text="http://de.ifmo.ru"
-                    android:textAlignment="center" />
+                    android:textAlignment="center"
+                    android:textSize="@dimen/font_size_14" />
 
             </LinearLayout>
 

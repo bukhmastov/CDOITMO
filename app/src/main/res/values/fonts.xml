@@ -1,0 +1,7 @@
+<resources>
+
+    <string name="font_light">sans-serif-light</string>
+    <string name="font_major">sans-serif</string>
+    <string name="font_bold">sans-serif-medium</string>
+
+</resources>

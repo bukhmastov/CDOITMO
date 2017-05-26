@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/spinnertext"
     android:layout_width="match_parent"
-    android:textAppearance="@style/TextAppearance.AppCompat.Button"
-    android:layout_height="wrap_content"
+    android:layout_height="@dimen/rating_detailed_height_half"
+    android:fontFamily="@string/font_bold"
     android:gravity="center_vertical"
-    android:textSize="14sp"
+    android:maxLines="1"
+    android:paddingEnd="@dimen/item_horizontal_padding"
+    android:paddingStart="@dimen/item_horizontal_padding"
     android:text="@string/lorem_ipsum"
-    android:textAllCaps="false"
-    android:paddingTop="5dp"
-    android:paddingBottom="5dp"
-    android:paddingStart="15dp"
-    android:paddingEnd="15dp" />
+    android:textColor="?android:attr/textColorPrimary"
+    android:textSize="@dimen/font_size_14" />

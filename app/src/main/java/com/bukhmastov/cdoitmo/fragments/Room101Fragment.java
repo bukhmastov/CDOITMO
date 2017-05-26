@@ -6,8 +6,6 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
@@ -37,7 +35,7 @@ import java.util.Objects;
 
 import cz.msebera.android.httpclient.Header;
 
-public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener, Room101ReviewBuilder.register {
+public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLayout.OnRefreshListener, Room101ReviewBuilder.register {
 
     private static final String TAG = "Room101Fragment";
     private boolean loaded = false;
@@ -94,7 +92,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
         Log.v(TAG, "onDenyRequest | reid=" + reid + " | status=" + status);
         if (Static.OFFLINE_MODE) {
             Log.v(TAG, "onDenyRequest rejected: offline mode");
-            snackBar(getString(R.string.device_offline_action_refused));
+            Static.snackBar(activity, getString(R.string.device_offline_action_refused));
         } else {
             (new AlertDialog.Builder(getContext())
                     .setTitle(R.string.request_deny)
@@ -120,7 +118,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
     private void denyRequest(final int reid, final int status){
         Log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status);
         RequestParams params = new RequestParams();
-        switch(status){
+        switch (status) {
             case 1: params.put("getFunc", "snatRequest"); break;
             default: params.put("getFunc", "delRequest"); break;
         }
@@ -186,7 +184,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
         Log.v(TAG, "addRequest");
         if (Static.OFFLINE_MODE) {
             Log.v(TAG, "addRequest rejected: offline mode");
-            snackBar(getString(R.string.device_offline_action_refused));
+            Static.snackBar(activity, getString(R.string.device_offline_action_refused));
         } else {
             draw(R.layout.layout_room101_add_request);
             final View room101_close_add_request = getActivity().findViewById(R.id.room101_close_add_request);
@@ -239,7 +237,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                         }
                     } catch (Exception e){
                         Static.error(e);
-                        snackBar(getString(R.string.error_occurred_while_room101_request));
+                        Static.snackBar(activity, getString(R.string.error_occurred_while_room101_request));
                         load(false);
                     }
                 }
@@ -253,7 +251,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                         }
                     } catch (Exception e){
                         Static.error(e);
-                        snackBar(getString(R.string.error_occurred));
+                        Static.snackBar(activity, getString(R.string.error_occurred));
                         load(false);
                     }
                 }
@@ -515,7 +513,7 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                     }
                 });
             }
-            Static.showUpdateTime(getActivity(), viewRequest.getLong("timestamp"), R.id.room101_review_swipe, false);
+            Static.showUpdateTime(getActivity(), viewRequest.getLong("timestamp"), false);
         } catch (Exception e){
             Static.error(e);
             loadFailed();
@@ -615,14 +613,6 @@ public class Room101Fragment extends Fragment implements SwipeRefreshLayout.OnRe
                 responseHandler.onNewHandle(requestHandle);
             }
         });
-    }
-    private void snackBar(String text){
-        View room101_review_swipe = getActivity().findViewById(R.id.room101_review_swipe);
-        if (room101_review_swipe != null) {
-            Snackbar snackbar = Snackbar.make(room101_review_swipe, text, Snackbar.LENGTH_SHORT);
-            snackbar.getView().setBackgroundColor(Static.colorBackgroundSnackBar);
-            snackbar.show();
-        }
     }
 
 }

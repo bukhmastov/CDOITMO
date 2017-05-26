@@ -13,10 +13,10 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp" >
+        android:paddingStart="@dimen/item_horizontal_padding"
+        android:paddingEnd="@dimen/item_horizontal_padding"
+        android:paddingTop="@dimen/item_vertical_padding"
+        android:paddingBottom="@dimen/item_vertical_padding" >
 
         <LinearLayout
             android:orientation="vertical"
@@ -32,8 +32,8 @@
                 android:layout_height="wrap_content"
                 android:text="@string/lorem_ipsum"
                 android:textColor="?android:attr/textColorPrimary"
-                android:textStyle="bold"
-                android:textSize="16sp" />
+                android:textSize="@dimen/font_size_16"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/sp_desc"
@@ -41,13 +41,14 @@
                 android:layout_height="wrap_content"
                 android:text="@string/lorem_ipsum"
                 android:textColor="?android:attr/textColorSecondary"
+                android:textSize="@dimen/font_size_14"
                 android:textStyle="bold" />
 
         </LinearLayout>
 
         <FrameLayout
             android:id="@+id/sp_value_container"
-            android:layout_width="50dp"
+            android:layout_width="60dp"
             android:layout_height="55dp"
             android:layout_alignParentEnd="true"
             android:layout_alignParentTop="true">
@@ -59,7 +60,7 @@
                 android:layout_gravity="center"
                 android:text="99.99"
                 android:textColor="?android:attr/textColorPrimary"
-                android:textSize="18sp"
+                android:textSize="@dimen/font_size_18"
                 android:textStyle="bold" />
 
         </FrameLayout>

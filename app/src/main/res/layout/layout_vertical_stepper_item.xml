@@ -2,18 +2,20 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:minHeight="32dp"
+    android:minHeight="@dimen/shortcut_create_step_width"
     android:orientation="horizontal">
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:layout_marginStart="0dp"
+        android:layout_marginEnd="@dimen/shortcut_create_step_margin" >
 
         <FrameLayout
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:padding="4dp">
+            android:layout_width="@dimen/shortcut_create_step_width"
+            android:layout_height="@dimen/shortcut_create_step_width"
+            android:padding="@dimen/shortcut_create_step_padding">
 
             <TextView
                 android:id="@+id/stepper_step_number"
@@ -49,18 +51,19 @@
         <TextView
             android:id="@+id/stepper_header"
             android:layout_width="match_parent"
-            android:layout_height="32dp"
-            android:padding="2dp"
+            android:layout_height="@dimen/shortcut_create_step_width"
             android:gravity="center_vertical"
             android:text="@string/lorem_ipsum"
-            android:textColor="?android:attr/textColorPrimary"/>
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="@dimen/font_size_14" />
 
         <LinearLayout
             android:id="@+id/stepper_content"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="2dp" />
+            android:paddingTop="@dimen/shortcut_create_step_padding"
+            android:paddingBottom="@dimen/shortcut_create_step_padding" />
 
     </LinearLayout>
 

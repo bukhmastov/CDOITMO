@@ -1,76 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="60dp">
+    android:layout_height="@dimen/rating_list_height">
 
     <FrameLayout
-        android:layout_width="60dp"
-        android:layout_height="60dp"
+        android:layout_width="@dimen/rating_list_height"
+        android:layout_height="@dimen/rating_list_height"
         android:id="@+id/lvrl_number_layout">
 
         <TextView
-            android:text="@string/lorem_ipsum"
-            android:layout_height="60dp"
             android:id="@+id/lvrl_number"
-            android:textAppearance="@style/TextAppearance.AppCompat.Button"
-            android:textSize="18sp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fontFamily="@string/font_bold"
             android:gravity="center"
-            android:layout_width="60dp" />
+            android:text="@string/lorem_number_short"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="@dimen/font_size_18" />
+
     </FrameLayout>
 
     <LinearLayout
-        android:orientation="vertical"
+        android:id="@+id/lvrl_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
+        android:layout_height="@dimen/rating_list_height"
         android:layout_toEndOf="@+id/lvrl_number_layout"
         android:layout_toStartOf="@+id/lvrl_delta_container"
-        android:paddingEnd="16dp"
-        android:paddingStart="0dp"
-        android:id="@+id/lvrl_layout">
-
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="10dp" />
+        android:gravity="center"
+        android:orientation="vertical" >
 
         <TextView
-            android:text="@string/lorem_ipsum"
-            android:layout_width="match_parent"
             android:id="@+id/lvrl_fio"
-            android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-            android:textSize="16sp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:maxLines="1"/>
+            android:maxLines="1"
+            android:text="@string/lorem_ipsum"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="@dimen/font_size_16" />
 
         <TextView
-            android:text="@string/lorem_ipsum"
-            android:layout_width="match_parent"
             android:id="@+id/lvrl_meta"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-            android:maxLines="1"/>
-
-        <Space
             android:layout_width="match_parent"
-            android:layout_height="10dp" />
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text="@string/lorem_ipsum"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="@dimen/font_size_14" />
 
     </LinearLayout>
 
     <FrameLayout
         android:id="@+id/lvrl_delta_container"
         android:layout_width="wrap_content"
-        android:layout_height="60dp"
-        android:layout_alignParentEnd="true">
+        android:layout_height="@dimen/rating_list_height"
+        android:layout_alignParentEnd="true" >
 
         <TextView
             android:id="@+id/lvrl_delta"
-            android:layout_height="match_parent"
             android:layout_width="wrap_content"
-            android:textAppearance="@style/TextAppearance.AppCompat.Button"
+            android:layout_height="match_parent"
             android:gravity="center"
-            android:padding="8dp" />
+            android:padding="16dp"
+            android:textAllCaps="true"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="@dimen/font_size_14"
+            android:textStyle="bold" />
 
     </FrameLayout>
 

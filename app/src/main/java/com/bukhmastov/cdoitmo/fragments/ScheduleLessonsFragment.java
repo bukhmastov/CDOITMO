@@ -5,16 +5,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.util.SparseIntArray;
-import android.util.TypedValue;
+import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -38,7 +36,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
 
-public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons.response, ViewPager.OnPageChangeListener {
+public class ScheduleLessonsFragment extends ConnectedFragment implements ScheduleLessons.response, ViewPager.OnPageChangeListener {
 
     private static final String TAG = "SLFragment";
     public static ScheduleLessons scheduleLessons;
@@ -57,11 +55,6 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
         Log.v(TAG, "Fragment created");
         scheduleLessons = new ScheduleLessons(getContext());
         scheduleLessons.setHandler(this);
-        try {
-            getActivity().findViewById(R.id.schedule_tabs).setVisibility(View.VISIBLE);
-        } catch (Exception e){
-            Static.error(e);
-        }
     }
 
     @Override
@@ -138,21 +131,6 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
             }
         } catch (Exception e){
             Static.error(e);
-        }
-    }
-
-    public static void searchAndClear(String query){
-        Log.v(TAG, "searchAndClear | query=" + query);
-        ScheduleLessonsFragment.scroll.clear();
-        ScheduleLessonsFragment.tabSelected = -1;
-        search(query);
-    }
-
-    public static void search(String query){
-        Log.v(TAG, "search | query=" + query);
-        if (ScheduleLessonsFragment.scheduleLessons != null) {
-            ScheduleLessonsFragment.query = query;
-            ScheduleLessonsFragment.scheduleLessons.search(query);
         }
     }
 
@@ -258,25 +236,26 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
             } else {
                 schedule_cached = !Objects.equals(scheduleLessons.getCache(schedule.getString("cache_token")), "");
                 if (schedule.getJSONArray("schedule").length() > 0) {
-                    getActivity().findViewById(R.id.schedule_tabs).setVisibility(View.VISIBLE);
+                    TabLayout schedule_tabs = (TabLayout) getActivity().findViewById(R.id.schedule_tabs);
+                    schedule_tabs.setVisibility(View.VISIBLE);
                     draw(R.layout.layout_schedule_lessons_tabs);
                     ViewPager schedule_view = (ViewPager) getActivity().findViewById(R.id.schedule_pager);
                     if (schedule_view != null) {
-                        schedule_view.setAdapter(new PagerAdapter(getFragmentManager(), getContext()));
+                        schedule_view.setAdapter(new PagerAdapter(getFragmentManager(), getContext(), activity));
                         schedule_view.addOnPageChangeListener(this);
-                        ((TabLayout) getActivity().findViewById(R.id.schedule_tabs)).setupWithViewPager(schedule_view);
+                        schedule_tabs.setupWithViewPager(schedule_view);
                     }
                     TabLayout.Tab tab;
                     if (ScheduleLessonsFragment.tabSelected == -1) {
                         int pref = Integer.parseInt(Storage.pref.get(getContext(), "pref_schedule_lessons_week", "-1"));
                         if (pref == -1) {
-                            tab = ((TabLayout) getActivity().findViewById(R.id.schedule_tabs)).getTabAt(Static.week >= 0 ? (Static.week % 2) + 1 : 0);
+                            tab = schedule_tabs.getTabAt(Static.week >= 0 ? (Static.week % 2) + 1 : 0);
                         } else {
-                            tab = ((TabLayout) getActivity().findViewById(R.id.schedule_tabs)).getTabAt(pref);
+                            tab = schedule_tabs.getTabAt(pref);
                         }
                     } else {
                         try {
-                            tab = ((TabLayout) getActivity().findViewById(R.id.schedule_tabs)).getTabAt(ScheduleLessonsFragment.tabSelected);
+                            tab = schedule_tabs.getTabAt(ScheduleLessonsFragment.tabSelected);
                         } catch (Exception e) {
                             tab = null;
                         }
@@ -292,49 +271,40 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
         }
     }
 
-    private void notFound(){
-        Log.v(TAG, "notFound");
-        TypedValue typedValue = new TypedValue();
-        getActivity().getTheme().resolveAttribute(android.R.attr.textColorPrimary, typedValue, true);
-        int textColorPrimary = getActivity().obtainStyledAttributes(typedValue.data, new int[]{android.R.attr.textColorPrimary}).getColor(0, -1);
-        float destiny = getContext().getResources().getDisplayMetrics().density;
-        LinearLayout linearLayout = new LinearLayout(getContext());
-        linearLayout.setOrientation(LinearLayout.VERTICAL);
-        linearLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-        linearLayout.setPadding((int) (16 * destiny), (int) (10 * destiny), (int) (16 * destiny), (int) (10 * destiny));
-        TextView title = new TextView(getContext());
-        title.setText(":c");
-        title.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-        title.setTextColor(textColorPrimary);
-        title.setTextSize(32);
-        title.setPadding(0, 0, 0, (int) (10 * destiny));
-        title.setTextAlignment(TextView.TEXT_ALIGNMENT_CENTER);
-        linearLayout.addView(title);
-        TextView desc = new TextView(getContext());
-        desc.setText(getString(R.string.on_demand) + " \"" + query + "\" " + getString(R.string.schedule_not_found_2));
-        desc.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-        desc.setTextColor(textColorPrimary);
-        desc.setTextSize(16);
-        desc.setTextAlignment(TextView.TEXT_ALIGNMENT_CENTER);
-        linearLayout.addView(desc);
-        ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_schedule));
-        if (vg != null) {
-            vg.removeAllViews();
-            vg.addView(linearLayout);
-        }
-    }
-    private void draw(int layoutId){
-        try {
-            ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_schedule));
-            if (vg != null) {
-                vg.removeAllViews();
-                vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-            }
-        } catch (Exception e){
-            Static.error(e);
-        }
+    @Override
+    public void onPageSelected(int position) {
+        ScheduleLessonsFragment.tabSelected = position;
     }
 
+    @Override
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
+
+    @Override
+    public void onPageScrollStateChanged(int state) {}
+
+    public static void searchAndClear(String query){
+        Log.v(TAG, "searchAndClear | query=" + query);
+        ScheduleLessonsFragment.scroll.clear();
+        ScheduleLessonsFragment.tabSelected = -1;
+        search(query);
+    }
+    public static void search(String query){
+        Log.v(TAG, "search | query=" + query);
+        if (ScheduleLessonsFragment.scheduleLessons != null) {
+            ScheduleLessonsFragment.query = query;
+            ScheduleLessonsFragment.scheduleLessons.search(query);
+        }
+    }
+    private void notFound(){
+        Log.v(TAG, "notFound");
+        ViewGroup container_schedule = ((ViewGroup) getActivity().findViewById(R.id.container_schedule));
+        if (container_schedule != null) {
+            container_schedule.removeAllViews();
+            View view = inflate(R.layout.nothing_to_display);
+            ((TextView) view.findViewById(R.id.ntd_text)).setText(getString(R.string.on_demand) + " \"" + query + "\" " + getString(R.string.schedule_not_found_2));
+            container_schedule.addView(view);
+        }
+    }
     public static void reSchedule(final Context context){
         Log.v(TAG, "reSchedule");
         new ScheduleLessonsAdditionalConverter(context, new ScheduleLessonsAdditionalConverter.response() {
@@ -356,15 +326,19 @@ public class ScheduleLessonsFragment extends Fragment implements ScheduleLessons
         }).execute(schedule);
     }
 
-    @Override
-    public void onPageSelected(int position) {
-        ScheduleLessonsFragment.tabSelected = position;
+    private void draw(int layoutId){
+        try {
+            ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_schedule));
+            if (vg != null) {
+                vg.removeAllViews();
+                vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            }
+        } catch (Exception e){
+            Static.error(e);
+        }
     }
-
-    @Override
-    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
-
-    @Override
-    public void onPageScrollStateChanged(int state) {}
+    private View inflate(int layoutId) throws InflateException {
+        return ((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
+    }
 
 }

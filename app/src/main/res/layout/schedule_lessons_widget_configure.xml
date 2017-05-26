@@ -13,105 +13,116 @@
         android:background="?attr/colorPrimary"
         app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
 
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/toolbar_widget"
+        android:layout_above="@+id/add_button">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/item_padding"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:id="@+id/slw_theme">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_toStartOf="@+id/slw_switch_theme"
+                android:gravity="center_vertical"
+                android:minHeight="@dimen/widget_schedule_lessons_configure_min_height"
+                android:text="@string/use_dark_theme"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="@dimen/font_size_14" />
+
+            <Switch
+                android:id="@+id/slw_switch_theme"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:minHeight="@dimen/widget_schedule_lessons_configure_min_height" />
+
+        </RelativeLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="?attr/colorSeparator"/>
+
+        <LinearLayout
+            android:id="@+id/slw_update_time"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/item_padding"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:maxLines="1"
+                android:minHeight="@dimen/widget_schedule_lessons_configure_min_height2"
+                android:text="@string/update_interval"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="@dimen/font_size_14" />
+
+            <TextView
+                android:id="@+id/slw_update_time_summary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:maxLines="1"
+                android:minHeight="@dimen/widget_schedule_lessons_configure_min_height3"
+                android:text="@string/lorem_ipsum"
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="@dimen/font_size_14" />
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="?attr/colorSeparator"/>
 
         <LinearLayout
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/toolbar_widget"
-            android:layout_above="@+id/add_button">
+            android:paddingTop="@dimen/item_padding">
 
-            <RelativeLayout
+            <EditText
+                android:id="@+id/slw_input"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="16dp"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:id="@+id/slw_theme">
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:minHeight="30dp"
-                    android:gravity="center_vertical"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:layout_toStartOf="@+id/slw_switch_theme"
-                    android:text="@string/use_dark_theme" />
-                <Switch
-                    android:id="@+id/slw_switch_theme"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentEnd="true"
-                    android:minHeight="30dp" />
-            </RelativeLayout>
+                android:layout_marginEnd="@dimen/item_horizontal_padding"
+                android:layout_marginStart="@dimen/item_horizontal_padding"
+                android:ems="10"
+                android:hint="@string/schedule_lessons_search_view_hint"
+                android:inputType="textPersonName"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="@dimen/font_size_14" />
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="?attr/colorSeparator"/>
-
-            <LinearLayout
-                android:id="@+id/slw_update_time"
-                android:orientation="vertical"
+            <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="16dp"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true">
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:minHeight="20dp"
-                    android:maxLines="1"
-                    android:gravity="center_vertical"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:text="@string/update_interval" />
-                <TextView
-                    android:id="@+id/slw_update_time_summary"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:minHeight="12dp"
-                    android:maxLines="1"
-                    android:gravity="center_vertical"
-                    android:textColor="?android:attr/textColorSecondary"
-                    android:text="@string/lorem_ipsum" />
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="?attr/colorSeparator"/>
-
-            <LinearLayout
-                android:orientation="vertical"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingTop="16dp">
-                <EditText
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="textPersonName"
-                    android:ems="10"
-                    android:id="@+id/slw_input"
-                    android:hint="@string/schedule_lessons_search_view_hint"
-                    android:textSize="14sp"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginEnd="16dp"/>
-                <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/slw_container" />
-            </LinearLayout>
+                android:id="@+id/slw_container" />
 
         </LinearLayout>
 
+    </LinearLayout>
 
     <Button
         android:id="@+id/add_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
         android:layout_gravity="end"
         android:text="@string/add_widget"
-        android:layout_alignParentBottom="true" />
+        android:textSize="@dimen/font_size_14" />
 
 </RelativeLayout>

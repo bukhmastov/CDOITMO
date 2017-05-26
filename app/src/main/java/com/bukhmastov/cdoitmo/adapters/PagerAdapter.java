@@ -7,13 +7,16 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.activities.ConnectedActivity;
 import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsTabFragment;
 
 public class PagerAdapter extends FragmentStatePagerAdapter {
     private Context context;
-    public PagerAdapter(FragmentManager fm, Context context) {
+    public static ConnectedActivity activity;
+    public PagerAdapter(FragmentManager fm, Context context, ConnectedActivity activity) {
         super(fm);
         this.context = context;
+        PagerAdapter.activity = activity;
     }
     @Override
     public Fragment getItem(int position) {

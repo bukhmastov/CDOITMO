@@ -3,8 +3,8 @@ package com.bukhmastov.cdoitmo.fragments;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,7 +16,6 @@ import android.widget.Spinner;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.LoginActivity;
-import com.bukhmastov.cdoitmo.activities.RatingListActivity;
 import com.bukhmastov.cdoitmo.adapters.RatingListView;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoClientResponseHandler;
@@ -36,7 +35,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Objects;
 
-public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
+public class RatingFragment extends ConnectedFragment implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "RatingFragment";
     public static Rating rating = null;
@@ -276,7 +275,7 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                 ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.swipe_container));
                 if (vg != null) {
                     vg.removeAllViews();
-                    vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.state_failed_compact, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                    vg.addView(inflate(R.layout.state_failed_compact), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
                 }
             } else {
                 // получаем список для отображения
@@ -310,11 +309,11 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                                         int year = now.get(Calendar.YEAR) - course_delta;
                                         int month = now.get(Calendar.MONTH);
                                         String years = month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year;
-                                        Intent intent = new Intent(getActivity(), RatingListActivity.class);
-                                        intent.putExtra("faculty", obj.getString("depId"));
-                                        intent.putExtra("course", hashMap.get("course"));
-                                        intent.putExtra("years", years);
-                                        startActivity(intent);
+                                        Bundle extras = new Bundle();
+                                        extras.putString("faculty", obj.getString("depId"));
+                                        extras.putString("course", hashMap.get("course"));
+                                        extras.putString("years", years);
+                                        activity.openActivityOrFragment(RatingListFragment.class, extras);
                                         Log.v(TAG, "rl_list_view clicked and found | faculty=" + obj.getString("depId") + " | course=" + hashMap.get("course") + " | years=" + years);
                                         break;
                                     }
@@ -333,11 +332,11 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                 mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
                 mSwipeRefreshLayout.setOnRefreshListener(this);
             }
-            if(dataRL == null){
+            if (dataRL == null) {
                 ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.rl_list_container));
                 if (vg != null) {
                     vg.removeAllViews();
-                    vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.state_failed_compact, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                    vg.addView(inflate(R.layout.state_failed_compact), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
                 }
             } else {
                 ArrayAdapter<String> adapter;
@@ -398,10 +397,10 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
                     rl_button.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            Intent intent = new Intent(getActivity(), RatingListActivity.class);
-                            intent.putExtra("faculty", rating_list_choose_faculty);
-                            intent.putExtra("course", rating_list_choose_course);
-                            startActivity(intent);
+                            Bundle extras = new Bundle();
+                            extras.putString("faculty", rating_list_choose_faculty);
+                            extras.putString("course", rating_list_choose_course);
+                            activity.openActivityOrFragment(RatingListFragment.class, extras);
                             Log.v(TAG, "rl_button clicked | faculty=" + rating_list_choose_faculty + " | course=" + rating_list_choose_course);
                         }
                     });
@@ -418,15 +417,20 @@ public class RatingFragment extends Fragment implements SwipeRefreshLayout.OnRef
         intent.putExtra("state", state);
         startActivity(intent);
     }
+
     private void draw(int layoutId){
         try {
             ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_rating));
             if (vg != null) {
                 vg.removeAllViews();
-                vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             }
         } catch (Exception e){
             Static.error(e);
         }
     }
+    private View inflate(int layoutId) throws InflateException {
+        return ((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
+    }
+
 }

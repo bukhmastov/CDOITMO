@@ -112,6 +112,10 @@ public class Storage {
 
         private static synchronized boolean put(Context context, STORAGE storage, boolean general, String path, String data){
             Log.v(TAG, "file | put | storage=" + (storage == null ? "both" : storage.toString()) + " | general=" + (general ? "true" : "false") + " | path=" + path);
+            if (context == null) {
+                Log.w(TAG, "file | put | context is null");
+                return false;
+            }
             try {
                 if (storage == STORAGE.cache && !pref.get(context, "pref_use_cache", true)) {
                     return false;
@@ -140,6 +144,10 @@ public class Storage {
         }
         private static String get(Context context, STORAGE storage, boolean general, String path, String def){
             Log.v(TAG, "file | get | storage=" + (storage == null ? "both" : storage.toString()) + " | general=" + (general ? "true" : "false") + " | path=" + path);
+            if (context == null) {
+                Log.w(TAG, "file | get | context is null");
+                return def;
+            }
             try {
                 File file = new File(getFileLocation(context, storage, general, path, true));
                 path = file.getAbsolutePath();
@@ -162,6 +170,10 @@ public class Storage {
         }
         private static boolean delete(Context context, STORAGE storage, boolean general, String path){
             Log.v(TAG, "file | delete | storage=" + (storage == null ? "both" : storage.toString()) + " | general=" + (general ? "true" : "false") + " | path=" + path);
+            if (context == null) {
+                Log.w(TAG, "file | delete | context is null");
+                return false;
+            }
             try {
                 File file = new File(getFileLocation(context, storage, general, path, true));
                 path = file.getAbsolutePath();
@@ -173,6 +185,10 @@ public class Storage {
         }
         private static boolean clear(Context context, STORAGE storage, boolean general){
             Log.v(TAG, "file | clear | storage=" + (storage == null ? "both" : storage.toString()) + " | general=" + (general ? "true" : "false"));
+            if (context == null) {
+                Log.w(TAG, "file | clear | context is null");
+                return false;
+            }
             try {
                 if (storage == null) {
                     return clear(context, STORAGE.cache, general) && clear(context, STORAGE.permanent, general);
@@ -185,6 +201,10 @@ public class Storage {
         }
         private static boolean clear(Context context, STORAGE storage, String path, boolean general){
             Log.v(TAG, "file | clear | storage=" + (storage == null ? "both" : storage.toString()) + " | general=" + (general ? "true" : "false") + " | path=" + path);
+            if (context == null) {
+                Log.w(TAG, "file | clear | context is null");
+                return false;
+            }
             try {
                 if (storage == null) {
                     return clear(context, STORAGE.cache, path, general) && clear(context, STORAGE.permanent, path, general);
@@ -197,6 +217,10 @@ public class Storage {
         }
         private static boolean exists(Context context, STORAGE storage, boolean general, String path){
             Log.v(TAG, "file | exists | storage=" + (storage == null ? "both" : storage.toString()) + " | general=" + (general ? "true" : "false") + " | path=" + path);
+            if (context == null) {
+                Log.w(TAG, "file | exists | context is null");
+                return false;
+            }
             try {
                 File file = new File(getFileLocation(context, storage, general, path, true));
                 Storage.proxy.access(file.getAbsolutePath());
@@ -207,6 +231,10 @@ public class Storage {
         }
         private static boolean reset(Context context, STORAGE storage){
             Log.v(TAG, "file | reset | storage=" + (storage == null ? "both" : storage.toString()));
+            if (context == null) {
+                Log.w(TAG, "file | reset | context is null");
+                return false;
+            }
             try {
                 if (storage == null) {
                     return reset(context, STORAGE.cache) && reset(context, STORAGE.permanent);
@@ -220,6 +248,10 @@ public class Storage {
         private static ArrayList<String> list(Context context, STORAGE storage, boolean general, String path){
             Log.v(TAG, "file | list | storage=" + (storage == null ? "both" : storage.toString()) + " | general=" + (general ? "true" : "false") + " | path=" + path);
             ArrayList<String> response = new ArrayList<>();
+            if (context == null) {
+                Log.w(TAG, "file | list | context is null");
+                return response;
+            }
             try {
                 File file = new File(getFileLocation(context, storage, general, path, false));
                 if (file.exists()) {
@@ -258,32 +290,64 @@ public class Storage {
             return getCoreLocation(context, storage) + File.separator + current_login;
         }
         private static String getCoreLocation(Context context, STORAGE storage) throws Exception {
+            if (context == null) {
+                Log.w(TAG, "file | getCoreLocation | context is null");
+                return "";
+            }
             return (storage == STORAGE.cache ? context.getCacheDir() : context.getFilesDir()) + File.separator + APP_FOLDER;
         }
     }
     public static class pref {
         public static synchronized void put(Context context, String key, String value){
+            if (context == null) {
+                Log.w(TAG, "pref | put | context is null");
+                return;
+            }
             PreferenceManager.getDefaultSharedPreferences(context).edit().putString(key, value).apply();
         }
         public static synchronized void put(Context context, String key, int value){
+            if (context == null) {
+                Log.w(TAG, "pref | put | context is null");
+                return;
+            }
             PreferenceManager.getDefaultSharedPreferences(context).edit().putInt(key, value).apply();
         }
         public static synchronized void put(Context context, String key, boolean value){
+            if (context == null) {
+                Log.w(TAG, "pref | put | context is null");
+                return;
+            }
             PreferenceManager.getDefaultSharedPreferences(context).edit().putBoolean(key, value).apply();
         }
         public static String get(Context context, String key){
             return pref.get(context, key, "");
         }
         public static String get(Context context, String key, String def){
+            if (context == null) {
+                Log.w(TAG, "pref | get | context is null");
+                return def;
+            }
             return PreferenceManager.getDefaultSharedPreferences(context).getString(key, def);
         }
         public static int get(Context context, String key, int def){
+            if (context == null) {
+                Log.w(TAG, "pref | get | context is null");
+                return def;
+            }
             return PreferenceManager.getDefaultSharedPreferences(context).getInt(key, def);
         }
         public static boolean get(Context context, String key, boolean def){
+            if (context == null) {
+                Log.w(TAG, "pref | get | context is null");
+                return def;
+            }
             return PreferenceManager.getDefaultSharedPreferences(context).getBoolean(key, def);
         }
         public static void delete(Context context, String key){
+            if (context == null) {
+                Log.w(TAG, "pref | delete | context is null");
+                return;
+            }
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
             if (sharedPreferences.contains(key)) sharedPreferences.edit().remove(key).apply();
         }
@@ -294,6 +358,10 @@ public class Storage {
             pref.clear(context, Pattern.compile("^(?!pref_).*$"));
         }
         public static void clear(Context context, Pattern pattern){
+            if (context == null) {
+                Log.w(TAG, "pref | clear | context is null");
+                return;
+            }
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
             Map<String, ?> list = sharedPreferences.getAll();
             SharedPreferences.Editor editor = sharedPreferences.edit();

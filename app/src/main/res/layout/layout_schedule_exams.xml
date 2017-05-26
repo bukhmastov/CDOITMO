@@ -3,7 +3,7 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.bukhmastov.cdoitmo.fragments.ScheduleLessonsTabFragment"
+    tools:activity="com.bukhmastov.cdoitmo.fragments.ScheduleLessonsTabFragment"
     android:id="@+id/container_schedule_exams">
 
     <android.support.v4.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -23,9 +23,9 @@
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:paddingTop="@dimen/activity_vertical_margin"
-                    android:paddingBottom="@dimen/activity_vertical_margin"
-                    android:background="?attr/colorBackgroundSection" >
+                    android:background="?attr/colorBackgroundSection"
+                    android:paddingBottom="@dimen/item_padding"
+                    android:paddingTop="@dimen/item_padding" >
 
                     <LinearLayout
                         android:id="@+id/schedule_exams_titles"
@@ -33,34 +33,38 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:layout_toStartOf="@+id/schedule_exams_cache">
+
                         <TextView
-                            android:text="@string/lorem_ipsum"
+                            android:id="@+id/schedule_exams_header"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:paddingLeft="@dimen/activity_horizontal_margin"
-                            android:paddingRight="@dimen/activity_horizontal_margin"
+                            android:paddingEnd="@dimen/item_horizontal_padding"
+                            android:paddingStart="@dimen/item_horizontal_padding"
+                            android:text="@string/lorem_ipsum"
                             android:textColor="?android:attr/textColorPrimary"
-                            android:id="@+id/schedule_exams_header" />
+                            android:textSize="@dimen/font_size_14" />
+
                         <TextView
-                            android:text="@string/lorem_ipsum"
+                            android:id="@+id/schedule_exams_week"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:paddingLeft="@dimen/activity_horizontal_margin"
-                            android:paddingRight="@dimen/activity_horizontal_margin"
-                            android:id="@+id/schedule_exams_week"
-                            android:textColor="?android:attr/textColorSecondary" />
+                            android:paddingEnd="@dimen/item_horizontal_padding"
+                            android:paddingStart="@dimen/item_horizontal_padding"
+                            android:text="@string/lorem_ipsum"
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:textSize="@dimen/font_size_14" />
+
                     </LinearLayout>
 
                     <FrameLayout
                         android:id="@+id/schedule_exams_cache"
+                        android:layout_width="@dimen/schedule_cache_button"
+                        android:layout_height="@dimen/schedule_cache_button"
                         android:layout_alignParentEnd="true"
                         android:layout_marginStart="0dp"
-                        android:layout_marginEnd="@dimen/activity_horizontal_margin"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
+                        android:layout_marginEnd="@dimen/item_horizontal_padding"
                         android:background="?attr/selectableItemBackground"
-                        android:clickable="true">
-                    </FrameLayout>
+                        android:clickable="true" />
 
                 </RelativeLayout>
 
@@ -73,13 +77,11 @@
                     android:id="@+id/schedule_exams_content"
                     android:orientation="vertical"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:paddingBottom="16dp" >
+                    android:layout_height="match_parent" >
 
                 </LinearLayout>
 
             </LinearLayout>
-
 
         </ScrollView>
 

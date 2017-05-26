@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -17,7 +16,7 @@ import com.bukhmastov.cdoitmo.utils.Static;
 
 import java.util.Random;
 
-public class AboutActivity extends AppCompatActivity {
+public class AboutActivity extends ConnectedActivity {
 
     private static final String TAG = "AboutActivity";
     private final Random random = new Random();
@@ -129,6 +128,11 @@ public class AboutActivity extends AppCompatActivity {
                 return true;
             default: return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    protected int getRootViewId() {
+        return R.id.about_content;
     }
 
 }

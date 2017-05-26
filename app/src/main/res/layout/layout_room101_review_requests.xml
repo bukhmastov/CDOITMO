@@ -3,26 +3,26 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingTop="10dp"
-    android:paddingBottom="10dp"
-    android:paddingLeft="16dp"
-    android:paddingRight="16dp" >
+    android:paddingTop="@dimen/item_vertical_padding"
+    android:paddingBottom="@dimen/item_vertical_padding"
+    android:paddingStart="@dimen/item_horizontal_padding"
+    android:paddingEnd="@dimen/item_horizontal_padding" >
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textStyle="normal|bold"
-        android:textColor="?android:attr/textColorPrimary"
+        android:text="@string/list_of_requests"
         android:textAllCaps="true"
-        android:text="@string/list_of_requests" />
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="@dimen/font_size_14"
+        android:textStyle="normal|bold" />
 
     <LinearLayout
         android:id="@+id/review_requests_container"
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:layout_marginBottom="6dp"
+        android:layout_marginTop="@dimen/item_vertical_padding"
         android:background="@drawable/shape_border_round" />
 
 </LinearLayout>

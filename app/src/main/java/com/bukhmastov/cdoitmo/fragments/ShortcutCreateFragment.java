@@ -1,0 +1,62 @@
+package com.bukhmastov.cdoitmo.fragments;
+
+import android.content.IntentFilter;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+
+import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.objects.ShortcutCreator;
+import com.bukhmastov.cdoitmo.receivers.ShortcutReceiver;
+import com.bukhmastov.cdoitmo.utils.Log;
+
+public class ShortcutCreateFragment extends ConnectedFragment implements ShortcutCreator.response {
+
+    private static final String TAG = "ShortcutCreateFragment";
+    private ShortcutCreator shortcutCreator = null;
+    private ShortcutReceiver receiver = new ShortcutReceiver();
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_shortcut_create, container, false);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.v(TAG, "Fragment resumed");
+        Data data = getData(getContext(), this.getClass());
+        if (data != null) {
+            activity.updateToolbar(data.title, data.image);
+        }
+        activity.registerReceiver(receiver, new IntentFilter(ShortcutReceiver.ACTION_INSTALL_SHORTCUT));
+        if (shortcutCreator == null) shortcutCreator = new ShortcutCreator(getContext(), this);
+        shortcutCreator.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        Log.v(TAG, "Fragment paused");
+        activity.unregisterReceiver(receiver);
+        shortcutCreator.onPause();
+    }
+
+    @Override
+    public void onDisplay(View view) {
+        Log.v(TAG, "onDisplay");
+        ViewGroup shortcut_create_content = (ViewGroup) activity.findViewById(R.id.shortcut_create_content);
+        if (shortcut_create_content != null) {
+            shortcut_create_content.removeAllViews();
+            shortcut_create_content.addView(view);
+        }
+    }
+
+    @Override
+    public void onError() {
+        Log.v(TAG, "onError");
+        activity.back();
+    }
+
+}

@@ -5,7 +5,6 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.InflateException;
 import android.view.LayoutInflater;
@@ -38,7 +37,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Objects;
 
-public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
+public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "ProtocolFragment";
     private Protocol protocol = null;
@@ -399,6 +398,9 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
                                 JSONObject item = protocol.getJSONObject(i);
                                 String subject = item.getString("subject");
                                 if (!Objects.equals(subject, title) || i == protocol.length() - 1) {
+                                    if (i == protocol.length() - 1) {
+                                        changes.add(item);
+                                    }
                                     if (changes.size() > 0) {
                                         LinearLayout header = (LinearLayout) inflate(R.layout.protocol_layout_mode_advanced_header);
                                         ((TextView) header.findViewById(R.id.lv_protocol_name)).setText(title);
@@ -485,7 +487,7 @@ public class ProtocolFragment extends Fragment implements SwipeRefreshLayout.OnR
                             public void onNothingSelected(AdapterView<?> parent) {}
                         });
                     }
-                    Static.showUpdateTime(getActivity(), data.getLong("timestamp"), R.id.protocol_layout, false);
+                    Static.showUpdateTime(getActivity(), data.getLong("timestamp"), false);
                 } catch (Exception e) {
                     Static.error(e);
                     loadFailed();

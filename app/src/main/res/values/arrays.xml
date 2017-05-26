@@ -134,6 +134,13 @@
         <item>6</item>
     </string-array>
 
+    <string-array name="lessons_types">
+        <item>@string/lecture</item>
+        <item>@string/practice</item>
+        <item>@string/lab</item>
+        <item>@string/srs</item>
+    </string-array>
+
     <string-array name="buildings">
         <item>Кронверкский проспект, д.49</item>
         <item>Ломоносова улица д.9</item>

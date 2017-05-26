@@ -3,7 +3,7 @@ xmlns:tools="http://schemas.android.com/tools"
 android:orientation="vertical"
 android:layout_width="match_parent"
 android:layout_height="match_parent"
-tools:context="com.bukhmastov.cdoitmo.fragments.ProtocolFragment"
+tools:activity="com.bukhmastov.cdoitmo.fragments.ProtocolFragment"
 android:id="@+id/container_protocol">
 
 

@@ -8,17 +8,17 @@
         android:id="@+id/lv_protocol_separator"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginStart="@dimen/item_horizontal_padding"
+        android:layout_marginEnd="@dimen/item_horizontal_padding"
         android:background="?attr/colorSeparator"/>
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingStart="16dp"
-        android:paddingEnd="4dp"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp" >
+        android:paddingStart="@dimen/item_horizontal_padding"
+        android:paddingEnd="@dimen/item_vertical_padding_half"
+        android:paddingTop="@dimen/item_vertical_padding"
+        android:paddingBottom="@dimen/item_vertical_padding" >
 
         <LinearLayout
             android:orientation="vertical"
@@ -33,14 +33,16 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/lorem_ipsum"
-                android:textColor="?android:attr/textColorPrimary" />
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="@dimen/font_size_14" />
 
             <TextView
                 android:id="@+id/lv_protocol_meta"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/lorem_ipsum"
-                android:textColor="?android:attr/textColorSecondary" />
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="@dimen/font_size_14" />
 
         </LinearLayout>
 
@@ -63,7 +65,7 @@
                 android:text="99.99"
                 android:textAppearance="@style/TextAppearance.AppCompat.Button"
                 android:textColor="?android:attr/textColorPrimary"
-                android:textSize="18sp" />
+                android:textSize="@dimen/font_size_18" />
 
             <TextView
                 android:id="@+id/lv_protocol_delta"
@@ -74,7 +76,7 @@
                 android:paddingStart="2dp"
                 android:text="+99.99"
                 android:textColor="?android:attr/textColorSecondary"
-                android:textSize="12sp" />
+                android:textSize="@dimen/font_size_12" />
 
         </RelativeLayout>
 

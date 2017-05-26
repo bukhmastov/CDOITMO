@@ -1,0 +1,73 @@
+<resources>
+
+    <dimen name="item_padding">24dp</dimen>
+    <dimen name="item_padding_half">12dp</dimen>
+    <dimen name="item_padding_quarter">6dp</dimen>
+    <dimen name="item_horizontal_padding">24dp</dimen>
+    <dimen name="item_vertical_padding">16dp</dimen>
+    <dimen name="item_horizontal_padding_half">12dp</dimen>
+    <dimen name="item_vertical_padding_half">8dp</dimen>
+
+    <dimen name="rounded_corner">4dp</dimen>
+
+    <dimen name="font_size_10">12sp</dimen>
+    <dimen name="font_size_12">14sp</dimen>
+    <dimen name="font_size_13">15sp</dimen>
+    <dimen name="font_size_14">16sp</dimen>
+    <dimen name="font_size_15">17sp</dimen>
+    <dimen name="font_size_16">18sp</dimen>
+    <dimen name="font_size_18">20sp</dimen>
+
+    <dimen name="dimen_16dp">24dp</dimen>
+    <dimen name="bottom_extra_bar_height">50dp</dimen>
+
+    <dimen name="rating_detailed_height">80dp</dimen>
+    <dimen name="rating_detailed_height_half">40dp</dimen>
+    <dimen name="rating_detailed_separator_margin">12dp</dimen>
+    <dimen name="rating_list_height">80dp</dimen>
+    <dimen name="rating_list_height_half">40dp</dimen>
+    <dimen name="rating_list_triangle">58dp</dimen>
+    <dimen name="rating_list_triangle_margin">10dp</dimen>
+
+    <dimen name="schedule_cache_button">40dp</dimen>
+    <dimen name="schedule_day_header">32dp</dimen>
+    <dimen name="schedule_time_padding">16dp</dimen>
+    <dimen name="schedule_time_min_width">80dp</dimen>
+    <dimen name="schedule_data_padding_top">10dp</dimen>
+    <dimen name="schedule_data_padding_bottom">14dp</dimen>
+    <dimen name="schedule_data_padding_end">8dp</dimen>
+    <dimen name="schedule_data_icon">24dp</dimen>
+    <dimen name="schedule_data_flag_vertical">2dp</dimen>
+    <dimen name="schedule_data_flag_horizontal">8dp</dimen>
+    <dimen name="schedule_exams_padding_vertical">20dp</dimen>
+    <dimen name="schedule_exams_padding_horizontal">24dp</dimen>
+    <dimen name="schedule_exams_padding_horizontal_half">12dp</dimen>
+
+    <dimen name="room101_padding">16dp</dimen>
+    <dimen name="room101_padding_additional">4dp</dimen>
+    <dimen name="room101_deny_button">42dp</dimen>
+    <dimen name="room101_deny_button_padding">5dp</dimen>
+    <dimen name="room101_add_close_button">32dp</dimen>
+    <dimen name="room101_add_nav_bar_padding">16dp</dimen>
+
+    <dimen name="shortcut_create_step_width">40dp</dimen>
+    <dimen name="shortcut_create_step_padding">3dp</dimen>
+    <dimen name="shortcut_create_step_margin">6dp</dimen>
+
+    <dimen name="about_icon_width">50dp</dimen>
+    <dimen name="about_icon_padding">12dp</dimen>
+
+    <dimen name="widget_schedule_lessons_header_height">24dp</dimen>
+    <dimen name="widget_schedule_lessons_second_header_height">18dp</dimen>
+    <dimen name="widget_schedule_lessons_header_icon_padding">3dp</dimen>
+    <dimen name="widget_schedule_lessons_padding">6dp</dimen>
+    <dimen name="widget_schedule_lessons_item_padding_top">2dp</dimen>
+    <dimen name="widget_schedule_lessons_item_padding_bottom">5dp</dimen>
+    <dimen name="widget_schedule_lessons_item_min_width">52dp</dimen>
+    <dimen name="widget_schedule_lessons_item_padding">10dp</dimen>
+    <dimen name="widget_schedule_lessons_item_time_icon_width">16dp</dimen>
+    <dimen name="widget_schedule_lessons_configure_min_height">36dp</dimen>
+    <dimen name="widget_schedule_lessons_configure_min_height2">26dp</dimen>
+    <dimen name="widget_schedule_lessons_configure_min_height3">16dp</dimen>
+
+</resources>

@@ -4,7 +4,7 @@
     android:layout_height="wrap_content"
     android:background="?attr/colorPopupBackgroundFill"
     android:orientation="vertical"
-    android:padding="16dp" >
+    android:padding="@dimen/item_padding" >
 
     <TextView
         android:id="@+id/exam_subject"
@@ -16,6 +16,7 @@
         android:textAlignment="center"
         android:textAllCaps="true"
         android:textColor="?android:attr/textColorSecondary"
+        android:textSize="@dimen/font_size_14"
         android:textStyle="bold" />
 
     <TextView
@@ -25,11 +26,11 @@
         android:paddingBottom="2dp"
         android:paddingTop="2dp"
         android:text="@string/lorem_ipsum"
+        android:textAlignment="center"
         android:textAllCaps="true"
         android:textColor="?android:attr/textColorSecondary"
-        android:textSize="12sp"
-        android:textStyle="bold"
-        android:textAlignment="center" />
+        android:textSize="@dimen/font_size_12"
+        android:textStyle="bold" />
 
     <HorizontalScrollView
         android:layout_width="match_parent"
@@ -46,7 +47,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="6dp" >
+                android:padding="@dimen/item_padding_half" >
 
                 <TextView
                     android:id="@+id/exam_time_day_value"
@@ -55,16 +56,18 @@
                     android:text="13"
                     android:textAlignment="center"
                     android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="@dimen/font_size_14"
                     android:textStyle="bold" />
+
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/days"
-                    android:textAllCaps="true"
-                    android:textStyle="bold"
                     android:textAlignment="center"
+                    android:textAllCaps="true"
                     android:textColor="?android:attr/textColorSecondary"
-                    android:textSize="12sp" />
+                    android:textSize="@dimen/font_size_12"
+                    android:textStyle="bold" />
             </LinearLayout>
 
             <LinearLayout
@@ -72,7 +75,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="6dp" >
+                android:padding="@dimen/item_padding_half" >
 
                 <TextView
                     android:id="@+id/exam_time_hour_value"
@@ -81,16 +84,18 @@
                     android:text="37"
                     android:textAlignment="center"
                     android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="@dimen/font_size_14"
                     android:textStyle="bold" />
+
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/hours"
-                    android:textAllCaps="true"
-                    android:textStyle="bold"
                     android:textAlignment="center"
+                    android:textAllCaps="true"
                     android:textColor="?android:attr/textColorSecondary"
-                    android:textSize="12sp" />
+                    android:textSize="@dimen/font_size_12"
+                    android:textStyle="bold" />
             </LinearLayout>
 
             <LinearLayout
@@ -98,7 +103,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="6dp" >
+                android:padding="@dimen/item_padding_half" >
 
                 <TextView
                     android:id="@+id/exam_time_min_value"
@@ -107,16 +112,18 @@
                     android:text="73"
                     android:textAlignment="center"
                     android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="@dimen/font_size_14"
                     android:textStyle="bold" />
+
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/minutes"
-                    android:textAllCaps="true"
-                    android:textStyle="bold"
                     android:textAlignment="center"
+                    android:textAllCaps="true"
                     android:textColor="?android:attr/textColorSecondary"
-                    android:textSize="12sp" />
+                    android:textSize="@dimen/font_size_12"
+                    android:textStyle="bold" />
             </LinearLayout>
 
             <LinearLayout
@@ -124,7 +131,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="6dp" >
+                android:padding="@dimen/item_padding_half" >
 
                 <TextView
                     android:id="@+id/exam_time_sec_value"
@@ -133,16 +140,18 @@
                     android:text="31"
                     android:textAlignment="center"
                     android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="@dimen/font_size_14"
                     android:textStyle="bold" />
+
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/seconds"
-                    android:textAllCaps="true"
-                    android:textStyle="bold"
                     android:textAlignment="center"
+                    android:textAllCaps="true"
                     android:textColor="?android:attr/textColorSecondary"
-                    android:textSize="12sp" />
+                    android:textSize="@dimen/font_size_12"
+                    android:textStyle="bold" />
             </LinearLayout>
 
         </LinearLayout>

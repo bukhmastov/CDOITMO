@@ -10,9 +10,9 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:gravity="center_vertical"
-        android:minWidth="60dp"
+        android:minWidth="@dimen/schedule_time_min_width"
         android:orientation="vertical"
-        android:padding="10dp">
+        android:padding="@dimen/schedule_time_padding">
 
         <TextView
             android:id="@+id/lesson_time_start"
@@ -22,12 +22,12 @@
             android:text="10:00"
             android:textAlignment="center"
             android:textColor="?android:attr/textColorPrimary"
-            android:textSize="15sp" />
+            android:textSize="@dimen/font_size_15" />
 
         <ImageView
             android:id="@+id/lesson_time_icon"
             android:layout_width="match_parent"
-            android:layout_height="16dp"
+            android:layout_height="@dimen/dimen_16dp"
             app:srcCompat="@drawable/ic_access_time" />
 
         <TextView
@@ -38,25 +38,25 @@
             android:text="10:00"
             android:textAlignment="center"
             android:textColor="?android:attr/textColorPrimary"
-            android:textSize="15sp" />
+            android:textSize="@dimen/font_size_15" />
 
     </LinearLayout>
 
     <LinearLayout
         android:id="@+id/data"
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center_vertical"
-        android:orientation="vertical"
-        android:paddingBottom="7dp"
-        android:paddingEnd="3dp"
+        android:paddingTop="@dimen/schedule_data_padding_top"
+        android:paddingBottom="@dimen/schedule_data_padding_bottom"
         android:paddingStart="0dp"
-        android:paddingTop="5dp">
+        android:paddingEnd="@dimen/schedule_data_padding_end">
 
         <LinearLayout
+            android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:layout_height="wrap_content" >
 
             <TextView
                 android:id="@+id/lesson_title"
@@ -65,30 +65,30 @@
                 android:layout_gravity="center_vertical"
                 android:layout_weight="1"
                 android:gravity="center_vertical"
+                android:paddingEnd="4dp"
+                android:paddingStart="0dp"
                 android:text="@string/lorem_ipsum"
                 android:textColor="?android:attr/textColorPrimary"
-                android:textSize="14sp"
-                android:paddingStart="0dp"
-                android:paddingEnd="4dp"/>
+                android:textSize="@dimen/font_size_14" />
 
             <ImageView
                 android:id="@+id/lesson_reduced_icon"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:layout_width="@dimen/schedule_data_icon"
+                android:layout_height="@dimen/schedule_data_icon"
                 android:padding="2dp"
                 app:srcCompat="@drawable/ic_visibility_off" />
 
             <ImageView
                 android:id="@+id/lesson_synthetic_icon"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:layout_width="@dimen/schedule_data_icon"
+                android:layout_height="@dimen/schedule_data_icon"
                 android:padding="2dp"
                 app:srcCompat="@drawable/ic_synthetic" />
 
             <ImageView
                 android:id="@+id/lesson_touch_icon"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:layout_width="@dimen/schedule_data_icon"
+                android:layout_height="@dimen/schedule_data_icon"
                 app:srcCompat="@drawable/ic_more_vert" />
 
         </LinearLayout>
@@ -99,7 +99,8 @@
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:text="@string/lorem_ipsum"
-            android:textColor="?android:attr/textColorSecondary" />
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="@dimen/font_size_14" />
 
         <LinearLayout
             android:id="@+id/lesson_flags"
@@ -113,7 +114,8 @@
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:text="@string/lorem_ipsum"
-            android:textColor="?android:attr/textColorSecondary" />
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="@dimen/font_size_14" />
 
     </LinearLayout>
 

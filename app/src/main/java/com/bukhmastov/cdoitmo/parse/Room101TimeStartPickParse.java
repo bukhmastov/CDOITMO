@@ -25,7 +25,7 @@ public class Room101TimeStartPickParse extends AsyncTask<String, Void, JSONObjec
             HtmlCleaner cleaner = new HtmlCleaner();
             TagNode root = cleaner.clean(params[0].replace("&nbsp;", " "));
             TagNode[] tables = root.getElementsByAttValue("class", "d_table min_lmargin_table", true, false);
-            if(tables == null || tables.length == 0){
+            if (tables == null || tables.length == 0) {
                 response.put("data", new JSONArray());
                 return response;
             }
@@ -33,16 +33,25 @@ public class Room101TimeStartPickParse extends AsyncTask<String, Void, JSONObjec
             TagNode[] trs = table.getElementsByName("tbody", false)[0].getElementsByName("tr", false);
             int counter = 0;
             JSONArray times = new JSONArray();
-            for(TagNode tr : trs){
+            for (TagNode tr : trs) {
                 counter++;
-                if(counter == 1) continue;
+                if (counter == 1) continue;
                 TagNode td = tr.getElementsByName("td", false)[0];
                 TagNode[] inputs = td.getElementsByName("input", false);
-                if(inputs == null || inputs.length == 0) continue;
+                if (inputs == null || inputs.length == 0) continue;
                 TagNode input = inputs[0];
-                if(!input.hasAttribute("disabled")){
+                if (!input.hasAttribute("disabled")) {
                     String value = input.getAttributeByName("value");
-                    if(value != null) times.put(value);
+                    if (value != null) {
+                        JSONObject session = new JSONObject();
+                        session.put("time", value);
+                        try {
+                            session.put("available", tr.getElementsByName("td", false)[2].getText().toString().trim());
+                        } catch (Exception e) {
+                            session.put("available", "");
+                        }
+                        times.put(session);
+                    }
                 }
             }
             response.put("data", times);

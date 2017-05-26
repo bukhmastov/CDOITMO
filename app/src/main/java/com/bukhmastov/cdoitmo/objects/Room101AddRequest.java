@@ -1,12 +1,13 @@
 package com.bukhmastov.cdoitmo.objects;
 
 import android.app.Activity;
-import android.support.design.widget.Snackbar;
-import android.view.Gravity;
+import android.content.Context;
+import android.view.InflateException;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
@@ -29,6 +30,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import cz.msebera.android.httpclient.Header;
 
@@ -54,8 +57,8 @@ public class Room101AddRequest {
     public static final int STAGE_PICK_DONE = 9;
     public static final int STAGES_COUNT = 9;
     private int CURRENT_STAGE = 0;
-    private Activity context = null;
-
+    private Activity activity = null;
+    private Pattern timePickerPattern = Pattern.compile("^(\\d{1,2}:\\d{2})\\s?(\\((Свободных мест:\\s)?(\\d*)\\))?$");
     private RequestHandle ARequestHandle = null;
 
     private JSONObject data = null;
@@ -63,9 +66,9 @@ public class Room101AddRequest {
     private String pick_time_start = null;
     private String pick_time_end = null;
 
-    public Room101AddRequest(Activity context, callback callback){
+    public Room101AddRequest(Activity activity, callback callback){
         this.callback = callback;
-        this.context = context;
+        this.activity = activity;
         proceedStage();
     }
 
@@ -99,9 +102,9 @@ public class Room101AddRequest {
                 return;
         }
         switch (CURRENT_STAGE){
-            case STAGE_PICK_DATE: if(pick_date == null){ snackBar(context.getString(R.string.need_to_peek_date)); return; } break;
-            case STAGE_PICK_TIME_START: if(pick_time_start == null){ snackBar(context.getString(R.string.need_to_peek_time_start)); return; } break;
-            case STAGE_PICK_TIME_END: if(pick_time_end == null){ snackBar(context.getString(R.string.need_to_peek_time_end)); return; } break;
+            case STAGE_PICK_DATE: if(pick_date == null){ Static.snackBar(activity, activity.getString(R.string.need_to_peek_date)); return; } break;
+            case STAGE_PICK_TIME_START: if(pick_time_start == null){ Static.snackBar(activity, activity.getString(R.string.need_to_peek_time_start)); return; } break;
+            case STAGE_PICK_TIME_END: if(pick_time_end == null){ Static.snackBar(activity, activity.getString(R.string.need_to_peek_time_end)); return; } break;
             case STAGE_PICK_DONE: close(true); return;
         }
         CURRENT_STAGE++;
@@ -136,10 +139,10 @@ public class Room101AddRequest {
     private void loadDatePick(int stage){
         Log.v(TAG, "loadDatePick | stage=" + stage);
         if (stage == 0) {
-            callback.onDraw(getLoadingLayout(context.getString(R.string.data_loading)));
+            callback.onDraw(getLoadingLayout(activity.getString(R.string.data_loading)));
             data = null;
             pick_date = null;
-            Room101Fragment.execute(context, "newRequest", new Room101ClientResponseHandler() {
+            Room101Fragment.execute(activity, "newRequest", new Room101ClientResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, String response) {
                     if (statusCode == 200) {
@@ -172,9 +175,9 @@ public class Room101AddRequest {
         } else if (stage == 1) {
             RequestParams params = new RequestParams();
             params.put("month", "next");
-            params.put("login", Storage.file.perm.get(context, "user#login"));
-            params.put("password", Storage.file.perm.get(context, "user#password"));
-            Room101Client.post(context, "newRequest.php", params, new Room101ClientResponseHandler() {
+            params.put("login", Storage.file.perm.get(activity, "user#login"));
+            params.put("password", Storage.file.perm.get(activity, "user#password"));
+            Room101Client.post(activity, "newRequest.php", params, new Room101ClientResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, String response) {
                     if (statusCode == 200) {
@@ -188,7 +191,7 @@ public class Room101AddRequest {
                                         try {
                                             JSONArray jsonArray = data.getJSONArray("data");
                                             JSONArray jsonArrayNew = json.getJSONArray("data");
-                                            for (int i = 0; i < jsonArrayNew.length(); i++) jsonArray.put(jsonArrayNew.getString(i));
+                                            for (int i = 0; i < jsonArrayNew.length(); i++) jsonArray.put(jsonArrayNew.getJSONObject(i));
                                             data.put("data", jsonArray);
                                         } catch (Exception e) {
                                             Static.error(e);
@@ -221,7 +224,7 @@ public class Room101AddRequest {
     }
     private void loadTimeStartPick(){
         Log.v(TAG, "loadTimeStartPick");
-        callback.onDraw(getLoadingLayout(context.getString(R.string.data_handling)));
+        callback.onDraw(getLoadingLayout(activity.getString(R.string.data_handling)));
         data = null;
         pick_time_start = null;
         RequestParams params = new RequestParams();
@@ -229,9 +232,9 @@ public class Room101AddRequest {
         params.put("dateRequest", pick_date);
         params.put("timeBegin", "");
         params.put("timeEnd", "");
-        params.put("login", Storage.file.perm.get(context, "user#login"));
-        params.put("password", Storage.file.perm.get(context, "user#password"));
-        Room101Client.post(context, "newRequest.php", params, new Room101ClientResponseHandler() {
+        params.put("login", Storage.file.perm.get(activity, "user#login"));
+        params.put("password", Storage.file.perm.get(activity, "user#password"));
+        Room101Client.post(activity, "newRequest.php", params, new Room101ClientResponseHandler() {
             @Override
             public void onSuccess(int statusCode, String response) {
                 if (statusCode == 200) {
@@ -265,7 +268,7 @@ public class Room101AddRequest {
     }
     private void loadTimeEndPick(){
         Log.v(TAG, "loadTimeEndPick");
-        callback.onDraw(getLoadingLayout(context.getString(R.string.data_handling)));
+        callback.onDraw(getLoadingLayout(activity.getString(R.string.data_handling)));
         data = null;
         pick_time_end = null;
         RequestParams params = new RequestParams();
@@ -273,9 +276,9 @@ public class Room101AddRequest {
         params.put("dateRequest", pick_date);
         params.put("timeBegin", pick_time_start);
         params.put("timeEnd", "");
-        params.put("login", Storage.file.perm.get(context, "user#login"));
-        params.put("password", Storage.file.perm.get(context, "user#password"));
-        Room101Client.post(context, "newRequest.php", params, new Room101ClientResponseHandler() {
+        params.put("login", Storage.file.perm.get(activity, "user#login"));
+        params.put("password", Storage.file.perm.get(activity, "user#password"));
+        Room101Client.post(activity, "newRequest.php", params, new Room101ClientResponseHandler() {
             @Override
             public void onSuccess(int statusCode, String response) {
                 if (statusCode == 200) {
@@ -315,16 +318,16 @@ public class Room101AddRequest {
     }
     private void create(){
         Log.v(TAG, "create");
-        callback.onDraw(getLoadingLayout(context.getString(R.string.add_request)));
+        callback.onDraw(getLoadingLayout(activity.getString(R.string.add_request)));
         data = null;
         RequestParams params = new RequestParams();
         params.put("getFunc", "saveRequest");
         params.put("dateRequest", pick_date);
         params.put("timeBegin", pick_time_start);
         params.put("timeEnd", pick_time_end);
-        params.put("login", Storage.file.perm.get(context, "user#login"));
-        params.put("password", Storage.file.perm.get(context, "user#password"));
-        Room101Client.post(context, "newRequest.php", params, new Room101ClientResponseHandler() {
+        params.put("login", Storage.file.perm.get(activity, "user#login"));
+        params.put("password", Storage.file.perm.get(activity, "user#password"));
+        Room101Client.post(activity, "newRequest.php", params, new Room101ClientResponseHandler() {
             @Override
             public void onSuccess(int statusCode, String response) {
                 try {
@@ -370,7 +373,7 @@ public class Room101AddRequest {
             if (!data.has("data")) throw new Exception("Empty data.data");
             final JSONArray date_pick = data.getJSONArray("data");
             if (date_pick.length() > 0) {
-                callback.onDraw(getChooserLayout(context.getString(R.string.peek_date), "", date_pick, new CompoundButton.OnCheckedChangeListener() {
+                callback.onDraw(getChooserLayout(activity.getString(R.string.peek_date), null, date_pick, new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                         if (isChecked) {
@@ -384,7 +387,7 @@ public class Room101AddRequest {
                     }
                 }));
             } else {
-                callback.onDraw(getEmptyLayout(context.getString(R.string.no_date_to_peek)));
+                callback.onDraw(getEmptyLayout(activity.getString(R.string.no_date_to_peek)));
             }
         } catch (Exception e){
             Static.error(e);
@@ -399,12 +402,17 @@ public class Room101AddRequest {
             if (!data.has("data")) throw new Exception("Empty data.data");
             final JSONArray time_pick = data.getJSONArray("data");
             if (time_pick.length() > 0) {
-                callback.onDraw(getChooserLayout(context.getString(R.string.peek_time_start), "", time_pick, new CompoundButton.OnCheckedChangeListener() {
+                callback.onDraw(getChooserLayout(activity.getString(R.string.peek_time_start), null, time_pick, new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                         if (isChecked) {
                             try {
-                                pick_time_start = buttonView.getText().toString().trim() + ":00";
+                                String value = buttonView.getText().toString().trim();
+                                Matcher m = timePickerPattern.matcher(value);
+                                if (m.find()) {
+                                    value = m.group(1);
+                                }
+                                pick_time_start = value + ":00";
                             } catch (Exception e) {
                                 Static.error(e);
                                 failed();
@@ -413,7 +421,7 @@ public class Room101AddRequest {
                     }
                 }));
             } else {
-                callback.onDraw(getEmptyLayout(context.getString(R.string.no_time_to_peek)));
+                callback.onDraw(getEmptyLayout(activity.getString(R.string.no_time_to_peek)));
             }
         } catch (Exception e){
             Static.error(e);
@@ -428,12 +436,17 @@ public class Room101AddRequest {
             if (!data.has("data")) throw new Exception("Empty data.data");
             final JSONArray time_pick = data.getJSONArray("data");
             if (time_pick.length() > 0) {
-                callback.onDraw(getChooserLayout(context.getString(R.string.peek_time_end), context.getString(R.string.peek_time_end_desc), time_pick, new CompoundButton.OnCheckedChangeListener() {
+                callback.onDraw(getChooserLayout(activity.getString(R.string.peek_time_end), activity.getString(R.string.peek_time_end_desc), time_pick, new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                         if (isChecked) {
                             try {
-                                pick_time_end = buttonView.getText().toString().trim() + ":00";
+                                String value = buttonView.getText().toString().trim();
+                                Matcher m = timePickerPattern.matcher(value);
+                                if (m.find()) {
+                                    value = m.group(1);
+                                }
+                                pick_time_end = value + ":00";
                             } catch (Exception e) {
                                 Static.error(e);
                                 failed();
@@ -442,7 +455,7 @@ public class Room101AddRequest {
                     }
                 }));
             } else {
-                callback.onDraw(getEmptyLayout(context.getString(R.string.no_time_to_peek)));
+                callback.onDraw(getEmptyLayout(activity.getString(R.string.no_time_to_peek)));
             }
         } catch (Exception e){
             Static.error(e);
@@ -455,7 +468,7 @@ public class Room101AddRequest {
             if (pick_date == null) throw new NullPointerException("pick_date cannot be null");
             if (pick_time_start == null) throw new NullPointerException("pick_time_start cannot be null");
             if (pick_time_end == null) throw new NullPointerException("pick_time_end cannot be null");
-            callback.onDraw(getChooserLayout(context.getString(R.string.attention) + "!", context.getString(R.string.room101_warning), null, null));
+            callback.onDraw(getChooserLayout(activity.getString(R.string.attention), activity.getString(R.string.room101_warning), null, null));
         } catch (Exception e){
             Static.error(e);
             failed();
@@ -466,7 +479,7 @@ public class Room101AddRequest {
         try {
             if (data == null) throw new NullPointerException("data cannot be null");
             if (!data.has("done")) throw new Exception("Empty data.done");
-            callback.onDraw(getChooserLayout(data.getBoolean("done") ? context.getString(R.string.request_accepted) : context.getString(R.string.request_denied), "", null, null));
+            callback.onDraw(getChooserLayout(data.getBoolean("done") ? activity.getString(R.string.request_accepted) : activity.getString(R.string.request_denied), null, null, null));
         } catch (Exception e){
             Static.error(e);
             failed();
@@ -475,121 +488,73 @@ public class Room101AddRequest {
 
     private void failed(){
         Log.v(TAG, "failed");
-        snackBar(context.getString(R.string.error_occurred));
+        Static.snackBar(activity, activity.getString(R.string.error_occurred));
         close(false);
     }
-    private void snackBar(String text){
-        try {
-            Snackbar snackbar = Snackbar.make(context.findViewById(R.id.container_room101), text, Snackbar.LENGTH_SHORT);
-            context.getTheme().resolveAttribute(R.attr.colorBackgroundSnackBar, Static.typedValue, true);
-            snackbar.getView().setBackgroundColor(Static.typedValue.data);
-            snackbar.show();
-        } catch (Exception e){
-            Static.error(e);
+
+    private View getLoadingLayout(String text){
+        View view = inflate(R.layout.state_loading_without_align);
+        ((TextView) view.findViewById(R.id.loading_message)).setText(text);
+        return view;
+    }
+    private View getEmptyLayout(String text) throws InflateException {
+        View view = inflate(R.layout.nothing_to_display);
+        ((TextView) view.findViewById(R.id.ntd_text)).setText(text);
+        return view;
+    }
+    private View getChooserLayout(String header, String desc, JSONArray array, CompoundButton.OnCheckedChangeListener onCheckedChangeListener) throws Exception {
+        View view = inflate(R.layout.layout_room101_add_request_state);
+        ViewGroup viewGroup = (ViewGroup) view;
+        if (pick_date != null || pick_time_start != null || pick_time_end != null) {
+            setRequestInfo(viewGroup, R.id.ars_request_info_pick_date, pick_date != null, activity.getString(R.string.session_date) + ": " + pick_date);
+            setRequestInfo(viewGroup, R.id.ars_request_info_pick_time_start, pick_time_start != null, activity.getString(R.string.time_start) + ": " + (pick_time_start == null ? "" : pick_time_start.replaceAll(":00$", "")));
+            setRequestInfo(viewGroup, R.id.ars_request_info_pick_time_end, pick_time_end != null, activity.getString(R.string.time_end) + ": " + (pick_time_end == null ? "" : pick_time_end.replaceAll(":00$", "")));
+        } else {
+            removeView(view, R.id.ars_request_info);
         }
-    }
-    private LinearLayout getLoadingLayout(String text){
-        LinearLayout loading = new LinearLayout(context);
-        loading.setOrientation(LinearLayout.VERTICAL);
-        loading.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-        loading.setGravity(Gravity.CENTER);
-        ProgressBar progressBar = new ProgressBar(context);
-        progressBar.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-        progressBar.setPadding(0, (int) (16 * Static.destiny), 0, (int) (10 * Static.destiny));
-        loading.addView(progressBar);
-        TextView textView = new TextView(context);
-        textView.setText(text);
-        textView.setGravity(Gravity.CENTER);
-        textView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-        textView.setTextColor(Static.textColorPrimary);
-        loading.addView(textView);
-        return loading;
-    }
-    private LinearLayout getEmptyLayout(String text){
-        LinearLayout empty = new LinearLayout(context);
-        empty.setOrientation(LinearLayout.VERTICAL);
-        empty.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-        empty.setGravity(Gravity.CENTER);
-        TextView textView = new TextView(context);
-        textView.setText(text);
-        textView.setGravity(Gravity.CENTER);
-        textView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-        textView.setTextColor(Static.textColorPrimary);
-        textView.setPadding(0, (int) (24 * Static.destiny), 0, (int) (24 * Static.destiny));
-        empty.addView(textView);
-        return empty;
-    }
-    private LinearLayout getChooserLayout(String header, String desc, JSONArray array, CompoundButton.OnCheckedChangeListener onCheckedChangeListener){
-        LinearLayout chooser = new LinearLayout(context);
-        chooser.setOrientation(LinearLayout.VERTICAL);
-        chooser.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-        chooser.setPadding((int) (16 * Static.destiny), (int) (8 * Static.destiny), (int) (16 * Static.destiny), (int) (8 * Static.destiny));
-        try {
-            if(pick_date != null || pick_time_start != null || pick_time_end != null){
-                LinearLayout requestLayout = new LinearLayout(context);
-                requestLayout.setOrientation(LinearLayout.VERTICAL);
-                requestLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                requestLayout.setPadding(0, (int) (8 * Static.destiny), 0, (int) (8 * Static.destiny));
-                TextView textView = new TextView(context);
-                textView.setText(context.getString(R.string.request) + ":");
-                textView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                textView.setTextColor(Static.textColorPrimary);
-                requestLayout.addView(textView);
-                if(pick_date != null){
-                    textView = new TextView(context);
-                    textView.setText(context.getString(R.string.session_date) + ":" + " " + pick_date);
-                    textView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                    textView.setTextColor(Static.textColorSecondary);
-                    requestLayout.addView(textView);
-                }
-                if(pick_time_start != null){
-                    textView = new TextView(context);
-                    textView.setText(context.getString(R.string.time_start) + ":" + " " + pick_time_start.replaceAll(":00$", ""));
-                    textView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                    textView.setTextColor(Static.textColorSecondary);
-                    requestLayout.addView(textView);
-                }
-                if(pick_time_end != null){
-                    textView = new TextView(context);
-                    textView.setText(context.getString(R.string.time_end) + ":" + " " + pick_time_end.replaceAll(":00$", ""));
-                    textView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                    textView.setTextColor(Static.textColorSecondary);
-                    requestLayout.addView(textView);
-                }
-                chooser.addView(requestLayout);
-            }
-            TextView textView = new TextView(context);
-            textView.setText(header);
-            textView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-            textView.setTextColor(Static.textColorPrimary);
-            textView.setPadding(0, (int) (8 * Static.destiny), 0, (int) (8 * Static.destiny));
-            chooser.addView(textView);
-            if (array != null && array.length() > 0) {
-                RadioGroup radioGroup = new RadioGroup(context);
-                radioGroup.setOrientation(RadioGroup.VERTICAL);
-                radioGroup.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                for (int i = 0; i < array.length(); i++) {
-                    RadioButton radioButton = new RadioButton(context);
+        ((TextView) view.findViewById(R.id.ars_request_content_header)).setText(header);
+        if (array != null && array.length() > 0) {
+            RadioGroup radioGroup = (RadioGroup) view.findViewById(R.id.ars_request_chooser);
+            for (int i = 0; i < array.length(); i++) {
+                try {
+                    JSONObject session = array.getJSONObject(i);
+                    String text = session.getString("time");
+                    if (!Objects.equals(session.getString("available"), "")) {
+                        text += " (" + "Свободных мест" + ": " + session.getString("available") + ")";
+                    }
+                    RadioButton radioButton = new RadioButton(activity);
                     radioButton.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                    radioButton.setText(array.getString(i));
+                    radioButton.setText(text);
                     radioButton.setOnCheckedChangeListener(onCheckedChangeListener);
                     radioGroup.addView(radioButton);
+                } catch (Exception e) {
+                    Static.error(e);
                 }
-                chooser.addView(radioGroup);
             }
-            if(desc != null && !Objects.equals(desc, "")){
-                TextView descView = new TextView(context);
-                descView.setText(desc);
-                descView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                descView.setTextColor(Static.textColorSecondary);
-                descView.setPadding(0, (int) (8 * Static.destiny), 0, (int) (8 * Static.destiny));
-                chooser.addView(descView);
-            }
-        } catch (Exception e){
-            Static.error(e);
-            failed();
         }
-        return chooser;
+        if (desc != null && !Objects.equals(desc, "")){
+            ((TextView) view.findViewById(R.id.ars_request_desc)).setText(desc);
+        } else {
+            removeView(view, R.id.ars_request_desc);
+        }
+        if ((array == null || array.length() == 0) && (desc == null || Objects.equals(desc, ""))) {
+            removeView(view, R.id.ars_request_content);
+        }
+        return view;
+    }
+    private void setRequestInfo(ViewGroup viewGroup, int layout, boolean show, String text) throws Exception {
+        if (show) {
+            ((TextView) viewGroup.findViewById(layout)).setText(text);
+        } else {
+            removeView(viewGroup, layout);
+        }
+    }
+    private void removeView(View view, int layout) throws Exception {
+        View element = view.findViewById(layout);
+        ((ViewGroup) element.getParent()).removeView(element);
+    }
+    private View inflate(int layout) throws InflateException {
+        return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layout, null);
     }
 
 }

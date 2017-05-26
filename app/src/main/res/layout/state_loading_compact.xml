@@ -7,6 +7,6 @@
         style="?android:attr/progressBarStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp" />
+        android:padding="@dimen/item_padding" />
 
 </FrameLayout>

@@ -13,12 +13,13 @@
         android:id="@+id/loading_bar"/>
 
     <TextView
-        android:text="@string/auth_check"
+        android:id="@+id/loading_message"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/loading_message"
+        android:text="@string/auth_check"
+        android:textAlignment="center"
         android:textAppearance="@style/TextAppearance.AppCompat.Button"
-        android:textAlignment="center" />
+        android:textSize="@dimen/font_size_14" />
 
     <Button
         android:id="@+id/interrupt_auth"
@@ -28,6 +29,7 @@
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="12dp"
         android:layout_marginTop="12dp"
-        android:text="@string/interrupt_auth" />
+        android:text="@string/interrupt_auth"
+        android:textSize="@dimen/font_size_14" />
 
 </LinearLayout>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/item_padding" >
+
+    <LinearLayout
+        android:id="@+id/lessons_container"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <FrameLayout
+        android:id="@+id/lessons_update_time_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="@dimen/item_padding"
+        android:paddingBottom="0dp"
+        android:paddingStart="@dimen/item_padding"
+        android:paddingEnd="@dimen/item_padding">
+
+        <TextView
+            android:id="@+id/lessons_update_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/lorem_ipsum"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="@dimen/font_size_13" />
+
+    </FrameLayout>
+
+</LinearLayout>

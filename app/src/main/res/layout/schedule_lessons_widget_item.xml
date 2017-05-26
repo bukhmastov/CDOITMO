@@ -3,40 +3,40 @@
     android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingTop="1dp"
-    android:paddingBottom="3dp" >
+    android:paddingTop="@dimen/widget_schedule_lessons_item_padding_top"
+    android:paddingBottom="@dimen/widget_schedule_lessons_item_padding_bottom" >
 
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:gravity="center"
-        android:paddingStart="6dp"
-        android:paddingEnd="6dp"
-        android:minWidth="46dp">
+        android:paddingStart="@dimen/widget_schedule_lessons_item_padding"
+        android:paddingEnd="@dimen/widget_schedule_lessons_item_padding"
+        android:minWidth="@dimen/widget_schedule_lessons_item_min_width">
 
         <TextView
-            android:text="@string/lorem_ipsum"
+            android:id="@+id/slw_item_time_start"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#000000"
             android:maxLines="1"
-            android:id="@+id/slw_item_time_start"
-            android:textSize="13sp" />
+            android:text="@string/lorem_ipsum"
+            android:textColor="#000000"
+            android:textSize="@dimen/font_size_13" />
 
         <ImageView
-            android:layout_height="12dp"
-            android:layout_width="12dp"
+            android:layout_height="@dimen/widget_schedule_lessons_item_time_icon_width"
+            android:layout_width="@dimen/widget_schedule_lessons_item_time_icon_width"
             android:id="@+id/slw_item_time_icon" />
 
         <TextView
-            android:text="@string/lorem_ipsum"
+            android:id="@+id/slw_item_time_end"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#000000"
             android:maxLines="1"
-            android:id="@+id/slw_item_time_end"
-            android:textSize="13sp" />
+            android:text="@string/lorem_ipsum"
+            android:textColor="#000000"
+            android:textSize="@dimen/font_size_13" />
 
     </LinearLayout>
 
@@ -46,34 +46,34 @@
         android:layout_height="match_parent"
         android:gravity="center"
         android:paddingStart="0dp"
-        android:paddingEnd="6dp" >
+        android:paddingEnd="@dimen/widget_schedule_lessons_item_padding" >
 
         <TextView
-            android:text="@string/lorem_ipsum"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textColor="#000000"
-            android:maxLines="1"
             android:id="@+id/slw_item_title"
-            android:textSize="13sp" />
-
-        <TextView
-            android:text="@string/lorem_ipsum"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text="@string/lorem_ipsum"
             android:textColor="#000000"
-            android:maxLines="1"
-            android:id="@+id/slw_item_desc"
-            android:textSize="12sp" />
+            android:textSize="@dimen/font_size_13" />
 
         <TextView
-            android:text="@string/lorem_ipsum"
+            android:id="@+id/slw_item_desc"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="#BB000000"
             android:maxLines="1"
+            android:text="@string/lorem_ipsum"
+            android:textColor="#000000"
+            android:textSize="@dimen/font_size_12" />
+
+        <TextView
             android:id="@+id/slw_item_meta"
-            android:textSize="12sp" />
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text="@string/lorem_ipsum"
+            android:textColor="#BB000000"
+            android:textSize="@dimen/font_size_12" />
 
     </LinearLayout>
 

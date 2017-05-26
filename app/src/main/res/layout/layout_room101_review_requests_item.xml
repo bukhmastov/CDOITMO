@@ -3,8 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingTop="5dp"
-    android:paddingBottom="5dp" >
+    android:padding="@dimen/room101_padding_additional">
 
     <LinearLayout
         android:id="@+id/request_time"
@@ -12,28 +11,28 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
-        android:padding="5dp"
+        android:padding="@dimen/room101_padding"
         android:minWidth="60dp" >
 
         <TextView
-            android:text="10:00"
+            android:id="@+id/request_time_start"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="?android:attr/textColorPrimary"
-            android:textSize="14sp"
-            android:textAlignment="center"
             android:gravity="bottom"
-            android:id="@+id/request_time_start" />
+            android:text="10:00"
+            android:textAlignment="center"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="@dimen/font_size_15" />
 
         <TextView
-            android:text="10:00"
+            android:id="@+id/request_time_end"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="?android:attr/textColorSecondary"
-            android:textSize="14sp"
-            android:textAlignment="center"
             android:gravity="top"
-            android:id="@+id/request_time_end" />
+            android:text="10:00"
+            android:textAlignment="center"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="@dimen/font_size_15" />
 
     </LinearLayout>
 
@@ -43,28 +42,28 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
-        android:padding="5dp"
-        android:paddingEnd="5dp"
-        android:paddingStart="0dp"
+        android:paddingTop="@dimen/room101_padding"
+        android:paddingBottom="@dimen/room101_padding"
         android:layout_toStartOf="@+id/request_deny"
         android:layout_toEndOf="@+id/request_time" >
 
         <TextView
             android:id="@+id/request_title"
-            android:text="@string/lorem_ipsum"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:textColor="?android:attr/textColorPrimary" />
+            android:text="@string/lorem_ipsum"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="@dimen/font_size_15" />
 
         <TextView
             android:id="@+id/request_desc"
-            android:text="@string/lorem_ipsum"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
+            android:text="@string/lorem_ipsum"
             android:textColor="?android:attr/textColorSecondary"
-            android:textSize="13sp" />
+            android:textSize="@dimen/font_size_14" />
 
     </LinearLayout>
 
@@ -74,15 +73,13 @@
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"
         android:layout_alignParentEnd="true"
-        android:padding="5dp">
+        android:padding="@dimen/room101_padding">
 
         <ImageView
             android:id="@+id/request_deny_button"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:padding="4dp"
-            android:layout_marginStart="0dp"
-            android:layout_marginEnd="5dp"
+            android:layout_width="@dimen/room101_deny_button"
+            android:layout_height="@dimen/room101_deny_button"
+            android:padding="@dimen/room101_deny_button_padding"
             app:srcCompat="@drawable/ic_close"
             android:background="?attr/selectableItemBackground" />
 

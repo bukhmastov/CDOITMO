@@ -25,12 +25,10 @@
         <item name="colorBackgroundCards">@color/colorBackgroundCards</item>
         <item name="android:textColorHint">@color/textColorSecondary</item>
 
-        <item name="ic_cdo_small">@drawable/cdo_small</item>
+        <item name="ic_cdo_small">@drawable/cdo</item>
         <item name="ic_security">@drawable/ic_security</item>
-
         <item name="windowActionModeOverlay">true</item>
     </style>
-
     <style name="AppTheme.Dark" parent="Theme.AppCompat.NoActionBar">
         <item name="colorPrimaryLight">@color/colorPrimaryLightInverse</item>
         <item name="colorPrimary">@color/colorPrimaryInverse</item>
@@ -56,18 +54,11 @@
         <item name="colorBackgroundCards">@color/colorBackgroundCardsInverse</item>
         <item name="android:textColorHint">@color/textColorSecondaryInverse</item>
 
-        <item name="ic_cdo_small">@drawable/cdo_small</item>
+        <item name="ic_cdo_small">@drawable/cdo</item>
         <item name="ic_security">@drawable/ic_security</item>
-
         <item name="windowActionModeOverlay">true</item>
     </style>
-
-    <style name="SplashTheme" parent="Theme.AppCompat.NoActionBar">
-        <item name="android:windowBackground">@drawable/splash_background</item>
-    </style>
-
     <style name="AppTheme.Popup" parent="AppTheme">
-
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowContentOverlay">@null</item>
@@ -75,11 +66,8 @@
         <item name="colorPopupBackground">@color/colorPopupBackground</item>
         <item name="colorPopupBackgroundFill">@color/colorPopupBackgroundFill</item>
         <item name="colorPrimaryDark">?attr/colorPopupBackground</item>
-
     </style>
-
     <style name="AppTheme.Popup.Dark" parent="AppTheme.Dark">
-
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowContentOverlay">@null</item>
@@ -87,11 +75,30 @@
         <item name="colorPopupBackground">@color/colorPopupBackgroundInverse</item>
         <item name="colorPopupBackgroundFill">@color/colorPopupBackgroundFillInverse</item>
         <item name="colorPrimaryDark">?attr/colorPopupBackground</item>
-
+    </style>
+    <style name="AppTheme.Search" parent="AppTheme">
+        <item name="colorSearchBackgroundToolbar">@color/colorSearchBackgroundToolbar</item>
+        <item name="colorSearchBackground">@color/colorSearchBackground</item>
+        <item name="colorPrimaryDark">@color/colorSearchPrimaryDark</item>
+    </style>
+    <style name="AppTheme.Search.Dark" parent="AppTheme.Dark" >
+        <item name="colorSearchBackgroundToolbar">@color/colorSearchBackgroundToolbarInverse</item>
+        <item name="colorSearchBackground">@color/colorSearchBackgroundInverse</item>
+        <item name="colorPrimaryDark">@color/colorSearchPrimaryDarkInverse</item>
+    </style>
+    <style name="AppTheme.Settings" parent="AppTheme">
+        <item name="android:activatedBackgroundIndicator">@drawable/list_activated_background</item>
+        <item name="android:colorControlActivated">@color/colorAccent</item>
+    </style>
+    <style name="AppTheme.Settings.Dark" parent="AppTheme.Dark">
+        <item name="android:activatedBackgroundIndicator">@drawable/list_activated_background_inverse</item>
+        <item name="android:colorControlActivated">@color/colorAccentInverse</item>
     </style>
 
+    <style name="AppTheme.Splash" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@drawable/splash_background</item>
+    </style>
     <style name="AppTheme.Transparent" parent="AppTheme">
-
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowContentOverlay">@null</item>
@@ -99,23 +106,10 @@
         <item name="colorPopupBackground">@android:color/transparent</item>
         <item name="colorPopupBackgroundFill">@android:color/transparent</item>
         <item name="colorPrimaryDark">@android:color/transparent</item>
-
     </style>
-
-    <style name="AppTheme.Search" parent="AppTheme">
-
-        <item name="colorSearchBackgroundToolbar">@color/colorSearchBackgroundToolbar</item>
-        <item name="colorSearchBackground">@color/colorSearchBackground</item>
-        <item name="colorPrimaryDark">@color/colorSearchPrimaryDark</item>
-
-    </style>
-
-    <style name="AppTheme.Search.Dark" parent="AppTheme.Dark" >
-
-        <item name="colorSearchBackgroundToolbar">@color/colorSearchBackgroundToolbarInverse</item>
-        <item name="colorSearchBackground">@color/colorSearchBackgroundInverse</item>
-        <item name="colorPrimaryDark">@color/colorSearchPrimaryDarkInverse</item>
-
+    <style name="AppTheme.NavigationViewTextStyle">
+        <item name="android:textSize">@dimen/font_size_14</item>
+        <item name="android:fontFamily">@string/font_bold</item>
     </style>
 
 </resources>

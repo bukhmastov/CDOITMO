@@ -7,9 +7,9 @@
 
     <ProgressBar
         style="?android:attr/progressBarStyle"
-        android:layout_width="40dp"
+        android:layout_width="@dimen/widget_schedule_lessons_item_min_width"
         android:layout_height="match_parent"
-        android:padding="6dp"
+        android:padding="@dimen/widget_schedule_lessons_item_padding"
         android:id="@+id/slw_loading_progressBar" />
 
     <TextView

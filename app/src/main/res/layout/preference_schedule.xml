@@ -8,28 +8,28 @@
         android:id="@+id/radioTypePicker"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"  >
+        android:paddingTop="@dimen/item_vertical_padding"
+        android:paddingBottom="@dimen/item_vertical_padding"
+        android:paddingStart="@dimen/item_horizontal_padding"
+        android:paddingEnd="@dimen/item_horizontal_padding"  >
 
         <RadioButton
-            android:text="@string/current_group"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
             android:id="@+id/ps_auto"
-            android:textSize="18sp"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp" />
-
-        <RadioButton
-            android:text="@string/choose_schedule"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:paddingTop="@dimen/item_vertical_padding"
+            android:paddingBottom="@dimen/item_vertical_padding"
+            android:text="@string/current_group"
+            android:textSize="@dimen/font_size_18" />
+
+        <RadioButton
             android:id="@+id/ps_defined"
-            android:textSize="18sp"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp" />
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="@dimen/item_vertical_padding"
+            android:paddingBottom="@dimen/item_vertical_padding"
+            android:text="@string/choose_schedule"
+            android:textSize="@dimen/font_size_18" />
 
     </RadioGroup>
 

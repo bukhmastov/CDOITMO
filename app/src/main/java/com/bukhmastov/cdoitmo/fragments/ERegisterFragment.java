@@ -2,12 +2,11 @@ package com.bukhmastov.cdoitmo.fragments;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,7 +17,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activities.SubjectActivity;
 import com.bukhmastov.cdoitmo.adapters.SubjectListView;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoRestClientResponseHandler;
@@ -36,7 +34,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Objects;
 
-public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
+public class ERegisterFragment extends ConnectedFragment implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "ERegisterFragment";
     public static ERegister eRegister = null;
@@ -302,10 +300,11 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                                         JSONObject subj = subjArr.getJSONObject(k);
                                         HashMap<String, String> subjObj = new HashMap<>();
                                         subjObj.put("group", group.getString("name"));
-                                        subjObj.put("name", subj.getString("name"));
                                         subjObj.put("semester", String.valueOf(term.getInt("number")));
-                                        subjObj.put("value", String.valueOf(subj.getDouble("currentPoints")));
+                                        subjObj.put("name", subj.getString("name"));
                                         subjObj.put("type", subj.getString("type"));
+                                        subjObj.put("value", String.valueOf(subj.getDouble("currentPoints")));
+                                        subjObj.put("mark", subj.getString("mark"));
                                         subjects.add(subjObj);
                                     }
                                 }
@@ -323,11 +322,11 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                                 Log.v(TAG, "erl_list_view clicked");
                                 HashMap<String, String> subj = subjects.get(position);
-                                Intent intent = new Intent(getActivity(), SubjectActivity.class);
-                                intent.putExtra("group", subj.get("group"));
-                                intent.putExtra("term", subj.get("semester"));
-                                intent.putExtra("name", subj.get("name"));
-                                startActivity(intent);
+                                Bundle extras = new Bundle();
+                                extras.putString("group", subj.get("group"));
+                                extras.putString("term", subj.get("semester"));
+                                extras.putString("name", subj.get("name"));
+                                activity.openActivityOrFragment(SubjectShowFragment.class, extras);
                             }
                         });
                     }
@@ -406,7 +405,7 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
                             public void onNothingSelected(AdapterView<?> parent) {}
                         });
                     }
-                    Static.showUpdateTime(getActivity(), data.getLong("timestamp"), R.id.eregister_layout, true);
+                    Static.showUpdateTime(getActivity(), data.getLong("timestamp"), true);
                 } catch (Exception e) {
                     Static.error(e);
                     loadFailed();
@@ -476,16 +475,20 @@ public class ERegisterFragment extends Fragment implements SwipeRefreshLayout.On
             }
         }
     }
+
     private void draw(int layoutId){
         try {
             ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_eregister));
             if (vg != null) {
                 vg.removeAllViews();
-                vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             }
         } catch (Exception e){
             Static.error(e);
         }
+    }
+    private View inflate(int layoutId) throws InflateException {
+        return ((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
 
 }

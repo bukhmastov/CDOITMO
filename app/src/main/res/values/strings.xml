@@ -1,4 +1,5 @@
 <resources>
+
     <string name="app_name">ЦДО ИТМО</string>
     <string name="title_activity_login">Авторизация</string>
     <string name="login">Логин</string>
@@ -27,6 +28,8 @@
     <string name="year">Год</string>
     <string name="subject_review">Обзор предмета</string>
     <string name="lorem_ipsum">Lorem ipsum</string>
+    <string name="lorem_number">99.99</string>
+    <string name="lorem_number_short">99</string>
     <string name="auth_check">Авторизация</string>
     <string name="authorization">Авторизация</string>
     <string name="authorized">Авторизован</string>
@@ -76,6 +79,7 @@
     <string name="practice">Практика</string>
     <string name="lecture">Лекция</string>
     <string name="lab">Лабораторная</string>
+    <string name="srs">СРС</string>
     <string name="group">Группа</string>
     <string name="room">Аудитория</string>
     <string name="school_week">учебная неделя</string>
@@ -116,16 +120,16 @@
     <string name="sec_past">сек. назад</string>
     <string name="min_past">мин. назад</string>
     <string name="hour_past">час. назад</string>
-    <string name="need_to_peek_date">Необходимо выбрать дату посещения</string>
+    <string name="need_to_peek_date">Необходимо выбрать дату сеанса</string>
     <string name="need_to_peek_time_start">Необходимо выбрать время начала сеанса</string>
     <string name="need_to_peek_time_end">Необходимо выбрать время конца сеанса</string>
     <string name="data_loading">Загрузка данных</string>
     <string name="data_handling">Обработка данных сервером</string>
-    <string name="peek_date">Выберите число, на которое будет подана заявка:</string>
+    <string name="peek_date">Выберите дату сеанса</string>
     <string name="no_date_to_peek">Нет доступных дат для записи в 101 кабинет</string>
-    <string name="peek_time_start">Выберите время начала сеанса:</string>
+    <string name="peek_time_start">Выберите время начала сеанса</string>
     <string name="no_time_to_peek">Нет доступного времени для записи в 101 кабинет</string>
-    <string name="peek_time_end">Выберите время конца сеанса:</string>
+    <string name="peek_time_end">Выберите время конца сеанса</string>
     <string name="peek_time_end_desc">Предлагаются варианты с учетом остатка Вашего времени, максимальной продолжительности одного сеанса и свободных мест в классе.</string>
     <string name="room101_warning">При подаче заявки на аттестацию в 101 аудитории просим учитывать, что из заявленного Вами времени до 10 минут уходит на регистрацию, а 5 минут отводится на завершение работы. Неявка на заявленный Вами сеанс работы в 101 аудитории наказывается штрафом, который рассчитывается по формуле: S = k*T, где коэффициент k = 2, T - продолжительность сеанса.</string>
     <string name="request_accepted">Заявка принята к рассмотрению</string>
@@ -231,7 +235,7 @@
     <string name="current_lesson">Текущая пара</string>
     <string name="next_lesson">Следующая пара</string>
     <string name="lessons_day_end">Конец учебного дня</string>
-    <string name="new_user">Новый пользователь</string>
+    <string name="new_user">Вход в AcademicNT</string>
     <string name="something_went_wrong">Что-то пошло не так</string>
     <string name="change_account">Сменить аккаунт</string>
     <string name="failed_to_start_geo_activity">Не удалось запустить программу для просмотра карт</string>
@@ -302,5 +306,8 @@
     <string name="enable_offline_mode">Перейти в оффлайн режим</string>
     <string name="disable_offline_mode">Выйти из оффлайн режима</string>
     <string name="no_points">Баллов нет</string>
+    <string name="top_rating">Топ-рейтинг</string>
+    <string name="error_occurred_while_runtime">В работе приложения произошла ошибка</string>
+    <string name="open_log">Открыть лог</string>
 
 </resources>

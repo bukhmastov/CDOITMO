@@ -3,19 +3,18 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="12dp"
-    android:paddingBottom="12dp"
+    android:paddingTop="@dimen/item_padding"
+    android:paddingBottom="@dimen/item_padding"
+    android:paddingStart="@dimen/item_padding"
+    android:paddingEnd="@dimen/item_padding"
     android:gravity="center" >
 
     <TextView
-        android:text="@string/lorem_ipsum"
-        android:layout_width="match_parent"
         android:id="@+id/lv_teacher_picker_name"
-        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-        android:textSize="16sp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical" />
+        android:text="@string/lorem_ipsum"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="@dimen/font_size_16" />
 
 </LinearLayout>

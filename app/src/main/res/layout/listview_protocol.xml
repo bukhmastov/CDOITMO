@@ -2,8 +2,10 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingStart="16dp"
-    android:paddingEnd="4dp" >
+    android:paddingStart="@dimen/item_horizontal_padding"
+    android:paddingEnd="@dimen/item_vertical_padding_half"
+    android:paddingTop="@dimen/item_vertical_padding"
+    android:paddingBottom="@dimen/item_vertical_padding" >
 
     <LinearLayout
         android:orientation="vertical"
@@ -12,48 +14,42 @@
         android:layout_toStartOf="@+id/lv_protocol_value_container"
         android:gravity="center" >
 
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="12dp" />
-
         <TextView
-            android:text="@string/lorem_ipsum"
-            android:layout_width="match_parent"
             android:id="@+id/lv_protocol_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:text="@string/lorem_ipsum"
             android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-            android:textSize="16sp"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical" />
+            android:textSize="@dimen/font_size_16" />
 
         <TextView
-            android:text="@string/lorem_ipsum"
-            android:layout_width="match_parent"
             android:id="@+id/lv_protocol_desc"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
+            android:text="@string/lorem_ipsum"
             android:textAppearance="@android:style/TextAppearance.Material.Small"
-            android:textColor="?android:attr/textColorSecondary" />
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="@dimen/font_size_14" />
 
         <TextView
-            android:text="@string/lorem_ipsum"
-            android:layout_width="match_parent"
             android:id="@+id/lv_protocol_meta"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:textAllCaps="false"
-            android:fontFamily="sans-serif"
-            android:textColor="?android:attr/textColorSecondary" />
-
-        <Space
             android:layout_width="match_parent"
-            android:layout_height="12dp" />
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif"
+            android:gravity="center_vertical"
+            android:text="@string/lorem_ipsum"
+            android:textAllCaps="false"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="@dimen/font_size_14" />
 
     </LinearLayout>
 
     <RelativeLayout
         android:id="@+id/lv_protocol_value_container"
         android:layout_width="90dp"
-        android:layout_height="75dp"
+        android:layout_height="55dp"
         android:layout_alignParentEnd="true"
         android:layout_alignParentTop="true"
         android:gravity="center">
@@ -69,7 +65,7 @@
             android:text="99.99"
             android:textAppearance="@style/TextAppearance.AppCompat.Button"
             android:textColor="?android:attr/textColorPrimary"
-            android:textSize="18sp" />
+            android:textSize="@dimen/font_size_18" />
 
         <TextView
             android:id="@+id/lv_protocol_delta"
@@ -80,7 +76,7 @@
             android:paddingStart="2dp"
             android:text="+99.99"
             android:textColor="?android:attr/textColorSecondary"
-            android:textSize="12sp" />
+            android:textSize="@dimen/font_size_12" />
 
     </RelativeLayout>
 

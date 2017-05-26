@@ -7,17 +7,14 @@
     android:id="@+id/rating_layout">
 
     <TextView
-        android:text="@string/detailed_rating"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:textAppearance="@style/TextAppearance.AppCompat.Menu"
-        android:paddingStart="10dp"
-        android:paddingEnd="10dp"
-        android:textSize="14sp"
-        android:fontFamily="roboto"
-        android:textColor="?android:attr/textColorSecondary"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorBackgroundSection"
         android:gravity="center_vertical"
-        android:background="?attr/colorBackgroundSection"/>
+        android:padding="@dimen/item_padding"
+        android:text="@string/detailed_rating"
+        android:textColor="?android:attr/textColorSecondary"
+        android:textSize="@dimen/font_size_14" />
 
     <View
         android:layout_width="match_parent"
@@ -25,55 +22,56 @@
         android:background="?attr/colorSeparator"/>
 
     <RelativeLayout
+        android:id="@+id/rl_list_container"
         android:layout_width="match_parent"
-        android:layout_height="61dp"
-        android:id="@+id/rl_list_container">
+        android:layout_height="@dimen/rating_detailed_height">
 
         <LinearLayout
-            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
+            android:layout_height="match_parent"
             android:layout_alignParentStart="true"
-            android:layout_toStartOf="@+id/rating_separator">
+            android:layout_alignParentTop="true"
+            android:layout_toStartOf="@+id/rating_separator"
+            android:orientation="vertical">
 
             <Spinner
+                android:id="@+id/rl_spinner_faculty"
                 android:layout_width="match_parent"
-                android:layout_height="30dp"
-                android:id="@+id/rl_spinner_faculty" />
+                android:layout_height="@dimen/rating_detailed_height_half" />
 
             <View
-                android:layout_height="1dp"
                 android:layout_width="match_parent"
-                android:layout_marginLeft="5dp"
-                android:layout_marginRight="5dp"
-                android:background="?attr/colorSeparator"/>
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/rating_detailed_separator_margin"
+                android:layout_marginEnd="@dimen/rating_detailed_separator_margin"
+                android:background="?attr/colorSeparator" />
 
             <Spinner
+                android:id="@+id/rl_spinner_course"
                 android:layout_width="match_parent"
-                android:layout_height="30dp"
-                android:id="@+id/rl_spinner_course" />
+                android:layout_height="@dimen/rating_detailed_height_half" />
+
         </LinearLayout>
 
         <View
             android:id="@+id/rating_separator"
             android:layout_width="1dp"
             android:layout_height="match_parent"
-            android:layout_marginTop="5dp"
-            android:layout_marginBottom="5dp"
-            android:background="?attr/colorSeparator"
-            android:layout_toStartOf="@+id/rl_button"/>
+            android:layout_marginBottom="@dimen/rating_detailed_separator_margin"
+            android:layout_marginTop="@dimen/rating_detailed_separator_margin"
+            android:layout_toStartOf="@+id/rl_button"
+            android:background="?attr/colorSeparator" />
 
         <ImageButton
             android:id="@+id/rl_button"
-            app:srcCompat="@drawable/ic_chevron_right"
-            android:layout_alignParentTop="true"
+            android:layout_width="@dimen/rating_detailed_height"
+            android:layout_height="@dimen/rating_detailed_height"
             android:layout_alignParentEnd="true"
-            android:layout_height="60dp"
-            android:layout_width="60dp"
-            android:contentDescription="@string/lorem_ipsum"
+            android:layout_alignParentTop="true"
             android:background="?attr/selectableItemBackground"
-            android:clickable="true" />
+            android:clickable="true"
+            android:contentDescription="@string/lorem_ipsum"
+            app:srcCompat="@drawable/ic_chevron_right" />
 
     </RelativeLayout>
 
@@ -83,16 +81,14 @@
         android:background="?attr/colorSeparator"/>
 
     <TextView
-        android:text="@string/your_rating"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:textAppearance="@style/TextAppearance.AppCompat"
-        android:paddingStart="10dp"
-        android:paddingEnd="10dp"
-        android:fontFamily="roboto"
-        android:textColor="?android:attr/textColorSecondary"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorBackgroundSection"
         android:gravity="center_vertical"
-        android:background="?attr/colorBackgroundSection"/>
+        android:padding="@dimen/item_padding"
+        android:text="@string/your_rating"
+        android:textColor="?android:attr/textColorSecondary"
+        android:textSize="@dimen/font_size_14" />
 
     <View
         android:layout_width="match_parent"

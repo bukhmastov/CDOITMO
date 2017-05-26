@@ -4,21 +4,13 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.fragments.ERegisterFragment;
@@ -27,19 +19,20 @@ import com.bukhmastov.cdoitmo.fragments.RatingFragment;
 import com.bukhmastov.cdoitmo.fragments.Room101Fragment;
 import com.bukhmastov.cdoitmo.fragments.ScheduleExamsFragment;
 import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsFragment;
+import com.bukhmastov.cdoitmo.fragments.ShortcutCreateFragment;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.ProtocolTracker;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends ConnectedActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "MainActivity";
     private static final String STATE_SELECTED_SELECTION = "selectedSection";
     public static int selectedSection = R.id.nav_e_register;
-    private NavigationView navigationView;
     public static Menu menu;
     public static boolean loaded = false;
+    public static MenuItem selectedMenuItem = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,10 +43,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar_main));
         DrawerLayout mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, ((Toolbar)findViewById(R.id.toolbar_main)), R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        mDrawerLayout.addDrawerListener(mDrawerToggle);
-        mDrawerToggle.syncState();
-        navigationView = (NavigationView) findViewById(R.id.nav_view);
+        if (mDrawerLayout != null) {
+            Static.tablet = false;
+            ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, ((Toolbar) findViewById(R.id.toolbar_main)), R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+            mDrawerLayout.addDrawerListener(mDrawerToggle);
+            mDrawerToggle.syncState();
+        } else {
+            Static.tablet = true;
+        }
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
         Static.OFFLINE_MODE = !Static.isOnline(this) || (Static.firstLaunch && Storage.pref.get(this, "pref_initial_offline", false));
@@ -91,20 +89,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onResume() {
         super.onResume();
         Log.v(TAG, "Activity resumed");
-        if (navigationView != null) {
+        Static.NavigationMenu.displayEnableDisableOfflineButton((NavigationView) findViewById(R.id.nav_view));
+        if (selectedMenuItem != null) {
             try {
-                Menu menu = navigationView.getMenu();
-                MenuItem nav_enable_offline_mode = menu.findItem(R.id.nav_enable_offline_mode);
-                MenuItem nav_disable_offline_mode = menu.findItem(R.id.nav_disable_offline_mode);
-                if (Static.OFFLINE_MODE) {
-                    nav_enable_offline_mode.setVisible(false);
-                    nav_disable_offline_mode.setVisible(true);
-                } else {
-                    nav_enable_offline_mode.setVisible(true);
-                    nav_disable_offline_mode.setVisible(false);
-                }
-            } catch (Exception e) {
-                Static.error(e);
+                selectSection(selectedMenuItem.getItemId());
+            } finally {
+                selectedMenuItem = null;
             }
         }
         if (Static.OFFLINE_MODE) {
@@ -142,15 +132,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer != null) {
-            if (drawer.isDrawerOpen(GravityCompat.START)) {
-                drawer.closeDrawer(GravityCompat.START);
+        try {
+            DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+            if (drawer == null) {
+                throw new Exception("");
             } else {
+                if (drawer.isDrawerOpen(GravityCompat.START)) {
+                    drawer.closeDrawer(GravityCompat.START);
+                } else {
+                    throw new Exception("");
+                }
+            }
+        } catch (Exception e) {
+            if (back()) {
                 super.onBackPressed();
             }
-        } else {
-            super.onBackPressed();
         }
     }
 
@@ -158,7 +154,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.toolbar_main, menu);
         MainActivity.menu = menu;
-        checkOffline();
+        Static.NavigationMenu.snackbarOffline(this);
+        Static.NavigationMenu.drawOffline(menu);
         return true;
     }
 
@@ -191,126 +188,75 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             loaded = true;
             if (Static.protocolTracker == null) Static.protocolTracker = new ProtocolTracker(this);
             Static.protocolTracker.check();
-            checkOffline();
             selectSection(selectedSection);
-            displayUserData();
-        }
-    }
-    private void checkOffline(){
-        Log.v(TAG, "checkOffline " + (Static.OFFLINE_MODE ? "offline" : "normal"));
-        if (Static.OFFLINE_MODE) {
-            Static.snackBar(this, getString(R.string.offline_mode_on));
-        }
-        if (MainActivity.menu != null) {
-            if (Static.OFFLINE_MODE) {
-                for (int i = 0; i < MainActivity.menu.size(); i++) {
-                    MainActivity.menu.getItem(i).setVisible(false);
-                }
-            }
-            MenuItem menuItem = MainActivity.menu.findItem(R.id.offline_mode);
-            if (menuItem != null) {
-                menuItem.setVisible(Static.OFFLINE_MODE);
-            }
-        }
-    }
-    private void displayUserData(){
-        displayUserData(R.id.user_name, Storage.file.perm.get(this, "user#name"));
-        displayUserData(R.id.user_group, Storage.file.perm.get(this, "user#group"));
-    }
-    private void displayUserData(int id, String text){
-        Log.v(TAG, "displayUserData " + text);
-        if (navigationView == null) return;
-        View activity_main_nav_header = navigationView.getHeaderView(0);
-        if (activity_main_nav_header == null) return;
-        TextView textView = (TextView) activity_main_nav_header.findViewById(id);
-        if (textView != null) {
-            if (!text.isEmpty()) {
-                textView.setText(text);
-                textView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            } else {
-                textView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0));
-            }
+            Static.NavigationMenu.displayUserData(this, (NavigationView) findViewById(R.id.nav_view));
+            Static.NavigationMenu.displayUserAvatar(this, (NavigationView) findViewById(R.id.nav_view));
+            Static.NavigationMenu.snackbarOffline(this);
+            Static.NavigationMenu.drawOffline(menu);
         }
     }
 
     private void selectSection(final int section){
-        Class fragmentClass = null;
-        String title = null;
-        switch(section){
+        switch (section) {
             case R.id.nav_e_register:
-                title = getString(R.string.e_journal);
-                fragmentClass = ERegisterFragment.class;
-                break;
             case R.id.nav_protocol_changes:
-                title = getString(R.string.protocol_changes);
-                fragmentClass = ProtocolFragment.class;
-                break;
             case R.id.nav_rating:
-                title = getString(R.string.rating);
-                fragmentClass = RatingFragment.class;
-                break;
             case R.id.nav_schedule:
-                title = getString(R.string.schedule_lessons);
-                fragmentClass = ScheduleLessonsFragment.class;
-                break;
             case R.id.nav_schedule_exams:
-                title = getString(R.string.schedule_exams);
-                fragmentClass = ScheduleExamsFragment.class;
-                break;
-            case R.id.nav_room101:
-                title = getString(R.string.room101);
-                fragmentClass = Room101Fragment.class;
-                break;
-            case R.id.nav_shortcuts: startActivity(new Intent(this, ShortcutCreateActivity.class)); break;
-            case R.id.nav_settings: startActivity(new Intent(this, SettingsActivity.class)); break;
-            case R.id.nav_enable_offline_mode:
-                loaded = false;
-                authorize(LoginActivity.SIGNAL_GO_OFFLINE);
-                break;
-            case R.id.nav_disable_offline_mode:
-                loaded = false;
-                authorize(LoginActivity.SIGNAL_RECONNECT);
-                break;
-            case R.id.nav_change_account:
-                loaded = false;
-                authorize(LoginActivity.SIGNAL_CHANGE_ACCOUNT);
-                break;
-            case R.id.nav_logout:
-                loaded = false;
-                authorize(LoginActivity.SIGNAL_LOGOUT);
-                break;
-        }
-        if (fragmentClass != null) {
-            Log.v(TAG, "selectSection | " + title);
-            navigationView.setCheckedItem(section);
-            selectedSection = section;
-            ViewGroup content_container = (ViewGroup) findViewById(R.id.content_container);
-            if (content_container != null) content_container.removeAllViews();
-            try {
-                Fragment fragment = (Fragment) fragmentClass.newInstance();
-                FragmentManager fragmentManager = getSupportFragmentManager();
-                fragmentManager.beginTransaction().replace(R.id.content_container, fragment).commit();
-                ActionBar actionBar = getSupportActionBar();
-                if (actionBar != null) {
-                    actionBar.setTitle(title);
+            case R.id.nav_room101: {
+                Class connectedFragmentClass;
+                switch (section) {
+                    default:
+                    case R.id.nav_e_register: connectedFragmentClass = ERegisterFragment.class; break;
+                    case R.id.nav_protocol_changes: connectedFragmentClass = ProtocolFragment.class; break;
+                    case R.id.nav_rating: connectedFragmentClass = RatingFragment.class; break;
+                    case R.id.nav_schedule: connectedFragmentClass = ScheduleLessonsFragment.class; break;
+                    case R.id.nav_schedule_exams: connectedFragmentClass = ScheduleExamsFragment.class; break;
+                    case R.id.nav_room101: connectedFragmentClass = Room101Fragment.class; break;
                 }
-            } catch (Exception e) {
-                Static.error(e);
-                if (content_container != null) {
-                    Snackbar snackbar = Snackbar.make(content_container, getString(R.string.failed_to_open_fragment), Snackbar.LENGTH_SHORT);
-                    snackbar.getView().setBackgroundColor(Static.colorBackgroundSnackBar);
-                    snackbar.setAction(R.string.redo, new View.OnClickListener() {
+                if (openFragment(TYPE.root, connectedFragmentClass, null)) {
+                    ((NavigationView) findViewById(R.id.nav_view)).setCheckedItem(section);
+                    selectedSection = section;
+                } else {
+                    Static.snackBar(this, getString(R.string.failed_to_open_fragment), getString(R.string.redo), new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
                             selectSection(section);
                         }
                     });
-                    snackbar.show();
-                } else {
-                    Log.w(TAG, "selectSection | content_container is null");
                 }
+                break;
+            }
+            case R.id.nav_shortcuts:
+                if (openActivityOrFragment(TYPE.stackable, ShortcutCreateFragment.class, null)) {
+                    if (Static.tablet) {
+                        Menu menu = ((NavigationView) findViewById(R.id.nav_view)).getMenu();
+                        for (int i = 0; i < menu.size(); i++) {
+                            menu.getItem(i).setChecked(false);
+                        }
+                    }
+                }
+                break;
+            case R.id.nav_settings: startActivity(new Intent(this, SettingsActivity.class)); break;
+            case R.id.nav_enable_offline_mode:
+            case R.id.nav_disable_offline_mode:
+            case R.id.nav_change_account:
+            case R.id.nav_logout: {
+                loaded = false;
+                switch (section) {
+                    case R.id.nav_enable_offline_mode: authorize(LoginActivity.SIGNAL_GO_OFFLINE); break;
+                    case R.id.nav_disable_offline_mode: authorize(LoginActivity.SIGNAL_RECONNECT); break;
+                    case R.id.nav_change_account: authorize(LoginActivity.SIGNAL_CHANGE_ACCOUNT); break;
+                    case R.id.nav_logout: authorize(LoginActivity.SIGNAL_LOGOUT); break;
+                }
+                break;
             }
         }
+    }
+
+    @Override
+    protected int getRootViewId() {
+        return R.id.activity_main;
     }
 
 }

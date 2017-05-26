@@ -2,6 +2,7 @@ package com.bukhmastov.cdoitmo.builders;
 
 import android.app.Activity;
 import android.content.Context;
+import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -95,7 +96,7 @@ public class Room101ReviewBuilder extends Thread {
         Log.v(TAG, "finished");
     }
 
-    private View inflate(int layout) throws Exception {
+    private View inflate(int layout) throws InflateException {
         return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layout, null);
     }
 

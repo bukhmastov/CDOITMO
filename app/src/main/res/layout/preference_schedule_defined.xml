@@ -5,17 +5,17 @@
     android:layout_height="match_parent" >
 
     <EditText
+        android:id="@+id/schedule_preference_edit_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:inputType="textPersonName"
+        android:layout_marginStart="@dimen/item_horizontal_padding"
+        android:layout_marginEnd="@dimen/item_horizontal_padding"
         android:ems="10"
-        android:id="@+id/schedule_preference_edit_text"
-        android:textSize="16sp"
         android:hint="@string/schedule_lessons_search_view_hint"
+        android:inputType="textPersonName"
+        android:selectAllOnFocus="true"
         android:textColor="?android:attr/textColorPrimary"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
-        android:selectAllOnFocus="true" />
+        android:textSize="@dimen/font_size_16" />
 
     <FrameLayout
         android:layout_width="match_parent"

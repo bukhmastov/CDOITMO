@@ -4,7 +4,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:clipToPadding="false"
-    android:padding="8dp"
+    android:padding="@dimen/item_padding_half"
     android:focusable="true"
     android:focusableInTouchMode="true">
 
@@ -20,16 +20,31 @@
             android:layout_height="match_parent"
             android:orientation="vertical" >
 
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingTop="16dp"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:paddingTop="@dimen/item_padding"
                 android:paddingBottom="0dp"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:text="@string/new_user"
-                android:textColor="?android:attr/textColorPrimary"
-                android:textSize="16sp" />
+                android:paddingStart="@dimen/item_padding"
+                android:paddingEnd="@dimen/item_padding">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    card_view:srcCompat="@drawable/ic_lock_outline" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:paddingStart="@dimen/item_padding_half"
+                    android:paddingEnd="0dp"
+                    android:text="@string/new_user"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="@dimen/font_size_16" />
+
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -40,30 +55,30 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:paddingTop="8dp"
-                    android:paddingBottom="16dp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp">
+                    android:paddingTop="@dimen/item_padding_half"
+                    android:paddingBottom="@dimen/item_padding"
+                    android:paddingStart="@dimen/item_padding"
+                    android:paddingEnd="@dimen/item_padding">
 
                     <EditText
                         android:id="@+id/input_login"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:ems="10"
-                        android:textSize="16sp"
                         android:hint="@string/login"
                         android:inputType="text"
-                        android:selectAllOnFocus="true" />
+                        android:selectAllOnFocus="true"
+                        android:textSize="@dimen/font_size_16" />
 
                     <EditText
                         android:id="@+id/input_password"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:ems="10"
-                        android:textSize="16sp"
                         android:hint="@string/password"
                         android:inputType="textPassword"
-                        android:selectAllOnFocus="true"/>
+                        android:selectAllOnFocus="true"
+                        android:textSize="@dimen/font_size_16" />
 
                 </LinearLayout>
 
@@ -77,14 +92,15 @@
                     android:layout_height="match_parent"
                     android:orientation="horizontal"
                     android:gravity="end"
-                    android:padding="4dp">
+                    android:padding="@dimen/item_padding_quarter">
 
                     <Button
                         android:id="@+id/login"
                         style="@style/Widget.AppCompat.Button.Borderless"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/enter" />
+                        android:text="@string/enter"
+                        android:textSize="@dimen/font_size_14" />
 
                 </LinearLayout>
 

@@ -8,16 +8,16 @@
     android:paddingEnd="2dp" >
 
     <TextView
-        android:text="@string/lorem_ipsum"
+        android:id="@+id/flag_content"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingTop="1dp"
-        android:paddingBottom="1dp"
-        android:paddingStart="5dp"
-        android:paddingEnd="5dp"
-        android:textSize="13sp"
-        android:textColor="?attr/colorScheduleFlagTEXT"
         android:background="?attr/colorScheduleFlagCommonBG"
-        android:id="@+id/flag_content" />
+        android:paddingBottom="@dimen/schedule_data_flag_vertical"
+        android:paddingEnd="@dimen/schedule_data_flag_horizontal"
+        android:paddingStart="@dimen/schedule_data_flag_horizontal"
+        android:paddingTop="@dimen/schedule_data_flag_vertical"
+        android:text="@string/lorem_ipsum"
+        android:textColor="?attr/colorScheduleFlagTEXT"
+        android:textSize="@dimen/font_size_13" />
 
 </FrameLayout>

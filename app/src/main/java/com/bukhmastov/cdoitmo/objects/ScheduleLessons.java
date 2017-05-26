@@ -1,16 +1,16 @@
 package com.bukhmastov.cdoitmo.objects;
 
 import android.content.Context;
-import android.content.Intent;
+import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.widget.SwipeRefreshLayout;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activities.ScheduleLessonCreateActivity;
-import com.bukhmastov.cdoitmo.activities.ScheduleLessonsEditActivity;
+import com.bukhmastov.cdoitmo.activities.ConnectedActivity;
 import com.bukhmastov.cdoitmo.converters.ScheduleLessonsAdditionalConverter;
 import com.bukhmastov.cdoitmo.converters.ScheduleLessonsConverter;
 import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsFragment;
+import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsModifyFragment;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.IfmoRestClientResponseHandler;
 import com.bukhmastov.cdoitmo.objects.entities.LessonUnit;
@@ -631,44 +631,46 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
         replica.remove("cdoitmo_type");
         return replica.toString();
     }
-    public static void createLesson(Context context, JSONObject schedule, int dayIndex, int week) throws JSONException {
+    public static void createLesson(ConnectedActivity activity, JSONObject schedule, int dayIndex, int week) throws JSONException {
         Log.v(TAG, "createLesson | cache_token=" + schedule.getString("cache_token"));
-        Intent intent = new Intent(context, ScheduleLessonCreateActivity.class);
-        intent.putExtra("header", schedule.getString("title") + " " + schedule.getString("label"));
-        intent.putExtra("cache_token", schedule.getString("cache_token"));
-        intent.putExtra("day", dayIndex);
-        intent.putExtra("week", week);
+        Bundle extras = new Bundle();
+        extras.putSerializable("action_type", ScheduleLessonsModifyFragment.TYPE.create);
+        extras.putString("header", schedule.getString("title") + " " + schedule.getString("label"));
+        extras.putString("cache_token", schedule.getString("cache_token"));
+        extras.putInt("day", dayIndex);
+        extras.putInt("week", week);
         switch (schedule.getString("type")) {
             case "group":
-                intent.putExtra("group", schedule.getString("label"));
+                extras.putString("group", schedule.getString("label"));
                 break;
             case "teacher":
-                intent.putExtra("teacher", schedule.getString("label"));
-                intent.putExtra("teacher_id", schedule.getString("pid"));
+                extras.putString("teacher", schedule.getString("label"));
+                extras.putString("teacher_id", schedule.getString("pid"));
                 break;
             case "room":
-                intent.putExtra("room", schedule.getString("label"));
+                extras.putString("room", schedule.getString("label"));
                 break;
         }
-        context.startActivity(intent);
+        activity.openActivityOrFragment(ScheduleLessonsModifyFragment.class, extras);
     }
-    public static void createLesson(Context context, JSONObject schedule, JSONObject lesson, int dayIndex, int week) throws JSONException {
+    public static void createLesson(ConnectedActivity activity, JSONObject schedule, JSONObject lesson, int dayIndex, int week) throws JSONException {
         Log.v(TAG, "createLesson(JSONObject) | cache_token=" + schedule.getString("cache_token"));
-        Intent intent = new Intent(context, ScheduleLessonCreateActivity.class);
-        intent.putExtra("header", schedule.getString("title") + " " + schedule.getString("label"));
-        intent.putExtra("cache_token", schedule.getString("cache_token"));
-        intent.putExtra("day", dayIndex);
-        intent.putExtra("week", week);
-        if (lesson.getString("subject") != null) intent.putExtra("title", lesson.getString("subject"));
-        if (lesson.getString("timeStart") != null) intent.putExtra("timeStart", lesson.getString("timeStart"));
-        if (lesson.getString("timeEnd") != null) intent.putExtra("timeEnd", lesson.getString("timeEnd"));
-        if (lesson.getString("type") != null) intent.putExtra("type", lesson.getString("type"));
-        if (lesson.getString("group") != null) intent.putExtra("group", lesson.getString("group"));
-        if (lesson.getString("teacher") != null) intent.putExtra("teacher", lesson.getString("teacher"));
-        if (lesson.getString("teacher_id") != null) intent.putExtra("teacher_id", lesson.getString("teacher_id"));
-        if (lesson.getString("room") != null) intent.putExtra("room", lesson.getString("room"));
-        if (lesson.getString("building") != null) intent.putExtra("building", lesson.getString("building"));
-        context.startActivity(intent);
+        Bundle extras = new Bundle();
+        extras.putSerializable("action_type", ScheduleLessonsModifyFragment.TYPE.create);
+        extras.putString("header", schedule.getString("title") + " " + schedule.getString("label"));
+        extras.putString("cache_token", schedule.getString("cache_token"));
+        extras.putInt("day", dayIndex);
+        extras.putInt("week", week);
+        if (lesson.getString("subject") != null) extras.putString("title", lesson.getString("subject"));
+        if (lesson.getString("timeStart") != null) extras.putString("timeStart", lesson.getString("timeStart"));
+        if (lesson.getString("timeEnd") != null) extras.putString("timeEnd", lesson.getString("timeEnd"));
+        if (lesson.getString("type") != null) extras.putString("type", lesson.getString("type"));
+        if (lesson.getString("group") != null) extras.putString("group", lesson.getString("group"));
+        if (lesson.getString("teacher") != null) extras.putString("teacher", lesson.getString("teacher"));
+        if (lesson.getString("teacher_id") != null) extras.putString("teacher_id", lesson.getString("teacher_id"));
+        if (lesson.getString("room") != null) extras.putString("room", lesson.getString("room"));
+        if (lesson.getString("building") != null) extras.putString("building", lesson.getString("building"));
+        activity.openActivityOrFragment(ScheduleLessonsModifyFragment.class, extras);
     }
     public static boolean createLesson(Context context, LessonUnit lessonUnit){
         Log.v(TAG, "createLesson(lessonUnit) | cache_token=" + lessonUnit.cache_token);
@@ -716,16 +718,17 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
         }
         return result;
     }
-    public static void editLesson(Context context, JSONObject schedule, JSONObject lesson, int dayIndex, int week) throws Exception {
+    public static void editLesson(ConnectedActivity activity, JSONObject schedule, JSONObject lesson, int dayIndex, int week) throws Exception {
         Log.v(TAG, "editLesson | cache_token=" + schedule.getString("cache_token"));
         if (!Objects.equals(lesson.getString("cdoitmo_type"), "synthetic")) throw new Exception("Wrong cdoitmo_type type");
-        Intent intent = new Intent(context, ScheduleLessonsEditActivity.class);
-        intent.putExtra("header", schedule.getString("title") + " " + schedule.getString("label"));
-        intent.putExtra("cache_token", schedule.getString("cache_token"));
-        intent.putExtra("day", dayIndex);
-        intent.putExtra("week", week);
-        intent.putExtra("hash", Static.crypt(lesson.toString()));
-        context.startActivity(intent);
+        Bundle extras = new Bundle();
+        extras.putSerializable("action_type", ScheduleLessonsModifyFragment.TYPE.edit);
+        extras.putString("header", schedule.getString("title") + " " + schedule.getString("label"));
+        extras.putString("cache_token", schedule.getString("cache_token"));
+        extras.putInt("day", dayIndex);
+        extras.putInt("week", week);
+        extras.putString("hash", Static.crypt(lesson.toString()));
+        activity.openActivityOrFragment(ScheduleLessonsModifyFragment.class, extras);
     }
     public static boolean editLesson(Context context, String cache_token, int index, String hash, LessonUnit lessonUnit){
         Log.v(TAG, "editLesson(LessonUnit) | cache_token=" + cache_token);

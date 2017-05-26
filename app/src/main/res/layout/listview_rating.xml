@@ -3,33 +3,28 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingStart="@dimen/item_padding"
+    android:paddingEnd="@dimen/item_padding"
+    android:paddingTop="@dimen/item_padding"
+    android:paddingBottom="@dimen/item_padding"
     android:gravity="center">
 
-    <Space
-        android:layout_width="match_parent"
-        android:layout_height="12dp" />
-
     <TextView
-        android:text="@string/lorem_ipsum"
-        android:layout_width="match_parent"
         android:id="@+id/lv_rating_name"
-        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-        android:textSize="16sp"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical" />
-
-    <TextView
-        android:text="@string/lorem_ipsum"
         android:layout_width="match_parent"
-        android:id="@+id/lv_rating_position"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
-        android:textAppearance="@android:style/TextAppearance.Material.Body1" />
+        android:text="@string/lorem_ipsum"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="@dimen/font_size_16" />
 
-    <Space
+    <TextView
+        android:id="@+id/lv_rating_position"
         android:layout_width="match_parent"
-        android:layout_height="12dp" />
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:text="@string/lorem_ipsum"
+        android:textColor="?android:attr/textColorSecondary"
+        android:textSize="@dimen/font_size_14" />
 
 </LinearLayout>

@@ -1,20 +1,16 @@
-package com.bukhmastov.cdoitmo.activities;
+package com.bukhmastov.cdoitmo.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+import android.support.annotation.Nullable;
 import android.view.InflateException;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.fragments.ERegisterFragment;
 import com.bukhmastov.cdoitmo.objects.ERegister;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
@@ -28,34 +24,49 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class SubjectActivity extends AppCompatActivity {
+public class SubjectShowFragment extends ConnectedFragment {
 
-    private static final String TAG = "SubjectActivity";
+    private static final String TAG = "SubjectShowFragment";
     private JSONObject subject = null;
+    private String groupSub = null;
+    private int termSub = -1;
+    private String nameSub = null;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        if (Static.darkTheme) setTheme(R.style.AppTheme_Dark);
-        super.onCreate(savedInstanceState);
-        Log.i(TAG, "Activity created");
-        setContentView(R.layout.activity_subject);
-        setSupportActionBar((Toolbar) findViewById(R.id.toolbar_subject));
-        final ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setTitle(R.string.subject_review);
-            actionBar.setHomeButtonEnabled(true);
-            actionBar.setDisplayHomeAsUpEnabled(true);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_subject_show, container, false);
+    }
+
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        display();
+    }
+
+    private void display() {
+        Log.v(TAG, "display");
+        try {
+            Bundle extras = getArguments();
+            if (extras == null) {
+                throw new NullPointerException("extras are null");
+            }
+            groupSub = extras.getString("group");
+            termSub = Integer.parseInt(extras.getString("term"));
+            nameSub = extras.getString("name");
+            if (groupSub == null || termSub < 0 || nameSub == null) {
+                throw new Exception("Wrong extras provided: " + extras.toString());
+            }
+        } catch (Exception e) {
+            Static.error(e);
+            activity.back();
+            return;
         }
-        // получаем реквизиты предмета
-        final String groupSub = getIntent().getStringExtra("group");
-        final int termSub = Integer.parseInt(getIntent().getStringExtra("term"));
-        final String nameSub = getIntent().getStringExtra("name");
-        Log.v(TAG, "groupSub=" + groupSub + " | termSub=" + termSub + " | nameSub=" + nameSub);
         // проверяем целостность данных
         try {
-            if (ERegisterFragment.eRegister == null)
+            if (ERegisterFragment.eRegister == null) {
                 throw new Exception("ERegisterFragment.eRegister is null");
-            final SubjectActivity self = this;
+            }
+            final SubjectShowFragment self = this;
             ERegisterFragment.eRegister.get(new ERegister.Callback() {
                 @Override
                 public void onDone(JSONObject data) {
@@ -92,25 +103,23 @@ public class SubjectActivity extends AppCompatActivity {
                             }
                         }
                         if (!groupFound) throw new Exception("Group not found");
-                        if (actionBar != null) {
-                            actionBar.setTitle(subject.getString("name"));
-                        }
+                        // отображаем заголовок
+                        activity.updateToolbar(subject.getString("name"), R.drawable.ic_e_journal);
                         // отображаем шапку
-                        TextView as_current_points = (TextView) findViewById(R.id.as_current_points);
-                        TextView as_desc = (TextView) findViewById(R.id.as_desc);
-                        TextView as_result = (TextView) findViewById(R.id.as_result);
-                        Double currentPoints = subject.getDouble("currentPoints");
-                        String pointsStr = String.valueOf(currentPoints);
-                        if (currentPoints != -1.0) {
-                            if (currentPoints == Double.parseDouble(currentPoints.intValue() + ".0")) {
-                                pointsStr = currentPoints.intValue() + "";
-                            }
-                        } else {
-                            pointsStr = "";
+                        TextView as_info_term = (TextView) getActivity().findViewById(R.id.as_info_term);
+                        TextView as_info_type = (TextView) getActivity().findViewById(R.id.as_info_type);
+                        TextView as_result = (TextView) getActivity().findViewById(R.id.as_result);
+                        TextView as_current_points = (TextView) getActivity().findViewById(R.id.as_current_points);
+                        if (as_info_term != null) {
+                            as_info_term.setText(termSub + " " + getString(R.string.semester));
                         }
-                        if (as_current_points != null) as_current_points.setText(pointsStr);
-                        if (as_desc != null)
-                            as_desc.setText(termSub + " " + getString(R.string.semester) + (Objects.equals(subject.getString("type"), "") ? "" : " | " + subject.getString("type")));
+                        if (as_info_type != null) {
+                            if (!Objects.equals(subject.getString("type"), "")) {
+                                as_info_type.setText(subject.getString("type"));
+                            } else {
+                                ((ViewGroup) as_info_type.getParent()).removeView(as_info_type);
+                            }
+                        }
                         if (as_result != null) {
                             if (Objects.equals(subject.getString("mark"), "")) {
                                 ((ViewGroup) as_result.getParent()).removeView(as_result);
@@ -118,9 +127,21 @@ public class SubjectActivity extends AppCompatActivity {
                                 as_result.setText(subject.getString("mark"));
                             }
                         }
+                        if (as_current_points != null) {
+                            Double currentPoints = subject.getDouble("currentPoints");
+                            String pointsStr = String.valueOf(currentPoints);
+                            if (currentPoints != -1.0) {
+                                if (currentPoints == Double.parseDouble(currentPoints.intValue() + ".0")) {
+                                    pointsStr = currentPoints.intValue() + "";
+                                }
+                            } else {
+                                pointsStr = "";
+                            }
+                            as_current_points.setText(pointsStr);
+                        }
                         // отображаем список оценок
                         JSONArray points = subject.getJSONArray("points");
-                        LinearLayout as_container = (LinearLayout) findViewById(R.id.as_container);
+                        LinearLayout as_container = (LinearLayout) getActivity().findViewById(R.id.as_container);
                         if (as_container != null) {
                             if (points.length() == 0) {
                                 View view = inflate(R.layout.nothing_to_display);
@@ -155,14 +176,14 @@ public class SubjectActivity extends AppCompatActivity {
                                         as_container.addView(view);
                                     } catch (Exception e) {
                                         Static.error(e);
-                                        Static.snackBar(self, getString(R.string.something_went_wrong));
+                                        Static.snackBar(getActivity(), getString(R.string.something_went_wrong));
                                     }
                                 }
                             }
                         }
                     } catch (Exception e) {
                         Static.error(e);
-                        finish();
+                        activity.back();
                     }
                 }
                 @Override
@@ -170,29 +191,12 @@ public class SubjectActivity extends AppCompatActivity {
             });
         } catch (Exception e) {
             Static.error(e);
-            finish();
-        }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        Log.i(TAG, "Activity destroyed");
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                finish();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+            activity.back();
         }
     }
 
     private View inflate(int layoutId) throws InflateException {
-        return ((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
+        return ((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
 
     private String markConverter(String value) {

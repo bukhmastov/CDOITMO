@@ -34,28 +34,30 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp" >
+                    android:paddingTop="@dimen/item_vertical_padding"
+                    android:paddingBottom="@dimen/item_vertical_padding"
+                    android:paddingStart="@dimen/item_horizontal_padding"
+                    android:paddingEnd="@dimen/item_horizontal_padding" >
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:gravity="center"
                         android:text="@string/warn"
-                        android:textColor="?android:attr/textColorPrimary"
                         android:textAllCaps="true"
-                        android:gravity="center" />
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="@dimen/font_size_14" />
 
                     <TextView
                         android:id="@+id/warn"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:gravity="center"
                         android:text="@string/lorem_ipsum"
                         android:textColor="?android:attr/textColorPrimary"
-                        android:gravity="center" />
+                        android:textSize="@dimen/font_size_14" />
 
                 </LinearLayout>
 
@@ -63,28 +65,30 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp" >
+                    android:paddingTop="@dimen/item_vertical_padding"
+                    android:paddingBottom="@dimen/item_vertical_padding"
+                    android:paddingStart="@dimen/item_horizontal_padding"
+                    android:paddingEnd="@dimen/item_horizontal_padding" >
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:gravity="center"
                         android:text="@string/error"
-                        android:textColor="?android:attr/textColorPrimary"
                         android:textAllCaps="true"
-                        android:gravity="center" />
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="@dimen/font_size_14" />
 
                     <TextView
                         android:id="@+id/error"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:gravity="center"
                         android:text="@string/lorem_ipsum"
                         android:textColor="?android:attr/textColorPrimary"
-                        android:gravity="center" />
+                        android:textSize="@dimen/font_size_14" />
 
                 </LinearLayout>
 
@@ -92,28 +96,30 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp" >
+                    android:paddingTop="@dimen/item_vertical_padding"
+                    android:paddingBottom="@dimen/item_vertical_padding"
+                    android:paddingStart="@dimen/item_horizontal_padding"
+                    android:paddingEnd="@dimen/item_horizontal_padding" >
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:gravity="center"
                         android:text="@string/exception"
-                        android:textColor="?android:attr/textColorPrimary"
                         android:textAllCaps="true"
-                        android:gravity="center" />
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="@dimen/font_size_14" />
 
                     <TextView
                         android:id="@+id/exception"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:gravity="center"
                         android:text="@string/lorem_ipsum"
                         android:textColor="?android:attr/textColorPrimary"
-                        android:gravity="center" />
+                        android:textSize="@dimen/font_size_14" />
 
                 </LinearLayout>
 
@@ -121,28 +127,30 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp" >
+                    android:paddingTop="@dimen/item_vertical_padding"
+                    android:paddingBottom="@dimen/item_vertical_padding"
+                    android:paddingStart="@dimen/item_horizontal_padding"
+                    android:paddingEnd="@dimen/item_horizontal_padding" >
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:gravity="center"
                         android:text="@string/wtf"
-                        android:textColor="?android:attr/textColorPrimary"
                         android:textAllCaps="true"
-                        android:gravity="center" />
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="@dimen/font_size_14" />
 
                     <TextView
                         android:id="@+id/wtf"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:gravity="center"
                         android:text="@string/lorem_ipsum"
                         android:textColor="?android:attr/textColorPrimary"
-                        android:gravity="center" />
+                        android:textSize="@dimen/font_size_14" />
 
                 </LinearLayout>
 
@@ -172,13 +180,14 @@
                         android:id="@+id/log_container"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:paddingBottom="6dp"
-                        android:paddingEnd="12dp"
-                        android:paddingStart="12dp"
-                        android:paddingTop="6dp"
+                        android:paddingTop="@dimen/item_vertical_padding"
+                        android:paddingBottom="@dimen/item_vertical_padding"
+                        android:paddingStart="@dimen/item_horizontal_padding"
+                        android:paddingEnd="@dimen/item_horizontal_padding"
                         android:text="@string/lorem_ipsum"
                         android:textColor="?android:attr/textColorSecondary"
-                        android:textIsSelectable="true" />
+                        android:textIsSelectable="true"
+                        android:textSize="@dimen/font_size_14" />
 
                 </FrameLayout>
 

@@ -8,39 +8,40 @@
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
+        android:paddingTop="@dimen/item_vertical_padding"
+        android:paddingBottom="@dimen/item_vertical_padding"
+        android:paddingStart="@dimen/item_horizontal_padding"
+        android:paddingEnd="@dimen/item_horizontal_padding"
         android:background="?attr/colorBackgroundSection"
         android:id="@+id/room101_header_bar">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/add_request"
-            android:layout_weight="10"
             android:layout_gravity="center_vertical"
+            android:layout_weight="10"
+            android:text="@string/add_request"
             android:textColor="?android:attr/textColorPrimary"
-            android:textSize="16sp" />
+            android:textSize="@dimen/font_size_16" />
 
         <ImageView
-            android:layout_height="24dp"
-            app:srcCompat="@drawable/ic_close"
-            android:layout_weight="1"
-            android:layout_width="24dp"
             android:id="@+id/room101_close_add_request"
-            android:contentDescription="@string/close" />
+            android:layout_width="@dimen/room101_deny_button"
+            android:layout_height="@dimen/room101_deny_button"
+            android:layout_weight="1"
+            android:padding="@dimen/room101_deny_button_padding"
+            app:srcCompat="@drawable/ic_close"
+            android:contentDescription="@string/close"
+            android:background="?attr/selectableItemBackground" />
 
     </LinearLayout>
 
     <View
+        android:id="@+id/room101_separator_header"
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="?attr/colorSeparator"
-        android:id="@+id/room101_separator_header"
         android:layout_below="@+id/room101_header_bar"/>
-
 
     <ScrollView
         android:layout_width="match_parent"
@@ -52,22 +53,21 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:id="@+id/room101_add_request_container" >
+            android:id="@+id/room101_add_request_container" />
 
-        </LinearLayout>
     </ScrollView>
 
     <View
+        android:id="@+id/room101_separator_nav"
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="?attr/colorSeparator"
-        android:id="@+id/room101_separator_nav"
         android:layout_above="@+id/room101_nav_bar"/>
 
     <RelativeLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="40dp"
+        android:layout_height="@dimen/bottom_extra_bar_height"
         android:background="?attr/colorBackgroundSection"
         android:id="@+id/room101_nav_bar"
         android:layout_alignParentBottom="true"
@@ -81,24 +81,25 @@
             android:layout_alignParentTop="true"
             android:layout_alignParentStart="true"
             android:paddingStart="0dp"
-            android:paddingEnd="10dp">
+            android:paddingEnd="@dimen/room101_add_nav_bar_padding">
 
             <ImageView
                 android:layout_height="match_parent"
                 app:srcCompat="@drawable/ic_chevron_left"
                 android:layout_weight="1"
-                android:layout_width="40dp"
+                android:layout_width="@dimen/bottom_extra_bar_height"
                 android:contentDescription="@string/back" />
 
             <TextView
-                android:text="@string/lorem_ipsum"
+                android:id="@+id/room101_back_text"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:gravity="center"
+                android:text="@string/lorem_ipsum"
                 android:textAllCaps="true"
                 android:textColor="?android:attr/textColorPrimary"
-                android:id="@+id/room101_back_text" />
+                android:textSize="@dimen/font_size_14" />
 
         </LinearLayout>
 
@@ -110,8 +111,8 @@
             android:layout_alignParentTop="true"
             android:layout_toEndOf="@+id/room101_back"
             android:layout_toStartOf="@+id/room101_forward"
-            android:paddingLeft="10dp"
-            android:paddingRight="10dp"
+            android:paddingStart="@dimen/room101_add_nav_bar_padding"
+            android:paddingEnd="@dimen/room101_add_nav_bar_padding"
             android:indeterminate="false"
             android:max="100"/>
 
@@ -123,23 +124,24 @@
             android:layout_alignParentEnd="true"
             android:layout_width="wrap_content"
             android:paddingEnd="0dp"
-            android:paddingStart="10dp">
+            android:paddingStart="@dimen/room101_add_nav_bar_padding">
 
             <TextView
-                android:text="@string/lorem_ipsum"
+                android:id="@+id/room101_forward_text"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:gravity="center"
+                android:text="@string/lorem_ipsum"
                 android:textAllCaps="true"
                 android:textColor="?android:attr/textColorPrimary"
-                android:id="@+id/room101_forward_text" />
+                android:textSize="@dimen/font_size_14" />
 
             <ImageView
                 android:layout_height="match_parent"
                 app:srcCompat="@drawable/ic_chevron_right"
                 android:layout_weight="1"
-                android:layout_width="40dp"
+                android:layout_width="@dimen/bottom_extra_bar_height"
                 android:contentDescription="@string/forward" />
 
         </LinearLayout>

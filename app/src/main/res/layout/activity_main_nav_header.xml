@@ -12,18 +12,27 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     android:theme="@style/ThemeOverlay.AppCompat.Dark">
 
-    <ImageView
+    <FrameLayout
+        android:id="@+id/user_icon"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:contentDescription="@string/cdo"
-        app:srcCompat="?attr/ic_cdo_small" />
+        android:background="@drawable/shape_user_icon">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/cdo"
+            app:srcCompat="?attr/ic_cdo_small" />
+
+    </FrameLayout>
 
     <TextView
         android:id="@+id/user_name"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:text="@string/lorem_ipsum"
-        android:textColor="@color/textColorHeader" />
+        android:textColor="@color/textColorHeader"
+        android:textSize="@dimen/font_size_14" />
 
     <TextView
         android:id="@+id/user_group"
@@ -31,6 +40,6 @@
         android:layout_height="0dp"
         android:text="@string/lorem_ipsum"
         android:textColor="@color/textColorHeader"
-        android:textSize="12sp" />
+        android:textSize="@dimen/font_size_12" />
 
 </LinearLayout>

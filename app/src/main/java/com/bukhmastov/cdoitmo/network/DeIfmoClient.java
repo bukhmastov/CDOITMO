@@ -1,13 +1,18 @@
 package com.bukhmastov.cdoitmo.network;
 
 import android.content.Context;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 
 import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoClientResponseHandler;
+import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoDrawableClientResponseHandler;
 import com.bukhmastov.cdoitmo.parse.UserDataParse;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 import com.loopj.android.http.AsyncHttpResponseHandler;
+import com.loopj.android.http.BinaryHttpResponseHandler;
 import com.loopj.android.http.RequestHandle;
 import com.loopj.android.http.RequestParams;
 
@@ -72,6 +77,7 @@ public class DeIfmoClient extends Client {
                                     Log.v(TAG, "check | success | parsed");
                                     Storage.file.perm.put(context, "user#name", result.get("name"));
                                     Storage.file.perm.put(context, "user#group", result.get("group"));
+                                    Storage.file.perm.put(context, "user#avatar", result.get("avatar"));
                                     try {
                                         JSONObject jsonObject = new JSONObject();
                                         jsonObject.put("timestamp", Calendar.getInstance().getTimeInMillis());
@@ -93,8 +99,8 @@ public class DeIfmoClient extends Client {
                     public void onProgress(int state) {}
                     @Override
                     public void onFailure(int state) {
-                        Log.v(TAG, "check | failed");
-                        responseHandler.onFailure(FAILED_TRY_AGAIN);
+                        Log.v(TAG, "check | failed | state = " + state);
+                        responseHandler.onFailure(state);
                     }
                     @Override
                     public void onNewHandle(RequestHandle requestHandle) {
@@ -349,6 +355,62 @@ public class DeIfmoClient extends Client {
             }));
         } else {
             Log.v(TAG, "post | offline");
+            responseHandler.onFailure(FAILED_OFFLINE);
+        }
+    }
+    public static void getAvatar(final Context context, final String url, final DeIfmoDrawableClientResponseHandler responseHandler){
+        getAvatar(context, Protocol.HTTPS, url, responseHandler);
+    }
+    public static void getAvatar(final Context context, final Protocol protocol, final String url, final DeIfmoDrawableClientResponseHandler responseHandler){
+        Log.v(TAG, "getAvatar | url=" + url);
+        init();
+        if (Static.isOnline(context)) {
+            if (checkJsessionId(context)) {
+                authorize(context, new DeIfmoClientResponseHandler() {
+                    @Override
+                    public void onSuccess(int statusCode, String response) {
+                        getAvatar(context, url, responseHandler);
+                    }
+                    @Override
+                    public void onProgress(int state) {
+                        responseHandler.onProgress(state);
+                    }
+                    @Override
+                    public void onFailure(int state) {
+                        responseHandler.onFailure(state);
+                    }
+                    @Override
+                    public void onNewHandle(RequestHandle requestHandle) {
+                        responseHandler.onNewHandle(requestHandle);
+                    }
+                });
+                return;
+            }
+            responseHandler.onProgress(STATE_HANDLING);
+            renewCookie(context);
+            String[] allowed = {"image/jpeg;charset=Windows-1251"};
+            responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(protocol, url), null, new BinaryHttpResponseHandler(allowed) {
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, byte[] binaryData) {
+                    Log.v(TAG, "getAvatar | url=" + url + " | success | statusCode=" + statusCode);
+                    responseHandler.onNewHandle(null);
+                    try {
+                        Drawable drawable = new BitmapDrawable(context.getResources(), BitmapFactory.decodeByteArray(binaryData, 0, binaryData.length));
+                        responseHandler.onSuccess(statusCode, drawable);
+                    } catch (Exception e) {
+                        Static.error(e);
+                        responseHandler.onFailure(FAILED_TRY_AGAIN);
+                    }
+                }
+                @Override
+                public void onFailure(int statusCode, Header[] headers, byte[] binaryData, Throwable throwable) {
+                    Log.v(TAG, "getAvatar | url=" + url + " | failure | statusCode=" + statusCode + (throwable != null ? " | throwable=" + throwable.getMessage() : ""));
+                    responseHandler.onNewHandle(null);
+                    responseHandler.onFailure(FAILED_TRY_AGAIN);
+                }
+            }));
+        } else {
+            Log.v(TAG, "getAvatar | offline");
             responseHandler.onFailure(FAILED_OFFLINE);
         }
     }

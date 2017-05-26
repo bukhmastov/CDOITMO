@@ -5,7 +5,7 @@
     android:id="@+id/activity_login"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.bukhmastov.cdoitmo.activities.LoginActivity">
+    tools:activity="com.bukhmastov.cdoitmo.activities.LoginActivity">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar_login"
@@ -35,9 +35,10 @@
 
     </FrameLayout>
 
-    <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_gravity="center_horizontal" >
 
         <LinearLayout
             android:id="@+id/login_content"

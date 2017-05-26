@@ -3,7 +3,7 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.bukhmastov.cdoitmo.fragments.ERegisterFragment"
+    tools:activity="com.bukhmastov.cdoitmo.fragments.ERegisterFragment"
     android:id="@+id/container_eregister">
 
 

@@ -14,10 +14,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp" >
+        android:paddingStart="@dimen/item_horizontal_padding"
+        android:paddingEnd="@dimen/item_horizontal_padding"
+        android:paddingTop="@dimen/item_vertical_padding"
+        android:paddingBottom="@dimen/item_vertical_padding" >
 
         <TextView
             android:id="@+id/lv_protocol_name"
@@ -27,7 +27,7 @@
             android:minHeight="32dp"
             android:text="@string/lorem_ipsum"
             android:textColor="?android:attr/textColorPrimary"
-            android:textSize="16sp"
+            android:textSize="@dimen/font_size_16"
             android:textStyle="bold" />
 
     </LinearLayout>

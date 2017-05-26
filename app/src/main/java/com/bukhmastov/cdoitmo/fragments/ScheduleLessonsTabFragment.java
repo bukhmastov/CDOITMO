@@ -17,6 +17,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.adapters.PagerAdapter;
 import com.bukhmastov.cdoitmo.builders.ScheduleLessonsBuilder;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
@@ -148,7 +149,7 @@ public class ScheduleLessonsTabFragment extends Fragment {
             }
             // отображаем расписание
             final ViewGroup schedule_lessons_content = (ViewGroup) fragment_schedule_lessons.findViewById(R.id.schedule_lessons_content);
-            (new ScheduleLessonsBuilder(getActivity(), TYPE, new ScheduleLessonsBuilder.response(){
+            (new ScheduleLessonsBuilder(PagerAdapter.activity, TYPE, new ScheduleLessonsBuilder.response(){
                 public void state(final int state, final View layout){
                     try {
                         getActivity().runOnUiThread(new Runnable() {

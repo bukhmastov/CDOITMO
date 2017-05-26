@@ -2,55 +2,53 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin" >
-
-    <TextView
-        android:text="@string/lorem_ipsum"
-        android:id="@+id/lv_point_value"
-        android:textAppearance="@style/TextAppearance.AppCompat.Button"
-        android:textSize="18sp"
-        android:layout_width="50dp"
-        android:gravity="center"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        android:layout_height="60dp" />
+    android:paddingStart="@dimen/item_horizontal_padding"
+    android:paddingEnd="@dimen/item_horizontal_padding"
+    android:paddingTop="@dimen/item_vertical_padding"
+    android:paddingBottom="@dimen/item_vertical_padding" >
 
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true"
-        android:layout_toStartOf="@+id/lv_point_value">
-
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="12dp" />
+        android:minHeight="55dp"
+        android:layout_toStartOf="@+id/sp_value_container"
+        android:gravity="center" >
 
         <TextView
-            android:text="@string/lorem_ipsum"
-            android:layout_width="match_parent"
             android:id="@+id/lv_subject_name"
-            android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-            android:textSize="16sp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:textColor="?android:attr/textColorPrimary" />
+            android:text="@string/lorem_ipsum"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="@dimen/font_size_16" />
 
         <TextView
-            android:text="@string/lorem_ipsum"
-            android:layout_width="match_parent"
             android:id="@+id/lv_subject_sem"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:textColor="?android:attr/textColorSecondary" />
-
-        <Space
             android:layout_width="match_parent"
-            android:layout_height="12dp" />
+            android:layout_height="wrap_content"
+            android:text="@string/lorem_ipsum"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="@dimen/font_size_14" />
 
     </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/sp_value_container"
+        android:layout_width="60dp"
+        android:layout_height="55dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true">
+
+        <TextView
+            android:id="@+id/lv_point_value"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="@string/lorem_ipsum"
+            android:textAppearance="@style/TextAppearance.AppCompat.Button"
+            android:textSize="@dimen/font_size_18" />
+
+    </FrameLayout>
 
 </RelativeLayout>

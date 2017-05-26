@@ -11,7 +11,7 @@
         android:ems="10"
         android:inputType="textPersonName"
         android:textColor="?android:attr/textColorPrimary"
-        android:textSize="14sp" />
+        android:textSize="@dimen/font_size_14" />
 
     <FrameLayout
         android:id="@+id/shortcut_creator_result"

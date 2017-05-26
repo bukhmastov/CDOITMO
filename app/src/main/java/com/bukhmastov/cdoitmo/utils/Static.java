@@ -8,12 +8,19 @@ import android.content.pm.PackageInfo;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
+import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.util.TypedValue;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.activities.LogActivity;
 import com.bukhmastov.cdoitmo.activities.MainActivity;
 import com.bukhmastov.cdoitmo.activities.SplashActivity;
 import com.bukhmastov.cdoitmo.converters.ProtocolConverter;
@@ -50,29 +57,42 @@ public class Static {
     public static ProtocolTracker protocolTracker = null;
     public static boolean darkTheme = false;
     public static int intentFlagRestart = 268468224;
+    public static boolean tablet = false;
     private static final String USER_AGENT_TEMPLATE = "CDOITMO/{versionName}/{versionCode} Java/Android/{sdkInt}";
     private static String USER_AGENT = null;
+    private static Activity activity = null;
 
-    public static void init(Context context) {
+    public static void init(Activity activity) {
         Log.i(TAG, "init");
+        Static.activity = activity;
         try {
-            PackageInfo pInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
+            PackageInfo pInfo = activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0);
             Static.versionName = pInfo.versionName;
             Static.versionCode = pInfo.versionCode;
             typedValue = new TypedValue();
-            textColorPrimary = resolveColor(context, android.R.attr.textColorPrimary);
-            textColorSecondary = resolveColor(context, android.R.attr.textColorSecondary);
-            colorSeparator = resolveColor(context, R.attr.colorSeparator);
-            colorBackgroundSnackBar = resolveColor(context, R.attr.colorBackgroundSnackBar);
-            colorAccent = resolveColor(context, R.attr.colorAccent);
-            colorBackgroundRefresh = resolveColor(context, R.attr.colorBackgroundRefresh);
-            destiny = context.getResources().getDisplayMetrics().density;
+            textColorPrimary = resolveColor(activity, android.R.attr.textColorPrimary);
+            textColorSecondary = resolveColor(activity, android.R.attr.textColorSecondary);
+            colorSeparator = resolveColor(activity, R.attr.colorSeparator);
+            colorBackgroundSnackBar = resolveColor(activity, R.attr.colorBackgroundSnackBar);
+            colorAccent = resolveColor(activity, R.attr.colorAccent);
+            colorBackgroundRefresh = resolveColor(activity, R.attr.colorBackgroundRefresh);
+            destiny = activity.getResources().getDisplayMetrics().density;
         } catch (Exception e) {
             Static.error(e);
         }
     }
     public static void error(Throwable throwable){
         Log.exception(throwable);
+        if (Static.activity != null) {
+            snackBar(Static.activity, Static.activity.getString(R.string.error_occurred_while_runtime), Static.activity.getString(R.string.open_log), new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (Static.activity != null) {
+                        Static.activity.startActivity(new Intent(Static.activity, LogActivity.class));
+                    }
+                }
+            });
+        }
     }
     public static boolean isOnline(Context context) {
         Log.v(TAG, "isOnline");
@@ -141,8 +161,10 @@ public class Static {
             activity.setRequestedOrientation(lock ? ActivityInfo.SCREEN_ORIENTATION_LOCKED : ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
         }
     }
+    public static void showUpdateTime(Activity activity, long time, boolean show_now){
+        showUpdateTime(activity, time, android.R.id.content, show_now);
+    }
     public static void showUpdateTime(Activity activity, long time, int layoutId, boolean show_now){
-        Log.v(TAG, "showUpdateTime | time=" + time);
         if (activity == null) return;
         String message = getUpdateTime(activity, time);
         int shift = (int) ((Calendar.getInstance().getTimeInMillis() - time) / 1000L);
@@ -151,7 +173,6 @@ public class Static {
         }
     }
     public static String getUpdateTime(Activity activity, long time) {
-        Log.v(TAG, "getUpdateTime | time=" + time);
         int shift = (int) ((Calendar.getInstance().getTimeInMillis() - time) / 1000L);
         String message;
         if (shift < 21600) {
@@ -239,6 +260,9 @@ public class Static {
     }
     public static void snackBar(View layout, String text){
         snackBar(layout, text, null, null);
+    }
+    public static void snackBar(Activity activity, String text, String action, View.OnClickListener onClickListener){
+        Static.snackBar(activity.findViewById(android.R.id.content), text, action, onClickListener);
     }
     public static void snackBar(View layout, String text, String action, View.OnClickListener onClickListener){
         if (layout != null) {
@@ -350,6 +374,112 @@ public class Static {
                 sb.append(cyr2lat(ch));
             }
             return sb.toString();
+        }
+    }
+    public static class NavigationMenu {
+        private static RequestHandle navRequestHandle = null;
+        public static void displayEnableDisableOfflineButton(NavigationView navigationView){
+            if (navigationView != null) {
+                try {
+                    Menu menu = navigationView.getMenu();
+                    MenuItem nav_enable_offline_mode = menu.findItem(R.id.nav_enable_offline_mode);
+                    MenuItem nav_disable_offline_mode = menu.findItem(R.id.nav_disable_offline_mode);
+                    if (Static.OFFLINE_MODE) {
+                        nav_enable_offline_mode.setVisible(false);
+                        nav_disable_offline_mode.setVisible(true);
+                    } else {
+                        nav_enable_offline_mode.setVisible(true);
+                        nav_disable_offline_mode.setVisible(false);
+                    }
+                } catch (Exception e) {
+                    Static.error(e);
+                }
+            }
+        }
+        public static void displayUserData(Context context, NavigationView navigationView){
+            displayUserData(navigationView, R.id.user_name, Storage.file.perm.get(context, "user#name"));
+            displayUserData(navigationView, R.id.user_group, Storage.file.perm.get(context, "user#group"));
+        }
+        public static void displayUserData(NavigationView navigationView, int id, String text){
+            if (navigationView == null) return;
+            View activity_main_nav_header = navigationView.getHeaderView(0);
+            if (activity_main_nav_header == null) return;
+            TextView textView = (TextView) activity_main_nav_header.findViewById(id);
+            if (textView != null) {
+                if (!text.isEmpty()) {
+                    textView.setText(text);
+                    textView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                } else {
+                    textView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0));
+                }
+            }
+        }
+        public static void displayUserAvatar(final Context context, final NavigationView navigationView){
+            /*if (navigationView == null) return;
+            String url = Storage.file.perm.get(context, "user#avatar").trim();
+            if (!url.isEmpty() && !url.contains("distributedCDE?Rule=GETATTACH&ATT_ID=1941771")) {
+                if (navRequestHandle != null) {
+                    navRequestHandle.cancel(true);
+                    navRequestHandle = null;
+                }
+                DeIfmoClient.getAvatar(context, url, new DeIfmoDrawableClientResponseHandler() {
+                    @Override
+                    public void onSuccess(int statusCode, Drawable drawable) {
+                        try {
+                            FrameLayout frameLayout = (FrameLayout) navigationView.findViewById(R.id.user_icon);
+                            if (frameLayout != null) {
+                                ImageView imageView = (ImageView) frameLayout.getChildAt(0);
+                                if (imageView != null) {
+                                    imageView.setImageDrawable(drawable);
+                                }
+                            }
+                        } catch (Exception e) {
+                            Static.error(e);
+                        }
+                    }
+                    @Override
+                    public void onProgress(int state) {}
+                    @Override
+                    public void onFailure(int state) {}
+                    @Override
+                    public void onNewHandle(RequestHandle requestHandle) {
+                        navRequestHandle = requestHandle;
+                    }
+                });
+            } else {
+                try {
+                    FrameLayout frameLayout = (FrameLayout) navigationView.findViewById(R.id.user_icon);
+                    if (frameLayout != null) {
+                        ImageView imageView = (ImageView) frameLayout.getChildAt(0);
+                        if (imageView != null) {
+                            TypedArray a = context.getTheme().obtainStyledAttributes(R.style.AppTheme, new int[] {R.attr.ic_cdo_small});
+                            Drawable drawable = context.getResources().getDrawable(a.getResourceId(0, 0), context.getTheme());
+                            a.recycle();
+                            imageView.setImageDrawable(drawable);
+                        }
+                    }
+                } catch (Exception e) {
+                    Static.error(e);
+                }
+            }*/
+        }
+        public static void snackbarOffline(Activity activity){
+            if (Static.OFFLINE_MODE) {
+                Static.snackBar(activity, activity.getString(R.string.offline_mode_on));
+            }
+        }
+        public static void drawOffline(Menu menu){
+            if (menu != null) {
+                if (Static.OFFLINE_MODE) {
+                    for (int i = 0; i < menu.size(); i++) {
+                        menu.getItem(i).setVisible(false);
+                    }
+                }
+                MenuItem menuItem = menu.findItem(R.id.offline_mode);
+                if (menuItem != null) {
+                    menuItem.setVisible(Static.OFFLINE_MODE);
+                }
+            }
         }
     }
 

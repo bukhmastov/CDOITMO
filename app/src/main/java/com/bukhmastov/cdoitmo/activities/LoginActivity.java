@@ -254,13 +254,25 @@ public class LoginActivity extends AppCompatActivity {
                 public void onFailure(int state) {
                     Log.v(TAG, "auth | check | failure " + state);
                     switch (state) {
-                        case DeIfmoClient.FAILED_OFFLINE: route(SIGNAL_GO_OFFLINE); return;
+                        case DeIfmoClient.FAILED_OFFLINE:
+                            route(SIGNAL_GO_OFFLINE);
+                            break;
                         case DeIfmoClient.FAILED_TRY_AGAIN:
-                        case DeIfmoClient.FAILED_AUTH_TRY_AGAIN: snackBar(getString(R.string.auth_failed)); break;
-                        case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED: snackBar(getString(R.string.required_login_password)); break;
-                        case DeIfmoClient.FAILED_AUTH_CREDENTIALS_FAILED: snackBar(getString(R.string.invalid_login_password)); break;
+                        case DeIfmoClient.FAILED_AUTH_TRY_AGAIN:
+                            snackBar(getString(R.string.auth_failed));
+                            route(SIGNAL_CHANGE_ACCOUNT);
+                            break;
+                        case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
+                            snackBar(getString(R.string.required_login_password));
+                            logoutDone(login, false);
+                            route(SIGNAL_CHANGE_ACCOUNT);
+                            break;
+                        case DeIfmoClient.FAILED_AUTH_CREDENTIALS_FAILED:
+                            snackBar(getString(R.string.invalid_login_password));
+                            logoutDone(login, false);
+                            route(SIGNAL_CHANGE_ACCOUNT);
+                            break;
                     }
-                    logoutDone(login, false);
                 }
                 @Override
                 public void onNewHandle(RequestHandle requestHandle) {

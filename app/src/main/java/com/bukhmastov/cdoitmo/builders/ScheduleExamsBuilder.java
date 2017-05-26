@@ -7,7 +7,6 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -30,7 +29,6 @@ public class ScheduleExamsBuilder extends Thread {
     }
     private response delegate = null;
     private Activity activity;
-    private float destiny;
 
     public static final int STATE_FAILED = 0;
     public static final int STATE_LOADING = 1;
@@ -39,14 +37,12 @@ public class ScheduleExamsBuilder extends Thread {
     public ScheduleExamsBuilder(Activity activity, ScheduleExamsBuilder.response delegate){
         this.activity = activity;
         this.delegate = delegate;
-        this.destiny = activity.getResources().getDisplayMetrics().density;
     }
     public void run(){
         Log.v(TAG, "started");
-        LinearLayout container = new LinearLayout(activity);
-        container.setOrientation(LinearLayout.VERTICAL);
-        container.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
         try {
+            LinearLayout schedule_layout = (LinearLayout) inflate(R.layout.layout_schedule);
+            LinearLayout container = (LinearLayout) schedule_layout.findViewById(R.id.lessons_container);
             delegate.state(STATE_LOADING, inflate(R.layout.state_loading_compact));
             JSONArray schedule = ScheduleExamsFragment.schedule.getJSONArray("schedule");
             String type = ScheduleExamsFragment.schedule.getString("type");
@@ -127,24 +123,20 @@ public class ScheduleExamsBuilder extends Thread {
                 }
                 container.addView(examsLayout);
             }
+            FrameLayout lessons_update_time_container = (FrameLayout) schedule_layout.findViewById(R.id.lessons_update_time_container);
             if (schedule.length() == 0) {
                 Log.v(TAG, "schedule.length() == 0");
+                schedule_layout.removeView(lessons_update_time_container);
                 View view = inflate(R.layout.nothing_to_display);
                 ((TextView) view.findViewById(R.id.ntd_text)).setText(activity.getString(R.string.no_exams));
                 container.addView(view);
             } else {
-                TextView textView = new TextView(activity);
-                textView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                textView.setPadding((int) (16 * destiny), (int) (10 * destiny), (int) (16 * destiny), 0);
-                textView.setTextColor(Static.textColorSecondary);
-                textView.setTextSize(13);
-                textView.setText(activity.getString(R.string.update_date) + " " + Static.getUpdateTime(activity, ScheduleExamsFragment.schedule.getLong("timestamp")));
-                container.addView(textView);
+                ((TextView) lessons_update_time_container.findViewById(R.id.lessons_update_time)).setText(activity.getString(R.string.update_date) + " " + Static.getUpdateTime(activity, ScheduleExamsFragment.schedule.getLong("timestamp")));
             }
-            delegate.state(STATE_DONE, container);
+            delegate.state(STATE_DONE, schedule_layout);
         } catch (Exception e) {
             Static.error(e);
-            delegate.state(STATE_FAILED, container);
+            delegate.state(STATE_FAILED, new LinearLayout(activity));
         }
         Log.v(TAG, "finished");
     }

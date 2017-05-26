@@ -4,17 +4,17 @@
     android:layout_height="match_parent">
 
     <TextView
-        android:text="@string/lorem_ipsum"
+        android:id="@+id/teacher_picker_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/teacher_picker_header"
+        android:background="?attr/colorBackgroundSection"
+        android:paddingBottom="@dimen/item_vertical_padding"
+        android:paddingEnd="@dimen/item_horizontal_padding"
+        android:paddingStart="@dimen/item_horizontal_padding"
+        android:paddingTop="@dimen/item_vertical_padding"
+        android:text="@string/lorem_ipsum"
         android:textColor="?android:attr/textColorPrimary"
-        android:textSize="16sp"
-        android:paddingRight="14dp"
-        android:paddingLeft="14dp"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp"
-        android:background="?attr/colorBackgroundSection" />
+        android:textSize="@dimen/font_size_16" />
 
     <View
         android:layout_width="match_parent"

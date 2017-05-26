@@ -38,6 +38,7 @@ import com.bukhmastov.cdoitmo.utils.Storage;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Field;
 import java.util.List;
 
 public class SettingsActivity extends AppCompatPreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
@@ -46,7 +47,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        if (Static.darkTheme) setTheme(R.style.AppTheme_Dark);
+        if (Static.darkTheme) setTheme(R.style.AppTheme_Settings_Dark);
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
     }
@@ -149,6 +150,18 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void onBuildHeaders(List<Header> target) {
         loadHeadersFromResource(R.xml.pref_headers, target);
+        if (onIsMultiPane()) {
+            View breadcrumb = findViewById(android.R.id.title);
+            if (breadcrumb != null) {
+                try {
+                    Field titleColor = breadcrumb.getClass().getDeclaredField("mTextColor");
+                    titleColor.setAccessible(true);
+                    titleColor.setInt(breadcrumb, Static.colorAccent);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     public static abstract class TemplatePreferenceFragment extends PreferenceFragment {

@@ -4,7 +4,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:clipToPadding="false"
-    android:padding="8dp"
+    android:padding="@dimen/item_padding_half"
     android:focusable="true"
     android:focusableInTouchMode="true" >
 
@@ -24,7 +24,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="@dimen/item_padding">
 
                 <TextView
                     android:id="@+id/name"
@@ -32,7 +32,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/lorem_ipsum"
                     android:textColor="?android:attr/textColorPrimary"
-                    android:textSize="16sp" />
+                    android:textSize="@dimen/font_size_16" />
 
                 <TextView
                     android:id="@+id/desc"
@@ -40,7 +40,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/lorem_ipsum"
                     android:textColor="?android:attr/textColorSecondary"
-                    android:textSize="14sp" />
+                    android:textSize="@dimen/font_size_14" />
 
             </LinearLayout>
 
@@ -54,7 +54,7 @@
                 android:layout_height="match_parent"
                 android:orientation="horizontal"
                 android:gravity="end"
-                android:padding="4dp">
+                android:padding="@dimen/item_padding_quarter">
 
                 <Button
                     android:id="@+id/logout"
@@ -62,8 +62,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="0dp"
-                    android:layout_marginStart="4dp"
-                    android:text="@string/logout" />
+                    android:layout_marginStart="@dimen/item_padding_quarter"
+                    android:text="@string/logout"
+                    android:textSize="@dimen/font_size_14" />
 
                 <Button
                     android:id="@+id/auth"
@@ -71,8 +72,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="0dp"
-                    android:layout_marginStart="4dp"
-                    android:text="@string/enter" />
+                    android:layout_marginStart="@dimen/item_padding_quarter"
+                    android:text="@string/enter"
+                    android:textSize="@dimen/font_size_14" />
 
             </LinearLayout>
 

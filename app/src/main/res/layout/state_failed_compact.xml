@@ -19,10 +19,13 @@
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:layout_gravity="center_horizontal"
+        android:fontFamily="@string/font_bold"
         android:gravity="center_vertical"
         android:paddingEnd="0dp"
         android:paddingStart="10dp"
         android:text="@string/load_failed"
-        android:textAppearance="@style/TextAppearance.AppCompat.Button" />
+        android:textAllCaps="true"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="@dimen/font_size_14" />
 
 </LinearLayout>

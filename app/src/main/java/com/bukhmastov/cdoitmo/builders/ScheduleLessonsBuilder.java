@@ -1,11 +1,11 @@
 package com.bukhmastov.cdoitmo.builders;
 
-import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.support.v7.widget.PopupMenu;
+import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -16,6 +16,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.activities.ConnectedActivity;
 import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
 import com.bukhmastov.cdoitmo.utils.Log;
@@ -35,7 +36,7 @@ public class ScheduleLessonsBuilder extends Thread {
         void state(int state, View layout);
     }
     private response delegate = null;
-    private Activity activity;
+    private ConnectedActivity activity;
     private int type;
     private float destiny;
     private int colorScheduleFlagTEXT = -1, colorScheduleFlagCommonBG = -1, colorScheduleFlagPracticeBG = -1, colorScheduleFlagLectureBG = -1, colorScheduleFlagLabBG = -1;
@@ -44,7 +45,7 @@ public class ScheduleLessonsBuilder extends Thread {
     public static final int STATE_LOADING = 1;
     public static final int STATE_DONE = 2;
 
-    public ScheduleLessonsBuilder(Activity activity, int type, ScheduleLessonsBuilder.response delegate){
+    public ScheduleLessonsBuilder(ConnectedActivity activity, int type, ScheduleLessonsBuilder.response delegate){
         this.activity = activity;
         this.delegate = delegate;
         this.type = type;
@@ -52,10 +53,9 @@ public class ScheduleLessonsBuilder extends Thread {
     }
     public void run(){
         Log.v(TAG, "started");
-        LinearLayout container = new LinearLayout(activity);
-        container.setOrientation(LinearLayout.VERTICAL);
-        container.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
         try {
+            LinearLayout schedule_layout = (LinearLayout) inflate(R.layout.layout_schedule);
+            LinearLayout container = (LinearLayout) schedule_layout.findViewById(R.id.lessons_container);
             delegate.state(STATE_LOADING, inflate(R.layout.state_loading_compact));
             final JSONArray schedule = ScheduleLessonsFragment.schedule.getJSONArray("schedule");
             final String cache_token = ScheduleLessonsFragment.schedule.getString("cache_token");
@@ -212,29 +212,25 @@ public class ScheduleLessonsBuilder extends Thread {
                     daysCount++;
                 }
             }
+            FrameLayout lessons_update_time_container = (FrameLayout) schedule_layout.findViewById(R.id.lessons_update_time_container);
             if (daysCount == 0) {
                 Log.v(TAG, "daysCount == 0");
+                schedule_layout.removeView(lessons_update_time_container);
                 View view = inflate(R.layout.nothing_to_display);
                 ((TextView) view.findViewById(R.id.ntd_text)).setText(activity.getString(R.string.no_lessons));
                 container.addView(view);
             } else {
-                TextView textView = new TextView(activity);
-                textView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                textView.setPadding((int) (16 * destiny), (int) (10 * destiny), (int) (16 * destiny), 0);
-                textView.setTextColor(Static.textColorSecondary);
-                textView.setTextSize(13);
-                textView.setText(activity.getString(R.string.update_date) + " " + Static.getUpdateTime(activity, ScheduleLessonsFragment.schedule.getLong("timestamp")));
-                container.addView(textView);
+                ((TextView) lessons_update_time_container.findViewById(R.id.lessons_update_time)).setText(activity.getString(R.string.update_date) + " " + Static.getUpdateTime(activity, ScheduleLessonsFragment.schedule.getLong("timestamp")));
             }
-            delegate.state(STATE_DONE, container);
+            delegate.state(STATE_DONE, schedule_layout);
         } catch (Exception e){
             Static.error(e);
-            delegate.state(STATE_FAILED, container);
+            delegate.state(STATE_FAILED, new LinearLayout(activity));
         }
         Log.v(TAG, "finished");
     }
 
-    private View inflate(int layout) throws Exception {
+    private View inflate(int layout) throws InflateException {
         return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layout, null);
     }
     private void setDesc(final JSONObject lesson, TextView textView) throws Exception {
