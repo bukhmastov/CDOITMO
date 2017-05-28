@@ -1,9 +1,9 @@
 package com.bukhmastov.cdoitmo.activities;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -43,6 +43,7 @@ public class LoginActivity extends AppCompatActivity {
     public static final int SIGNAL_CREDENTIALS_REQUIRED = 5;
     public static final int SIGNAL_CREDENTIALS_FAILED = 6;
     private RequestHandle loginRequestHandle = null;
+    public static boolean auto_logout = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +57,14 @@ public class LoginActivity extends AppCompatActivity {
             actionBar.setTitle("  " + getString(R.string.title_activity_login));
             actionBar.setLogo(obtainStyledAttributes(new int[] { R.attr.ic_security }).getDrawable(0));
         }
-        route(getIntent().getIntExtra("state", SIGNAL_LOGIN));
+
+        if (LoginActivity.auto_logout) {
+            LoginActivity.auto_logout = false;
+            route(SIGNAL_LOGOUT);
+        } else {
+            route(getIntent().getIntExtra("state", SIGNAL_LOGIN));
+        }
+
     }
 
     @Override
@@ -117,7 +125,7 @@ public class LoginActivity extends AppCompatActivity {
                 Storage.file.perm.delete(this, "user#jsessionid");
                 Static.logoutCurrent(this);
                 Static.authorized = false;
-                snackBar(getString(R.string.required_login_password));
+                Static.snackBar(this, getString(R.string.required_login_password));
                 show();
                 break;
             case SIGNAL_CREDENTIALS_FAILED:
@@ -126,7 +134,7 @@ public class LoginActivity extends AppCompatActivity {
                 Storage.file.perm.delete(this, "user#password");
                 Static.logoutCurrent(this);
                 Static.authorized = false;
-                snackBar(getString(R.string.invalid_login_password));
+                Static.snackBar(this, getString(R.string.invalid_login_password));
                 show();
                 break;
             default:
@@ -202,7 +210,7 @@ public class LoginActivity extends AppCompatActivity {
             }
         } catch (Exception e) {
             Static.error(e);
-            snackBar(getString(R.string.something_went_wrong));
+            Static.snackBar(this, getString(R.string.something_went_wrong));
         }
     }
     private void auth(final String login, String password, String role, final boolean newUser){
@@ -210,9 +218,10 @@ public class LoginActivity extends AppCompatActivity {
         if (!login.isEmpty() && !password.isEmpty()) {
             if (Objects.equals(login, "general")) {
                 Log.w(TAG, "auth | got login=general that does not supported");
-                snackBar(getString(R.string.wrong_login_general));
+                Static.snackBar(this, getString(R.string.wrong_login_general));
                 return;
             }
+            final Activity activity = this;
             Storage.file.general.put(this, "users#current_login", login);
             Storage.file.perm.put(this, "user#login", login);
             Storage.file.perm.put(this, "user#password", password);
@@ -259,16 +268,16 @@ public class LoginActivity extends AppCompatActivity {
                             break;
                         case DeIfmoClient.FAILED_TRY_AGAIN:
                         case DeIfmoClient.FAILED_AUTH_TRY_AGAIN:
-                            snackBar(getString(R.string.auth_failed));
+                            Static.snackBar(activity, getString(R.string.auth_failed));
                             route(SIGNAL_CHANGE_ACCOUNT);
                             break;
                         case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
-                            snackBar(getString(R.string.required_login_password));
+                            Static.snackBar(activity, getString(R.string.required_login_password));
                             logoutDone(login, false);
                             route(SIGNAL_CHANGE_ACCOUNT);
                             break;
                         case DeIfmoClient.FAILED_AUTH_CREDENTIALS_FAILED:
-                            snackBar(getString(R.string.invalid_login_password));
+                            Static.snackBar(activity, getString(R.string.invalid_login_password));
                             logoutDone(login, false);
                             route(SIGNAL_CHANGE_ACCOUNT);
                             break;
@@ -281,7 +290,7 @@ public class LoginActivity extends AppCompatActivity {
             });
         } else {
             Log.v(TAG, "auth | empty fields");
-            snackBar(getString(R.string.fill_fields));
+            Static.snackBar(this, getString(R.string.fill_fields));
         }
     }
     private void authorized(boolean newUser){
@@ -290,13 +299,12 @@ public class LoginActivity extends AppCompatActivity {
         if (!current_login.isEmpty()) {
             accounts.push(this, current_login);
             Static.authorized = true;
-            Static.updateWeek(this);
             Static.protocolTracker = new ProtocolTracker(this);
             if (newUser) Static.protocolChangesTrackSetup(this, 0);
             finish();
         } else {
             Log.w(TAG, "authorized | current_login is empty");
-            snackBar(getString(R.string.something_went_wrong));
+            Static.snackBar(this, getString(R.string.something_went_wrong));
             show();
         }
     }
@@ -336,7 +344,7 @@ public class LoginActivity extends AppCompatActivity {
         accounts.remove(this, login);
         Storage.file.general.put(this, "users#current_login", login);
         Static.logout(this);
-        if (showSnackBar) snackBar(getString(R.string.logged_out));
+        if (showSnackBar) Static.snackBar(this, getString(R.string.logged_out));
         show();
     }
 
@@ -422,16 +430,6 @@ public class LoginActivity extends AppCompatActivity {
             }
         } catch (Exception e){
             Static.error(e);
-        }
-    }
-    private void snackBar(String text){
-        View activity_login = findViewById(R.id.activity_login);
-        if (activity_login != null) {
-            Snackbar snackbar = Snackbar.make(activity_login, text, Snackbar.LENGTH_SHORT);
-            snackbar.getView().setBackgroundColor(Static.colorBackgroundSnackBar);
-            snackbar.show();
-        } else {
-            Log.w(TAG, "activity_login is null");
         }
     }
 

@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
@@ -96,8 +95,9 @@ public class ScheduleLessonsTabFragment extends Fragment {
             }
             TextView schedule_lessons_all_week = (TextView) fragment_schedule_lessons.findViewById(R.id.schedule_lessons_week);
             if (schedule_lessons_all_week != null) {
-                if (Static.week >= 0) {
-                    schedule_lessons_all_week.setText(Static.week + " " + getString(R.string.school_week));
+                int week = Static.getWeek(getContext());
+                if (week >= 0) {
+                    schedule_lessons_all_week.setText(week + " " + getString(R.string.school_week));
                 } else {
                     schedule_lessons_all_week.setText(new SimpleDateFormat("dd.MM.yyyy", Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis())));
                 }
@@ -118,9 +118,9 @@ public class ScheduleLessonsTabFragment extends Fragment {
                             Boolean result = ScheduleLessonsFragment.scheduleLessons.toggleCache();
                             if (result == null) {
                                 Log.w(TAG, "failed to toggle cache");
-                                snackBar(getString(R.string.cache_failed));
+                                Static.snackBar(getActivity(), getString(R.string.cache_failed));
                             } else {
-                                snackBar(result ? getString(R.string.cache_true) : getString(R.string.cache_false));
+                                Static.snackBar(getActivity(), result ? getString(R.string.cache_true) : getString(R.string.cache_false));
                                 if (fragment_schedule_lessons != null) {
                                     FrameLayout schedule_lessons_cache = (FrameLayout) fragment_schedule_lessons.findViewById(R.id.schedule_lessons_cache);
                                     if (schedule_lessons_cache != null) {
@@ -263,19 +263,6 @@ public class ScheduleLessonsTabFragment extends Fragment {
             if (vg != null) {
                 vg.removeAllViews();
                 vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-            }
-        } catch (Exception e){
-            Static.error(e);
-        }
-    }
-    private void snackBar(String text){
-        try {
-            if (fragment_schedule_lessons == null) throw new NullPointerException("ScheduleLessonsTabFragment.fragment_schedule_lessons cannot be null");
-            View content_container = fragment_schedule_lessons.findViewById(R.id.container_schedule_lessons);
-            if (content_container != null) {
-                Snackbar snackbar = Snackbar.make(content_container, text, Snackbar.LENGTH_SHORT);
-                snackbar.getView().setBackgroundColor(Static.colorBackgroundSnackBar);
-                snackbar.show();
             }
         } catch (Exception e){
             Static.error(e);

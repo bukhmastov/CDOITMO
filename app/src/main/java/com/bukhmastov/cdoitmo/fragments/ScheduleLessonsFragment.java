@@ -249,7 +249,8 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
                     if (ScheduleLessonsFragment.tabSelected == -1) {
                         int pref = Integer.parseInt(Storage.pref.get(getContext(), "pref_schedule_lessons_week", "-1"));
                         if (pref == -1) {
-                            tab = schedule_tabs.getTabAt(Static.week >= 0 ? (Static.week % 2) + 1 : 0);
+                            int week = Static.getWeek(getContext());
+                            tab = schedule_tabs.getTabAt(week >= 0 ? (week % 2) + 1 : 0);
                         } else {
                             tab = schedule_tabs.getTabAt(pref);
                         }

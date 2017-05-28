@@ -1,6 +1,5 @@
 package com.bukhmastov.cdoitmo.converters;
 
-import android.content.Context;
 import android.os.AsyncTask;
 
 import com.bukhmastov.cdoitmo.utils.Log;
@@ -18,11 +17,9 @@ public class ScheduleLessonsConverter extends AsyncTask<JSONObject, Void, JSONOb
     public interface response {
         void finish(JSONObject json);
     }
-    private Context context;
     private response delegate = null;
 
-    public ScheduleLessonsConverter(Context context, response delegate){
-        this.context = context;
+    public ScheduleLessonsConverter(response delegate){
         this.delegate = delegate;
     }
 

@@ -29,7 +29,7 @@ public class Log {
             }
             return logList;
         } catch (Throwable t) {
-            android.util.Log.e("Exception", null, t);
+            android.util.Log.e("Log.getRawLog", null, t);
             return null;
         }
     }
@@ -97,7 +97,7 @@ public class Log {
             }
             logList.add(logItem);
         } catch (Throwable t) {
-            android.util.Log.e("Exception", null, t);
+            android.util.Log.e("Log.addLog", null, t);
         }
     }
 

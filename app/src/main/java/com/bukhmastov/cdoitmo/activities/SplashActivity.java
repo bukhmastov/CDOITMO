@@ -47,7 +47,7 @@ public class SplashActivity extends AppCompatActivity {
 
         Static.init(this);
 
-        if (Storage.pref.get(this, "pref_auto_logout", false)) Static.logout(this);
+        LoginActivity.auto_logout = Storage.pref.get(this, "pref_auto_logout", false);
 
         loaded();
     }

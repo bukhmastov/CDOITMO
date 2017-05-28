@@ -373,8 +373,9 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
             slc_title.setText(header);
         }
         if (slc_desc != null) {
-            if (Static.week >= 0) {
-                slc_desc.setText(Static.week + " " + getString(R.string.school_week));
+            int week = Static.getWeek(getContext());
+            if (week >= 0) {
+                slc_desc.setText(week + " " + getString(R.string.school_week));
             } else {
                 slc_desc.setText(new SimpleDateFormat("dd.MM.yyyy", Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis())));
             }

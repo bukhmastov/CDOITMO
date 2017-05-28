@@ -26,7 +26,6 @@
     <string name="semester">семестр</string>
     <string name="update_date">Последнее обновление:</string>
     <string name="year">Год</string>
-    <string name="subject_review">Обзор предмета</string>
     <string name="lorem_ipsum">Lorem ipsum</string>
     <string name="lorem_number">99.99</string>
     <string name="lorem_number_short">99</string>
@@ -307,7 +306,5 @@
     <string name="disable_offline_mode">Выйти из оффлайн режима</string>
     <string name="no_points">Баллов нет</string>
     <string name="top_rating">Топ-рейтинг</string>
-    <string name="error_occurred_while_runtime">В работе приложения произошла ошибка</string>
-    <string name="open_log">Открыть лог</string>
 
 </resources>

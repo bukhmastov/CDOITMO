@@ -20,7 +20,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activities.LogActivity;
 import com.bukhmastov.cdoitmo.activities.MainActivity;
 import com.bukhmastov.cdoitmo.activities.SplashActivity;
 import com.bukhmastov.cdoitmo.converters.ProtocolConverter;
@@ -40,7 +39,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
-import java.util.Objects;
 
 public class Static {
 
@@ -51,7 +49,6 @@ public class Static {
     public static float destiny;
     public static TypedValue typedValue;
     public static boolean OFFLINE_MODE = false;
-    public static int week = -1;
     public static boolean firstLaunch = true;
     public static boolean authorized = false;
     public static ProtocolTracker protocolTracker = null;
@@ -60,11 +57,9 @@ public class Static {
     public static boolean tablet = false;
     private static final String USER_AGENT_TEMPLATE = "CDOITMO/{versionName}/{versionCode} Java/Android/{sdkInt}";
     private static String USER_AGENT = null;
-    private static Activity activity = null;
 
     public static void init(Activity activity) {
         Log.i(TAG, "init");
-        Static.activity = activity;
         try {
             PackageInfo pInfo = activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0);
             Static.versionName = pInfo.versionName;
@@ -83,16 +78,6 @@ public class Static {
     }
     public static void error(Throwable throwable){
         Log.exception(throwable);
-        if (Static.activity != null) {
-            snackBar(Static.activity, Static.activity.getString(R.string.error_occurred_while_runtime), Static.activity.getString(R.string.open_log), new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (Static.activity != null) {
-                        Static.activity.startActivity(new Intent(Static.activity, LogActivity.class));
-                    }
-                }
-            });
-        }
     }
     public static boolean isOnline(Context context) {
         Log.v(TAG, "isOnline");
@@ -123,25 +108,22 @@ public class Static {
         context.getTheme().resolveAttribute(reference, typedValue, true);
         return context.obtainStyledAttributes(typedValue.data, new int[]{reference}).getColor(0, -1);
     }
-    public static void updateWeek(Context context){
-        Log.v(TAG, "updateWeek");
+    public static int getWeek(Context context){
         try {
-            String weekStr = Storage.file.general.get(context, "user#week");
-            if (!Objects.equals(weekStr, "")) {
+            String weekStr = Storage.file.general.get(context, "user#week").trim();
+            if (!weekStr.isEmpty()) {
                 JSONObject jsonObject = new JSONObject(weekStr);
                 int week = jsonObject.getInt("week");
                 if (week >= 0) {
                     Calendar past = Calendar.getInstance();
                     past.setTimeInMillis(jsonObject.getLong("timestamp"));
-                    Static.week = week + (Calendar.getInstance().get(Calendar.WEEK_OF_YEAR) - past.get(Calendar.WEEK_OF_YEAR));
+                    return week + (Calendar.getInstance().get(Calendar.WEEK_OF_YEAR) - past.get(Calendar.WEEK_OF_YEAR));
                 }
-            } else {
-                Log.v(TAG, "updateWeek | general user#week is empty");
             }
         } catch (JSONException e) {
-            Static.error(e);
             Storage.file.general.delete(context, "user#week");
         }
+        return -1;
     }
     public static void logout(Context context){
         Log.i(TAG, "logout");

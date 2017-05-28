@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.Toast;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.DaysRemainingWidgetActivity;
@@ -57,7 +56,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
                     break;
                 }
                 case ACTION_INSTALL_SHORTCUT: {
-                    toast(context, context.getString(R.string.shortcut_created));
+                    Static.toast(context, context.getString(R.string.shortcut_created));
                     break;
                 }
                 default: {
@@ -183,10 +182,6 @@ public class ShortcutReceiver extends BroadcastReceiver {
         } catch (Exception e) {
             Static.error(e);
         }
-    }
-
-    private void toast(Context context, String text){
-        Toast.makeText(context, text, Toast.LENGTH_SHORT).show();
     }
 
 }

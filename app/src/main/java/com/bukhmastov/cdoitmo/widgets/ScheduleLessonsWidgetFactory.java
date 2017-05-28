@@ -9,10 +9,9 @@ import android.widget.RemoteViewsService;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.ScheduleLessonsWidgetConfigureActivity;
-import com.bukhmastov.cdoitmo.utils.Storage;
+import com.bukhmastov.cdoitmo.utils.Static;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Calendar;
@@ -23,7 +22,6 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
     private Context context;
     private int appWidgetId;
     private boolean darkTheme;
-    private int week;
     private String type;
     private JSONArray lessons;
 
@@ -31,9 +29,9 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
         this.context = context;
         this.appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
         try {
-            String settings = ScheduleLessonsWidgetConfigureActivity.getPref(context, appWidgetId, "settings");
+            JSONObject settings = ScheduleLessonsWidgetConfigureActivity.getPrefJson(context, appWidgetId, "settings");
             if (settings == null) throw new NullPointerException("settings cannot be null");
-            this.darkTheme = new JSONObject(settings).getBoolean("darkTheme");
+            this.darkTheme = settings.getBoolean("darkTheme");
         } catch (Exception e) {
             this.darkTheme = true;
         }
@@ -42,20 +40,12 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
     @Override
     public void onCreate() {
         this.lessons = new JSONArray();
-        updateWeek(context);
     }
 
     @Override
     public void onDataSetChanged() {
-        JSONObject content;
         try {
-            String tmp = ScheduleLessonsWidgetConfigureActivity.getPref(context, appWidgetId, "cache_converted");
-            if (tmp == null) throw new NullPointerException("cache is null");
-            content = new JSONObject(tmp);
-        } catch (Exception e) {
-            content = null;
-        }
-        try {
+            JSONObject content = ScheduleLessonsWidgetConfigureActivity.getPrefJson(context, appWidgetId, "cache_converted");
             if (content == null) throw new NullPointerException("content cannot be null");
             try {
                 int dayNumber = 0;
@@ -71,10 +61,9 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
                 JSONArray schedule = content.getJSONArray("schedule");
                 type = content.getString("type");
                 if (schedule == null) throw new NullPointerException("schedule cannot be null");
-                updateWeek(context);
-                int w = week % 2;
+                int week = Static.getWeek(context) % 2;
                 boolean found = false;
-                for (int i = 0; i < schedule.length(); i++){
+                for (int i = 0; i < schedule.length(); i++) {
                     JSONObject day = schedule.getJSONObject(i);
                     if (day.getInt("index") == dayNumber) {
                         JSONArray lessonsArr = day.getJSONArray("lessons");
@@ -82,7 +71,7 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
                         lessons = new JSONArray();
                         for (int j = 0; j < lessonsArr.length(); j++) {
                             JSONObject lessonObj = lessonsArr.getJSONObject(j);
-                            if (w == -1 || (lessonObj.getInt("week") == 2 || lessonObj.getInt("week") == w)) {
+                            if (week == -1 || (lessonObj.getInt("week") == 2 || lessonObj.getInt("week") == week)) {
                                 if (!Objects.equals(lessonObj.getString("cdoitmo_type"), "reduced")) {
                                     lessons.put(lessonObj);
                                 }
@@ -96,11 +85,11 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
                     lessons = new JSONArray();
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                Static.error(e);
                 lessons = new JSONArray();
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Static.error(e);
             this.lessons = new JSONArray();
         }
     }
@@ -118,16 +107,16 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
             remoteViews.setInt(R.id.slw_item_time_end, "setTextColor", textColor);
             remoteViews.setImageViewResource(R.id.slw_item_time_icon, darkTheme ? R.drawable.ic_widget_time : R.drawable.ic_widget_time_dark);
             String title = lesson.getString("subject");
-            String type = lesson.getString("type");
+            String type = lesson.getString("type").trim();
             switch (type) {
                 case "practice": title += " (" + context.getString(R.string.practice) + ")"; break;
                 case "lecture": title += " (" + context.getString(R.string.lecture) + ")"; break;
                 case "lab": title += " (" + context.getString(R.string.lab) + ")"; break;
                 default:
-                    if (!Objects.equals(type, "")) title += " (" + type + ")";
+                    if (!type.isEmpty()) title += " (" + type + ")";
                     break;
             }
-            int week = this.week % 2;
+            int week = Static.getWeek(context) % 2;
             if (week == -1) {
                 switch (lesson.getInt("week")){
                     case 0: title += " (" + context.getString(R.string.tab_even) + ")"; break;
@@ -187,30 +176,8 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
             }
             return remoteViews;
         } catch (Exception e) {
-            e.printStackTrace();
+            Static.error(e);
             return null;
-        }
-    }
-
-    private void updateWeek(Context context){
-        try {
-            String weekStr = Storage.file.general.get(context, "user#week");
-            if(!Objects.equals(weekStr, "")){
-                JSONObject jsonObject = new JSONObject(weekStr);
-                int week = jsonObject.getInt("week");
-                if (week >= 0){
-                    Calendar past = Calendar.getInstance();
-                    past.setTimeInMillis(jsonObject.getLong("timestamp"));
-                    this.week = week + (Calendar.getInstance().get(Calendar.WEEK_OF_YEAR) - past.get(Calendar.WEEK_OF_YEAR));
-                } else {
-                    this.week = -1;
-                }
-            } else {
-                this.week = -1;
-            }
-        } catch (JSONException e) {
-            Storage.file.general.delete(context, "user#week");
-            this.week = -1;
         }
     }
 
@@ -241,4 +208,5 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
 
     @Override
     public void onDestroy() {}
+
 }

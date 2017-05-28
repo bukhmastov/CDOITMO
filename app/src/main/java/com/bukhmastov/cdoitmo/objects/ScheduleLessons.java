@@ -103,7 +103,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                             handler.onFailure(FAILED_LOAD);
                             return;
                         }
-                        new ScheduleLessonsConverter(context, new ScheduleLessonsConverter.response() {
+                        new ScheduleLessonsConverter(new ScheduleLessonsConverter.response() {
                             @Override
                             public void finish(JSONObject json) {
                                 try {
@@ -186,7 +186,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                             handler.onFailure(FAILED_LOAD);
                             return;
                         }
-                        new ScheduleLessonsConverter(context, new ScheduleLessonsConverter.response() {
+                        new ScheduleLessonsConverter(new ScheduleLessonsConverter.response() {
                             @Override
                             public void finish(JSONObject json) {
                                 try {
@@ -269,7 +269,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                             handler.onFailure(FAILED_LOAD);
                             return;
                         }
-                        new ScheduleLessonsConverter(context, new ScheduleLessonsConverter.response() {
+                        new ScheduleLessonsConverter(new ScheduleLessonsConverter.response() {
                             @Override
                             public void finish(JSONObject json) {
                                 try {

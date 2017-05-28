@@ -1,11 +1,11 @@
 package com.bukhmastov.cdoitmo.activities;
 
+import android.app.Activity;
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -24,7 +24,6 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapters.TeacherPickerListView;
@@ -52,7 +51,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
     private String query = null;
     private boolean darkTheme = false;
     private int updateTime = 168;
-    private int textColorPrimary, colorBackgroundSnackBar;
+    private int textColorPrimary;
     private float destiny;
 
     public ScheduleLessonsWidgetConfigureActivity() {
@@ -85,8 +84,6 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
         TypedValue typedValue = new TypedValue();
         getTheme().resolveAttribute(android.R.attr.textColorPrimary, typedValue, true);
         textColorPrimary = obtainStyledAttributes(typedValue.data, new int[]{android.R.attr.textColorPrimary}).getColor(0, -1);
-        getTheme().resolveAttribute(R.attr.colorBackgroundSnackBar, typedValue, true);
-        colorBackgroundSnackBar = obtainStyledAttributes(typedValue.data, new int[]{R.attr.colorBackgroundSnackBar}).getColor(0, -1);
         destiny = getResources().getDisplayMetrics().density;
         EditText slw_input = (EditText) findViewById(R.id.slw_input);
         if (slw_input != null) {
@@ -171,11 +168,12 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
             });
         }
         updateTimeSummary();
+        final Activity activity = this;
         findViewById(R.id.add_button).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Log.v(TAG, "add_button clicked");
                 if (query == null) {
-                    snackBar(getString(R.string.need_to_pick_schedule));
+                    Static.snackBar(activity, getString(R.string.need_to_pick_schedule));
                 } else {
                     try {
                         JSONObject jsonObject = new JSONObject();
@@ -191,7 +189,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
                     } catch (Exception e) {
                         Log.w(TAG, "failed to create widget");
                         Static.error(e);
-                        snackBar(getString(R.string.failed_to_create_widget));
+                        Static.snackBar(activity, getString(R.string.failed_to_create_widget));
                     }
                 }
             }
@@ -219,7 +217,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
             case IfmoRestClient.FAILED_OFFLINE:
             case IfmoRestClient.FAILED_TRY_AGAIN:
             case ScheduleLessons.FAILED_LOAD:
-                toast(getString(R.string.widget_creation_failed));
+                Static.toast(this, getString(R.string.widget_creation_failed));
                 close(RESULT_CANCELED, null);
                 break;
         }
@@ -382,17 +380,6 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
             slw_update_time_summary.setText(summary);
         }
     }
-    private void toast(String text){
-        Toast.makeText(getBaseContext(), text, Toast.LENGTH_SHORT).show();
-    }
-    private void snackBar(String text){
-        View content = findViewById(android.R.id.content);
-        if (content != null) {
-            Snackbar snackbar = Snackbar.make(content, text, Snackbar.LENGTH_SHORT);
-            snackbar.getView().setBackgroundColor(colorBackgroundSnackBar);
-            snackbar.show();
-        }
-    }
     private void close(int result, Intent intent){
         Log.v(TAG, "close | result=" + result);
         if (intent == null){
@@ -406,15 +393,41 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
 
     public static void savePref(Context context, int appWidgetId, String type, String text) {
         Log.v(TAG, "savePref | appWidgetId=" + appWidgetId + " | type=" + type);
+        if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
+            Log.w(TAG, "savePref | prevented due to invalid appwidget id");
+            return;
+        }
         Storage.file.general.put(context, "widget_schedule_lessons#" + appWidgetId + "#" + type, text);
-    }
-    public static String getPref(Context context, int appWidgetId, String type) {
-        Log.v(TAG, "getPref | appWidgetId=" + appWidgetId + " | type=" + type);
-        return Storage.file.general.get(context, "widget_schedule_lessons#" + appWidgetId + "#" + type);
     }
     public static void deletePref(Context context, int appWidgetId, String type) {
         Log.v(TAG, "deletePref | appWidgetId=" + appWidgetId + " | type=" + type);
+        if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
+            Log.w(TAG, "deletePref | prevented due to invalid appwidget id");
+            return;
+        }
         Storage.file.general.delete(context, "widget_schedule_lessons#" + appWidgetId + "#" + type);
+    }
+    public static String getPref(Context context, int appWidgetId, String type) {
+        Log.v(TAG, "getPref | appWidgetId=" + appWidgetId + " | type=" + type);
+        String pref;
+        if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
+            Log.w(TAG, "getPref | prevented due to invalid appwidget id");
+            pref = "";
+        } else {
+            pref = Storage.file.general.get(context, "widget_schedule_lessons#" + appWidgetId + "#" + type).trim();
+        }
+        return pref.isEmpty() ? null : pref;
+    }
+    public static JSONObject getPrefJson(Context context, int appWidgetId, String type) {
+        JSONObject pref;
+        try {
+            String tmp = ScheduleLessonsWidgetConfigureActivity.getPref(context, appWidgetId, type);
+            if (tmp == null) throw new NullPointerException(type + " is null");
+            pref = new JSONObject(tmp);
+        } catch (Exception e) {
+            pref = null;
+        }
+        return pref;
     }
 
 }

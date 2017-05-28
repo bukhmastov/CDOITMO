@@ -18,7 +18,7 @@
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="100dp"
+        android:layout_height="160dp"
         android:background="?attr/colorPrimary"
         android:elevation="4dp">
 
@@ -36,16 +36,16 @@
     </FrameLayout>
 
     <ScrollView
-        android:layout_width="600dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="center_horizontal" >
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
 
         <LinearLayout
             android:id="@+id/login_content"
-            android:layout_width="match_parent"
+            android:layout_width="600dp"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="8dp" />
+            android:layout_gravity="center_horizontal"
+            android:padding="16dp" />
 
     </ScrollView>
 

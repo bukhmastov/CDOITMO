@@ -47,23 +47,10 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     }
 
     public static void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId, boolean force) {
-        Log.i(TAG, "Widget update | appWidgetId=" + appWidgetId);
+        Log.i(TAG, "update | appWidgetId=" + appWidgetId);
         try {
-            JSONObject settings, cache;
-            try {
-                String tmp = ScheduleLessonsWidgetConfigureActivity.getPref(context, appWidgetId, "settings");
-                if (tmp == null) throw new NullPointerException("settings is null");
-                settings = new JSONObject(tmp);
-            } catch (Exception e) {
-                settings = null;
-            }
-            try {
-                String tmp = ScheduleLessonsWidgetConfigureActivity.getPref(context, appWidgetId, "cache");
-                if (tmp == null) throw new NullPointerException("cache is null");
-                cache = new JSONObject(tmp);
-            } catch (Exception e) {
-                cache = null;
-            }
+            JSONObject settings = ScheduleLessonsWidgetConfigureActivity.getPrefJson(context, appWidgetId, "settings");
+            JSONObject cache = ScheduleLessonsWidgetConfigureActivity.getPrefJson(context, appWidgetId, "cache");
             if (settings == null) {
                 needPreparations(context, appWidgetManager, appWidgetId);
             } else if (cache == null || force) {
@@ -82,13 +69,13 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         }
     }
     public static void deleteAppWidget(Context context, int appWidgetId){
-        Log.i(TAG, "Widget delete | appWidgetId=" + appWidgetId);
+        Log.i(TAG, "delete | appWidgetId=" + appWidgetId);
         ScheduleLessonsWidgetConfigureActivity.deletePref(context, appWidgetId, "settings");
         ScheduleLessonsWidgetConfigureActivity.deletePref(context, appWidgetId, "cache");
     }
 
     private static void refresh(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final JSONObject settings){
-        Log.i(TAG, "Widget refresh | appWidgetId=" + appWidgetId);
+        Log.i(TAG, "refresh | appWidgetId=" + appWidgetId);
         ScheduleLessons scheduleLessons = new ScheduleLessons(context);
         scheduleLessons.setHandler(new ScheduleLessons.response(){
             @Override
@@ -129,76 +116,35 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         }
     }
     private static void progress(Context context, AppWidgetManager appWidgetManager, int appWidgetId, JSONObject settings){
-        Log.v(TAG, "Widget progress | appWidgetId=" + appWidgetId);
-        int textColor, backGroundColor;
-        boolean darkTheme;
-        try {
-            darkTheme = settings.getBoolean("darkTheme");
-        } catch (JSONException e) {
-            darkTheme = true;
-        }
-        if (darkTheme) {
-            textColor = Color.parseColor("#FFFFFF");
-            backGroundColor = Color.parseColor("#000000");
-        } else {
-            textColor = Color.parseColor("#000000");
-            backGroundColor = Color.parseColor("#FFFFFF");
-        }
-        backGroundColor = Color.argb(150, Color.red(backGroundColor), Color.green(backGroundColor), Color.blue(backGroundColor));
+        Log.v(TAG, "progress | appWidgetId=" + appWidgetId);
+        int[] colors = getColors(settings);
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget);
-        views.setInt(R.id.widget_content, "setBackgroundColor", backGroundColor);
-        views.setInt(R.id.widget_title_layout, "setBackgroundColor", backGroundColor);
-        views.setInt(R.id.widget_title, "setTextColor", textColor);
+        views.setInt(R.id.widget_content, "setBackgroundColor", colors[1]);
+        views.setInt(R.id.widget_title_layout, "setBackgroundColor", colors[1]);
+        views.setInt(R.id.widget_title, "setTextColor", colors[0]);
         views.setTextViewText(R.id.widget_title, context.getString(R.string.schedule_lessons));
         views.removeAllViews(R.id.widget_container);
         views.addView(R.id.widget_container, new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget_loading));
-        views.setInt(R.id.slw_loading_text, "setTextColor", textColor);
+        views.setInt(R.id.slw_loading_text, "setTextColor", colors[0]);
         bindOpen(context, appWidgetId, views);
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }
     private static void display(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId){
-        Log.v(TAG, "Widget display | appWidgetId=" + appWidgetId);
-        JSONObject settings, cache;
-        try {
-            String tmp = ScheduleLessonsWidgetConfigureActivity.getPref(context, appWidgetId, "settings");
-            if (tmp == null) throw new NullPointerException("settings is null");
-            settings = new JSONObject(tmp);
-        } catch (Exception e) {
-            settings = null;
-        }
-        try {
-            String tmp = ScheduleLessonsWidgetConfigureActivity.getPref(context, appWidgetId, "cache");
-            if (tmp == null) throw new NullPointerException("cache is null");
-            cache = new JSONObject(tmp);
-        } catch (Exception e) {
-            cache = null;
-        }
+        Log.v(TAG, "display | appWidgetId=" + appWidgetId);
+        JSONObject settings = ScheduleLessonsWidgetConfigureActivity.getPrefJson(context, appWidgetId, "settings");
+        JSONObject cache = ScheduleLessonsWidgetConfigureActivity.getPrefJson(context, appWidgetId, "cache");
         try {
             if (settings == null) throw new NullPointerException("settings cannot be null");
             if (cache == null) throw new NullPointerException("cache cannot be null");
-            int textColor, backGroundColor;
-            boolean darkTheme;
-            try {
-                darkTheme = settings.getBoolean("darkTheme");
-            } catch (JSONException e) {
-                darkTheme = true;
-            }
-            if (darkTheme) {
-                textColor = Color.parseColor("#FFFFFF");
-                backGroundColor = Color.parseColor("#000000");
-            } else {
-                textColor = Color.parseColor("#000000");
-                backGroundColor = Color.parseColor("#FFFFFF");
-            }
-            backGroundColor = Color.argb(150, Color.red(backGroundColor), Color.green(backGroundColor), Color.blue(backGroundColor));
+            int[] colors = getColors(settings);
+            boolean theme = getTheme(settings);
             JSONObject json = cache.getJSONObject("content");
-            backGroundColor = Color.argb(150, Color.red(backGroundColor), Color.green(backGroundColor), Color.blue(backGroundColor));
             final RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget);
-            views.setInt(R.id.widget_content, "setBackgroundColor", backGroundColor);
-            views.setInt(R.id.widget_title_layout, "setBackgroundColor", backGroundColor);
-            views.setInt(R.id.widget_title, "setTextColor", textColor);
+            views.setInt(R.id.widget_content, "setBackgroundColor", colors[1]);
+            views.setInt(R.id.widget_title_layout, "setBackgroundColor", colors[1]);
+            views.setInt(R.id.widget_title, "setTextColor", colors[0]);
             views.setTextViewText(R.id.widget_title, (Objects.equals(json.getString("type"), "room") ? context.getString(R.string.room) + " " : "") + json.getString("label"));
-            views.setImageViewResource(R.id.widget_status, darkTheme ? R.drawable.ic_widget_refresh : R.drawable.ic_widget_refresh_dark);
+            views.setImageViewResource(R.id.widget_status, theme ? R.drawable.ic_widget_refresh : R.drawable.ic_widget_refresh_dark);
             views.removeAllViews(R.id.widget_container);
             views.addView(R.id.widget_container, new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget_list));
             String title = "";
@@ -211,11 +157,10 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 case Calendar.SATURDAY: title = context.getString(R.string.saturday).toUpperCase(); break;
                 case Calendar.SUNDAY: title = context.getString(R.string.sunday).toUpperCase(); break;
             }
-            int week = getWeek(context);
-            week = week % 2;
+            int week = Static.getWeek(context) % 2;
             views.setTextViewText(R.id.slw_day_title, title + (week == 0 ? " (" + context.getString(R.string.tab_even) + ")" : (week == 1 ? " (" + context.getString(R.string.tab_odd) + ")" : "")).toUpperCase());
-            views.setInt(R.id.slw_day_title, "setTextColor", textColor);
-            views.setInt(R.id.slw_day_title, "setBackgroundColor", Color.argb(80, Color.red(backGroundColor), Color.green(backGroundColor), Color.blue(backGroundColor)));
+            views.setInt(R.id.slw_day_title, "setTextColor", colors[0]);
+            views.setInt(R.id.slw_day_title, "setBackgroundColor", Color.argb(80, Color.red(colors[1]), Color.green(colors[1]), Color.blue(colors[1])));
             new ScheduleLessonsAdditionalConverter(context, new ScheduleLessonsAdditionalConverter.response() {
                 @Override
                 public void finish(JSONObject content) {
@@ -240,62 +185,72 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         }
     }
     private static void failed(Context context, AppWidgetManager appWidgetManager, int appWidgetId, JSONObject settings, String text){
-        Log.v(TAG, "Widget failed | appWidgetId=" + appWidgetId + " | text=" + text);
-        int textColor, backGroundColor;
+        Log.v(TAG, "failed | appWidgetId=" + appWidgetId + " | text=" + text);
+        int[] colors = getColors(settings);
+        boolean theme = getTheme(settings);
+        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget);
+        views.setInt(R.id.widget_content, "setBackgroundColor", colors[1]);
+        views.setInt(R.id.widget_title_layout, "setBackgroundColor", colors[1]);
+        views.setInt(R.id.widget_title, "setTextColor", colors[0]);
+        views.setTextViewText(R.id.widget_title, context.getString(R.string.schedule_lessons));
+        views.setImageViewResource(R.id.widget_status, theme ? R.drawable.ic_widget_refresh : R.drawable.ic_widget_refresh_dark);
+        views.removeAllViews(R.id.widget_container);
+        views.addView(R.id.widget_container, new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget_message));
+        views.setInt(R.id.slw_message_text, "setTextColor", colors[0]);
+        views.setTextViewText(R.id.slw_message_text, text);
+        views.setImageViewResource(R.id.slw_message_icon, theme ? R.drawable.ic_widget_error_outline : R.drawable.ic_widget_info_outline_dark);
+        bindRefresh(context, appWidgetId, views);
+        bindOpen(context, appWidgetId, views);
+        appWidgetManager.updateAppWidget(appWidgetId, views);
+    }
+    private static void needPreparations(Context context, AppWidgetManager appWidgetManager, int appWidgetId){
+        Log.v(TAG, "needPreparations | appWidgetId=" + appWidgetId);
+        int[] colors = getColors(context);
+        boolean theme = getTheme(context);
+        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget);
+        views.setInt(R.id.widget_content, "setBackgroundColor", colors[1]);
+        views.setInt(R.id.widget_title_layout, "setBackgroundColor", colors[1]);
+        views.setInt(R.id.widget_title, "setTextColor", colors[0]);
+        views.setTextViewText(R.id.widget_title, context.getString(R.string.schedule_lessons));
+        views.setImageViewResource(R.id.widget_status, theme ? R.drawable.ic_widget_refresh : R.drawable.ic_widget_refresh_dark);
+        views.removeAllViews(R.id.widget_container);
+        views.addView(R.id.widget_container, new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget_message));
+        views.setInt(R.id.slw_message_text, "setTextColor", colors[0]);
+        views.setImageViewResource(R.id.slw_message_icon, theme ? R.drawable.ic_widget_info_outline : R.drawable.ic_widget_info_outline_dark);
+        bindRefresh(context, appWidgetId, views);
+        bindOpen(context, appWidgetId, views);
+        appWidgetManager.updateAppWidget(appWidgetId, views);
+    }
+
+    private static int[] getColors(Context context){
+        return getColors(getTheme(context));
+    }
+    private static int[] getColors(JSONObject settings){
+        return getColors(getTheme(settings));
+    }
+    private static int[] getColors(boolean theme){
+        int[] colors = new int[2];
+        if (theme) {
+            colors[0] = Color.parseColor("#FFFFFF");
+            colors[1] = Color.parseColor("#000000");
+        } else {
+            colors[0] = Color.parseColor("#000000");
+            colors[1] = Color.parseColor("#FFFFFF");
+        }
+        colors[1] = Color.argb(150, Color.red(colors[1]), Color.green(colors[1]), Color.blue(colors[1]));
+        return colors;
+    }
+    private static boolean getTheme(Context context) {
+        return Storage.pref.get(context, "pref_dark_theme", false);
+    }
+    private static boolean getTheme(JSONObject settings){
         boolean darkTheme;
         try {
             darkTheme = settings.getBoolean("darkTheme");
         } catch (JSONException e) {
             darkTheme = true;
         }
-        if (darkTheme) {
-            textColor = Color.parseColor("#FFFFFF");
-            backGroundColor = Color.parseColor("#000000");
-        } else {
-            textColor = Color.parseColor("#000000");
-            backGroundColor = Color.parseColor("#FFFFFF");
-        }
-        backGroundColor = Color.argb(150, Color.red(backGroundColor), Color.green(backGroundColor), Color.blue(backGroundColor));
-        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget);
-        views.setInt(R.id.widget_content, "setBackgroundColor", backGroundColor);
-        views.setInt(R.id.widget_title_layout, "setBackgroundColor", backGroundColor);
-        views.setInt(R.id.widget_title, "setTextColor", textColor);
-        views.setTextViewText(R.id.widget_title, context.getString(R.string.schedule_lessons));
-        views.setImageViewResource(R.id.widget_status, darkTheme ? R.drawable.ic_widget_refresh : R.drawable.ic_widget_refresh_dark);
-        views.removeAllViews(R.id.widget_container);
-        views.addView(R.id.widget_container, new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget_message));
-        views.setInt(R.id.slw_message_text, "setTextColor", textColor);
-        views.setTextViewText(R.id.slw_message_text, text);
-        views.setImageViewResource(R.id.slw_message_icon, darkTheme ? R.drawable.ic_widget_error_outline : R.drawable.ic_widget_info_outline_dark);
-        bindRefresh(context, appWidgetId, views);
-        bindOpen(context, appWidgetId, views);
-        appWidgetManager.updateAppWidget(appWidgetId, views);
-    }
-    private static void needPreparations(Context context, AppWidgetManager appWidgetManager, int appWidgetId){
-        Log.v(TAG, "Widget needPreparations | appWidgetId=" + appWidgetId);
-        int textColor, backGroundColor;
-        boolean darkTheme = Storage.pref.get(context, "pref_dark_theme", false);
-        if (darkTheme) {
-            textColor = Color.parseColor("#FFFFFF");
-            backGroundColor = Color.parseColor("#000000");
-        } else {
-            textColor = Color.parseColor("#000000");
-            backGroundColor = Color.parseColor("#FFFFFF");
-        }
-        backGroundColor = Color.argb(150, Color.red(backGroundColor), Color.green(backGroundColor), Color.blue(backGroundColor));
-        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget);
-        views.setInt(R.id.widget_content, "setBackgroundColor", backGroundColor);
-        views.setInt(R.id.widget_title_layout, "setBackgroundColor", backGroundColor);
-        views.setInt(R.id.widget_title, "setTextColor", textColor);
-        views.setTextViewText(R.id.widget_title, context.getString(R.string.schedule_lessons));
-        views.setImageViewResource(R.id.widget_status, darkTheme ? R.drawable.ic_widget_refresh : R.drawable.ic_widget_refresh_dark);
-        views.removeAllViews(R.id.widget_container);
-        views.addView(R.id.widget_container, new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget_message));
-        views.setInt(R.id.slw_message_text, "setTextColor", textColor);
-        views.setImageViewResource(R.id.slw_message_icon, darkTheme ? R.drawable.ic_widget_info_outline : R.drawable.ic_widget_info_outline_dark);
-        bindRefresh(context, appWidgetId, views);
-        bindOpen(context, appWidgetId, views);
-        appWidgetManager.updateAppWidget(appWidgetId, views);
+        return darkTheme;
     }
 
     private static void bindRefresh(Context context, int appWidgetId, RemoteViews remoteViews){
@@ -313,36 +268,18 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         PendingIntent pIntent = PendingIntent.getBroadcast(context, 0, adapter, 0);
         remoteViews.setOnClickPendingIntent(R.id.widget_content, pIntent);
     }
-    private static int getWeek(Context context){
-        try {
-            String weekStr = Storage.file.general.get(context, "user#week");
-            if(!Objects.equals(weekStr, "")){
-                JSONObject jsonObject = new JSONObject(weekStr);
-                int week = jsonObject.getInt("week");
-                if (week >= 0){
-                    Calendar past = Calendar.getInstance();
-                    past.setTimeInMillis(jsonObject.getLong("timestamp"));
-                    return week + (Calendar.getInstance().get(Calendar.WEEK_OF_YEAR) - past.get(Calendar.WEEK_OF_YEAR));
-                }
-            }
-        } catch (JSONException e) {
-            Storage.file.general.delete(context, "user#week");
-            return -1;
-        }
-        return -1;
-    }
 
     public void onReceive(Context context, Intent intent) {
-        Log.v(TAG, "Widget onReceive | action=" + intent.getAction());
-        int appWidgetId;
-        switch(intent.getAction()){
-            case ACTION_WIDGET_UPDATE:
-                appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
+        Log.v(TAG, "onReceive | action=" + intent.getAction());
+        switch (intent.getAction()) {
+            case ACTION_WIDGET_UPDATE: {
+                int appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
                 AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
                 updateAppWidget(context, appWidgetManager, appWidgetId, true);
                 break;
-            case ACTION_WIDGET_OPEN:
-                appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
+            }
+            case ACTION_WIDGET_OPEN: {
+                int appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
                 Intent oIntent = new Intent(context, SplashActivity.class);
                 oIntent.addFlags(Static.intentFlagRestart);
                 oIntent.putExtra("action", "schedule_lessons");
@@ -355,6 +292,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 }
                 context.startActivity(oIntent);
                 break;
+            }
         }
         super.onReceive(context, intent);
     }

@@ -247,8 +247,9 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
                     }
                     TextView schedule_exams_week = (TextView) getActivity().findViewById(R.id.schedule_exams_week);
                     if (schedule_exams_week != null) {
-                        if (Static.week >= 0) {
-                            schedule_exams_week.setText(Static.week + " " + getString(R.string.school_week));
+                        int week = Static.getWeek(getContext());
+                        if (week >= 0) {
+                            schedule_exams_week.setText(week + " " + getString(R.string.school_week));
                         } else {
                             schedule_exams_week.setText(new SimpleDateFormat("dd.MM.yyyy", Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis())));
                         }
