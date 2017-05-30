@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
 
     <ProgressBar
+        android:id="@+id/loading_bar"
         style="?android:attr/progressBarStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:layout_marginBottom="12dp"
-        android:id="@+id/loading_bar"/>
+        android:layout_marginTop="@dimen/item_padding"
+        android:layout_marginBottom="@dimen/item_padding_half" />
 
     <TextView
         android:id="@+id/loading_message"
@@ -21,15 +22,50 @@
         android:textAppearance="@style/TextAppearance.AppCompat.Button"
         android:textSize="@dimen/font_size_14" />
 
-    <Button
-        android:id="@+id/interrupt_auth"
-        style="@style/Widget.AppCompat.Button"
+    <FrameLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="12dp"
-        android:layout_marginTop="12dp"
-        android:text="@string/interrupt_auth"
-        android:textSize="@dimen/font_size_14" />
+        android:layout_margin="@dimen/item_padding"
+        android:background="@drawable/shape_border_round"
+        android:padding="@dimen/item_padding_quarter">
+
+        <LinearLayout
+            android:id="@+id/interrupt_auth"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:orientation="horizontal"
+            android:padding="@dimen/item_padding_quarter">
+
+            <ImageView
+                android:layout_width="@dimen/login_interrupt_icon_width"
+                android:layout_height="@dimen/login_interrupt_icon_width"
+                android:layout_gravity="center_vertical"
+                android:padding="@dimen/login_interrupt_icon_padding"
+                app:srcCompat="@drawable/ic_disconnected" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/item_padding_quarter"
+                android:layout_marginStart="@dimen/item_padding_quarter"
+                android:layout_gravity="center_vertical"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/interrupt_auth"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="@dimen/font_size_14"
+                    android:fontFamily="@string/font_bold"
+                    android:textAllCaps="true"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </FrameLayout>
 
 </LinearLayout>

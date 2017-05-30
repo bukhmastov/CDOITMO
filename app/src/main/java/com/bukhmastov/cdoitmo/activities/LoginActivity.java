@@ -12,7 +12,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
@@ -236,7 +235,7 @@ public class LoginActivity extends AppCompatActivity {
                 public void onProgress(int state) {
                     Log.v(TAG, "auth | check | progress " + state);
                     draw(R.layout.state_auth);
-                    Button interrupt_auth = (Button) findViewById(R.id.interrupt_auth);
+                    View interrupt_auth = findViewById(R.id.interrupt_auth);
                     if (interrupt_auth != null) {
                         interrupt_auth.setOnClickListener(new View.OnClickListener() {
                             @Override
@@ -321,7 +320,7 @@ public class LoginActivity extends AppCompatActivity {
             public void onProgress(int state) {
                 Log.v(TAG, "logout | progress " + state);
                 draw(R.layout.state_auth);
-                Button interrupt_auth = (Button) findViewById(R.id.interrupt_auth);
+                View interrupt_auth = findViewById(R.id.interrupt_auth);
                 if (interrupt_auth != null) {
                     interrupt_auth.setLayoutParams(new LinearLayout.LayoutParams(0, 0));
                 }
