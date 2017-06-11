@@ -7,6 +7,7 @@ import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -137,7 +138,11 @@ public class SubjectShowFragment extends ConnectedFragment {
                             } else {
                                 pointsStr = "";
                             }
-                            as_current_points.setText(pointsStr);
+                            if (!pointsStr.isEmpty()) {
+                                as_current_points.setText(pointsStr);
+                            } else {
+                                as_current_points.setLayoutParams(new FrameLayout.LayoutParams(0, 0));
+                            }
                         }
                         // отображаем список оценок
                         JSONArray points = subject.getJSONArray("points");

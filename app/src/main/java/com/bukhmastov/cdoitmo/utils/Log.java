@@ -19,7 +19,7 @@ public class Log {
     private static final int WTF = android.util.Log.ASSERT;
     private static final int WTF_EXCEPTION = 8442;
 
-    private static SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss:SSS", Locale.getDefault());
+    private static SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.SSS", Locale.getDefault());
     private static ArrayList<LogItem> logList = null;
     @Nullable
     public static ArrayList<LogItem> getRawLog(){

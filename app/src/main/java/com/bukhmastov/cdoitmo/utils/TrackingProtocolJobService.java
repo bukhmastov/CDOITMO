@@ -178,7 +178,7 @@ public class TrackingProtocolJobService extends JobService {
         PendingIntent pIntent = PendingIntent.getActivity(this, (int) System.currentTimeMillis(), intent, 0);
         Notification.Builder b = new Notification.Builder(this);
         b.setContentTitle(title).setContentText(text).setStyle(new Notification.BigTextStyle().bigText(text));
-        b.setSmallIcon(R.drawable.cdo).setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.cdo_small_background));
+        b.setSmallIcon(R.drawable.cdo).setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher));
         b.setGroup("protocol_" + timestamp).setGroupSummary(isSummary);
         b.setCategory(Notification.CATEGORY_EVENT);
         b.setContentIntent(pIntent);

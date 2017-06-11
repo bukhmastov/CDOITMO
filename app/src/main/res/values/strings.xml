@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
 
     <string name="app_name">ЦДО ИТМО</string>
@@ -26,9 +27,9 @@
     <string name="semester">семестр</string>
     <string name="update_date">Последнее обновление:</string>
     <string name="year">Год</string>
-    <string name="lorem_ipsum">Lorem ipsum</string>
-    <string name="lorem_number">99.99</string>
-    <string name="lorem_number_short">99</string>
+    <string name="lorem_ipsum" translatable="false">Lorem ipsum</string>
+    <string name="lorem_number" translatable="false">99.99</string>
+    <string name="lorem_number_short" translatable="false">99</string>
     <string name="auth_check">Авторизация</string>
     <string name="authorization">Авторизация</string>
     <string name="authorized">Авторизован</string>
@@ -66,7 +67,7 @@
     <string name="app_info_disclaimer">Данное приложение использует и обрабатывает данные с серверов университета ИТМО. Персональные данные хранятся только на данном устройстве и передаются только на сервера университета ИТМО. Обратите внимание, что данное приложение не является официальным.</string>
     <string name="app_info_dev">Бухмастов Алексей</string>
     <string name="app_info_mail_dev">bukhmastov-alex@ya.ru</string>
-    <string name="offline_mode">Offline mode</string>
+    <string name="offline_mode">Оффлайн режим</string>
     <string name="schedule_lessons">Расписание занятий</string>
     <string name="search">Поиск</string>
     <string name="schedule_lessons_search_view_hint">Группа, аудитория, преподаватель…</string>
@@ -286,10 +287,10 @@
     <string name="lesson_time_start_required">Необходимо указать время начала занятия</string>
     <string name="need_to_pick_schedule">Необходимо выбрать расписание для показа</string>
     <string name="log">Лог-журнал</string>
-    <string name="warn">warn</string>
-    <string name="error">error</string>
-    <string name="exception">exception</string>
-    <string name="wtf">wtf</string>
+    <string name="warn" translatable="false">warn</string>
+    <string name="error" translatable="false">error</string>
+    <string name="exception" translatable="false">exception</string>
+    <string name="wtf" translatable="false">wtf</string>
     <string name="share">Поделиться</string>
     <string name="download_file">Выгрузить файл</string>
     <string name="send_log">Отправить лог разработчику</string>
@@ -306,5 +307,10 @@
     <string name="disable_offline_mode">Выйти из оффлайн режима</string>
     <string name="no_points">Баллов нет</string>
     <string name="top_rating">Топ-рейтинг</string>
+    <string name="pref_lang_title">Язык приложения</string>
+    <string name="pref_lang_title_summary">Необходимо перезапустить приложение для принятия изменений</string>
+    <string name="pref_lang_default">Язык устройства</string>
+    <string name="pref_lang_ru">Русский</string>
+    <string name="pref_lang_en">English</string>
 
 </resources>

@@ -20,6 +20,7 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoClientResponseHandler;
+import com.bukhmastov.cdoitmo.utils.CtxWrapper;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.ProtocolTracker;
 import com.bukhmastov.cdoitmo.utils.Static;
@@ -53,7 +54,7 @@ public class LoginActivity extends AppCompatActivity {
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar_login));
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
-            actionBar.setTitle("  " + getString(R.string.title_activity_login));
+            actionBar.setTitle(getString(R.string.title_activity_login));
             actionBar.setLogo(obtainStyledAttributes(new int[] { R.attr.ic_security }).getDrawable(0));
         }
 
@@ -86,6 +87,11 @@ public class LoginActivity extends AppCompatActivity {
             });
         }
         return true;
+    }
+
+    @Override
+    protected void attachBaseContext(Context context) {
+        super.attachBaseContext(CtxWrapper.wrap(context));
     }
 
     private void route(int signal){

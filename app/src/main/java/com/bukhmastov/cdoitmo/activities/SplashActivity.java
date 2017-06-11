@@ -11,6 +11,7 @@ import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.utils.CtxWrapper;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
@@ -52,6 +53,11 @@ public class SplashActivity extends AppCompatActivity {
         loaded();
     }
 
+    @Override
+    protected void attachBaseContext(Context context) {
+        super.attachBaseContext(CtxWrapper.wrap(context));
+    }
+
     private static class Wipe {
         static void check(Context context) {
             try {
@@ -78,6 +84,13 @@ public class SplashActivity extends AppCompatActivity {
                 }
                 case 29: {
                     Storage.file.cache.delete(context, "eregister#core");
+                    break;
+                }
+                case 51: {
+                    Storage.file.cache.clear(context, "protocol#log");
+                    if (Storage.pref.get(context, "pref_protocol_changes_track", true)) {
+                        Static.protocolChangesTrackSetup(context, 0);
+                    }
                     break;
                 }
             }

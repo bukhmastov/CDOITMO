@@ -41,12 +41,13 @@
                     android:padding="@dimen/item_padding_half">
 
                     <ImageView
+                        android:id="@+id/app_icon"
                         android:layout_width="@dimen/about_icon_width"
                         android:layout_height="@dimen/about_icon_width"
                         android:layout_marginStart="0dp"
                         android:layout_marginEnd="@dimen/item_padding_half"
                         android:contentDescription="@string/app_name"
-                        app:srcCompat="@drawable/cdo_small_background" />
+                        app:srcCompat="@mipmap/ic_launcher" />
 
                     <LinearLayout
                         android:layout_width="match_parent"

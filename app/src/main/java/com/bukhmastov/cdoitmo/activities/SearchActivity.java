@@ -1,6 +1,7 @@
 package com.bukhmastov.cdoitmo.activities;
 
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
@@ -21,6 +22,7 @@ import android.widget.Toast;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapters.SuggestionsListView;
 import com.bukhmastov.cdoitmo.objects.entities.Suggestion;
+import com.bukhmastov.cdoitmo.utils.CtxWrapper;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 
@@ -68,6 +70,11 @@ public abstract class SearchActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         Log.i(TAG, "Activity destroyed");
+    }
+
+    @Override
+    protected void attachBaseContext(Context context) {
+        super.attachBaseContext(CtxWrapper.wrap(context));
     }
 
     private void done(String query, String label){

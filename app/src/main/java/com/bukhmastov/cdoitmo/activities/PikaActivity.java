@@ -1,11 +1,13 @@
 package com.bukhmastov.cdoitmo.activities;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.ImageView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.utils.CtxWrapper;
 import com.bukhmastov.cdoitmo.utils.Log;
 
 import java.util.Random;
@@ -48,4 +50,10 @@ public class PikaActivity extends AppCompatActivity {
             Log.v(TAG, "PIKA left us to stream some games");
         }
     }
+
+    @Override
+    protected void attachBaseContext(Context context) {
+        super.attachBaseContext(CtxWrapper.wrap(context));
+    }
+
 }

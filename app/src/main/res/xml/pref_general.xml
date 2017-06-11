@@ -2,6 +2,14 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <ListPreference
+        android:key="pref_lang"
+        android:title="@string/pref_lang_title"
+        android:summary="@string/pref_lang_title_summary"
+        android:entries="@array/pref_lang_titles"
+        android:entryValues="@array/pref_lang_values"
+        android:defaultValue="default" />
+
+    <ListPreference
         android:key="pref_default_fragment"
         android:title="@string/pref_default_fragment"
         android:entries="@array/pref_general_default_fragment_titles"

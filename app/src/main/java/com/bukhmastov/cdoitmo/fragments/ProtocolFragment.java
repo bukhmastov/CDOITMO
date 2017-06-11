@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.util.SparseArray;
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -378,12 +379,40 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                             break;
                         }
                         case "advanced": {
+                            JSONArray protocol = data.getJSONArray("protocol");
+                            SparseArray<JSONObject> groups = new SparseArray<>();
+                            int key = 0;
+                            for (int i = 0; i < protocol.length(); i++) {
+                                JSONObject item = protocol.getJSONObject(i);
+                                String subject = item.getString("subject");
+                                String date = item.getString("date");
+                                String token = subject + "#" + date;
+                                boolean found = false;
+                                for (int j = 0; j < groups.size(); j++) {
+                                    JSONObject obj = groups.get(groups.keyAt(j));
+                                    if (Objects.equals(obj.getString("token"), token)) {
+                                        found = true;
+                                        break;
+                                    }
+                                }
+                                if (!found) {
+                                    JSONObject obj = new JSONObject();
+                                    obj.put("token", token);
+                                    obj.put("subject", subject);
+                                    obj.put("changes", new JSONArray());
+                                    groups.append(key++, obj);
+                                }
+                                for (int j = 0; j < groups.size(); j++) {
+                                    JSONObject obj = groups.get(groups.keyAt(j));
+                                    if (Objects.equals(obj.getString("token"), token)) {
+                                        obj.getJSONArray("changes").put(item);
+                                        break;
+                                    }
+                                }
+                            }
                             ViewGroup protocol_container = (ViewGroup) getActivity().findViewById(R.id.protocol_container);
                             if (protocol_container == null) throw new NullPointerException("");
                             protocol_container.addView(inflate(R.layout.protocol_layout_mode_advanced));
-                            JSONArray protocol = data.getJSONArray("protocol");
-                            String title = "";
-                            ArrayList<JSONObject> changes = new ArrayList<>();
                             ViewGroup pl_advanced_container = (ViewGroup) getActivity().findViewById(R.id.pl_advanced_container);
                             if (protocol.length() == 0) {
                                 ViewGroup mSwipeRefreshLayout = (SwipeRefreshLayout) getActivity().findViewById(R.id.swipe_container);
@@ -393,50 +422,40 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                                     ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_changes_for_period);
                                     mSwipeRefreshLayout.addView(view);
                                 }
-                            }
-                            for (int i = 0; i < protocol.length(); i++) {
-                                JSONObject item = protocol.getJSONObject(i);
-                                String subject = item.getString("subject");
-                                if (!Objects.equals(subject, title) || i == protocol.length() - 1) {
-                                    if (i == protocol.length() - 1) {
-                                        changes.add(item);
-                                    }
-                                    if (changes.size() > 0) {
-                                        LinearLayout header = (LinearLayout) inflate(R.layout.protocol_layout_mode_advanced_header);
-                                        ((TextView) header.findViewById(R.id.lv_protocol_name)).setText(title);
-                                        pl_advanced_container.addView(header);
-                                        boolean remove_separator = true;
-                                        for (int j = 0; j < changes.size(); j++) {
-                                            JSONObject change = changes.get(j);
-                                            JSONObject var = change.getJSONObject("var");
-                                            LinearLayout element = (LinearLayout) inflate(R.layout.protocol_layout_mode_advanced_change);
-                                            if (remove_separator) {
-                                                remove_separator = false;
-                                                element.findViewById(R.id.lv_protocol_separator).setLayoutParams(new LinearLayout.LayoutParams(0, 0));
-                                            }
-                                            ((TextView) element.findViewById(R.id.lv_protocol_desc)).setText(var.getString("name") + " [" + var.getString("min") + "/" + var.getString("threshold") + "/" + var.getString("max") + "]");
-                                            ((TextView) element.findViewById(R.id.lv_protocol_meta)).setText(Objects.equals(change.getString("sign"), "..") ? "" : change.getString("sign") + " | " + change.getString("date"));
-                                            ((TextView) element.findViewById(R.id.lv_protocol_value)).setText(change.getString("value"));
-                                            TextView lv_protocol_delta = ((TextView) element.findViewById(R.id.lv_protocol_delta));
-                                            if (change.getDouble("cdoitmo_delta_double") != 0.0) {
-                                                lv_protocol_delta.setText(change.getString("cdoitmo_delta"));
-                                                try {
-                                                    lv_protocol_delta.setTextColor(Static.resolveColor(getContext(), change.getDouble("cdoitmo_delta_double") < 0.0 ? R.attr.textColorDegrade : R.attr.textColorPassed));
-                                                } catch (Exception e) {
-                                                    Static.error(e);
-                                                }
-                                            } else {
-                                                lv_protocol_delta.setWidth(0);
-                                                lv_protocol_delta.setHeight(0);
-                                            }
-                                            pl_advanced_container.addView(element);
+                            } else {
+                                for (int j = 0; j < groups.size(); j++) {
+                                    JSONObject group = groups.get(groups.keyAt(j));
+                                    String title = group.getString("subject");
+                                    JSONArray changes = group.getJSONArray("changes");
+                                    LinearLayout header = (LinearLayout) inflate(R.layout.protocol_layout_mode_advanced_header);
+                                    ((TextView) header.findViewById(R.id.lv_protocol_name)).setText(title);
+                                    pl_advanced_container.addView(header);
+                                    boolean remove_separator = true;
+                                    for (int i = 0; i < changes.length(); i++) {
+                                        JSONObject change = changes.getJSONObject(i);
+                                        JSONObject var = change.getJSONObject("var");
+                                        LinearLayout element = (LinearLayout) inflate(R.layout.protocol_layout_mode_advanced_change);
+                                        if (remove_separator) {
+                                            remove_separator = false;
+                                            element.findViewById(R.id.lv_protocol_separator).setLayoutParams(new LinearLayout.LayoutParams(0, 0));
                                         }
+                                        ((TextView) element.findViewById(R.id.lv_protocol_desc)).setText(var.getString("name") + " [" + var.getString("min") + "/" + var.getString("threshold") + "/" + var.getString("max") + "]");
+                                        ((TextView) element.findViewById(R.id.lv_protocol_meta)).setText(Objects.equals(change.getString("sign"), "..") ? "" : change.getString("sign") + " | " + change.getString("date"));
+                                        ((TextView) element.findViewById(R.id.lv_protocol_value)).setText(change.getString("value"));
+                                        TextView lv_protocol_delta = ((TextView) element.findViewById(R.id.lv_protocol_delta));
+                                        if (change.getDouble("cdoitmo_delta_double") != 0.0) {
+                                            lv_protocol_delta.setText(change.getString("cdoitmo_delta"));
+                                            try {
+                                                lv_protocol_delta.setTextColor(Static.resolveColor(getContext(), change.getDouble("cdoitmo_delta_double") < 0.0 ? R.attr.textColorDegrade : R.attr.textColorPassed));
+                                            } catch (Exception e) {
+                                                Static.error(e);
+                                            }
+                                        } else {
+                                            lv_protocol_delta.setWidth(0);
+                                            lv_protocol_delta.setHeight(0);
+                                        }
+                                        pl_advanced_container.addView(element);
                                     }
-                                    title = subject;
-                                    changes.clear();
-                                    changes.add(item);
-                                } else {
-                                    changes.add(item);
                                 }
                             }
                             break;

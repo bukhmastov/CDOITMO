@@ -8,6 +8,7 @@ import android.content.pm.PackageInfo;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
+import android.support.annotation.IdRes;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.util.TypedValue;
@@ -60,6 +61,10 @@ public class Static {
 
     public static void init(Activity activity) {
         Log.i(TAG, "init");
+        if (activity == null) {
+            Log.w(TAG, "init | activity is null");
+            return;
+        }
         try {
             PackageInfo pInfo = activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0);
             Static.versionName = pInfo.versionName;
@@ -90,12 +95,20 @@ public class Static {
     }
     public static void reLaunch(Context context){
         Log.i(TAG, "reLaunch");
+        if (context == null) {
+            Log.w(TAG, "reLaunch | context is null");
+            return;
+        }
         Intent intent = new Intent(context, SplashActivity.class);
         intent.addFlags(Static.intentFlagRestart);
         context.startActivity(intent);
     }
     public static void hardReset(Context context){
         Log.i(TAG, "hardReset");
+        if (context == null) {
+            Log.w(TAG, "hardReset | context is null");
+            return;
+        }
         Static.logout(context);
         Storage.file.all.reset(context);
         Static.firstLaunch = true;
@@ -144,20 +157,19 @@ public class Static {
         }
     }
     public static void showUpdateTime(Activity activity, long time, boolean show_now){
-        showUpdateTime(activity, time, android.R.id.content, show_now);
+        showUpdateTime(activity, android.R.id.content, time, show_now);
     }
-    public static void showUpdateTime(Activity activity, long time, int layoutId, boolean show_now){
-        if (activity == null) return;
+    public static void showUpdateTime(Activity activity, @IdRes int layout, long time, boolean show_now){
         String message = getUpdateTime(activity, time);
         int shift = (int) ((Calendar.getInstance().getTimeInMillis() - time) / 1000L);
         if (show_now || shift > 4) {
-            Static.snackBar(activity.findViewById(layoutId), activity.getString(R.string.update_date) + " " + message);
+            Static.snackBar(activity, layout, activity.getString(R.string.update_date) + " " + message);
         }
     }
     public static String getUpdateTime(Activity activity, long time) {
         int shift = (int) ((Calendar.getInstance().getTimeInMillis() - time) / 1000L);
         String message;
-        if (shift < 21600) {
+        if (shift < 21600 && activity != null) {
             if (shift < 5) {
                 message = activity.getString(R.string.right_now);
             } else if (shift < 60) {
@@ -174,6 +186,10 @@ public class Static {
     }
     public static String getGenitiveMonth(Context context, String month) {
         Log.v(TAG, "getGenitiveMonth | month=" + month);
+        if (context == null) {
+            Log.w(TAG, "getGenitiveMonth | context is null");
+            return month;
+        }
         switch (month) {
             case "01": month = context.getString(R.string.january_genitive); break;
             case "02": month = context.getString(R.string.february_genitive); break;
@@ -222,6 +238,10 @@ public class Static {
     }
     public static void delay(final Activity activity, final int sleep, final Runnable runnable){
         Log.v(TAG, "delay | sleep=" + sleep);
+        if (activity == null) {
+            Log.w(TAG, "delay | activity is null");
+            return;
+        }
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -235,16 +255,42 @@ public class Static {
         }).start();
     }
     public static void toast(Context context, String text){
+        if (context == null) {
+            Log.w(TAG, "toast | context is null");
+            return;
+        }
         Toast.makeText(context, text, Toast.LENGTH_SHORT).show();
     }
     public static void snackBar(Activity activity, String text){
+        if (activity == null) {
+            Log.w(TAG, "snackBar | activity is null");
+            return;
+        }
         Static.snackBar(activity.findViewById(android.R.id.content), text);
+    }
+    public static void snackBar(Activity activity, @IdRes int layout, String text){
+        if (activity == null) {
+            Log.w(TAG, "snackBar | activity is null");
+            return;
+        }
+        Static.snackBar(activity.findViewById(layout), text);
     }
     public static void snackBar(View layout, String text){
         snackBar(layout, text, null, null);
     }
     public static void snackBar(Activity activity, String text, String action, View.OnClickListener onClickListener){
+        if (activity == null) {
+            Log.w(TAG, "snackBar | activity is null");
+            return;
+        }
         Static.snackBar(activity.findViewById(android.R.id.content), text, action, onClickListener);
+    }
+    public static void snackBar(Activity activity, @IdRes int layout, String text, String action, View.OnClickListener onClickListener){
+        if (activity == null) {
+            Log.w(TAG, "snackBar | activity is null");
+            return;
+        }
+        Static.snackBar(activity.findViewById(layout), text, action, onClickListener);
     }
     public static void snackBar(View layout, String text, String action, View.OnClickListener onClickListener){
         if (layout != null) {
@@ -463,6 +509,25 @@ public class Static {
                 }
             }
         }
+    }
+    public static Locale getLocale(Context context) throws Exception {
+        Locale locale;
+        String lang = Storage.pref.get(context, "pref_lang", "default");
+        switch (lang) {
+            case "ru": case "en": {
+                locale = new Locale(lang);
+                break;
+            }
+            default: case "default": {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    locale = new Locale(context.getResources().getConfiguration().getLocales().get(0).getCountry());
+                } else {
+                    locale = new Locale(context.getResources().getConfiguration().locale.getCountry());
+                }
+                break;
+            }
+        }
+        return locale;
     }
 
 }

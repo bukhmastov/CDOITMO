@@ -13,6 +13,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
 import com.bukhmastov.cdoitmo.objects.TimeRemainingWidget;
+import com.bukhmastov.cdoitmo.utils.CtxWrapper;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
@@ -108,6 +109,11 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
             timeRemainingWidget.stop();
             timeRemainingWidget = null;
         }
+    }
+
+    @Override
+    protected void attachBaseContext(Context context) {
+        super.attachBaseContext(CtxWrapper.wrap(context));
     }
 
     @Override

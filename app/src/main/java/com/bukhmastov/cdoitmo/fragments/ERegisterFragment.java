@@ -38,8 +38,8 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
 
     private static final String TAG = "ERegisterFragment";
     public static ERegister eRegister = null;
-    private String group = "";
-    private int term = -1;
+    private String group;
+    private int term;
     private boolean spinner_group_blocker = true, spinner_period_blocker = true;
     private boolean loaded = false;
     private RequestHandle fragmentRequestHandle = null;
@@ -49,6 +49,8 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
         super.onCreate(savedInstanceState);
         Log.v(TAG, "Fragment created");
         eRegister = new ERegister(getActivity());
+        group = Storage.file.cache.get(getContext(), "eregister#params#selected_group", "");
+        term = -2;
     }
 
     @Override
@@ -362,6 +364,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                                 }
                                 group = spinner_group_arr_names.get(position);
                                 Log.v(TAG, "spinner_group clicked | group=" + group);
+                                Storage.file.cache.put(getContext(), "eregister#params#selected_group", group);
                                 load(-1);
                             }
                             public void onNothingSelected(AdapterView<?> parent) {}
@@ -425,11 +428,24 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
         JSONArray groups = data.getJSONArray("groups");
         for (int i = 0; i < groups.length(); i++) {
             JSONObject group = groups.getJSONObject(i);
-            if (!Objects.equals(this.group, "") && Objects.equals(this.group, group.getString("name"))) { // мы нашли назначенную группу
+            if (!this.group.isEmpty() && Objects.equals(this.group, group.getString("name"))) { // мы нашли назначенную группу
                 this.group = group.getString("name");
                 // теперь проверяем семестр
                 JSONArray terms = group.getJSONArray("terms");
                 boolean isTermOk = false;
+                if (this.term == -2) {
+                    JSONArray years = group.getJSONArray("years");
+                    if (year == years.getInt(month > Calendar.AUGUST ? 0 : 1)) {
+                        if (Integer.parseInt(Storage.pref.get(getContext(), "pref_e_journal_term", "0")) == 1) {
+                            this.term = -1;
+                        } else {
+                            this.term = group.getJSONArray("terms").getJSONObject(month > Calendar.AUGUST || month == Calendar.JANUARY ? 0 : 1).getInt("number");
+                        }
+                    } else {
+                        this.term = -1;
+                    }
+                    isTermOk = true;
+                }
                 for (int j = 0; j < terms.length(); j++) {
                     JSONObject term = terms.getJSONObject(j);
                     if (this.term != -1 && this.term == term.getInt("number")) { // мы нашли семестр в найденной группе
@@ -444,7 +460,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                 break;
             } else { // группа до сих пор не найдена
                 JSONArray years = group.getJSONArray("years");
-                if (Objects.equals(currentGroup, "")) {
+                if (currentGroup.isEmpty()) {
                     if (year == years.getInt(month > Calendar.AUGUST ? 0 : 1)) {
                         currentGroup = group.getString("name");
                         if (Integer.parseInt(Storage.pref.get(getContext(), "pref_e_journal_term", "0")) == 1) {
@@ -459,8 +475,8 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                 }
             }
         }
-        if (Objects.equals(this.group, "")) {
-            if (!Objects.equals(currentGroup, "")) {
+        if (this.group.isEmpty()) {
+            if (!currentGroup.isEmpty()) {
                 this.group = currentGroup;
                 this.term = currentTerm;
             } else {

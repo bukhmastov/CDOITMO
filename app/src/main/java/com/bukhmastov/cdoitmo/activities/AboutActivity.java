@@ -8,6 +8,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
@@ -42,11 +43,15 @@ public class AboutActivity extends ConnectedActivity {
         }
 
         View block_pika = findViewById(R.id.block_pika);
+        final ImageView app_icon = (ImageView) findViewById(R.id.app_icon);
         if (block_pika != null) {
             block_pika.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     if (counterToPika >= tapsToPika) {
+                        if (app_icon != null) {
+                            app_icon.setImageDrawable(getDrawable(random.nextInt(100) % 10 == 0 ? R.mipmap.ic_launcher_round : R.mipmap.ic_launcher));
+                        }
                         if (random.nextInt(200) % 10 == 0) {
                             startActivity(new Intent(getBaseContext(), PikaActivity.class));
                         }

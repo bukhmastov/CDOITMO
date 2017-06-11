@@ -65,6 +65,7 @@ public class ProtocolConverter extends AsyncTask<JSONArray, Void, JSONObject> {
                 } else {
                     delta = 0.0;
                 }
+                delta = round(delta);
                 item.put("cdoitmo_hash", hash);
                 item.put("cdoitmo_delta", markConverter(String.valueOf(delta), true));
                 item.put("cdoitmo_delta_double", delta);
@@ -91,6 +92,9 @@ public class ProtocolConverter extends AsyncTask<JSONArray, Void, JSONObject> {
         return (new StringBuilder())
                 .append(item.getString("subject")).append(separator)
                 .append(var.getString("name")).append(separator)
+                .append(var.getString("min")).append(separator)
+                .append(var.getString("max")).append(separator)
+                .append(var.getString("threshold")).append(separator)
                 .toString();
     }
     private static JSONObject markConvert(JSONObject item) throws JSONException {
@@ -126,6 +130,12 @@ public class ProtocolConverter extends AsyncTask<JSONArray, Void, JSONObject> {
         } catch (NumberFormatException e) {
             return 0;
         }
+    }
+    private static double round(double d) {
+        int precise = 100;
+        d = d * precise;
+        int i = (int) Math.round(d);
+        return (double) i / precise;
     }
 
 }

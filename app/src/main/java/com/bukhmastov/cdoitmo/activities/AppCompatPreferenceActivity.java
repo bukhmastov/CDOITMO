@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.activities;
 
+import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
@@ -12,6 +13,8 @@ import android.support.v7.widget.Toolbar;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.bukhmastov.cdoitmo.utils.CtxWrapper;
 
 public abstract class AppCompatPreferenceActivity extends PreferenceActivity {
 
@@ -104,4 +107,10 @@ public abstract class AppCompatPreferenceActivity extends PreferenceActivity {
         }
         return mDelegate;
     }
+
+    @Override
+    protected void attachBaseContext(Context context) {
+        super.attachBaseContext(CtxWrapper.wrap(context));
+    }
+
 }

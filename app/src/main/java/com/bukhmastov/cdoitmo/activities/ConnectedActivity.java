@@ -1,15 +1,18 @@
 package com.bukhmastov.cdoitmo.activities;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.support.annotation.IdRes;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.ViewGroup;
 
 import com.bukhmastov.cdoitmo.fragments.ConnectedFragment;
+import com.bukhmastov.cdoitmo.utils.CtxWrapper;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 
@@ -20,7 +23,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     private static final String TAG = "ConnectedActivity";
     private ArrayList<StackElement> stack = new ArrayList<>();
 
-    protected abstract int getRootViewId();
+    protected abstract @IdRes int getRootViewId();
 
     private class StackElement {
         public Class connectedFragmentClass;
@@ -62,9 +65,9 @@ public abstract class ConnectedActivity extends AppCompatActivity {
             if (data == null) {
                 throw new NullPointerException("data cannot be null");
             }
-            ViewGroup activity_main = (ViewGroup) findViewById(getRootViewId());
-            if (activity_main != null) {
-                activity_main.removeAllViews();
+            ViewGroup root_layout = (ViewGroup) findViewById(getRootViewId());
+            if (root_layout != null) {
+                root_layout.removeAllViews();
             }
             Fragment fragment = (Fragment) data.connectedFragmentClass.newInstance();
             if (stackElement.extras != null) fragment.setArguments(stackElement.extras);
@@ -119,7 +122,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
                 return true;
             }
         } else {
-            Log.v(TAG, "back | non tablet > finish()");
+            Log.v(TAG, "back | non tablet -> finish()");
             finish();
             return false;
         }
@@ -165,6 +168,11 @@ public abstract class ConnectedActivity extends AppCompatActivity {
                 }
             }
         }
+    }
+
+    @Override
+    protected void attachBaseContext(Context context) {
+        super.attachBaseContext(CtxWrapper.wrap(context));
     }
 
 }

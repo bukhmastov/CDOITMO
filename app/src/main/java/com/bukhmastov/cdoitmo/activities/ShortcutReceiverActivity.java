@@ -1,10 +1,12 @@
 package com.bukhmastov.cdoitmo.activities;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 
+import com.bukhmastov.cdoitmo.utils.CtxWrapper;
 import com.bukhmastov.cdoitmo.utils.Log;
 
 public class ShortcutReceiverActivity extends AppCompatActivity {
@@ -22,6 +24,11 @@ public class ShortcutReceiverActivity extends AppCompatActivity {
         sendBroadcast(remoteIntent);
         finish();
         Log.v(TAG, "onCreate | action=" + remoteIntent.getAction() + " | " + remoteIntent.toString());
+    }
+
+    @Override
+    protected void attachBaseContext(Context context) {
+        super.attachBaseContext(CtxWrapper.wrap(context));
     }
 
 }

@@ -1,7 +1,7 @@
 <resources>
 
-    <string name="font_light">sans-serif-light</string>
-    <string name="font_major">sans-serif</string>
-    <string name="font_bold">sans-serif-medium</string>
+    <string name="font_light" translatable="false">sans-serif-light</string>
+    <string name="font_major" translatable="false">sans-serif</string>
+    <string name="font_bold" translatable="false">sans-serif-medium</string>
 
 </resources>

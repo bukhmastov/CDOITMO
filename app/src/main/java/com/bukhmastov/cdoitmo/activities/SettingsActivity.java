@@ -1,6 +1,7 @@
 package com.bukhmastov.cdoitmo.activities;
 
 import android.annotation.TargetApi;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -30,6 +31,7 @@ import android.widget.ListView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.preferences.SchedulePreference;
+import com.bukhmastov.cdoitmo.utils.CtxWrapper;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.ProtocolTracker;
 import com.bukhmastov.cdoitmo.utils.Static;
@@ -110,6 +112,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
     }
 
     @Override
+    protected void attachBaseContext(Context context) {
+        super.attachBaseContext(CtxWrapper.wrap(context));
+    }
+
+    @Override
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
             if (!super.onMenuItemSelected(featureId, item)) {
@@ -135,7 +142,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                 if (Storage.pref.get(this, "pref_protocol_changes_track", true)) {
                     Static.protocolChangesTrackSetup(this, 0);
                 } else {
-                    Storage.file.cache.clear(this, "rating#log");
+                    Storage.file.cache.clear(this, "protocol#log");
                 }
                 break;
         }

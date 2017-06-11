@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.activities;
 
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -14,6 +15,7 @@ import android.view.MenuItem;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.utils.CtxWrapper;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 
@@ -91,6 +93,11 @@ public class LogActivity extends AppCompatActivity implements SwipeRefreshLayout
                 return true;
             default: return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    protected void attachBaseContext(Context context) {
+        super.attachBaseContext(CtxWrapper.wrap(context));
     }
 
     @Nullable

@@ -9,7 +9,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -118,8 +121,8 @@ public class ERegisterConverter extends AsyncTask<JSONObject, Void, JSONObject> 
                     if (term == firstTermOut.getInt("number")) firstTermSubjectsOut.put(subjectOut);
                     if (term == secondTermOut.getInt("number")) secondTermSubjectsOut.put(subjectOut);
                 }
-                firstTermOut.put("subjects", firstTermSubjectsOut);
-                secondTermOut.put("subjects", secondTermSubjectsOut);
+                firstTermOut.put("subjects", sortSubjects(firstTermSubjectsOut));
+                secondTermOut.put("subjects", sortSubjects(secondTermSubjectsOut));
                 termsOut.put(firstTermOut);
                 termsOut.put(secondTermOut);
                 yearOut.put("name", year.getString("group"));
@@ -162,6 +165,23 @@ public class ERegisterConverter extends AsyncTask<JSONObject, Void, JSONObject> 
                 firstTerm.put("number", secondTerm.getInt("number") + 1);
             }
         }
+    }
+    private JSONArray sortSubjects(JSONArray subjects) throws JSONException {
+        ArrayList<JSONObject> sort = new ArrayList<>();
+        for (int i = 0; i < subjects.length(); i++) {
+            sort.add(subjects.getJSONObject(i));
+        }
+        Collections.sort(sort, new Comparator<JSONObject>() {
+            @Override
+            public int compare(JSONObject o1, JSONObject o2) {
+                try {
+                    return o1.getString("name").compareTo(o2.getString("name"));
+                } catch (JSONException e) {
+                    return 0;
+                }
+            }
+        });
+        return new JSONArray(sort);
     }
 
     @Override

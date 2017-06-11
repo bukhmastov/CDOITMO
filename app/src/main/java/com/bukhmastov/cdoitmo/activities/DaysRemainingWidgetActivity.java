@@ -14,6 +14,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.network.IfmoClient;
 import com.bukhmastov.cdoitmo.objects.DaysRemainingWidget;
 import com.bukhmastov.cdoitmo.objects.ScheduleExams;
+import com.bukhmastov.cdoitmo.utils.CtxWrapper;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
@@ -114,6 +115,11 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
             daysRemainingWidget.stop();
             daysRemainingWidget = null;
         }
+    }
+
+    @Override
+    protected void attachBaseContext(Context context) {
+        super.attachBaseContext(CtxWrapper.wrap(context));
     }
 
     @Override
