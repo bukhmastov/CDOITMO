@@ -87,26 +87,6 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                 retrieveEditingLesson();
             }
 
-
-            /*final AutoCompleteAsyncTextView test = (AutoCompleteAsyncTextView) activity.findViewById(R.id.test);
-            test.setThreshold(2);
-            test.setAdapter(new AutoCompleteTeacherLessonsSearchAdapter(activity));
-            test.setLoadingIndicator((ProgressBar) activity.findViewById(R.id.testProgressBar));
-            test.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-                    try {
-                        JSONObject teacher = (JSONObject) adapterView.getItemAtPosition(position);
-                        lessonUnit.teacher = teacher.getString("person");
-                        lessonUnit.teacher_id = String.valueOf(teacher.getInt("pid"));
-                        test.setText(lessonUnit.teacher);
-                    } catch (Exception e) {
-                        Static.error(e);
-                    }
-                }
-            });*/
-
-
             TextInputEditText lesson_title = (TextInputEditText) activity.findViewById(R.id.lesson_title);
             if (lessonUnit.title != null) lesson_title.setText(lessonUnit.title);
             lesson_title.requestFocus();
