@@ -13,6 +13,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -85,6 +86,26 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
             if (type == TYPE.edit) {
                 retrieveEditingLesson();
             }
+
+
+            /*final AutoCompleteAsyncTextView test = (AutoCompleteAsyncTextView) activity.findViewById(R.id.test);
+            test.setThreshold(2);
+            test.setAdapter(new AutoCompleteTeacherLessonsSearchAdapter(activity));
+            test.setLoadingIndicator((ProgressBar) activity.findViewById(R.id.testProgressBar));
+            test.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                    try {
+                        JSONObject teacher = (JSONObject) adapterView.getItemAtPosition(position);
+                        lessonUnit.teacher = teacher.getString("person");
+                        lessonUnit.teacher_id = String.valueOf(teacher.getInt("pid"));
+                        test.setText(lessonUnit.teacher);
+                    } catch (Exception e) {
+                        Static.error(e);
+                    }
+                }
+            });*/
+
 
             TextInputEditText lesson_title = (TextInputEditText) activity.findViewById(R.id.lesson_title);
             if (lessonUnit.title != null) lesson_title.setText(lessonUnit.title);
@@ -213,6 +234,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
             });
 
             final AutoCompleteTextView lesson_teacher = (AutoCompleteTextView) activity.findViewById(R.id.lesson_teacher);
+            final ProgressBar lesson_teacher_bar = (ProgressBar) activity.findViewById(R.id.lesson_teacher_bar);
             final TeacherPickerAdapter teacherPickerAdapter = new TeacherPickerAdapter(getContext(), new ArrayList<JSONObject>());
             if (lessonUnit.teacher != null) {
                 TeacherSearch.blocked = true;
@@ -232,7 +254,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                     teacherPickerAdapter.clear();
                     lesson_teacher.dismissDropDown();
                     if (!query.isEmpty()) {
-                        TeacherSearch.search(getContext(), query, new TeacherSearch.response() {
+                        TeacherSearch.search(getContext(), query, lesson_teacher_bar, new TeacherSearch.response() {
                             @Override
                             public void onSuccess(JSONObject json) {
                                 teacherPickerAdapter.clear();
@@ -268,7 +290,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     try {
                         JSONObject item = teacherPickerAdapter.getItem(position);
-                        if (item == null)  throw new Exception("Teacher item is null");
+                        if (item == null) throw new Exception("Teacher item is null");
                         lessonUnit.teacher = item.getString("person");
                         lessonUnit.teacher_id = String.valueOf(item.getInt("pid"));
                         TeacherSearch.blocked = true;
@@ -470,7 +492,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
         private static RequestHandle request = null;
         static boolean blocked = false;
 
-        public static void search(final Context context, final String query, final response delegate){
+        public static void search(final Context context, final String query, final ProgressBar progressBar, final response delegate){
             Log.v(TAG, "search | query=" + query);
             if (request != null) {
                 request.cancel(true);
@@ -478,6 +500,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
             }
             if (blocked) {
                 blocked = false;
+                progressBar.setVisibility(View.GONE);
                 return;
             }
             ScheduleLessons scheduleLessons = new ScheduleLessons(context);
@@ -490,11 +513,13 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                 @Override
                 public void onFailure(int state) {
                     Log.v(TAG, "search | failure " + state);
+                    progressBar.setVisibility(View.GONE);
                     delegate.onFailure(state);
                 }
                 @Override
                 public void onSuccess(JSONObject json) {
                     Log.v(TAG, "search | success");
+                    progressBar.setVisibility(View.GONE);
                     delegate.onSuccess(json);
                 }
                 @Override
@@ -502,6 +527,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                     request = requestHandle;
                 }
             });
+            progressBar.setVisibility(View.VISIBLE);
             scheduleLessons.search(query);
         }
 

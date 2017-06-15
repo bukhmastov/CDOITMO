@@ -212,21 +212,39 @@
 
             </android.support.design.widget.TextInputLayout>
 
-            <android.support.design.widget.TextInputLayout
+            <LinearLayout
+                android:orientation="horizontal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <AutoCompleteTextView
-                    android:id="@+id/lesson_teacher"
+                <android.support.design.widget.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/lesson_teacher"
-                    android:inputType="text|textCapSentences"
-                    android:maxLines="1"
-                    android:selectAllOnFocus="true"
-                    android:textSize="@dimen/font_size_14" />
+                    android:layout_weight="100">
 
-            </android.support.design.widget.TextInputLayout>
+                    <AutoCompleteTextView
+                        android:id="@+id/lesson_teacher"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/lesson_teacher"
+                        android:inputType="text|textCapSentences"
+                        android:maxLines="1"
+                        android:selectAllOnFocus="true"
+                        android:textSize="@dimen/font_size_14" />
+
+                </android.support.design.widget.TextInputLayout>
+
+                <ProgressBar
+                    android:id="@+id/lesson_teacher_bar"
+                    style="?android:attr/progressBarStyleSmall"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical|end"
+                    android:layout_weight="1"
+                    android:indeterminate="true"
+                    android:visibility="gone" />
+
+            </LinearLayout>
 
             <android.support.design.widget.TextInputLayout
                 android:layout_width="match_parent"
