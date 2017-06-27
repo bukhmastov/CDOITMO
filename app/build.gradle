@@ -7,8 +7,8 @@ android {
         applicationId "com.bukhmastov.cdoitmo"
         minSdkVersion 21
         targetSdkVersion 25
-        versionCode 48
-        versionName "1.7.0"
+        versionCode 53
+        versionName "1.7.1"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -20,7 +20,7 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile fileTree(include: ['*.jar'], dir: 'libs')
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
