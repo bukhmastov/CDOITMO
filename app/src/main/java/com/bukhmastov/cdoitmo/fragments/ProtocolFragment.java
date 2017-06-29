@@ -379,6 +379,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                             break;
                         }
                         case "advanced": {
+                            // Формируем группированный список из изменений по предметам и датам
                             JSONArray protocol = data.getJSONArray("protocol");
                             SparseArray<JSONObject> groups = new SparseArray<>();
                             int key = 0;
@@ -410,6 +411,22 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                                     }
                                 }
                             }
+                            // Объединяем одинаковые предметы, идущие подряд
+                            for (int i = 1; i < groups.size(); i++) {
+                                JSONObject groupPrevious = groups.get(groups.keyAt(i - 1));
+                                JSONObject group = groups.get(groups.keyAt(i));
+                                if (Objects.equals(groupPrevious.getString("subject"), group.getString("subject"))) {
+                                    JSONArray changesPrevious = groupPrevious.getJSONArray("changes");
+                                    JSONArray changes = group.getJSONArray("changes");
+                                    for (int j = 0; j < changes.length(); j++) {
+                                        changesPrevious.put(changes.getJSONObject(j));
+                                    }
+                                    group.put("changes", changesPrevious);
+                                    groups.remove(groups.keyAt(i - 1));
+                                    i--;
+                                }
+                            }
+                            // Отображаем группированный список изменений
                             ViewGroup protocol_container = (ViewGroup) getActivity().findViewById(R.id.protocol_container);
                             if (protocol_container == null) throw new NullPointerException("");
                             protocol_container.addView(inflate(R.layout.protocol_layout_mode_advanced));
@@ -430,13 +447,11 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                                     LinearLayout header = (LinearLayout) inflate(R.layout.protocol_layout_mode_advanced_header);
                                     ((TextView) header.findViewById(R.id.lv_protocol_name)).setText(title);
                                     pl_advanced_container.addView(header);
-                                    boolean remove_separator = true;
                                     for (int i = 0; i < changes.length(); i++) {
                                         JSONObject change = changes.getJSONObject(i);
                                         JSONObject var = change.getJSONObject("var");
                                         LinearLayout element = (LinearLayout) inflate(R.layout.protocol_layout_mode_advanced_change);
-                                        if (remove_separator) {
-                                            remove_separator = false;
+                                        if (i == changes.length() - 1 && j != groups.size() - 1) {
                                             Static.removeView(element.findViewById(R.id.lv_protocol_separator));
                                         }
                                         ((TextView) element.findViewById(R.id.lv_protocol_desc)).setText(var.getString("name") + " [" + var.getString("min") + "/" + var.getString("threshold") + "/" + var.getString("max") + "]");

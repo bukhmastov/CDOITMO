@@ -4,14 +4,6 @@
     android:layout_height="wrap_content"
     android:orientation="vertical" >
 
-    <View
-        android:id="@+id/lv_protocol_separator"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginStart="@dimen/item_horizontal_padding"
-        android:layout_marginEnd="@dimen/item_horizontal_padding"
-        android:background="?attr/colorSeparator"/>
-
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -81,5 +73,13 @@
         </RelativeLayout>
 
     </RelativeLayout>
+
+    <View
+        android:id="@+id/lv_protocol_separator"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginStart="@dimen/item_horizontal_padding"
+        android:layout_marginEnd="@dimen/item_horizontal_padding"
+        android:background="?attr/colorSeparator"/>
 
 </LinearLayout>
