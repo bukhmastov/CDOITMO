@@ -529,6 +529,15 @@ public class Static {
         }
         return locale;
     }
+    public static boolean removeView(View view) {
+        try {
+            ((ViewGroup) view.getParent()).removeView(view);
+        } catch (Throwable e) {
+            Static.error(e);
+            return false;
+        }
+        return true;
+    }
 
 }
 

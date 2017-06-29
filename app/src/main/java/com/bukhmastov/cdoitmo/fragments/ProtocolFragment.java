@@ -437,7 +437,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                                         LinearLayout element = (LinearLayout) inflate(R.layout.protocol_layout_mode_advanced_change);
                                         if (remove_separator) {
                                             remove_separator = false;
-                                            element.findViewById(R.id.lv_protocol_separator).setLayoutParams(new LinearLayout.LayoutParams(0, 0));
+                                            Static.removeView(element.findViewById(R.id.lv_protocol_separator));
                                         }
                                         ((TextView) element.findViewById(R.id.lv_protocol_desc)).setText(var.getString("name") + " [" + var.getString("min") + "/" + var.getString("threshold") + "/" + var.getString("max") + "]");
                                         ((TextView) element.findViewById(R.id.lv_protocol_meta)).setText(Objects.equals(change.getString("sign"), "..") ? "" : change.getString("sign") + " | " + change.getString("date"));

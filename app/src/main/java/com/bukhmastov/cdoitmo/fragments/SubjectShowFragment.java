@@ -7,7 +7,6 @@ import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -141,7 +140,7 @@ public class SubjectShowFragment extends ConnectedFragment {
                             if (!pointsStr.isEmpty()) {
                                 as_current_points.setText(pointsStr);
                             } else {
-                                as_current_points.setLayoutParams(new FrameLayout.LayoutParams(0, 0));
+                                Static.removeView(as_current_points);
                             }
                         }
                         // отображаем список оценок
