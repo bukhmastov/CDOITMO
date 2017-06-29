@@ -305,5 +305,6 @@
     <string name="pref_lang_default">Default language</string>
     <string name="pref_lang_ru">Русский</string>
     <string name="pref_lang_en">English</string>
+    <string name="pin_shortcut_not_supported">Your device does not support in-app pinning of shortcuts</string>
 
 </resources>

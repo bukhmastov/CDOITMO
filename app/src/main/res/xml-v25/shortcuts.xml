@@ -17,7 +17,7 @@
 
     <shortcut
         android:shortcutId="room101"
-        android:icon="@drawable/ic_shortcut_room101"
+        android:icon="@drawable/ic_shortcut_room101_add"
         android:shortcutShortLabel="@string/shortcut_room101_short"
         android:shortcutLongLabel="@string/shortcut_room101_long"
         android:shortcutDisabledMessage="@string/shortcut_disabled"

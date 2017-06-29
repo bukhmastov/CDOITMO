@@ -116,6 +116,7 @@
                 <action android:name="com.bukhmastov.cdoitmo.CLICK_SHORTCUT" />
                 <action android:name="com.bukhmastov.cdoitmo.ADD_SHORTCUT" />
                 <action android:name="com.bukhmastov.cdoitmo.REMOVE_SHORTCUT" />
+                <action android:name="com.bukhmastov.cdoitmo.SHORTCUT_INSTALLED" />
             </intent-filter>
         </receiver>
 
