@@ -570,11 +570,12 @@ public class ShortcutCreator {
         Intent intent = new Intent(ShortcutReceiver.ACTION_ADD_SHORTCUT);
         intent.putExtra(ShortcutReceiver.EXTRA_TYPE, type);
         intent.putExtra(ShortcutReceiver.EXTRA_DATA, data);
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            new ShortcutReceiver().onReceive(context, intent);
-        } else {
+        // Android 8.0
+        //if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+        //    new ShortcutReceiver().onReceive(context, intent);
+        //} else {
             context.sendBroadcast(intent);
-        }
+        //}
     }
 
 }
