@@ -26,6 +26,7 @@ import com.bukhmastov.cdoitmo.activities.SplashActivity;
 import com.bukhmastov.cdoitmo.converters.ProtocolConverter;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoRestClientResponseHandler;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.loopj.android.http.RequestHandle;
 import com.loopj.android.http.RequestParams;
 
@@ -537,6 +538,38 @@ public class Static {
             return false;
         }
         return true;
+    }
+    public static class Firebase {
+        public static String CHANNEL_OWNER_NOTIFICATION = "owner_notification";
+        public static boolean subscribe(String topic) {
+            try {
+                FirebaseMessaging.getInstance().subscribeToTopic(topic);
+                Log.i(TAG, "Firebase Messaging Service: subscribed to '" + topic + "' topic");
+            } catch (Throwable e) {
+                Log.i(TAG, "Firebase Messaging Service: failed to subscribed to '" + topic + "' topic");
+                Static.error(e);
+                return false;
+            }
+            return true;
+        }
+        public static boolean unsubscribe(String topic) {
+            try {
+                FirebaseMessaging.getInstance().unsubscribeFromTopic(topic);
+                Log.i(TAG, "Firebase Messaging Service: unsubscribed from '" + topic + "' topic");
+            } catch (Throwable e) {
+                Log.i(TAG, "Firebase Messaging Service: failed to unsubscribed from '" + topic + "' topic");
+                Static.error(e);
+                return false;
+            }
+            return true;
+        }
+        public static boolean toggleOwnerNotification(Context context){
+            if (Storage.pref.get(context, "pref_allow_owner_notifications", true)) {
+                return Static.Firebase.subscribe(Static.Firebase.CHANNEL_OWNER_NOTIFICATION);
+            } else {
+                return Static.Firebase.unsubscribe(Static.Firebase.CHANNEL_OWNER_NOTIFICATION);
+            }
+        }
     }
 
 }

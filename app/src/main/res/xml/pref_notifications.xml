@@ -28,4 +28,14 @@
         android:defaultValue="true"
         android:title="@string/pref_notify_vibrate" />
 
+    <PreferenceCategory android:title="@string/pref_allow_owner_notifications_category">
+
+        <SwitchPreference
+            android:key="pref_allow_owner_notifications"
+            android:defaultValue="true"
+            android:title="@string/pref_allow_owner_notifications"
+            android:summary="@string/pref_allow_owner_notifications_summary"/>
+
+    </PreferenceCategory>
+
 </PreferenceScreen>

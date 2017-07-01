@@ -93,6 +93,10 @@ public class SplashActivity extends AppCompatActivity {
                     }
                     break;
                 }
+                case 56: {
+                    Static.Firebase.toggleOwnerNotification(context);
+                    break;
+                }
             }
         }
     }

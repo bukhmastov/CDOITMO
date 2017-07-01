@@ -145,6 +145,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                     Storage.file.cache.clear(this, "protocol#log");
                 }
                 break;
+            case "pref_allow_owner_notifications":
+                Static.Firebase.toggleOwnerNotification(this);
+                break;
         }
     }
 

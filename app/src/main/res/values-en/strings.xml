@@ -54,6 +54,9 @@
     <string name="pref_notify_sound">Notification sound</string>
     <string name="pref_ringtone_silent">Soundless</string>
     <string name="pref_notify_vibrate">Vibration</string>
+    <string name="pref_allow_owner_notifications">Notifications from developer</string>
+    <string name="pref_allow_owner_notifications_summary">Enable/disable these notifications</string>
+    <string name="pref_allow_owner_notifications_category">System notifications</string>
     <string name="attention">Attention</string>
     <string name="action_1">change</string>
     <string name="action_2">changes</string>

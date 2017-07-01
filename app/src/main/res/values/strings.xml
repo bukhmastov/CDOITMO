@@ -57,6 +57,9 @@
     <string name="pref_notify_sound">Звук уведомления</string>
     <string name="pref_ringtone_silent">Без звука</string>
     <string name="pref_notify_vibrate">Вибрация</string>
+    <string name="pref_allow_owner_notifications">Уведомления от разработчика</string>
+    <string name="pref_allow_owner_notifications_summary">Разрешить/запретить данные уведомления</string>
+    <string name="pref_allow_owner_notifications_category">Системные уведомления</string>
     <string name="attention">Внимание</string>
     <string name="action_1">событие</string>
     <string name="action_2">события</string>

@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "310469646338",
+    "firebase_url": "https://cde-itmo.firebaseio.com",
+    "project_id": "cde-itmo",
+    "storage_bucket": "cde-itmo.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:310469646338:android:5cb7a45addb8b0d6",
+        "android_client_info": {
+          "package_name": "com.bukhmastov.cdoitmo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "310469646338-r86bnl8s09c036eg9voraefvl4vem0rc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.bukhmastov.cdoitmo",
+            "certificate_hash": "af18a01c44f964815ccc5790ddb094363f16e9e1"
+          }
+        },
+        {
+          "client_id": "310469646338-vqdqd2vmt0bdtj5dejthsrvdslbj273p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBTVUi-boKIkxZUQvrM7031ENqr4v-xAIU"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "310469646338-vqdqd2vmt0bdtj5dejthsrvdslbj273p.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
