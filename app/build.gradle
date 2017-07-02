@@ -31,6 +31,7 @@ dependencies {
     compile 'com.loopj.android:android-async-http:1.4.9'
     compile 'net.sourceforge.htmlcleaner:htmlcleaner:2.18'
     compile 'com.google.firebase:firebase-messaging:10.0.1'
+    compile 'com.google.firebase:firebase-crash:10.0.1'
     testCompile 'junit:junit:4.12'
 }
 
