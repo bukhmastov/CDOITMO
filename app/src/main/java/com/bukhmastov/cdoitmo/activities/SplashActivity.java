@@ -61,8 +61,8 @@ public class SplashActivity extends AppCompatActivity {
     private static class Wipe {
         static void check(Context context) {
             try {
-                int versionCode = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode;
-                int lastVersionCode = Storage.pref.get(context, "last_version", 0);
+                int versionCode = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode; // 57
+                int lastVersionCode = Storage.pref.get(context, "last_version", 0); // 56
                 if (lastVersionCode < versionCode) {
                     for (int i = lastVersionCode + 1; i <= versionCode; i++) {
                         apply(context, i);
@@ -93,7 +93,7 @@ public class SplashActivity extends AppCompatActivity {
                     }
                     break;
                 }
-                case 56: {
+                case 58: {
                     Static.Firebase.toggleOwnerNotification(context);
                     break;
                 }
