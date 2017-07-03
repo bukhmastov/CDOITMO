@@ -237,7 +237,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
 
     private void draw(int layoutId) {
         try {
-            ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.rating_list_container));
+            ViewGroup vg = ((ViewGroup) activity.findViewById(R.id.rating_list_container));
             if (vg != null) {
                 vg.removeAllViews();
                 vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
@@ -247,7 +247,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
         }
     }
     private View inflate(int layoutId) throws InflateException {
-        return ((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
+        return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
 
 }

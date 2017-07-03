@@ -1,6 +1,5 @@
 package com.bukhmastov.cdoitmo.fragments;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
@@ -48,7 +47,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.v(TAG, "Fragment created");
-        eRegister = new ERegister(getActivity());
+        eRegister = new ERegister(activity);
         group = Storage.file.cache.get(getContext(), "eregister#params#selected_group", "");
         term = -2;
     }
@@ -164,7 +163,6 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                 public void onProgress(int state) {
                     Log.v(TAG, "forceLoad | progress " + state);
                     draw(R.layout.state_loading);
-                    Activity activity = getActivity();
                     if (activity != null) {
                         TextView loading_message = (TextView) activity.findViewById(R.id.loading_message);
                         if (loading_message != null) {
@@ -177,7 +175,6 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                 @Override
                 public void onFailure(int state) {
                     Log.v(TAG, "forceLoad | failure " + state);
-                    final Activity activity = getActivity();
                     switch (state) {
                         case DeIfmoRestClient.FAILED_OFFLINE:
                             eRegister.is(new ERegister.Callback() {
@@ -238,7 +235,6 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                     } else {
                         try {
                             draw(R.layout.state_offline);
-                            Activity activity = getActivity();
                             if (activity != null) {
                                 View offline_reload = activity.findViewById(R.id.offline_reload);
                                 if (offline_reload != null) {
@@ -262,9 +258,9 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
         Log.v(TAG, "loadFailed");
         try {
             draw(R.layout.state_try_again);
-            TextView try_again_message = (TextView) getActivity().findViewById(R.id.try_again_message);
+            TextView try_again_message = (TextView) activity.findViewById(R.id.try_again_message);
             if (try_again_message != null) try_again_message.setText(R.string.load_failed_retry_in_minute);
-            View try_again_reload = getActivity().findViewById(R.id.try_again_reload);
+            View try_again_reload = activity.findViewById(R.id.try_again_reload);
             if (try_again_reload != null) {
                 try_again_reload.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -317,9 +313,9 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                     // отображаем интерфейс
                     draw(R.layout.eregister_layout);
                     // работаем со списком
-                    ListView erl_list_view = (ListView) getActivity().findViewById(R.id.erl_list_view);
+                    ListView erl_list_view = (ListView) activity.findViewById(R.id.erl_list_view);
                     if (erl_list_view != null) {
-                        erl_list_view.setAdapter(new SubjectListView(getActivity(), subjects));
+                        erl_list_view.setAdapter(new SubjectListView(activity, subjects));
                         erl_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                                 Log.v(TAG, "erl_list_view clicked");
@@ -333,7 +329,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                         });
                     }
                     // работаем со свайпом
-                    SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) getActivity().findViewById(R.id.swipe_container);
+                    SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) activity.findViewById(R.id.swipe_container);
                     if (mSwipeRefreshLayout != null) {
                         mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
                         mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
@@ -342,7 +338,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                     // работаем с раскрывающимися списками
                     int selection = 0, counter = 0;
                     // список групп
-                    Spinner spinner_group = (Spinner) getActivity().findViewById(R.id.erl_group_spinner);
+                    Spinner spinner_group = (Spinner) activity.findViewById(R.id.erl_group_spinner);
                     if (spinner_group != null) {
                         final ArrayList<String> spinner_group_arr = new ArrayList<>();
                         final ArrayList<String> spinner_group_arr_names = new ArrayList<>();
@@ -353,7 +349,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                             if (Objects.equals(group.getString("name"), self.group)) selection = counter;
                             counter++;
                         }
-                        spinner_group.setAdapter(new ArrayAdapter<>(getActivity(), R.layout.spinner_layout, spinner_group_arr));
+                        spinner_group.setAdapter(new ArrayAdapter<>(activity, R.layout.spinner_layout, spinner_group_arr));
                         spinner_group.setSelection(selection);
                         spinner_group_blocker = true;
                         spinner_group.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -371,7 +367,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                         });
                     }
                     // список семестров
-                    Spinner spinner_period = (Spinner) getActivity().findViewById(R.id.erl_period_spinner);
+                    Spinner spinner_period = (Spinner) activity.findViewById(R.id.erl_period_spinner);
                     if (spinner_period != null) {
                         final ArrayList<String> spinner_period_arr = new ArrayList<>();
                         final ArrayList<Integer> spinner_period_arr_values = new ArrayList<>();
@@ -392,7 +388,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                                 break;
                             }
                         }
-                        spinner_period.setAdapter(new ArrayAdapter<>(getActivity(), R.layout.spinner_layout, spinner_period_arr));
+                        spinner_period.setAdapter(new ArrayAdapter<>(activity, R.layout.spinner_layout, spinner_period_arr));
                         spinner_period.setSelection(selection);
                         spinner_period_blocker = true;
                         spinner_period.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -408,7 +404,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                             public void onNothingSelected(AdapterView<?> parent) {}
                         });
                     }
-                    Static.showUpdateTime(getActivity(), data.getLong("timestamp"), true);
+                    Static.showUpdateTime(activity, data.getLong("timestamp"), true);
                 } catch (Exception e) {
                     Static.error(e);
                     loadFailed();
@@ -494,7 +490,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
 
     private void draw(int layoutId){
         try {
-            ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_eregister));
+            ViewGroup vg = ((ViewGroup) activity.findViewById(R.id.container_eregister));
             if (vg != null) {
                 vg.removeAllViews();
                 vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
@@ -504,7 +500,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
         }
     }
     private View inflate(int layoutId) throws InflateException {
-        return ((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
+        return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
 
 }

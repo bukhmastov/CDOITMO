@@ -86,12 +86,19 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
         }
         if (!loaded) {
             loaded = true;
-            String scope;
-            String action_extra = getActivity().getIntent().getStringExtra("action_extra");
-            if (action_extra != null) {
-                getActivity().getIntent().removeExtra("action_extra");
-                scope = action_extra;
-            } else {
+            String scope = null;
+            Activity activity = getActivity();
+            if (activity != null) {
+                Intent intent = activity.getIntent();
+                if (intent != null) {
+                    String action_extra = intent.getStringExtra("action_extra");
+                    if (action_extra != null) {
+                        intent.removeExtra("action_extra");
+                        scope = action_extra;
+                    }
+                }
+            }
+            if (scope == null) {
                 scope = scheduleLessons.getDefault();
             }
             Log.v(TAG, "search(" + scope + ")");
@@ -99,7 +106,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
         }
         if (reScheduleRequired) {
             reScheduleRequired = false;
-            reSchedule(getActivity());
+            reSchedule(activity);
         }
     }
 
@@ -120,7 +127,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
         super.onDestroy();
         Log.v(TAG, "Fragment destroyed");
         try {
-            getActivity().findViewById(R.id.schedule_tabs).setVisibility(View.GONE);
+            activity.findViewById(R.id.schedule_tabs).setVisibility(View.GONE);
             if (MainActivity.menu != null) {
                 MenuItem action_schedule_lessons_search = MainActivity.menu.findItem(R.id.action_schedule_lessons_search);
                 if (action_schedule_lessons_search != null && action_schedule_lessons_search.isVisible()) {
@@ -138,9 +145,9 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
     public void onProgress(int state){
         Log.v(TAG, "progress " + state);
         try {
-            getActivity().findViewById(R.id.schedule_tabs).setVisibility(View.GONE);
+            activity.findViewById(R.id.schedule_tabs).setVisibility(View.GONE);
             draw(R.layout.state_loading);
-            TextView loading_message = (TextView) getActivity().findViewById(R.id.loading_message);
+            TextView loading_message = (TextView) activity.findViewById(R.id.loading_message);
             if (loading_message != null) {
                 switch (state) {
                     case IfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
@@ -164,7 +171,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
                 case IfmoRestClient.FAILED_OFFLINE:
                 case ScheduleLessons.FAILED_OFFLINE:
                     draw(R.layout.state_offline);
-                    View offline_reload = getActivity().findViewById(R.id.offline_reload);
+                    View offline_reload = activity.findViewById(R.id.offline_reload);
                     if (offline_reload != null) {
                         offline_reload.setOnClickListener(new View.OnClickListener() {
                             @Override
@@ -177,7 +184,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
                 case IfmoRestClient.FAILED_TRY_AGAIN:
                 case ScheduleLessons.FAILED_LOAD:
                     draw(R.layout.state_try_again);
-                    View try_again_reload = getActivity().findViewById(R.id.try_again_reload);
+                    View try_again_reload = activity.findViewById(R.id.try_again_reload);
                     if (try_again_reload != null) {
                         try_again_reload.setOnClickListener(new View.OnClickListener() {
                             @Override
@@ -199,7 +206,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
         try {
             if (json == null) throw new NullPointerException("json cannot be null");
             schedule = json;
-            getActivity().findViewById(R.id.schedule_tabs).setVisibility(View.GONE);
+            activity.findViewById(R.id.schedule_tabs).setVisibility(View.GONE);
             if (Objects.equals(json.getString("type"), "teacher_picker")) {
                 schedule_cached = false;
                 JSONArray teachers = json.getJSONArray("list");
@@ -209,8 +216,8 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
                         return;
                     }
                     draw(R.layout.layout_schedule_lessons_teacher_picker);
-                    TextView teacher_picker_header = (TextView) getActivity().findViewById(R.id.teacher_picker_header);
-                    ListView teacher_picker_list_view = (ListView) getActivity().findViewById(R.id.teacher_picker_list_view);
+                    TextView teacher_picker_header = (TextView) activity.findViewById(R.id.teacher_picker_header);
+                    ListView teacher_picker_list_view = (ListView) activity.findViewById(R.id.teacher_picker_list_view);
                     if (teacher_picker_header != null) teacher_picker_header.setText(R.string.choose_teacher);
                     if (teacher_picker_list_view != null) {
                         final ArrayList<HashMap<String, String>> teachersMap = new ArrayList<>();
@@ -222,7 +229,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
                             teacherMap.put("post", teacher.getString("post"));
                             teachersMap.add(teacherMap);
                         }
-                        teacher_picker_list_view.setAdapter(new TeacherPickerListView(getActivity(), teachersMap));
+                        teacher_picker_list_view.setAdapter(new TeacherPickerListView(activity, teachersMap));
                         teacher_picker_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                                 Log.v(TAG, "teacher_picker_list_view clicked | scope=" + teachersMap.get(position).get("pid"));
@@ -236,10 +243,10 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
             } else {
                 schedule_cached = !Objects.equals(scheduleLessons.getCache(schedule.getString("cache_token")), "");
                 if (schedule.getJSONArray("schedule").length() > 0) {
-                    TabLayout schedule_tabs = (TabLayout) getActivity().findViewById(R.id.schedule_tabs);
+                    TabLayout schedule_tabs = (TabLayout) activity.findViewById(R.id.schedule_tabs);
                     schedule_tabs.setVisibility(View.VISIBLE);
                     draw(R.layout.layout_schedule_lessons_tabs);
-                    ViewPager schedule_view = (ViewPager) getActivity().findViewById(R.id.schedule_pager);
+                    ViewPager schedule_view = (ViewPager) activity.findViewById(R.id.schedule_pager);
                     if (schedule_view != null) {
                         schedule_view.setAdapter(new PagerAdapter(getFragmentManager(), getContext(), activity));
                         schedule_view.addOnPageChangeListener(this);
@@ -298,7 +305,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
     }
     private void notFound(){
         Log.v(TAG, "notFound");
-        ViewGroup container_schedule = ((ViewGroup) getActivity().findViewById(R.id.container_schedule));
+        ViewGroup container_schedule = ((ViewGroup) activity.findViewById(R.id.container_schedule));
         if (container_schedule != null) {
             container_schedule.removeAllViews();
             View view = inflate(R.layout.nothing_to_display);
@@ -329,7 +336,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
 
     private void draw(int layoutId){
         try {
-            ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_schedule));
+            ViewGroup vg = ((ViewGroup) activity.findViewById(R.id.container_schedule));
             if (vg != null) {
                 vg.removeAllViews();
                 vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
@@ -339,7 +346,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
         }
     }
     private View inflate(int layoutId) throws InflateException {
-        return ((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
+        return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
 
 }

@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.fragments;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
@@ -33,6 +34,7 @@ public class ScheduleLessonsTabFragment extends Fragment {
     private int TYPE = -1;
     private boolean displayed = false;
     private View fragment_schedule_lessons = null;
+    private Activity activity;
 
     public ScheduleLessonsTabFragment() {
         super();
@@ -41,6 +43,7 @@ public class ScheduleLessonsTabFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        this.activity = getActivity();
         Log.v(TAG, "Fragment created | TYPE=" + TYPE);
     }
 
@@ -105,9 +108,9 @@ public class ScheduleLessonsTabFragment extends Fragment {
             FrameLayout schedule_lessons_cache = (FrameLayout) fragment_schedule_lessons.findViewById(R.id.schedule_lessons_cache);
             if (schedule_lessons_cache != null) {
                 ImageView cacheImage = new ImageView(getContext());
-                cacheImage.setImageDrawable(getActivity().getResources().getDrawable(ScheduleLessonsFragment.schedule_cached ? R.drawable.ic_cached : R.drawable.ic_cache, getActivity().getTheme()));
+                cacheImage.setImageDrawable(activity.getResources().getDrawable(ScheduleLessonsFragment.schedule_cached ? R.drawable.ic_cached : R.drawable.ic_cache, activity.getTheme()));
                 cacheImage.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
-                int padding = (int) (getActivity().getResources().getDisplayMetrics().density * 4);
+                int padding = (int) (activity.getResources().getDisplayMetrics().density * 4);
                 cacheImage.setPadding(padding, padding, padding, padding);
                 schedule_lessons_cache.addView(cacheImage);
                 schedule_lessons_cache.setOnClickListener(new View.OnClickListener() {
@@ -118,16 +121,16 @@ public class ScheduleLessonsTabFragment extends Fragment {
                             Boolean result = ScheduleLessonsFragment.scheduleLessons.toggleCache();
                             if (result == null) {
                                 Log.w(TAG, "failed to toggle cache");
-                                Static.snackBar(getActivity(), getString(R.string.cache_failed));
+                                Static.snackBar(activity, getString(R.string.cache_failed));
                             } else {
-                                Static.snackBar(getActivity(), result ? getString(R.string.cache_true) : getString(R.string.cache_false));
+                                Static.snackBar(activity, result ? getString(R.string.cache_true) : getString(R.string.cache_false));
                                 if (fragment_schedule_lessons != null) {
                                     FrameLayout schedule_lessons_cache = (FrameLayout) fragment_schedule_lessons.findViewById(R.id.schedule_lessons_cache);
                                     if (schedule_lessons_cache != null) {
                                         ImageView cacheImage = new ImageView(getContext());
-                                        cacheImage.setImageDrawable(getActivity().getResources().getDrawable(result ? R.drawable.ic_cached : R.drawable.ic_cache, getActivity().getTheme()));
+                                        cacheImage.setImageDrawable(activity.getResources().getDrawable(result ? R.drawable.ic_cached : R.drawable.ic_cache, activity.getTheme()));
                                         cacheImage.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
-                                        int padding = (int) (getActivity().getResources().getDisplayMetrics().density * 4);
+                                        int padding = (int) (activity.getResources().getDisplayMetrics().density * 4);
                                         cacheImage.setPadding(padding, padding, padding, padding);
                                         schedule_lessons_cache.removeAllViews();
                                         schedule_lessons_cache.addView(cacheImage);
@@ -152,7 +155,7 @@ public class ScheduleLessonsTabFragment extends Fragment {
             (new ScheduleLessonsBuilder(PagerAdapter.activity, TYPE, new ScheduleLessonsBuilder.response(){
                 public void state(final int state, final View layout){
                     try {
-                        getActivity().runOnUiThread(new Runnable() {
+                        activity.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
                                 if (schedule_lessons_content != null) {
@@ -262,7 +265,7 @@ public class ScheduleLessonsTabFragment extends Fragment {
             ViewGroup vg = ((ViewGroup) fragment_schedule_lessons.findViewById(R.id.container_schedule_lessons));
             if (vg != null) {
                 vg.removeAllViews();
-                vg.addView(((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                vg.addView(((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             }
         } catch (Exception e){
             Static.error(e);

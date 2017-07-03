@@ -1,6 +1,7 @@
 package com.bukhmastov.cdoitmo.activities;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -179,8 +180,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         public boolean onOptionsItemSelected(MenuItem item) {
             int id = item.getItemId();
             if (id == android.R.id.home) {
-                startActivity(new Intent(getActivity(), SettingsActivity.class));
-                return true;
+                Activity activity = getActivity();
+                if (activity != null) {
+                    startActivity(new Intent(activity, SettingsActivity.class));
+                    return true;
+                }
             }
             return super.onOptionsItemSelected(item);
         }
@@ -200,7 +204,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
                         Log.v(TAG, "pref_reset_application clicked");
-                        new AlertDialog.Builder(getActivity())
+                        final Activity activity = getActivity();
+                        if (activity != null) {
+                            new AlertDialog.Builder(activity)
                                 .setTitle(getString(R.string.pref_reset_application_summary))
                                 .setMessage(R.string.pref_reset_application_warning)
                                 .setIcon(R.drawable.ic_warning)
@@ -208,11 +214,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
                                         Log.v(TAG, "pref_reset_application dialog accepted");
-                                        Static.hardReset(getActivity());
+                                        Static.hardReset(activity);
                                     }
                                 })
                                 .setNegativeButton(android.R.string.cancel, null)
                                 .create().show();
+                        }
                         return false;
                     }
                 });
@@ -240,8 +247,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
                         Log.v(TAG, "pref_clear_cache clicked");
-                        boolean success = Storage.file.cache.clear(getActivity());
-                        Static.snackBar(getActivity(), getActivity().getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
+                        Activity activity = getActivity();
+                        if (activity != null) {
+                            boolean success = Storage.file.cache.clear(activity);
+                            Static.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
+                        }
                         return false;
                     }
                 });
@@ -252,8 +262,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
                         Log.v(TAG, "pref_schedule_lessons_clear_cache clicked");
-                        boolean success = Storage.file.cache.clear(getActivity(), "schedule_lessons");
-                        Static.snackBar(getActivity(), getActivity().getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
+                        Activity activity = getActivity();
+                        if (activity != null) {
+                            boolean success = Storage.file.cache.clear(activity, "schedule_lessons");
+                            Static.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
+                        }
                         return false;
                     }
                 });
@@ -264,8 +277,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
                         Log.v(TAG, "pref_schedule_exams_clear_cache clicked");
-                        boolean success = Storage.file.cache.clear(getActivity(), "schedule_exams");
-                        Static.snackBar(getActivity(), getActivity().getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
+                        Activity activity = getActivity();
+                        if (activity != null) {
+                            boolean success = Storage.file.cache.clear(activity, "schedule_exams");
+                            Static.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
+                        }
                         return false;
                     }
                 });
@@ -314,8 +330,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
                         Log.v(TAG, "pref_schedule_lessons_clear_cache clicked");
-                        boolean success = Storage.file.cache.clear(getActivity(), "schedule_lessons");
-                        Static.snackBar(getActivity(), getActivity().getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
+                        Activity activity = getActivity();
+                        if (activity != null) {
+                            boolean success = Storage.file.cache.clear(activity, "schedule_lessons");
+                            Static.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
+                        }
                         return false;
                     }
                 });
@@ -326,8 +345,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
                         Log.v(TAG, "pref_schedule_exams_clear_cache clicked");
-                        boolean success = Storage.file.cache.clear(getActivity(), "schedule_exams");
-                        Static.snackBar(getActivity(), getActivity().getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
+                        Activity activity = getActivity();
+                        if (activity != null) {
+                            boolean success = Storage.file.cache.clear(activity, "schedule_exams");
+                            Static.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
+                        }
                         return false;
                     }
                 });
@@ -339,7 +361,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
                         Log.v(TAG, "pref_schedule_lessons_clear_additional clicked");
-                        new AlertDialog.Builder(getActivity())
+                        final Activity activity = getActivity();
+                        if (activity != null) {
+                            new AlertDialog.Builder(activity)
                                 .setTitle(getString(R.string.pref_schedule_lessons_clear_additional_title))
                                 .setMessage(R.string.pref_schedule_lessons_clear_additional_warning)
                                 .setIcon(R.drawable.ic_warning)
@@ -347,12 +371,13 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
                                         Log.v(TAG, "pref_schedule_lessons_clear_additional dialog accepted");
-                                        boolean success = Storage.file.perm.clear(getActivity(), "schedule_lessons");
-                                        Static.snackBar(getActivity(), getActivity().getString(success ? R.string.changes_cleared : R.string.something_went_wrong));
+                                        boolean success = Storage.file.perm.clear(activity, "schedule_lessons");
+                                        Static.snackBar(activity, activity.getString(success ? R.string.changes_cleared : R.string.something_went_wrong));
                                     }
                                 })
                                 .setNegativeButton(android.R.string.cancel, null)
                                 .create().show();
+                        }
                         return false;
                     }
                 });
@@ -370,8 +395,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            getActivity().finish();
-            startActivity(new Intent(getActivity(), AboutActivity.class));
+            Activity activity = getActivity();
+            if (activity != null) {
+                activity.finish();
+                startActivity(new Intent(activity, AboutActivity.class));
+            }
         }
     }
 

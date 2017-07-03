@@ -106,10 +106,10 @@ public class SubjectShowFragment extends ConnectedFragment {
                         // отображаем заголовок
                         activity.updateToolbar(subject.getString("name"), R.drawable.ic_e_journal);
                         // отображаем шапку
-                        TextView as_info_term = (TextView) getActivity().findViewById(R.id.as_info_term);
-                        TextView as_info_type = (TextView) getActivity().findViewById(R.id.as_info_type);
-                        TextView as_result = (TextView) getActivity().findViewById(R.id.as_result);
-                        TextView as_current_points = (TextView) getActivity().findViewById(R.id.as_current_points);
+                        TextView as_info_term = (TextView) activity.findViewById(R.id.as_info_term);
+                        TextView as_info_type = (TextView) activity.findViewById(R.id.as_info_type);
+                        TextView as_result = (TextView) activity.findViewById(R.id.as_result);
+                        TextView as_current_points = (TextView) activity.findViewById(R.id.as_current_points);
                         if (as_info_term != null) {
                             as_info_term.setText(termSub + " " + getString(R.string.semester));
                         }
@@ -145,7 +145,7 @@ public class SubjectShowFragment extends ConnectedFragment {
                         }
                         // отображаем список оценок
                         JSONArray points = subject.getJSONArray("points");
-                        LinearLayout as_container = (LinearLayout) getActivity().findViewById(R.id.as_container);
+                        LinearLayout as_container = (LinearLayout) activity.findViewById(R.id.as_container);
                         if (as_container != null) {
                             if (points.length() == 0) {
                                 View view = inflate(R.layout.nothing_to_display);
@@ -180,7 +180,7 @@ public class SubjectShowFragment extends ConnectedFragment {
                                         as_container.addView(view);
                                     } catch (Exception e) {
                                         Static.error(e);
-                                        Static.snackBar(getActivity(), getString(R.string.something_went_wrong));
+                                        Static.snackBar(activity, getString(R.string.something_went_wrong));
                                     }
                                 }
                             }
@@ -200,7 +200,7 @@ public class SubjectShowFragment extends ConnectedFragment {
     }
 
     private View inflate(int layoutId) throws InflateException {
-        return ((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
+        return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
 
     private String markConverter(String value) {

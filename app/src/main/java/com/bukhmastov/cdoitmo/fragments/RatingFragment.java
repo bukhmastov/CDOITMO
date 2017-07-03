@@ -48,7 +48,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.v(TAG, "Fragment created");
-        rating = new Rating(getActivity());
+        rating = new Rating(activity);
         ready = new HashMap<>();
         fragmentRequestHandle = new HashMap<>();
         ready.put("Rating", 0);
@@ -251,7 +251,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
         Log.v(TAG, "loadFailed");
         try {
             draw(R.layout.state_try_again);
-            View try_again_reload = getActivity().findViewById(R.id.try_again_reload);
+            View try_again_reload = activity.findViewById(R.id.try_again_reload);
             if (try_again_reload != null) {
                 try_again_reload.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -272,7 +272,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
             // отображаем интерфейс
             draw(R.layout.rating_layout);
             if(dataR == null){
-                ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.swipe_container));
+                ViewGroup vg = ((ViewGroup) activity.findViewById(R.id.swipe_container));
                 if (vg != null) {
                     vg.removeAllViews();
                     vg.addView(inflate(R.layout.state_failed_compact), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
@@ -291,9 +291,9 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                     courses.add(hashMap);
                 }
                 // работаем со списком
-                ListView rl_list_view = (ListView) getActivity().findViewById(R.id.rl_list_view);
+                ListView rl_list_view = (ListView) activity.findViewById(R.id.rl_list_view);
                 if (rl_list_view != null) {
-                    rl_list_view.setAdapter(new RatingListView(getActivity(), courses));
+                    rl_list_view.setAdapter(new RatingListView(activity, courses));
                     rl_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                             Log.v(TAG, "rl_list_view clicked");
@@ -326,14 +326,14 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                 }
             }
             // работаем со свайпом
-            SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) getActivity().findViewById(R.id.swipe_container);
+            SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) activity.findViewById(R.id.swipe_container);
             if (mSwipeRefreshLayout != null) {
                 mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
                 mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
                 mSwipeRefreshLayout.setOnRefreshListener(this);
             }
             if (dataRL == null) {
-                ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.rl_list_container));
+                ViewGroup vg = ((ViewGroup) activity.findViewById(R.id.rl_list_container));
                 if (vg != null) {
                     vg.removeAllViews();
                     vg.addView(inflate(R.layout.state_failed_compact), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
@@ -342,7 +342,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                 ArrayAdapter<String> adapter;
                 int choose;
                 // работаем с выбором факультета
-                Spinner rl_spinner_faculty = (Spinner) getActivity().findViewById(R.id.rl_spinner_faculty);
+                Spinner rl_spinner_faculty = (Spinner) activity.findViewById(R.id.rl_spinner_faculty);
                 if (rl_spinner_faculty != null) {
                     final ArrayList<String> rl_spinner_faculty_arr = new ArrayList<>();
                     final ArrayList<String> rl_spinner_faculty_arr_ids = new ArrayList<>();
@@ -354,7 +354,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                         rl_spinner_faculty_arr_ids.add(obj.getString("depId"));
                         if (Objects.equals(rating_list_choose_faculty, obj.getString("depId"))) choose = i;
                     }
-                    adapter = new ArrayAdapter<>(getActivity(), R.layout.spinner_rating_layout, rl_spinner_faculty_arr);
+                    adapter = new ArrayAdapter<>(activity, R.layout.spinner_rating_layout, rl_spinner_faculty_arr);
                     adapter.setDropDownViewResource(R.layout.spinner_rating_dropdown_layout);
                     rl_spinner_faculty.setAdapter(adapter);
                     rl_spinner_faculty.setSelection(choose);
@@ -368,7 +368,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                     });
                 }
                 // работаем с выбором курса
-                Spinner rl_spinner_course = (Spinner) getActivity().findViewById(R.id.rl_spinner_course);
+                Spinner rl_spinner_course = (Spinner) activity.findViewById(R.id.rl_spinner_course);
                 if (rl_spinner_course != null) {
                     final ArrayList<String> rl_spinner_course_arr = new ArrayList<>();
                     final ArrayList<String> rl_spinner_course_arr_ids = new ArrayList<>();
@@ -378,7 +378,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                         rl_spinner_course_arr_ids.add(String.valueOf(i));
                         if (Objects.equals(rating_list_choose_course, String.valueOf(i))) choose = i - 1;
                     }
-                    adapter = new ArrayAdapter<>(getActivity(), R.layout.spinner_rating_layout, rl_spinner_course_arr);
+                    adapter = new ArrayAdapter<>(activity, R.layout.spinner_rating_layout, rl_spinner_course_arr);
                     adapter.setDropDownViewResource(R.layout.spinner_rating_dropdown_layout);
                     rl_spinner_course.setAdapter(adapter);
                     rl_spinner_course.setSelection(choose);
@@ -392,7 +392,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                     });
                 }
                 // инициализируем кнопку
-                ImageButton rl_button = (ImageButton) getActivity().findViewById(R.id.rl_button);
+                ImageButton rl_button = (ImageButton) activity.findViewById(R.id.rl_button);
                 if (rl_button != null) {
                     rl_button.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -420,7 +420,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
 
     private void draw(int layoutId){
         try {
-            ViewGroup vg = ((ViewGroup) getActivity().findViewById(R.id.container_rating));
+            ViewGroup vg = ((ViewGroup) activity.findViewById(R.id.container_rating));
             if (vg != null) {
                 vg.removeAllViews();
                 vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
@@ -430,7 +430,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
         }
     }
     private View inflate(int layoutId) throws InflateException {
-        return ((LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
+        return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
 
 }
