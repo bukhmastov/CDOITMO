@@ -64,7 +64,12 @@ public class LoginActivity extends AppCompatActivity {
             LoginActivity.auto_logout = false;
             route(SIGNAL_LOGOUT);
         } else {
-            route(getIntent().getIntExtra("state", SIGNAL_LOGIN));
+            Intent intent = getIntent();
+            if (intent != null) {
+                route(intent.getIntExtra("state", SIGNAL_LOGIN));
+            } else {
+                route(SIGNAL_LOGIN);
+            }
         }
 
     }
@@ -330,7 +335,7 @@ public class LoginActivity extends AppCompatActivity {
                 draw(R.layout.state_auth);
                 View interrupt_auth = findViewById(R.id.interrupt_auth);
                 if (interrupt_auth != null) {
-                    interrupt_auth.setLayoutParams(new LinearLayout.LayoutParams(0, 0));
+                    Static.removeView(interrupt_auth);
                 }
                 TextView loading_message = (TextView) findViewById(R.id.loading_message);
                 if (loading_message != null) {
