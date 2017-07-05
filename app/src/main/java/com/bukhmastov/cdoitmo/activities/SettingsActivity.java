@@ -31,6 +31,9 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
+import com.bukhmastov.cdoitmo.firebase.FirebaseCrashProvider;
+import com.bukhmastov.cdoitmo.firebase.FirebaseMessagingProvider;
 import com.bukhmastov.cdoitmo.preferences.SchedulePreference;
 import com.bukhmastov.cdoitmo.utils.CtxWrapper;
 import com.bukhmastov.cdoitmo.utils.Log;
@@ -53,6 +56,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         if (Static.darkTheme) setTheme(R.style.AppTheme_Settings_Dark);
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
+        FirebaseAnalyticsProvider.logCurrentScreen(this);
     }
 
     @Override
@@ -146,8 +150,14 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                     Storage.file.cache.clear(this, "protocol#log");
                 }
                 break;
+            case "pref_allow_send_reports":
+                FirebaseCrashProvider.setEnabled(this, Storage.pref.get(this, "pref_allow_send_reports", true), true);
+                break;
+            case "pref_allow_collect_analytics":
+                FirebaseAnalyticsProvider.setEnabled(this, Storage.pref.get(this, "pref_allow_collect_analytics", true), true);
+                break;
             case "pref_allow_owner_notifications":
-                Static.Firebase.toggleOwnerNotification(this);
+                FirebaseMessagingProvider.checkOwnerNotification(this);
                 break;
         }
     }
@@ -195,6 +205,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             Log.v(TAG, "GeneralPreferenceFragment created");
+            final Activity activity = getActivity();
+            FirebaseAnalyticsProvider.setCurrentScreen(activity, this.getClass());
+            FirebaseAnalyticsProvider.logCurrentScreen(activity, this.getClass().getSimpleName());
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
             bindPreferenceSummaryToValue(findPreference("pref_default_fragment"));
@@ -204,7 +217,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
                         Log.v(TAG, "pref_reset_application clicked");
-                        final Activity activity = getActivity();
                         if (activity != null) {
                             new AlertDialog.Builder(activity)
                                 .setTitle(getString(R.string.pref_reset_application_summary))
@@ -237,6 +249,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             Log.v(TAG, "CachePreferenceFragment created");
+            final Activity activity = getActivity();
+            FirebaseAnalyticsProvider.setCurrentScreen(activity, this.getClass());
+            FirebaseAnalyticsProvider.logCurrentScreen(activity, this.getClass().getSimpleName());
             addPreferencesFromResource(R.xml.pref_cache);
             setHasOptionsMenu(true);
             bindPreferenceSummaryToValue(findPreference("pref_tab_refresh"));
@@ -247,7 +262,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
                         Log.v(TAG, "pref_clear_cache clicked");
-                        Activity activity = getActivity();
                         if (activity != null) {
                             boolean success = Storage.file.cache.clear(activity);
                             Static.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
@@ -299,6 +313,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             Log.v(TAG, "NotificationsPreferenceFragment created");
+            final Activity activity = getActivity();
+            FirebaseAnalyticsProvider.setCurrentScreen(activity, this.getClass());
+            FirebaseAnalyticsProvider.logCurrentScreen(activity, this.getClass().getSimpleName());
             addPreferencesFromResource(R.xml.pref_notifications);
             setHasOptionsMenu(true);
             bindPreferenceSummaryToValue(findPreference("pref_notify_frequency"));
@@ -316,6 +333,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             Log.v(TAG, "AdditionalPreferenceFragment created");
+            final Activity activity = getActivity();
+            FirebaseAnalyticsProvider.setCurrentScreen(activity, this.getClass());
+            FirebaseAnalyticsProvider.logCurrentScreen(activity, this.getClass().getSimpleName());
             addPreferencesFromResource(R.xml.pref_additional);
             setHasOptionsMenu(true);
             bindPreferenceSummaryToValue(findPreference("pref_e_journal_term"));
@@ -330,7 +350,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
                         Log.v(TAG, "pref_schedule_lessons_clear_cache clicked");
-                        Activity activity = getActivity();
                         if (activity != null) {
                             boolean success = Storage.file.cache.clear(activity, "schedule_lessons");
                             Static.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
@@ -345,7 +364,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
                         Log.v(TAG, "pref_schedule_exams_clear_cache clicked");
-                        Activity activity = getActivity();
                         if (activity != null) {
                             boolean success = Storage.file.cache.clear(activity, "schedule_exams");
                             Static.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
@@ -354,14 +372,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                     }
                 });
             }
-
             Preference pref_schedule_lessons_clear_additional = findPreference("pref_schedule_lessons_clear_additional");
             if (pref_schedule_lessons_clear_additional != null) {
                 pref_schedule_lessons_clear_additional.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
                         Log.v(TAG, "pref_schedule_lessons_clear_additional clicked");
-                        final Activity activity = getActivity();
                         if (activity != null) {
                             new AlertDialog.Builder(activity)
                                 .setTitle(getString(R.string.pref_schedule_lessons_clear_additional_title))
@@ -382,7 +398,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                     }
                 });
             }
-
         }
         @Override
         public void onDestroy() {
@@ -395,7 +410,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            Activity activity = getActivity();
+            final Activity activity = getActivity();
+            FirebaseAnalyticsProvider.setCurrentScreen(activity, this.getClass());
+            FirebaseAnalyticsProvider.logCurrentScreen(activity, this.getClass().getSimpleName());
             if (activity != null) {
                 activity.finish();
                 startActivity(new Intent(activity, AboutActivity.class));

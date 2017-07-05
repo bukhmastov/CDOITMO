@@ -9,6 +9,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.ConnectedActivity;
 import com.bukhmastov.cdoitmo.converters.ScheduleLessonsAdditionalConverter;
 import com.bukhmastov.cdoitmo.converters.ScheduleLessonsConverter;
+import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsModifyFragment;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
@@ -533,6 +534,11 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
             }
             Storage.file.perm.put(context, "schedule_lessons#reduced#" + cache_token, reduced.toString());
             ScheduleLessonsFragment.reSchedule(context);
+            FirebaseAnalyticsProvider.logEvent(
+                    context,
+                    FirebaseAnalyticsProvider.Event.SCHEDULE_LESSON_REDUCE,
+                    FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LESSON_TITLE, lesson.getString("subject"))
+            );
         } catch (Exception e) {
             Static.error(e);
             Static.toast(context, context.getString(R.string.something_went_wrong));
@@ -576,60 +582,6 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
             Static.error(e);
             Static.toast(context, context.getString(R.string.something_went_wrong));
         }
-    }
-    public static void deleteLesson(Context context, String cache_token, int index, JSONObject lesson){
-        Log.v(TAG, "deleteLesson | cache_token=" + cache_token);
-        try {
-            if (!Objects.equals(lesson.getString("cdoitmo_type"), "synthetic")) throw new Exception("Wrong cdoitmo_type type");
-            if (!deleteLesson(context, cache_token, index, Static.crypt(lesson.toString()))) throw new Exception("Failed to delete lesson");
-            ScheduleLessonsFragment.reSchedule(context);
-        } catch (Exception e) {
-            Static.error(e);
-            Static.toast(context, context.getString(R.string.something_went_wrong));
-        }
-    }
-    public static boolean deleteLesson(Context context, String cache_token, int index, String hash){
-        Log.v(TAG, "deleteLesson(hash) | cache_token=" + cache_token);
-        try {
-            String addedStr = Storage.file.perm.get(context, "schedule_lessons#added#" + cache_token, "");
-            JSONArray added;
-            if (addedStr.isEmpty()) {
-                added = new JSONArray();
-            } else {
-                added = new JSONArray(addedStr);
-            }
-            // remove
-            for (int i = 0; i < added.length(); i++) {
-                JSONObject day = added.getJSONObject(i);
-                if (day.getInt("index") == index) {
-                    JSONArray lessons = day.getJSONArray("lessons");
-                    for (int j = 0; j < lessons.length(); j++) {
-                        if (Objects.equals(hash, Static.crypt(lessons.getJSONObject(j).toString()))) {
-                            lessons.remove(j);
-                            break;
-                        }
-                    }
-                    if (lessons.length() == 0) {
-                        added.remove(i);
-                    }
-                    break;
-                }
-            }
-            if (added.length() == 0) {
-                Storage.file.perm.delete(context, "schedule_lessons#added#" + cache_token);
-            } else {
-                Storage.file.perm.put(context, "schedule_lessons#added#" + cache_token, added.toString());
-            }
-            return true;
-        } catch (Exception e) {
-            Static.error(e);
-            return false;
-        }
-    }
-    public static String getCast(JSONObject lesson) throws JSONException {
-        JSONObject replica = new JSONObject(lesson.toString());
-        replica.remove("cdoitmo_type");
-        return replica.toString();
     }
     public static void createLesson(ConnectedActivity activity, JSONObject schedule, int dayIndex, int week) throws JSONException {
         Log.v(TAG, "createLesson | cache_token=" + schedule.getString("cache_token"));
@@ -712,11 +664,65 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                 added.put(day);
             }
             Storage.file.perm.put(context, "schedule_lessons#added#" + lessonUnit.cache_token, added.toString());
+            FirebaseAnalyticsProvider.logEvent(
+                    context,
+                    FirebaseAnalyticsProvider.Event.SCHEDULE_LESSON_ADD,
+                    FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LESSON_TITLE, lessonUnit.title)
+            );
         } catch (Exception e) {
             Static.error(e);
             result = false;
         }
         return result;
+    }
+    public static void deleteLesson(Context context, String cache_token, int index, JSONObject lesson){
+        Log.v(TAG, "deleteLesson | cache_token=" + cache_token);
+        try {
+            if (!Objects.equals(lesson.getString("cdoitmo_type"), "synthetic")) throw new Exception("Wrong cdoitmo_type type");
+            if (!deleteLesson(context, cache_token, index, Static.crypt(lesson.toString()))) throw new Exception("Failed to delete lesson");
+            ScheduleLessonsFragment.reSchedule(context);
+        } catch (Exception e) {
+            Static.error(e);
+            Static.toast(context, context.getString(R.string.something_went_wrong));
+        }
+    }
+    public static boolean deleteLesson(Context context, String cache_token, int index, String hash){
+        Log.v(TAG, "deleteLesson(hash) | cache_token=" + cache_token);
+        try {
+            String addedStr = Storage.file.perm.get(context, "schedule_lessons#added#" + cache_token, "");
+            JSONArray added;
+            if (addedStr.isEmpty()) {
+                added = new JSONArray();
+            } else {
+                added = new JSONArray(addedStr);
+            }
+            // remove
+            for (int i = 0; i < added.length(); i++) {
+                JSONObject day = added.getJSONObject(i);
+                if (day.getInt("index") == index) {
+                    JSONArray lessons = day.getJSONArray("lessons");
+                    for (int j = 0; j < lessons.length(); j++) {
+                        if (Objects.equals(hash, Static.crypt(lessons.getJSONObject(j).toString()))) {
+                            lessons.remove(j);
+                            break;
+                        }
+                    }
+                    if (lessons.length() == 0) {
+                        added.remove(i);
+                    }
+                    break;
+                }
+            }
+            if (added.length() == 0) {
+                Storage.file.perm.delete(context, "schedule_lessons#added#" + cache_token);
+            } else {
+                Storage.file.perm.put(context, "schedule_lessons#added#" + cache_token, added.toString());
+            }
+            return true;
+        } catch (Exception e) {
+            Static.error(e);
+            return false;
+        }
     }
     public static void editLesson(ConnectedActivity activity, JSONObject schedule, JSONObject lesson, int dayIndex, int week) throws Exception {
         Log.v(TAG, "editLesson | cache_token=" + schedule.getString("cache_token"));
@@ -733,6 +739,11 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
     public static boolean editLesson(Context context, String cache_token, int index, String hash, LessonUnit lessonUnit){
         Log.v(TAG, "editLesson(LessonUnit) | cache_token=" + cache_token);
         return deleteLesson(context, cache_token, index, hash) && createLesson(context, lessonUnit);
+    }
+    public static String getCast(JSONObject lesson) throws JSONException {
+        JSONObject replica = new JSONObject(lesson.toString());
+        replica.remove("cdoitmo_type");
+        return replica.toString();
     }
     private static String getLessonField(String field, String def){
         return field == null || field.isEmpty() ? def : field;

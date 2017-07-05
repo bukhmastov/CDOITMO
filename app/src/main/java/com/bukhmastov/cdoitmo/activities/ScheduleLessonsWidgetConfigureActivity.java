@@ -27,6 +27,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapters.TeacherPickerListView;
+import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
 import com.bukhmastov.cdoitmo.utils.CtxWrapper;
@@ -63,6 +64,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
         Log.i(TAG, "Activity created");
+        FirebaseAnalyticsProvider.logCurrentScreen(this);
         setResult(RESULT_CANCELED);
         boolean isDarkTheme = Storage.pref.get(this, "pref_dark_theme", false);
         if (isDarkTheme) setTheme(R.style.AppTheme_Dark);
@@ -187,6 +189,11 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
                         Intent resultValue = new Intent();
                         resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
                         close(RESULT_OK, resultValue);
+                        FirebaseAnalyticsProvider.logEvent(
+                                context,
+                                FirebaseAnalyticsProvider.Event.WIDGET_INSTALL,
+                                FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.WIDGET_QUERY, query)
+                        );
                     } catch (Exception e) {
                         Log.w(TAG, "failed to create widget");
                         Static.error(e);

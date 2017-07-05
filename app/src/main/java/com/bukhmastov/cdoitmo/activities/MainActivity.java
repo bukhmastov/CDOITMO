@@ -13,6 +13,7 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragments.ERegisterFragment;
 import com.bukhmastov.cdoitmo.fragments.ProtocolFragment;
 import com.bukhmastov.cdoitmo.fragments.RatingFragment;
@@ -39,6 +40,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
         if (Static.darkTheme) setTheme(R.style.AppTheme_Dark);
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
+        FirebaseAnalyticsProvider.logCurrentScreen(this);
         setContentView(R.layout.activity_main);
 
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar_main));

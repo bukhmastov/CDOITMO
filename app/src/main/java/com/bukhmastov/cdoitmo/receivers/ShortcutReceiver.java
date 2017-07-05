@@ -11,6 +11,7 @@ import com.bukhmastov.cdoitmo.activities.DaysRemainingWidgetActivity;
 import com.bukhmastov.cdoitmo.activities.ShortcutReceiverActivity;
 import com.bukhmastov.cdoitmo.activities.SplashActivity;
 import com.bukhmastov.cdoitmo.activities.TimeRemainingWidgetActivity;
+import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 
@@ -75,6 +76,11 @@ public class ShortcutReceiver extends BroadcastReceiver {
     private void resolve(Context context, String shortcut_type, String shortcut_data){
         Log.v(TAG, "resolve | shortcut_type=" + shortcut_type + " | shortcut_data=" + shortcut_data);
         try {
+            FirebaseAnalyticsProvider.logEvent(
+                    context,
+                    FirebaseAnalyticsProvider.Event.SHORTCUT_USE,
+                    FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.SHORTCUT_INFO, shortcut_type + "#" + shortcut_data)
+            );
             switch (shortcut_type) {
                 case "tab": {
                     Intent intent = new Intent(context, SplashActivity.class);
@@ -119,6 +125,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
             Static.error(e);
         }
     }
+
     private void addShortcut(Context context, String type, String data) {
         Log.v(TAG, "addShortcut | type=" + type + " | data=" + data);
         try {
@@ -169,6 +176,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
             Static.error(e);
         }
     }
+
     private void installShortcut(Context context, String type, String data, String label, @DrawableRes int icon){
         Log.v(TAG, "installShortcut | type=" + type + " | data=" + data);
         try {
@@ -201,6 +209,11 @@ public class ShortcutReceiver extends BroadcastReceiver {
                 addIntent.putExtra("duplicate", false);
                 context.sendBroadcast(addIntent);
             //}
+            FirebaseAnalyticsProvider.logEvent(
+                    context,
+                    FirebaseAnalyticsProvider.Event.SHORTCUT_INSTALL,
+                    FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.SHORTCUT_INFO, type + "#" + data)
+            );
         } catch (Exception e) {
             Static.error(e);
         }

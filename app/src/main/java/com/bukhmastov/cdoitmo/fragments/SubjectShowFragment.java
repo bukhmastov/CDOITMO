@@ -11,6 +11,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.objects.ERegister;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
@@ -33,6 +34,12 @@ public class SubjectShowFragment extends ConnectedFragment {
     private String nameSub = null;
 
     @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_subject_show, container, false);
     }
@@ -41,6 +48,12 @@ public class SubjectShowFragment extends ConnectedFragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         display();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        FirebaseAnalyticsProvider.setCurrentScreen(activity, this.getClass());
     }
 
     private void display() {

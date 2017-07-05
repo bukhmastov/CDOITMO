@@ -1,6 +1,9 @@
 package com.bukhmastov.cdoitmo.activities;
 
+import android.os.Bundle;
+
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragments.ScheduleExamsFragment;
 import com.bukhmastov.cdoitmo.objects.entities.Suggestion;
 import com.bukhmastov.cdoitmo.utils.Log;
@@ -18,6 +21,12 @@ public class ScheduleExamsSearchActivity extends SearchActivity {
     private static final String TAG = "SESearchActivity";
     private static final int numberOfSuggestions = 3;
     private static final int maxCountOfSuggestionsToStore = 100;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        FirebaseAnalyticsProvider.logCurrentScreen(this);
+    }
 
     @Override
     String getHint() {

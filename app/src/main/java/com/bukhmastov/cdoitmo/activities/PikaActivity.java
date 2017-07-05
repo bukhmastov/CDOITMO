@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.utils.CtxWrapper;
 import com.bukhmastov.cdoitmo.utils.Log;
 
@@ -21,8 +22,9 @@ public class PikaActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_pika);
         Log.v(TAG, "PIKA is no longer hiding");
+        FirebaseAnalyticsProvider.logCurrentScreen(this);
+        setContentView(R.layout.activity_pika);
         overridePendingTransition(R.anim.zoom_bottom_in, R.anim.zoom_bottom_out);
         if (random.nextInt(6) % 6 == 0) {
             Log.v(TAG, "LEGENDARY D1MA$ APPEARS, so pika went away");

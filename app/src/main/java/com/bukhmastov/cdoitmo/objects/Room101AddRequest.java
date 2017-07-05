@@ -13,6 +13,7 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragments.Room101Fragment;
 import com.bukhmastov.cdoitmo.network.Room101Client;
 import com.bukhmastov.cdoitmo.network.interfaces.Room101ClientResponseHandler;
@@ -480,6 +481,13 @@ public class Room101AddRequest {
             if (data == null) throw new NullPointerException("data cannot be null");
             if (!data.has("done")) throw new Exception("Empty data.done");
             callback.onDraw(getChooserLayout(data.getBoolean("done") ? activity.getString(R.string.request_accepted) : activity.getString(R.string.request_denied), null, null, null));
+            if (data.getBoolean("done")) {
+                FirebaseAnalyticsProvider.logEvent(
+                        activity,
+                        FirebaseAnalyticsProvider.Event.ROOM101_REQUEST_ADDED,
+                        FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.ROOM101_REQUEST_DETAILS, pick_date + "#" + pick_time_start + "#" + pick_time_end)
+                );
+            }
         } catch (Exception e){
             Static.error(e);
             failed();

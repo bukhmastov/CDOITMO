@@ -11,6 +11,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoClient;
 import com.bukhmastov.cdoitmo.objects.DaysRemainingWidget;
 import com.bukhmastov.cdoitmo.objects.ScheduleExams;
@@ -43,6 +44,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
         if (Static.darkTheme) setTheme(R.style.AppTheme_Popup_Dark);
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
+        FirebaseAnalyticsProvider.logCurrentScreen(this);
         setContentView(R.layout.activity_days_remaining_widget);
         try {
             String shortcut_data = getIntent().getStringExtra("shortcut_data");

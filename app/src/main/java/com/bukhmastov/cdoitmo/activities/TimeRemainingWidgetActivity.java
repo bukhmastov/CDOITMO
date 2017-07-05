@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
 import com.bukhmastov.cdoitmo.objects.TimeRemainingWidget;
@@ -37,6 +38,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
         if (Static.darkTheme) setTheme(R.style.AppTheme_Popup_Dark);
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
+        FirebaseAnalyticsProvider.logCurrentScreen(this);
         setContentView(R.layout.activity_time_remaining_widget);
         try {
             String shortcut_data = getIntent().getStringExtra("shortcut_data");

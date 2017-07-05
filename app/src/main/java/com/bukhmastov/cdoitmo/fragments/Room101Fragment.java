@@ -18,6 +18,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.builders.Room101ReviewBuilder;
+import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.Room101Client;
 import com.bukhmastov.cdoitmo.network.interfaces.Room101ClientResponseHandler;
 import com.bukhmastov.cdoitmo.objects.Room101AddRequest;
@@ -47,6 +48,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.v(TAG, "Fragment created");
+        FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
         Activity activity = getActivity();
         if (activity != null) {
             Intent intent = activity.getIntent();
@@ -74,6 +76,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
     public void onResume() {
         super.onResume();
         Log.v(TAG, "resumed");
+        FirebaseAnalyticsProvider.setCurrentScreen(activity, this.getClass());
         if (!loaded) {
             loaded = true;
             load();
@@ -167,6 +170,10 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                 Log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status + " | failure(rather success) | statusCode=" + statusCode);
                 if (statusCode == 302) {
                     load(true);
+                    FirebaseAnalyticsProvider.logEvent(
+                            getContext(),
+                            FirebaseAnalyticsProvider.Event.ROOM101_REQUEST_DENIED
+                    );
                 } else {
                     draw(R.layout.state_try_again);
                     TextView try_again_message = (TextView) activity.findViewById(R.id.try_again_message);

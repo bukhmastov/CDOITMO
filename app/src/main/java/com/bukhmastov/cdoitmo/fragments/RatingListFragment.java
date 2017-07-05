@@ -13,6 +13,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapters.RatingTopListView;
+import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.Client;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.IfmoClient;
@@ -39,6 +40,12 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
     private String years = null;
     private boolean loaded = false;
     private RequestHandle fragmentRequestHandle = null;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -77,6 +84,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
     public void onResume() {
         super.onResume();
         Log.v(TAG, "Fragment resumed");
+        FirebaseAnalyticsProvider.setCurrentScreen(activity, this.getClass());
         if (!loaded) {
             loaded = true;
             load();

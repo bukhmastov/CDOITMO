@@ -23,6 +23,7 @@ import com.bukhmastov.cdoitmo.activities.MainActivity;
 import com.bukhmastov.cdoitmo.activities.ScheduleExamsSearchActivity;
 import com.bukhmastov.cdoitmo.adapters.TeacherPickerListView;
 import com.bukhmastov.cdoitmo.builders.ScheduleExamsBuilder;
+import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.objects.ScheduleExams;
 import com.bukhmastov.cdoitmo.utils.Log;
@@ -54,6 +55,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.v(TAG, "Fragment created");
+        FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
         scheduleExams = new ScheduleExams(getContext());
         scheduleExams.setHandler(this);
     }
@@ -67,6 +69,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
     public void onResume() {
         super.onResume();
         Log.v(TAG, "resumed");
+        FirebaseAnalyticsProvider.setCurrentScreen(activity, this.getClass());
         try {
             if (MainActivity.menu != null && !Static.OFFLINE_MODE) {
                 MenuItem action_schedule_exams_search = MainActivity.menu.findItem(R.id.action_schedule_exams_search);

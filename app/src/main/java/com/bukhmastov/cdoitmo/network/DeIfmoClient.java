@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 
+import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoClientResponseHandler;
 import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoDrawableClientResponseHandler;
 import com.bukhmastov.cdoitmo.parse.UserDataParse;
@@ -87,6 +88,7 @@ public class DeIfmoClient extends Client {
                                         Static.error(e);
                                         Storage.file.general.delete(context, "user#week");
                                     }
+                                    FirebaseAnalyticsProvider.setUserProperties(context, result.get("group"));
                                     responseHandler.onSuccess(200, "");
                                 } else {
                                     Log.v(TAG, "check | success | not parsed");

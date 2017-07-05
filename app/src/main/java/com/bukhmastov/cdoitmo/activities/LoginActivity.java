@@ -18,6 +18,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoClientResponseHandler;
 import com.bukhmastov.cdoitmo.utils.CtxWrapper;
@@ -50,6 +51,7 @@ public class LoginActivity extends AppCompatActivity {
         if (Static.darkTheme) setTheme(R.style.AppTheme_Dark);
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
+        FirebaseAnalyticsProvider.logCurrentScreen(this);
         setContentView(R.layout.activity_login);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar_login));
         ActionBar actionBar = getSupportActionBar();
@@ -374,6 +376,14 @@ public class LoginActivity extends AppCompatActivity {
                 }
                 if (!found) accounts.put(login);
                 Storage.file.general.put(context, "users#list", accounts.toString());
+                Bundle bundle;
+                bundle = FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_COUNT, accounts.length());
+                bundle = FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_NEW, found ? "old" : "new", bundle);
+                FirebaseAnalyticsProvider.logEvent(
+                        context,
+                        FirebaseAnalyticsProvider.Event.LOGIN,
+                        bundle
+                );
             } catch (Exception e) {
                 Static.error(e);
             }
@@ -395,6 +405,11 @@ public class LoginActivity extends AppCompatActivity {
                     }
                 }
                 Storage.file.general.put(context, "users#list", accounts.toString());
+                FirebaseAnalyticsProvider.logEvent(
+                        context,
+                        FirebaseAnalyticsProvider.Event.LOGOUT,
+                        FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_COUNT, accounts.length())
+                );
             } catch (Exception e) {
                 Static.error(e);
             }

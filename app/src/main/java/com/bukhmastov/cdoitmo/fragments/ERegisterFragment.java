@@ -17,6 +17,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapters.SubjectListView;
+import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoRestClientResponseHandler;
 import com.bukhmastov.cdoitmo.objects.ERegister;
@@ -47,6 +48,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.v(TAG, "Fragment created");
+        FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
         eRegister = new ERegister(activity);
         group = Storage.file.cache.get(getContext(), "eregister#params#selected_group", "");
         term = -2;
@@ -67,6 +69,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
     public void onResume() {
         super.onResume();
         Log.v(TAG, "resumed");
+        FirebaseAnalyticsProvider.setCurrentScreen(activity, this.getClass());
         if (!loaded) {
             loaded = true;
             load();

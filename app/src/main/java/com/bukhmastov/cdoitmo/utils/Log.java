@@ -4,7 +4,7 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.google.firebase.crash.FirebaseCrash;
+import com.bukhmastov.cdoitmo.firebase.FirebaseCrashProvider;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -99,48 +99,48 @@ public class Log {
             }
             logList.add(logItem);
         } catch (Throwable throwable) {
-            FirebaseCrash.report(throwable);
+            FirebaseCrashProvider.exception(throwable);
             android.util.Log.e("Log.addLog", null, throwable);
         }
     }
 
     public static int v(String TAG, String log){
-        FirebaseCrash.log("VERBOSE" + "/" + TAG + " " + log);
+        FirebaseCrashProvider.v(TAG, log);
         addLog(new LogItem(VERBOSE, TAG, log));
         return android.util.Log.v(TAG, log);
     }
     public static int d(String TAG, String log){
-        FirebaseCrash.log("DEBUG" + "/" + TAG + " " + log);
+        FirebaseCrashProvider.d(TAG, log);
         addLog(new LogItem(DEBUG, TAG, log));
         return android.util.Log.d(TAG, log);
     }
     public static int i(String TAG, String log){
-        FirebaseCrash.log("INFO" + "/" + TAG + " " + log);
+        FirebaseCrashProvider.i(TAG, log);
         addLog(new LogItem(INFO, TAG, log));
         return android.util.Log.i(TAG, log);
     }
     public static int w(String TAG, String log){
-        FirebaseCrash.log("WARN" + "/" + TAG + " " + log);
+        FirebaseCrashProvider.w(TAG, log);
         addLog(new LogItem(WARN, TAG, log));
         return android.util.Log.w(TAG, log);
     }
     public static int e(String TAG, String log){
-        FirebaseCrash.log("ERROR" + "/" + TAG + " " + log);
+        FirebaseCrashProvider.e(TAG, log);
         addLog(new LogItem(ERROR, TAG, log));
         return android.util.Log.e(TAG, log);
     }
     public static int wtf(String TAG, String log){
-        FirebaseCrash.report(new Exception("WTF" + "/" + TAG + " " + log));
+        FirebaseCrashProvider.wtf(TAG, log);
         addLog(new LogItem(WTF, TAG, log));
         return android.util.Log.wtf(TAG, log);
     }
     public static int wtf(Throwable throwable){
-        FirebaseCrash.report(throwable);
+        FirebaseCrashProvider.wtf(throwable);
         addLog(new LogItem(WTF_EXCEPTION, throwable));
         return android.util.Log.wtf("Assert", null, throwable);
     }
     public static int exception(Throwable throwable){
-        FirebaseCrash.report(throwable);
+        FirebaseCrashProvider.exception(throwable);
         addLog(new LogItem(EXCEPTION, throwable));
         return android.util.Log.e("Exception", null, throwable);
     }

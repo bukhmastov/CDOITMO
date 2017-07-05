@@ -21,6 +21,7 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.MainActivity;
 import com.bukhmastov.cdoitmo.adapters.ProtocolListView;
+import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoRestClientResponseHandler;
 import com.bukhmastov.cdoitmo.objects.Protocol;
@@ -51,6 +52,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.v(TAG, "Fragment created");
+        FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
         number_of_weeks = Integer.parseInt(Storage.pref.get(getContext(), "pref_protocol_changes_weeks", "1"));
         protocol = new Protocol(activity);
     }
@@ -80,6 +82,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
     public void onResume() {
         super.onResume();
         Log.v(TAG, "resumed");
+        FirebaseAnalyticsProvider.setCurrentScreen(activity, this.getClass());
         try {
             if (MainActivity.menu != null) {
                 final MenuItem simple = MainActivity.menu.findItem(R.id.action_protocol_changes_switch_to_simple);

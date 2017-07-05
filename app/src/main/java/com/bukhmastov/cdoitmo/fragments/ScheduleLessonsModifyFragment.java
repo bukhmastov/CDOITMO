@@ -19,6 +19,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapters.TeacherPickerAdapter;
+import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
 import com.bukhmastov.cdoitmo.objects.entities.LessonUnit;
 import com.bukhmastov.cdoitmo.utils.Log;
@@ -47,6 +48,12 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
     private LessonUnit lessonUnit;
     private int index = 0;
     private String hash = null;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -78,6 +85,12 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
             Static.error(e);
             activity.back();
         }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        FirebaseAnalyticsProvider.setCurrentScreen(activity, this.getClass());
     }
 
     private void display() {

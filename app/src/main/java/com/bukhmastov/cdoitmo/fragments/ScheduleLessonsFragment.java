@@ -22,6 +22,7 @@ import com.bukhmastov.cdoitmo.activities.ScheduleLessonsSearchActivity;
 import com.bukhmastov.cdoitmo.adapters.PagerAdapter;
 import com.bukhmastov.cdoitmo.adapters.TeacherPickerListView;
 import com.bukhmastov.cdoitmo.converters.ScheduleLessonsAdditionalConverter;
+import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
 import com.bukhmastov.cdoitmo.utils.Log;
@@ -53,6 +54,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.v(TAG, "Fragment created");
+        FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
         scheduleLessons = new ScheduleLessons(getContext());
         scheduleLessons.setHandler(this);
     }
@@ -66,6 +68,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
     public void onResume() {
         super.onResume();
         Log.v(TAG, "resumed");
+        FirebaseAnalyticsProvider.setCurrentScreen(activity, this.getClass());
         try {
             if (MainActivity.menu != null && !Static.OFFLINE_MODE) {
                 MenuItem action_schedule_lessons_search = MainActivity.menu.findItem(R.id.action_schedule_lessons_search);

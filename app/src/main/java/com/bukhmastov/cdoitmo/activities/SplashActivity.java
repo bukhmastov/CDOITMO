@@ -11,6 +11,9 @@ import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
+import com.bukhmastov.cdoitmo.firebase.FirebaseCrashProvider;
+import com.bukhmastov.cdoitmo.firebase.FirebaseMessagingProvider;
 import com.bukhmastov.cdoitmo.utils.CtxWrapper;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
@@ -44,11 +47,16 @@ public class SplashActivity extends AppCompatActivity {
         PreferenceManager.setDefaultValues(this, R.xml.pref_notifications, false);
         PreferenceManager.setDefaultValues(this, R.xml.pref_additional, false);
 
+        FirebaseCrashProvider.setEnabled(this);
+        FirebaseAnalyticsProvider.setEnabled(this);
+
         Wipe.check(this);
 
         Static.init(this);
 
         LoginActivity.auto_logout = Storage.pref.get(this, "pref_auto_logout", false);
+
+        FirebaseAnalyticsProvider.logEvent(this, FirebaseAnalyticsProvider.Event.APP_OPEN);
 
         loaded();
     }
@@ -94,7 +102,7 @@ public class SplashActivity extends AppCompatActivity {
                     break;
                 }
                 case 58: {
-                    Static.Firebase.toggleOwnerNotification(context);
+                    FirebaseMessagingProvider.checkOwnerNotification(context);
                     break;
                 }
             }

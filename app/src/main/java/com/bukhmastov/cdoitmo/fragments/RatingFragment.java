@@ -17,6 +17,7 @@ import android.widget.Spinner;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.LoginActivity;
 import com.bukhmastov.cdoitmo.adapters.RatingListView;
+import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoClientResponseHandler;
 import com.bukhmastov.cdoitmo.objects.Rating;
@@ -48,6 +49,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.v(TAG, "Fragment created");
+        FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
         rating = new Rating(activity);
         ready = new HashMap<>();
         fragmentRequestHandle = new HashMap<>();
@@ -74,6 +76,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
     public void onResume() {
         super.onResume();
         Log.v(TAG, "resumed");
+        FirebaseAnalyticsProvider.setCurrentScreen(activity, this.getClass());
         if (!loaded) {
             loaded = true;
             load();
