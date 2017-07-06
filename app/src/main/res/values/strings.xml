@@ -90,6 +90,7 @@
     <string name="group">Группа</string>
     <string name="room">Аудитория</string>
     <string name="school_week">учебная неделя</string>
+    <string name="eregister_load_failed_retry_in_minute">Не удалось загрузить электронный журнал\nПовторите попытку через минуту</string>
     <string name="load_failed_retry_in_minute">Загрузка не удалась\nПовторите попытку через минуту</string>
     <string name="schedule_exams">Расписание сессии</string>
     <string name="no_exams">Экзаменов нет</string>

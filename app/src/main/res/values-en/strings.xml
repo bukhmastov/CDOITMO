@@ -87,6 +87,7 @@
     <string name="group">Group</string>
     <string name="room">Audience</string>
     <string name="school_week">study week</string>
+    <string name="eregister_load_failed_retry_in_minute">Failed to load e-register\nPlease try again in a minute</string>
     <string name="load_failed_retry_in_minute">Download failed\nPlease try again in a minute</string>
     <string name="schedule_exams">Schedule of exams</string>
     <string name="no_exams">No exams</string>

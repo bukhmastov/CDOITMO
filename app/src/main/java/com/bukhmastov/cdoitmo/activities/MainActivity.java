@@ -8,6 +8,7 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -50,6 +51,10 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
             ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, ((Toolbar) findViewById(R.id.toolbar_main)), R.string.navigation_drawer_open, R.string.navigation_drawer_close);
             mDrawerLayout.addDrawerListener(mDrawerToggle);
             mDrawerToggle.syncState();
+            if (Storage.pref.get(this, "pref_open_drawer_at_startup", true)) {
+                Storage.pref.put(this, "pref_open_drawer_at_startup", false);
+                mDrawerLayout.openDrawer(Gravity.START);
+            }
         } else {
             Static.tablet = true;
         }

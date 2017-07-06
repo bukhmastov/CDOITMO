@@ -111,6 +111,7 @@ public class Static {
         }
         Static.logout(context);
         Storage.file.all.reset(context);
+        Storage.pref.put(context, "pref_open_drawer_at_startup", true);
         Static.firstLaunch = true;
         Static.OFFLINE_MODE = false;
         MainActivity.loaded = false;

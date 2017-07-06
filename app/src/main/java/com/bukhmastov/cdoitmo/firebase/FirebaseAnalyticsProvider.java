@@ -50,6 +50,7 @@ public class FirebaseAnalyticsProvider {
         public static String LEVEL = "cdo_user_level";
         public static String COURSE = "cdo_user_course";
         public static String GROUP = "cdo_user_group";
+        public static String THEME = "cdo_theme";
     }
 
     private static FirebaseAnalytics getFirebaseAnalytics(Context context) throws Exception {

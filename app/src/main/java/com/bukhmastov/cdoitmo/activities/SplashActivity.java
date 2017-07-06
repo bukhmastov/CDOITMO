@@ -57,6 +57,7 @@ public class SplashActivity extends AppCompatActivity {
         LoginActivity.auto_logout = Storage.pref.get(this, "pref_auto_logout", false);
 
         FirebaseAnalyticsProvider.logEvent(this, FirebaseAnalyticsProvider.Event.APP_OPEN);
+        FirebaseAnalyticsProvider.setUserProperty(this, FirebaseAnalyticsProvider.Property.THEME, Storage.pref.get(this, "pref_dark_theme", false) ? "dark" : "light");
 
         loaded();
     }

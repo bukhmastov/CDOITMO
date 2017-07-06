@@ -262,7 +262,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
         try {
             draw(R.layout.state_try_again);
             TextView try_again_message = (TextView) activity.findViewById(R.id.try_again_message);
-            if (try_again_message != null) try_again_message.setText(R.string.load_failed_retry_in_minute);
+            if (try_again_message != null) try_again_message.setText(R.string.eregister_load_failed_retry_in_minute);
             View try_again_reload = activity.findViewById(R.id.try_again_reload);
             if (try_again_reload != null) {
                 try_again_reload.setOnClickListener(new View.OnClickListener() {
