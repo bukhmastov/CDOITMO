@@ -53,7 +53,7 @@ public class SubjectShowFragment extends ConnectedFragment {
     @Override
     public void onResume() {
         super.onResume();
-        FirebaseAnalyticsProvider.setCurrentScreen(activity, this.getClass());
+        FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
     }
 
     private void display() {

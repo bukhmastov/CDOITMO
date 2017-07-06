@@ -83,12 +83,30 @@ public class FirebaseAnalyticsProvider {
         return FirebaseAnalyticsProvider.enabled;
     }
 
-    public static void setCurrentScreen(Activity activity, Class screenClass) {
+    public static void setCurrentScreen(Activity activity) {
+        setCurrentScreen(activity, null, null);
+    }
+
+    public static void setCurrentScreen(Activity activity, String screenOverride) {
+        logCurrentScreen(activity, null, screenOverride);
+    }
+
+    public static void setCurrentScreen(Activity activity, Fragment fragment) {
+        logCurrentScreen(activity, fragment, null);
+    }
+
+    public static void setCurrentScreen(Activity activity, Fragment fragment, String view_screen) {
         try {
             if (!enabled) return;
-            if (activity != null) {
-                getFirebaseAnalytics(activity).setCurrentScreen(activity, screenClass.getSimpleName(), null);
+            if (activity == null) return;
+            if (view_screen == null) {
+                if (fragment != null) {
+                    view_screen = fragment.getClass().getSimpleName();
+                } else {
+                    view_screen = activity.getClass().getSimpleName();
+                }
             }
+            getFirebaseAnalytics(activity).setCurrentScreen(activity, view_screen, null);
         } catch (Exception e) {
             Static.error(e);
         }
@@ -111,10 +129,10 @@ public class FirebaseAnalyticsProvider {
             if (!enabled) return;
             if (activity == null) return;
             if (view_screen == null) {
-                if (fragment == null) {
-                    view_screen = activity.getClass().getSimpleName();
-                } else {
+                if (fragment != null) {
                     view_screen = fragment.getClass().getSimpleName();
+                } else {
+                    view_screen = activity.getClass().getSimpleName();
                 }
             }
             FirebaseAnalyticsProvider.logEvent(

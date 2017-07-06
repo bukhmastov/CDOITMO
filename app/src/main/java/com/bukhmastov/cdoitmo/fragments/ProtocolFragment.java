@@ -82,7 +82,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
     public void onResume() {
         super.onResume();
         Log.v(TAG, "resumed");
-        FirebaseAnalyticsProvider.setCurrentScreen(activity, this.getClass());
+        FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
         try {
             if (MainActivity.menu != null) {
                 final MenuItem simple = MainActivity.menu.findItem(R.id.action_protocol_changes_switch_to_simple);

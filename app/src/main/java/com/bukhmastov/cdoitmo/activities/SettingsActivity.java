@@ -206,7 +206,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             super.onCreate(savedInstanceState);
             Log.v(TAG, "GeneralPreferenceFragment created");
             final Activity activity = getActivity();
-            FirebaseAnalyticsProvider.setCurrentScreen(activity, this.getClass());
             FirebaseAnalyticsProvider.logCurrentScreen(activity, this.getClass().getSimpleName());
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
@@ -238,6 +237,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             }
         }
         @Override
+        public void onResume() {
+            super.onResume();
+            FirebaseAnalyticsProvider.setCurrentScreen(getActivity(), this.getClass().getSimpleName());
+        }
+        @Override
         public void onDestroy() {
             super.onDestroy();
             Log.i(TAG, "GeneralPreferenceFragment destroyed");
@@ -250,7 +254,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             super.onCreate(savedInstanceState);
             Log.v(TAG, "CachePreferenceFragment created");
             final Activity activity = getActivity();
-            FirebaseAnalyticsProvider.setCurrentScreen(activity, this.getClass());
             FirebaseAnalyticsProvider.logCurrentScreen(activity, this.getClass().getSimpleName());
             addPreferencesFromResource(R.xml.pref_cache);
             setHasOptionsMenu(true);
@@ -302,6 +305,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             }
         }
         @Override
+        public void onResume() {
+            super.onResume();
+            FirebaseAnalyticsProvider.setCurrentScreen(getActivity(), this.getClass().getSimpleName());
+        }
+        @Override
         public void onDestroy() {
             super.onDestroy();
             Log.i(TAG, "CachePreferenceFragment destroyed");
@@ -314,12 +322,16 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             super.onCreate(savedInstanceState);
             Log.v(TAG, "NotificationsPreferenceFragment created");
             final Activity activity = getActivity();
-            FirebaseAnalyticsProvider.setCurrentScreen(activity, this.getClass());
             FirebaseAnalyticsProvider.logCurrentScreen(activity, this.getClass().getSimpleName());
             addPreferencesFromResource(R.xml.pref_notifications);
             setHasOptionsMenu(true);
             bindPreferenceSummaryToValue(findPreference("pref_notify_frequency"));
             bindPreferenceSummaryToValue(findPreference("pref_notify_sound"));
+        }
+        @Override
+        public void onResume() {
+            super.onResume();
+            FirebaseAnalyticsProvider.setCurrentScreen(getActivity(), this.getClass().getSimpleName());
         }
         @Override
         public void onDestroy() {
@@ -334,7 +346,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             super.onCreate(savedInstanceState);
             Log.v(TAG, "AdditionalPreferenceFragment created");
             final Activity activity = getActivity();
-            FirebaseAnalyticsProvider.setCurrentScreen(activity, this.getClass());
             FirebaseAnalyticsProvider.logCurrentScreen(activity, this.getClass().getSimpleName());
             addPreferencesFromResource(R.xml.pref_additional);
             setHasOptionsMenu(true);
@@ -400,6 +411,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             }
         }
         @Override
+        public void onResume() {
+            super.onResume();
+            FirebaseAnalyticsProvider.setCurrentScreen(getActivity(), this.getClass().getSimpleName());
+        }
+        @Override
         public void onDestroy() {
             super.onDestroy();
             Log.i(TAG, "AdditionalPreferenceFragment destroyed");
@@ -411,12 +427,16 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             final Activity activity = getActivity();
-            FirebaseAnalyticsProvider.setCurrentScreen(activity, this.getClass());
             FirebaseAnalyticsProvider.logCurrentScreen(activity, this.getClass().getSimpleName());
             if (activity != null) {
                 activity.finish();
                 startActivity(new Intent(activity, AboutActivity.class));
             }
+        }
+        @Override
+        public void onResume() {
+            super.onResume();
+            FirebaseAnalyticsProvider.setCurrentScreen(getActivity(), this.getClass().getSimpleName());
         }
     }
 

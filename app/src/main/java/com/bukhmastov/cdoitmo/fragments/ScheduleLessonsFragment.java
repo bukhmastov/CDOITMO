@@ -68,7 +68,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
     public void onResume() {
         super.onResume();
         Log.v(TAG, "resumed");
-        FirebaseAnalyticsProvider.setCurrentScreen(activity, this.getClass());
+        FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
         try {
             if (MainActivity.menu != null && !Static.OFFLINE_MODE) {
                 MenuItem action_schedule_lessons_search = MainActivity.menu.findItem(R.id.action_schedule_lessons_search);

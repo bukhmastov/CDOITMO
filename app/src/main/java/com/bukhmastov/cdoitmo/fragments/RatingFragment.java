@@ -76,7 +76,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
     public void onResume() {
         super.onResume();
         Log.v(TAG, "resumed");
-        FirebaseAnalyticsProvider.setCurrentScreen(activity, this.getClass());
+        FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
         if (!loaded) {
             loaded = true;
             load();
