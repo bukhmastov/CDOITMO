@@ -20,6 +20,7 @@ public class FirebaseAnalyticsProvider {
     private static FirebaseAnalytics firebaseAnalytics = null;
 
     public static class Event {
+        // 500 different types of Events | 40 characters long
         public static String JOIN_GROUP = "cdo_join_group";                         // присоединен к определеннйо группе
         public static String APP_OPEN = "cdo_app_open";                             // приложение запущено
         public static String LOGIN = "cdo_login";                                   // авторизован
@@ -35,6 +36,7 @@ public class FirebaseAnalyticsProvider {
     }
 
     public static class Param {
+        // 25 unique Params with each Event type | 40 characters long | values 100 characters long
         public static String GROUP_ID = "cdo_group_id";
         public static String LOGIN_COUNT = "cdo_login_count";
         public static String LOGIN_NEW = "cdo_login_new";
@@ -46,6 +48,7 @@ public class FirebaseAnalyticsProvider {
     }
 
     public static class Property {
+        // 25 unique UserProperties | 24 characters long | values 36 characters long
         public static String FACULTY = "cdo_user_faculty";
         public static String LEVEL = "cdo_user_level";
         public static String COURSE = "cdo_user_course";
@@ -156,25 +159,25 @@ public class FirebaseAnalyticsProvider {
                 switch (faculty) {
                     case "A": faculty = "A - Естественнонаучный"; break;
                     case "B": faculty = "B - Лазерной и световой инженерии"; break;
-                    case "C": faculty = "C - Институт дизайна и урбанистики"; break;
-                    case "D": faculty = "D - Институт международного развития и партнерства"; break;
-                    case "F": faculty = "F - Институт трансляционной медицины"; break;
+                    case "C": faculty = "C - Дизайна и урбанистики"; break;
+                    case "D": faculty = "D - ИМРиП"; break;
+                    case "F": faculty = "F - Трансляционной медицины"; break;
                     case "K": faculty = "K - Инфокоммуникационных технологий"; break;
-                    case "M": faculty = "M - Информационных технологий и программирования"; break;
+                    case "M": faculty = "M - ИТиП"; break;
                     case "N": faculty = "N - 'ИКВО'"; break;
                     case "O": faculty = "O - 'ИМБиП'"; break;
-                    case "P": faculty = "P - Компьютерных технологий и управления"; break;
-                    case "S": faculty = "S - Методов и техники управления 'Академия ЛИМТУ'"; break;
-                    case "T": faculty = "T - Пищевых биотехнологий и инженерии"; break;
-                    case "U": faculty = "U - Технорлогического менеджмента и инноваций"; break;
+                    case "P": faculty = "P - КТиУ"; break;
+                    case "S": faculty = "S - 'Академия ЛИМТУ'"; break;
+                    case "T": faculty = "T - ФПБИ"; break;
+                    case "U": faculty = "U - ФТМИ"; break;
                     case "V": faculty = "V - Фотоники и оптоинформатики"; break;
-                    case "W": faculty = "W - Холодильной, криогенной техники и кондиционирования"; break;
+                    case "W": faculty = "W - ФХКТК"; break;
                     case "X": faculty = "X - Заочный"; break;
-                    case "Y": faculty = "Y - Среднего профессионального образования"; break;
+                    case "Y": faculty = "Y - Среднего проф. образования"; break;
                 }
                 switch (level) {
-                    case "0": level = "0 - Подготовительное отделение для иностранных граждан"; break;
-                    case "2": level = "2 - Среднее профессиональное образование"; break;
+                    case "0": level = "0 - Подг. отделение для ин. граждан"; break;
+                    case "2": level = "2 - Среднее проф. образование"; break;
                     case "3": level = "3 - Бакалавриат"; break;
                     case "4": level = "4 - Магистратура"; break;
                     case "5": level = "5 - Специалитет"; break;

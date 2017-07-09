@@ -7,7 +7,7 @@ android {
         applicationId "com.bukhmastov.cdoitmo"
         minSdkVersion 21
         targetSdkVersion 25
-        versionCode 60
+        versionCode 61
         versionName "1.7.3"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
