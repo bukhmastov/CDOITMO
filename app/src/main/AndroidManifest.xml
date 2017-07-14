@@ -169,6 +169,10 @@
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/cdo" />
 
+        <activity
+            android:name=".activities.UniversityPersonCardActivity"
+            android:theme="@style/AppTheme.TransparentStatusBar"/>
+
     </application>
 
 </manifest>

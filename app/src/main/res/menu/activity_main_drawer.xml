@@ -26,6 +26,10 @@
             android:id="@+id/nav_room101"
             android:icon="@drawable/ic_room101"
             android:title="@string/room101"/>
+        <item
+            android:id="@+id/nav_university"
+            android:icon="@drawable/ic_university"
+            android:title="@string/university"/>
     </group>
 
     <group android:id="@+id/activity_main_drawer_group2" android:checkableBehavior="none">

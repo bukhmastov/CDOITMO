@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/connect"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/university_person_card_contact_info"
+    android:background="?attr/selectableItemBackground">
+
+    <FrameLayout
+        android:layout_width="@dimen/university_person_card_contact_info"
+        android:layout_height="@dimen/university_person_card_contact_info">
+
+        <ImageView
+            android:id="@+id/connect_image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:padding="@dimen/university_person_card_contact_info_padding"
+            app:srcCompat="@drawable/ic_email"/>
+
+    </FrameLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/connect_text"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:text="@string/lorem_ipsum"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="@dimen/font_size_15"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <View
+            android:id="@+id/separator"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_gravity="bottom"
+            android:background="?attr/colorSeparator"
+            android:layout_alignParentBottom="true"/>
+
+    </RelativeLayout>
+
+</LinearLayout>

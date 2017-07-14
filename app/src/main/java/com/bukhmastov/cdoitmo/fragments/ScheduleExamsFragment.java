@@ -126,7 +126,6 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
         super.onDestroy();
         Log.v(TAG, "Fragment destroyed");
         try {
-            activity.findViewById(R.id.schedule_tabs).setVisibility(View.GONE);
             if (MainActivity.menu != null) {
                 MenuItem action_schedule_exams_search = MainActivity.menu.findItem(R.id.action_schedule_exams_search);
                 if (action_schedule_exams_search != null && action_schedule_exams_search.isVisible()) {

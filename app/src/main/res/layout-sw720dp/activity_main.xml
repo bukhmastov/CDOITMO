@@ -40,11 +40,25 @@
             app:titleMarginStart="48dp" />
 
         <android.support.design.widget.TabLayout
-            android:id="@+id/schedule_tabs"
+            android:id="@+id/fixed_tabs"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?attr/colorPrimary"
             android:visibility="gone"
+            app:tabMode="fixed"
+            app:tabSelectedTextColor="?android:attr/textColorPrimaryInverse"
+            app:tabTextColor="?android:attr/textColorPrimaryInverse"
+            app:tabMaxWidth="0dp"
+            app:tabGravity="fill"
+            app:elevation="4dp" />
+
+        <android.support.design.widget.TabLayout
+            android:id="@+id/scrollable_tabs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/colorPrimary"
+            android:visibility="gone"
+            app:tabMode="scrollable"
             app:tabSelectedTextColor="?android:attr/textColorPrimaryInverse"
             app:tabTextColor="?android:attr/textColorPrimaryInverse"
             app:tabMaxWidth="0dp"

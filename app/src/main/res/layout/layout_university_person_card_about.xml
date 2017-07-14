@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_gravity="bottom"
+        android:background="?attr/colorSeparator"/>
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/item_padding"
+        android:paddingEnd="@dimen/item_padding"
+        android:paddingTop="@dimen/item_padding"
+        android:paddingBottom="@dimen/item_padding_half"
+        android:text="@string/lorem_ipsum"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="@dimen/font_size_16"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/item_padding"
+        android:paddingEnd="@dimen/item_padding"
+        android:paddingTop="0dp"
+        android:paddingBottom="@dimen/item_padding"
+        android:text="@string/lorem_ipsum"
+        android:textColor="?android:attr/textColorSecondary"
+        android:textIsSelectable="true" />
+
+</LinearLayout>

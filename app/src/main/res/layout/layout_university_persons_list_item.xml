@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="42dp"
+    android:paddingTop="@dimen/item_padding_half"
+    android:paddingBottom="@dimen/item_padding_half"
+    android:paddingStart="@dimen/item_padding"
+    android:paddingEnd="@dimen/item_padding"
+    android:background="?attr/selectableItemBackground">
+
+    <ImageView
+        android:id="@+id/avatar"
+        android:layout_width="@dimen/university_person_card_small_avatar"
+        android:layout_height="@dimen/university_person_card_small_avatar"
+        android:layout_gravity="center_vertical"
+        app:srcCompat="@drawable/ic_sentiment_very_satisfied" />
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="@dimen/item_padding_half"
+        android:layout_marginEnd="@dimen/item_padding_quarter">
+
+        <TextView
+            android:id="@+id/name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/lorem_ipsum"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="@dimen/font_size_15" />
+
+        <TextView
+            android:id="@+id/post"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/lorem_ipsum"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="@dimen/font_size_14" />
+
+    </LinearLayout>
+
+</LinearLayout>

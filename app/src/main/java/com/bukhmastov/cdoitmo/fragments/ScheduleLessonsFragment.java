@@ -130,7 +130,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
         super.onDestroy();
         Log.v(TAG, "Fragment destroyed");
         try {
-            activity.findViewById(R.id.schedule_tabs).setVisibility(View.GONE);
+            activity.findViewById(R.id.fixed_tabs).setVisibility(View.GONE);
             if (MainActivity.menu != null) {
                 MenuItem action_schedule_lessons_search = MainActivity.menu.findItem(R.id.action_schedule_lessons_search);
                 if (action_schedule_lessons_search != null && action_schedule_lessons_search.isVisible()) {
@@ -148,7 +148,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
     public void onProgress(int state){
         Log.v(TAG, "progress " + state);
         try {
-            activity.findViewById(R.id.schedule_tabs).setVisibility(View.GONE);
+            activity.findViewById(R.id.fixed_tabs).setVisibility(View.GONE);
             draw(R.layout.state_loading);
             TextView loading_message = (TextView) activity.findViewById(R.id.loading_message);
             if (loading_message != null) {
@@ -209,7 +209,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
         try {
             if (json == null) throw new NullPointerException("json cannot be null");
             schedule = json;
-            activity.findViewById(R.id.schedule_tabs).setVisibility(View.GONE);
+            activity.findViewById(R.id.fixed_tabs).setVisibility(View.GONE);
             if (Objects.equals(json.getString("type"), "teacher_picker")) {
                 schedule_cached = false;
                 JSONArray teachers = json.getJSONArray("list");
@@ -246,7 +246,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
             } else {
                 schedule_cached = !Objects.equals(scheduleLessons.getCache(schedule.getString("cache_token")), "");
                 if (schedule.getJSONArray("schedule").length() > 0) {
-                    TabLayout schedule_tabs = (TabLayout) activity.findViewById(R.id.schedule_tabs);
+                    TabLayout schedule_tabs = (TabLayout) activity.findViewById(R.id.fixed_tabs);
                     schedule_tabs.setVisibility(View.VISIBLE);
                     draw(R.layout.layout_schedule_lessons_tabs);
                     ViewPager schedule_view = (ViewPager) activity.findViewById(R.id.schedule_pager);

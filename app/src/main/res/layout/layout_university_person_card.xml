@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:id="@+id/person_header"
+        android:layout_width="match_parent"
+        android:layout_height="170dp"
+        android:background="@drawable/background_imagery"
+        android:backgroundTint="#88000000"
+        android:backgroundTintMode="src_over"
+        android:elevation="4dp">
+
+        <LinearLayout
+            android:id="@+id/linearLayout"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:id="@+id/back"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:background="?attr/selectableItemBackgroundBorderless">
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:padding="16dp"
+                    app:srcCompat="@drawable/ic_arrow_back_white" />
+
+            </FrameLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentStart="true"
+            android:layout_margin="@dimen/item_padding_half"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/avatar"
+                android:layout_width="@dimen/university_person_card_big_avatar"
+                android:layout_height="@dimen/university_person_card_big_avatar"
+                android:layout_gravity="center_vertical"
+                android:layout_margin="@dimen/item_padding_half"
+                android:tint="?android:attr/textColorPrimaryInverse"
+                app:srcCompat="@drawable/ic_sentiment_very_satisfied" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_margin="@dimen/item_padding_half"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:maxLines="2"
+                    android:text="@string/lorem_ipsum"
+                    android:textColor="?android:attr/textColorPrimaryInverse"
+                    android:textSize="@dimen/font_size_18"
+                    android:textStyle="bold"
+                    android:textIsSelectable="true" />
+
+                <TextView
+                    android:id="@+id/degree"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:maxLines="2"
+                    android:text="@string/lorem_ipsum"
+                    android:textColor="?android:attr/textColorPrimaryInverse"
+                    android:textSize="@dimen/font_size_16"
+                    android:textStyle="bold"
+                    android:textIsSelectable="true" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+    <android.support.v4.widget.SwipeRefreshLayout
+        android:id="@+id/person_swipe"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" >
+
+                <LinearLayout
+                    android:id="@+id/info_connect_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+
+                <LinearLayout
+                    android:id="@+id/info_about_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+
+            </LinearLayout>
+
+        </ScrollView>
+
+    </android.support.v4.widget.SwipeRefreshLayout>
+
+</LinearLayout>

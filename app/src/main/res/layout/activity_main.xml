@@ -19,12 +19,24 @@
         app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
 
     <android.support.design.widget.TabLayout
-        android:id="@+id/schedule_tabs"
+        android:id="@+id/fixed_tabs"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?attr/colorPrimary"
         android:visibility="gone"
         android:elevation="4dp"
+        app:tabMode="fixed"
+        app:tabSelectedTextColor="?android:attr/textColorPrimaryInverse"
+        app:tabTextColor="?android:attr/textColorPrimaryInverse" />
+
+    <android.support.design.widget.TabLayout
+        android:id="@+id/scrollable_tabs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorPrimary"
+        android:visibility="gone"
+        android:elevation="4dp"
+        app:tabMode="scrollable"
         app:tabSelectedTextColor="?android:attr/textColorPrimaryInverse"
         app:tabTextColor="?android:attr/textColorPrimaryInverse" />
 

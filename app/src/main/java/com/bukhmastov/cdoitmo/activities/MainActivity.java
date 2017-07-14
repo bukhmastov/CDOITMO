@@ -22,6 +22,7 @@ import com.bukhmastov.cdoitmo.fragments.Room101Fragment;
 import com.bukhmastov.cdoitmo.fragments.ScheduleExamsFragment;
 import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.fragments.ShortcutCreateFragment;
+import com.bukhmastov.cdoitmo.fragments.UniversityFragment;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.ProtocolTracker;
 import com.bukhmastov.cdoitmo.utils.Static;
@@ -78,6 +79,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                 case "schedule_lessons": selectedSection = R.id.nav_schedule; break;
                 case "schedule_exams": selectedSection = R.id.nav_schedule_exams; break;
                 case "room101": selectedSection = R.id.nav_room101; break;
+                case "university": selectedSection = R.id.nav_university; break;
                 default:
                     Log.wtf(TAG, "unsupported act: '" + act + "'. Going to select 'e_journal' instead");
                     selectedSection = R.id.nav_e_register;
@@ -210,7 +212,8 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
             case R.id.nav_rating:
             case R.id.nav_schedule:
             case R.id.nav_schedule_exams:
-            case R.id.nav_room101: {
+            case R.id.nav_room101:
+            case R.id.nav_university: {
                 Class connectedFragmentClass;
                 switch (section) {
                     default:
@@ -220,6 +223,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                     case R.id.nav_schedule: connectedFragmentClass = ScheduleLessonsFragment.class; break;
                     case R.id.nav_schedule_exams: connectedFragmentClass = ScheduleExamsFragment.class; break;
                     case R.id.nav_room101: connectedFragmentClass = Room101Fragment.class; break;
+                    case R.id.nav_university: connectedFragmentClass = UniversityFragment.class; break;
                 }
                 if (openFragment(TYPE.root, connectedFragmentClass, null)) {
                     ((NavigationView) findViewById(R.id.nav_view)).setCheckedItem(section);

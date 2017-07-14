@@ -112,4 +112,11 @@
         <item name="android:fontFamily">@string/font_bold</item>
     </style>
 
+    <style name="AppTheme.TransparentStatusBar" parent="AppTheme">
+        <item name="android:windowTranslucentStatus">true</item>
+    </style>
+    <style name="AppTheme.Dark.TransparentStatusBar" parent="AppTheme.Dark">
+        <item name="android:windowTranslucentStatus">true</item>
+    </style>
+
 </resources>

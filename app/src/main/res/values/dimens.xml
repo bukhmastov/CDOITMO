@@ -23,6 +23,7 @@
     <dimen name="font_size_18">18sp</dimen>
 
     <dimen name="dimen_16dp">16dp</dimen>
+    <dimen name="dp16">16dp</dimen>
     <dimen name="bottom_extra_bar_height">40dp</dimen>
 
     <dimen name="rating_detailed_height">60dp</dimen>
@@ -76,5 +77,14 @@
     <dimen name="widget_schedule_lessons_configure_min_height">30dp</dimen>
     <dimen name="widget_schedule_lessons_configure_min_height2">20dp</dimen>
     <dimen name="widget_schedule_lessons_configure_min_height3">12dp</dimen>
+
+    <dimen name="university_person_card_small_avatar">36dp</dimen>
+    <dimen name="university_person_card_big_avatar">62dp</dimen>
+    <dimen name="university_person_card_contact_info">64dp</dimen>
+    <dimen name="university_person_card_contact_info_padding">20dp</dimen>
+
+    <dimen name="search_height">48dp</dimen>
+    <dimen name="search_padding">8dp</dimen>
+    <dimen name="search_offset_start">12dp</dimen>
 
 </resources>
