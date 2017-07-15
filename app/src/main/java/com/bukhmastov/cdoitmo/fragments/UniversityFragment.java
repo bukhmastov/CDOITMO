@@ -31,7 +31,6 @@ public class UniversityFragment extends ConnectedFragment implements ViewPager.O
         super.onDestroy();
         Log.v(TAG, "Fragment destroyed");
         activity.findViewById(R.id.scrollable_tabs).setVisibility(View.GONE);
-        Storage.pref.put(getContext(), "pref_university_tab", tabSelected);
     }
 
     @Override
@@ -81,7 +80,8 @@ public class UniversityFragment extends ConnectedFragment implements ViewPager.O
 
     @Override
     public void onPageSelected(int position) {
-        UniversityFragment.tabSelected = position;
+        tabSelected = position;
+        Storage.pref.put(getContext(), "pref_university_tab", tabSelected);
     }
 
     @Override

@@ -3,13 +3,10 @@ package com.bukhmastov.cdoitmo.fragments;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
-import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.InflateException;
 import android.view.KeyEvent;
@@ -25,12 +22,13 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.UniversityPersonCardActivity;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.network.DownloadImage;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.IfmoRestClientResponseHandler;
+import com.bukhmastov.cdoitmo.utils.CircularTransformation;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.loopj.android.http.RequestHandle;
+import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -251,23 +249,11 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
             } else {
                 Static.removeView(layout_university_persons_list_item.findViewById(R.id.post));
             }
-            new DownloadImage(new DownloadImage.response() {
-                @Override
-                public void finish(Bitmap bitmap) {
-                    if (bitmap == null) return;
-                    try {
-                        float destiny = getResources().getDisplayMetrics().density;
-                        float dimen = getResources().getDimension(R.dimen.university_person_card_small_avatar);
-                        bitmap = Static.createSquaredBitmap(bitmap);
-                        bitmap = Static.getResizedBitmap(bitmap, (int) (dimen * destiny), (int) (dimen * destiny));
-                        RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getResources(), bitmap);
-                        drawable.setCornerRadius((dimen / 2) * destiny);
-                        ((ImageView) layout_university_persons_list_item.findViewById(R.id.avatar)).setImageDrawable(drawable);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }).execute(image);
+            Picasso.with(getContext())
+                    .load(image)
+                    .error(R.drawable.ic_sentiment_very_satisfied)
+                    .transform(new CircularTransformation())
+                    .into((ImageView) layout_university_persons_list_item.findViewById(R.id.avatar));
             layout_university_persons_list_item.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

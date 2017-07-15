@@ -3,12 +3,14 @@
     <dimen name="item_padding">24dp</dimen>
     <dimen name="item_padding_half">12dp</dimen>
     <dimen name="item_padding_quarter">6dp</dimen>
+    <dimen name="item_padding_eight">3dp</dimen>
     <dimen name="item_horizontal_padding">24dp</dimen>
     <dimen name="item_vertical_padding">16dp</dimen>
     <dimen name="item_horizontal_padding_half">12dp</dimen>
     <dimen name="item_vertical_padding_half">8dp</dimen>
 
     <dimen name="rounded_corner">4dp</dimen>
+    <dimen name="rounded_corner_big">48dp</dimen>
 
     <dimen name="font_size_10">12sp</dimen>
     <dimen name="font_size_12">14sp</dimen>
@@ -20,6 +22,7 @@
 
     <dimen name="dimen_16dp">24dp</dimen>
     <dimen name="dp16">24dp</dimen>
+    <dimen name="dp42">60dp</dimen>
     <dimen name="bottom_extra_bar_height">50dp</dimen>
 
     <dimen name="rating_detailed_height">80dp</dimen>

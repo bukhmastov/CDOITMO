@@ -334,5 +334,9 @@
     <string name="faculty_section_divisions">Дочерние подразделения</string>
     <string name="division_general">Учебные подразделения</string>
     <string name="unit_general">Административные подразделения</string>
+    <string name="dormitory">Общежитие</string>
+    <string name="campus">Учебный корпус</string>
+    <string name="dormitories">Общежития</string>
+    <string name="campuses">Учебные корпуса</string>
 
 </resources>

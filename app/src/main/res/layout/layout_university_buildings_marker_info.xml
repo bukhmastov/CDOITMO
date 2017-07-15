@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/marker_info"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content" >
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="0dp"
+        android:layout_marginBottom="@dimen/item_padding_quarter"
+        android:layout_marginStart="@dimen/item_padding_quarter"
+        android:layout_marginEnd="@dimen/item_padding_quarter"
+        android:padding="@dimen/item_padding_quarter"
+        android:background="@drawable/shape_border_round">
+
+        <ImageView
+            android:id="@+id/marker_image"
+            android:layout_width="@dimen/university_person_card_big_avatar"
+            android:layout_height="@dimen/university_person_card_big_avatar"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="@dimen/item_padding_half"
+            app:srcCompat="@drawable/ic_sentiment_very_satisfied" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toEndOf="@+id/marker_image"
+            android:layout_toStartOf="@+id/marker_close"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/marker_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="@string/lorem_ipsum"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="@dimen/font_size_16"
+                android:maxLines="2"
+                android:ellipsize="end" />
+
+            <TextView
+                android:id="@+id/marker_desc"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="@string/lorem_ipsum"
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="@dimen/font_size_14"
+                android:maxLines="6"
+                android:ellipsize="end"/>
+
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/marker_close"
+            android:layout_width="@dimen/schedule_cache_button"
+            android:layout_height="@dimen/schedule_cache_button"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="@dimen/item_padding_quarter"
+                app:srcCompat="@drawable/ic_close" />
+
+        </FrameLayout>
+
+    </RelativeLayout>
+
+</FrameLayout>

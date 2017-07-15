@@ -315,6 +315,7 @@
     <string name="pref_lang_en">English</string>
     <string name="pin_shortcut_not_supported">Your device does not support in-app pinning of shortcuts</string>
     <string name="university">University</string>
+    <!-- TODO translate this shit -->
     <string name="no_persons">Никто не найден</string>
     <string name="load_more">Загрузить еще</string>
     <string name="load_no_more">Вы достигли дна</string>
@@ -327,5 +328,9 @@
     <string name="faculty_section_divisions">Дочерние подразделения</string>
     <string name="division_general">Учебные подразделения</string>
     <string name="unit_general">Административные подразделения</string>
+    <string name="dormitory">Общежитие</string>
+    <string name="campus">Учебный корпус</string>
+    <string name="dormitories">Общежития</string>
+    <string name="campuses">Учебные корпуса</string>
 
 </resources>

@@ -1,17 +1,15 @@
 package com.bukhmastov.cdoitmo.fragments;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
-import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.InflateException;
 import android.view.LayoutInflater;
@@ -23,12 +21,13 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.UniversityPersonCardActivity;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.network.DownloadImage;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.IfmoRestClientResponseHandler;
+import com.bukhmastov.cdoitmo.utils.CircularTransformation;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.loopj.android.http.RequestHandle;
+import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -255,7 +254,11 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                     structure_common.addView(getConnectContainer(R.drawable.ic_location, address.trim(), exists, new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            // @TODO link to the map tab
+                            try {
+                                activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + address)));
+                            } catch (ActivityNotFoundException e) {
+                                Static.toast(activity, activity.getString(R.string.failed_to_start_geo_activity));
+                            }
                         }
                     }));
                     exists = true;
@@ -295,7 +298,11 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                     structure_deanery.addView(getConnectContainer(R.drawable.ic_location, deanery_address.trim(), exists, new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            // @TODO link to the map tab
+                            try {
+                                activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + deanery_address)));
+                            } catch (ActivityNotFoundException e) {
+                                Static.toast(activity, activity.getString(R.string.failed_to_start_geo_activity));
+                            }
                         }
                     }));
                     exists = true;
@@ -353,23 +360,11 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                         Static.removeView(layout_university_persons_list_item.findViewById(R.id.post));
                     }
                     if (head_avatar != null && !head_avatar.trim().isEmpty()) {
-                        new DownloadImage(new DownloadImage.response() {
-                            @Override
-                            public void finish(Bitmap bitmap) {
-                                if (bitmap == null) return;
-                                try {
-                                    float destiny = getResources().getDisplayMetrics().density;
-                                    float dimen = getResources().getDimension(R.dimen.university_person_card_big_avatar);
-                                    bitmap = Static.createSquaredBitmap(bitmap);
-                                    bitmap = Static.getResizedBitmap(bitmap, (int) (dimen * destiny), (int) (dimen * destiny));
-                                    RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getResources(), bitmap);
-                                    drawable.setCornerRadius((dimen / 2) * destiny);
-                                    ((ImageView) layout_university_persons_list_item.findViewById(R.id.avatar)).setImageDrawable(drawable);
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        }).execute(head_avatar);
+                        Picasso.with(getContext())
+                                .load(head_avatar)
+                                .error(R.drawable.ic_sentiment_very_satisfied)
+                                .transform(new CircularTransformation())
+                                .into((ImageView) layout_university_persons_list_item.findViewById(R.id.avatar));
                     }
                     layout_university_persons_list_item.setOnClickListener(new View.OnClickListener() {
                         @Override
