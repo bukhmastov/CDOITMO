@@ -4,12 +4,14 @@
     android:id="@+id/connect"
     android:orientation="horizontal"
     android:layout_width="match_parent"
-    android:layout_height="@dimen/university_person_card_contact_info"
+    android:layout_height="wrap_content"
+    android:minHeight="@dimen/university_person_card_contact_info"
     android:background="?attr/selectableItemBackground">
 
     <FrameLayout
         android:layout_width="@dimen/university_person_card_contact_info"
-        android:layout_height="@dimen/university_person_card_contact_info">
+        android:layout_height="@dimen/university_person_card_contact_info"
+        android:layout_gravity="center_vertical" >
 
         <ImageView
             android:id="@+id/connect_image"
@@ -24,26 +26,26 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <TextView
-            android:id="@+id/connect_text"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center_vertical"
-            android:text="@string/lorem_ipsum"
-            android:textColor="?android:attr/textColorPrimary"
-            android:textSize="@dimen/font_size_15"
-            android:maxLines="1"
-            android:ellipsize="end" />
+        android:layout_height="wrap_content"
+        android:minHeight="@dimen/university_person_card_contact_info">
 
         <View
             android:id="@+id/separator"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_gravity="bottom"
-            android:background="?attr/colorSeparator"
-            android:layout_alignParentBottom="true"/>
+            android:background="?attr/colorSeparator"/>
+
+        <TextView
+            android:id="@+id/connect_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:text="@string/lorem_ipsum"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="@dimen/font_size_15"
+            android:layout_centerVertical="true"
+            android:layout_alignParentStart="true" />
 
     </RelativeLayout>
 

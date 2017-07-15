@@ -230,12 +230,13 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
             // контент
             ViewGroup info_connect_container = (ViewGroup) findViewById(R.id.info_connect_container);
             if (info_connect_container != null) {
+                boolean exists = false;
                 final String[] phones = person.getString("phone").trim().split(";|,");
                 final String[] emails = person.getString("email").trim().split(";|,");
                 final String[] webs = person.getString("www").trim().split(";|,");
                 for (final String phone : phones) {
                     if (!phone.isEmpty()) {
-                        info_connect_container.addView(getConnectContainer(R.drawable.ic_phone, phone, new View.OnClickListener() {
+                        info_connect_container.addView(getConnectContainer(R.drawable.ic_phone, phone, exists, new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
                                 Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + phone.trim()));
@@ -243,11 +244,12 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                                 startActivity(intent);
                             }
                         }));
+                        exists = true;
                     }
                 }
                 for (final String email : emails) {
                     if (!email.isEmpty()) {
-                        info_connect_container.addView(getConnectContainer(R.drawable.ic_email, email, new View.OnClickListener() {
+                        info_connect_container.addView(getConnectContainer(R.drawable.ic_email, email, exists, new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
                                 Intent emailIntent = new Intent(Intent.ACTION_SEND);
@@ -256,16 +258,18 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                                 startActivity(Intent.createChooser(emailIntent, getString(R.string.send_mail) + "..."));
                             }
                         }));
+                        exists = true;
                     }
                 }
                 for (final String web : webs) {
                     if (!web.isEmpty()) {
-                        info_connect_container.addView(getConnectContainer(R.drawable.ic_web, web, new View.OnClickListener() {
+                        info_connect_container.addView(getConnectContainer(R.drawable.ic_web, web, exists, new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
                                 startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(web.trim())));
                             }
                         }));
+                        exists = true;
                     }
                 }
             }
@@ -283,9 +287,6 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                 if (!bio.isEmpty()) {
                     info_about_container.addView(getAboutContainer(getString(R.string.person_bio), bio));
                 }
-                if ((!rank.isEmpty() || !post.isEmpty() || !bio.isEmpty()) && info_connect_container != null && info_connect_container.getChildCount() > 0) {
-                    Static.removeView(info_connect_container.getChildAt(info_connect_container.getChildCount() - 1).findViewById(R.id.separator));
-                }
             }
             // работаем со свайпом
             SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.person_swipe);
@@ -298,11 +299,16 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
             Static.error(e);
         }
     }
-    private View getConnectContainer(@DrawableRes int icon, String text, View.OnClickListener listener) {
+    private View getConnectContainer(@DrawableRes int icon, String text, boolean first_block, View.OnClickListener listener) {
         View activity_university_person_card_connect = inflate(R.layout.layout_university_connect);
         ((ImageView) activity_university_person_card_connect.findViewById(R.id.connect_image)).setImageResource(icon);
         ((TextView) activity_university_person_card_connect.findViewById(R.id.connect_text)).setText(text.trim());
-        activity_university_person_card_connect.setOnClickListener(listener);
+        if (listener != null) {
+            activity_university_person_card_connect.setOnClickListener(listener);
+        }
+        if (!first_block) {
+            Static.removeView(activity_university_person_card_connect.findViewById(R.id.separator));
+        }
         return activity_university_person_card_connect;
     }
     private View getAboutContainer(String title, String text) {

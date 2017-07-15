@@ -1,6 +1,7 @@
 package com.bukhmastov.cdoitmo.fragments;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -13,6 +14,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.text.TextUtils;
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -36,9 +38,9 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-public class UniversityFacultiesFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
+public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
-    private static final String TAG = "UniversityFacultiesFragment";
+    private static final String TAG = "UniversityUnitsFragment";
     private Activity activity;
     private View container;
     private RequestHandle fragmentRequestHandle = null;
@@ -95,11 +97,11 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
     }
 
     private void forceLoad() {
-        String dep_id = "";
+        String unit_id = "";
         if (stack.size() > 0) {
-            dep_id = stack.get(stack.size() - 1);
+            unit_id = stack.get(stack.size() - 1);
         }
-        IfmoRestClient.get(getContext(), "study_structure" + (dep_id.isEmpty() ? "" : "/" + dep_id), null, new IfmoRestClientResponseHandler() {
+        IfmoRestClient.get(getContext(), "unit" + (unit_id.isEmpty() ? "" : "/" + unit_id), null, new IfmoRestClientResponseHandler() {
             @Override
             public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
                 if (statusCode == 200) {
@@ -183,11 +185,11 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
 
     private void display(JSONObject json) {
         try {
-            JSONObject structure = getJsonObject(json, "structure");
+            JSONObject unit = getJsonObject(json, "unit");
             JSONArray divisions = getJsonArray(json, "divisions");
             draw(R.layout.layout_university_faculties);
             first_block = true;
-            if (stack.size() == 0 || structure == null) {
+            if (stack.size() == 0 || unit == null) {
                 ((ImageView) ((ViewGroup) container.findViewById(R.id.back)).getChildAt(0)).setImageResource(R.drawable.ic_refresh);
                 container.findViewById(R.id.back).setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -195,7 +197,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                         forceLoad();
                     }
                 });
-                ((TextView) container.findViewById(R.id.title)).setText(R.string.division_general);
+                ((TextView) container.findViewById(R.id.title)).setText(R.string.unit_general);
                 Static.removeView(container.findViewById(R.id.link));
             } else {
                 container.findViewById(R.id.back).setOnClickListener(new View.OnClickListener() {
@@ -205,27 +207,16 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                         forceLoad();
                     }
                 });
-                final String name = getString(structure, "name");
-                final String link = getString(structure, "link");
+                final String name = getString(unit, "unit_title");
                 if (name != null && !name.trim().isEmpty()) {
                     ((TextView) container.findViewById(R.id.title)).setText(name.trim());
                 } else {
                     Static.removeView(container.findViewById(R.id.title));
                 }
-                if (link != null && !link.trim().isEmpty()) {
-                    ((TextView) container.findViewById(R.id.link)).setText(link.trim());
-                    container.findViewById(R.id.departament_link).setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(link.trim())));
-                        }
-                    });
-                } else {
-                    Static.removeView(container.findViewById(R.id.link));
-                }
+                Static.removeView(container.findViewById(R.id.link));
             }
             // структура подразделения
-            displayStructure(structure);
+            displayUnit(unit);
             // дочерние подразделения
             displayDivisions(divisions);
             // работаем со свайпом
@@ -240,167 +231,143 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
             loadFailed();
         }
     }
-    private void displayStructure(JSONObject structure) throws Exception {
-        if (structure != null) {
+    private void displayUnit(JSONObject unit) throws Exception {
+        if (unit != null) {
             boolean exists;
-            final JSONObject info = getJsonObject(structure, "info");
-            if (info != null) {
-                // основная информация
-                exists = false;
-                ViewGroup structure_common = (ViewGroup) container.findViewById(R.id.structure_common);
-                final String address = getString(info, "adres");
-                final String phone = getString(info, "phone");
-                final String site = getString(info, "site");
-                if (address != null && !address.trim().isEmpty()) {
-                    structure_common.addView(getConnectContainer(R.drawable.ic_location, address.trim(), exists, new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            // @TODO link to the map tab
+            // основная информация
+            exists = false;
+            ViewGroup structure_common = (ViewGroup) container.findViewById(R.id.structure_common);
+            final String address = getString(unit, "address");
+            final String phone = getString(unit, "phone");
+            final String email = getString(unit, "email");
+            final String site = getString(unit, "site");
+            final String working_hours = getString(unit, "working_hours");
+            if (address != null && !address.trim().isEmpty()) {
+                structure_common.addView(getConnectContainer(R.drawable.ic_location, address.trim(), exists, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        try {
+                            activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + address)));
+                        } catch (ActivityNotFoundException e) {
+                            Static.toast(activity, activity.getString(R.string.failed_to_start_geo_activity));
                         }
-                    }));
-                    exists = true;
-                }
-                if (phone != null && !phone.trim().isEmpty()) {
-                    structure_common.addView(getConnectContainer(R.drawable.ic_phone, phone.trim(), exists, new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + phone.trim()));
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivity(intent);
-                        }
-                    }));
-                    exists = true;
-                }
-                if (site != null && !site.trim().isEmpty()) {
-                    structure_common.addView(getConnectContainer(R.drawable.ic_web, site.trim(), exists, new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(site.trim())));
-                        }
-                    }));
-                    exists = true;
-                }
-                if (!exists) {
-                    Static.removeView(structure_common);
-                } else {
-                    removeFirstSeparator(structure_common);
-                }
-                // деканат
-                exists = false;
-                ViewGroup structure_deanery = (ViewGroup) container.findViewById(R.id.structure_deanery);
-                final String deanery_address = getString(info, "dekanat_adres");
-                final String deanery_phone = getString(info, "dekanat_phone");
-                final String deanery_email = getString(info, "dekanat_email");
-                if (deanery_address != null && !deanery_address.trim().isEmpty()) {
-                    structure_deanery.addView(getConnectContainer(R.drawable.ic_location, deanery_address.trim(), exists, new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            // @TODO link to the map tab
-                        }
-                    }));
-                    exists = true;
-                }
-                if (deanery_phone != null && !deanery_phone.trim().isEmpty()) {
-                    structure_deanery.addView(getConnectContainer(R.drawable.ic_phone, deanery_phone.trim(), exists, new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + deanery_phone.trim()));
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivity(intent);
-                        }
-                    }));
-                    exists = true;
-                }
-                if (deanery_email != null && !deanery_email.trim().isEmpty()) {
-                    structure_deanery.addView(getConnectContainer(R.drawable.ic_email, deanery_email.trim(), exists, new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            Intent emailIntent = new Intent(Intent.ACTION_SEND);
-                            emailIntent.setType("message/rfc822");
-                            emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{deanery_email.trim()});
-                            startActivity(Intent.createChooser(emailIntent, getString(R.string.send_mail) + "..."));
-                        }
-                    }));
-                    exists = true;
-                }
-                if (!exists) {
-                    Static.removeView(structure_deanery);
-                } else {
-                    removeFirstSeparator(structure_deanery);
-                }
-                // глава
-                exists = false;
-                ViewGroup structure_head = (ViewGroup) container.findViewById(R.id.structure_head);
-                final String head_post = getString(info, "person_post");
-                final String head_lastname = getString(info, "lastname");
-                final String head_firstname = getString(info, "firstname");
-                final String head_middlename = getString(info, "middlename");
-                final String head_avatar = getString(info, "person_avatar");
-                final String head_degree = getString(info, "person_degree");
-                final String head_email = getString(info, "email");
-                final int head_pid = getInt(info, "ifmo_person_id");
-                if (head_post != null && !head_post.trim().isEmpty()) {
-                    ((TextView) structure_head.findViewById(R.id.structure_head_title)).setText(Static.capitalizeFirstLetter(head_post));
-                }
-                if (head_lastname != null && !head_lastname.trim().isEmpty() &&
-                        head_firstname != null && !head_firstname.trim().isEmpty() &&
-                        head_middlename != null && !head_middlename.trim().isEmpty()) {
-                    final View layout_university_persons_list_item = inflate(R.layout.layout_university_persons_list_item);
-                    ((TextView) layout_university_persons_list_item.findViewById(R.id.name)).setText((head_lastname + " " + head_firstname + " " + head_middlename).trim());
-                    if (head_degree != null && !head_degree.trim().isEmpty()) {
-                        ((TextView) layout_university_persons_list_item.findViewById(R.id.post)).setText(head_degree);
-                    } else {
-                        Static.removeView(layout_university_persons_list_item.findViewById(R.id.post));
                     }
-                    if (head_avatar != null && !head_avatar.trim().isEmpty()) {
-                        new DownloadImage(new DownloadImage.response() {
-                            @Override
-                            public void finish(Bitmap bitmap) {
-                                if (bitmap == null) return;
-                                try {
-                                    float destiny = getResources().getDisplayMetrics().density;
-                                    float dimen = getResources().getDimension(R.dimen.university_person_card_big_avatar);
-                                    bitmap = Static.createSquaredBitmap(bitmap);
-                                    bitmap = Static.getResizedBitmap(bitmap, (int) (dimen * destiny), (int) (dimen * destiny));
-                                    RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getResources(), bitmap);
-                                    drawable.setCornerRadius((dimen / 2) * destiny);
-                                    ((ImageView) layout_university_persons_list_item.findViewById(R.id.avatar)).setImageDrawable(drawable);
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        }).execute(head_avatar);
+                }));
+                exists = true;
+            }
+            if (phone != null && !phone.trim().isEmpty()) {
+                structure_common.addView(getConnectContainer(R.drawable.ic_phone, phone.trim(), exists, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + phone.trim()));
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
                     }
-                    layout_university_persons_list_item.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            Intent intent = new Intent(getContext(), UniversityPersonCardActivity.class);
-                            intent.putExtra("pid", head_pid);
-                            startActivity(intent);
-                        }
-                    });
-                    structure_head.addView(layout_university_persons_list_item);
-                    exists = true;
+                }));
+                exists = true;
+            }
+            if (email != null && !email.trim().isEmpty()) {
+                structure_common.addView(getConnectContainer(R.drawable.ic_email, email.trim(), exists, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent emailIntent = new Intent(Intent.ACTION_SEND);
+                        emailIntent.setType("message/rfc822");
+                        emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{email.trim()});
+                        startActivity(Intent.createChooser(emailIntent, getString(R.string.send_mail) + "..."));
+                    }
+                }));
+                exists = true;
+            }
+            if (site != null && !site.trim().isEmpty()) {
+                structure_common.addView(getConnectContainer(R.drawable.ic_web, site.trim(), exists, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(site.trim())));
+                    }
+                }));
+                exists = true;
+            }
+            if (working_hours != null && !working_hours.trim().isEmpty()) {
+                String[] days = working_hours.trim().split("\\|");
+                ArrayList<String> days_new = new ArrayList<>();
+                for (String day : days) {
+                    String[] day_split = day.trim().split("/");
+                    String time = "";
+                    for (int i = 1; i < day_split.length; i++) {
+                        time += day_split[i] + "/";
+                    }
+                    time = time.trim();
+                    if (time.endsWith("/")) {
+                        time = time.trim().substring(0, time.length() - 1);
+                    }
+                    time = time.replace("/", ", ");
+                    if (!time.isEmpty()) {
+                        time = (day_split[0] + " (" + time + ")").trim();
+                    }
+                    days_new.add(time);
                 }
-                if (head_email != null && !head_email.trim().isEmpty()) {
-                    structure_head.addView(getConnectContainer(R.drawable.ic_email, head_email.trim(), exists, new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            Intent emailIntent = new Intent(Intent.ACTION_SEND);
-                            emailIntent.setType("message/rfc822");
-                            emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{head_email.trim()});
-                            startActivity(Intent.createChooser(emailIntent, getString(R.string.send_mail) + "..."));
-                        }
-                    }));
-                    exists = true;
-                }
-                if (!exists) {
-                    Static.removeView(structure_head);
-                } else {
-                    removeFirstSeparator(structure_head);
-                }
+                structure_common.addView(getConnectContainer(R.drawable.ic_access_time, TextUtils.join("\n", days_new).trim(), exists, null));
+                exists = true;
+            }
+            if (!exists) {
+                Static.removeView(structure_common);
             } else {
-                Static.removeView(container.findViewById(R.id.structure));
+                removeFirstSeparator(structure_common);
+            }
+            // деканат
+            Static.removeView(container.findViewById(R.id.structure_deanery));
+            // глава
+            exists = false;
+            ViewGroup structure_head = (ViewGroup) container.findViewById(R.id.structure_head);
+            final String head_post = getString(unit, "post");
+            final String head_lastname = getString(unit, "lastname");
+            final String head_firstname = getString(unit, "firstname");
+            final String head_middlename = getString(unit, "middlename");
+            final String head_avatar = getString(unit, "avatar");
+            final int head_pid = getInt(unit, "ifmo_person_id");
+            if (head_post != null && !head_post.trim().isEmpty()) {
+                ((TextView) structure_head.findViewById(R.id.structure_head_title)).setText(Static.capitalizeFirstLetter(head_post));
+            }
+            if (head_lastname != null && !head_lastname.trim().isEmpty() &&
+                    head_firstname != null && !head_firstname.trim().isEmpty() &&
+                    head_middlename != null && !head_middlename.trim().isEmpty()) {
+                final View layout_university_persons_list_item = inflate(R.layout.layout_university_persons_list_item);
+                ((TextView) layout_university_persons_list_item.findViewById(R.id.name)).setText((head_lastname + " " + head_firstname + " " + head_middlename).trim());
+                Static.removeView(layout_university_persons_list_item.findViewById(R.id.post));
+                if (head_avatar != null && !head_avatar.trim().isEmpty()) {
+                    new DownloadImage(new DownloadImage.response() {
+                        @Override
+                        public void finish(Bitmap bitmap) {
+                            if (bitmap == null) return;
+                            try {
+                                float destiny = getResources().getDisplayMetrics().density;
+                                float dimen = getResources().getDimension(R.dimen.university_person_card_big_avatar);
+                                bitmap = Static.createSquaredBitmap(bitmap);
+                                bitmap = Static.getResizedBitmap(bitmap, (int) (dimen * destiny), (int) (dimen * destiny));
+                                RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getResources(), bitmap);
+                                drawable.setCornerRadius((dimen / 2) * destiny);
+                                ((ImageView) layout_university_persons_list_item.findViewById(R.id.avatar)).setImageDrawable(drawable);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }).execute(head_avatar);
+                }
+                layout_university_persons_list_item.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(getContext(), UniversityPersonCardActivity.class);
+                        intent.putExtra("pid", head_pid);
+                        startActivity(intent);
+                    }
+                });
+                structure_head.addView(layout_university_persons_list_item);
+                exists = true;
+            }
+            if (!exists) {
+                Static.removeView(structure_head);
+            } else {
+                removeFirstSeparator(structure_head);
             }
         } else {
             Static.removeView(container.findViewById(R.id.structure));
@@ -414,16 +381,16 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
             ViewGroup divisions_list = (ViewGroup) container.findViewById(R.id.divisions_list);
             for (int i = 0; i < divisions.length(); i++) {
                 final JSONObject division = divisions.getJSONObject(i);
-                final String title = getString(division, "name");
-                final int cis_dep_id = getInt(division, "cis_dep_id");
+                final String title = getString(division, "unit_title");
+                final int unit_id = getInt(division, "unit_id");
                 if (title != null && !title.trim().isEmpty()) {
                     View view = inflate(R.layout.layout_university_faculties_divisions_list_item);
                     ((TextView) view.findViewById(R.id.title)).setText(title);
                     view.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            if (cis_dep_id >= 0) {
-                                stack.add(String.valueOf(cis_dep_id));
+                            if (unit_id >= 0) {
+                                stack.add(String.valueOf(unit_id));
                                 forceLoad();
                             }
                         }
