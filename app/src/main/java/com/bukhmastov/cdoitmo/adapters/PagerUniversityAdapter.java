@@ -6,6 +6,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 
 import com.bukhmastov.cdoitmo.activities.ConnectedActivity;
+import com.bukhmastov.cdoitmo.fragments.UniversityFacultiesFragment;
 import com.bukhmastov.cdoitmo.fragments.UniversityPersonsFragment;
 import com.bukhmastov.cdoitmo.utils.Static;
 
@@ -33,7 +34,7 @@ public class PagerUniversityAdapter extends FragmentStatePagerAdapter {
         this.context = context;
         this.activity = activity;
         tabs.add(new Element(0, "Персоналии", UniversityPersonsFragment.class));
-        //tabs.add(new Element(1, "Факультеты", UniversityPersonsFragment.class));
+        tabs.add(new Element(1, "Факультеты", UniversityFacultiesFragment.class));
         //tabs.add(new Element(2, "Подразделения", UniversityPersonsFragment.class));
         //tabs.add(new Element(3, "Корпуса", UniversityPersonsFragment.class));
         //tabs.add(new Element(4, "Новости", UniversityPersonsFragment.class));

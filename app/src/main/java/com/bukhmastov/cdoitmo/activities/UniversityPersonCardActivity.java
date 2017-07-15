@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.LayoutRes;
@@ -15,9 +14,7 @@ import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.widget.ImageView;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
@@ -221,7 +218,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                         float destiny = getResources().getDisplayMetrics().density;
                         float dimen = getResources().getDimension(R.dimen.university_person_card_big_avatar);
                         bitmap = Static.createSquaredBitmap(bitmap);
-                        bitmap = Static.getResizedBitmap(bitmap, (int) (62 * dimen), (int) (62 * dimen));
+                        bitmap = Static.getResizedBitmap(bitmap, (int) (dimen * destiny), (int) (dimen * destiny));
                         RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getResources(), bitmap);
                         drawable.setCornerRadius((dimen / 2) * destiny);
                         ((ImageView) findViewById(R.id.avatar)).setImageDrawable(drawable);
@@ -297,31 +294,12 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                 mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
                 mSwipeRefreshLayout.setOnRefreshListener(this);
             }
-            final ScrollView persons_list_scroll = (ScrollView) findViewById(R.id.persons_list_scroll);
-            if (persons_list_scroll != null && persons_list_scroll.getChildCount() > 0) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    persons_list_scroll.getChildAt(0).setOnScrollChangeListener(new View.OnScrollChangeListener() {
-                        @Override
-                        public void onScrollChange(View v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
-                            Log.d(TAG, scrollX + " " + scrollY);
-                        }
-                    });
-                }
-                persons_list_scroll.getViewTreeObserver().addOnScrollChangedListener(new ViewTreeObserver.OnScrollChangedListener() {
-                    @Override
-                    public void onScrollChanged() {
-                        int scrollY = persons_list_scroll.getScrollY(); // For ScrollView
-                        int scrollX = persons_list_scroll.getScrollX(); // For HorizontalScrollView
-                        Log.d(TAG, scrollX + " " + scrollY);
-                    }
-                });
-            }
         } catch (Exception e) {
             Static.error(e);
         }
     }
     private View getConnectContainer(@DrawableRes int icon, String text, View.OnClickListener listener) {
-        View activity_university_person_card_connect = inflate(R.layout.layout_university_person_card_connect);
+        View activity_university_person_card_connect = inflate(R.layout.layout_university_connect);
         ((ImageView) activity_university_person_card_connect.findViewById(R.id.connect_image)).setImageResource(icon);
         ((TextView) activity_university_person_card_connect.findViewById(R.id.connect_text)).setText(text.trim());
         activity_university_person_card_connect.setOnClickListener(listener);

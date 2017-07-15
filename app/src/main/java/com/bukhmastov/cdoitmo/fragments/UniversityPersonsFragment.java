@@ -91,11 +91,6 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-    }
-
-    @Override
     public void onRefresh() {
         Log.v(TAG, "refreshed");
         searchAndLoad(search);
@@ -111,15 +106,19 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
         loadProvider(new IfmoRestClientResponseHandler() {
             @Override
             public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
-                persons = json;
-                display();
+                if (statusCode == 200) {
+                    persons = json;
+                    display();
+                } else {
+                    loadFailed();
+                }
             }
             @Override
             public void onProgress(int state) {
-                Log.v(TAG, "forceLoad | progress " + state);
+                Log.v(TAG, "searchAndLoad | progress " + state);
                 draw(R.layout.state_loading);
                 if (activity != null) {
-                    TextView loading_message = (TextView) activity.findViewById(R.id.loading_message);
+                    TextView loading_message = (TextView) container.findViewById(R.id.loading_message);
                     if (loading_message != null) {
                         switch (state) {
                             case IfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
@@ -129,12 +128,12 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
             }
             @Override
             public void onFailure(int state) {
-                Log.v(TAG, "forceLoad | failure " + state);
+                Log.v(TAG, "searchAndLoad | failure " + state);
                 switch (state) {
                     case IfmoRestClient.FAILED_OFFLINE:
                         draw(R.layout.state_offline);
                         if (activity != null) {
-                            View offline_reload = activity.findViewById(R.id.offline_reload);
+                            View offline_reload = container.findViewById(R.id.offline_reload);
                             if (offline_reload != null) {
                                 offline_reload.setOnClickListener(new View.OnClickListener() {
                                     @Override
@@ -148,7 +147,7 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
                     case IfmoRestClient.FAILED_TRY_AGAIN:
                         draw(R.layout.state_try_again);
                         if (activity != null) {
-                            View try_again_reload = activity.findViewById(R.id.try_again_reload);
+                            View try_again_reload = container.findViewById(R.id.try_again_reload);
                             if (try_again_reload != null) {
                                 try_again_reload.setOnClickListener(new View.OnClickListener() {
                                     @Override
@@ -174,9 +173,9 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
         Log.v(TAG, "loadFailed");
         try {
             draw(R.layout.state_try_again);
-            TextView try_again_message = (TextView) activity.findViewById(R.id.try_again_message);
-            if (try_again_message != null) try_again_message.setText(R.string.load_failed_retry_in_minute);
-            View try_again_reload = activity.findViewById(R.id.try_again_reload);
+            TextView try_again_message = (TextView) container.findViewById(R.id.try_again_message);
+            if (try_again_message != null) try_again_message.setText(R.string.load_failed);
+            View try_again_reload = container.findViewById(R.id.try_again_reload);
             if (try_again_reload != null) {
                 try_again_reload.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -198,8 +197,8 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
         try {
             draw(R.layout.layout_university_persons_list);
             // поиск
-            final EditText search_input = (EditText) activity.findViewById(R.id.search_input);
-            final FrameLayout search_action = (FrameLayout) activity.findViewById(R.id.search_action);
+            final EditText search_input = (EditText) container.findViewById(R.id.search_input);
+            final FrameLayout search_action = (FrameLayout) container.findViewById(R.id.search_action);
             search_action.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -218,7 +217,7 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
             });
             search_input.setText(search);
             // список
-            LinearLayout persons_list = (LinearLayout) activity.findViewById(R.id.persons_list);
+            LinearLayout persons_list = (LinearLayout) container.findViewById(R.id.persons_list);
             JSONArray list = persons.getJSONArray("list");
             if (list.length() > 0) {
                 displayContent(list, persons_list);
@@ -228,7 +227,7 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
                 persons_list.addView(view);
             }
             // работаем со свайпом
-            SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) activity.findViewById(R.id.persons_list_swipe);
+            SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) container.findViewById(R.id.persons_list_swipe);
             if (mSwipeRefreshLayout != null) {
                 mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
                 mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);

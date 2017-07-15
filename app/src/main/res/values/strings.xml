@@ -328,5 +328,10 @@
     <string name="person_rank">Ученое звание</string>
     <string name="person_post">Должность</string>
     <string name="person_bio">Биография</string>
+    <string name="faculty_section_general">Основная информация</string>
+    <string name="faculty_section_deanery">Деканат</string>
+    <string name="faculty_section_head">Глава</string>
+    <string name="faculty_section_divisions">Дочерние подразделения</string>
+    <string name="division_general">Учебные подразделения</string>
 
 </resources>

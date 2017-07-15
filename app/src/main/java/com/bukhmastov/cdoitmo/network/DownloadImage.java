@@ -4,8 +4,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 
-import com.bukhmastov.cdoitmo.utils.Log;
-
 import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.net.URL;
@@ -23,7 +21,6 @@ public class DownloadImage extends AsyncTask<String, Integer, Bitmap> {
 
     @Override
     protected Bitmap doInBackground(String... arg0) {
-        Log.i("qweasdzxzzxc", "opened");
         Bitmap bitmap = null;
         InputStream inputStream = null;
         BufferedInputStream bufferedInputStream = null;

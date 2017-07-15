@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/item_horizontal_padding_half"
+        android:background="@drawable/shape_filled_card"
+        android:elevation="4dp"
+        android:orientation="horizontal"
+        android:paddingEnd="@dimen/item_padding_half"
+        android:paddingStart="@dimen/item_padding_quarter">
+
+        <FrameLayout
+            android:id="@+id/back"
+            android:layout_width="@dimen/search_height"
+            android:layout_height="@dimen/search_height"
+            android:layout_gravity="center_vertical"
+            android:background="?attr/selectableItemBackgroundBorderless">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:padding="12dp"
+                app:srcCompat="@drawable/ic_arrow_back_white"
+                android:tint="?android:attr/textColorPrimaryInverse"/>
+
+        </FrameLayout>
+
+        <LinearLayout
+            android:id="@+id/departament_link"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:orientation="vertical"
+            android:paddingBottom="@dimen/item_padding_quarter"
+            android:paddingEnd="0dp"
+            android:paddingStart="@dimen/item_padding_quarter"
+            android:paddingTop="@dimen/item_padding_quarter">
+
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/lorem_ipsum"
+                android:textColor="?android:attr/textColorPrimaryInverse"
+                android:textSize="@dimen/font_size_16" />
+
+            <TextView
+                android:id="@+id/link"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/lorem_ipsum"
+                android:textColor="?android:attr/textColorPrimaryInverse"
+                android:textSize="@dimen/font_size_14" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <View
+        android:id="@+id/separator"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_gravity="bottom"
+        android:background="?attr/colorSeparator"/>
+
+    <android.support.v4.widget.SwipeRefreshLayout
+        android:id="@+id/swipe_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" >
+
+                <LinearLayout
+                    android:id="@+id/structure"
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <LinearLayout
+                        android:id="@+id/structure_common"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical">
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_gravity="bottom"
+                            android:background="?attr/colorSeparator"/>
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:paddingStart="@dimen/item_padding"
+                            android:paddingEnd="@dimen/item_padding"
+                            android:paddingTop="@dimen/item_padding_half"
+                            android:paddingBottom="@dimen/item_padding_quarter"
+                            android:text="@string/faculty_section_general"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="@dimen/font_size_16"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/structure_deanery"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical">
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_gravity="bottom"
+                            android:background="?attr/colorSeparator"/>
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:paddingStart="@dimen/item_padding"
+                            android:paddingEnd="@dimen/item_padding"
+                            android:paddingTop="@dimen/item_padding_half"
+                            android:paddingBottom="@dimen/item_padding_quarter"
+                            android:text="@string/faculty_section_deanery"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="@dimen/font_size_16"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/structure_head"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical">
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_gravity="bottom"
+                            android:background="?attr/colorSeparator"/>
+
+                        <TextView
+                            android:id="@+id/structure_head_title"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:paddingStart="@dimen/item_padding"
+                            android:paddingEnd="@dimen/item_padding"
+                            android:paddingTop="@dimen/item_padding_half"
+                            android:paddingBottom="@dimen/item_padding_quarter"
+                            android:text="@string/faculty_section_head"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="@dimen/font_size_16"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/divisions"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical" >
+
+                    <LinearLayout
+                        android:id="@+id/divisions_list"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical">
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_gravity="bottom"
+                            android:background="?attr/colorSeparator"/>
+
+                        <TextView
+                            android:id="@+id/divisions_list_title"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:paddingStart="@dimen/item_padding"
+                            android:paddingEnd="@dimen/item_padding"
+                            android:paddingTop="@dimen/item_padding_half"
+                            android:paddingBottom="@dimen/item_padding_quarter"
+                            android:text="@string/faculty_section_divisions"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="@dimen/font_size_16"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </ScrollView>
+
+    </android.support.v4.widget.SwipeRefreshLayout>
+
+</LinearLayout>
