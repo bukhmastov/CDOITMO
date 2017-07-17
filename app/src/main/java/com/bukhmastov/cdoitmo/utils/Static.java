@@ -188,7 +188,6 @@ public class Static {
         return message;
     }
     public static String getGenitiveMonth(Context context, String month) {
-        Log.v(TAG, "getGenitiveMonth | month=" + month);
         if (context == null) {
             Log.w(TAG, "getGenitiveMonth | context is null");
             return month;
@@ -210,7 +209,6 @@ public class Static {
         return month;
     }
     public static String getGenitiveMonth(Context context, int month) {
-        Log.v(TAG, "getGenitiveMonth | month=" + month);
         String m = "";
         if (context == null) {
             Log.w(TAG, "getGenitiveMonth | context is null");

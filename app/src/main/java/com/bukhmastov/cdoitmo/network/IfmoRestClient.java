@@ -2,9 +2,11 @@ package com.bukhmastov.cdoitmo.network;
 
 import android.content.Context;
 
+import com.bukhmastov.cdoitmo.network.interfaces.IfmoClientResponseHandler;
 import com.bukhmastov.cdoitmo.network.interfaces.IfmoRestClientResponseHandler;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
+import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
@@ -72,6 +74,41 @@ public class IfmoRestClient extends Client {
             }));
         } else {
             Log.v(TAG, "get | url=" + url + " | offline");
+            responseHandler.onFailure(FAILED_OFFLINE);
+        }
+    }
+    public static void getPlain(final Context context, final String url, final RequestParams params, final IfmoClientResponseHandler responseHandler){
+        getPlain(context, DEFAULT_PROTOCOL, url, params, responseHandler);
+    }
+    public static void getPlain(final Context context, final Protocol protocol, final String url, final RequestParams params, final IfmoClientResponseHandler responseHandler){
+        Log.v(TAG, "getPlain | url=" + url + " | params=" + Static.getSafetyRequestParams(params));
+        init();
+        if (Static.isOnline(context)) {
+            responseHandler.onProgress(STATE_HANDLING);
+            renewCookie(context);
+            responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(protocol, url), params, new AsyncHttpResponseHandler() {
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                    Log.v(TAG, "getPlain | url=" + url + " | success | statusCode=" + statusCode);
+                    responseHandler.onNewHandle(null);
+                    try {
+                        String data = convert2UTF8(headers, responseBody);
+                        if (data == null) throw new NullPointerException("data cannot be null");
+                        responseHandler.onSuccess(statusCode, data);
+                    } catch (Exception e) {
+                        Static.error(e);
+                        responseHandler.onFailure(FAILED_TRY_AGAIN);
+                    }
+                }
+                @Override
+                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable throwable) {
+                    Log.v(TAG, "getPlain | url=" + url + " | failure | statusCode=" + statusCode + (responseBody != null ? convert2UTF8(headers, responseBody) : "") + (throwable != null ? " | throwable=" + throwable.getMessage() : ""));
+                    responseHandler.onNewHandle(null);
+                    responseHandler.onFailure(FAILED_TRY_AGAIN);
+                }
+            }));
+        } else {
+            Log.v(TAG, "getPlain | url=" + url + " | offline");
             responseHandler.onFailure(FAILED_OFFLINE);
         }
     }

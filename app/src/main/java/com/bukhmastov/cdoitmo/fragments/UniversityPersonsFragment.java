@@ -24,6 +24,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.UniversityPersonCardActivity;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
+import com.bukhmastov.cdoitmo.network.interfaces.IfmoClientResponseHandler;
 import com.bukhmastov.cdoitmo.network.interfaces.IfmoRestClientResponseHandler;
 import com.bukhmastov.cdoitmo.utils.CircularTransformation;
 import com.bukhmastov.cdoitmo.utils.Log;
@@ -169,10 +170,18 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
     }
     private void loadProvider(final IfmoRestClientResponseHandler handler, final int attempt) {
         Log.v(TAG, "loadProvider | attempt=" + attempt);
-        IfmoRestClient.get(getContext(), "person?limit=" + limit + "&offset=" + offset + "&search=" + search, null, new IfmoRestClientResponseHandler() {
+        IfmoRestClient.getPlain(getContext(), "person?limit=" + limit + "&offset=" + offset + "&search=" + search, null, new IfmoClientResponseHandler() {
             @Override
-            public void onSuccess(int statusCode, JSONObject responseObj, JSONArray responseArr) {
-                handler.onSuccess(statusCode, responseObj, responseArr);
+            public void onSuccess(int statusCode, String response) {
+                try {
+                    handler.onSuccess(statusCode, new JSONObject(response), null);
+                } catch (Exception e) {
+                    if (attempt < 3) {
+                        loadProvider(handler, attempt + 1);
+                    } else {
+                        handler.onFailure(IfmoRestClient.FAILED_TRY_AGAIN);
+                    }
+                }
             }
             @Override
             public void onProgress(int state) {
