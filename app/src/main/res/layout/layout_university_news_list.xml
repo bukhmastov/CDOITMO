@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/search_height"
+        android:layout_margin="@dimen/search_padding"
+        android:background="@drawable/shape_border_round">
+
+        <FrameLayout
+            android:id="@+id/search"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_toStartOf="@+id/search_action"
+            android:paddingStart="@dimen/search_offset_start"
+            android:paddingEnd="0dp">
+
+            <EditText
+                android:id="@+id/search_input"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:backgroundTint="@android:color/transparent"
+                android:ems="10"
+                android:inputType="textPersonName"
+                android:maxLines="1"
+                android:selectAllOnFocus="true"
+                android:textSize="@dimen/font_size_16"
+                android:hint="@string/search"/>
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/search_action"
+            android:layout_width="@dimen/search_height"
+            android:layout_height="@dimen/search_height"
+            android:layout_alignParentEnd="true"
+            android:background="?attr/selectableItemBackgroundBorderless">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="@dimen/search_offset_start"
+                app:srcCompat="@drawable/ic_search_black" />
+
+        </FrameLayout>
+
+    </RelativeLayout>
+
+    <View
+        android:id="@+id/separator"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_gravity="bottom"
+        android:background="?attr/colorSeparator"/>
+
+    <android.support.v4.widget.SwipeRefreshLayout
+        android:id="@+id/news_list_swipe"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ScrollView
+            android:id="@+id/news_list_scroll"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:id="@+id/news_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+        </ScrollView>
+
+    </android.support.v4.widget.SwipeRefreshLayout>
+
+</LinearLayout>

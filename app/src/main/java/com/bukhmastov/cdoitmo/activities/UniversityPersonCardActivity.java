@@ -114,7 +114,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
             display();
             return;
         }
-        IfmoRestClient.get(this, "person/" + pid, null, new IfmoRestClientResponseHandler() {
+        loadProvider(new IfmoRestClientResponseHandler() {
             @Override
             public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
                 try {
@@ -182,6 +182,34 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
             @Override
             public void onNewHandle(RequestHandle requestHandle) {
                 fragmentRequestHandle = requestHandle;
+            }
+        });
+    }
+    private void loadProvider(IfmoRestClientResponseHandler handler) {
+        loadProvider(handler, 0);
+    }
+    private void loadProvider(final IfmoRestClientResponseHandler handler, final int attempt) {
+        Log.v(TAG, "loadProvider | attempt=" + attempt);
+        IfmoRestClient.get(this, "person/" + pid, null, new IfmoRestClientResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, JSONObject responseObj, JSONArray responseArr) {
+                handler.onSuccess(statusCode, responseObj, responseArr);
+            }
+            @Override
+            public void onProgress(int state) {
+                handler.onProgress(state);
+            }
+            @Override
+            public void onFailure(int state) {
+                if (state == IfmoRestClient.FAILED_TRY_AGAIN && attempt < 3) {
+                    loadProvider(handler, attempt + 1);
+                } else {
+                    handler.onFailure(state);
+                }
+            }
+            @Override
+            public void onNewHandle(RequestHandle requestHandle) {
+                handler.onNewHandle(requestHandle);
             }
         });
     }

@@ -8,6 +8,7 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import com.bukhmastov.cdoitmo.activities.ConnectedActivity;
 import com.bukhmastov.cdoitmo.fragments.UniversityBuildingsFragment;
 import com.bukhmastov.cdoitmo.fragments.UniversityFacultiesFragment;
+import com.bukhmastov.cdoitmo.fragments.UniversityNewsFragment;
 import com.bukhmastov.cdoitmo.fragments.UniversityPersonsFragment;
 import com.bukhmastov.cdoitmo.fragments.UniversityUnitsFragment;
 import com.bukhmastov.cdoitmo.utils.Static;
@@ -35,11 +36,12 @@ public class PagerUniversityAdapter extends FragmentStatePagerAdapter {
         super(fm);
         this.context = context;
         this.activity = activity;
+        // TODO extract string sources
         tabs.add(new Element(0, "Персоналии", UniversityPersonsFragment.class));
         tabs.add(new Element(1, "Факультеты", UniversityFacultiesFragment.class));
         tabs.add(new Element(2, "Подразделения", UniversityUnitsFragment.class));
         tabs.add(new Element(3, "Корпуса", UniversityBuildingsFragment.class));
-        //tabs.add(new Element(4, "Новости", UniversityPersonsFragment.class));
+        tabs.add(new Element(4, "Новости", UniversityNewsFragment.class));
         //tabs.add(new Element(5, "События", UniversityPersonsFragment.class));
     }
 

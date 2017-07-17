@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/load_manager"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -31,6 +32,33 @@
             android:layout_marginEnd="@dimen/item_padding_quarter"
             android:layout_marginStart="0dp"
             android:text="@string/load_more"
+            android:textAllCaps="true"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="@dimen/font_size_12" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/loading_more"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="@dimen/item_padding_half">
+
+        <ProgressBar
+            style="?android:attr/progressBarStyle"
+            android:layout_width="@dimen/dp16"
+            android:layout_height="@dimen/dp16"
+            android:layout_marginStart="@dimen/item_padding_quarter"
+            android:layout_marginEnd="@dimen/item_padding_quarter" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/item_padding_quarter"
+            android:layout_marginStart="0dp"
+            android:text="@string/loading_more"
             android:textAllCaps="true"
             android:textColor="?android:attr/textColorPrimary"
             android:textSize="@dimen/font_size_12" />

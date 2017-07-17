@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clipToPadding="false"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:paddingStart="@dimen/item_padding_quarter"
+    android:paddingEnd="@dimen/item_padding_quarter"
+    android:paddingTop="@dimen/item_padding_quarter"
+    android:paddingBottom="0dp">
+
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        card_view:cardBackgroundColor="?attr/colorBackgroundCards"
+        card_view:cardCornerRadius="4dp"
+        card_view:cardElevation="2dp"
+        card_view:cardUseCompatPadding="true">
+
+        <LinearLayout
+            android:id="@+id/news_click"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground">
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight=".70"
+                android:padding="@dimen/item_padding_half">
+
+                <TextView
+                    android:id="@+id/categories"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingEnd="@dimen/item_padding_half"
+                    android:paddingStart="@dimen/item_padding_half"
+                    android:paddingTop="@dimen/item_padding_quarter"
+                    android:paddingBottom="@dimen/item_padding_quarter"
+                    android:text="@string/lorem_ipsum"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="@dimen/font_size_12"
+                    android:textAllCaps="true"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingEnd="@dimen/item_padding_half"
+                    android:paddingStart="@dimen/item_padding_half"
+                    android:paddingTop="@dimen/item_padding_quarter"
+                    android:paddingBottom="@dimen/item_padding_quarter"
+                    android:text="@string/lorem_ipsum"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="@dimen/font_size_16"
+                    android:maxLines="3"
+                    android:ellipsize="end" />
+
+                <RelativeLayout
+                    android:id="@+id/info_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:paddingEnd="@dimen/item_padding_half"
+                    android:paddingStart="@dimen/item_padding_half"
+                    android:paddingTop="@dimen/item_padding_quarter"
+                    android:paddingBottom="@dimen/item_padding_quarter">
+
+                    <TextView
+                        android:id="@+id/date"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true"
+                        android:text="@string/lorem_ipsum"
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:textSize="@dimen/font_size_12" />
+
+                    <LinearLayout
+                        android:id="@+id/count_view_container"
+                        android:orientation="horizontal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerVertical="true"
+                        android:layout_alignParentEnd="true">
+
+                        <ImageView
+                            android:layout_width="@dimen/font_size_12"
+                            android:layout_height="@dimen/font_size_12"
+                            android:layout_gravity="center_vertical"
+                            card_view:srcCompat="@drawable/ic_visibility"
+                            android:tint="?android:attr/textColorSecondary"
+                            android:layout_marginStart="@dimen/item_padding_quarter"
+                            android:layout_marginEnd="@dimen/item_padding_quarter"/>
+
+                        <TextView
+                            android:id="@+id/count_view"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_vertical"
+                            android:text="@string/lorem_number_short"
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:textSize="@dimen/font_size_12" />
+
+                    </LinearLayout>
+
+                </RelativeLayout>
+
+            </LinearLayout>
+
+            <FrameLayout
+                android:id="@+id/news_image_container"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight=".30"
+                android:padding="@dimen/item_padding_half">
+
+                <ImageView
+                    android:id="@+id/news_image"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:adjustViewBounds="true"
+                    android:scaleType="centerCrop"
+                    card_view:srcCompat="@drawable/background_imagery" />
+
+            </FrameLayout>
+
+        </LinearLayout>
+
+    </android.support.v7.widget.CardView>
+
+</FrameLayout>

@@ -51,7 +51,7 @@ public class UniversityFragment extends ConnectedFragment implements ViewPager.O
         TabLayout.Tab tab;
         try {
             if (tabSelected == -1) {
-                int pref = Integer.parseInt(Storage.pref.get(getContext(), "pref_university_tab", "-1"));
+                int pref = Storage.pref.get(getContext(), "pref_university_tab", -1);
                 tab = main_tabs.getTabAt(pref < 0 ? 0 : pref);
             } else {
                 tab = main_tabs.getTabAt(tabSelected);

@@ -542,5 +542,12 @@ public class Static {
     public static String capitalizeFirstLetter(String text) {
         return text.substring(0, 1).toUpperCase() + text.substring(1);
     }
+    public static String escapeString(String text) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            return android.text.Html.fromHtml(text, android.text.Html.FROM_HTML_MODE_LEGACY).toString().trim();
+        } else {
+            return android.text.Html.fromHtml(text).toString().trim();
+        }
+    }
 
 }

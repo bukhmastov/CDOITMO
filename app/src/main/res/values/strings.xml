@@ -324,6 +324,7 @@
     <string name="university">Университет</string>
     <string name="no_persons">Никто не найден</string>
     <string name="load_more">Загрузить еще</string>
+    <string name="loading_more">Загружаем</string>
     <string name="load_no_more">Вы достигли дна</string>
     <string name="person_rank">Ученое звание</string>
     <string name="person_post">Должность</string>
@@ -338,5 +339,8 @@
     <string name="campus">Учебный корпус</string>
     <string name="dormitories">Общежития</string>
     <string name="campuses">Учебные корпуса</string>
+    <string name="no_news">Нет новостей</string>
+    <string name="web_browser">Веб-браузер</string>
+    <string name="news">Новости</string>
 
 </resources>
