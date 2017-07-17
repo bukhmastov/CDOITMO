@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.utils;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -36,6 +37,7 @@ import org.json.JSONObject;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -206,6 +208,29 @@ public class Static {
             case "12": month = context.getString(R.string.december_genitive); break;
         }
         return month;
+    }
+    public static String getGenitiveMonth(Context context, int month) {
+        Log.v(TAG, "getGenitiveMonth | month=" + month);
+        String m = "";
+        if (context == null) {
+            Log.w(TAG, "getGenitiveMonth | context is null");
+            return m;
+        }
+        switch (month) {
+            case Calendar.JANUARY: m = context.getString(R.string.january_genitive); break;
+            case Calendar.FEBRUARY: m = context.getString(R.string.february_genitive); break;
+            case Calendar.MARCH: m = context.getString(R.string.march_genitive); break;
+            case Calendar.APRIL: m = context.getString(R.string.april_genitive); break;
+            case Calendar.MAY: m = context.getString(R.string.may_genitive); break;
+            case Calendar.JUNE: m = context.getString(R.string.june_genitive); break;
+            case Calendar.JULY: m = context.getString(R.string.july_genitive); break;
+            case Calendar.AUGUST: m = context.getString(R.string.august_genitive); break;
+            case Calendar.SEPTEMBER: m = context.getString(R.string.september_genitive); break;
+            case Calendar.OCTOBER: m = context.getString(R.string.october_genitive); break;
+            case Calendar.NOVEMBER: m = context.getString(R.string.november_genitive); break;
+            case Calendar.DECEMBER: m = context.getString(R.string.december_genitive); break;
+        }
+        return m;
     }
     public static String crypt(String value) {
         return crypt(value, "SHA-256");
@@ -511,7 +536,7 @@ public class Static {
             }
         }
     }
-    public static Locale getLocale(Context context) throws Exception {
+    public static Locale getLocale(Context context) {
         Locale locale;
         String lang = Storage.pref.get(context, "pref_lang", "default");
         switch (lang) {
@@ -548,6 +573,51 @@ public class Static {
         } else {
             return android.text.Html.fromHtml(text).toString().trim();
         }
+    }
+    public static String cuteDate(Context context, String date_format, String date_string) throws ParseException {
+        SimpleDateFormat format_input = new SimpleDateFormat(date_format, getLocale(context));
+        Calendar date = Calendar.getInstance();
+        date.setTime(format_input.parse(date_string));
+        return (new StringBuilder())
+                .append(date.get(Calendar.DATE))
+                .append(" ")
+                .append(getGenitiveMonth(context, date.get(Calendar.MONTH)))
+                .append(" ")
+                .append(date.get(Calendar.YEAR))
+                .append(" ")
+                .append(ldgZero(date.get(Calendar.HOUR_OF_DAY)))
+                .append(":")
+                .append(ldgZero(date.get(Calendar.MINUTE)))
+                .toString();
+    }
+    public static String cuteDate(Context context, String date_format, String date_start, String date_end) throws ParseException {
+        SimpleDateFormat format_input = new SimpleDateFormat(date_format, getLocale(context));
+        Calendar calendar_start = Calendar.getInstance();
+        Calendar calendar_end = Calendar.getInstance();
+        calendar_start.setTime(format_input.parse(date_start));
+        calendar_end.setTime(format_input.parse(date_end));
+        boolean diff_days = calendar_start.get(Calendar.DATE) != calendar_end.get(Calendar.DATE);
+        boolean diff_months = calendar_start.get(Calendar.MONTH) != calendar_end.get(Calendar.MONTH);
+        boolean diff_years = calendar_start.get(Calendar.YEAR) != calendar_end.get(Calendar.YEAR);
+        StringBuilder sb = new StringBuilder();
+        if (diff_days || diff_months || diff_years) {
+            sb.append(calendar_start.get(Calendar.DATE));
+        }
+        if (diff_months || diff_years) {
+            sb.append(" ").append(getGenitiveMonth(context, calendar_start.get(Calendar.MONTH)));
+        }
+        if (diff_years) {
+            sb.append(" ").append(calendar_start.get(Calendar.YEAR));
+        }
+        if (diff_days || diff_months || diff_years) {
+            sb.append(" - ");
+        }
+        sb.append(calendar_end.get(Calendar.DATE)).append(" ").append(getGenitiveMonth(context, calendar_end.get(Calendar.MONTH))).append(" ").append(calendar_end.get(Calendar.YEAR));
+        return sb.toString();
+    }
+    @SuppressLint("DefaultLocale")
+    public static String ldgZero(int number) {
+        return String.format("%02d", number);
     }
 
 }

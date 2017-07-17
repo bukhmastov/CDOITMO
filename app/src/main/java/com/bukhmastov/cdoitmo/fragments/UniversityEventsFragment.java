@@ -35,16 +35,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Objects;
+public class UniversityEventsFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
-public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
-
-    private static final String TAG = "UniversityNewsFragment";
+    private static final String TAG = "UniversityEventsFragment";
     private Activity activity;
     private View container;
     private RequestHandle fragmentRequestHandle = null;
     private boolean loaded = false;
-    private JSONObject news = null;
+    private JSONObject events = null;
     private int limit = 20;
     private int offset = 0;
     private String search = "";
@@ -108,7 +106,7 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
             @Override
             public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
                 if (statusCode == 200) {
-                    news = json;
+                    events = json;
                     display();
                 } else {
                     loadFailed();
@@ -172,7 +170,7 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
     }
     private void loadProvider(final IfmoRestClientResponseHandler handler, final int attempt) {
         Log.v(TAG, "loadProvider | attempt=" + attempt);
-        IfmoRestClient.get(getContext(), "news.ifmo.ru/news?limit=" + limit + "&offset=" + offset + "&search=" + search, null, new IfmoRestClientResponseHandler() {
+        IfmoRestClient.get(getContext(), "event?limit=" + limit + "&offset=" + offset + "&search=" + search, null, new IfmoRestClientResponseHandler() {
             @Override
             public void onSuccess(int statusCode, JSONObject responseObj, JSONArray responseArr) {
                 handler.onSuccess(statusCode, responseObj, responseArr);
@@ -216,12 +214,12 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
     }
     private void display() {
         Log.v(TAG, "display");
-        if (news == null) {
+        if (events == null) {
             loadFailed();
             return;
         }
         try {
-            draw(R.layout.layout_university_news_list);
+            draw(R.layout.layout_university_events_list);
             // поиск
             final EditText search_input = (EditText) container.findViewById(R.id.search_input);
             final FrameLayout search_action = (FrameLayout) container.findViewById(R.id.search_action);
@@ -243,17 +241,17 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
             });
             search_input.setText(search);
             // список
-            ViewGroup news_list = (ViewGroup) container.findViewById(R.id.news_list);
-            JSONArray list = news.getJSONArray("list");
+            ViewGroup events_list = (ViewGroup) container.findViewById(R.id.events_list);
+            JSONArray list = events.getJSONArray("list");
             if (list.length() > 0) {
-                displayContent(list, news_list);
+                displayContent(list, events_list);
             } else {
                 View view = inflate(R.layout.nothing_to_display);
-                ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_news);
-                news_list.addView(view);
+                ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_events);
+                events_list.addView(view);
             }
             // работаем со свайпом
-            SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) container.findViewById(R.id.news_list_swipe);
+            SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) container.findViewById(R.id.events_list_swipe);
             if (mSwipeRefreshLayout != null) {
                 mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
                 mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
@@ -267,34 +265,19 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
     private void displayContent(final JSONArray list, final ViewGroup container) throws Exception {
         for (int i = 0; i < list.length(); i++) {
             try {
-                final JSONObject news = list.getJSONObject(i);
-                boolean main = getBoolean(news, "main");
-                String title = getString(news, "news_title");
-                String img = getString(news, "img");
-                String img_small = getString(news, "img_small");
-                String anons = getString(news, "anons");
-                String category_parent = getString(news, "category_parent");
-                String category_child = getString(news, "category_child");
-                String color_hex = getString(news, "color_hex");
-                String date = getString(news, "pub_date");
-                final String webview = getString(news, "url_webview");
-                int count_view = getInt(news, "count_view");
+                final JSONObject event = list.getJSONObject(i);
+                String title = getString(event, "name");
+                String img = getString(event, "logo");
+                String type = getString(event, "type_name");
+                String color_hex = "#DF1843";
+                String date_begin = getString(event, "date_begin");
+                String date_end = getString(event, "date_end");
+                final String webview = getString(event, "url_webview");
                 if (title == null || title.trim().isEmpty()) {
-                    // skip news with empty title
+                    // skip event with empty title
                     continue;
                 }
-                View layout;
-                if (main) {
-                    layout = inflate(R.layout.layout_university_news_card);
-                    if ((img == null || img.trim().isEmpty()) && (img_small != null && !img_small.trim().isEmpty())) {
-                        img = img_small;
-                    }
-                } else {
-                    layout = inflate(R.layout.layout_university_news_card_compact);
-                    if (img_small != null && !img_small.trim().isEmpty()) {
-                        img = img_small;
-                    }
-                }
+                View layout = inflate(R.layout.layout_university_news_card_compact);
                 final View news_image_container = layout.findViewById(R.id.news_image_container);
                 if (img != null && !img.trim().isEmpty()) {
                     Picasso.with(getContext())
@@ -311,58 +294,29 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                     Static.removeView(news_image_container);
                 }
                 ((TextView) layout.findViewById(R.id.title)).setText(Static.escapeString(title));
-                boolean category_parent_exists = category_parent != null && !category_parent.trim().isEmpty();
-                boolean category_child_exists = category_child != null && !category_child.trim().isEmpty();
-                if (category_parent_exists || category_child_exists) {
-                    if (Objects.equals(category_parent, category_child)) {
-                        category_child_exists = false;
-                    }
-                    String category = "";
-                    if (category_parent_exists) {
-                        category += category_parent;
-                        if (category_child_exists) {
-                            category += " ► ";
-                        }
-                    }
-                    if (category_child_exists) {
-                        category += category_child;
-                    }
-                    if (!category.isEmpty()) {
-                        category = "● " + category;
-                        TextView categories = (TextView) layout.findViewById(R.id.categories);
-                        categories.setText(category);
-                        if (color_hex != null && !color_hex.trim().isEmpty()) {
-                            categories.setTextColor(Color.parseColor(color_hex));
-                        }
-                    } else {
-                        Static.removeView(layout.findViewById(R.id.categories));
-                    }
+                if (type != null && !type.trim().isEmpty()) {
+                    TextView categories = (TextView) layout.findViewById(R.id.categories);
+                    categories.setText("● " + type);
+                    categories.setTextColor(Color.parseColor(color_hex));
                 } else {
                     Static.removeView(layout.findViewById(R.id.categories));
                 }
-                if (main) {
-                    if (anons != null && !anons.trim().isEmpty()) {
-                        ((TextView) layout.findViewById(R.id.anons)).setText(Static.escapeString(anons));
-                    } else {
-                        Static.removeView(layout.findViewById(R.id.anons));
+                boolean date_begin_exists = date_begin != null && !date_begin.trim().isEmpty();
+                boolean date_end_exists = date_end != null && !date_end.trim().isEmpty();
+                if (date_begin_exists || date_end_exists) {
+                    String date = null;
+                    if (date_begin_exists && date_end_exists) {
+                        date = Static.cuteDate(getContext(), "yyyy-MM-dd HH:mm:ss", date_begin, date_end);
+                    } else if (date_begin_exists) {
+                        date = Static.cuteDate(getContext(), "yyyy-MM-dd HH:mm:ss", date_begin);
+                    } else if (date_end_exists) {
+                        date = Static.cuteDate(getContext(), "yyyy-MM-dd HH:mm:ss", date_end);
                     }
-                }
-                boolean date_exists = date != null && !date.trim().isEmpty();
-                boolean count_exists = count_view >= 0;
-                if (date_exists || count_exists) {
-                    if (date_exists) {
-                        ((TextView) layout.findViewById(R.id.date)).setText(Static.cuteDate(getContext(), "yyyy-MM-dd HH:mm:ss", date));
-                    } else {
-                        Static.removeView(layout.findViewById(R.id.date));
-                    }
-                    if (count_exists) {
-                        ((TextView) layout.findViewById(R.id.count_view)).setText(String.valueOf(count_view));
-                    } else {
-                        Static.removeView(layout.findViewById(R.id.count_view_container));
-                    }
+                    ((TextView) layout.findViewById(R.id.date)).setText(date);
                 } else {
-                    Static.removeView(layout.findViewById(R.id.info_container));
+                    Static.removeView(layout.findViewById(R.id.date));
                 }
+                Static.removeView(layout.findViewById(R.id.count_view_container));
                 if (webview != null && !webview.trim().isEmpty()) {
                     layout.findViewById(R.id.news_click).setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -370,7 +324,7 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                             Intent intent = new Intent(getContext(), WebViewActivity.class);
                             Bundle extras = new Bundle();
                             extras.putString("url", webview.trim());
-                            extras.putString("title", getString(R.string.news));
+                            extras.putString("title", getString(R.string.events));
                             intent.putExtras(extras);
                             startActivity(intent);
                         }
@@ -381,7 +335,7 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                 Static.error(e);
             }
         }
-        if (offset + limit < news.getInt("count")) {
+        if (offset + limit < events.getInt("count")) {
             manageLayoutUniversityListItemState(container, R.id.load_more, loadMoreListener(container));
         } else {
             manageLayoutUniversityListItemState(container, R.id.no_more, null);
@@ -419,10 +373,10 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                     @Override
                     public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
                         try {
-                            news.put("count", json.getInt("count"));
-                            news.put("limit", json.getInt("limit"));
-                            news.put("offset", json.getInt("offset"));
-                            JSONArray list_original = news.getJSONArray("list");
+                            events.put("count", json.getInt("count"));
+                            events.put("limit", json.getInt("limit"));
+                            events.put("offset", json.getInt("offset"));
+                            JSONArray list_original = events.getJSONArray("list");
                             JSONArray list = json.getJSONArray("list");
                             for (int i = 0; i < list.length(); i++) {
                                 list_original.put(list.getJSONObject(i));

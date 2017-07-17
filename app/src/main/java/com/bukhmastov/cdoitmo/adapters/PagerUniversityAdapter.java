@@ -5,8 +5,9 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 
-import com.bukhmastov.cdoitmo.activities.ConnectedActivity;
+import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.fragments.UniversityBuildingsFragment;
+import com.bukhmastov.cdoitmo.fragments.UniversityEventsFragment;
 import com.bukhmastov.cdoitmo.fragments.UniversityFacultiesFragment;
 import com.bukhmastov.cdoitmo.fragments.UniversityNewsFragment;
 import com.bukhmastov.cdoitmo.fragments.UniversityPersonsFragment;
@@ -16,9 +17,6 @@ import com.bukhmastov.cdoitmo.utils.Static;
 import java.util.ArrayList;
 
 public class PagerUniversityAdapter extends FragmentStatePagerAdapter {
-
-    private Context context;
-    private ConnectedActivity activity;
 
     private class Element {
         public int id;
@@ -32,17 +30,14 @@ public class PagerUniversityAdapter extends FragmentStatePagerAdapter {
     }
     private ArrayList<Element> tabs = new ArrayList<>();
 
-    public PagerUniversityAdapter(FragmentManager fm, Context context, ConnectedActivity activity) {
+    public PagerUniversityAdapter(FragmentManager fm, Context context) {
         super(fm);
-        this.context = context;
-        this.activity = activity;
-        // TODO extract string sources
-        tabs.add(new Element(0, "Персоналии", UniversityPersonsFragment.class));
-        tabs.add(new Element(1, "Факультеты", UniversityFacultiesFragment.class));
-        tabs.add(new Element(2, "Подразделения", UniversityUnitsFragment.class));
-        tabs.add(new Element(3, "Корпуса", UniversityBuildingsFragment.class));
-        tabs.add(new Element(4, "Новости", UniversityNewsFragment.class));
-        //tabs.add(new Element(5, "События", UniversityPersonsFragment.class));
+        tabs.add(new Element(0, context.getString(R.string.persons), UniversityPersonsFragment.class));
+        tabs.add(new Element(1, context.getString(R.string.faculties), UniversityFacultiesFragment.class));
+        tabs.add(new Element(2, context.getString(R.string.units), UniversityUnitsFragment.class));
+        tabs.add(new Element(3, context.getString(R.string.buildings), UniversityBuildingsFragment.class));
+        tabs.add(new Element(4, context.getString(R.string.news), UniversityNewsFragment.class));
+        tabs.add(new Element(5, context.getString(R.string.events), UniversityEventsFragment.class));
     }
 
     @Override

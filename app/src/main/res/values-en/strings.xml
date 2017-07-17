@@ -336,5 +336,11 @@
     <string name="no_news">Нет новостей</string>
     <string name="web_browser">Веб-браузер</string>
     <string name="news">Новости</string>
+    <string name="events">Анонсы</string>
+    <string name="buildings">Корпуса</string>
+    <string name="units">Подразделения</string>
+    <string name="faculties">Факультеты</string>
+    <string name="persons">Персоналии</string>
+    <string name="no_events">Нет событий</string>
 
 </resources>
