@@ -30,6 +30,7 @@
     <color name="colorSearchBackgroundToolbar">#ffffff</color>
     <color name="colorSearchBackground">#f5f5f5</color>
     <color name="colorSearchPrimaryDark">#eeeeee</color>
+    <color name="colorBackground">#fafafa</color>
 
     <!-- colors for dark AppTheme.Dark -->
     <color name="colorPrimaryLightInverse">#282828</color>
@@ -58,5 +59,6 @@
     <color name="colorSearchBackgroundToolbarInverse">#212121</color>
     <color name="colorSearchBackgroundInverse">#323232</color>
     <color name="colorSearchPrimaryDarkInverse">#090909</color>
+    <color name="colorBackgroundInverse">#303030</color>
 
 </resources>

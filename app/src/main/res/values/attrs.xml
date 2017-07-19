@@ -23,6 +23,7 @@
         <attr name="colorBackgroundCards" format="color" />
         <attr name="colorSearchBackgroundToolbar" format="color" />
         <attr name="colorSearchBackground" format="color" />
+        <attr name="colorBackground" format="color" />
 
         <attr name="ic_cdo_small" format="reference" />
         <attr name="ic_security" format="reference" />

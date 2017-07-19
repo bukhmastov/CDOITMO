@@ -35,7 +35,7 @@ public class PagerUniversityAdapter extends FragmentStatePagerAdapter {
         tabs.add(new Element(0, context.getString(R.string.persons), UniversityPersonsFragment.class));
         tabs.add(new Element(1, context.getString(R.string.faculties), UniversityFacultiesFragment.class));
         tabs.add(new Element(2, context.getString(R.string.units), UniversityUnitsFragment.class));
-        tabs.add(new Element(3, context.getString(R.string.buildings), UniversityBuildingsFragment.class));
+        tabs.add(new Element(3, context.getString(R.string.ubuildings), UniversityBuildingsFragment.class));
         tabs.add(new Element(4, context.getString(R.string.news), UniversityNewsFragment.class));
         tabs.add(new Element(5, context.getString(R.string.events), UniversityEventsFragment.class));
     }

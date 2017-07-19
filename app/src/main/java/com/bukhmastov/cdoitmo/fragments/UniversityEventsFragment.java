@@ -2,14 +2,13 @@ package com.bukhmastov.cdoitmo.fragments;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.support.annotation.IdRes;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.InflateException;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -17,11 +16,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activities.WebViewActivity;
+import com.bukhmastov.cdoitmo.adapters.EventsRecyclerViewAdapter;
+import com.bukhmastov.cdoitmo.adapters.RecyclerViewOnScrollListener;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.IfmoClientResponseHandler;
@@ -29,12 +29,11 @@ import com.bukhmastov.cdoitmo.network.interfaces.IfmoRestClientResponseHandler;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.loopj.android.http.RequestHandle;
-import com.squareup.picasso.Callback;
-import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
 
 public class UniversityEventsFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
@@ -47,6 +46,7 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
     private int limit = 20;
     private int offset = 0;
     private String search = "";
+    private EventsRecyclerViewAdapter eventsRecyclerViewAdapter = null;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -175,7 +175,11 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
             @Override
             public void onSuccess(int statusCode, String response) {
                 try {
-                    handler.onSuccess(statusCode, new JSONObject(response), null);
+                    if (statusCode == 200) {
+                        handler.onSuccess(statusCode, new JSONObject(response), null);
+                    } else {
+                        handler.onFailure(IfmoRestClient.FAILED_TRY_AGAIN);
+                    }
                 } catch (Exception e) {
                     if (attempt < 3) {
                         loadProvider(handler, attempt + 1);
@@ -190,11 +194,7 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
             }
             @Override
             public void onFailure(int state) {
-                if (state == IfmoRestClient.FAILED_TRY_AGAIN && attempt < 3) {
-                    loadProvider(handler, attempt + 1);
-                } else {
-                    handler.onFailure(state);
-                }
+                handler.onFailure(state);
             }
             @Override
             public void onNewHandle(RequestHandle requestHandle) {
@@ -249,16 +249,78 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
                 }
             });
             search_input.setText(search);
+            // очищаем сообщение
+            ViewGroup news_list_info = (ViewGroup) container.findViewById(R.id.events_list_info);
+            news_list_info.removeAllViews();
+            news_list_info.setPadding(0, 0, 0, 0);
             // список
-            ViewGroup events_list = (ViewGroup) container.findViewById(R.id.events_list);
             JSONArray list = events.getJSONArray("list");
             if (list.length() > 0) {
-                displayContent(list, events_list);
+                eventsRecyclerViewAdapter = new EventsRecyclerViewAdapter(getContext());
+                final RecyclerView events_list = (RecyclerView) container.findViewById(R.id.events_list);
+                events_list.setLayoutManager(new LinearLayoutManager(getContext()));
+                events_list.setAdapter(eventsRecyclerViewAdapter);
+                events_list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
+                eventsRecyclerViewAdapter.setOnStateClickListener(R.id.load_more, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        offset += limit;
+                        eventsRecyclerViewAdapter.setState(R.id.loading_more);
+                        loadProvider(new IfmoRestClientResponseHandler() {
+                            @Override
+                            public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
+                                try {
+                                    events.put("count", json.getInt("count"));
+                                    events.put("limit", json.getInt("limit"));
+                                    events.put("offset", json.getInt("offset"));
+                                    JSONArray list_original = events.getJSONArray("list");
+                                    JSONArray list = json.getJSONArray("list");
+                                    for (int i = 0; i < list.length(); i++) {
+                                        list_original.put(list.getJSONObject(i));
+                                    }
+                                    displayContent(list);
+                                } catch (Exception e) {
+                                    Static.error(e);
+                                    eventsRecyclerViewAdapter.setState(R.id.load_more);
+                                }
+                            }
+                            @Override
+                            public void onProgress(int state) {}
+                            @Override
+                            public void onFailure(int state) {
+                                eventsRecyclerViewAdapter.setState(R.id.load_more);
+                            }
+                            @Override
+                            public void onNewHandle(RequestHandle requestHandle) {
+                                fragmentRequestHandle = requestHandle;
+                            }
+                        });
+                    }
+                });
+                displayContent(list);
             } else {
                 View view = inflate(R.layout.nothing_to_display);
                 ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_events);
-                events_list.addView(view);
+                news_list_info.addView(view);
             }
+            // добавляем отступ
+            container.findViewById(R.id.top_panel).post(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        int height = container.findViewById(R.id.top_panel).getHeight();
+                        RecyclerView events_list = (RecyclerView) container.findViewById(R.id.events_list);
+                        events_list.setPadding(0, height, 0, 0);
+                        events_list.scrollToPosition(0);
+                        LinearLayout events_list_info = (LinearLayout) container.findViewById(R.id.events_list_info);
+                        if (events_list_info.getChildCount() > 0) {
+                            events_list_info.setPadding(0, height, 0, 0);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
             // работаем со свайпом
             SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) container.findViewById(R.id.events_list_swipe);
             if (mSwipeRefreshLayout != null) {
@@ -271,182 +333,26 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
             loadFailed();
         }
     }
-    private void displayContent(final JSONArray list, final ViewGroup container) throws Exception {
-        for (int i = 0; i < list.length(); i++) {
-            try {
-                final JSONObject event = list.getJSONObject(i);
-                String title = getString(event, "name");
-                String img = getString(event, "logo");
-                String type = getString(event, "type_name");
-                String color_hex = "#DF1843";
-                String date_begin = getString(event, "date_begin");
-                String date_end = getString(event, "date_end");
-                final String webview = getString(event, "url_webview");
-                if (title == null || title.trim().isEmpty()) {
-                    // skip event with empty title
-                    continue;
-                }
-                View layout = inflate(R.layout.layout_university_news_card_compact);
-                final View news_image_container = layout.findViewById(R.id.news_image_container);
-                if (img != null && !img.trim().isEmpty()) {
-                    Picasso.with(getContext())
-                            .load(img)
-                            .into((ImageView) layout.findViewById(R.id.news_image), new Callback() {
-                                @Override
-                                public void onSuccess() {}
-                                @Override
-                                public void onError() {
-                                    Static.removeView(news_image_container);
-                                }
-                            });
-                } else {
-                    Static.removeView(news_image_container);
-                }
-                ((TextView) layout.findViewById(R.id.title)).setText(Static.escapeString(title));
-                if (type != null && !type.trim().isEmpty()) {
-                    TextView categories = (TextView) layout.findViewById(R.id.categories);
-                    categories.setText("● " + type);
-                    categories.setTextColor(Color.parseColor(color_hex));
-                } else {
-                    Static.removeView(layout.findViewById(R.id.categories));
-                }
-                boolean date_begin_exists = date_begin != null && !date_begin.trim().isEmpty();
-                boolean date_end_exists = date_end != null && !date_end.trim().isEmpty();
-                if (date_begin_exists || date_end_exists) {
-                    String date = null;
-                    if (date_begin_exists && date_end_exists) {
-                        date = Static.cuteDate(getContext(), "yyyy-MM-dd HH:mm:ss", date_begin, date_end);
-                    } else if (date_begin_exists) {
-                        date = Static.cuteDate(getContext(), "yyyy-MM-dd HH:mm:ss", date_begin);
-                    } else if (date_end_exists) {
-                        date = Static.cuteDate(getContext(), "yyyy-MM-dd HH:mm:ss", date_end);
-                    }
-                    ((TextView) layout.findViewById(R.id.date)).setText(date);
-                } else {
-                    Static.removeView(layout.findViewById(R.id.date));
-                }
-                Static.removeView(layout.findViewById(R.id.count_view_container));
-                if (webview != null && !webview.trim().isEmpty()) {
-                    layout.findViewById(R.id.news_click).setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            Intent intent = new Intent(getContext(), WebViewActivity.class);
-                            Bundle extras = new Bundle();
-                            extras.putString("url", webview.trim());
-                            extras.putString("title", getString(R.string.events));
-                            intent.putExtras(extras);
-                            startActivity(intent);
-                        }
-                    });
-                }
-                container.addView(layout);
-            } catch (Exception e) {
-                Static.error(e);
-            }
-        }
-        if (offset + limit < events.getInt("count")) {
-            manageLayoutUniversityListItemState(container, R.id.load_more, loadMoreListener(container));
-        } else {
-            manageLayoutUniversityListItemState(container, R.id.no_more, null);
-        }
-    }
-
-    private void manageLayoutUniversityListItemState(ViewGroup container, @IdRes int keep, View.OnClickListener onClickListener) {
-        View load_manager = container.findViewById(R.id.load_manager);
-        if (load_manager != null) {
-            Static.removeView(load_manager);
-        }
-        View item_state = inflate(R.layout.layout_university_list_item_state);
-        manageLayoutUniversityListItemState(item_state, keep, onClickListener);
-        container.addView(item_state);
-    }
-    private void manageLayoutUniversityListItemState(View item_state_view, @IdRes int keep, View.OnClickListener onClickListener) {
-        ViewGroup item_state = (ViewGroup) item_state_view;
-        for (int i = item_state.getChildCount() - 1; i >= 0; i--) {
-            View item = item_state.getChildAt(i);
-            if (item.getId() != keep) {
-                Static.removeView(item);
-            }
-        }
-        if (onClickListener != null) {
-            item_state.setOnClickListener(onClickListener);
-        }
-    }
-    private View.OnClickListener loadMoreListener(final ViewGroup container) {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                offset += limit;
-                manageLayoutUniversityListItemState(container, R.id.loading_more, null);
-                loadProvider(new IfmoRestClientResponseHandler() {
-                    @Override
-                    public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
-                        try {
-                            events.put("count", json.getInt("count"));
-                            events.put("limit", json.getInt("limit"));
-                            events.put("offset", json.getInt("offset"));
-                            JSONArray list_original = events.getJSONArray("list");
-                            JSONArray list = json.getJSONArray("list");
-                            for (int i = 0; i < list.length(); i++) {
-                                list_original.put(list.getJSONObject(i));
-                            }
-                            displayContent(list, container);
-                        } catch (Exception e) {
-                            Static.error(e);
-                            manageLayoutUniversityListItemState(container, R.id.load_more, loadMoreListener(container));
-                        }
-                    }
-                    @Override
-                    public void onProgress(int state) {}
-                    @Override
-                    public void onFailure(int state) {
-                        manageLayoutUniversityListItemState(container, R.id.load_more, loadMoreListener(container));
-                    }
-                    @Override
-                    public void onNewHandle(RequestHandle requestHandle) {
-                        fragmentRequestHandle = requestHandle;
-                    }
-                });
-            }
-        };
-    }
-
-    private String getString(JSONObject json, String key) throws JSONException {
-        if (json.has(key)) {
-            Object object = json.get(key);
-            if (object == null) {
-                return null;
-            } else {
+    private void displayContent(final JSONArray list) throws Exception {
+        if (eventsRecyclerViewAdapter != null) {
+            ArrayList<EventsRecyclerViewAdapter.Item> items = new ArrayList<>();
+            for (int i = 0; i < list.length(); i++) {
                 try {
-                    return (String) object;
+                    final JSONObject event = list.getJSONObject(i);
+                    EventsRecyclerViewAdapter.Item item = new EventsRecyclerViewAdapter.Item();
+                    item.type = EventsRecyclerViewAdapter.TYPE_MINOR;
+                    item.data = event;
+                    items.add(item);
                 } catch (Exception e) {
-                    return null;
+                    Static.error(e);
                 }
             }
-        } else {
-            return null;
-        }
-    }
-    private int getInt(JSONObject json, String key) throws JSONException {
-        if (json.has(key)) {
-            try {
-                return json.getInt(key);
-            } catch (Exception e) {
-                return -1;
+            eventsRecyclerViewAdapter.addItem(items);
+            if (offset + limit < events.getInt("count")) {
+                eventsRecyclerViewAdapter.setState(R.id.load_more);
+            } else {
+                eventsRecyclerViewAdapter.setState(R.id.no_more);
             }
-        } else {
-            return -1;
-        }
-    }
-    private boolean getBoolean(JSONObject json, String key) throws JSONException {
-        if (json.has(key)) {
-            try {
-                return json.getBoolean(key);
-            } catch (Exception e) {
-                return true;
-            }
-        } else {
-            return true;
         }
     }
 

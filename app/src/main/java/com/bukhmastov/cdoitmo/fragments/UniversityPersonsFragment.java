@@ -2,13 +2,13 @@ package com.bukhmastov.cdoitmo.fragments;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.IdRes;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.InflateException;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -16,24 +16,24 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activities.UniversityPersonCardActivity;
+import com.bukhmastov.cdoitmo.adapters.PersonsRecyclerViewAdapter;
+import com.bukhmastov.cdoitmo.adapters.RecyclerViewOnScrollListener;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.IfmoClientResponseHandler;
 import com.bukhmastov.cdoitmo.network.interfaces.IfmoRestClientResponseHandler;
-import com.bukhmastov.cdoitmo.utils.CircularTransformation;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.loopj.android.http.RequestHandle;
-import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
 
 public class UniversityPersonsFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
@@ -46,6 +46,7 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
     private int limit = 20;
     private int offset = 0;
     private String search = "";
+    private PersonsRecyclerViewAdapter personsRecyclerViewAdapter = null;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -174,7 +175,11 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
             @Override
             public void onSuccess(int statusCode, String response) {
                 try {
-                    handler.onSuccess(statusCode, new JSONObject(response), null);
+                    if (statusCode == 200) {
+                        handler.onSuccess(statusCode, new JSONObject(response), null);
+                    } else {
+                        handler.onFailure(IfmoRestClient.FAILED_TRY_AGAIN);
+                    }
                 } catch (Exception e) {
                     if (attempt < 3) {
                         loadProvider(handler, attempt + 1);
@@ -189,11 +194,7 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
             }
             @Override
             public void onFailure(int state) {
-                if (state == IfmoRestClient.FAILED_TRY_AGAIN && attempt < 3) {
-                    loadProvider(handler, attempt + 1);
-                } else {
-                    handler.onFailure(state);
-                }
+                handler.onFailure(state);
             }
             @Override
             public void onNewHandle(RequestHandle requestHandle) {
@@ -248,16 +249,78 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
                 }
             });
             search_input.setText(search);
+            // очищаем сообщение
+            ViewGroup persons_list_info = (ViewGroup) container.findViewById(R.id.persons_list_info);
+            persons_list_info.removeAllViews();
+            persons_list_info.setPadding(0, 0, 0, 0);
             // список
-            ViewGroup persons_list = (ViewGroup) container.findViewById(R.id.persons_list);
             JSONArray list = persons.getJSONArray("list");
             if (list.length() > 0) {
-                displayContent(list, persons_list);
+                personsRecyclerViewAdapter = new PersonsRecyclerViewAdapter(getContext());
+                final RecyclerView persons_list = (RecyclerView) container.findViewById(R.id.persons_list);
+                persons_list.setLayoutManager(new LinearLayoutManager(getContext()));
+                persons_list.setAdapter(personsRecyclerViewAdapter);
+                persons_list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
+                personsRecyclerViewAdapter.setOnStateClickListener(R.id.load_more, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        offset += limit;
+                        personsRecyclerViewAdapter.setState(R.id.loading_more);
+                        loadProvider(new IfmoRestClientResponseHandler() {
+                            @Override
+                            public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
+                                try {
+                                    persons.put("count", json.getInt("count"));
+                                    persons.put("limit", json.getInt("limit"));
+                                    persons.put("offset", json.getInt("offset"));
+                                    JSONArray list_original = persons.getJSONArray("list");
+                                    JSONArray list = json.getJSONArray("list");
+                                    for (int i = 0; i < list.length(); i++) {
+                                        list_original.put(list.getJSONObject(i));
+                                    }
+                                    displayContent(list);
+                                } catch (Exception e) {
+                                    Static.error(e);
+                                    personsRecyclerViewAdapter.setState(R.id.load_more);
+                                }
+                            }
+                            @Override
+                            public void onProgress(int state) {}
+                            @Override
+                            public void onFailure(int state) {
+                                personsRecyclerViewAdapter.setState(R.id.load_more);
+                            }
+                            @Override
+                            public void onNewHandle(RequestHandle requestHandle) {
+                                fragmentRequestHandle = requestHandle;
+                            }
+                        });
+                    }
+                });
+                displayContent(list);
             } else {
                 View view = inflate(R.layout.nothing_to_display);
                 ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_persons);
-                persons_list.addView(view);
+                persons_list_info.addView(view);
             }
+            // добавляем отступ
+            container.findViewById(R.id.top_panel).post(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        int height = container.findViewById(R.id.top_panel).getHeight();
+                        RecyclerView persons_list = (RecyclerView) container.findViewById(R.id.persons_list);
+                        persons_list.setPadding(0, height, 0, 0);
+                        persons_list.scrollToPosition(0);
+                        LinearLayout persons_list_info = (LinearLayout) container.findViewById(R.id.persons_list_info);
+                        if (persons_list_info.getChildCount() > 0) {
+                            persons_list_info.setPadding(0, height, 0, 0);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
             // работаем со свайпом
             SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) container.findViewById(R.id.persons_list_swipe);
             if (mSwipeRefreshLayout != null) {
@@ -270,104 +333,27 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
             loadFailed();
         }
     }
-    private void displayContent(final JSONArray list, final ViewGroup container) throws Exception {
-        for (int i = 0; i < list.length(); i++) {
-            final JSONObject person = list.getJSONObject(i);
-            final String name = (person.getString("title_l") + " " + person.getString("title_f") + " " + person.getString("title_m")).trim();
-            final String degree = person.getString("degree").trim();
-            final String image = person.getString("image");
-            final LinearLayout layout_university_persons_list_item = (LinearLayout) inflate(R.layout.layout_university_persons_list_item);
-            ((TextView) layout_university_persons_list_item.findViewById(R.id.name)).setText(name);
-            if (!degree.isEmpty()) {
-                ((TextView) layout_university_persons_list_item.findViewById(R.id.post)).setText(degree.substring(0, 1).toUpperCase() + degree.substring(1));
-            } else {
-                Static.removeView(layout_university_persons_list_item.findViewById(R.id.post));
-            }
-            Picasso.with(getContext())
-                    .load(image)
-                    .error(R.drawable.ic_sentiment_very_satisfied)
-                    .transform(new CircularTransformation())
-                    .into((ImageView) layout_university_persons_list_item.findViewById(R.id.avatar));
-            layout_university_persons_list_item.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    try {
-                        Intent intent = new Intent(getContext(), UniversityPersonCardActivity.class);
-                        intent.putExtra("pid", person.getInt("persons_id"));
-                        intent.putExtra("person", person.toString());
-                        startActivity(intent);
-                    } catch (Exception e) {
-                        Static.error(e);
-                    }
+    private void displayContent(final JSONArray list) throws Exception {
+        if (personsRecyclerViewAdapter != null) {
+            ArrayList<PersonsRecyclerViewAdapter.Item> items = new ArrayList<>();
+            for (int i = 0; i < list.length(); i++) {
+                try {
+                    final JSONObject news = list.getJSONObject(i);
+                    PersonsRecyclerViewAdapter.Item item = new PersonsRecyclerViewAdapter.Item();
+                    item.type = PersonsRecyclerViewAdapter.TYPE_MAIN;
+                    item.data = news;
+                    items.add(item);
+                } catch (Exception e) {
+                    Static.error(e);
                 }
-            });
-            container.addView(layout_university_persons_list_item);
-        }
-        if (offset + limit < persons.getInt("count")) {
-            manageLayoutUniversityListItemState(container, R.id.load_more, loadMoreListener(container));
-        } else {
-            manageLayoutUniversityListItemState(container, R.id.no_more, null);
-        }
-    }
-
-    private void manageLayoutUniversityListItemState(ViewGroup container, @IdRes int keep, View.OnClickListener onClickListener) {
-        View load_manager = container.findViewById(R.id.load_manager);
-        if (load_manager != null) {
-            Static.removeView(load_manager);
-        }
-        View item_state = inflate(R.layout.layout_university_list_item_state);
-        manageLayoutUniversityListItemState(item_state, keep, onClickListener);
-        container.addView(item_state);
-    }
-    private void manageLayoutUniversityListItemState(View item_state_view, @IdRes int keep, View.OnClickListener onClickListener) {
-        ViewGroup item_state = (ViewGroup) item_state_view;
-        for (int i = item_state.getChildCount() - 1; i >= 0; i--) {
-            View item = item_state.getChildAt(i);
-            if (item.getId() != keep) {
-                Static.removeView(item);
+            }
+            personsRecyclerViewAdapter.addItem(items);
+            if (offset + limit < persons.getInt("count")) {
+                personsRecyclerViewAdapter.setState(R.id.load_more);
+            } else {
+                personsRecyclerViewAdapter.setState(R.id.no_more);
             }
         }
-        if (onClickListener != null) {
-            item_state.setOnClickListener(onClickListener);
-        }
-    }
-    private View.OnClickListener loadMoreListener(final ViewGroup container) {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                offset += limit;
-                manageLayoutUniversityListItemState(container, R.id.loading_more, null);
-                loadProvider(new IfmoRestClientResponseHandler() {
-                    @Override
-                    public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
-                        try {
-                            persons.put("count", json.getInt("count"));
-                            persons.put("limit", json.getInt("limit"));
-                            persons.put("offset", json.getInt("offset"));
-                            JSONArray list_original = persons.getJSONArray("list");
-                            JSONArray list = json.getJSONArray("list");
-                            for (int i = 0; i < list.length(); i++) {
-                                list_original.put(list.getJSONObject(i));
-                            }
-                            displayContent(list, container);
-                        } catch (Exception e) {
-                            Static.error(e);
-                            manageLayoutUniversityListItemState(container, R.id.load_more, loadMoreListener(container));
-                        }
-                    }
-                    @Override
-                    public void onProgress(int state) {}
-                    @Override
-                    public void onFailure(int state) {
-                        manageLayoutUniversityListItemState(container, R.id.load_more, loadMoreListener(container));
-                    }
-                    @Override
-                    public void onNewHandle(RequestHandle requestHandle) {
-                        fragmentRequestHandle = requestHandle;
-                    }
-                });
-            }
-        };
     }
 
     private void draw(int layoutId){
@@ -384,5 +370,4 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
     private View inflate(@LayoutRes int layoutId) throws InflateException {
         return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
-
 }

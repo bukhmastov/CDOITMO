@@ -195,7 +195,11 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
             @Override
             public void onSuccess(int statusCode, String response) {
                 try {
-                    handler.onSuccess(statusCode, new JSONObject(response), null);
+                    if (statusCode == 200) {
+                        handler.onSuccess(statusCode, new JSONObject(response), null);
+                    } else {
+                        handler.onFailure(IfmoRestClient.FAILED_TRY_AGAIN);
+                    }
                 } catch (Exception e) {
                     if (attempt < 3) {
                         loadProvider(handler, attempt + 1);
@@ -210,11 +214,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
             }
             @Override
             public void onFailure(int state) {
-                if (state == IfmoRestClient.FAILED_TRY_AGAIN && attempt < 3) {
-                    loadProvider(handler, attempt + 1);
-                } else {
-                    handler.onFailure(state);
-                }
+                handler.onFailure(state);
             }
             @Override
             public void onNewHandle(RequestHandle requestHandle) {

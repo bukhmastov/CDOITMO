@@ -23,6 +23,7 @@
         <item name="colorScheduleFlagLabBG">@color/colorScheduleFlagLabBG</item>
         <item name="colorScheduleFlagTEXT">@color/colorScheduleFlagTEXT</item>
         <item name="colorBackgroundCards">@color/colorBackgroundCards</item>
+        <item name="colorBackground">@color/colorBackground</item>
         <item name="android:textColorHint">@color/textColorSecondary</item>
 
         <item name="ic_cdo_small">@drawable/cdo</item>
@@ -52,6 +53,7 @@
         <item name="colorScheduleFlagLabBG">@color/colorScheduleFlagLabBGInverse</item>
         <item name="colorScheduleFlagTEXT">@color/colorScheduleFlagTEXTInverse</item>
         <item name="colorBackgroundCards">@color/colorBackgroundCardsInverse</item>
+        <item name="colorBackground">@color/colorBackgroundInverse</item>
         <item name="android:textColorHint">@color/textColorSecondaryInverse</item>
 
         <item name="ic_cdo_small">@drawable/cdo</item>

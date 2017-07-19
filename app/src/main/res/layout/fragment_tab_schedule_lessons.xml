@@ -4,7 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:activity="com.bukhmastov.cdoitmo.fragments.ScheduleLessonsTabFragment"
-    android:id="@+id/container_schedule_lessons">
+    android:id="@+id/container_schedule_lessons"
+    android:background="?attr/colorBackground">
 
     <android.support.v4.widget.SwipeRefreshLayout
         android:id="@+id/swipe_schedule_lessons"

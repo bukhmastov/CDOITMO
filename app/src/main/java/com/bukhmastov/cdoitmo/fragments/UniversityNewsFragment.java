@@ -2,14 +2,13 @@ package com.bukhmastov.cdoitmo.fragments;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.support.annotation.IdRes;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.InflateException;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -17,11 +16,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activities.WebViewActivity;
+import com.bukhmastov.cdoitmo.adapters.NewsRecyclerViewAdapter;
+import com.bukhmastov.cdoitmo.adapters.RecyclerViewOnScrollListener;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.IfmoClientResponseHandler;
@@ -29,14 +29,12 @@ import com.bukhmastov.cdoitmo.network.interfaces.IfmoRestClientResponseHandler;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.loopj.android.http.RequestHandle;
-import com.squareup.picasso.Callback;
-import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Objects;
+import java.util.ArrayList;
 
 public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
@@ -49,6 +47,7 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
     private int limit = 20;
     private int offset = 0;
     private String search = "";
+    private NewsRecyclerViewAdapter newsRecyclerViewAdapter = null;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -177,7 +176,11 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
             @Override
             public void onSuccess(int statusCode, String response) {
                 try {
-                    handler.onSuccess(statusCode, new JSONObject(response), null);
+                    if (statusCode == 200) {
+                        handler.onSuccess(statusCode, new JSONObject(response), null);
+                    } else {
+                        handler.onFailure(IfmoRestClient.FAILED_TRY_AGAIN);
+                    }
                 } catch (Exception e) {
                     if (attempt < 3) {
                         loadProvider(handler, attempt + 1);
@@ -192,11 +195,7 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
             }
             @Override
             public void onFailure(int state) {
-                if (state == IfmoRestClient.FAILED_TRY_AGAIN && attempt < 3) {
-                    loadProvider(handler, attempt + 1);
-                } else {
-                    handler.onFailure(state);
-                }
+                handler.onFailure(state);
             }
             @Override
             public void onNewHandle(RequestHandle requestHandle) {
@@ -251,16 +250,78 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                 }
             });
             search_input.setText(search);
+            // очищаем сообщение
+            ViewGroup news_list_info = (ViewGroup) container.findViewById(R.id.news_list_info);
+            news_list_info.removeAllViews();
+            news_list_info.setPadding(0, 0, 0, 0);
             // список
-            ViewGroup news_list = (ViewGroup) container.findViewById(R.id.news_list);
             JSONArray list = news.getJSONArray("list");
             if (list.length() > 0) {
-                displayContent(list, news_list);
+                newsRecyclerViewAdapter = new NewsRecyclerViewAdapter(getContext());
+                final RecyclerView news_list = (RecyclerView) container.findViewById(R.id.news_list);
+                news_list.setLayoutManager(new LinearLayoutManager(getContext()));
+                news_list.setAdapter(newsRecyclerViewAdapter);
+                news_list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
+                newsRecyclerViewAdapter.setOnStateClickListener(R.id.load_more, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        offset += limit;
+                        newsRecyclerViewAdapter.setState(R.id.loading_more);
+                        loadProvider(new IfmoRestClientResponseHandler() {
+                            @Override
+                            public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
+                                try {
+                                    news.put("count", json.getInt("count"));
+                                    news.put("limit", json.getInt("limit"));
+                                    news.put("offset", json.getInt("offset"));
+                                    JSONArray list_original = news.getJSONArray("list");
+                                    JSONArray list = json.getJSONArray("list");
+                                    for (int i = 0; i < list.length(); i++) {
+                                        list_original.put(list.getJSONObject(i));
+                                    }
+                                    displayContent(list);
+                                } catch (Exception e) {
+                                    Static.error(e);
+                                    newsRecyclerViewAdapter.setState(R.id.load_more);
+                                }
+                            }
+                            @Override
+                            public void onProgress(int state) {}
+                            @Override
+                            public void onFailure(int state) {
+                                newsRecyclerViewAdapter.setState(R.id.load_more);
+                            }
+                            @Override
+                            public void onNewHandle(RequestHandle requestHandle) {
+                                fragmentRequestHandle = requestHandle;
+                            }
+                        });
+                    }
+                });
+                displayContent(list);
             } else {
                 View view = inflate(R.layout.nothing_to_display);
                 ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_news);
-                news_list.addView(view);
+                news_list_info.addView(view);
             }
+            // добавляем отступ
+            container.findViewById(R.id.top_panel).post(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        int height = container.findViewById(R.id.top_panel).getHeight();
+                        RecyclerView news_list = (RecyclerView) container.findViewById(R.id.news_list);
+                        news_list.setPadding(0, height, 0, 0);
+                        news_list.scrollToPosition(0);
+                        LinearLayout news_list_info = (LinearLayout) container.findViewById(R.id.news_list_info);
+                        if (news_list_info.getChildCount() > 0) {
+                            news_list_info.setPadding(0, height, 0, 0);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
             // работаем со свайпом
             SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) container.findViewById(R.id.news_list_swipe);
             if (mSwipeRefreshLayout != null) {
@@ -273,217 +334,29 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
             loadFailed();
         }
     }
-    private void displayContent(final JSONArray list, final ViewGroup container) throws Exception {
-        for (int i = 0; i < list.length(); i++) {
-            try {
-                final JSONObject news = list.getJSONObject(i);
-                boolean main = getBoolean(news, "main");
-                String title = getString(news, "news_title");
-                String img = getString(news, "img");
-                String img_small = getString(news, "img_small");
-                String anons = getString(news, "anons");
-                String category_parent = getString(news, "category_parent");
-                String category_child = getString(news, "category_child");
-                String color_hex = getString(news, "color_hex");
-                String date = getString(news, "pub_date");
-                final String webview = getString(news, "url_webview");
-                int count_view = getInt(news, "count_view");
-                if (title == null || title.trim().isEmpty()) {
-                    // skip news with empty title
-                    continue;
-                }
-                View layout;
-                if (main) {
-                    layout = inflate(R.layout.layout_university_news_card);
-                    if ((img == null || img.trim().isEmpty()) && (img_small != null && !img_small.trim().isEmpty())) {
-                        img = img_small;
-                    }
-                } else {
-                    layout = inflate(R.layout.layout_university_news_card_compact);
-                    if (img_small != null && !img_small.trim().isEmpty()) {
-                        img = img_small;
-                    }
-                }
-                final View news_image_container = layout.findViewById(R.id.news_image_container);
-                if (img != null && !img.trim().isEmpty()) {
-                    Picasso.with(getContext())
-                            .load(img)
-                            .into((ImageView) layout.findViewById(R.id.news_image), new Callback() {
-                                @Override
-                                public void onSuccess() {}
-                                @Override
-                                public void onError() {
-                                    Static.removeView(news_image_container);
-                                }
-                            });
-                } else {
-                    Static.removeView(news_image_container);
-                }
-                ((TextView) layout.findViewById(R.id.title)).setText(Static.escapeString(title));
-                boolean category_parent_exists = category_parent != null && !category_parent.trim().isEmpty();
-                boolean category_child_exists = category_child != null && !category_child.trim().isEmpty();
-                if (category_parent_exists || category_child_exists) {
-                    if (Objects.equals(category_parent, category_child)) {
-                        category_child_exists = false;
-                    }
-                    String category = "";
-                    if (category_parent_exists) {
-                        category += category_parent;
-                        if (category_child_exists) {
-                            category += " ► ";
-                        }
-                    }
-                    if (category_child_exists) {
-                        category += category_child;
-                    }
-                    if (!category.isEmpty()) {
-                        category = "● " + category;
-                        TextView categories = (TextView) layout.findViewById(R.id.categories);
-                        categories.setText(category);
-                        if (color_hex != null && !color_hex.trim().isEmpty()) {
-                            categories.setTextColor(Color.parseColor(color_hex));
-                        }
-                    } else {
-                        Static.removeView(layout.findViewById(R.id.categories));
-                    }
-                } else {
-                    Static.removeView(layout.findViewById(R.id.categories));
-                }
-                if (main) {
-                    if (anons != null && !anons.trim().isEmpty()) {
-                        ((TextView) layout.findViewById(R.id.anons)).setText(Static.escapeString(anons));
-                    } else {
-                        Static.removeView(layout.findViewById(R.id.anons));
-                    }
-                }
-                boolean date_exists = date != null && !date.trim().isEmpty();
-                boolean count_exists = count_view >= 0;
-                if (date_exists || count_exists) {
-                    if (date_exists) {
-                        ((TextView) layout.findViewById(R.id.date)).setText(Static.cuteDate(getContext(), "yyyy-MM-dd HH:mm:ss", date));
-                    } else {
-                        Static.removeView(layout.findViewById(R.id.date));
-                    }
-                    if (count_exists) {
-                        ((TextView) layout.findViewById(R.id.count_view)).setText(String.valueOf(count_view));
-                    } else {
-                        Static.removeView(layout.findViewById(R.id.count_view_container));
-                    }
-                } else {
-                    Static.removeView(layout.findViewById(R.id.info_container));
-                }
-                if (webview != null && !webview.trim().isEmpty()) {
-                    layout.findViewById(R.id.news_click).setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            Intent intent = new Intent(getContext(), WebViewActivity.class);
-                            Bundle extras = new Bundle();
-                            extras.putString("url", webview.trim());
-                            extras.putString("title", getString(R.string.news));
-                            intent.putExtras(extras);
-                            startActivity(intent);
-                        }
-                    });
-                }
-                container.addView(layout);
-            } catch (Exception e) {
-                Static.error(e);
-            }
-        }
-        if (offset + limit < news.getInt("count")) {
-            manageLayoutUniversityListItemState(container, R.id.load_more, loadMoreListener(container));
-        } else {
-            manageLayoutUniversityListItemState(container, R.id.no_more, null);
-        }
-    }
-
-    private void manageLayoutUniversityListItemState(ViewGroup container, @IdRes int keep, View.OnClickListener onClickListener) {
-        View load_manager = container.findViewById(R.id.load_manager);
-        if (load_manager != null) {
-            Static.removeView(load_manager);
-        }
-        View item_state = inflate(R.layout.layout_university_list_item_state);
-        manageLayoutUniversityListItemState(item_state, keep, onClickListener);
-        container.addView(item_state);
-    }
-    private void manageLayoutUniversityListItemState(View item_state_view, @IdRes int keep, View.OnClickListener onClickListener) {
-        ViewGroup item_state = (ViewGroup) item_state_view;
-        for (int i = item_state.getChildCount() - 1; i >= 0; i--) {
-            View item = item_state.getChildAt(i);
-            if (item.getId() != keep) {
-                Static.removeView(item);
-            }
-        }
-        if (onClickListener != null) {
-            item_state.setOnClickListener(onClickListener);
-        }
-    }
-    private View.OnClickListener loadMoreListener(final ViewGroup container) {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                offset += limit;
-                manageLayoutUniversityListItemState(container, R.id.loading_more, null);
-                loadProvider(new IfmoRestClientResponseHandler() {
-                    @Override
-                    public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
-                        try {
-                            news.put("count", json.getInt("count"));
-                            news.put("limit", json.getInt("limit"));
-                            news.put("offset", json.getInt("offset"));
-                            JSONArray list_original = news.getJSONArray("list");
-                            JSONArray list = json.getJSONArray("list");
-                            for (int i = 0; i < list.length(); i++) {
-                                list_original.put(list.getJSONObject(i));
-                            }
-                            displayContent(list, container);
-                        } catch (Exception e) {
-                            Static.error(e);
-                            manageLayoutUniversityListItemState(container, R.id.load_more, loadMoreListener(container));
-                        }
-                    }
-                    @Override
-                    public void onProgress(int state) {}
-                    @Override
-                    public void onFailure(int state) {
-                        manageLayoutUniversityListItemState(container, R.id.load_more, loadMoreListener(container));
-                    }
-                    @Override
-                    public void onNewHandle(RequestHandle requestHandle) {
-                        fragmentRequestHandle = requestHandle;
-                    }
-                });
-            }
-        };
-    }
-
-    private String getString(JSONObject json, String key) throws JSONException {
-        if (json.has(key)) {
-            Object object = json.get(key);
-            if (object == null) {
-                return null;
-            } else {
+    private void displayContent(final JSONArray list) throws Exception {
+        if (newsRecyclerViewAdapter != null) {
+            ArrayList<NewsRecyclerViewAdapter.Item> items = new ArrayList<>();
+            for (int i = 0; i < list.length(); i++) {
                 try {
-                    return (String) object;
+                    final JSONObject news = list.getJSONObject(i);
+                    NewsRecyclerViewAdapter.Item item = new NewsRecyclerViewAdapter.Item();
+                    item.type = getBoolean(news, "main") ? NewsRecyclerViewAdapter.TYPE_MAIN : NewsRecyclerViewAdapter.TYPE_MINOR;
+                    item.data = news;
+                    items.add(item);
                 } catch (Exception e) {
-                    return null;
+                    Static.error(e);
                 }
             }
-        } else {
-            return null;
-        }
-    }
-    private int getInt(JSONObject json, String key) throws JSONException {
-        if (json.has(key)) {
-            try {
-                return json.getInt(key);
-            } catch (Exception e) {
-                return -1;
+            newsRecyclerViewAdapter.addItem(items);
+            if (offset + limit < news.getInt("count")) {
+                newsRecyclerViewAdapter.setState(R.id.load_more);
+            } else {
+                newsRecyclerViewAdapter.setState(R.id.no_more);
             }
-        } else {
-            return -1;
         }
     }
+
     private boolean getBoolean(JSONObject json, String key) throws JSONException {
         if (json.has(key)) {
             try {

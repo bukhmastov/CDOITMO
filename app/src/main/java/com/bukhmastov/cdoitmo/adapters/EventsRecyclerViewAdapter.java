@@ -1,0 +1,130 @@
+package com.bukhmastov.cdoitmo.adapters;
+
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Color;
+import android.os.Bundle;
+import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+
+import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.activities.WebViewActivity;
+import com.bukhmastov.cdoitmo.utils.Static;
+
+import java.util.ArrayList;
+
+public class EventsRecyclerViewAdapter extends UniversityRecyclerViewAdapter {
+
+    public EventsRecyclerViewAdapter(final Context context) {
+        super(context, null);
+    }
+    public EventsRecyclerViewAdapter(final Context context, final ArrayList<Item> dataset) {
+        super(context, dataset);
+    }
+
+    @Override
+    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        switch (viewType) {
+            case TYPE_MINOR: {
+                return new EventsRecyclerViewAdapter.ViewHolder((ViewGroup) LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_university_news_card_compact, parent, false));
+            }
+            case TYPE_STATE: {
+                return new EventsRecyclerViewAdapter.ViewHolder((ViewGroup) LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_university_list_item_state, parent, false));
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+        Item item = dataset.get(position);
+        switch (item.type) {
+            case TYPE_MINOR: {
+                bindMinor(holder, item);
+                break;
+            }
+            case TYPE_STATE: {
+                bindState(holder, item);
+                break;
+            }
+        }
+    }
+
+    private void bindMinor(RecyclerView.ViewHolder holder, Item item) {
+        try {
+            EventsRecyclerViewAdapter.ViewHolder viewHolder = (EventsRecyclerViewAdapter.ViewHolder) holder;
+            String title = getString(item.data, "name");
+            String type = getString(item.data, "type_name");
+            String color_hex = "#DF1843";
+            String date_begin = getString(item.data, "date_begin");
+            String date_end = getString(item.data, "date_end");
+            final String webview = getString(item.data, "url_webview");
+            if (title == null || title.trim().isEmpty()) {
+                // skip event with empty title
+                return;
+            }
+            ((TextView) viewHolder.container.findViewById(R.id.title)).setText(Static.escapeString(title));
+            if (type != null && !type.trim().isEmpty()) {
+                TextView categories = (TextView) viewHolder.container.findViewById(R.id.categories);
+                categories.setText("● " + type);
+                categories.setTextColor(Color.parseColor(color_hex));
+            } else {
+                Static.removeView(viewHolder.container.findViewById(R.id.categories));
+            }
+            boolean date_begin_exists = date_begin != null && !date_begin.trim().isEmpty();
+            boolean date_end_exists = date_end != null && !date_end.trim().isEmpty();
+            if (date_begin_exists || date_end_exists) {
+                String date = null;
+                if (date_begin_exists && date_end_exists) {
+                    date = Static.cuteDate(context, "yyyy-MM-dd HH:mm:ss", date_begin, date_end);
+                } else if (date_begin_exists) {
+                    date = Static.cuteDate(context, "yyyy-MM-dd HH:mm:ss", date_begin);
+                } else if (date_end_exists) {
+                    date = Static.cuteDate(context, "yyyy-MM-dd HH:mm:ss", date_end);
+                }
+                ((TextView) viewHolder.container.findViewById(R.id.date)).setText(date);
+            } else {
+                Static.removeView(viewHolder.container.findViewById(R.id.date));
+            }
+            Static.removeView(viewHolder.container.findViewById(R.id.news_image_container));
+            Static.removeView(viewHolder.container.findViewById(R.id.count_view_container));
+            if (webview != null && !webview.trim().isEmpty()) {
+                viewHolder.container.findViewById(R.id.news_click).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(context, WebViewActivity.class);
+                        Bundle extras = new Bundle();
+                        extras.putString("url", webview.trim());
+                        extras.putString("title", context.getString(R.string.events));
+                        intent.putExtras(extras);
+                        context.startActivity(intent);
+                    }
+                });
+            }
+        } catch (Exception e) {
+            Static.error(e);
+        }
+    }
+    private void bindState(RecyclerView.ViewHolder holder, Item item) {
+        try {
+            EventsRecyclerViewAdapter.ViewHolder viewHolder = (EventsRecyclerViewAdapter.ViewHolder) holder;
+            for (int i = viewHolder.container.getChildCount() - 1; i >= 0; i--) {
+                View child = viewHolder.container.getChildAt(i);
+                if (child.getId() == item.data_state_keep) {
+                    child.setVisibility(View.VISIBLE);
+                } else {
+                    child.setVisibility(View.GONE);
+                }
+            }
+            View.OnClickListener onStateClickListener = onStateClickListeners.containsKey(item.data_state_keep) ? onStateClickListeners.get(item.data_state_keep) : null;
+            if (onStateClickListener != null) {
+                viewHolder.container.setOnClickListener(onStateClickListener);
+            }
+        } catch (Exception e) {
+            Static.error(e);
+        }
+    }
+}

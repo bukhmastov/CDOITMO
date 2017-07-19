@@ -3,4 +3,5 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:activity="com.bukhmastov.cdoitmo.fragments.Room101Fragment"
-    android:id="@+id/container_room101" />
+    android:id="@+id/container_room101"
+    android:background="?attr/colorBackground" />

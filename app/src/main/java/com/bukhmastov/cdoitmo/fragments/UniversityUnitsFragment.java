@@ -1,34 +1,32 @@
 package com.bukhmastov.cdoitmo.fragments;
 
 import android.app.Activity;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.DrawableRes;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.text.TextUtils;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activities.UniversityPersonCardActivity;
+import com.bukhmastov.cdoitmo.adapters.FacultiesRecyclerViewAdapter;
+import com.bukhmastov.cdoitmo.adapters.RecyclerViewOnScrollListener;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
+import com.bukhmastov.cdoitmo.network.interfaces.IfmoClientResponseHandler;
 import com.bukhmastov.cdoitmo.network.interfaces.IfmoRestClientResponseHandler;
-import com.bukhmastov.cdoitmo.utils.CircularTransformation;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.loopj.android.http.RequestHandle;
-import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -44,7 +42,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
     private RequestHandle fragmentRequestHandle = null;
     private boolean loaded = false;
     private ArrayList<String> stack = new ArrayList<>();
-    private boolean first_block = true;
+    private FacultiesRecyclerViewAdapter facultiesRecyclerViewAdapter = null;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -95,11 +93,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
     }
 
     private void forceLoad() {
-        String unit_id = "";
-        if (stack.size() > 0) {
-            unit_id = stack.get(stack.size() - 1);
-        }
-        IfmoRestClient.get(getContext(), "unit" + (unit_id.isEmpty() ? "" : "/" + unit_id), null, new IfmoRestClientResponseHandler() {
+        loadProvider(new IfmoRestClientResponseHandler() {
             @Override
             public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
                 if (statusCode == 200) {
@@ -161,6 +155,46 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
             }
         });
     }
+    private void loadProvider(IfmoRestClientResponseHandler handler) {
+        loadProvider(handler, 0);
+    }
+    private void loadProvider(final IfmoRestClientResponseHandler handler, final int attempt) {
+        Log.v(TAG, "loadProvider | attempt=" + attempt);
+        String unit_id = "";
+        if (stack.size() > 0) {
+            unit_id = stack.get(stack.size() - 1);
+        }
+        IfmoRestClient.getPlain(getContext(), "unit" + (unit_id.isEmpty() ? "" : "/" + unit_id), null, new IfmoClientResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, String response) {
+                try {
+                    if (statusCode == 200) {
+                        handler.onSuccess(statusCode, new JSONObject(response), null);
+                    } else {
+                        handler.onFailure(IfmoRestClient.FAILED_TRY_AGAIN);
+                    }
+                } catch (Exception e) {
+                    if (attempt < 3) {
+                        loadProvider(handler, attempt + 1);
+                    } else {
+                        handler.onFailure(IfmoRestClient.FAILED_TRY_AGAIN);
+                    }
+                }
+            }
+            @Override
+            public void onProgress(int state) {
+                handler.onProgress(state);
+            }
+            @Override
+            public void onFailure(int state) {
+                handler.onFailure(state);
+            }
+            @Override
+            public void onNewHandle(RequestHandle requestHandle) {
+                handler.onNewHandle(requestHandle);
+            }
+        });
+    }
     private void loadFailed(){
         Log.v(TAG, "loadFailed");
         try {
@@ -186,7 +220,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
             JSONObject unit = getJsonObject(json, "unit");
             JSONArray divisions = getJsonArray(json, "divisions");
             draw(R.layout.layout_university_faculties);
-            first_block = true;
+            // заголовок
             if (stack.size() == 0 || unit == null) {
                 ((ImageView) ((ViewGroup) container.findViewById(R.id.back)).getChildAt(0)).setImageResource(R.drawable.ic_refresh);
                 container.findViewById(R.id.back).setOnClickListener(new View.OnClickListener() {
@@ -213,12 +247,33 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                 }
                 Static.removeView(container.findViewById(R.id.link));
             }
-            // структура подразделения
-            displayUnit(unit);
-            // дочерние подразделения
-            displayDivisions(divisions);
+            // список
+            facultiesRecyclerViewAdapter = new FacultiesRecyclerViewAdapter(getContext());
+            final RecyclerView list = (RecyclerView) container.findViewById(R.id.list);
+            list.setLayoutManager(new LinearLayoutManager(getContext()));
+            list.setAdapter(facultiesRecyclerViewAdapter);
+            list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
+            displayContent(unit, divisions);
+            // добавляем отступ
+            container.findViewById(R.id.top_panel).post(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        int height = container.findViewById(R.id.top_panel).getHeight();
+                        RecyclerView list = (RecyclerView) container.findViewById(R.id.list);
+                        list.setPadding(0, height, 0, 0);
+                        list.scrollToPosition(0);
+                        LinearLayout list_info = (LinearLayout) container.findViewById(R.id.list_info);
+                        if (list_info.getChildCount() > 0) {
+                            list_info.setPadding(0, height, 0, 0);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
             // работаем со свайпом
-            SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) container.findViewById(R.id.swipe_layout);
+            SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) container.findViewById(R.id.list_swipe);
             if (mSwipeRefreshLayout != null) {
                 mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
                 mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
@@ -229,173 +284,80 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
             loadFailed();
         }
     }
-    private void displayUnit(JSONObject unit) throws Exception {
-        if (unit != null) {
-            boolean exists;
-            // основная информация
-            exists = false;
-            ViewGroup structure_common = (ViewGroup) container.findViewById(R.id.structure_common);
-            final String address = getString(unit, "address");
-            final String phone = getString(unit, "phone");
-            final String email = getString(unit, "email");
-            final String site = getString(unit, "site");
-            final String working_hours = getString(unit, "working_hours");
-            if (address != null && !address.trim().isEmpty()) {
-                structure_common.addView(getConnectContainer(R.drawable.ic_location, address.trim(), exists, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        try {
-                            activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + address)));
-                        } catch (ActivityNotFoundException e) {
-                            Static.toast(activity, activity.getString(R.string.failed_to_start_geo_activity));
-                        }
-                    }
-                }));
-                exists = true;
-            }
-            if (phone != null && !phone.trim().isEmpty()) {
-                structure_common.addView(getConnectContainer(R.drawable.ic_phone, phone.trim(), exists, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + phone.trim()));
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        startActivity(intent);
-                    }
-                }));
-                exists = true;
-            }
-            if (email != null && !email.trim().isEmpty()) {
-                structure_common.addView(getConnectContainer(R.drawable.ic_email, email.trim(), exists, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Intent emailIntent = new Intent(Intent.ACTION_SEND);
-                        emailIntent.setType("message/rfc822");
-                        emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{email.trim()});
-                        startActivity(Intent.createChooser(emailIntent, getString(R.string.send_mail) + "..."));
-                    }
-                }));
-                exists = true;
-            }
-            if (site != null && !site.trim().isEmpty()) {
-                structure_common.addView(getConnectContainer(R.drawable.ic_web, site.trim(), exists, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(site.trim())));
-                    }
-                }));
-                exists = true;
-            }
-            if (working_hours != null && !working_hours.trim().isEmpty()) {
-                String[] days = working_hours.trim().split("\\|");
-                ArrayList<String> days_new = new ArrayList<>();
-                for (String day : days) {
-                    String[] day_split = day.trim().split("/");
-                    String time = "";
-                    for (int i = 1; i < day_split.length; i++) {
-                        time += day_split[i] + "/";
-                    }
-                    time = time.trim();
-                    if (time.endsWith("/")) {
-                        time = time.trim().substring(0, time.length() - 1);
-                    }
-                    time = time.replace("/", ", ");
-                    if (!time.isEmpty()) {
-                        time = (day_split[0] + " (" + time + ")").trim();
-                    }
-                    days_new.add(time);
+    private void displayContent(final JSONObject unit, final JSONArray divisions) throws Exception {
+        if (facultiesRecyclerViewAdapter != null) {
+            ArrayList<FacultiesRecyclerViewAdapter.Item> items = new ArrayList<>();
+            if (unit != null) {
+                // основная информация
+                final String address = getString(unit, "address");
+                final String phone = getString(unit, "phone");
+                final String email = getString(unit, "email");
+                final String site = getString(unit, "site");
+                final String working_hours = getString(unit, "working_hours");
+                if (isValid(address) || isValid(phone) || isValid(email) || isValid(site) || isValid(working_hours)) {
+                    FacultiesRecyclerViewAdapter.Item item = new FacultiesRecyclerViewAdapter.Item();
+                    item.type = FacultiesRecyclerViewAdapter.TYPE_UNIT_STRUCTURE_COMMON;
+                    item.data = new JSONObject()
+                            .put("header", getString(R.string.faculty_section_general))
+                            .put("address", isValid(address) ? address : null)
+                            .put("phone", isValid(phone) ? phone : null)
+                            .put("email", isValid(email) ? email : null)
+                            .put("site", isValid(site) ? site : null)
+                            .put("working_hours", isValid(working_hours) ? working_hours : null);
+                    items.add(item);
                 }
-                structure_common.addView(getConnectContainer(R.drawable.ic_access_time, TextUtils.join("\n", days_new).trim(), exists, null));
-                exists = true;
-            }
-            if (!exists) {
-                Static.removeView(structure_common);
-            } else {
-                removeFirstSeparator(structure_common);
-            }
-            // деканат
-            Static.removeView(container.findViewById(R.id.structure_deanery));
-            // глава
-            exists = false;
-            ViewGroup structure_head = (ViewGroup) container.findViewById(R.id.structure_head);
-            final String head_post = getString(unit, "post");
-            final String head_lastname = getString(unit, "lastname");
-            final String head_firstname = getString(unit, "firstname");
-            final String head_middlename = getString(unit, "middlename");
-            final String head_avatar = getString(unit, "avatar");
-            final int head_pid = getInt(unit, "ifmo_person_id");
-            if (head_post != null && !head_post.trim().isEmpty()) {
-                ((TextView) structure_head.findViewById(R.id.structure_head_title)).setText(Static.capitalizeFirstLetter(head_post));
-            }
-            if (head_lastname != null && !head_lastname.trim().isEmpty() &&
-                    head_firstname != null && !head_firstname.trim().isEmpty() &&
-                    head_middlename != null && !head_middlename.trim().isEmpty()) {
-                final View layout_university_persons_list_item = inflate(R.layout.layout_university_persons_list_item);
-                ((TextView) layout_university_persons_list_item.findViewById(R.id.name)).setText((head_lastname + " " + head_firstname + " " + head_middlename).trim());
-                Static.removeView(layout_university_persons_list_item.findViewById(R.id.post));
-                if (head_avatar != null && !head_avatar.trim().isEmpty()) {
-                    Picasso.with(getContext())
-                            .load(head_avatar)
-                            .error(R.drawable.ic_sentiment_very_satisfied)
-                            .transform(new CircularTransformation())
-                            .into((ImageView) layout_university_persons_list_item.findViewById(R.id.avatar));
+                // глава
+                final String head_post = getString(unit, "post");
+                final String head_lastname = getString(unit, "lastname");
+                final String head_firstname = getString(unit, "firstname");
+                final String head_middlename = getString(unit, "middlename");
+                final String head_avatar = getString(unit, "avatar");
+                final int head_pid = getInt(unit, "ifmo_person_id");
+                if (isValid(head_lastname) || isValid(head_firstname) || isValid(head_middlename)) {
+                    FacultiesRecyclerViewAdapter.Item item = new FacultiesRecyclerViewAdapter.Item();
+                    item.type = FacultiesRecyclerViewAdapter.TYPE_UNIT_STRUCTURE_HEAD;
+                    item.data = new JSONObject()
+                            .put("header", isValid(head_post) ? head_post : getString(R.string.faculty_section_head))
+                            .put("head_lastname", isValid(head_lastname) ? head_lastname : null)
+                            .put("head_firstname", isValid(head_firstname) ? head_firstname : null)
+                            .put("head_middlename", isValid(head_middlename) ? head_middlename : null)
+                            .put("head_avatar", isValid(head_avatar) ? head_avatar : null)
+                            .put("head_pid", isValid(head_pid) ? head_pid : -1);
+                    items.add(item);
                 }
-                layout_university_persons_list_item.setOnClickListener(new View.OnClickListener() {
+            }
+            if (divisions != null && divisions.length() > 0) {
+                // дивизионы
+                JSONArray d = new JSONArray();
+                for (int i = 0; i < divisions.length(); i++) {
+                    final JSONObject division = divisions.getJSONObject(i);
+                    d.put(new JSONObject()
+                        .put("title", getString(division, "unit_title"))
+                        .put("id", getInt(division, "unit_id"))
+                    );
+                }
+                FacultiesRecyclerViewAdapter.Item item = new FacultiesRecyclerViewAdapter.Item();
+                item.type = FacultiesRecyclerViewAdapter.TYPE_UNIT_DIVISIONS;
+                item.data = new JSONObject()
+                        .put("header", stack.size() == 0 ? null : getString(R.string.faculty_section_divisions))
+                        .put("divisions", d);
+                items.add(item);
+                facultiesRecyclerViewAdapter.setOnDivisionClickListener(new FacultiesRecyclerViewAdapter.OnDivisionClickListener() {
                     @Override
-                    public void onClick(View v) {
-                        Intent intent = new Intent(getContext(), UniversityPersonCardActivity.class);
-                        intent.putExtra("pid", head_pid);
-                        startActivity(intent);
+                    public void onClick(int dep_id) {
+                        stack.add(String.valueOf(dep_id));
+                        forceLoad();
                     }
                 });
-                structure_head.addView(layout_university_persons_list_item);
-                exists = true;
             }
-            if (!exists) {
-                Static.removeView(structure_head);
-            } else {
-                removeFirstSeparator(structure_head);
-            }
-        } else {
-            Static.removeView(container.findViewById(R.id.structure));
+            facultiesRecyclerViewAdapter.addItem(items);
         }
     }
-    private void displayDivisions(JSONArray divisions) throws Exception {
-        if (divisions != null && divisions.length() > 0) {
-            if (stack.size() == 0) {
-                Static.removeView(container.findViewById(R.id.divisions_list_title));
-            }
-            ViewGroup divisions_list = (ViewGroup) container.findViewById(R.id.divisions_list);
-            for (int i = 0; i < divisions.length(); i++) {
-                final JSONObject division = divisions.getJSONObject(i);
-                final String title = getString(division, "unit_title");
-                final int unit_id = getInt(division, "unit_id");
-                if (title != null && !title.trim().isEmpty()) {
-                    View view = inflate(R.layout.layout_university_faculties_divisions_list_item);
-                    ((TextView) view.findViewById(R.id.title)).setText(title);
-                    view.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            if (unit_id >= 0) {
-                                stack.add(String.valueOf(unit_id));
-                                forceLoad();
-                            }
-                        }
-                    });
-                    divisions_list.addView(view);
-                }
-            }
-            removeFirstSeparator(divisions_list);
-        } else {
-            Static.removeView(container.findViewById(R.id.divisions));
-        }
+    private boolean isValid(String text) {
+        return text != null && !text.trim().isEmpty();
     }
-    private void removeFirstSeparator(ViewGroup section) {
-        if (first_block) {
-            first_block = false;
-            if (section.getChildCount() > 0) {
-                Static.removeView(section.getChildAt(0));
-            }
-        }
+    private boolean isValid(int number) {
+        return number >= 0;
     }
 
     private JSONObject getJsonObject(JSONObject json, String key) throws JSONException {
@@ -456,19 +418,6 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
         } else {
             return -1;
         }
-    }
-
-    private View getConnectContainer(@DrawableRes int icon, String text, boolean first_block, View.OnClickListener listener) {
-        View layout_university_connect = inflate(R.layout.layout_university_connect);
-        ((ImageView) layout_university_connect.findViewById(R.id.connect_image)).setImageResource(icon);
-        ((TextView) layout_university_connect.findViewById(R.id.connect_text)).setText(text.trim());
-        if (listener != null) {
-            layout_university_connect.setOnClickListener(listener);
-        }
-        if (!first_block) {
-            Static.removeView(layout_university_connect.findViewById(R.id.separator));
-        }
-        return layout_university_connect;
     }
 
     private void draw(int layoutId){

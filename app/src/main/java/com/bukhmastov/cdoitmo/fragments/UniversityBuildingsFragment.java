@@ -18,6 +18,7 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
+import com.bukhmastov.cdoitmo.network.interfaces.IfmoClientResponseHandler;
 import com.bukhmastov.cdoitmo.network.interfaces.IfmoRestClientResponseHandler;
 import com.bukhmastov.cdoitmo.utils.CircularTransformation;
 import com.bukhmastov.cdoitmo.utils.Log;
@@ -144,7 +145,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     }
 
     private void forceLoad() {
-        IfmoRestClient.get(getContext(), "building_map", null, new IfmoRestClientResponseHandler() {
+        loadProvider(new IfmoRestClientResponseHandler() {
             @Override
             public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
                 if (statusCode == 200) {
@@ -207,6 +208,42 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
             }
         });
     }
+    private void loadProvider(IfmoRestClientResponseHandler handler) {
+        loadProvider(handler, 0);
+    }
+    private void loadProvider(final IfmoRestClientResponseHandler handler, final int attempt) {
+        Log.v(TAG, "loadProvider | attempt=" + attempt);
+        IfmoRestClient.getPlain(getContext(), "building_map", null, new IfmoClientResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, String response) {
+                try {
+                    if (statusCode == 200) {
+                        handler.onSuccess(statusCode, new JSONObject(response), null);
+                    } else {
+                        handler.onFailure(IfmoRestClient.FAILED_TRY_AGAIN);
+                    }
+                } catch (Exception e) {
+                    if (attempt < 3) {
+                        loadProvider(handler, attempt + 1);
+                    } else {
+                        handler.onFailure(IfmoRestClient.FAILED_TRY_AGAIN);
+                    }
+                }
+            }
+            @Override
+            public void onProgress(int state) {
+                handler.onProgress(state);
+            }
+            @Override
+            public void onFailure(int state) {
+                handler.onFailure(state);
+            }
+            @Override
+            public void onNewHandle(RequestHandle requestHandle) {
+                handler.onNewHandle(requestHandle);
+            }
+        });
+    }
     private void loadFailed(){
         Log.v(TAG, "loadFailed");
         try {
@@ -236,44 +273,45 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     }
     private void display() {
         draw(R.layout.layout_university_buildings);
-        MapView mapView = (MapView) container.findViewById(R.id.buildings_map);
+        mapView = (MapView) container.findViewById(R.id.buildings_map);
         if (mapView != null) {
-            mapView.onCreate(savedInstanceState);
-            mapView.onResume();
+            mapView.onCreate(getMapBundle(savedInstanceState));
             mapView.getMapAsync(this);
-            Switch dormitory_switch = (Switch) container.findViewById(R.id.dormitory_switch);
-            if (dormitory_switch != null) {
-                dormitory_switch.setChecked(markers_dormitory);
-                dormitory_switch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        markers_dormitory = isChecked;
-                        displayMarkers();
-                        Storage.pref.put(getContext(), "pref_university_buildings_dormitory", markers_dormitory);
-                    }
-                });
-            }
-            Switch campus_switch = (Switch) container.findViewById(R.id.campus_switch);
-            if (campus_switch != null) {
-                campus_switch.setChecked(markers_campus);
-                campus_switch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        markers_campus = isChecked;
-                        displayMarkers();
-                        Storage.pref.put(getContext(), "pref_university_buildings_campus", markers_campus);
-                    }
-                });
-            }
-            View view_list = container.findViewById(R.id.view_list);
-            if (view_list != null) {
-                view_list.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        openList();
-                    }
-                });
-            }
+            mapView.onStart();
+            mapView.onResume();
+        }
+        Switch dormitory_switch = (Switch) container.findViewById(R.id.dormitory_switch);
+        if (dormitory_switch != null) {
+            dormitory_switch.setChecked(markers_dormitory);
+            dormitory_switch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    markers_dormitory = isChecked;
+                    displayMarkers();
+                    Storage.pref.put(getContext(), "pref_university_buildings_dormitory", markers_dormitory);
+                }
+            });
+        }
+        Switch campus_switch = (Switch) container.findViewById(R.id.campus_switch);
+        if (campus_switch != null) {
+            campus_switch.setChecked(markers_campus);
+            campus_switch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    markers_campus = isChecked;
+                    displayMarkers();
+                    Storage.pref.put(getContext(), "pref_university_buildings_campus", markers_campus);
+                }
+            });
+        }
+        View view_list = container.findViewById(R.id.view_list);
+        if (view_list != null) {
+            view_list.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    openList();
+                }
+            });
         }
     }
 
@@ -477,6 +515,13 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
             Static.error(e);
         }
         return text.trim();
+    }
+    private Bundle getMapBundle(Bundle bundle) {
+        Bundle mapViewBundle = null;
+        if (bundle != null) {
+            mapViewBundle = bundle.getBundle("MapViewBundleKey");
+        }
+        return mapViewBundle;
     }
 
     private void draw(int layoutId){
