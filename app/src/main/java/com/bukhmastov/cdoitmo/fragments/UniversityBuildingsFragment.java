@@ -37,9 +37,11 @@ import com.loopj.android.http.RequestHandle;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Objects;
 
 public class UniversityBuildingsFragment extends Fragment implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
@@ -55,6 +57,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     private ArrayList<Marker> markers = new ArrayList<>();
     private boolean markers_campus = true;
     private boolean markers_dormitory = true;
+    private long timestamp = 0;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -93,7 +96,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         Log.v(TAG, "resumed");
         FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
         if (building_map == null) {
-            forceLoad();
+            load();
         }
         if (mapView != null) {
             mapView.onResume();
@@ -144,69 +147,132 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         return view;
     }
 
-    private void forceLoad() {
-        loadProvider(new IfmoRestClientResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
-                if (statusCode == 200) {
-                    building_map = json;
-                    display();
+    private void load() {
+        load(Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)
+                ? Integer.parseInt(Storage.pref.get(getContext(), "pref_static_refresh", "168"))
+                : 0);
+    }
+    private void load(boolean force) {
+        load(Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)
+                ? Integer.parseInt(Storage.pref.get(getContext(), "pref_static_refresh", "168"))
+                : 0, force);
+    }
+    private void load(int refresh_rate) {
+        String cache = Storage.file.cache.get(getContext(), "university#buildings").trim();
+        if (cache.isEmpty()) {
+            load(refresh_rate, true);
+        } else {
+            try {
+                JSONObject cacheJson = new JSONObject(cache);
+                building_map = cacheJson.getJSONObject("data");
+                timestamp = cacheJson.getLong("timestamp");
+                if (timestamp + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+                    load(refresh_rate, true);
                 } else {
-                    loadFailed();
+                    load(refresh_rate, false);
                 }
+            } catch (JSONException e) {
+                Static.error(e);
+                load(refresh_rate, true);
             }
-            @Override
-            public void onProgress(int state) {
-                Log.v(TAG, "forceLoad | progress " + state);
-                draw(R.layout.state_loading);
-                if (activity != null) {
-                    TextView loading_message = (TextView) container.findViewById(R.id.loading_message);
-                    if (loading_message != null) {
-                        switch (state) {
-                            case IfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
+        }
+    }
+    private void load(final int refresh_rate, final boolean force) {
+        Log.v(TAG, "load | refresh_rate=" + refresh_rate + " | force=" + (force ? "true" : "false"));
+        if ((!force || !Static.isOnline(getContext())) && building_map != null) {
+            display();
+            return;
+        }
+        if (!Static.OFFLINE_MODE) {
+            loadProvider(new IfmoRestClientResponseHandler() {
+                @Override
+                public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
+                    if (statusCode == 200) {
+                        long now = Calendar.getInstance().getTimeInMillis();
+                        if (json != null) {
+                            try {
+                                Storage.file.cache.put(getContext(), "university#buildings", new JSONObject()
+                                        .put("timestamp", now)
+                                        .put("data", json)
+                                        .toString()
+                                );
+                            } catch (JSONException e) {
+                                Static.error(e);
+                            }
+                        }
+                        building_map = json;
+                        timestamp = now;
+                        display();
+                    } else {
+                        loadFailed();
+                    }
+                }
+                @Override
+                public void onProgress(int state) {
+                    Log.v(TAG, "forceLoad | progress " + state);
+                    draw(R.layout.state_loading);
+                    if (activity != null) {
+                        TextView loading_message = (TextView) container.findViewById(R.id.loading_message);
+                        if (loading_message != null) {
+                            switch (state) {
+                                case IfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
+                            }
                         }
                     }
                 }
-            }
-            @Override
-            public void onFailure(int state) {
-                Log.v(TAG, "forceLoad | failure " + state);
-                switch (state) {
-                    case IfmoRestClient.FAILED_OFFLINE:
-                        draw(R.layout.state_offline);
-                        if (activity != null) {
-                            View offline_reload = container.findViewById(R.id.offline_reload);
-                            if (offline_reload != null) {
-                                offline_reload.setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        forceLoad();
-                                    }
-                                });
+                @Override
+                public void onFailure(int state) {
+                    Log.v(TAG, "forceLoad | failure " + state);
+                    switch (state) {
+                        case IfmoRestClient.FAILED_OFFLINE:
+                            draw(R.layout.state_offline);
+                            if (activity != null) {
+                                View offline_reload = container.findViewById(R.id.offline_reload);
+                                if (offline_reload != null) {
+                                    offline_reload.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            load();
+                                        }
+                                    });
+                                }
                             }
-                        }
-                        break;
-                    case IfmoRestClient.FAILED_TRY_AGAIN:
-                        draw(R.layout.state_try_again);
-                        if (activity != null) {
-                            View try_again_reload = container.findViewById(R.id.try_again_reload);
-                            if (try_again_reload != null) {
-                                try_again_reload.setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        forceLoad();
-                                    }
-                                });
+                            break;
+                        case IfmoRestClient.FAILED_TRY_AGAIN:
+                            draw(R.layout.state_try_again);
+                            if (activity != null) {
+                                View try_again_reload = container.findViewById(R.id.try_again_reload);
+                                if (try_again_reload != null) {
+                                    try_again_reload.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            load();
+                                        }
+                                    });
+                                }
                             }
+                            break;
+                    }
+                }
+                @Override
+                public void onNewHandle(RequestHandle requestHandle) {
+                    fragmentRequestHandle = requestHandle;
+                }
+            });
+        } else {
+            draw(R.layout.state_offline);
+            if (activity != null) {
+                View offline_reload = activity.findViewById(R.id.offline_reload);
+                if (offline_reload != null) {
+                    offline_reload.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            load(refresh_rate, true);
                         }
-                        break;
+                    });
                 }
             }
-            @Override
-            public void onNewHandle(RequestHandle requestHandle) {
-                fragmentRequestHandle = requestHandle;
-            }
-        });
+        }
     }
     private void loadProvider(IfmoRestClientResponseHandler handler) {
         loadProvider(handler, 0);
@@ -255,7 +321,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                 try_again_reload.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        forceLoad();
+                        load();
                     }
                 });
             }

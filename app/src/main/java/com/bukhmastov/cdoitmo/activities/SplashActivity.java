@@ -70,8 +70,8 @@ public class SplashActivity extends AppCompatActivity {
     private static class Wipe {
         static void check(Context context) {
             try {
-                int versionCode = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode; // 57
-                int lastVersionCode = Storage.pref.get(context, "last_version", 0); // 56
+                int versionCode = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode;
+                int lastVersionCode = Storage.pref.get(context, "last_version", 0);
                 if (lastVersionCode < versionCode) {
                     for (int i = lastVersionCode + 1; i <= versionCode; i++) {
                         apply(context, i);
@@ -105,6 +105,12 @@ public class SplashActivity extends AppCompatActivity {
                 case 58: {
                     FirebaseMessagingProvider.checkOwnerNotification(context);
                     break;
+                }
+                case 62: {
+                    Storage.pref.put(context, "pref_dynamic_refresh", Storage.pref.get(context, "pref_tab_refresh", "0"));
+                    Storage.pref.put(context, "pref_static_refresh", Storage.pref.get(context, "pref_schedule_refresh", "168"));
+                    Storage.pref.delete(context, "pref_tab_refresh");
+                    Storage.pref.delete(context, "pref_schedule_refresh");
                 }
             }
         }

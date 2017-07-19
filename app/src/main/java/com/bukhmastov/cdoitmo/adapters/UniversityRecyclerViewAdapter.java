@@ -5,6 +5,10 @@ import android.support.v4.util.ArrayMap;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
+
+import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.utils.Static;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -14,13 +18,14 @@ import java.util.ArrayList;
 
 public abstract class UniversityRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-    public static final int TYPE_MAIN = 0;
-    public static final int TYPE_MINOR = 1;
-    public static final int TYPE_STATE = 2;
-    public static final int TYPE_UNIT_STRUCTURE_COMMON = 3;
-    public static final int TYPE_UNIT_STRUCTURE_DEANERY = 4;
-    public static final int TYPE_UNIT_STRUCTURE_HEAD = 5;
-    public static final int TYPE_UNIT_DIVISIONS = 6;
+    public static final int TYPE_INFO_ABOUT_UPDATE_TIME = 0;
+    public static final int TYPE_MAIN = 1;
+    public static final int TYPE_MINOR = 2;
+    public static final int TYPE_STATE = 3;
+    public static final int TYPE_UNIT_STRUCTURE_COMMON = 4;
+    public static final int TYPE_UNIT_STRUCTURE_DEANERY = 5;
+    public static final int TYPE_UNIT_STRUCTURE_HEAD = 6;
+    public static final int TYPE_UNIT_DIVISIONS = 7;
     public static class Item {
         public int type;
         public JSONObject data;
@@ -62,6 +67,18 @@ public abstract class UniversityRecyclerViewAdapter extends RecyclerView.Adapter
     @Override
     public int getItemViewType(int position) {
         return dataset.get(position).type;
+    }
+
+    protected void bindInfoAboutUpdateTime(RecyclerView.ViewHolder holder, Item item) {
+        try {
+            ViewHolder viewHolder = (ViewHolder) holder;
+            String title = getString(item.data, "title");
+            if (title != null) {
+                ((TextView) viewHolder.container.findViewById(R.id.text)).setText(title);
+            }
+        } catch (Exception e) {
+            Static.error(e);
+        }
     }
 
     protected ArrayMap<Integer, View.OnClickListener> onStateClickListeners = new ArrayMap<>();

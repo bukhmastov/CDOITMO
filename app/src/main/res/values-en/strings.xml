@@ -173,8 +173,8 @@
     <string name="once_per_1_week">Once a week</string>
     <string name="once_per_4_weeks">Once every 4 weeks</string>
     <string name="manually">Manually only</string>
-    <string name="pref_tab_refresh">Update tabs</string>
-    <string name="pref_schedule_refresh">Update schedules</string>
+    <string name="pref_dynamic_refresh">Update dynamic data</string>
+    <string name="pref_static_refresh">Update static data</string>
     <string name="update_interval">Update interval</string>
     <string name="unknown">Unknown</string>
     <string name="shortcut_disabled">Shortcut unavailable</string>
@@ -341,5 +341,7 @@
     <string name="faculties">Faculties</string>
     <string name="persons">Personalities</string>
     <string name="no_events">No events</string>
+    <string name="pref_use_university_cache">Cache data \"University\"</string>
+    <string name="pref_use_university_cache_summary">Will take a lot of memory</string>
 
 </resources>

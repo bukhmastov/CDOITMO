@@ -423,7 +423,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
         }
     }
     private int getRefreshRate(){
-        return Storage.pref.get(context, "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(context, "pref_schedule_refresh", "168")) : 0;
+        return Storage.pref.get(context, "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(context, "pref_static_refresh", "168")) : 0;
     }
     private boolean getForce(String cache, int refresh_rate){
         Log.v(TAG, "getForce | refresh_rate=" + refresh_rate);

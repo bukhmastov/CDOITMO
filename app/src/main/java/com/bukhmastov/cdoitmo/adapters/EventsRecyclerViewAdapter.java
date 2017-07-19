@@ -28,6 +28,9 @@ public class EventsRecyclerViewAdapter extends UniversityRecyclerViewAdapter {
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         switch (viewType) {
+            case TYPE_INFO_ABOUT_UPDATE_TIME: {
+                return new ViewHolder((ViewGroup) LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_university_update_time, parent, false));
+            }
             case TYPE_MINOR: {
                 return new EventsRecyclerViewAdapter.ViewHolder((ViewGroup) LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_university_news_card_compact, parent, false));
             }
@@ -42,6 +45,10 @@ public class EventsRecyclerViewAdapter extends UniversityRecyclerViewAdapter {
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         Item item = dataset.get(position);
         switch (item.type) {
+            case TYPE_INFO_ABOUT_UPDATE_TIME: {
+                bindInfoAboutUpdateTime(holder, item);
+                break;
+            }
             case TYPE_MINOR: {
                 bindMinor(holder, item);
                 break;

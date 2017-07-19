@@ -22,12 +22,14 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapters.FacultiesRecyclerViewAdapter;
 import com.bukhmastov.cdoitmo.adapters.RecyclerViewOnScrollListener;
+import com.bukhmastov.cdoitmo.adapters.UniversityRecyclerViewAdapter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.IfmoClientResponseHandler;
 import com.bukhmastov.cdoitmo.network.interfaces.IfmoRestClientResponseHandler;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
+import com.bukhmastov.cdoitmo.utils.Storage;
 import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONArray;
@@ -35,6 +37,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 
 public class UniversityFacultiesFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
@@ -45,6 +48,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
     private boolean loaded = false;
     private ArrayList<String> stack = new ArrayList<>();
     private FacultiesRecyclerViewAdapter facultiesRecyclerViewAdapter = null;
+    private long timestamp = 0;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -67,7 +71,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
         FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
         if (!loaded) {
             loaded = true;
-            forceLoad();
+            load();
         }
     }
 
@@ -91,71 +95,138 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
     @Override
     public void onRefresh() {
         Log.v(TAG, "refreshed");
-        forceLoad();
+        load(true);
     }
 
-    private void forceLoad() {
-        loadProvider(new IfmoRestClientResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
-                if (statusCode == 200) {
-                    display(json);
+    private void load() {
+        load(Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)
+                ? Integer.parseInt(Storage.pref.get(getContext(), "pref_static_refresh", "168"))
+                : 0);
+    }
+    private void load(boolean force) {
+        load(Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)
+                ? Integer.parseInt(Storage.pref.get(getContext(), "pref_static_refresh", "168"))
+                : 0, force);
+    }
+    private void load(int refresh_rate) {
+        String cache = Storage.file.cache.get(getContext(), "university#faculties#" + (stack.size() == 0 ? "0" : stack.get(stack.size() - 1))).trim();
+        if (cache.isEmpty()) {
+            load(refresh_rate, true);
+        } else {
+            try {
+                JSONObject cacheJson = new JSONObject(cache);
+                timestamp = cacheJson.getLong("timestamp");
+                if (timestamp + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+                    load(refresh_rate, true);
                 } else {
-                    loadFailed();
+                    load(refresh_rate, false);
                 }
+            } catch (JSONException e) {
+                Static.error(e);
+                load(refresh_rate, true);
             }
-            @Override
-            public void onProgress(int state) {
-                Log.v(TAG, "forceLoad | progress " + state);
-                draw(R.layout.state_loading);
-                if (activity != null) {
-                    TextView loading_message = (TextView) container.findViewById(R.id.loading_message);
-                    if (loading_message != null) {
-                        switch (state) {
-                            case IfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
+        }
+    }
+    private void load(final int refresh_rate, final boolean force) {
+        Log.v(TAG, "load | refresh_rate=" + refresh_rate + " | force=" + (force ? "true" : "false"));
+        if (!force || !Static.isOnline(getContext())) {
+            try {
+                String cache = Storage.file.cache.get(getContext(), "university#faculties#" + (stack.size() == 0 ? "0" : stack.get(stack.size() - 1))).trim();
+                display(new JSONObject(cache).getJSONObject("data"));
+            } catch (Exception e) {
+                display(null);
+            }
+            return;
+        }
+        if (!Static.OFFLINE_MODE) {
+            loadProvider(new IfmoRestClientResponseHandler() {
+                @Override
+                public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
+                    if (statusCode == 200) {
+                        long now = Calendar.getInstance().getTimeInMillis();
+                        if (json != null) {
+                            try {
+                                Storage.file.cache.put(getContext(), "university#faculties#" + (stack.size() == 0 ? "0" : stack.get(stack.size() - 1)), new JSONObject()
+                                        .put("timestamp", now)
+                                        .put("data", json)
+                                        .toString()
+                                );
+                            } catch (JSONException e) {
+                                Static.error(e);
+                            }
+                        }
+                        timestamp = now;
+                        display(json);
+                    } else {
+                        loadFailed();
+                    }
+                }
+                @Override
+                public void onProgress(int state) {
+                    Log.v(TAG, "forceLoad | progress " + state);
+                    draw(R.layout.state_loading);
+                    if (activity != null) {
+                        TextView loading_message = (TextView) container.findViewById(R.id.loading_message);
+                        if (loading_message != null) {
+                            switch (state) {
+                                case IfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
+                            }
                         }
                     }
                 }
-            }
-            @Override
-            public void onFailure(int state) {
-                Log.v(TAG, "forceLoad | failure " + state);
-                switch (state) {
-                    case IfmoRestClient.FAILED_OFFLINE:
-                        draw(R.layout.state_offline);
-                        if (activity != null) {
-                            View offline_reload = container.findViewById(R.id.offline_reload);
-                            if (offline_reload != null) {
-                                offline_reload.setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        forceLoad();
-                                    }
-                                });
+                @Override
+                public void onFailure(int state) {
+                    Log.v(TAG, "forceLoad | failure " + state);
+                    switch (state) {
+                        case IfmoRestClient.FAILED_OFFLINE:
+                            draw(R.layout.state_offline);
+                            if (activity != null) {
+                                View offline_reload = container.findViewById(R.id.offline_reload);
+                                if (offline_reload != null) {
+                                    offline_reload.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            load();
+                                        }
+                                    });
+                                }
                             }
-                        }
-                        break;
-                    case IfmoRestClient.FAILED_TRY_AGAIN:
-                        draw(R.layout.state_try_again);
-                        if (activity != null) {
-                            View try_again_reload = container.findViewById(R.id.try_again_reload);
-                            if (try_again_reload != null) {
-                                try_again_reload.setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        forceLoad();
-                                    }
-                                });
+                            break;
+                        case IfmoRestClient.FAILED_TRY_AGAIN:
+                            draw(R.layout.state_try_again);
+                            if (activity != null) {
+                                View try_again_reload = container.findViewById(R.id.try_again_reload);
+                                if (try_again_reload != null) {
+                                    try_again_reload.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            load();
+                                        }
+                                    });
+                                }
                             }
+                            break;
+                    }
+                }
+                @Override
+                public void onNewHandle(RequestHandle requestHandle) {
+                    fragmentRequestHandle = requestHandle;
+                }
+            });
+        } else {
+            draw(R.layout.state_offline);
+            if (activity != null) {
+                View offline_reload = activity.findViewById(R.id.offline_reload);
+                if (offline_reload != null) {
+                    offline_reload.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            load(refresh_rate, true);
                         }
-                        break;
+                    });
                 }
             }
-            @Override
-            public void onNewHandle(RequestHandle requestHandle) {
-                fragmentRequestHandle = requestHandle;
-            }
-        });
+        }
     }
     private void loadProvider(IfmoRestClientResponseHandler handler) {
         loadProvider(handler, 0);
@@ -208,7 +279,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                 try_again_reload.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        forceLoad();
+                        load();
                     }
                 });
             }
@@ -218,6 +289,11 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
     }
 
     private void display(JSONObject json) {
+        Log.v(TAG, "display");
+        if (json == null) {
+            loadFailed();
+            return;
+        }
         try {
             JSONObject structure = getJsonObject(json, "structure");
             JSONArray divisions = getJsonArray(json, "divisions");
@@ -228,7 +304,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                 container.findViewById(R.id.back).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        forceLoad();
+                        load(true);
                     }
                 });
                 ((TextView) container.findViewById(R.id.title)).setText(R.string.division_general);
@@ -238,7 +314,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                     @Override
                     public void onClick(View v) {
                         stack.remove(stack.size() - 1);
-                        forceLoad();
+                        load();
                     }
                 });
                 final String name = getString(structure, "name");
@@ -267,6 +343,12 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
             list.setAdapter(facultiesRecyclerViewAdapter);
             list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
             displayContent(structure, divisions);
+            if (timestamp > 0 && timestamp + 5000 < Calendar.getInstance().getTimeInMillis()) {
+                UniversityRecyclerViewAdapter.Item item = new UniversityRecyclerViewAdapter.Item();
+                item.type = UniversityRecyclerViewAdapter.TYPE_INFO_ABOUT_UPDATE_TIME;
+                item.data = new JSONObject().put("title", getString(R.string.update_date) + " " + Static.getUpdateTime(activity, timestamp));
+                facultiesRecyclerViewAdapter.addItem(item);
+            }
             // добавляем отступ
             container.findViewById(R.id.top_panel).post(new Runnable() {
                 @Override
@@ -376,7 +458,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                     @Override
                     public void onClick(int dep_id) {
                         stack.add(String.valueOf(dep_id));
-                        forceLoad();
+                        load();
                     }
                 });
             }

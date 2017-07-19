@@ -176,8 +176,8 @@
     <string name="once_per_1_week">Раз в неделю</string>
     <string name="once_per_4_weeks">Раз в 4 недели</string>
     <string name="manually">Только вручную</string>
-    <string name="pref_tab_refresh">Обновление вкладок</string>
-    <string name="pref_schedule_refresh">Обновление расписаний</string>
+    <string name="pref_dynamic_refresh">Обновление динамичных данных</string>
+    <string name="pref_static_refresh">Обновление статичных данных</string>
     <string name="update_interval">Интервал обновления</string>
     <string name="unknown">Неизвестно</string>
     <string name="shortcut_disabled">Ярлык недоступен</string>
@@ -348,5 +348,7 @@
     <string name="faculties">Факультеты</string>
     <string name="persons">Персоналии</string>
     <string name="no_events">Нет событий</string>
+    <string name="pref_use_university_cache">Кэшировать данные \"Университет\"</string>
+    <string name="pref_use_university_cache_summary">Займет большое количество памяти</string>
 
 </resources>

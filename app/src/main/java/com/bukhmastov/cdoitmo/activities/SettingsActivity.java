@@ -159,6 +159,16 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             case "pref_allow_owner_notifications":
                 FirebaseMessagingProvider.checkOwnerNotification(this);
                 break;
+            case "pref_use_cache":
+                if (!Storage.pref.get(this, "pref_use_cache", true)) {
+                    Storage.file.cache.clear(this);
+                }
+                break;
+            case "pref_use_university_cache":
+                if (!Storage.pref.get(this, "pref_use_university_cache", false)) {
+                    Storage.file.cache.clear(this, "university");
+                }
+                break;
         }
     }
 
@@ -257,8 +267,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             FirebaseAnalyticsProvider.logCurrentScreen(activity, this.getClass().getSimpleName());
             addPreferencesFromResource(R.xml.pref_cache);
             setHasOptionsMenu(true);
-            bindPreferenceSummaryToValue(findPreference("pref_tab_refresh"));
-            bindPreferenceSummaryToValue(findPreference("pref_schedule_refresh"));
+            bindPreferenceSummaryToValue(findPreference("pref_dynamic_refresh"));
+            bindPreferenceSummaryToValue(findPreference("pref_static_refresh"));
             Preference pref_clear_cache = findPreference("pref_clear_cache");
             if (pref_clear_cache != null) {
                 pref_clear_cache.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {

@@ -140,7 +140,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
     }
 
     private void load(){
-        load(Storage.pref.get(getContext(), "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(getContext(), "pref_tab_refresh", "0")) : 0);
+        load(Storage.pref.get(getContext(), "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(getContext(), "pref_dynamic_refresh", "0")) : 0);
     }
     private void load(final int refresh_rate){
         Log.v(TAG, "load | refresh_rate=" + refresh_rate);

@@ -38,6 +38,9 @@ public class FacultiesRecyclerViewAdapter extends UniversityRecyclerViewAdapter 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         switch (viewType) {
+            case TYPE_INFO_ABOUT_UPDATE_TIME: {
+                return new ViewHolder((ViewGroup) LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_university_update_time, parent, false));
+            }
             case TYPE_UNIT_STRUCTURE_COMMON:
             case TYPE_UNIT_STRUCTURE_DEANERY:
             case TYPE_UNIT_STRUCTURE_HEAD:
@@ -52,6 +55,10 @@ public class FacultiesRecyclerViewAdapter extends UniversityRecyclerViewAdapter 
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         Item item = dataset.get(position);
         switch (item.type) {
+            case TYPE_INFO_ABOUT_UPDATE_TIME: {
+                bindInfoAboutUpdateTime(holder, item);
+                break;
+            }
             case TYPE_UNIT_STRUCTURE_COMMON:
             case TYPE_UNIT_STRUCTURE_DEANERY:
             case TYPE_UNIT_STRUCTURE_HEAD: {
