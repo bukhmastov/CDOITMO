@@ -333,6 +333,8 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     @Override
     public void onMapReady(GoogleMap gMap) {
         googleMap = gMap;
+        mapView.onStart();
+        mapView.onResume();
         displayMarkers();
         googleMap.setOnMarkerClickListener(this);
         googleMap.moveCamera(CameraUpdateFactory.newCameraPosition(new CameraPosition.Builder().target(new LatLng(59.93465, 30.3138391)).zoom(10).build()));
@@ -343,8 +345,6 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         if (mapView != null) {
             mapView.onCreate(getMapBundle(savedInstanceState));
             mapView.getMapAsync(this);
-            mapView.onStart();
-            mapView.onResume();
         }
         Switch dormitory_switch = (Switch) container.findViewById(R.id.dormitory_switch);
         if (dormitory_switch != null) {
