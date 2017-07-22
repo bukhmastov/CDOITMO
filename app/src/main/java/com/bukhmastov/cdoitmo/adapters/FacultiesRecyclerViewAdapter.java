@@ -83,12 +83,15 @@ public class FacultiesRecyclerViewAdapter extends UniversityRecyclerViewAdapter 
                 Static.removeView(viewHolder.container.findViewById(R.id.structure_header));
             }
             ViewGroup structure_container = (ViewGroup) viewHolder.container.findViewById(R.id.structure_container);
+            if (structure_container == null) {
+                return;
+            }
             if (item.type == TYPE_UNIT_STRUCTURE_COMMON) {
                 boolean is_first_container = true;
                 final String address = getString(item.data, "address");
-                final String phone = getString(item.data, "phone");
-                final String email = getString(item.data, "email");
-                final String site = getString(item.data, "site");
+                final String[] phones = (getString(item.data, "phone") == null ? "" : getString(item.data, "phone")).trim().split(";|,");
+                final String[] emails = (getString(item.data, "email") == null ? "" : getString(item.data, "email")).trim().split(";|,");
+                final String[] sites = (getString(item.data, "site") == null ? "" : getString(item.data, "site")).trim().split(";|,");
                 final String working_hours = getString(item.data, "working_hours");
                 if (address != null) {
                     structure_container.addView(getConnectContainer(R.drawable.ic_location, address.trim(), is_first_container, new View.OnClickListener() {
@@ -103,37 +106,43 @@ public class FacultiesRecyclerViewAdapter extends UniversityRecyclerViewAdapter 
                     }));
                     is_first_container = false;
                 }
-                if (phone != null) {
-                    structure_container.addView(getConnectContainer(R.drawable.ic_phone, phone.trim(), is_first_container, new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + phone.trim()));
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            context.startActivity(intent);
-                        }
-                    }));
-                    is_first_container = false;
+                for (final String phone : phones) {
+                    if (phone != null && !phone.trim().isEmpty()) {
+                        structure_container.addView(getConnectContainer(R.drawable.ic_phone, phone.trim(), is_first_container, new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + phone.trim()));
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                context.startActivity(intent);
+                            }
+                        }));
+                        is_first_container = false;
+                    }
                 }
-                if (email != null) {
-                    structure_container.addView(getConnectContainer(R.drawable.ic_email, email.trim(), is_first_container, new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            Intent emailIntent = new Intent(Intent.ACTION_SEND);
-                            emailIntent.setType("message/rfc822");
-                            emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{email.trim()});
-                            context.startActivity(Intent.createChooser(emailIntent, context.getString(R.string.send_mail) + "..."));
-                        }
-                    }));
-                    is_first_container = false;
+                for (final String email : emails) {
+                    if (email != null && !email.trim().isEmpty()) {
+                        structure_container.addView(getConnectContainer(R.drawable.ic_email, email.trim(), is_first_container, new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Intent emailIntent = new Intent(Intent.ACTION_SEND);
+                                emailIntent.setType("message/rfc822");
+                                emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{email.trim()});
+                                context.startActivity(Intent.createChooser(emailIntent, context.getString(R.string.send_mail) + "..."));
+                            }
+                        }));
+                        is_first_container = false;
+                    }
                 }
-                if (site != null) {
-                    structure_container.addView(getConnectContainer(R.drawable.ic_web, site.trim(), is_first_container, new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(site.trim())));
-                        }
-                    }));
-                    is_first_container = false;
+                for (final String site : sites) {
+                    if (site != null && !site.trim().isEmpty()) {
+                        structure_container.addView(getConnectContainer(R.drawable.ic_web, site.trim(), is_first_container, new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(site.trim())));
+                            }
+                        }));
+                        is_first_container = false;
+                    }
                 }
                 if (working_hours != null) {
                     String[] days = working_hours.trim().split("\\|");
@@ -161,8 +170,8 @@ public class FacultiesRecyclerViewAdapter extends UniversityRecyclerViewAdapter 
             if (item.type == TYPE_UNIT_STRUCTURE_DEANERY) {
                 boolean is_first_container = true;
                 final String deanery_address = getString(item.data, "deanery_address");
-                final String deanery_phone = getString(item.data, "deanery_phone");
-                final String deanery_email = getString(item.data, "deanery_email");
+                final String[] deanery_phones = (getString(item.data, "deanery_phone") == null ? "" : getString(item.data, "deanery_phone")).trim().split(";|,");
+                final String[] deanery_emails = (getString(item.data, "deanery_email") == null ? "" : getString(item.data, "deanery_email")).trim().split(";|,");
                 if (deanery_address != null && !deanery_address.trim().isEmpty()) {
                     structure_container.addView(getConnectContainer(R.drawable.ic_location, deanery_address.trim(), is_first_container, new View.OnClickListener() {
                         @Override
@@ -176,28 +185,32 @@ public class FacultiesRecyclerViewAdapter extends UniversityRecyclerViewAdapter 
                     }));
                     is_first_container = false;
                 }
-                if (deanery_phone != null && !deanery_phone.trim().isEmpty()) {
-                    structure_container.addView(getConnectContainer(R.drawable.ic_phone, deanery_phone.trim(), is_first_container, new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + deanery_phone.trim()));
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            context.startActivity(intent);
-                        }
-                    }));
-                    is_first_container = false;
+                for (final String deanery_phone : deanery_phones) {
+                    if (deanery_phone != null && !deanery_phone.trim().isEmpty()) {
+                        structure_container.addView(getConnectContainer(R.drawable.ic_phone, deanery_phone.trim(), is_first_container, new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + deanery_phone.trim()));
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                context.startActivity(intent);
+                            }
+                        }));
+                        is_first_container = false;
+                    }
                 }
-                if (deanery_email != null && !deanery_email.trim().isEmpty()) {
-                    structure_container.addView(getConnectContainer(R.drawable.ic_email, deanery_email.trim(), is_first_container, new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            Intent emailIntent = new Intent(Intent.ACTION_SEND);
-                            emailIntent.setType("message/rfc822");
-                            emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{deanery_email.trim()});
-                            context.startActivity(Intent.createChooser(emailIntent, context.getString(R.string.send_mail) + "..."));
-                        }
-                    }));
-                    is_first_container = false;
+                for (final String deanery_email : deanery_emails) {
+                    if (deanery_email != null && !deanery_email.trim().isEmpty()) {
+                        structure_container.addView(getConnectContainer(R.drawable.ic_email, deanery_email.trim(), is_first_container, new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Intent emailIntent = new Intent(Intent.ACTION_SEND);
+                                emailIntent.setType("message/rfc822");
+                                emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{deanery_email.trim()});
+                                context.startActivity(Intent.createChooser(emailIntent, context.getString(R.string.send_mail) + "..."));
+                            }
+                        }));
+                        is_first_container = false;
+                    }
                 }
             }
             if (item.type == TYPE_UNIT_STRUCTURE_HEAD) {
@@ -207,7 +220,7 @@ public class FacultiesRecyclerViewAdapter extends UniversityRecyclerViewAdapter 
                 final String head_middlename = getString(item.data, "head_middlename");
                 final String head_avatar = getString(item.data, "head_avatar");
                 final String head_degree = getString(item.data, "head_degree");
-                final String head_email = getString(item.data, "head_email");
+                final String[] head_emails = (getString(item.data, "head_email") == null ? "" : getString(item.data, "head_email")).trim().split(";|,");
                 final int head_pid = getInt(item.data, "head_pid");
                 if (head_lastname != null && head_firstname != null) {
                     final View layout_university_persons_list_item = inflate(R.layout.layout_university_persons_list_item);
@@ -235,17 +248,19 @@ public class FacultiesRecyclerViewAdapter extends UniversityRecyclerViewAdapter 
                     structure_container.addView(layout_university_persons_list_item);
                     is_first_container = false;
                 }
-                if (head_email != null && !head_email.trim().isEmpty()) {
-                    structure_container.addView(getConnectContainer(R.drawable.ic_email, head_email.trim(), is_first_container, new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            Intent emailIntent = new Intent(Intent.ACTION_SEND);
-                            emailIntent.setType("message/rfc822");
-                            emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{head_email.trim()});
-                            context.startActivity(Intent.createChooser(emailIntent, context.getString(R.string.send_mail) + "..."));
-                        }
-                    }));
-                    is_first_container = false;
+                for (final String head_email : head_emails) {
+                    if (head_email != null && !head_email.trim().isEmpty()) {
+                        structure_container.addView(getConnectContainer(R.drawable.ic_email, head_email.trim(), is_first_container, new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Intent emailIntent = new Intent(Intent.ACTION_SEND);
+                                emailIntent.setType("message/rfc822");
+                                emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{head_email.trim()});
+                                context.startActivity(Intent.createChooser(emailIntent, context.getString(R.string.send_mail) + "..."));
+                            }
+                        }));
+                        is_first_container = false;
+                    }
                 }
             }
         } catch (Exception e) {
@@ -263,6 +278,9 @@ public class FacultiesRecyclerViewAdapter extends UniversityRecyclerViewAdapter 
                 Static.removeView(viewHolder.container.findViewById(R.id.structure_header));
             }
             ViewGroup structure_container = (ViewGroup) viewHolder.container.findViewById(R.id.structure_container);
+            if (structure_container == null) {
+                return;
+            }
             JSONArray divisions = getJsonArray(item.data, "divisions");
             if (divisions != null) {
                 for (int i = 0; i < divisions.length(); i++) {

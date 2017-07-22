@@ -47,11 +47,12 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
     private RequestHandle fragmentRequestHandle = null;
     private boolean loaded = false;
     private JSONObject events = null;
-    private int limit = 20;
+    private int limit = 10;
     private int offset = 0;
     private String search = "";
     private EventsRecyclerViewAdapter eventsRecyclerViewAdapter = null;
     private long timestamp = 0;
+    private Thread thread = null;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -82,10 +83,6 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
     public void onPause() {
         super.onPause();
         Log.v(TAG, "paused");
-        if (fragmentRequestHandle != null) {
-            loaded = false;
-            fragmentRequestHandle.cancel(true);
-        }
     }
 
     @Override
@@ -110,25 +107,38 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
                         ? Integer.parseInt(Storage.pref.get(getContext(), "pref_dynamic_refresh", "0"))
                         : 0);
     }
-    private void searchAndLoad(String search, int refresh_rate) {
-        String cache = Storage.file.cache.get(getContext(), "university#events").trim();
-        if (cache.isEmpty()) {
-            searchAndLoad(search, refresh_rate, true);
-        } else {
-            try {
-                JSONObject cacheJson = new JSONObject(cache);
-                events = cacheJson.getJSONObject("data");
-                timestamp = cacheJson.getLong("timestamp");
-                if (timestamp + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+    private void searchAndLoad(final String search, final int refresh_rate) {
+        if (thread != null) {
+            if (thread.isAlive() && !thread.isInterrupted()) {
+                thread.interrupt();
+            }
+            thread = null;
+        }
+        thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                String cache = Storage.file.cache.get(getContext(), "university#events").trim();
+                if (cache.isEmpty()) {
                     searchAndLoad(search, refresh_rate, true);
                 } else {
-                    searchAndLoad(search, refresh_rate, false);
+                    try {
+                        JSONObject cacheJson = new JSONObject(cache);
+                        events = cacheJson.getJSONObject("data");
+                        timestamp = cacheJson.getLong("timestamp");
+                        if (timestamp + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+                            searchAndLoad(search, refresh_rate, true);
+                        } else {
+                            searchAndLoad(search, refresh_rate, false);
+                        }
+                    } catch (JSONException e) {
+                        Static.error(e);
+                        searchAndLoad(search, refresh_rate, true);
+                    }
                 }
-            } catch (JSONException e) {
-                Static.error(e);
-                searchAndLoad(search, refresh_rate, true);
             }
-        }
+        });
+        thread.setName("UniversityEventsThread");
+        thread.start();
     }
     private void searchAndLoad(final String search, final int refresh_rate, final boolean force) {
         Log.v(TAG, "searchAndLoad | search=" + search + " | refresh_rate=" + refresh_rate + " | force=" + (force ? "true" : "false"));
@@ -144,7 +154,7 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
                 public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
                     if (statusCode == 200) {
                         long now = Calendar.getInstance().getTimeInMillis();
-                        if (json != null) {
+                        if (json != null && Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)) {
                             try {
                                 Storage.file.cache.put(getContext(), "university#events", new JSONObject()
                                         .put("timestamp", now)
@@ -163,53 +173,63 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
                     }
                 }
                 @Override
-                public void onProgress(int state) {
-                    Log.v(TAG, "searchAndLoad | progress " + state);
-                    draw(R.layout.state_loading);
-                    if (activity != null) {
-                        TextView loading_message = (TextView) container.findViewById(R.id.loading_message);
-                        if (loading_message != null) {
+                public void onProgress(final int state) {
+                    activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Log.v(TAG, "searchAndLoad | progress " + state);
+                            draw(R.layout.state_loading);
+                            if (activity != null) {
+                                TextView loading_message = (TextView) container.findViewById(R.id.loading_message);
+                                if (loading_message != null) {
+                                    switch (state) {
+                                        case IfmoRestClient.STATE_HANDLING:
+                                            loading_message.setText(R.string.loading);
+                                            break;
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+                @Override
+                public void onFailure(final int state) {
+                    activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Log.v(TAG, "searchAndLoad | failure " + state);
                             switch (state) {
-                                case IfmoRestClient.STATE_HANDLING:
-                                    loading_message.setText(R.string.loading);
+                                case IfmoRestClient.FAILED_OFFLINE:
+                                    draw(R.layout.state_offline);
+                                    if (activity != null) {
+                                        View offline_reload = container.findViewById(R.id.offline_reload);
+                                        if (offline_reload != null) {
+                                            offline_reload.setOnClickListener(new View.OnClickListener() {
+                                                @Override
+                                                public void onClick(View v) {
+                                                    clearAndLoad();
+                                                }
+                                            });
+                                        }
+                                    }
+                                    break;
+                                case IfmoRestClient.FAILED_TRY_AGAIN:
+                                    draw(R.layout.state_try_again);
+                                    if (activity != null) {
+                                        View try_again_reload = container.findViewById(R.id.try_again_reload);
+                                        if (try_again_reload != null) {
+                                            try_again_reload.setOnClickListener(new View.OnClickListener() {
+                                                @Override
+                                                public void onClick(View v) {
+                                                    clearAndLoad();
+                                                }
+                                            });
+                                        }
+                                    }
                                     break;
                             }
                         }
-                    }
-                }
-                @Override
-                public void onFailure(int state) {
-                    Log.v(TAG, "searchAndLoad | failure " + state);
-                    switch (state) {
-                        case IfmoRestClient.FAILED_OFFLINE:
-                            draw(R.layout.state_offline);
-                            if (activity != null) {
-                                View offline_reload = container.findViewById(R.id.offline_reload);
-                                if (offline_reload != null) {
-                                    offline_reload.setOnClickListener(new View.OnClickListener() {
-                                        @Override
-                                        public void onClick(View v) {
-                                            clearAndLoad();
-                                        }
-                                    });
-                                }
-                            }
-                            break;
-                        case IfmoRestClient.FAILED_TRY_AGAIN:
-                            draw(R.layout.state_try_again);
-                            if (activity != null) {
-                                View try_again_reload = container.findViewById(R.id.try_again_reload);
-                                if (try_again_reload != null) {
-                                    try_again_reload.setOnClickListener(new View.OnClickListener() {
-                                        @Override
-                                        public void onClick(View v) {
-                                            clearAndLoad();
-                                        }
-                                    });
-                                }
-                            }
-                            break;
-                    }
+                    });
                 }
                 @Override
                 public void onNewHandle(RequestHandle requestHandle) {
@@ -224,7 +244,7 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
                     offline_reload.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            searchAndLoad(search, refresh_rate, true);
+                            searchAndLoad(search, refresh_rate);
                         }
                     });
                 }
@@ -236,7 +256,7 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
     }
     private void loadProvider(final IfmoRestClientResponseHandler handler, final int attempt) {
         Log.v(TAG, "loadProvider | attempt=" + attempt);
-        IfmoRestClient.getPlain(getContext(), "event?limit=" + limit + "&offset=" + offset + "&search=" + search, null, new IfmoClientResponseHandler() {
+        IfmoRestClient.getPlainSync(getContext(), "event?limit=" + limit + "&offset=" + offset + "&search=" + search, null, new IfmoClientResponseHandler() {
             @Override
             public void onSuccess(int statusCode, String response) {
                 try {
@@ -268,175 +288,224 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
         });
     }
     private void loadFailed(){
-        Log.v(TAG, "loadFailed");
-        try {
-            draw(R.layout.state_try_again);
-            TextView try_again_message = (TextView) container.findViewById(R.id.try_again_message);
-            if (try_again_message != null) try_again_message.setText(R.string.load_failed);
-            View try_again_reload = container.findViewById(R.id.try_again_reload);
-            if (try_again_reload != null) {
-                try_again_reload.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        clearAndLoad();
-                    }
-                });
-            }
-        } catch (Exception e) {
-            Static.error(e);
-        }
-    }
-    private void display() {
-        Log.v(TAG, "display");
-        if (events == null) {
-            loadFailed();
-            return;
-        }
-        try {
-            draw(R.layout.layout_university_events_list);
-            // поиск
-            final EditText search_input = (EditText) container.findViewById(R.id.search_input);
-            final FrameLayout search_action = (FrameLayout) container.findViewById(R.id.search_action);
-            search_action.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    searchAndLoad(search_input.getText().toString().trim());
-                }
-            });
-            search_input.setOnKeyListener(new View.OnKeyListener() {
-                @Override
-                public boolean onKey(View v, int keyCode, KeyEvent event) {
-                    if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
-                        searchAndLoad(search_input.getText().toString().trim());
-                        return true;
-                    }
-                    return false;
-                }
-            });
-            search_input.setText(search);
-            // очищаем сообщение
-            ViewGroup news_list_info = (ViewGroup) container.findViewById(R.id.events_list_info);
-            news_list_info.removeAllViews();
-            news_list_info.setPadding(0, 0, 0, 0);
-            // список
-            JSONArray list = events.getJSONArray("list");
-            if (list.length() > 0) {
-                eventsRecyclerViewAdapter = new EventsRecyclerViewAdapter(getContext());
-                final RecyclerView events_list = (RecyclerView) container.findViewById(R.id.events_list);
-                events_list.setLayoutManager(new LinearLayoutManager(getContext()));
-                events_list.setAdapter(eventsRecyclerViewAdapter);
-                events_list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
-                eventsRecyclerViewAdapter.setOnStateClickListener(R.id.load_more, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        offset += limit;
-                        eventsRecyclerViewAdapter.setState(R.id.loading_more);
-                        loadProvider(new IfmoRestClientResponseHandler() {
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "loadFailed");
+                try {
+                    draw(R.layout.state_try_again);
+                    TextView try_again_message = (TextView) container.findViewById(R.id.try_again_message);
+                    if (try_again_message != null) try_again_message.setText(R.string.load_failed);
+                    View try_again_reload = container.findViewById(R.id.try_again_reload);
+                    if (try_again_reload != null) {
+                        try_again_reload.setOnClickListener(new View.OnClickListener() {
                             @Override
-                            public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
-                                try {
-                                    events.put("count", json.getInt("count"));
-                                    events.put("limit", json.getInt("limit"));
-                                    events.put("offset", json.getInt("offset"));
-                                    JSONArray list_original = events.getJSONArray("list");
-                                    JSONArray list = json.getJSONArray("list");
-                                    for (int i = 0; i < list.length(); i++) {
-                                        list_original.put(list.getJSONObject(i));
-                                    }
-                                    displayContent(list);
-                                } catch (Exception e) {
-                                    Static.error(e);
-                                    eventsRecyclerViewAdapter.setState(R.id.load_more);
-                                }
-                            }
-                            @Override
-                            public void onProgress(int state) {}
-                            @Override
-                            public void onFailure(int state) {
-                                eventsRecyclerViewAdapter.setState(R.id.load_more);
-                            }
-                            @Override
-                            public void onNewHandle(RequestHandle requestHandle) {
-                                fragmentRequestHandle = requestHandle;
+                            public void onClick(View v) {
+                                clearAndLoad();
                             }
                         });
                     }
-                });
-                if (timestamp > 0 && timestamp + 5000 < Calendar.getInstance().getTimeInMillis()) {
-                    UniversityRecyclerViewAdapter.Item item = new UniversityRecyclerViewAdapter.Item();
-                    item.type = UniversityRecyclerViewAdapter.TYPE_INFO_ABOUT_UPDATE_TIME;
-                    item.data = new JSONObject().put("title", getString(R.string.update_date) + " " + Static.getUpdateTime(activity, timestamp));
-                    eventsRecyclerViewAdapter.addItem(item);
-                }
-                displayContent(list);
-            } else {
-                View view = inflate(R.layout.nothing_to_display);
-                ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_events);
-                news_list_info.addView(view);
-            }
-            // добавляем отступ
-            container.findViewById(R.id.top_panel).post(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        int height = container.findViewById(R.id.top_panel).getHeight();
-                        RecyclerView events_list = (RecyclerView) container.findViewById(R.id.events_list);
-                        events_list.setPadding(0, height, 0, 0);
-                        events_list.scrollToPosition(0);
-                        LinearLayout events_list_info = (LinearLayout) container.findViewById(R.id.events_list_info);
-                        if (events_list_info.getChildCount() > 0) {
-                            events_list_info.setPadding(0, height, 0, 0);
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-            // работаем со свайпом
-            SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) container.findViewById(R.id.events_list_swipe);
-            if (mSwipeRefreshLayout != null) {
-                mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
-                mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
-                mSwipeRefreshLayout.setOnRefreshListener(this);
-            }
-        } catch (Exception e) {
-            Static.error(e);
-            loadFailed();
-        }
-    }
-    private void displayContent(final JSONArray list) throws Exception {
-        if (eventsRecyclerViewAdapter != null) {
-            ArrayList<EventsRecyclerViewAdapter.Item> items = new ArrayList<>();
-            for (int i = 0; i < list.length(); i++) {
-                try {
-                    final JSONObject event = list.getJSONObject(i);
-                    EventsRecyclerViewAdapter.Item item = new EventsRecyclerViewAdapter.Item();
-                    item.type = EventsRecyclerViewAdapter.TYPE_MINOR;
-                    item.data = event;
-                    items.add(item);
                 } catch (Exception e) {
                     Static.error(e);
                 }
             }
-            eventsRecyclerViewAdapter.addItem(items);
-            if (offset + limit < events.getInt("count")) {
-                eventsRecyclerViewAdapter.setState(R.id.load_more);
-            } else {
-                eventsRecyclerViewAdapter.setState(R.id.no_more);
+        });
+    }
+    private void display() {
+        final SwipeRefreshLayout.OnRefreshListener onRefreshListener = this;
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "display");
+                if (events == null) {
+                    loadFailed();
+                    return;
+                }
+                try {
+                    draw(R.layout.layout_university_events_list);
+                    // поиск
+                    final EditText search_input = (EditText) container.findViewById(R.id.search_input);
+                    final FrameLayout search_action = (FrameLayout) container.findViewById(R.id.search_action);
+                    search_action.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            searchAndLoad(search_input.getText().toString().trim());
+                        }
+                    });
+                    search_input.setOnKeyListener(new View.OnKeyListener() {
+                        @Override
+                        public boolean onKey(View v, int keyCode, KeyEvent event) {
+                            if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
+                                searchAndLoad(search_input.getText().toString().trim());
+                                return true;
+                            }
+                            return false;
+                        }
+                    });
+                    search_input.setText(search);
+                    // очищаем сообщение
+                    ViewGroup news_list_info = (ViewGroup) container.findViewById(R.id.events_list_info);
+                    news_list_info.removeAllViews();
+                    news_list_info.setPadding(0, 0, 0, 0);
+                    // список
+                    JSONArray list = events.getJSONArray("list");
+                    if (list.length() > 0) {
+                        eventsRecyclerViewAdapter = new EventsRecyclerViewAdapter(getContext());
+                        final RecyclerView events_list = (RecyclerView) container.findViewById(R.id.events_list);
+                        events_list.setLayoutManager(new LinearLayoutManager(getContext()));
+                        events_list.setAdapter(eventsRecyclerViewAdapter);
+                        events_list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
+                        eventsRecyclerViewAdapter.setOnStateClickListener(R.id.load_more, new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                offset += limit;
+                                eventsRecyclerViewAdapter.setState(R.id.loading_more);
+                                if (thread != null) {
+                                    if (thread.isAlive() && !thread.isInterrupted()) {
+                                        thread.interrupt();
+                                    }
+                                    thread = null;
+                                }
+                                thread = new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        loadProvider(new IfmoRestClientResponseHandler() {
+                                            @Override
+                                            public void onSuccess(int statusCode, final JSONObject json, JSONArray responseArr) {
+                                                activity.runOnUiThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        try {
+                                                            events.put("count", json.getInt("count"));
+                                                            events.put("limit", json.getInt("limit"));
+                                                            events.put("offset", json.getInt("offset"));
+                                                            JSONArray list_original = events.getJSONArray("list");
+                                                            JSONArray list = json.getJSONArray("list");
+                                                            for (int i = 0; i < list.length(); i++) {
+                                                                list_original.put(list.getJSONObject(i));
+                                                            }
+                                                            displayContent(list);
+                                                        } catch (Exception e) {
+                                                            Static.error(e);
+                                                            eventsRecyclerViewAdapter.setState(R.id.load_more);
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                            @Override
+                                            public void onProgress(int state) {}
+                                            @Override
+                                            public void onFailure(int state) {
+                                                activity.runOnUiThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        eventsRecyclerViewAdapter.setState(R.id.load_more);
+                                                    }
+                                                });
+                                            }
+                                            @Override
+                                            public void onNewHandle(RequestHandle requestHandle) {
+                                                fragmentRequestHandle = requestHandle;
+                                            }
+                                        });
+                                    }
+                                });
+                                thread.setName("UniversityEventsThread");
+                                thread.start();
+                            }
+                        });
+                        if (timestamp > 0 && timestamp + 5000 < Calendar.getInstance().getTimeInMillis()) {
+                            UniversityRecyclerViewAdapter.Item item = new UniversityRecyclerViewAdapter.Item();
+                            item.type = UniversityRecyclerViewAdapter.TYPE_INFO_ABOUT_UPDATE_TIME;
+                            item.data = new JSONObject().put("title", getString(R.string.update_date) + " " + Static.getUpdateTime(activity, timestamp));
+                            eventsRecyclerViewAdapter.addItem(item);
+                        }
+                        displayContent(list);
+                    } else {
+                        View view = inflate(R.layout.nothing_to_display);
+                        ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_events);
+                        news_list_info.addView(view);
+                    }
+                    // добавляем отступ
+                    container.findViewById(R.id.top_panel).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                int height = container.findViewById(R.id.top_panel).getHeight();
+                                RecyclerView events_list = (RecyclerView) container.findViewById(R.id.events_list);
+                                events_list.setPadding(0, height, 0, 0);
+                                events_list.scrollToPosition(0);
+                                LinearLayout events_list_info = (LinearLayout) container.findViewById(R.id.events_list_info);
+                                if (events_list_info.getChildCount() > 0) {
+                                    events_list_info.setPadding(0, height, 0, 0);
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    });
+                    // работаем со свайпом
+                    SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) container.findViewById(R.id.events_list_swipe);
+                    if (mSwipeRefreshLayout != null) {
+                        mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
+                        mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
+                        mSwipeRefreshLayout.setOnRefreshListener(onRefreshListener);
+                    }
+                } catch (Exception e) {
+                    Static.error(e);
+                    loadFailed();
+                }
             }
-        }
+        });
+    }
+    private void displayContent(final JSONArray list) {
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (eventsRecyclerViewAdapter != null) {
+                        ArrayList<EventsRecyclerViewAdapter.Item> items = new ArrayList<>();
+                        for (int i = 0; i < list.length(); i++) {
+                            try {
+                                final JSONObject event = list.getJSONObject(i);
+                                EventsRecyclerViewAdapter.Item item = new EventsRecyclerViewAdapter.Item();
+                                item.type = EventsRecyclerViewAdapter.TYPE_MINOR;
+                                item.data = event;
+                                items.add(item);
+                            } catch (Exception e) {
+                                Static.error(e);
+                            }
+                        }
+                        eventsRecyclerViewAdapter.addItem(items);
+                        if (offset + limit < events.getInt("count")) {
+                            eventsRecyclerViewAdapter.setState(R.id.load_more);
+                        } else {
+                            eventsRecyclerViewAdapter.setState(R.id.no_more);
+                        }
+                    }
+                } catch (Exception e) {
+                    Static.error(e);
+                    loadFailed();
+                }
+            }
+        });
     }
 
-    private void draw(int layoutId){
-        try {
-            ViewGroup vg = ((ViewGroup) container);
-            if (vg != null) {
-                vg.removeAllViews();
-                vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+    private void draw(final int layoutId){
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    ViewGroup vg = ((ViewGroup) container);
+                    if (vg != null) {
+                        vg.removeAllViews();
+                        vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                    }
+                } catch (Exception e){
+                    Static.error(e);
+                }
             }
-        } catch (Exception e){
-            Static.error(e);
-        }
+        });
     }
     private View inflate(@LayoutRes int layoutId) throws InflateException {
         return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);

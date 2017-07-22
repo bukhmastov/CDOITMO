@@ -91,71 +91,97 @@ public class NewsRecyclerViewAdapter extends UniversityRecyclerViewAdapter {
             if ((img == null || img.trim().isEmpty()) && (img_small != null && !img_small.trim().isEmpty())) {
                 img = img_small;
             }
+            View titleView = viewHolder.container.findViewById(R.id.title);
+            View categoriesView = viewHolder.container.findViewById(R.id.categories);
+            View anonsView = viewHolder.container.findViewById(R.id.anons);
+            View dateView = viewHolder.container.findViewById(R.id.date);
+            View countViewContainerView = viewHolder.container.findViewById(R.id.count_view_container);
+            View countView = viewHolder.container.findViewById(R.id.count_view);
+            View infoContainerView = viewHolder.container.findViewById(R.id.info_container);
             final View news_image_container = viewHolder.container.findViewById(R.id.news_image_container);
-            if (img != null && !img.trim().isEmpty()) {
-                Picasso.with(context)
-                        .load(img)
-                        .into((ImageView) viewHolder.container.findViewById(R.id.news_image), new Callback() {
-                            @Override
-                            public void onSuccess() {}
-                            @Override
-                            public void onError() {
-                                Static.removeView(news_image_container);
-                            }
-                        });
-            } else {
-                Static.removeView(news_image_container);
-            }
-            ((TextView) viewHolder.container.findViewById(R.id.title)).setText(Static.escapeString(title));
-            boolean category_parent_exists = category_parent != null && !category_parent.trim().isEmpty();
-            boolean category_child_exists = category_child != null && !category_child.trim().isEmpty();
-            if (category_parent_exists || category_child_exists) {
-                if (Objects.equals(category_parent, category_child)) {
-                    category_child_exists = false;
-                }
-                String category = "";
-                if (category_parent_exists) {
-                    category += category_parent;
-                    if (category_child_exists) {
-                        category += " ► ";
-                    }
-                }
-                if (category_child_exists) {
-                    category += category_child;
-                }
-                if (!category.isEmpty()) {
-                    category = "● " + category;
-                    TextView categories = (TextView) viewHolder.container.findViewById(R.id.categories);
-                    categories.setText(category);
-                    if (color_hex != null && !color_hex.trim().isEmpty()) {
-                        categories.setTextColor(Color.parseColor(color_hex));
+            if (news_image_container != null) {
+                if (img != null && !img.trim().isEmpty()) {
+                    View news_image = viewHolder.container.findViewById(R.id.news_image);
+                    if (news_image != null) {
+                        Picasso.with(context)
+                                .load(img)
+                                .into((ImageView) viewHolder.container.findViewById(R.id.news_image), new Callback() {
+                                    @Override
+                                    public void onSuccess() {}
+                                    @Override
+                                    public void onError() {
+                                        Static.removeView(news_image_container);
+                                    }
+                                });
                     }
                 } else {
-                    Static.removeView(viewHolder.container.findViewById(R.id.categories));
+                    Static.removeView(news_image_container);
                 }
-            } else {
-                Static.removeView(viewHolder.container.findViewById(R.id.categories));
             }
-            if (anons != null && !anons.trim().isEmpty()) {
-                ((TextView) viewHolder.container.findViewById(R.id.anons)).setText(Static.escapeString(anons));
-            } else {
-                Static.removeView(viewHolder.container.findViewById(R.id.anons));
+            if (titleView != null) {
+                ((TextView) titleView).setText(Static.escapeString(title));
+            }
+            if (categoriesView != null) {
+                boolean category_parent_exists = category_parent != null && !category_parent.trim().isEmpty();
+                boolean category_child_exists = category_child != null && !category_child.trim().isEmpty();
+                if (category_parent_exists || category_child_exists) {
+                    if (Objects.equals(category_parent, category_child)) {
+                        category_child_exists = false;
+                    }
+                    String category = "";
+                    if (category_parent_exists) {
+                        category += category_parent;
+                        if (category_child_exists) {
+                            category += " ► ";
+                        }
+                    }
+                    if (category_child_exists) {
+                        category += category_child;
+                    }
+                    if (!category.isEmpty()) {
+                        category = "● " + category;
+                        TextView categories = (TextView) categoriesView;
+                        categories.setText(category);
+                        if (color_hex != null && !color_hex.trim().isEmpty()) {
+                            categories.setTextColor(Color.parseColor(color_hex));
+                        }
+                    } else {
+                        Static.removeView(categoriesView);
+                    }
+                } else {
+                    Static.removeView(categoriesView);
+                }
+            }
+            if (anonsView != null) {
+                if (anons != null && !anons.trim().isEmpty()) {
+                    ((TextView) anonsView).setText(Static.escapeString(anons));
+                } else {
+                    Static.removeView(anonsView);
+                }
             }
             boolean date_exists = date != null && !date.trim().isEmpty();
             boolean count_exists = count_view >= 0;
             if (date_exists || count_exists) {
-                if (date_exists) {
-                    ((TextView) viewHolder.container.findViewById(R.id.date)).setText(Static.cuteDate(context, "yyyy-MM-dd HH:mm:ss", date));
-                } else {
-                    Static.removeView(viewHolder.container.findViewById(R.id.date));
+                if (dateView != null) {
+                    if (date_exists) {
+                        ((TextView) dateView).setText(Static.cuteDate(context, "yyyy-MM-dd HH:mm:ss", date));
+                    } else {
+                        Static.removeView(dateView);
+                    }
                 }
                 if (count_exists) {
-                    ((TextView) viewHolder.container.findViewById(R.id.count_view)).setText(String.valueOf(count_view));
+                    if (countView != null) {
+                        ((TextView) countView).setText(String.valueOf(count_view));
+                    }
                 } else {
-                    Static.removeView(viewHolder.container.findViewById(R.id.count_view_container));
+                    if (countViewContainerView != null) {
+                        Static.removeView(countViewContainerView);
+                    }
                 }
             } else {
-                Static.removeView(viewHolder.container.findViewById(R.id.info_container));
+                if (infoContainerView != null) {
+                    Static.removeView(infoContainerView);
+                }
             }
             if (webview != null && !webview.trim().isEmpty()) {
                 viewHolder.container.findViewById(R.id.news_click).setOnClickListener(new View.OnClickListener() {
@@ -190,69 +216,92 @@ public class NewsRecyclerViewAdapter extends UniversityRecyclerViewAdapter {
                 // skip news with empty title
                 return;
             }
+            View titleView = viewHolder.container.findViewById(R.id.title);
+            View categoriesView = viewHolder.container.findViewById(R.id.categories);
+            View dateView = viewHolder.container.findViewById(R.id.date);
+            View countViewContainerView = viewHolder.container.findViewById(R.id.count_view_container);
+            View countView = viewHolder.container.findViewById(R.id.count_view);
+            View infoContainerView = viewHolder.container.findViewById(R.id.info_container);
             if (img_small != null && !img_small.trim().isEmpty()) {
                 img = img_small;
             }
             final View news_image_container = viewHolder.container.findViewById(R.id.news_image_container);
-            if (img != null && !img.trim().isEmpty()) {
-                Picasso.with(context)
-                        .load(img)
-                        .into((ImageView) viewHolder.container.findViewById(R.id.news_image), new Callback() {
-                            @Override
-                            public void onSuccess() {}
-                            @Override
-                            public void onError() {
-                                Static.removeView(news_image_container);
-                            }
-                        });
-            } else {
-                Static.removeView(news_image_container);
-            }
-            ((TextView) viewHolder.container.findViewById(R.id.title)).setText(Static.escapeString(title));
-            boolean category_parent_exists = category_parent != null && !category_parent.trim().isEmpty();
-            boolean category_child_exists = category_child != null && !category_child.trim().isEmpty();
-            if (category_parent_exists || category_child_exists) {
-                if (Objects.equals(category_parent, category_child)) {
-                    category_child_exists = false;
-                }
-                String category = "";
-                if (category_parent_exists) {
-                    category += category_parent;
-                    if (category_child_exists) {
-                        category += " ► ";
-                    }
-                }
-                if (category_child_exists) {
-                    category += category_child;
-                }
-                if (!category.isEmpty()) {
-                    category = "● " + category;
-                    TextView categories = (TextView) viewHolder.container.findViewById(R.id.categories);
-                    categories.setText(category);
-                    if (color_hex != null && !color_hex.trim().isEmpty()) {
-                        categories.setTextColor(Color.parseColor(color_hex));
+            if (news_image_container != null) {
+                if (img != null && !img.trim().isEmpty()) {
+                    View news_image = viewHolder.container.findViewById(R.id.news_image);
+                    if (news_image != null) {
+                        Picasso.with(context)
+                                .load(img)
+                                .into((ImageView) viewHolder.container.findViewById(R.id.news_image), new Callback() {
+                                    @Override
+                                    public void onSuccess() {}
+                                    @Override
+                                    public void onError() {
+                                        Static.removeView(news_image_container);
+                                    }
+                                });
                     }
                 } else {
-                    Static.removeView(viewHolder.container.findViewById(R.id.categories));
+                    Static.removeView(news_image_container);
                 }
-            } else {
-                Static.removeView(viewHolder.container.findViewById(R.id.categories));
+            }
+            if (titleView != null) {
+                ((TextView) titleView).setText(Static.escapeString(title));
+            }
+            if (categoriesView != null) {
+                boolean category_parent_exists = category_parent != null && !category_parent.trim().isEmpty();
+                boolean category_child_exists = category_child != null && !category_child.trim().isEmpty();
+                if (category_parent_exists || category_child_exists) {
+                    if (Objects.equals(category_parent, category_child)) {
+                        category_child_exists = false;
+                    }
+                    String category = "";
+                    if (category_parent_exists) {
+                        category += category_parent;
+                        if (category_child_exists) {
+                            category += " ► ";
+                        }
+                    }
+                    if (category_child_exists) {
+                        category += category_child;
+                    }
+                    if (!category.isEmpty()) {
+                        category = "● " + category;
+                        TextView categories = (TextView) categoriesView;
+                        categories.setText(category);
+                        if (color_hex != null && !color_hex.trim().isEmpty()) {
+                            categories.setTextColor(Color.parseColor(color_hex));
+                        }
+                    } else {
+                        Static.removeView(categoriesView);
+                    }
+                } else {
+                    Static.removeView(categoriesView);
+                }
             }
             boolean date_exists = date != null && !date.trim().isEmpty();
             boolean count_exists = count_view >= 0;
             if (date_exists || count_exists) {
-                if (date_exists) {
-                    ((TextView) viewHolder.container.findViewById(R.id.date)).setText(Static.cuteDate(context, "yyyy-MM-dd HH:mm:ss", date));
-                } else {
-                    Static.removeView(viewHolder.container.findViewById(R.id.date));
+                if (dateView != null) {
+                    if (date_exists) {
+                        ((TextView) dateView).setText(Static.cuteDate(context, "yyyy-MM-dd HH:mm:ss", date));
+                    } else {
+                        Static.removeView(dateView);
+                    }
                 }
                 if (count_exists) {
-                    ((TextView) viewHolder.container.findViewById(R.id.count_view)).setText(String.valueOf(count_view));
+                    if (countView != null) {
+                        ((TextView) countView).setText(String.valueOf(count_view));
+                    }
                 } else {
-                    Static.removeView(viewHolder.container.findViewById(R.id.count_view_container));
+                    if (countViewContainerView != null) {
+                        Static.removeView(countViewContainerView);
+                    }
                 }
             } else {
-                Static.removeView(viewHolder.container.findViewById(R.id.info_container));
+                if (infoContainerView != null) {
+                    Static.removeView(infoContainerView);
+                }
             }
             if (webview != null && !webview.trim().isEmpty()) {
                 viewHolder.container.findViewById(R.id.news_click).setOnClickListener(new View.OnClickListener() {

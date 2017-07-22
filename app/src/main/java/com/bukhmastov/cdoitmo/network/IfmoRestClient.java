@@ -6,9 +6,11 @@ import com.bukhmastov.cdoitmo.network.interfaces.IfmoClientResponseHandler;
 import com.bukhmastov.cdoitmo.network.interfaces.IfmoRestClientResponseHandler;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
+import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
+import com.loopj.android.http.SyncHttpClient;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -77,19 +79,32 @@ public class IfmoRestClient extends Client {
             responseHandler.onFailure(FAILED_OFFLINE);
         }
     }
+
     public static void getPlain(final Context context, final String url, final RequestParams params, final IfmoClientResponseHandler responseHandler){
         getPlain(context, DEFAULT_PROTOCOL, url, params, responseHandler);
     }
     public static void getPlain(final Context context, final Protocol protocol, final String url, final RequestParams params, final IfmoClientResponseHandler responseHandler){
         Log.v(TAG, "getPlain | url=" + url + " | params=" + Static.getSafetyRequestParams(params));
         init();
+        getPlain(httpclient, context, protocol, url, params, responseHandler);
+    }
+    public static void getPlainSync(final Context context, final String url, final RequestParams params, final IfmoClientResponseHandler responseHandler){
+        getPlainSync(context, DEFAULT_PROTOCOL, url, params, responseHandler);
+    }
+    public static void getPlainSync(final Context context, final Protocol protocol, final String url, final RequestParams params, final IfmoClientResponseHandler responseHandler){
+        Log.v(TAG, "getPlainSync | url=" + url + " | params=" + Static.getSafetyRequestParams(params));
+        SyncHttpClient httpclient = new SyncHttpClient();
+        httpclient.setLoggingLevel(android.util.Log.WARN);
+        getPlain(httpclient, context, protocol, url, params, responseHandler);
+    }
+    private static void getPlain(final AsyncHttpClient httpclient, final Context context, final Protocol protocol, final String url, final RequestParams params, final IfmoClientResponseHandler responseHandler) {
         if (Static.isOnline(context)) {
             responseHandler.onProgress(STATE_HANDLING);
             renewCookie(context);
             responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(protocol, url), params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                    Log.v(TAG, "getPlain | url=" + url + " | success | statusCode=" + statusCode);
+                    Log.v(TAG, "getPlainSA | url=" + url + " | success | statusCode=" + statusCode);
                     responseHandler.onNewHandle(null);
                     try {
                         String data = convert2UTF8(headers, responseBody);
@@ -102,13 +117,13 @@ public class IfmoRestClient extends Client {
                 }
                 @Override
                 public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable throwable) {
-                    Log.v(TAG, "getPlain | url=" + url + " | failure | statusCode=" + statusCode + (responseBody != null ? convert2UTF8(headers, responseBody) : "") + (throwable != null ? " | throwable=" + throwable.getMessage() : ""));
+                    Log.v(TAG, "getPlainSA | url=" + url + " | failure | statusCode=" + statusCode + (responseBody != null ? convert2UTF8(headers, responseBody) : "") + (throwable != null ? " | throwable=" + throwable.getMessage() : ""));
                     responseHandler.onNewHandle(null);
                     responseHandler.onFailure(FAILED_TRY_AGAIN);
                 }
             }));
         } else {
-            Log.v(TAG, "getPlain | url=" + url + " | offline");
+            Log.v(TAG, "getPlainSA | url=" + url + " | offline");
             responseHandler.onFailure(FAILED_OFFLINE);
         }
     }

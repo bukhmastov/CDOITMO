@@ -58,6 +58,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     private boolean markers_campus = true;
     private boolean markers_dormitory = true;
     private long timestamp = 0;
+    private Thread thread = null;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -107,9 +108,6 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     public void onPause() {
         super.onPause();
         Log.v(TAG, "paused");
-        if (fragmentRequestHandle != null) {
-            fragmentRequestHandle.cancel(true);
-        }
         if (mapView != null) {
             mapView.onPause();
         }
@@ -153,29 +151,46 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                 : 0);
     }
     private void load(boolean force) {
-        load(Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)
-                ? Integer.parseInt(Storage.pref.get(getContext(), "pref_static_refresh", "168"))
-                : 0, force);
-    }
-    private void load(int refresh_rate) {
-        String cache = Storage.file.cache.get(getContext(), "university#buildings").trim();
-        if (cache.isEmpty()) {
-            load(refresh_rate, true);
+        if (force) {
+            load (0);
         } else {
-            try {
-                JSONObject cacheJson = new JSONObject(cache);
-                building_map = cacheJson.getJSONObject("data");
-                timestamp = cacheJson.getLong("timestamp");
-                if (timestamp + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+            load(Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)
+                    ? Integer.parseInt(Storage.pref.get(getContext(), "pref_static_refresh", "168"))
+                    : 0);
+        }
+    }
+    private void load(final int refresh_rate) {
+        if (thread != null) {
+            if (thread.isAlive() && !thread.isInterrupted()) {
+                thread.interrupt();
+            }
+            thread = null;
+        }
+        thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                String cache = Storage.file.cache.get(getContext(), "university#buildings").trim();
+                if (cache.isEmpty()) {
                     load(refresh_rate, true);
                 } else {
-                    load(refresh_rate, false);
+                    try {
+                        JSONObject cacheJson = new JSONObject(cache);
+                        building_map = cacheJson.getJSONObject("data");
+                        timestamp = cacheJson.getLong("timestamp");
+                        if (timestamp + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+                            load(refresh_rate, true);
+                        } else {
+                            load(refresh_rate, false);
+                        }
+                    } catch (JSONException e) {
+                        Static.error(e);
+                        load(refresh_rate, true);
+                    }
                 }
-            } catch (JSONException e) {
-                Static.error(e);
-                load(refresh_rate, true);
             }
-        }
+        });
+        thread.setName("UniversityBuildingsThread");
+        thread.start();
     }
     private void load(final int refresh_rate, final boolean force) {
         Log.v(TAG, "load | refresh_rate=" + refresh_rate + " | force=" + (force ? "true" : "false"));
@@ -189,7 +204,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                 public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
                     if (statusCode == 200) {
                         long now = Calendar.getInstance().getTimeInMillis();
-                        if (json != null) {
+                        if (json != null && Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)) {
                             try {
                                 Storage.file.cache.put(getContext(), "university#buildings", new JSONObject()
                                         .put("timestamp", now)
@@ -208,51 +223,61 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                     }
                 }
                 @Override
-                public void onProgress(int state) {
-                    Log.v(TAG, "forceLoad | progress " + state);
-                    draw(R.layout.state_loading);
-                    if (activity != null) {
-                        TextView loading_message = (TextView) container.findViewById(R.id.loading_message);
-                        if (loading_message != null) {
-                            switch (state) {
-                                case IfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
+                public void onProgress(final int state) {
+                    activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Log.v(TAG, "forceLoad | progress " + state);
+                            draw(R.layout.state_loading);
+                            if (activity != null) {
+                                TextView loading_message = (TextView) container.findViewById(R.id.loading_message);
+                                if (loading_message != null) {
+                                    switch (state) {
+                                        case IfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
+                                    }
+                                }
                             }
                         }
-                    }
+                    });
                 }
                 @Override
-                public void onFailure(int state) {
-                    Log.v(TAG, "forceLoad | failure " + state);
-                    switch (state) {
-                        case IfmoRestClient.FAILED_OFFLINE:
-                            draw(R.layout.state_offline);
-                            if (activity != null) {
-                                View offline_reload = container.findViewById(R.id.offline_reload);
-                                if (offline_reload != null) {
-                                    offline_reload.setOnClickListener(new View.OnClickListener() {
-                                        @Override
-                                        public void onClick(View v) {
-                                            load();
+                public void onFailure(final int state) {
+                    activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Log.v(TAG, "forceLoad | failure " + state);
+                            switch (state) {
+                                case IfmoRestClient.FAILED_OFFLINE:
+                                    draw(R.layout.state_offline);
+                                    if (activity != null) {
+                                        View offline_reload = container.findViewById(R.id.offline_reload);
+                                        if (offline_reload != null) {
+                                            offline_reload.setOnClickListener(new View.OnClickListener() {
+                                                @Override
+                                                public void onClick(View v) {
+                                                    load();
+                                                }
+                                            });
                                         }
-                                    });
-                                }
-                            }
-                            break;
-                        case IfmoRestClient.FAILED_TRY_AGAIN:
-                            draw(R.layout.state_try_again);
-                            if (activity != null) {
-                                View try_again_reload = container.findViewById(R.id.try_again_reload);
-                                if (try_again_reload != null) {
-                                    try_again_reload.setOnClickListener(new View.OnClickListener() {
-                                        @Override
-                                        public void onClick(View v) {
-                                            load();
+                                    }
+                                    break;
+                                case IfmoRestClient.FAILED_TRY_AGAIN:
+                                    draw(R.layout.state_try_again);
+                                    if (activity != null) {
+                                        View try_again_reload = container.findViewById(R.id.try_again_reload);
+                                        if (try_again_reload != null) {
+                                            try_again_reload.setOnClickListener(new View.OnClickListener() {
+                                                @Override
+                                                public void onClick(View v) {
+                                                    load();
+                                                }
+                                            });
                                         }
-                                    });
-                                }
+                                    }
+                                    break;
                             }
-                            break;
-                    }
+                        }
+                    });
                 }
                 @Override
                 public void onNewHandle(RequestHandle requestHandle) {
@@ -267,7 +292,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                     offline_reload.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            load(refresh_rate, true);
+                            load(refresh_rate);
                         }
                     });
                 }
@@ -279,7 +304,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     }
     private void loadProvider(final IfmoRestClientResponseHandler handler, final int attempt) {
         Log.v(TAG, "loadProvider | attempt=" + attempt);
-        IfmoRestClient.getPlain(getContext(), "building_map", null, new IfmoClientResponseHandler() {
+        IfmoRestClient.getPlainSync(getContext(), "building_map", null, new IfmoClientResponseHandler() {
             @Override
             public void onSuccess(int statusCode, String response) {
                 try {
@@ -311,23 +336,28 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         });
     }
     private void loadFailed(){
-        Log.v(TAG, "loadFailed");
-        try {
-            draw(R.layout.state_try_again);
-            TextView try_again_message = (TextView) container.findViewById(R.id.try_again_message);
-            if (try_again_message != null) try_again_message.setText(R.string.load_failed);
-            View try_again_reload = container.findViewById(R.id.try_again_reload);
-            if (try_again_reload != null) {
-                try_again_reload.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        load();
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "loadFailed");
+                try {
+                    draw(R.layout.state_try_again);
+                    TextView try_again_message = (TextView) container.findViewById(R.id.try_again_message);
+                    if (try_again_message != null) try_again_message.setText(R.string.load_failed);
+                    View try_again_reload = container.findViewById(R.id.try_again_reload);
+                    if (try_again_reload != null) {
+                        try_again_reload.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                load();
+                            }
+                        });
                     }
-                });
+                } catch (Exception e) {
+                    Static.error(e);
+                }
             }
-        } catch (Exception e) {
-            Static.error(e);
-        }
+        });
     }
 
     @Override
@@ -340,45 +370,51 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         googleMap.moveCamera(CameraUpdateFactory.newCameraPosition(new CameraPosition.Builder().target(new LatLng(59.93465, 30.3138391)).zoom(10).build()));
     }
     private void display() {
-        draw(R.layout.layout_university_buildings);
-        mapView = (MapView) container.findViewById(R.id.buildings_map);
-        if (mapView != null) {
-            mapView.onCreate(getMapBundle(savedInstanceState));
-            mapView.getMapAsync(this);
-        }
-        Switch dormitory_switch = (Switch) container.findViewById(R.id.dormitory_switch);
-        if (dormitory_switch != null) {
-            dormitory_switch.setChecked(markers_dormitory);
-            dormitory_switch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    markers_dormitory = isChecked;
-                    displayMarkers();
-                    Storage.pref.put(getContext(), "pref_university_buildings_dormitory", markers_dormitory);
+        final OnMapReadyCallback onMapReadyCallback = this;
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                draw(R.layout.layout_university_buildings);
+                mapView = (MapView) container.findViewById(R.id.buildings_map);
+                if (mapView != null) {
+                    mapView.onCreate(getMapBundle(savedInstanceState));
+                    mapView.getMapAsync(onMapReadyCallback);
                 }
-            });
-        }
-        Switch campus_switch = (Switch) container.findViewById(R.id.campus_switch);
-        if (campus_switch != null) {
-            campus_switch.setChecked(markers_campus);
-            campus_switch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    markers_campus = isChecked;
-                    displayMarkers();
-                    Storage.pref.put(getContext(), "pref_university_buildings_campus", markers_campus);
+                Switch dormitory_switch = (Switch) container.findViewById(R.id.dormitory_switch);
+                if (dormitory_switch != null) {
+                    dormitory_switch.setChecked(markers_dormitory);
+                    dormitory_switch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                        @Override
+                        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                            markers_dormitory = isChecked;
+                            displayMarkers();
+                            Storage.pref.put(getContext(), "pref_university_buildings_dormitory", markers_dormitory);
+                        }
+                    });
                 }
-            });
-        }
-        View view_list = container.findViewById(R.id.view_list);
-        if (view_list != null) {
-            view_list.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    openList();
+                Switch campus_switch = (Switch) container.findViewById(R.id.campus_switch);
+                if (campus_switch != null) {
+                    campus_switch.setChecked(markers_campus);
+                    campus_switch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                        @Override
+                        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                            markers_campus = isChecked;
+                            displayMarkers();
+                            Storage.pref.put(getContext(), "pref_university_buildings_campus", markers_campus);
+                        }
+                    });
                 }
-            });
-        }
+                View view_list = container.findViewById(R.id.view_list);
+                if (view_list != null) {
+                    view_list.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            openList();
+                        }
+                    });
+                }
+            }
+        });
     }
 
     private void displayMarkers() {
@@ -399,14 +435,14 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                                 if (!markers_campus) {
                                     continue;
                                 }
-                                type = getString(R.string.campus);
+                                type = activity.getString(R.string.campus);
                                 icon = R.drawable.location_campus;
                                 break;
                             case 2:
                                 if (!markers_dormitory) {
                                     continue;
                                 }
-                                type = getString(R.string.dormitory);
+                                type = activity.getString(R.string.dormitory);
                                 icon = R.drawable.location_dormitory;
                                 break;
                         }
@@ -590,16 +626,21 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         return mapViewBundle;
     }
 
-    private void draw(int layoutId){
-        try {
-            ViewGroup vg = ((ViewGroup) container);
-            if (vg != null) {
-                vg.removeAllViews();
-                vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+    private void draw(final int layoutId){
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    ViewGroup vg = ((ViewGroup) container);
+                    if (vg != null) {
+                        vg.removeAllViews();
+                        vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                    }
+                } catch (Exception e){
+                    Static.error(e);
+                }
             }
-        } catch (Exception e){
-            Static.error(e);
-        }
+        });
     }
     private View inflate(@LayoutRes int layoutId) throws InflateException {
         return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);

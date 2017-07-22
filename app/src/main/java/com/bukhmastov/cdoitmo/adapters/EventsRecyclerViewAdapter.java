@@ -73,31 +73,46 @@ public class EventsRecyclerViewAdapter extends UniversityRecyclerViewAdapter {
                 // skip event with empty title
                 return;
             }
-            ((TextView) viewHolder.container.findViewById(R.id.title)).setText(Static.escapeString(title));
-            if (type != null && !type.trim().isEmpty()) {
-                TextView categories = (TextView) viewHolder.container.findViewById(R.id.categories);
-                categories.setText("● " + type);
-                categories.setTextColor(Color.parseColor(color_hex));
-            } else {
-                Static.removeView(viewHolder.container.findViewById(R.id.categories));
+            View titleView = viewHolder.container.findViewById(R.id.title);
+            View categoriesView = viewHolder.container.findViewById(R.id.categories);
+            View dateView = viewHolder.container.findViewById(R.id.date);
+            View newsImageContainerView = viewHolder.container.findViewById(R.id.news_image_container);
+            View countViewContainerView = viewHolder.container.findViewById(R.id.count_view_container);
+            if (titleView != null) {
+                ((TextView) titleView).setText(Static.escapeString(title));
             }
-            boolean date_begin_exists = date_begin != null && !date_begin.trim().isEmpty();
-            boolean date_end_exists = date_end != null && !date_end.trim().isEmpty();
-            if (date_begin_exists || date_end_exists) {
-                String date = null;
-                if (date_begin_exists && date_end_exists) {
-                    date = Static.cuteDate(context, "yyyy-MM-dd HH:mm:ss", date_begin, date_end);
-                } else if (date_begin_exists) {
-                    date = Static.cuteDate(context, "yyyy-MM-dd HH:mm:ss", date_begin);
-                } else if (date_end_exists) {
-                    date = Static.cuteDate(context, "yyyy-MM-dd HH:mm:ss", date_end);
+            if (categoriesView != null) {
+                if (type != null && !type.trim().isEmpty()) {
+                    TextView categories = (TextView) categoriesView;
+                    categories.setText("● " + type);
+                    categories.setTextColor(Color.parseColor(color_hex));
+                } else {
+                    Static.removeView(categoriesView);
                 }
-                ((TextView) viewHolder.container.findViewById(R.id.date)).setText(date);
-            } else {
-                Static.removeView(viewHolder.container.findViewById(R.id.date));
             }
-            Static.removeView(viewHolder.container.findViewById(R.id.news_image_container));
-            Static.removeView(viewHolder.container.findViewById(R.id.count_view_container));
+            if (dateView != null) {
+                boolean date_begin_exists = date_begin != null && !date_begin.trim().isEmpty();
+                boolean date_end_exists = date_end != null && !date_end.trim().isEmpty();
+                if (date_begin_exists || date_end_exists) {
+                    String date = null;
+                    if (date_begin_exists && date_end_exists) {
+                        date = Static.cuteDate(context, "yyyy-MM-dd HH:mm:ss", date_begin, date_end);
+                    } else if (date_begin_exists) {
+                        date = Static.cuteDate(context, "yyyy-MM-dd HH:mm:ss", date_begin);
+                    } else if (date_end_exists) {
+                        date = Static.cuteDate(context, "yyyy-MM-dd HH:mm:ss", date_end);
+                    }
+                    ((TextView) dateView).setText(date);
+                } else {
+                    Static.removeView(dateView);
+                }
+            }
+            if (newsImageContainerView != null) {
+                Static.removeView(newsImageContainerView);
+            }
+            if (countViewContainerView != null) {
+                Static.removeView(countViewContainerView);
+            }
             if (webview != null && !webview.trim().isEmpty()) {
                 viewHolder.container.findViewById(R.id.news_click).setOnClickListener(new View.OnClickListener() {
                     @Override

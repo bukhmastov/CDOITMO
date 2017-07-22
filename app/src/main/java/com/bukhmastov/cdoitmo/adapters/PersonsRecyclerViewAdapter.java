@@ -67,17 +67,26 @@ public class PersonsRecyclerViewAdapter extends UniversityRecyclerViewAdapter {
             final String name = (item.data.getString("title_l") + " " + item.data.getString("title_f") + " " + item.data.getString("title_m")).trim();
             final String degree = item.data.getString("degree").trim();
             final String image = item.data.getString("image");
-            ((TextView) viewHolder.container.findViewById(R.id.name)).setText(name);
-            if (!degree.isEmpty()) {
-                ((TextView) viewHolder.container.findViewById(R.id.post)).setText(degree.substring(0, 1).toUpperCase() + degree.substring(1));
-            } else {
-                Static.removeView(viewHolder.container.findViewById(R.id.post));
+            View nameView = viewHolder.container.findViewById(R.id.name);
+            View postView = viewHolder.container.findViewById(R.id.post);
+            View avatarView = viewHolder.container.findViewById(R.id.avatar);
+            if (nameView != null) {
+                ((TextView) nameView).setText(name);
             }
-            Picasso.with(context)
-                    .load(image)
-                    .error(R.drawable.ic_sentiment_very_satisfied)
-                    .transform(new CircularTransformation())
-                    .into((ImageView) viewHolder.container.findViewById(R.id.avatar));
+            if (postView != null) {
+                if (!degree.isEmpty()) {
+                        ((TextView) postView).setText(degree.substring(0, 1).toUpperCase() + degree.substring(1));
+                } else {
+                    Static.removeView(viewHolder.container.findViewById(R.id.post));
+                }
+            }
+            if (avatarView != null) {
+                Picasso.with(context)
+                        .load(image)
+                        .error(R.drawable.ic_sentiment_very_satisfied)
+                        .transform(new CircularTransformation())
+                        .into((ImageView) avatarView);
+            }
             viewHolder.container.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
