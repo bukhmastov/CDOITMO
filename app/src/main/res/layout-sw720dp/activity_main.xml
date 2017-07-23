@@ -66,20 +66,33 @@
             app:tabGravity="fill"
             app:elevation="4dp" />
 
-        <LinearLayout
-            android:id="@+id/activity_main"
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical"
-            tools:activity="com.bukhmastov.cdoitmo.activities.MainActivity" >
+            android:orientation="horizontal">
 
-            <ProgressBar
-                style="?android:attr/progressBarStyle"
+            <LinearLayout
+                android:id="@+id/activity_main"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="16dp" />
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                tools:activity="com.bukhmastov.cdoitmo.activities.MainActivity" >
 
-        </LinearLayout>
+                <ProgressBar
+                    style="?android:attr/progressBarStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:background="?attr/colorSeparator"
+                android:layout_alignParentStart="true" />
+
+        </RelativeLayout>
 
     </LinearLayout>
 

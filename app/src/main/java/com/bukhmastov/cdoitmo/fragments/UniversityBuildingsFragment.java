@@ -70,7 +70,15 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         markers_campus = Storage.pref.get(getContext(), "pref_university_buildings_campus", true);
         markers_dormitory = Storage.pref.get(getContext(), "pref_university_buildings_dormitory", true);
         if (mapView != null) {
-            mapView.onCreate(savedInstanceState);
+            try {
+                try {
+                    mapView.onCreate(getMapBundle(savedInstanceState));
+                } catch (Exception e) {
+                    mapView.onCreate(savedInstanceState);
+                }
+            } catch (Exception e) {
+                Static.error(e);
+            }
         }
     }
 
@@ -78,7 +86,12 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     public void onStart() {
         super.onStart();
         if (mapView != null) {
-            mapView.onStart();
+            try {
+                mapView.onStart();
+            } catch (Exception e) {
+                Static.error(e);
+                loadFailed();
+            }
         }
     }
 
@@ -87,7 +100,11 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         super.onDestroy();
         Log.v(TAG, "Fragment destroyed");
         if (mapView != null) {
-            mapView.onDestroy();
+            try {
+                mapView.onDestroy();
+            } catch (Exception e) {
+                Static.error(e);
+            }
         }
     }
 
@@ -100,7 +117,12 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
             load();
         }
         if (mapView != null) {
-            mapView.onResume();
+            try {
+                mapView.onResume();
+            } catch (Exception e) {
+                Static.error(e);
+                loadFailed();
+            }
         }
     }
 
@@ -109,7 +131,12 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         super.onPause();
         Log.v(TAG, "paused");
         if (mapView != null) {
-            mapView.onPause();
+            try {
+                mapView.onPause();
+            } catch (Exception e) {
+                Static.error(e);
+                loadFailed();
+            }
         }
     }
 
@@ -117,7 +144,12 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     public void onStop() {
         super.onStop();
         if (mapView != null) {
-            mapView.onStop();
+            try {
+                mapView.onStop();
+            } catch (Exception e) {
+                Static.error(e);
+                loadFailed();
+            }
         }
     }
 
@@ -126,7 +158,15 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         super.onSaveInstanceState(outState);
         savedInstanceState = outState;
         if (mapView != null) {
-            mapView.onSaveInstanceState(outState);
+            try {
+                try {
+                    mapView.onSaveInstanceState(getMapBundle(savedInstanceState));
+                } catch (Exception e) {
+                    mapView.onSaveInstanceState(savedInstanceState);
+                }
+            } catch (Exception e) {
+                Static.error(e);
+            }
         }
     }
 
@@ -134,7 +174,11 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     public void onLowMemory() {
         super.onLowMemory();
         if (mapView != null) {
-            mapView.onLowMemory();
+            try {
+                mapView.onLowMemory();
+            } catch (Exception e) {
+                Static.error(e);
+            }
         }
     }
 
@@ -309,7 +353,11 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
             public void onSuccess(int statusCode, String response) {
                 try {
                     if (statusCode == 200) {
-                        handler.onSuccess(statusCode, new JSONObject(response), null);
+                        try {
+                            handler.onSuccess(statusCode, new JSONObject(response), null);
+                        } catch (JSONException e) {
+                            handler.onSuccess(statusCode, new JSONObject(Static.parseInvalidIfmoRestClientResponse(response)), null);
+                        }
                     } else {
                         handler.onFailure(IfmoRestClient.FAILED_TRY_AGAIN);
                     }
@@ -377,8 +425,17 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                 draw(R.layout.layout_university_buildings);
                 mapView = (MapView) container.findViewById(R.id.buildings_map);
                 if (mapView != null) {
-                    mapView.onCreate(getMapBundle(savedInstanceState));
-                    mapView.getMapAsync(onMapReadyCallback);
+                    try {
+                        try {
+                            mapView.onCreate(getMapBundle(savedInstanceState));
+                        } catch (Exception e) {
+                            mapView.onCreate(savedInstanceState);
+                        }
+                        mapView.getMapAsync(onMapReadyCallback);
+                    } catch (Exception e) {
+                        Static.error(e);
+                        loadFailed();
+                    }
                 }
                 Switch dormitory_switch = (Switch) container.findViewById(R.id.dormitory_switch);
                 if (dormitory_switch != null) {

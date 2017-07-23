@@ -380,9 +380,9 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                             if (Objects.equals(group.getString("name"), self.group)) {
                                 int first = group.getJSONArray("terms").getJSONObject(0).getInt("number");
                                 int second = group.getJSONArray("terms").getJSONObject(1).getInt("number");
-                                spinner_period_arr.add(first + " " + getString(R.string.semester));
-                                spinner_period_arr.add(second + " " + getString(R.string.semester));
-                                spinner_period_arr.add(getString(R.string.year));
+                                spinner_period_arr.add(first + " " + activity.getString(R.string.semester));
+                                spinner_period_arr.add(second + " " + activity.getString(R.string.semester));
+                                spinner_period_arr.add(activity.getString(R.string.year));
                                 spinner_period_arr_values.add(first);
                                 spinner_period_arr_values.add(second);
                                 spinner_period_arr_values.add(-1);

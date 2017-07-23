@@ -343,5 +343,6 @@
     <string name="no_events">No events</string>
     <string name="pref_use_university_cache">Cache data \"University\"</string>
     <string name="pref_use_university_cache_summary">Will take a lot of memory</string>
+    <string name="student">student</string>
 
 </resources>

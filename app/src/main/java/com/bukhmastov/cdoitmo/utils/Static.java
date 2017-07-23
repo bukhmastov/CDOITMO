@@ -42,6 +42,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Static {
 
@@ -616,6 +618,13 @@ public class Static {
     @SuppressLint("DefaultLocale")
     public static String ldgZero(int number) {
         return String.format("%02d", number);
+    }
+    public static String parseInvalidIfmoRestClientResponse(String response) {
+        Matcher m = Pattern.compile("(\\\\u)([0-9a-f]{3})[^0-9a-f]").matcher(response);
+        if (m.find()) {
+            response = m.replaceAll(m.group(1) + "0" + m.group(2));
+        }
+        return response;
     }
 
 }

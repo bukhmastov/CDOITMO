@@ -350,5 +350,6 @@
     <string name="no_events">Нет событий</string>
     <string name="pref_use_university_cache">Кэшировать данные \"Университет\"</string>
     <string name="pref_use_university_cache_summary">Займет большое количество памяти</string>
+    <string name="student">студент</string>
 
 </resources>

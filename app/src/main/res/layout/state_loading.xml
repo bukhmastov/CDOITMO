@@ -3,27 +3,33 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <ProgressBar
-        style="?android:attr/progressBarStyle"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
-        android:id="@+id/loading_bar"
-        android:layout_above="@+id/loading_message"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerVertical="true">
 
-    <TextView
-        android:id="@+id/loading_message"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentStart="true"
-        android:layout_centerVertical="true"
-        android:fontFamily="@string/font_bold"
-        android:text="@string/loading"
-        android:textAlignment="center"
-        android:textAllCaps="true"
-        android:textColor="?android:attr/textColorPrimary"
-        android:textSize="@dimen/font_size_14" />
+        <ProgressBar
+            style="?android:attr/progressBarStyle"
+            android:id="@+id/loading_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="@dimen/item_padding_quarter" />
+
+        <TextView
+            android:id="@+id/loading_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="@dimen/item_padding_quarter"
+            android:fontFamily="@string/font_bold"
+            android:text="@string/loading"
+            android:textAlignment="center"
+            android:textAllCaps="true"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="@dimen/font_size_14" />
+
+    </LinearLayout>
 
 </RelativeLayout>

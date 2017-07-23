@@ -3,40 +3,43 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/loading_message"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentStart="true"
-        android:layout_centerVertical="true"
-        android:layout_gravity="center_horizontal"
-        android:fontFamily="@string/font_bold"
-        android:text="@string/no_connection"
-        android:textAlignment="center"
-        android:textAllCaps="true"
-        android:textColor="?android:attr/textColorPrimary"
-        android:textSize="@dimen/font_size_14" />
+        android:layout_centerVertical="true">
 
-    <ImageView
-        android:id="@+id/offline_img"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/ic_disconnected"
-        android:contentDescription="@string/no_connection"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="12dp"
-        android:layout_above="@+id/loading_message"
-        android:layout_centerHorizontal="true" />
+        <ImageView
+            android:id="@+id/offline_img"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="@dimen/item_padding_half"
+            android:src="@drawable/ic_disconnected"
+            android:contentDescription="@string/no_connection" />
 
-    <Button
-        android:id="@+id/offline_reload"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/loading_message"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="12dp"
-        android:text="@string/redo"
-        android:textSize="@dimen/font_size_14" />
+        <TextView
+            android:id="@+id/loading_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="@dimen/item_padding_quarter"
+            android:fontFamily="@string/font_bold"
+            android:text="@string/no_connection"
+            android:textAlignment="center"
+            android:textAllCaps="true"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="@dimen/font_size_14" />
+
+        <Button
+            android:id="@+id/offline_reload"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="@dimen/item_padding_quarter"
+            android:text="@string/redo"
+            android:textSize="@dimen/font_size_14" />
+
+    </LinearLayout>
 
 </RelativeLayout>

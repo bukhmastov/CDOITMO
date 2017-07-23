@@ -62,11 +62,13 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
+        FirebaseAnalyticsProvider.setUserProperty(this, FirebaseAnalyticsProvider.Property.DEVICE, Static.tablet ? "tablet" : "mobile");
+
         Static.OFFLINE_MODE = !Static.isOnline(this) || (Static.firstLaunch && Storage.pref.get(this, "pref_initial_offline", false));
         Static.init(this);
         Static.firstLaunch = false;
 
-        Log.i(TAG, "mode=" + (Static.OFFLINE_MODE ? "offline" : "normal"));
+        Log.i(TAG, "mode=" + (Static.OFFLINE_MODE ? "offline" : "online"));
 
         String action = getIntent().getStringExtra("action");
         if (savedInstanceState == null || action != null) {

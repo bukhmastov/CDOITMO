@@ -3,6 +3,7 @@ package com.bukhmastov.cdoitmo.network;
 import android.content.Context;
 
 import com.bukhmastov.cdoitmo.network.interfaces.IfmoClientResponseHandler;
+import com.bukhmastov.cdoitmo.network.interfaces.IfmoClientResponseHandlerExtended;
 import com.bukhmastov.cdoitmo.network.interfaces.IfmoRestClientResponseHandler;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
@@ -119,7 +120,11 @@ public class IfmoRestClient extends Client {
                 public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable throwable) {
                     Log.v(TAG, "getPlainSA | url=" + url + " | failure | statusCode=" + statusCode + (responseBody != null ? convert2UTF8(headers, responseBody) : "") + (throwable != null ? " | throwable=" + throwable.getMessage() : ""));
                     responseHandler.onNewHandle(null);
-                    responseHandler.onFailure(FAILED_TRY_AGAIN);
+                    if (responseHandler instanceof IfmoClientResponseHandlerExtended) {
+                        ((IfmoClientResponseHandlerExtended) responseHandler).onFailure(statusCode, FAILED_TRY_AGAIN);
+                    } else {
+                        responseHandler.onFailure(FAILED_TRY_AGAIN);
+                    }
                 }
             }));
         } else {

@@ -212,7 +212,7 @@ public class ScheduleLessonsBuilder extends Thread {
                     daysCount++;
                 }
             }
-            FrameLayout lessons_update_time_container = (FrameLayout) schedule_layout.findViewById(R.id.lessons_update_time_container);
+            ViewGroup lessons_update_time_container = (ViewGroup) schedule_layout.findViewById(R.id.lessons_update_time_container);
             if (daysCount == 0) {
                 Log.v(TAG, "daysCount == 0");
                 schedule_layout.removeView(lessons_update_time_container);

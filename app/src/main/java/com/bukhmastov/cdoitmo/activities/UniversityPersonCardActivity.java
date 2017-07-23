@@ -17,8 +17,8 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
-import com.bukhmastov.cdoitmo.network.interfaces.IfmoClientResponseHandler;
-import com.bukhmastov.cdoitmo.network.interfaces.IfmoRestClientResponseHandler;
+import com.bukhmastov.cdoitmo.network.interfaces.IfmoClientResponseHandlerExtended;
+import com.bukhmastov.cdoitmo.network.interfaces.IfmoRestClientResponseHandlerExtended;
 import com.bukhmastov.cdoitmo.utils.CircularTransformation;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
@@ -26,6 +26,7 @@ import com.loopj.android.http.RequestHandle;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class UniversityPersonCardActivity extends ConnectedActivity implements SwipeRefreshLayout.OnRefreshListener {
@@ -115,25 +116,29 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
             display();
             return;
         }
-        loadProvider(new IfmoRestClientResponseHandler() {
+        loadProvider(new IfmoRestClientResponseHandlerExtended() {
             @Override
             public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
-                try {
-                    SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.person_swipe);
-                    if (mSwipeRefreshLayout != null) {
-                        mSwipeRefreshLayout.setRefreshing(false);
-                    }
-                    String post = json.getString("post");
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                        json.put("post", android.text.Html.fromHtml(post, android.text.Html.FROM_HTML_MODE_LEGACY));
-                    } else {
-                        json.put("post", android.text.Html.fromHtml(post));
-                    }
-                } catch (Exception e) {
-                    // ok
+                SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.person_swipe);
+                if (mSwipeRefreshLayout != null) {
+                    mSwipeRefreshLayout.setRefreshing(false);
                 }
-                person = json;
-                display();
+                if (statusCode == 200) {
+                    try {
+                        String post = json.getString("post");
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                            json.put("post", android.text.Html.fromHtml(post, android.text.Html.FROM_HTML_MODE_LEGACY));
+                        } else {
+                            json.put("post", android.text.Html.fromHtml(post));
+                        }
+                    } catch (Exception e) {
+                        // ok
+                    }
+                    person = json;
+                    display();
+                } else {
+                    loadFailed();
+                }
             }
             @Override
             public void onProgress(int state) {
@@ -181,22 +186,38 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                 }
             }
             @Override
+            public void onFailure(int statusCode, int state) {
+                SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.person_swipe);
+                if (mSwipeRefreshLayout != null) {
+                    mSwipeRefreshLayout.setRefreshing(false);
+                }
+                if (statusCode == 404) {
+                    loadNotFound();
+                } else {
+                    this.onFailure(state);
+                }
+            }
+            @Override
             public void onNewHandle(RequestHandle requestHandle) {
                 fragmentRequestHandle = requestHandle;
             }
         });
     }
-    private void loadProvider(IfmoRestClientResponseHandler handler) {
+    private void loadProvider(IfmoRestClientResponseHandlerExtended handler) {
         loadProvider(handler, 0);
     }
-    private void loadProvider(final IfmoRestClientResponseHandler handler, final int attempt) {
+    private void loadProvider(final IfmoRestClientResponseHandlerExtended handler, final int attempt) {
         Log.v(TAG, "loadProvider | attempt=" + attempt);
-        IfmoRestClient.getPlain(this, "person/" + pid, null, new IfmoClientResponseHandler() {
+        IfmoRestClient.getPlain(this, "person/" + pid, null, new IfmoClientResponseHandlerExtended() {
             @Override
             public void onSuccess(int statusCode, String response) {
                 try {
                     if (statusCode == 200) {
-                        handler.onSuccess(statusCode, new JSONObject(response), null);
+                        try {
+                            handler.onSuccess(statusCode, new JSONObject(response), null);
+                        } catch (JSONException e) {
+                            handler.onSuccess(statusCode, new JSONObject(Static.parseInvalidIfmoRestClientResponse(response)), null);
+                        }
                     } else {
                         handler.onFailure(IfmoRestClient.FAILED_TRY_AGAIN);
                     }
@@ -213,6 +234,10 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                 handler.onProgress(state);
             }
             @Override
+            public void onFailure(int statusCode, int state) {
+                handler.onFailure(statusCode, state);
+            }
+            @Override
             public void onFailure(int state) {
                 handler.onFailure(state);
             }
@@ -221,6 +246,37 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                 handler.onNewHandle(requestHandle);
             }
         });
+    }
+    private void loadFailed(){
+        Log.v(TAG, "loadFailed");
+        try {
+            draw(R.layout.state_try_again);
+            TextView try_again_message = (TextView) findViewById(R.id.try_again_message);
+            if (try_again_message != null) try_again_message.setText(R.string.load_failed);
+            View try_again_reload = findViewById(R.id.try_again_reload);
+            if (try_again_reload != null) {
+                try_again_reload.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        load();
+                    }
+                });
+            }
+        } catch (Exception e) {
+            Static.error(e);
+        }
+    }
+    private void loadNotFound() {
+        Log.v(TAG, "loadNotFound");
+        try {
+            draw(R.layout.nothing_to_display_center);
+            TextView ntd_text = (TextView) findViewById(R.id.ntd_text);
+            if (ntd_text != null) {
+                ntd_text.setText(R.string.no_persons);
+            }
+        } catch (Exception e) {
+            Static.error(e);
+        }
     }
 
     private void display() {

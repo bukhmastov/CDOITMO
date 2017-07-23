@@ -9,6 +9,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.ArrayMap;
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -45,6 +46,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
     private RequestHandle fragmentRequestHandle = null;
     private boolean loaded = false;
     private ArrayList<String> stack = new ArrayList<>();
+    private ArrayMap<String, String> history = new ArrayMap<>();
     private FacultiesRecyclerViewAdapter facultiesRecyclerViewAdapter = null;
     private long timestamp = 0;
     private Thread thread = null;
@@ -141,14 +143,31 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
     }
     private void load(final int refresh_rate, final boolean force) {
         Log.v(TAG, "load | refresh_rate=" + refresh_rate + " | force=" + (force ? "true" : "false"));
+        final String fid = stack.size() == 0 ? "0" : stack.get(stack.size() - 1);
+        if (history.containsKey(fid)) {
+            try {
+                String local = history.get(fid);
+                JSONObject localObj = new JSONObject(local);
+                timestamp = Calendar.getInstance().getTimeInMillis();
+                Log.v(TAG, "load | from local cache");
+                display(localObj);
+                return;
+            } catch (Exception e) {
+                history.remove(fid);
+            }
+        }
         if (!force || !Static.isOnline(getContext())) {
             try {
-                String cache = Storage.file.cache.get(getContext(), "university#units#" + (stack.size() == 0 ? "0" : stack.get(stack.size() - 1))).trim();
-                display(new JSONObject(cache).getJSONObject("data"));
+                String cache = Storage.file.cache.get(getContext(), "university#units#" + fid).trim();
+                if (!cache.isEmpty()) {
+                    display(new JSONObject(cache).getJSONObject("data"));
+                    return;
+                }
             } catch (Exception e) {
-                display(null);
+                Static.error(e);
+                loadFailed();
+                return;
             }
-            return;
         }
         if (!Static.OFFLINE_MODE) {
             loadProvider(new IfmoRestClientResponseHandler() {
@@ -158,7 +177,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                         long now = Calendar.getInstance().getTimeInMillis();
                         if (json != null && Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)) {
                             try {
-                                Storage.file.cache.put(getContext(), "university#units#" + (stack.size() == 0 ? "0" : stack.get(stack.size() - 1)), new JSONObject()
+                                Storage.file.cache.put(getContext(), "university#units#" + fid, new JSONObject()
                                         .put("timestamp", now)
                                         .put("data", json)
                                         .toString()
@@ -168,6 +187,9 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                             }
                         }
                         timestamp = now;
+                        if (json != null) {
+                            history.put(fid, json.toString());
+                        }
                         display(json);
                     } else {
                         loadFailed();
@@ -264,7 +286,11 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
             public void onSuccess(int statusCode, String response) {
                 try {
                     if (statusCode == 200) {
-                        handler.onSuccess(statusCode, new JSONObject(response), null);
+                        try {
+                            handler.onSuccess(statusCode, new JSONObject(response), null);
+                        } catch (JSONException e) {
+                            handler.onSuccess(statusCode, new JSONObject(Static.parseInvalidIfmoRestClientResponse(response)), null);
+                        }
                     } else {
                         handler.onFailure(IfmoRestClient.FAILED_TRY_AGAIN);
                     }

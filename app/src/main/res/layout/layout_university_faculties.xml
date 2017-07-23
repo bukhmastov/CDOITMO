@@ -42,8 +42,8 @@
         <LinearLayout
             android:id="@+id/header"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="@dimen/item_horizontal_padding_half"
+            android:layout_height="@dimen/search_height"
+            android:layout_margin="@dimen/search_padding"
             android:background="@drawable/shape_filled_card"
             android:elevation="4dp"
             android:orientation="horizontal"
@@ -61,7 +61,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_gravity="center"
-                    android:padding="12dp"
+                    android:padding="@dimen/search_offset_start"
                     app:srcCompat="@drawable/ic_arrow_back_white"
                     android:tint="?android:attr/textColorPrimaryInverse"/>
 

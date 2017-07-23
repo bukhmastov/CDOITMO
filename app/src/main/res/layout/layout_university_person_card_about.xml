@@ -33,6 +33,7 @@
         android:paddingBottom="@dimen/item_padding_half"
         android:text="@string/lorem_ipsum"
         android:textColor="?android:attr/textColorSecondary"
+        android:textSize="@dimen/font_size_14"
         android:textIsSelectable="true" />
 
 </LinearLayout>

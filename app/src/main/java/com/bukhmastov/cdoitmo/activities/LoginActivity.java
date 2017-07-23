@@ -193,12 +193,40 @@ public class LoginActivity extends AppCompatActivity {
                         final String login = Storage.file.perm.get(this, "user#login");
                         final String password = Storage.file.perm.get(this, "user#password");
                         final String role = Storage.file.perm.get(this, "user#role");
-                        final String name = Storage.file.perm.get(this, "user#name");
-                        final String group = Storage.file.perm.get(this, "user#group");
+                        final String name = Storage.file.perm.get(this, "user#name").trim();
                         Storage.file.general.delete(this, "users#current_login");
-                        FrameLayout layout_login_user_tile = (FrameLayout) inflate(R.layout.layout_login_user_tile);
-                        ((TextView) layout_login_user_tile.findViewById(R.id.name)).setText(name);
-                        ((TextView) layout_login_user_tile.findViewById(R.id.desc)).setText(group);
+                        ViewGroup layout_login_user_tile = (ViewGroup) inflate(R.layout.layout_login_user_tile);
+                        View nameView = layout_login_user_tile.findViewById(R.id.name);
+                        View descView = layout_login_user_tile.findViewById(R.id.desc);
+                        String desc = "";
+                        if (!login.isEmpty()) {
+                            desc += login;
+                        }
+                        switch (role) {
+                            case "student": {
+                                if (desc.isEmpty()) {
+                                    desc += getString(R.string.student);
+                                } else {
+                                    desc += " (" + getString(R.string.student) + ")";
+                                }
+                                break;
+                            }
+                        }
+                        if (!name.isEmpty()) {
+                            if (nameView != null) {
+                                ((TextView) nameView).setText(name);
+                            }
+                            if (descView != null) {
+                                ((TextView) descView).setText(desc);
+                            }
+                        } else {
+                            if (nameView != null) {
+                                ((TextView) nameView).setText(desc);
+                            }
+                            if (descView != null) {
+                                Static.removeView(descView);
+                            }
+                        }
                         layout_login_user_tile.findViewById(R.id.logout).setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {

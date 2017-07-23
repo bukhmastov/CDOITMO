@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -123,7 +124,7 @@ public class ScheduleExamsBuilder extends Thread {
                 }
                 container.addView(examsLayout);
             }
-            FrameLayout lessons_update_time_container = (FrameLayout) schedule_layout.findViewById(R.id.lessons_update_time_container);
+            ViewGroup lessons_update_time_container = (ViewGroup) schedule_layout.findViewById(R.id.lessons_update_time_container);
             if (schedule.length() == 0) {
                 Log.v(TAG, "schedule.length() == 0");
                 schedule_layout.removeView(lessons_update_time_container);

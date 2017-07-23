@@ -79,11 +79,11 @@
 
     <dimen name="university_person_card_small_avatar">48dp</dimen>
     <dimen name="university_person_card_big_avatar">72dp</dimen>
-    <dimen name="university_person_card_contact_info">72dp</dimen>
-    <dimen name="university_person_card_contact_info_padding">20dp</dimen>
+    <dimen name="university_person_card_contact_info">62dp</dimen>
+    <dimen name="university_person_card_contact_info_padding">18dp</dimen>
 
-    <dimen name="search_height">72dp</dimen>
-    <dimen name="search_padding">12dp</dimen>
-    <dimen name="search_offset_start">18dp</dimen>
+    <dimen name="search_height">52dp</dimen>
+    <dimen name="search_padding">8dp</dimen>
+    <dimen name="search_offset_start">12dp</dimen>
 
 </resources>

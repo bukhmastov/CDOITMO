@@ -261,7 +261,11 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
             public void onSuccess(int statusCode, String response) {
                 try {
                     if (statusCode == 200) {
-                        handler.onSuccess(statusCode, new JSONObject(response), null);
+                        try {
+                            handler.onSuccess(statusCode, new JSONObject(response), null);
+                        } catch (JSONException e) {
+                            handler.onSuccess(statusCode, new JSONObject(Static.parseInvalidIfmoRestClientResponse(response)), null);
+                        }
                     } else {
                         handler.onFailure(IfmoRestClient.FAILED_TRY_AGAIN);
                     }
