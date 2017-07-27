@@ -1,9 +1,8 @@
 package com.bukhmastov.cdoitmo.network;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoClientResponseHandler;
@@ -371,7 +370,7 @@ public class DeIfmoClient extends Client {
                 authorize(context, new DeIfmoClientResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, String response) {
-                        getAvatar(context, url, responseHandler);
+                        getAvatar(context, protocol, url, responseHandler);
                     }
                     @Override
                     public void onProgress(int state) {
@@ -390,15 +389,19 @@ public class DeIfmoClient extends Client {
             }
             responseHandler.onProgress(STATE_HANDLING);
             renewCookie(context);
-            String[] allowed = {"image/jpeg;charset=Windows-1251"};
-            responseHandler.onNewHandle(checkHandle(getHttpClient().get(getAbsoluteUrl(protocol, url), null, new BinaryHttpResponseHandler(allowed) {
+            String[] allowed = {
+                    "application/octet-stream",
+                    "image/jpeg", "image/png", "image/gif",
+                    "image/jpeg;charset=Windows-1251", "image/png;charset=Windows-1251", "image/gif;charset=Windows-1251"
+            };
+            responseHandler.onNewHandle(checkHandle(getHttpClient().get(getAbsoluteUrl(protocol, url.startsWith("servlet/") ? url : "servlet/" + url), null, new BinaryHttpResponseHandler(allowed) {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] binaryData) {
                     Log.v(TAG, "getAvatar | url=" + url + " | success | statusCode=" + statusCode);
                     responseHandler.onNewHandle(null);
                     try {
-                        Drawable drawable = new BitmapDrawable(context.getResources(), BitmapFactory.decodeByteArray(binaryData, 0, binaryData.length));
-                        responseHandler.onSuccess(statusCode, drawable);
+                        Bitmap bitmap = BitmapFactory.decodeByteArray(binaryData, 0, binaryData.length);
+                        responseHandler.onSuccess(statusCode, bitmap);
                     } catch (Exception e) {
                         Static.error(e);
                         responseHandler.onFailure(statusCode, FAILED_TRY_AGAIN);
@@ -406,7 +409,7 @@ public class DeIfmoClient extends Client {
                 }
                 @Override
                 public void onFailure(int statusCode, Header[] headers, byte[] binaryData, Throwable throwable) {
-                    Log.v(TAG, "getAvatar | url=" + url + " | failure | statusCode=" + statusCode + (throwable != null ? " | throwable=" + throwable.getMessage() : ""));
+                    Log.v(TAG, "getAvatar | url=" + url + " | failure | statusCode=" + statusCode + (throwable != null ? " | throwable=" + throwable.getMessage() : "") + (binaryData != null ? " | response=" + convert2UTF8(headers, binaryData) : ""));
                     responseHandler.onNewHandle(null);
                     responseHandler.onFailure(statusCode, FAILED_TRY_AGAIN);
                 }

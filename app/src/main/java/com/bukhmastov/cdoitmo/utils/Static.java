@@ -6,6 +6,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
+import android.graphics.Rect;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
@@ -594,53 +601,92 @@ public class Static {
             });
         }
         public static void displayUserAvatar(final Context context, final NavigationView navigationView) {
-            /*if (navigationView == null) return;
-            String url = Storage.file.perm.get(context, "user#avatar").trim();
-            if (!url.isEmpty() && !url.contains("distributedCDE?Rule=GETATTACH&ATT_ID=1941771")) {
-                if (navRequestHandle != null) {
-                    navRequestHandle.cancel(true);
-                    navRequestHandle = null;
-                }
-                DeIfmoClient.getAvatar(context, url, new DeIfmoDrawableClientResponseHandler() {
-                    @Override
-                    public void onSuccess(int statusCode, Drawable drawable) {
-                        try {
-                            FrameLayout frameLayout = (FrameLayout) navigationView.findViewById(R.id.user_icon);
-                            if (frameLayout != null) {
-                                ImageView imageView = (ImageView) frameLayout.getChildAt(0);
-                                if (imageView != null) {
-                                    imageView.setImageDrawable(drawable);
+            /*Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+                @Override
+                public void run() {
+                    if (navigationView == null) return;
+                    String url = Storage.file.perm.get(context, "user#avatar").trim();
+                    if (!url.isEmpty() && !url.contains("distributedCDE?Rule=GETATTACH&ATT_ID=1941771")) {
+                        if (navRequestHandle != null) {
+                            navRequestHandle.cancel(true);
+                            navRequestHandle = null;
+                        }
+                        DeIfmoClient.getAvatar(context, url, new DeIfmoDrawableClientResponseHandler() {
+                            @Override
+                            public void onSuccess(final int statusCode, final Bitmap bitmap) {
+                                Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        try {
+                                            final Drawable drawable = new BitmapDrawable(context.getResources(), getCroppedBitmap(bitmap));
+                                            Static.T.runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    try {
+                                                        ViewGroup frameLayout = (ViewGroup) navigationView.findViewById(R.id.user_icon);
+                                                        if (frameLayout != null) {
+                                                            ImageView imageView = (ImageView) frameLayout.getChildAt(0);
+                                                            if (imageView != null) {
+                                                                imageView.setImageDrawable(drawable);
+                                                            }
+                                                        }
+                                                    } catch (Exception e) {
+                                                        Static.error(e);
+                                                    }
+                                                }
+                                            });
+                                        } catch (Exception e) {
+                                            Static.error(e);
+                                        }
+                                    }
+                                });
+                            }
+                            @Override
+                            public void onProgress(int state) {}
+                            @Override
+                            public void onFailure(int statusCode, int state) {}
+                            @Override
+                            public void onNewHandle(RequestHandle requestHandle) {
+                                navRequestHandle = requestHandle;
+                            }
+                        });
+                    } else {
+                        Static.T.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    FrameLayout frameLayout = (FrameLayout) navigationView.findViewById(R.id.user_icon);
+                                    if (frameLayout != null) {
+                                        ImageView imageView = (ImageView) frameLayout.getChildAt(0);
+                                        if (imageView != null) {
+                                            TypedArray a = context.getTheme().obtainStyledAttributes(R.style.AppTheme, new int[] {R.attr.ic_cdo_small});
+                                            Drawable drawable = context.getResources().getDrawable(a.getResourceId(0, 0), context.getTheme());
+                                            a.recycle();
+                                            imageView.setImageDrawable(drawable);
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                    Static.error(e);
                                 }
                             }
-                        } catch (Exception e) {
-                            Static.error(e);
-                        }
+                        });
                     }
-                    @Override
-                    public void onProgress(int state) {}
-                    @Override
-                    public void onFailure(int state) {}
-                    @Override
-                    public void onNewHandle(RequestHandle requestHandle) {
-                        navRequestHandle = requestHandle;
-                    }
-                });
-            } else {
-                try {
-                    FrameLayout frameLayout = (FrameLayout) navigationView.findViewById(R.id.user_icon);
-                    if (frameLayout != null) {
-                        ImageView imageView = (ImageView) frameLayout.getChildAt(0);
-                        if (imageView != null) {
-                            TypedArray a = context.getTheme().obtainStyledAttributes(R.style.AppTheme, new int[] {R.attr.ic_cdo_small});
-                            Drawable drawable = context.getResources().getDrawable(a.getResourceId(0, 0), context.getTheme());
-                            a.recycle();
-                            imageView.setImageDrawable(drawable);
-                        }
-                    }
-                } catch (Exception e) {
-                    Static.error(e);
                 }
-            }*/
+            });*/
+        }
+        private static Bitmap getCroppedBitmap(Bitmap bitmap) {
+            int dimen = Math.min(bitmap.getWidth(), bitmap.getHeight());
+            Bitmap output = Bitmap.createBitmap(dimen, dimen, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(output);
+            final Rect rect = new Rect(0, 0, dimen, dimen);
+            final Paint paint = new Paint();
+            canvas.drawARGB(0, 0, 0, 0);
+            paint.setAntiAlias(true);
+            paint.setColor(Color.parseColor("#ffffff"));
+            canvas.drawCircle(dimen / 2, dimen / 2, dimen / 2, paint);
+            paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
+            canvas.drawBitmap(bitmap, rect, rect, paint);
+            return output;
         }
         public static void snackbarOffline(final Activity activity) {
             Static.T.runOnUiThread(new Runnable() {
@@ -754,4 +800,5 @@ public class Static {
     public static String ldgZero(int number) {
         return String.format("%02d", number);
     }
+
 }

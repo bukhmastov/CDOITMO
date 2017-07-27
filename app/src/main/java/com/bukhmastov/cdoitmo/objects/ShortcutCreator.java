@@ -30,6 +30,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Objects;
 
@@ -45,7 +46,7 @@ public class ShortcutCreator {
     private int step = 0;
     private boolean displayed = false;
     public static RequestHandle shortcutRequestHandle = null;
-    private enum TYPES {none, e_journal, protocol_changes, rating, room101, room101create, schedule_lessons, schedule_exams, time_remaining_widget, days_remaining_widget}
+    private enum TYPES {none, e_journal, protocol_changes, rating, room101, room101create, schedule_lessons, schedule_exams, university, time_remaining_widget, days_remaining_widget}
     private TYPES type = TYPES.none;
     private Additional additional = null;
 
@@ -375,6 +376,43 @@ public class ShortcutCreator {
                             });
                             break;
                         }
+                        case university: {
+                            View layout_vertical_stepper_item = inflate(R.layout.layout_vertical_stepper_item);
+                            ((TextView) layout_vertical_stepper_item.findViewById(R.id.stepper_step_number)).setText("2");
+                            ((TextView) layout_vertical_stepper_item.findViewById(R.id.stepper_header)).setText(R.string.choose_type);
+                            ViewGroup stepper_content = (ViewGroup) inflate(R.layout.layout_shortcut_creator_step_1);
+                            Spinner shortcut_creator_spinner = (Spinner) stepper_content.findViewById(R.id.shortcut_creator_spinner);
+                            final ArrayList<String> spinner_layout_normal_labels = new ArrayList<>(Arrays.asList(new String[] {
+                                    context.getString(R.string.shortcut_creator_need_to_choose_type),
+                                    context.getString(R.string.persons),
+                                    context.getString(R.string.faculties),
+                                    context.getString(R.string.units),
+                                    context.getString(R.string.ubuildings),
+                                    context.getString(R.string.news),
+                                    context.getString(R.string.events)
+                            }));
+                            final ArrayList<String> spinner_layout_normal_values = new ArrayList<>(Arrays.asList(new String[] {
+                                    "shortcut_creator_need_to_choose_type",
+                                    "persons",
+                                    "faculties",
+                                    "units",
+                                    "ubuildings",
+                                    "news",
+                                    "events"
+                            }));
+                            shortcut_creator_spinner.setAdapter(new ArrayAdapter<>(context, R.layout.spinner_layout_normal, spinner_layout_normal_labels));
+                            shortcut_creator_spinner.setSelection(0);
+                            shortcut_creator_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                                public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
+                                    additional = new Additional(spinner_layout_normal_labels.get(position), spinner_layout_normal_values.get(position));
+                                    if (position != 0) next();
+                                }
+                                public void onNothingSelected(AdapterView<?> parent) {}
+                            });
+                            ((ViewGroup) layout_vertical_stepper_item.findViewById(R.id.stepper_content)).addView(stepper_content);
+                            content.addView(layout_vertical_stepper_item);
+                            break;
+                        }
                     }
                     delegate.onDisplay(content);
                 } catch (Exception e) {
@@ -398,13 +436,34 @@ public class ShortcutCreator {
                         return;
                     } else {
                         content.addView(getDone("1", context.getString(R.string.choose_shortcut), context.getString(R.string.shortcut_choosed) + ": " + getTypeLabel(type)));
-                        content.addView(getDone("2", context.getString(R.string.choose_schedule_for_display), context.getString(R.string.chose_additional_done) + ": " + additional.label));
+                        switch (type) {
+                            case schedule_lessons:
+                            case time_remaining_widget:
+                            case schedule_exams:
+                            case days_remaining_widget: {
+                                content.addView(getDone("2", context.getString(R.string.choose_schedule_for_display), context.getString(R.string.chose_additional_done) + ": " + additional.label));
+                                break;
+                            }
+                            case university: {
+                                content.addView(getDone("2", context.getString(R.string.choose_type), context.getString(R.string.chose_additional_done) + ": " + additional.label));
+                                break;
+                            }
+                        }
                     }
-                    View layout_vertical_stepper_item = inflate(R.layout.layout_vertical_stepper_item);
-                    ((TextView) layout_vertical_stepper_item.findViewById(R.id.stepper_step_number)).setText("3");
-                    ((TextView) layout_vertical_stepper_item.findViewById(R.id.stepper_header)).setText(R.string.compete);
-                    ((ViewGroup) layout_vertical_stepper_item.findViewById(R.id.stepper_content)).addView(getSubmitButton());
-                    content.addView(layout_vertical_stepper_item);
+                    switch (type) {
+                        case schedule_lessons:
+                        case time_remaining_widget:
+                        case schedule_exams:
+                        case days_remaining_widget:
+                        case university: {
+                            View layout_vertical_stepper_item = inflate(R.layout.layout_vertical_stepper_item);
+                            ((TextView) layout_vertical_stepper_item.findViewById(R.id.stepper_step_number)).setText("3");
+                            ((TextView) layout_vertical_stepper_item.findViewById(R.id.stepper_header)).setText(R.string.compete);
+                            ((ViewGroup) layout_vertical_stepper_item.findViewById(R.id.stepper_content)).addView(getSubmitButton());
+                            content.addView(layout_vertical_stepper_item);
+                            break;
+                        }
+                    }
                     delegate.onDisplay(content);
                 } catch (Exception e) {
                     Static.error(e);
@@ -455,6 +514,19 @@ public class ShortcutCreator {
                             }
                         } catch (Exception e) {
                             Static.error(e);
+                            error();
+                        }
+                        break;
+                    }
+                    case university: {
+                        try {
+                            JSONObject json = new JSONObject();
+                            json.put("label", additional.label);
+                            json.put("query", additional.query);
+                            addShortcut("university", json.toString());
+                        } catch (Exception e) {
+                            Static.error(e);
+                            error();
                         }
                         break;
                     }
@@ -559,12 +631,11 @@ public class ShortcutCreator {
                 Intent intent = new Intent(ShortcutReceiver.ACTION_ADD_SHORTCUT);
                 intent.putExtra(ShortcutReceiver.EXTRA_TYPE, type);
                 intent.putExtra(ShortcutReceiver.EXTRA_DATA, data);
-                // Android 8.0
-                //if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                //    new ShortcutReceiver().onReceive(context, intent);
-                //} else {
-                context.sendBroadcast(intent);
-                //}
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    new ShortcutReceiver().onReceive(context, intent);
+                } else {
+                    context.sendBroadcast(intent);
+                }
             }
         });
     }
@@ -580,6 +651,7 @@ public class ShortcutCreator {
             case room101create: return context.getString(R.string.room101create);
             case schedule_lessons: return context.getString(R.string.schedule_lessons);
             case schedule_exams: return context.getString(R.string.schedule_exams);
+            case university: return context.getString(R.string.university);
             case time_remaining_widget: return context.getString(R.string.time_remaining_widget);
             case days_remaining_widget: return context.getString(R.string.days_remaining_widget);
             default: return null;

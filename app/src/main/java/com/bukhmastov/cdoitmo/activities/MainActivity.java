@@ -187,7 +187,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
         super.onSaveInstanceState(savedInstanceState);
     }
 
-    private void authorize(final int state){
+    private void authorize(final int state) {
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -199,7 +199,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
             }
         });
     }
-    private void authorized(){
+    private void authorized() {
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -218,7 +218,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
         });
     }
 
-    private void selectSection(final int section){
+    private void selectSection(final int section) {
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {

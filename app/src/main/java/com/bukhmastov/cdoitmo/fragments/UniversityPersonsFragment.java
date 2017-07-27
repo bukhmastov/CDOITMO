@@ -316,14 +316,14 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
                     search_action.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            load(search_input.getText().toString().trim());
+                            load(search_input.getText().toString().trim(), true);
                         }
                     });
                     search_input.setOnKeyListener(new View.OnKeyListener() {
                         @Override
                         public boolean onKey(View v, int keyCode, KeyEvent event) {
                             if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
-                                load(search_input.getText().toString().trim());
+                                load(search_input.getText().toString().trim(), true);
                                 return true;
                             }
                             return false;

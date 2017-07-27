@@ -97,7 +97,7 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
     @Override
     public void onRefresh() {
         Log.v(TAG, "refreshed");
-        load(search, 0);
+        load(search, true);
     }
 
     private void load() {
@@ -274,7 +274,7 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
         Log.v(TAG, "loadProvider");
         IfmoRestClient.get(getContext(), "event?limit=" + limit + "&offset=" + offset + "&search=" + search, null, handler);
     }
-    private void loadFailed(){
+    private void loadFailed() {
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -316,14 +316,14 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
                     search_action.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            load(search_input.getText().toString().trim());
+                            load(search_input.getText().toString().trim(), true);
                         }
                     });
                     search_input.setOnKeyListener(new View.OnKeyListener() {
                         @Override
                         public boolean onKey(View v, int keyCode, KeyEvent event) {
                             if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
-                                load(search_input.getText().toString().trim());
+                                load(search_input.getText().toString().trim(), true);
                                 return true;
                             }
                             return false;

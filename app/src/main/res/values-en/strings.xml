@@ -344,5 +344,7 @@
     <string name="pref_use_university_cache">Cache data \"University\"</string>
     <string name="pref_use_university_cache_summary">Will take a lot of memory</string>
     <string name="student">student</string>
+    <string name="choose_type">Choose type</string>
+    <string name="shortcut_creator_need_to_choose_type">You must select a shortcut type</string>
 
 </resources>

@@ -1,11 +1,11 @@
 package com.bukhmastov.cdoitmo.network.interfaces;
 
-import android.graphics.drawable.Drawable;
+import android.graphics.Bitmap;
 
 import com.loopj.android.http.RequestHandle;
 
 public interface DeIfmoDrawableClientResponseHandler {
-    void onSuccess(int statusCode, Drawable drawable);
+    void onSuccess(int statusCode, Bitmap bitmap);
     void onProgress(int state);
     void onFailure(int statusCode, int state);
     void onNewHandle(RequestHandle requestHandle);

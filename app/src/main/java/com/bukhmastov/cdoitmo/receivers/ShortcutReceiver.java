@@ -1,8 +1,13 @@
 package com.bukhmastov.cdoitmo.receivers;
 
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentSender;
+import android.content.pm.ShortcutInfo;
+import android.content.pm.ShortcutManager;
+import android.graphics.drawable.Icon;
 import android.os.Bundle;
 import android.support.annotation.DrawableRes;
 
@@ -16,6 +21,8 @@ import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 
 import org.json.JSONObject;
+
+import java.util.Calendar;
 
 public class ShortcutReceiver extends BroadcastReceiver {
 
@@ -97,7 +104,8 @@ public class ShortcutReceiver extends BroadcastReceiver {
                             context.startActivity(intent);
                             break;
                         }
-                        case "room101": {
+                        case "room101":
+                        case "university": {
                             Intent intent = new Intent(context, SplashActivity.class);
                             intent.addFlags(Static.intentFlagRestart);
                             intent.putExtra("action", shortcut_type);
@@ -184,6 +192,11 @@ public class ShortcutReceiver extends BroadcastReceiver {
                             installShortcut(context, type, data, json.getString("label"), R.drawable.ic_shortcut_days_remaining_widget);
                             break;
                         }
+                        case "university": {
+                            JSONObject json = new JSONObject(data);
+                            installShortcut(context, type, json.getString("query"), json.getString("label"), R.drawable.ic_shortcut_university);
+                            break;
+                        }
                     }
                 } catch (Exception e) {
                     Static.error(e);
@@ -202,31 +215,30 @@ public class ShortcutReceiver extends BroadcastReceiver {
                     shortcutIntent.setAction(ShortcutReceiver.ACTION_CLICK_SHORTCUT);
                     shortcutIntent.putExtra(ShortcutReceiver.EXTRA_TYPE, type);
                     shortcutIntent.putExtra(ShortcutReceiver.EXTRA_DATA, data);
-                    // Android 8.0
-                    //if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                    //    ShortcutManager shortcutManager = context.getSystemService(ShortcutManager.class);
-                    //    if (shortcutManager.isRequestPinShortcutSupported()) {
-                    //        ShortcutInfo pinShortcutInfo = new ShortcutInfo.Builder(context, "synthetic-" + Calendar.getInstance().getTimeInMillis())
-                    //            .setIcon(Icon.createWithResource(context, icon))
-                    //            .setShortLabel(label)
-                    //            .setIntent(shortcutIntent)
-                    //            .build();
-                    //
-                    //        Intent pinnedShortcutCallbackIntent = new Intent(context, ShortcutReceiver.class);
-                    //        pinnedShortcutCallbackIntent.setAction(ShortcutReceiver.ACTION_SHORTCUT_INSTALLED);
-                    //        IntentSender pinnedShortcutCallbackPendingIntentSender = PendingIntent.getBroadcast(context, 0, pinnedShortcutCallbackIntent, 0).getIntentSender();
-                    //        shortcutManager.requestPinShortcut(pinShortcutInfo, pinnedShortcutCallbackPendingIntentSender);
-                    //    } else {
-                    //        Static.toast(context, context.getString(R.string.pin_shortcut_not_supported));
-                    //    }
-                    //} else {
-                    Intent addIntent = new Intent(ShortcutReceiver.ACTION_INSTALL_SHORTCUT);
-                    addIntent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent);
-                    addIntent.putExtra(Intent.EXTRA_SHORTCUT_NAME, label);
-                    addIntent.putExtra(Intent.EXTRA_SHORTCUT_ICON_RESOURCE, Intent.ShortcutIconResource.fromContext(context, icon));
-                    addIntent.putExtra("duplicate", false);
-                    context.sendBroadcast(addIntent);
-                    //}
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                        ShortcutManager shortcutManager = context.getSystemService(ShortcutManager.class);
+                        if (shortcutManager.isRequestPinShortcutSupported()) {
+                            ShortcutInfo pinShortcutInfo = new ShortcutInfo.Builder(context, "synthetic-" + Calendar.getInstance().getTimeInMillis())
+                                .setIcon(Icon.createWithResource(context, icon))
+                                .setShortLabel(label)
+                                .setIntent(shortcutIntent)
+                                .build();
+
+                            Intent pinnedShortcutCallbackIntent = new Intent(context, ShortcutReceiver.class);
+                            pinnedShortcutCallbackIntent.setAction(ShortcutReceiver.ACTION_SHORTCUT_INSTALLED);
+                            IntentSender pinnedShortcutCallbackPendingIntentSender = PendingIntent.getBroadcast(context, 0, pinnedShortcutCallbackIntent, 0).getIntentSender();
+                            shortcutManager.requestPinShortcut(pinShortcutInfo, pinnedShortcutCallbackPendingIntentSender);
+                        } else {
+                            Static.toast(context, context.getString(R.string.pin_shortcut_not_supported));
+                        }
+                    } else {
+                        Intent addIntent = new Intent(ShortcutReceiver.ACTION_INSTALL_SHORTCUT);
+                        addIntent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent);
+                        addIntent.putExtra(Intent.EXTRA_SHORTCUT_NAME, label);
+                        addIntent.putExtra(Intent.EXTRA_SHORTCUT_ICON_RESOURCE, Intent.ShortcutIconResource.fromContext(context, icon));
+                        addIntent.putExtra("duplicate", false);
+                        context.sendBroadcast(addIntent);
+                    }
                     FirebaseAnalyticsProvider.logEvent(
                             context,
                             FirebaseAnalyticsProvider.Event.SHORTCUT_INSTALL,

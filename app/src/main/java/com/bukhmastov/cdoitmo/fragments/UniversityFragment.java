@@ -1,5 +1,7 @@
 package com.bukhmastov.cdoitmo.fragments;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
@@ -18,12 +20,23 @@ public class UniversityFragment extends ConnectedFragment implements ViewPager.O
 
     private static final String TAG = "UniversityFragment";
     private static int tabSelected = -1;
+    private String action_extra = null;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.v(TAG, "Fragment created");
         FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
+        Activity activity = getActivity();
+        if (activity != null) {
+            Intent intent = activity.getIntent();
+            if (intent != null) {
+                action_extra = intent.getStringExtra("action_extra");
+                if (action_extra != null) {
+                    intent.removeExtra("action_extra");
+                }
+            }
+        }
     }
 
     @Override
@@ -48,13 +61,26 @@ public class UniversityFragment extends ConnectedFragment implements ViewPager.O
             university_pager.addOnPageChangeListener(this);
             main_tabs.setupWithViewPager(university_pager);
         }
-        TabLayout.Tab tab;
+        TabLayout.Tab tab = null;
         try {
-            if (tabSelected == -1) {
-                int pref = Storage.pref.get(getContext(), "pref_university_tab", -1);
-                tab = main_tabs.getTabAt(pref < 0 ? 0 : pref);
-            } else {
-                tab = main_tabs.getTabAt(tabSelected);
+            if (action_extra != null) {
+                switch (action_extra) {
+                    case "persons": tab = main_tabs.getTabAt(0); break;
+                    case "faculties": tab = main_tabs.getTabAt(1); break;
+                    case "units": tab = main_tabs.getTabAt(2); break;
+                    case "ubuildings": tab = main_tabs.getTabAt(3); break;
+                    case "news": tab = main_tabs.getTabAt(4); break;
+                    case "events": tab = main_tabs.getTabAt(5); break;
+                }
+                action_extra = null;
+            }
+            if (tab == null) {
+                if (tabSelected == -1) {
+                    int pref = Storage.pref.get(getContext(), "pref_university_tab", -1);
+                    tab = main_tabs.getTabAt(pref < 0 ? 0 : pref);
+                } else {
+                    tab = main_tabs.getTabAt(tabSelected);
+                }
             }
         } catch (Exception e) {
             tab = null;

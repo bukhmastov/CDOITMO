@@ -351,5 +351,7 @@
     <string name="pref_use_university_cache">Кэшировать данные \"Университет\"</string>
     <string name="pref_use_university_cache_summary">Займет большое количество памяти</string>
     <string name="student">студент</string>
+    <string name="choose_type">Выберите тип</string>
+    <string name="shortcut_creator_need_to_choose_type">Необходимо выбрать тип</string>
 
 </resources>
