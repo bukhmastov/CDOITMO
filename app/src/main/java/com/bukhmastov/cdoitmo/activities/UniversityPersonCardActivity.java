@@ -120,10 +120,15 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                 loadProvider(new IfmoRestClientResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
-                        SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.person_swipe);
-                        if (mSwipeRefreshLayout != null) {
-                            mSwipeRefreshLayout.setRefreshing(false);
-                        }
+                        Static.T.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.person_swipe);
+                                if (mSwipeRefreshLayout != null) {
+                                    mSwipeRefreshLayout.setRefreshing(false);
+                                }
+                            }
+                        });
                         if (statusCode == 200) {
                             try {
                                 String post = json.getString("post");
@@ -274,6 +279,18 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                             finish();
                         }
                     });
+                    // кнопка сайта
+                    final String persons_id = person.getString("persons_id");
+                    if (persons_id != null && !persons_id.trim().isEmpty()) {
+                        findViewById(R.id.web).setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ifmo.ru/ru/viewperson/" + persons_id.trim() + "/")));
+                            }
+                        });
+                    } else {
+                        Static.removeView(findViewById(R.id.web));
+                    }
                     // заголовок
                     final String name = (person.getString("title_l") + " " + person.getString("title_f") + " " + person.getString("title_m")).trim();
                     final String degree = person.getString("degree").trim();

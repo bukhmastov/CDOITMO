@@ -121,48 +121,53 @@ public abstract class SchedulePreference extends DialogPreference {
         return preference_schedule;
     }
     @Override
-    protected void onBindDialogView(View view) {
-        final RadioGroup radioTypePicker = (RadioGroup) preference_schedule.findViewById(R.id.radioTypePicker);
-        final FrameLayout ps_content = (FrameLayout) preference_schedule.findViewById(R.id.ps_content);
-        if (radioTypePicker != null) {
-            radioTypePicker.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(RadioGroup group, int checkedId) {
-                    Dialog dialog = getDialog();
-                    if (dialog != null) {
-                        Window window = dialog.getWindow();
-                        if (window != null) {
-                            window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
-                        }
-                    }
-                    if (preferenceRequestHandle != null) preferenceRequestHandle.cancel(true);
-                    if (ps_content != null) ps_content.removeAllViews();
-                    if (checkedId == R.id.ps_auto) {
-                        setValue("auto", "");
-                    } else if (checkedId == R.id.ps_defined) {
-                        if (Objects.equals(query, "auto")) setValue("", "");
-                        if (ps_content != null) {
-                            ps_content.addView(((LayoutInflater) getContext().getSystemService(android.content.Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.preference_schedule_defined, null));
-                            EditText editText = (EditText) preference_schedule.findViewById(R.id.schedule_preference_edit_text);
-                            if (editText != null) {
-                                editText.setOnKeyListener(new View.OnKeyListener() {
-                                    public boolean onKey(View v, int keyCode, KeyEvent event) {
-                                        return event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER && setQuery();
+    protected void onBindDialogView(final View view) {
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                final RadioGroup radioTypePicker = (RadioGroup) preference_schedule.findViewById(R.id.radioTypePicker);
+                final FrameLayout ps_content = (FrameLayout) preference_schedule.findViewById(R.id.ps_content);
+                if (radioTypePicker != null) {
+                    radioTypePicker.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+                        @Override
+                        public void onCheckedChanged(RadioGroup group, int checkedId) {
+                            Dialog dialog = getDialog();
+                            if (dialog != null) {
+                                Window window = dialog.getWindow();
+                                if (window != null) {
+                                    window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
+                                }
+                            }
+                            if (preferenceRequestHandle != null) preferenceRequestHandle.cancel(true);
+                            if (ps_content != null) ps_content.removeAllViews();
+                            if (checkedId == R.id.ps_auto) {
+                                setValue("auto", "");
+                            } else if (checkedId == R.id.ps_defined) {
+                                if (Objects.equals(query, "auto")) setValue("", "");
+                                if (ps_content != null) {
+                                    ps_content.addView(((LayoutInflater) getContext().getSystemService(android.content.Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.preference_schedule_defined, null));
+                                    EditText editText = (EditText) preference_schedule.findViewById(R.id.schedule_preference_edit_text);
+                                    if (editText != null) {
+                                        editText.setOnKeyListener(new View.OnKeyListener() {
+                                            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                                                return event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER && setQuery();
+                                            }
+                                        });
+                                        if (!Objects.equals(title, "")) {
+                                            editText.setText(title.replace(getContext().getString(R.string.group), "").replace(getContext().getString(R.string.room), "").trim());
+                                        }
                                     }
-                                });
-                                if (!Objects.equals(title, "")) {
-                                    editText.setText(title.replace(getContext().getString(R.string.group), "").replace(getContext().getString(R.string.room), "").trim());
                                 }
                             }
                         }
-                    }
+                    });
                 }
-            });
-        }
-        switch (query) {
-            case "auto": ((RadioButton) preference_schedule.findViewById(R.id.ps_auto)).setChecked(true); break;
-            default: ((RadioButton) preference_schedule.findViewById(R.id.ps_defined)).setChecked(true); break;
-        }
+                switch (query) {
+                    case "auto": ((RadioButton) preference_schedule.findViewById(R.id.ps_auto)).setChecked(true); break;
+                    default: ((RadioButton) preference_schedule.findViewById(R.id.ps_defined)).setChecked(true); break;
+                }
+            }
+        });
         super.onBindDialogView(view);
     }
     protected boolean setQuery() {
@@ -182,73 +187,88 @@ public abstract class SchedulePreference extends DialogPreference {
         }
     }
     protected abstract void search(String search);
-    protected void loading(String text) {
-        if (preference_schedule == null) return;
-        FrameLayout schedule_preference_list = (FrameLayout) preference_schedule.findViewById(R.id.schedule_preference_list);
-        if (schedule_preference_list != null){
-            LinearLayout linearLayout = new LinearLayout(getContext());
-            linearLayout.setOrientation(LinearLayout.VERTICAL);
-            linearLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-            linearLayout.setPadding((int) (16 * Static.destiny), (int) (10 * Static.destiny), (int) (16 * Static.destiny), (int) (10 * Static.destiny));
-            ProgressBar progressBar = new ProgressBar(getContext());
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            lp.gravity = Gravity.CENTER;
-            progressBar.setLayoutParams(lp);
-            linearLayout.addView(progressBar);
-            TextView textView = new TextView(getContext());
-            textView.setText(text);
-            textView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-            textView.setTextColor(Static.textColorPrimary);
-            textView.setGravity(Gravity.CENTER);
-            textView.setPadding(0, (int) (10 * Static.destiny), 0, (int) (10 * Static.destiny));
-            linearLayout.addView(textView);
-            schedule_preference_list.removeAllViews();
-            schedule_preference_list.addView(linearLayout);
-        }
+    protected void loading(final String text) {
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (preference_schedule == null) return;
+                FrameLayout schedule_preference_list = (FrameLayout) preference_schedule.findViewById(R.id.schedule_preference_list);
+                if (schedule_preference_list != null){
+                    LinearLayout linearLayout = new LinearLayout(getContext());
+                    linearLayout.setOrientation(LinearLayout.VERTICAL);
+                    linearLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+                    linearLayout.setPadding((int) (16 * Static.destiny), (int) (10 * Static.destiny), (int) (16 * Static.destiny), (int) (10 * Static.destiny));
+                    ProgressBar progressBar = new ProgressBar(getContext());
+                    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                    lp.gravity = Gravity.CENTER;
+                    progressBar.setLayoutParams(lp);
+                    linearLayout.addView(progressBar);
+                    TextView textView = new TextView(getContext());
+                    textView.setText(text);
+                    textView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+                    textView.setTextColor(Static.textColorPrimary);
+                    textView.setGravity(Gravity.CENTER);
+                    textView.setPadding(0, (int) (10 * Static.destiny), 0, (int) (10 * Static.destiny));
+                    linearLayout.addView(textView);
+                    schedule_preference_list.removeAllViews();
+                    schedule_preference_list.addView(linearLayout);
+                }
+            }
+        });
     }
-    protected void failed(String text) {
-        if (preference_schedule == null) return;
-        FrameLayout schedule_preference_list = (FrameLayout) preference_schedule.findViewById(R.id.schedule_preference_list);
-        if (schedule_preference_list != null){
-            LinearLayout linearLayout = new LinearLayout(getContext());
-            linearLayout.setOrientation(LinearLayout.VERTICAL);
-            linearLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-            linearLayout.setPadding((int) (16 * Static.destiny), (int) (10 * Static.destiny), (int) (16 * Static.destiny), (int) (10 * Static.destiny));
-            ImageView imageView = new ImageView(getContext());
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            lp.gravity = Gravity.CENTER;
-            imageView.setLayoutParams(lp);
-            imageView.setImageDrawable(getContext().getDrawable(R.drawable.ic_warning));
-            linearLayout.addView(imageView);
-            TextView textView = new TextView(getContext());
-            textView.setText(text);
-            textView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-            textView.setTextColor(Static.textColorPrimary);
-            textView.setGravity(Gravity.CENTER);
-            textView.setPadding(0, (int) (10 * Static.destiny), 0, (int) (10 * Static.destiny));
-            linearLayout.addView(textView);
-            schedule_preference_list.removeAllViews();
-            schedule_preference_list.addView(linearLayout);
-        }
+    protected void failed(final String text) {
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (preference_schedule == null) return;
+                FrameLayout schedule_preference_list = (FrameLayout) preference_schedule.findViewById(R.id.schedule_preference_list);
+                if (schedule_preference_list != null){
+                    LinearLayout linearLayout = new LinearLayout(getContext());
+                    linearLayout.setOrientation(LinearLayout.VERTICAL);
+                    linearLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+                    linearLayout.setPadding((int) (16 * Static.destiny), (int) (10 * Static.destiny), (int) (16 * Static.destiny), (int) (10 * Static.destiny));
+                    ImageView imageView = new ImageView(getContext());
+                    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                    lp.gravity = Gravity.CENTER;
+                    imageView.setLayoutParams(lp);
+                    imageView.setImageDrawable(getContext().getDrawable(R.drawable.ic_warning));
+                    linearLayout.addView(imageView);
+                    TextView textView = new TextView(getContext());
+                    textView.setText(text);
+                    textView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+                    textView.setTextColor(Static.textColorPrimary);
+                    textView.setGravity(Gravity.CENTER);
+                    textView.setPadding(0, (int) (10 * Static.destiny), 0, (int) (10 * Static.destiny));
+                    linearLayout.addView(textView);
+                    schedule_preference_list.removeAllViews();
+                    schedule_preference_list.addView(linearLayout);
+                }
+            }
+        });
     }
-    protected void found(String text) {
-        if (preference_schedule == null) return;
-        FrameLayout schedule_preference_list = (FrameLayout) preference_schedule.findViewById(R.id.schedule_preference_list);
-        if (schedule_preference_list != null){
-            LinearLayout linearLayout = new LinearLayout(getContext());
-            linearLayout.setOrientation(LinearLayout.VERTICAL);
-            linearLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-            linearLayout.setPadding((int) (16 * Static.destiny), (int) (10 * Static.destiny), (int) (16 * Static.destiny), (int) (10 * Static.destiny));
-            TextView textView = new TextView(getContext());
-            textView.setText(text);
-            textView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-            textView.setTextColor(Static.textColorPrimary);
-            textView.setGravity(Gravity.CENTER);
-            textView.setPadding(0, (int) (10 * Static.destiny), 0, (int) (10 * Static.destiny));
-            linearLayout.addView(textView);
-            schedule_preference_list.removeAllViews();
-            schedule_preference_list.addView(linearLayout);
-        }
+    protected void found(final String text) {
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (preference_schedule == null) return;
+                FrameLayout schedule_preference_list = (FrameLayout) preference_schedule.findViewById(R.id.schedule_preference_list);
+                if (schedule_preference_list != null){
+                    LinearLayout linearLayout = new LinearLayout(getContext());
+                    linearLayout.setOrientation(LinearLayout.VERTICAL);
+                    linearLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+                    linearLayout.setPadding((int) (16 * Static.destiny), (int) (10 * Static.destiny), (int) (16 * Static.destiny), (int) (10 * Static.destiny));
+                    TextView textView = new TextView(getContext());
+                    textView.setText(text);
+                    textView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+                    textView.setTextColor(Static.textColorPrimary);
+                    textView.setGravity(Gravity.CENTER);
+                    textView.setPadding(0, (int) (10 * Static.destiny), 0, (int) (10 * Static.destiny));
+                    linearLayout.addView(textView);
+                    schedule_preference_list.removeAllViews();
+                    schedule_preference_list.addView(linearLayout);
+                }
+            }
+        });
     }
     public void onProgress(int state) {
         switch (state) {

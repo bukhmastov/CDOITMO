@@ -48,6 +48,8 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
     private LessonUnit lessonUnit;
     private int index = 0;
     private String hash = null;
+    private boolean block_time_start = false;
+    private boolean block_time_end = false;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -117,8 +119,10 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                         }
                     });
 
-                    TextInputEditText lesson_time_start = (TextInputEditText) activity.findViewById(R.id.lesson_time_start);
+                    final TextInputEditText lesson_time_start = (TextInputEditText) activity.findViewById(R.id.lesson_time_start);
+                    final TextInputEditText lesson_time_end = (TextInputEditText) activity.findViewById(R.id.lesson_time_end);
                     if (lessonUnit.timeStart != null) lesson_time_start.setText(lessonUnit.timeStart);
+                    if (lessonUnit.timeEnd != null) lesson_time_end.setText(lessonUnit.timeEnd);
                     lesson_time_start.addTextChangedListener(new TextWatcher() {
                         @Override
                         public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -126,26 +130,54 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                         public void onTextChanged(CharSequence s, int start, int before, int count) {}
                         @Override
                         public void afterTextChanged(Editable s) {
-                            lessonUnit.timeStart = s.toString();
-                            TextInputEditText lesson_time_end = (TextInputEditText) activity.findViewById(R.id.lesson_time_end);
-                            if (lesson_time_end.getText().toString().isEmpty()) {
-                                Matcher time = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(s.toString());
-                                if (time.find()) {
-                                    Calendar calendar = Calendar.getInstance();
-                                    calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(time.group(1)));
-                                    calendar.set(Calendar.MINUTE, Integer.parseInt(time.group(2)));
-                                    calendar.set(Calendar.SECOND, 0);
-                                    long timestamp = calendar.getTimeInMillis();
-                                    calendar = Calendar.getInstance();
-                                    calendar.setTime(new Date(timestamp + 5400000));
-                                    lesson_time_end.setText(ldgZero(calendar.get(Calendar.HOUR_OF_DAY)) + ":" + ldgZero(calendar.get(Calendar.MINUTE)));
-                                }
+                            if (block_time_start) {
+                                block_time_start = false;
+                                return;
                             }
+                            String st = s.toString().trim();
+                            Matcher time = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(st);
+                            if (time.find()) {
+                                Calendar st_calendar = Calendar.getInstance();
+                                st_calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(time.group(1)));
+                                st_calendar.set(Calendar.MINUTE, Integer.parseInt(time.group(2)));
+                                st_calendar.set(Calendar.SECOND, 0);
+                                st = st_calendar.get(Calendar.HOUR_OF_DAY) + ":" + ldgZero(st_calendar.get(Calendar.MINUTE));
+                                if (lesson_time_end.getText().toString().isEmpty()) {
+                                    Calendar nt_calendar = Calendar.getInstance();
+                                    nt_calendar.setTime(new Date(st_calendar.getTimeInMillis() + 5400000));
+                                    block_time_end = true;
+                                    String insert = nt_calendar.get(Calendar.HOUR_OF_DAY) + ":" + ldgZero(nt_calendar.get(Calendar.MINUTE));
+                                    lessonUnit.timeEnd = insert;
+                                    int selection = lesson_time_end.getSelectionStart();
+                                    lesson_time_end.setText(insert);
+                                    lesson_time_end.setSelection(selection);
+                                } else {
+                                    String nt = lesson_time_end.getText().toString();
+                                    Matcher next_time = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(nt);
+                                    if (next_time.find()) {
+                                        Calendar nt_calendar = Calendar.getInstance();
+                                        nt_calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(next_time.group(1)));
+                                        nt_calendar.set(Calendar.MINUTE, Integer.parseInt(next_time.group(2)));
+                                        nt_calendar.set(Calendar.SECOND, 0);
+                                        if (nt_calendar.getTimeInMillis() <= st_calendar.getTimeInMillis()) {
+                                            nt_calendar.setTime(new Date(st_calendar.getTimeInMillis() + 5400000));
+                                            block_time_end = true;
+                                            String insert = nt_calendar.get(Calendar.HOUR_OF_DAY) + ":" + ldgZero(nt_calendar.get(Calendar.MINUTE));
+                                            lessonUnit.timeEnd = insert;
+                                            int selection = lesson_time_end.getSelectionStart();
+                                            lesson_time_end.setText(insert);
+                                            lesson_time_end.setSelection(selection);
+                                        }
+                                    }
+                                }
+                                block_time_start = true;
+                                int selection = lesson_time_start.getSelectionStart();
+                                lesson_time_start.setText(st);
+                                lesson_time_start.setSelection(selection);
+                            }
+                            lessonUnit.timeStart = st;
                         }
                     });
-
-                    TextInputEditText lesson_time_end = (TextInputEditText) activity.findViewById(R.id.lesson_time_end);
-                    if (lessonUnit.timeEnd != null) lesson_time_end.setText(lessonUnit.timeEnd);
                     lesson_time_end.addTextChangedListener(new TextWatcher() {
                         @Override
                         public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -153,21 +185,52 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                         public void onTextChanged(CharSequence s, int start, int before, int count) {}
                         @Override
                         public void afterTextChanged(Editable s) {
-                            lessonUnit.timeEnd = s.toString();
-                            TextInputEditText lesson_time_start = (TextInputEditText) activity.findViewById(R.id.lesson_time_start);
-                            if (lesson_time_start.getText().toString().isEmpty()) {
-                                Matcher time = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(s.toString());
-                                if (time.find()) {
-                                    Calendar calendar = Calendar.getInstance();
-                                    calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(time.group(1)));
-                                    calendar.set(Calendar.MINUTE, Integer.parseInt(time.group(2)));
-                                    calendar.set(Calendar.SECOND, 0);
-                                    long timestamp = calendar.getTimeInMillis();
-                                    calendar = Calendar.getInstance();
-                                    calendar.setTime(new Date(timestamp - 5400000));
-                                    lesson_time_start.setText(ldgZero(calendar.get(Calendar.HOUR_OF_DAY)) + ":" + ldgZero(calendar.get(Calendar.MINUTE)));
-                                }
+                            if (block_time_end) {
+                                block_time_end = false;
+                                return;
                             }
+                            String et = s.toString().trim();
+                            Matcher time = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(et);
+                            if (time.find()) {
+                                Calendar et_calendar = Calendar.getInstance();
+                                et_calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(time.group(1)));
+                                et_calendar.set(Calendar.MINUTE, Integer.parseInt(time.group(2)));
+                                et_calendar.set(Calendar.SECOND, 0);
+                                et = et_calendar.get(Calendar.HOUR_OF_DAY) + ":" + ldgZero(et_calendar.get(Calendar.MINUTE));
+                                if (lesson_time_start.getText().toString().isEmpty()) {
+                                    Calendar st_calendar = Calendar.getInstance();
+                                    st_calendar.setTime(new Date(et_calendar.getTimeInMillis() - 5400000));
+                                    block_time_start = true;
+                                    String insert = st_calendar.get(Calendar.HOUR_OF_DAY) + ":" + ldgZero(st_calendar.get(Calendar.MINUTE));
+                                    lessonUnit.timeStart = insert;
+                                    int selection = lesson_time_start.getSelectionStart();
+                                    lesson_time_start.setText(insert);
+                                    lesson_time_start.setSelection(selection);
+                                } else {
+                                    String st = lesson_time_start.getText().toString();
+                                    Matcher previous_time = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(st);
+                                    if (previous_time.find()) {
+                                        Calendar st_calendar = Calendar.getInstance();
+                                        st_calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(previous_time.group(1)));
+                                        st_calendar.set(Calendar.MINUTE, Integer.parseInt(previous_time.group(2)));
+                                        st_calendar.set(Calendar.SECOND, 0);
+                                        if (st_calendar.getTimeInMillis() >= et_calendar.getTimeInMillis()) {
+                                            st_calendar.setTime(new Date(et_calendar.getTimeInMillis() - 5400000));
+                                            block_time_start = true;
+                                            String insert = st_calendar.get(Calendar.HOUR_OF_DAY) + ":" + ldgZero(st_calendar.get(Calendar.MINUTE));
+                                            lessonUnit.timeStart = insert;
+                                            int selection = lesson_time_start.getSelectionStart();
+                                            lesson_time_start.setText(insert);
+                                            lesson_time_start.setSelection(selection);
+                                        }
+                                    }
+                                }
+                                block_time_end = true;
+                                int selection = lesson_time_end.getSelectionStart();
+                                lesson_time_end.setText(et);
+                                lesson_time_end.setSelection(selection);
+                            }
+                            lessonUnit.timeEnd = et;
                         }
                     });
 
@@ -506,7 +569,12 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                     }
                     if (blocked) {
                         blocked = false;
-                        progressBar.setVisibility(View.GONE);
+                        Static.T.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                progressBar.setVisibility(View.GONE);
+                            }
+                        });
                         return;
                     }
                     ScheduleLessons scheduleLessons = new ScheduleLessons(context);
@@ -519,13 +587,23 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                         @Override
                         public void onFailure(int state) {
                             Log.v(TAG, "search | failure " + state);
-                            progressBar.setVisibility(View.GONE);
+                            Static.T.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    progressBar.setVisibility(View.GONE);
+                                }
+                            });
                             delegate.onFailure(state);
                         }
                         @Override
                         public void onSuccess(JSONObject json) {
                             Log.v(TAG, "search | success");
-                            progressBar.setVisibility(View.GONE);
+                            Static.T.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    progressBar.setVisibility(View.GONE);
+                                }
+                            });
                             delegate.onSuccess(json);
                         }
                         @Override
@@ -533,7 +611,12 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                             request = requestHandle;
                         }
                     });
-                    progressBar.setVisibility(View.VISIBLE);
+                    Static.T.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            progressBar.setVisibility(View.VISIBLE);
+                        }
+                    });
                     scheduleLessons.search(query);
                 }
             });

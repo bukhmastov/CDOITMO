@@ -83,6 +83,7 @@
                     android:inputType="text|textCapSentences"
                     android:maxLines="1"
                     android:selectAllOnFocus="true"
+                    android:textColor="?android:attr/textColorPrimary"
                     android:textSize="@dimen/font_size_14" />
 
             </android.support.design.widget.TextInputLayout>
@@ -106,6 +107,7 @@
                         android:inputType="text|textCapSentences"
                         android:maxLines="1"
                         android:selectAllOnFocus="true"
+                        android:textColor="?android:attr/textColorPrimary"
                         android:textSize="@dimen/font_size_14" />
 
                 </android.support.design.widget.TextInputLayout>
@@ -123,6 +125,7 @@
                         android:inputType="text|textCapSentences"
                         android:maxLines="1"
                         android:selectAllOnFocus="true"
+                        android:textColor="?android:attr/textColorPrimary"
                         android:textSize="@dimen/font_size_14" />
 
                 </android.support.design.widget.TextInputLayout>
@@ -153,7 +156,13 @@
                         android:id="@+id/lesson_week"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:entries="@array/week_types_titles" />
+                        android:entries="@array/week_types_titles"
+                        android:textColor="?android:attr/textColorPrimary" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="?attr/colorSeparatorDark" />
 
                 </LinearLayout>
 
@@ -175,7 +184,13 @@
                         android:id="@+id/lesson_day_of_week"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:entries="@array/days_of_week_titles" />
+                        android:entries="@array/days_of_week_titles"
+                        android:textColor="?android:attr/textColorPrimary" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="?attr/colorSeparatorDark" />
 
                 </LinearLayout>
 
@@ -193,6 +208,7 @@
                     android:inputType="text|textCapSentences"
                     android:maxLines="1"
                     android:selectAllOnFocus="true"
+                    android:textColor="?android:attr/textColorPrimary"
                     android:textSize="@dimen/font_size_14" />
 
             </android.support.design.widget.TextInputLayout>
@@ -209,6 +225,7 @@
                     android:inputType="text|textCapSentences"
                     android:maxLines="1"
                     android:selectAllOnFocus="true"
+                    android:textColor="?android:attr/textColorPrimary"
                     android:textSize="@dimen/font_size_14" />
 
             </android.support.design.widget.TextInputLayout>
@@ -231,6 +248,7 @@
                         android:inputType="text|textCapSentences"
                         android:maxLines="1"
                         android:selectAllOnFocus="true"
+                        android:textColor="?android:attr/textColorPrimary"
                         android:textSize="@dimen/font_size_14" />
 
                 </android.support.design.widget.TextInputLayout>
@@ -259,6 +277,7 @@
                     android:inputType="text|textCapSentences"
                     android:maxLines="1"
                     android:selectAllOnFocus="true"
+                    android:textColor="?android:attr/textColorPrimary"
                     android:textSize="@dimen/font_size_14" />
 
             </android.support.design.widget.TextInputLayout>
@@ -275,6 +294,7 @@
                     android:inputType="text|textCapSentences"
                     android:maxLines="1"
                     android:selectAllOnFocus="true"
+                    android:textColor="?android:attr/textColorPrimary"
                     android:textSize="@dimen/font_size_14" />
 
             </android.support.design.widget.TextInputLayout>

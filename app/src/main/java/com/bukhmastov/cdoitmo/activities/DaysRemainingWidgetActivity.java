@@ -228,7 +228,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
         });
     }
     private void setText(final int layout, final String text) {
-        Static.T.runThread(new Runnable() {
+        Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 TextView textView = (TextView) findViewById(layout);
@@ -248,7 +248,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
         });
     }
     private void setText(final int container, final int layout, final String text) {
-        Static.T.runThread(new Runnable() {
+        Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -274,7 +274,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
         });
     }
     private void message(final String text) {
-        Static.T.runThread(new Runnable() {
+        Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 draw(R.layout.layout_days_remaining_widget_message);
@@ -287,7 +287,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
         });
     }
     private void draw(final int layoutId) {
-        Static.T.runThread(new Runnable() {
+        Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 try {

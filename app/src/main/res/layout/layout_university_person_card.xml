@@ -14,7 +14,7 @@
         android:backgroundTintMode="src_over"
         android:elevation="4dp">
 
-        <LinearLayout
+        <RelativeLayout
             android:id="@+id/linearLayout"
             android:layout_width="match_parent"
             android:layout_height="56dp"
@@ -24,6 +24,7 @@
                 android:id="@+id/back"
                 android:layout_width="56dp"
                 android:layout_height="56dp"
+                android:layout_alignParentStart="true"
                 android:background="?attr/selectableItemBackgroundBorderless">
 
                 <ImageView
@@ -35,7 +36,24 @@
 
             </FrameLayout>
 
-        </LinearLayout>
+            <FrameLayout
+                android:id="@+id/web"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_alignParentEnd="true"
+                android:background="?attr/selectableItemBackgroundBorderless">
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:padding="16dp"
+                    app:srcCompat="@drawable/ic_web"
+                    android:tint="#FFFFFF"/>
+
+            </FrameLayout>
+
+        </RelativeLayout>
 
         <LinearLayout
             android:layout_width="match_parent"

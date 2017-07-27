@@ -7,6 +7,7 @@
         <attr name="colorPrimaryOpacity" format="color" />
         <attr name="textColorPassed" format="color" />
         <attr name="colorSeparator" format="color" />
+        <attr name="colorSeparatorDark" format="color" />
         <attr name="colorBackgroundRefresh" format="color" />
         <attr name="colorBackgroundSection" format="color" />
         <attr name="colorBackgroundSnackBar" format="color" />
