@@ -30,16 +30,16 @@ public class TimeRemainingWidget {
     private response delegate;
     private Executor executor;
 
-    public TimeRemainingWidget(response delegate){
+    public TimeRemainingWidget(response delegate) {
         this.delegate = delegate;
     }
 
-    public void start(Context context, JSONObject schedule){
+    public void start(Context context, JSONObject schedule) {
         Log.v(TAG, "start");
         executor = new Executor(context, schedule);
     }
 
-    public void stop(){
+    public void stop() {
         Log.v(TAG, "stop");
         if (executor != null) {
             executor.cancel();
@@ -65,7 +65,8 @@ public class TimeRemainingWidget {
             this.running = true;
             start();
         }
-        public void run(){
+
+        public void run() {
             while (!Thread.currentThread().isInterrupted() && running) {
                 try {
                     long ts = System.currentTimeMillis();
@@ -137,13 +138,13 @@ public class TimeRemainingWidget {
             }
             if (!Thread.currentThread().isInterrupted() || running) this.cancel();
         }
-        public void cancel(){
+        public void cancel() {
             running = false;
             interrupt();
             delegate.onCancelled();
             Log.i(TAG, "interrupted");
         }
-        private int getWeek(){
+        private int getWeek() {
             try {
                 String weekStr = Storage.file.general.get(context, "user#week");
                 if (!Objects.equals(weekStr, "")) {
@@ -161,7 +162,7 @@ public class TimeRemainingWidget {
             }
             return -1;
         }
-        private int getDayOfTheWeek(int day_of_the_week){
+        private int getDayOfTheWeek(int day_of_the_week) {
             switch (day_of_the_week) {
                 case Calendar.MONDAY:
                     day_of_the_week = 0;
@@ -190,7 +191,7 @@ public class TimeRemainingWidget {
             }
             return day_of_the_week;
         }
-        private String ts2date(long ts){
+        private String ts2date(long ts) {
             int time = (int) (ts / 1000L);
             int hours = time / 3600;
             int minutes = (time - hours * 3600) / 60;
@@ -213,9 +214,8 @@ public class TimeRemainingWidget {
             }
             return response;
         }
-        private String ldgZero(int time){
+        private String ldgZero(int time) {
             return time % 10 == time ? "0" + String.valueOf(time) : String.valueOf(time);
         }
     }
-
 }

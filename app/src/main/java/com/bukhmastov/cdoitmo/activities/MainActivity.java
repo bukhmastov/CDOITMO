@@ -31,6 +31,7 @@ import com.bukhmastov.cdoitmo.utils.Storage;
 public class MainActivity extends ConnectedActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "MainActivity";
+    private MainActivity self = this;
     private static final String STATE_SELECTED_SELECTION = "selectedSection";
     public static int selectedSection = R.id.nav_e_register;
     public static Menu menu;
@@ -133,7 +134,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
     }
 
     @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+    public boolean onNavigationItemSelected(@NonNull final MenuItem item) {
         Log.v(TAG, "NavigationItemSelected " + item.getTitle());
         DrawerLayout drawer_layout = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer_layout != null) drawer_layout.closeDrawer(GravityCompat.START);
@@ -186,85 +187,100 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
         super.onSaveInstanceState(savedInstanceState);
     }
 
-    private void authorize(int state){
-        Log.v(TAG, "authorize | state=" + state);
-        loaded = false;
-        Intent intent = new Intent(this, LoginActivity.class);
-        intent.putExtra("state", state);
-        startActivity(intent);
+    private void authorize(final int state){
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "authorize | state=" + state);
+                loaded = false;
+                Intent intent = new Intent(self, LoginActivity.class);
+                intent.putExtra("state", state);
+                startActivity(intent);
+            }
+        });
     }
     private void authorized(){
-        Log.v(TAG, "authorized");
-        if (!loaded) {
-            loaded = true;
-            if (Static.protocolTracker == null) Static.protocolTracker = new ProtocolTracker(this);
-            Static.protocolTracker.check();
-            selectSection(selectedSection);
-            Static.NavigationMenu.displayUserData(this, (NavigationView) findViewById(R.id.nav_view));
-            Static.NavigationMenu.displayUserAvatar(this, (NavigationView) findViewById(R.id.nav_view));
-            Static.NavigationMenu.snackbarOffline(this);
-            Static.NavigationMenu.drawOffline(menu);
-        }
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "authorized");
+                if (!loaded) {
+                    loaded = true;
+                    if (Static.protocolTracker == null) Static.protocolTracker = new ProtocolTracker(self);
+                    Static.protocolTracker.check();
+                    selectSection(selectedSection);
+                    Static.NavigationMenu.displayUserData(self, (NavigationView) findViewById(R.id.nav_view));
+                    Static.NavigationMenu.displayUserAvatar(self, (NavigationView) findViewById(R.id.nav_view));
+                    Static.NavigationMenu.snackbarOffline(self);
+                    Static.NavigationMenu.drawOffline(menu);
+                }
+            }
+        });
     }
 
     private void selectSection(final int section){
-        switch (section) {
-            case R.id.nav_e_register:
-            case R.id.nav_protocol_changes:
-            case R.id.nav_rating:
-            case R.id.nav_schedule:
-            case R.id.nav_schedule_exams:
-            case R.id.nav_room101:
-            case R.id.nav_university: {
-                Class connectedFragmentClass;
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
                 switch (section) {
-                    default:
-                    case R.id.nav_e_register: connectedFragmentClass = ERegisterFragment.class; break;
-                    case R.id.nav_protocol_changes: connectedFragmentClass = ProtocolFragment.class; break;
-                    case R.id.nav_rating: connectedFragmentClass = RatingFragment.class; break;
-                    case R.id.nav_schedule: connectedFragmentClass = ScheduleLessonsFragment.class; break;
-                    case R.id.nav_schedule_exams: connectedFragmentClass = ScheduleExamsFragment.class; break;
-                    case R.id.nav_room101: connectedFragmentClass = Room101Fragment.class; break;
-                    case R.id.nav_university: connectedFragmentClass = UniversityFragment.class; break;
-                }
-                if (openFragment(TYPE.root, connectedFragmentClass, null)) {
-                    ((NavigationView) findViewById(R.id.nav_view)).setCheckedItem(section);
-                    selectedSection = section;
-                } else {
-                    Static.snackBar(this, getString(R.string.failed_to_open_fragment), getString(R.string.redo), new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            selectSection(section);
+                    case R.id.nav_e_register:
+                    case R.id.nav_protocol_changes:
+                    case R.id.nav_rating:
+                    case R.id.nav_schedule:
+                    case R.id.nav_schedule_exams:
+                    case R.id.nav_room101:
+                    case R.id.nav_university: {
+                        Class connectedFragmentClass;
+                        switch (section) {
+                            default:
+                            case R.id.nav_e_register: connectedFragmentClass = ERegisterFragment.class; break;
+                            case R.id.nav_protocol_changes: connectedFragmentClass = ProtocolFragment.class; break;
+                            case R.id.nav_rating: connectedFragmentClass = RatingFragment.class; break;
+                            case R.id.nav_schedule: connectedFragmentClass = ScheduleLessonsFragment.class; break;
+                            case R.id.nav_schedule_exams: connectedFragmentClass = ScheduleExamsFragment.class; break;
+                            case R.id.nav_room101: connectedFragmentClass = Room101Fragment.class; break;
+                            case R.id.nav_university: connectedFragmentClass = UniversityFragment.class; break;
                         }
-                    });
-                }
-                break;
-            }
-            case R.id.nav_shortcuts:
-                if (openActivityOrFragment(TYPE.stackable, ShortcutCreateFragment.class, null)) {
-                    if (Static.tablet) {
-                        Menu menu = ((NavigationView) findViewById(R.id.nav_view)).getMenu();
-                        for (int i = 0; i < menu.size(); i++) {
-                            menu.getItem(i).setChecked(false);
+                        if (openFragment(TYPE.root, connectedFragmentClass, null)) {
+                            ((NavigationView) findViewById(R.id.nav_view)).setCheckedItem(section);
+                            selectedSection = section;
+                        } else {
+                            Static.snackBar(self, getString(R.string.failed_to_open_fragment), getString(R.string.redo), new View.OnClickListener() {
+                                @Override
+                                public void onClick(View view) {
+                                    selectSection(section);
+                                }
+                            });
                         }
+                        break;
+                    }
+                    case R.id.nav_shortcuts:
+                        if (openActivityOrFragment(TYPE.stackable, ShortcutCreateFragment.class, null)) {
+                            if (Static.tablet) {
+                                Menu menu = ((NavigationView) findViewById(R.id.nav_view)).getMenu();
+                                for (int i = 0; i < menu.size(); i++) {
+                                    menu.getItem(i).setChecked(false);
+                                }
+                            }
+                        }
+                        break;
+                    case R.id.nav_settings: startActivity(new Intent(self, SettingsActivity.class)); break;
+                    case R.id.nav_enable_offline_mode:
+                    case R.id.nav_disable_offline_mode:
+                    case R.id.nav_change_account:
+                    case R.id.nav_logout: {
+                        loaded = false;
+                        switch (section) {
+                            case R.id.nav_enable_offline_mode: authorize(LoginActivity.SIGNAL_GO_OFFLINE); break;
+                            case R.id.nav_disable_offline_mode: authorize(LoginActivity.SIGNAL_RECONNECT); break;
+                            case R.id.nav_change_account: authorize(LoginActivity.SIGNAL_CHANGE_ACCOUNT); break;
+                            case R.id.nav_logout: authorize(LoginActivity.SIGNAL_LOGOUT); break;
+                        }
+                        break;
                     }
                 }
-                break;
-            case R.id.nav_settings: startActivity(new Intent(this, SettingsActivity.class)); break;
-            case R.id.nav_enable_offline_mode:
-            case R.id.nav_disable_offline_mode:
-            case R.id.nav_change_account:
-            case R.id.nav_logout: {
-                loaded = false;
-                switch (section) {
-                    case R.id.nav_enable_offline_mode: authorize(LoginActivity.SIGNAL_GO_OFFLINE); break;
-                    case R.id.nav_disable_offline_mode: authorize(LoginActivity.SIGNAL_RECONNECT); break;
-                    case R.id.nav_change_account: authorize(LoginActivity.SIGNAL_CHANGE_ACCOUNT); break;
-                    case R.id.nav_logout: authorize(LoginActivity.SIGNAL_LOGOUT); break;
-                }
-                break;
             }
-        }
+        });
     }
 
     @Override

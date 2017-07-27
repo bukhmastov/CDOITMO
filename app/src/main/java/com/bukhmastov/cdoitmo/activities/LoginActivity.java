@@ -1,6 +1,5 @@
 package com.bukhmastov.cdoitmo.activities;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -36,6 +35,7 @@ import java.util.Objects;
 public class LoginActivity extends AppCompatActivity {
 
     private static final String TAG = "LoginActivity";
+    private LoginActivity self = this;
     public static final int SIGNAL_LOGIN = 0;
     public static final int SIGNAL_RECONNECT = 1;
     public static final int SIGNAL_GO_OFFLINE = 2;
@@ -101,351 +101,413 @@ public class LoginActivity extends AppCompatActivity {
         super.attachBaseContext(CtxWrapper.wrap(context));
     }
 
-    private void route(int signal){
-        Log.i(TAG, "signal = " + signal);
-        switch (signal) {
-            case SIGNAL_LOGIN:
-                Static.OFFLINE_MODE = false;
-                show();
-                break;
-            case SIGNAL_RECONNECT:
-                Static.OFFLINE_MODE = false;
-                Static.authorized = false;
-                show();
-                break;
-            case SIGNAL_GO_OFFLINE:
-                Static.OFFLINE_MODE = true;
-                authorized(false);
-                break;
-            case SIGNAL_CHANGE_ACCOUNT:
-                Static.OFFLINE_MODE = false;
-                Static.logoutCurrent(this);
-                Static.authorized = false;
-                show();
-                break;
-            case SIGNAL_LOGOUT:
-                Static.OFFLINE_MODE = false;
-                String current_login = Storage.file.general.get(this, "users#current_login");
-                if (!current_login.isEmpty()) {
-                    logout(current_login);
-                } else {
-                    show();
+    private void route(final int signal) {
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.i(TAG, "signal = " + signal);
+                switch (signal) {
+                    case SIGNAL_LOGIN: {
+                        Static.OFFLINE_MODE = false;
+                        show();
+                        break;
+                    }
+                    case SIGNAL_RECONNECT: {
+                        Static.OFFLINE_MODE = false;
+                        Static.authorized = false;
+                        show();
+                        break;
+                    }
+                    case SIGNAL_GO_OFFLINE: {
+                        Static.OFFLINE_MODE = true;
+                        authorized(false);
+                        break;
+                    }
+                    case SIGNAL_CHANGE_ACCOUNT: {
+                        Static.OFFLINE_MODE = false;
+                        Static.logoutCurrent(self);
+                        Static.authorized = false;
+                        show();
+                        break;
+                    }
+                    case SIGNAL_LOGOUT: {
+                        Static.OFFLINE_MODE = false;
+                        String current_login = Storage.file.general.get(self, "users#current_login");
+                        if (!current_login.isEmpty()) {
+                            logout(current_login);
+                        } else {
+                            show();
+                        }
+                        break;
+                    }
+                    case SIGNAL_CREDENTIALS_REQUIRED: {
+                        Static.OFFLINE_MODE = false;
+                        Storage.file.perm.delete(self, "user#jsessionid");
+                        Static.logoutCurrent(self);
+                        Static.authorized = false;
+                        Static.snackBar(self, getString(R.string.required_login_password));
+                        show();
+                        break;
+                    }
+                    case SIGNAL_CREDENTIALS_FAILED: {
+                        Static.OFFLINE_MODE = false;
+                        Storage.file.perm.delete(self, "user#jsessionid");
+                        Storage.file.perm.delete(self, "user#password");
+                        Static.logoutCurrent(self);
+                        Static.authorized = false;
+                        Static.snackBar(self, getString(R.string.invalid_login_password));
+                        show();
+                        break;
+                    }
+                    default: {
+                        Static.OFFLINE_MODE = false;
+                        Log.wtf(TAG, "unsupported signal: signal=" + signal);
+                        show();
+                        break;
+                    }
                 }
-                break;
-            case SIGNAL_CREDENTIALS_REQUIRED:
-                Static.OFFLINE_MODE = false;
-                Storage.file.perm.delete(this, "user#jsessionid");
-                Static.logoutCurrent(this);
-                Static.authorized = false;
-                Static.snackBar(this, getString(R.string.required_login_password));
-                show();
-                break;
-            case SIGNAL_CREDENTIALS_FAILED:
-                Static.OFFLINE_MODE = false;
-                Storage.file.perm.delete(this, "user#jsessionid");
-                Storage.file.perm.delete(this, "user#password");
-                Static.logoutCurrent(this);
-                Static.authorized = false;
-                Static.snackBar(this, getString(R.string.invalid_login_password));
-                show();
-                break;
-            default:
-                Static.OFFLINE_MODE = false;
-                Log.wtf(TAG, "unsupported signal: signal=" + signal);
-                show();
-                break;
-        }
+            }
+        });
     }
 
-    private void show(){
-        Log.v(TAG, "show");
-        try {
-            String current_login = Storage.file.general.get(this, "users#current_login");
-            if (!current_login.isEmpty()) {
-                String login = Storage.file.perm.get(this, "user#login");
-                String password = Storage.file.perm.get(this, "user#password");
-                String role = Storage.file.perm.get(this, "user#role");
-                auth(login, password, role, false);
-            } else {
-                LinearLayout login_tiles_container = new LinearLayout(this);
-                login_tiles_container.setOrientation(LinearLayout.VERTICAL);
-                login_tiles_container.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                FrameLayout layout_login_new_user_tile = (FrameLayout) inflate(R.layout.layout_login_new_user_tile);
-                final EditText input_login = (EditText) layout_login_new_user_tile.findViewById(R.id.input_login);
-                final EditText input_password = (EditText) layout_login_new_user_tile.findViewById(R.id.input_password);
-                layout_login_new_user_tile.findViewById(R.id.login).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Log.v(TAG, "new_user_tile login clicked");
-                        String login = "";
-                        String password = "";
-                        if (input_login != null) login = input_login.getText().toString();
-                        if (input_password != null) password = input_password.getText().toString();
-                        auth(login, password, "student", true);
-                    }
-                });
-                login_tiles_container.addView(layout_login_new_user_tile);
-                JSONArray accounts = LoginActivity.accounts.get(this);
-                for (int i = 0; i < accounts.length(); i++) {
-                    try {
-                        Log.v(TAG, "account in accounts " + accounts.getString(i));
-                        Storage.file.general.put(this, "users#current_login", accounts.getString(i));
-                        final String login = Storage.file.perm.get(this, "user#login");
-                        final String password = Storage.file.perm.get(this, "user#password");
-                        final String role = Storage.file.perm.get(this, "user#role");
-                        final String name = Storage.file.perm.get(this, "user#name").trim();
-                        Storage.file.general.delete(this, "users#current_login");
-                        ViewGroup layout_login_user_tile = (ViewGroup) inflate(R.layout.layout_login_user_tile);
-                        View nameView = layout_login_user_tile.findViewById(R.id.name);
-                        View descView = layout_login_user_tile.findViewById(R.id.desc);
-                        String desc = "";
-                        if (!login.isEmpty()) {
-                            desc += login;
-                        }
-                        switch (role) {
-                            case "student": {
-                                if (desc.isEmpty()) {
-                                    desc += getString(R.string.student);
+    private void show() {
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "show");
+                try {
+                    String current_login = Storage.file.general.get(self, "users#current_login");
+                    if (!current_login.isEmpty()) {
+                        String login = Storage.file.perm.get(self, "user#login");
+                        String password = Storage.file.perm.get(self, "user#password");
+                        String role = Storage.file.perm.get(self, "user#role");
+                        auth(login, password, role, false);
+                    } else {
+                        LinearLayout login_tiles_container = new LinearLayout(self);
+                        login_tiles_container.setOrientation(LinearLayout.VERTICAL);
+                        login_tiles_container.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                        FrameLayout layout_login_new_user_tile = (FrameLayout) inflate(R.layout.layout_login_new_user_tile);
+                        final EditText input_login = (EditText) layout_login_new_user_tile.findViewById(R.id.input_login);
+                        final EditText input_password = (EditText) layout_login_new_user_tile.findViewById(R.id.input_password);
+                        layout_login_new_user_tile.findViewById(R.id.login).setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Log.v(TAG, "new_user_tile login clicked");
+                                String login = "";
+                                String password = "";
+                                if (input_login != null) login = input_login.getText().toString();
+                                if (input_password != null) password = input_password.getText().toString();
+                                auth(login, password, "student", true);
+                            }
+                        });
+                        login_tiles_container.addView(layout_login_new_user_tile);
+                        JSONArray accounts = LoginActivity.accounts.get(self);
+                        for (int i = 0; i < accounts.length(); i++) {
+                            try {
+                                Log.v(TAG, "account in accounts " + accounts.getString(i));
+                                Storage.file.general.put(self, "users#current_login", accounts.getString(i));
+                                final String login = Storage.file.perm.get(self, "user#login");
+                                final String password = Storage.file.perm.get(self, "user#password");
+                                final String role = Storage.file.perm.get(self, "user#role");
+                                final String name = Storage.file.perm.get(self, "user#name").trim();
+                                Storage.file.general.delete(self, "users#current_login");
+                                ViewGroup layout_login_user_tile = (ViewGroup) inflate(R.layout.layout_login_user_tile);
+                                View nameView = layout_login_user_tile.findViewById(R.id.name);
+                                View descView = layout_login_user_tile.findViewById(R.id.desc);
+                                String desc = "";
+                                if (!login.isEmpty()) {
+                                    desc += login;
+                                }
+                                switch (role) {
+                                    case "student": {
+                                        desc += desc.isEmpty() ? getString(R.string.student) : " (" + getString(R.string.student) + ")";
+                                        break;
+                                    }
+                                    default: {
+                                        desc += desc.isEmpty() ? role : " (" + role + ")";
+                                        break;
+                                    }
+                                }
+                                if (!name.isEmpty()) {
+                                    if (nameView != null) {
+                                        ((TextView) nameView).setText(name);
+                                    }
+                                    if (descView != null) {
+                                        ((TextView) descView).setText(desc);
+                                    }
                                 } else {
-                                    desc += " (" + getString(R.string.student) + ")";
+                                    if (nameView != null) {
+                                        ((TextView) nameView).setText(desc);
+                                    }
+                                    if (descView != null) {
+                                        Static.removeView(descView);
+                                    }
                                 }
-                                break;
+                                layout_login_user_tile.findViewById(R.id.logout).setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        Log.v(TAG, "user_tile logout clicked");
+                                        logout(login);
+                                    }
+                                });
+                                layout_login_user_tile.findViewById(R.id.auth).setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        Log.v(TAG, "user_tile login clicked");
+                                        auth(login, password, role, false);
+                                    }
+                                });
+                                login_tiles_container.addView(layout_login_user_tile);
+                            } catch (JSONException e) {
+                                Static.error(e);
                             }
                         }
-                        if (!name.isEmpty()) {
-                            if (nameView != null) {
-                                ((TextView) nameView).setText(name);
-                            }
-                            if (descView != null) {
-                                ((TextView) descView).setText(desc);
-                            }
-                        } else {
-                            if (nameView != null) {
-                                ((TextView) nameView).setText(desc);
-                            }
-                            if (descView != null) {
-                                Static.removeView(descView);
-                            }
-                        }
-                        layout_login_user_tile.findViewById(R.id.logout).setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                Log.v(TAG, "user_tile logout clicked");
-                                logout(login);
-                            }
-                        });
-                        layout_login_user_tile.findViewById(R.id.auth).setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                Log.v(TAG, "user_tile login clicked");
-                                auth(login, password, role, false);
-                            }
-                        });
-                        login_tiles_container.addView(layout_login_user_tile);
-                    } catch (JSONException e) {
-                        Static.error(e);
+                        draw(login_tiles_container);
                     }
+                } catch (Exception e) {
+                    Static.error(e);
+                    Static.snackBar(self, getString(R.string.something_went_wrong));
                 }
-                draw(login_tiles_container);
             }
-        } catch (Exception e) {
-            Static.error(e);
-            Static.snackBar(this, getString(R.string.something_went_wrong));
-        }
+        });
     }
-    private void auth(final String login, String password, String role, final boolean newUser){
-        Log.v(TAG, "auth | login=" + login + " role=" + role + " newUser=" + (newUser ? "true" : "false"));
-        if (!login.isEmpty() && !password.isEmpty()) {
-            if (Objects.equals(login, "general")) {
-                Log.w(TAG, "auth | got login=general that does not supported");
-                Static.snackBar(this, getString(R.string.wrong_login_general));
-                return;
-            }
-            final Activity activity = this;
-            Storage.file.general.put(this, "users#current_login", login);
-            Storage.file.perm.put(this, "user#login", login);
-            Storage.file.perm.put(this, "user#password", password);
-            Storage.file.perm.put(this, "user#role", role);
-            DeIfmoClient.check(this, new DeIfmoClientResponseHandler() {
-                @Override
-                public void onSuccess(int statusCode, String response) {
-                    Log.v(TAG, "auth | check | success");
-                    authorized(newUser);
-                }
-                @Override
-                public void onProgress(int state) {
-                    Log.v(TAG, "auth | check | progress " + state);
-                    draw(R.layout.state_auth);
-                    View interrupt_auth = findViewById(R.id.interrupt_auth);
-                    if (interrupt_auth != null) {
-                        interrupt_auth.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                Log.v(TAG, "auth | auth interrupted, going offline");
-                                if (loginRequestHandle != null) {
-                                    loginRequestHandle.cancel(true);
-                                    loginRequestHandle = null;
+    private void auth(final String login, final String password, final String role, final boolean newUser) {
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "auth | login=" + login + " role=" + role + " newUser=" + (newUser ? "true" : "false"));
+                if (!login.isEmpty() && !password.isEmpty()) {
+                    if (Objects.equals(login, "general")) {
+                        Log.w(TAG, "auth | got login=general that does not supported");
+                        Static.snackBar(self, getString(R.string.wrong_login_general));
+                        return;
+                    }
+                    Storage.file.general.put(self, "users#current_login", login);
+                    Storage.file.perm.put(self, "user#login", login);
+                    Storage.file.perm.put(self, "user#password", password);
+                    Storage.file.perm.put(self, "user#role", role);
+                    DeIfmoClient.check(self, new DeIfmoClientResponseHandler() {
+                        @Override
+                        public void onSuccess(final int statusCode, final String response) {
+                            Log.v(TAG, "auth | check | success");
+                            authorized(newUser);
+                        }
+                        @Override
+                        public void onProgress(final int state) {
+                            Static.T.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.v(TAG, "auth | check | progress " + state);
+                                    draw(R.layout.state_auth);
+                                    View interrupt_auth = findViewById(R.id.interrupt_auth);
+                                    if (interrupt_auth != null) {
+                                        interrupt_auth.setOnClickListener(new View.OnClickListener() {
+                                            @Override
+                                            public void onClick(View v) {
+                                                Log.v(TAG, "auth | auth interrupted, going offline");
+                                                if (loginRequestHandle != null) {
+                                                    loginRequestHandle.cancel(true);
+                                                    loginRequestHandle = null;
+                                                }
+                                                route(SIGNAL_GO_OFFLINE);
+                                            }
+                                        });
+                                    }
+                                    TextView loading_message = (TextView) findViewById(R.id.loading_message);
+                                    if (loading_message != null) {
+                                        switch (state) {
+                                            case DeIfmoClient.STATE_CHECKING: loading_message.setText(R.string.auth_check); break;
+                                            case DeIfmoClient.STATE_AUTHORIZATION: loading_message.setText(R.string.authorization); break;
+                                            case DeIfmoClient.STATE_AUTHORIZED: loading_message.setText(R.string.authorized); break;
+                                        }
+                                    }
                                 }
-                                route(SIGNAL_GO_OFFLINE);
+                            });
+                        }
+                        @Override
+                        public void onFailure(final int statusCode, final int state) {
+                            Static.T.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.v(TAG, "auth | check | failure " + state);
+                                    switch (state) {
+                                        case DeIfmoClient.FAILED_OFFLINE:
+                                            route(SIGNAL_GO_OFFLINE);
+                                            break;
+                                        case DeIfmoClient.FAILED_TRY_AGAIN:
+                                        case DeIfmoClient.FAILED_AUTH_TRY_AGAIN:
+                                            Static.snackBar(self, getString(R.string.auth_failed));
+                                            route(SIGNAL_CHANGE_ACCOUNT);
+                                            break;
+                                        case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
+                                            Static.snackBar(self, getString(R.string.required_login_password));
+                                            logoutDone(login, false);
+                                            route(SIGNAL_CHANGE_ACCOUNT);
+                                            break;
+                                        case DeIfmoClient.FAILED_AUTH_CREDENTIALS_FAILED:
+                                            Static.snackBar(self, getString(R.string.invalid_login_password));
+                                            logoutDone(login, false);
+                                            route(SIGNAL_CHANGE_ACCOUNT);
+                                            break;
+                                    }
+                                }
+                            });
+                        }
+                        @Override
+                        public void onNewHandle(RequestHandle requestHandle) {
+                            loginRequestHandle = requestHandle;
+                        }
+                    });
+                } else {
+                    Log.v(TAG, "auth | empty fields");
+                    Static.snackBar(self, getString(R.string.fill_fields));
+                }
+            }
+        });
+    }
+    private void authorized(final boolean newUser) {
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "authorized | newUser=" + (newUser ? "true" : "false"));
+                String current_login = Storage.file.general.get(self, "users#current_login");
+                if (!current_login.isEmpty()) {
+                    accounts.push(self, current_login);
+                    Static.authorized = true;
+                    Static.protocolTracker = new ProtocolTracker(self);
+                    if (newUser) Static.protocolChangesTrackSetup(self, 0);
+                    finish();
+                } else {
+                    Log.w(TAG, "authorized | current_login is empty");
+                    Static.snackBar(self, getString(R.string.something_went_wrong));
+                    show();
+                }
+            }
+        });
+    }
+    private void logout(final String login) {
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "logout | login=" + login);
+                Storage.file.general.put(self, "users#current_login", login);
+                DeIfmoClient.get(self, "servlet/distributedCDE?Rule=SYSTEM_EXIT", null, new DeIfmoClientResponseHandler() {
+                    @Override
+                    public void onSuccess(int statusCode, String response) {
+                        Log.v(TAG, "logout | success");
+                        logoutDone(login, true);
+                    }
+                    @Override
+                    public void onProgress(final int state) {
+                        Static.T.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Log.v(TAG, "logout | progress " + state);
+                                draw(R.layout.state_auth);
+                                View interrupt_auth = findViewById(R.id.interrupt_auth);
+                                if (interrupt_auth != null) {
+                                    Static.removeView(interrupt_auth);
+                                }
+                                TextView loading_message = (TextView) findViewById(R.id.loading_message);
+                                if (loading_message != null) {
+                                    loading_message.setText(getString(R.string.exiting) + "\n" + Storage.file.perm.get(getBaseContext(), "user#name"));
+                                }
                             }
                         });
                     }
-                    TextView loading_message = (TextView) findViewById(R.id.loading_message);
-                    if (loading_message != null) {
-                        switch (state) {
-                            case DeIfmoClient.STATE_CHECKING: loading_message.setText(R.string.auth_check); break;
-                            case DeIfmoClient.STATE_AUTHORIZATION: loading_message.setText(R.string.authorization); break;
-                            case DeIfmoClient.STATE_AUTHORIZED: loading_message.setText(R.string.authorized); break;
-                        }
+                    @Override
+                    public void onFailure(int statusCode, int state) {
+                        Log.v(TAG, "logout | failure " + state);
+                        logoutDone(login, true);
                     }
-                }
-                @Override
-                public void onFailure(int state) {
-                    Log.v(TAG, "auth | check | failure " + state);
-                    switch (state) {
-                        case DeIfmoClient.FAILED_OFFLINE:
-                            route(SIGNAL_GO_OFFLINE);
-                            break;
-                        case DeIfmoClient.FAILED_TRY_AGAIN:
-                        case DeIfmoClient.FAILED_AUTH_TRY_AGAIN:
-                            Static.snackBar(activity, getString(R.string.auth_failed));
-                            route(SIGNAL_CHANGE_ACCOUNT);
-                            break;
-                        case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
-                            Static.snackBar(activity, getString(R.string.required_login_password));
-                            logoutDone(login, false);
-                            route(SIGNAL_CHANGE_ACCOUNT);
-                            break;
-                        case DeIfmoClient.FAILED_AUTH_CREDENTIALS_FAILED:
-                            Static.snackBar(activity, getString(R.string.invalid_login_password));
-                            logoutDone(login, false);
-                            route(SIGNAL_CHANGE_ACCOUNT);
-                            break;
-                    }
-                }
-                @Override
-                public void onNewHandle(RequestHandle requestHandle) {
-                    loginRequestHandle = requestHandle;
-                }
-            });
-        } else {
-            Log.v(TAG, "auth | empty fields");
-            Static.snackBar(this, getString(R.string.fill_fields));
-        }
-    }
-    private void authorized(boolean newUser){
-        Log.v(TAG, "authorized | newUser=" + (newUser ? "true" : "false"));
-        String current_login = Storage.file.general.get(this, "users#current_login");
-        if (!current_login.isEmpty()) {
-            accounts.push(this, current_login);
-            Static.authorized = true;
-            Static.protocolTracker = new ProtocolTracker(this);
-            if (newUser) Static.protocolChangesTrackSetup(this, 0);
-            finish();
-        } else {
-            Log.w(TAG, "authorized | current_login is empty");
-            Static.snackBar(this, getString(R.string.something_went_wrong));
-            show();
-        }
-    }
-    private void logout(final String login){
-        Log.v(TAG, "logout | login=" + login);
-        Storage.file.general.put(this, "users#current_login", login);
-        DeIfmoClient.get(this, "servlet/distributedCDE?Rule=SYSTEM_EXIT", null, new DeIfmoClientResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, String response) {
-                Log.v(TAG, "logout | success");
-                logoutDone(login, true);
+                    @Override
+                    public void onNewHandle(RequestHandle requestHandle) {}
+                }, false);
             }
-            @Override
-            public void onProgress(int state) {
-                Log.v(TAG, "logout | progress " + state);
-                draw(R.layout.state_auth);
-                View interrupt_auth = findViewById(R.id.interrupt_auth);
-                if (interrupt_auth != null) {
-                    Static.removeView(interrupt_auth);
-                }
-                TextView loading_message = (TextView) findViewById(R.id.loading_message);
-                if (loading_message != null) {
-                    loading_message.setText(getString(R.string.exiting) + "\n" + Storage.file.perm.get(getBaseContext(), "user#name"));
-                }
-            }
-            @Override
-            public void onFailure(int state) {
-                Log.v(TAG, "logout | failure " + state);
-                logoutDone(login, true);
-            }
-            @Override
-            public void onNewHandle(RequestHandle requestHandle) {}
-        }, false);
+        });
     }
-    private void logoutDone(String login, boolean showSnackBar){
-        Log.v(TAG, "logoutDone | login=" + login);
-        accounts.remove(this, login);
-        Storage.file.general.put(this, "users#current_login", login);
-        Static.logout(this);
-        if (showSnackBar) Static.snackBar(this, getString(R.string.logged_out));
-        show();
+    private void logoutDone(final String login, final boolean showSnackBar) {
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "logoutDone | login=" + login);
+                accounts.remove(self, login);
+                Storage.file.general.put(self, "users#current_login", login);
+                Static.logout(self);
+                if (showSnackBar) Static.snackBar(self, getString(R.string.logged_out));
+                show();
+            }
+        });
     }
 
     private static class accounts {
         private static final String TAG = "LoginActivity.accounts";
-        private static void push(Context context, String login){
-            Log.v(TAG, "push | login=" + login);
-            String list = Storage.file.general.get(context, "users#list");
-            try {
-                JSONArray accounts;
-                if (list.isEmpty()) {
-                    accounts = new JSONArray();
-                } else {
-                    accounts = new JSONArray(list);
-                }
-                boolean found = false;
-                for (int i = 0; i < accounts.length(); i++) {
-                    if (Objects.equals(accounts.getString(i), login)) {
-                        found = true;
-                        break;
+        private static void push(final Context context, final String login) {
+            Static.T.runThread(new Runnable() {
+                @Override
+                public void run() {
+                    Log.v(TAG, "push | login=" + login);
+                    String list = Storage.file.general.get(context, "users#list");
+                    try {
+                        JSONArray accounts;
+                        if (list.isEmpty()) {
+                            accounts = new JSONArray();
+                        } else {
+                            accounts = new JSONArray(list);
+                        }
+                        boolean found = false;
+                        for (int i = 0; i < accounts.length(); i++) {
+                            if (Objects.equals(accounts.getString(i), login)) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) accounts.put(login);
+                        Storage.file.general.put(context, "users#list", accounts.toString());
+                        Bundle bundle;
+                        bundle = FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_COUNT, accounts.length());
+                        bundle = FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_NEW, found ? "old" : "new", bundle);
+                        FirebaseAnalyticsProvider.logEvent(
+                                context,
+                                FirebaseAnalyticsProvider.Event.LOGIN,
+                                bundle
+                        );
+                    } catch (Exception e) {
+                        Static.error(e);
                     }
                 }
-                if (!found) accounts.put(login);
-                Storage.file.general.put(context, "users#list", accounts.toString());
-                Bundle bundle;
-                bundle = FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_COUNT, accounts.length());
-                bundle = FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_NEW, found ? "old" : "new", bundle);
-                FirebaseAnalyticsProvider.logEvent(
-                        context,
-                        FirebaseAnalyticsProvider.Event.LOGIN,
-                        bundle
-                );
-            } catch (Exception e) {
-                Static.error(e);
-            }
+            });
         }
-        private static void remove(Context context, String login){
-            Log.v(TAG, "remove | login=" + login);
-            String list = Storage.file.general.get(context, "users#list");
-            try {
-                JSONArray accounts;
-                if (list.isEmpty()) {
-                    accounts = new JSONArray();
-                } else {
-                    accounts = new JSONArray(list);
-                }
-                for (int i = 0; i < accounts.length(); i++) {
-                    if (Objects.equals(accounts.getString(i), login)) {
-                        accounts.remove(i);
-                        break;
+        private static void remove(final Context context, final String login) {
+            Static.T.runThread(new Runnable() {
+                @Override
+                public void run() {
+                    Log.v(TAG, "remove | login=" + login);
+                    String list = Storage.file.general.get(context, "users#list");
+                    try {
+                        JSONArray accounts;
+                        if (list.isEmpty()) {
+                            accounts = new JSONArray();
+                        } else {
+                            accounts = new JSONArray(list);
+                        }
+                        for (int i = 0; i < accounts.length(); i++) {
+                            if (Objects.equals(accounts.getString(i), login)) {
+                                accounts.remove(i);
+                                break;
+                            }
+                        }
+                        Storage.file.general.put(context, "users#list", accounts.toString());
+                        FirebaseAnalyticsProvider.logEvent(
+                                context,
+                                FirebaseAnalyticsProvider.Event.LOGOUT,
+                                FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_COUNT, accounts.length())
+                        );
+                    } catch (Exception e) {
+                        Static.error(e);
                     }
                 }
-                Storage.file.general.put(context, "users#list", accounts.toString());
-                FirebaseAnalyticsProvider.logEvent(
-                        context,
-                        FirebaseAnalyticsProvider.Event.LOGOUT,
-                        FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_COUNT, accounts.length())
-                );
-            } catch (Exception e) {
-                Static.error(e);
-            }
+            });
         }
         private static JSONArray get(Context context){
             Log.v(TAG, "get");
@@ -460,30 +522,39 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
+    private void draw(final int layoutId) {
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    ViewGroup vg = ((ViewGroup) findViewById(R.id.login_content));
+                    if (vg != null) {
+                        vg.removeAllViews();
+                        vg.addView(((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                    }
+                } catch (Exception e){
+                    Static.error(e);
+                }
+            }
+        });
+    }
+    private void draw(final View view) {
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    ViewGroup vg = ((ViewGroup) findViewById(R.id.login_content));
+                    if (vg != null) {
+                        vg.removeAllViews();
+                        vg.addView(view);
+                    }
+                } catch (Exception e){
+                    Static.error(e);
+                }
+            }
+        });
+    }
     private View inflate(int layout) throws Exception {
         return ((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layout, null);
     }
-    private void draw(int layoutId){
-        try {
-            ViewGroup vg = ((ViewGroup) findViewById(R.id.login_content));
-            if (vg != null) {
-                vg.removeAllViews();
-                vg.addView(((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-            }
-        } catch (Exception e){
-            Static.error(e);
-        }
-    }
-    private void draw(View view){
-        try {
-            ViewGroup vg = ((ViewGroup) findViewById(R.id.login_content));
-            if (vg != null) {
-                vg.removeAllViews();
-                vg.addView(view);
-            }
-        } catch (Exception e){
-            Static.error(e);
-        }
-    }
-
 }

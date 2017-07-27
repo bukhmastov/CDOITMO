@@ -25,10 +25,10 @@ public class DeIfmoRestClient extends Client {
     public static final int FAILED_OFFLINE = 0;
     public static final int FAILED_TRY_AGAIN = 1;
 
-    public static void get(final Context context, final String url, final RequestParams params, final DeIfmoRestClientResponseHandler responseHandler){
+    public static void get(final Context context, final String url, final RequestParams params, final DeIfmoRestClientResponseHandler responseHandler) {
         get(context, DEFAULT_PROTOCOL, url, params, responseHandler);
     }
-    public static void get(final Context context, final Protocol protocol, final String url, final RequestParams params, final DeIfmoRestClientResponseHandler responseHandler){
+    public static void get(final Context context, final Protocol protocol, final String url, final RequestParams params, final DeIfmoRestClientResponseHandler responseHandler) {
         Log.v(TAG, "get | url=" + url + " | params=" + Static.getSafetyRequestParams(params));
         init();
         if (Static.isOnline(context)) {
@@ -44,7 +44,7 @@ public class DeIfmoRestClient extends Client {
                         responseHandler.onProgress(STATE_HANDLING);
                     }
                     @Override
-                    public void onFailure(int state) {
+                    public void onFailure(int statusCode, int state) {
                         switch (state) {
                             case DeIfmoClient.FAILED_OFFLINE:
                                 state = FAILED_OFFLINE;
@@ -56,7 +56,7 @@ public class DeIfmoRestClient extends Client {
                                 state = FAILED_TRY_AGAIN;
                                 break;
                         }
-                        responseHandler.onFailure(state);
+                        responseHandler.onFailure(statusCode, state);
                     }
                     @Override
                     public void onNewHandle(RequestHandle requestHandle) {
@@ -67,7 +67,7 @@ public class DeIfmoRestClient extends Client {
             }
             responseHandler.onProgress(STATE_HANDLING);
             renewCookie(context);
-            responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(protocol, url), params, new JsonHttpResponseHandler() {
+            responseHandler.onNewHandle(checkHandle(getHttpClient().get(getAbsoluteUrl(protocol, url), params, new JsonHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                     Log.v(TAG, "get | url=" + url + " | success(JSONObject) | statusCode=" + statusCode);
@@ -84,35 +84,34 @@ public class DeIfmoRestClient extends Client {
                 public void onSuccess(int statusCode, Header[] headers, String responseString) {
                     Log.v(TAG, "get | url=" + url + " | success(String)(rather failure) | statusCode=" + statusCode + " | responseString=" + responseString);
                     responseHandler.onNewHandle(null);
-                    responseHandler.onFailure(FAILED_TRY_AGAIN);
+                    responseHandler.onFailure(statusCode, FAILED_TRY_AGAIN);
                 }
                 @Override
                 public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
                     Log.v(TAG, "get | url=" + url + " | failure(JSONObject) | statusCode=" + statusCode + (throwable != null ? " | throwable=" + throwable.getMessage() : "") + (errorResponse != null ? " | response=" + errorResponse.toString() : ""));
                     responseHandler.onNewHandle(null);
-                    responseHandler.onFailure(FAILED_TRY_AGAIN);
+                    responseHandler.onFailure(statusCode, FAILED_TRY_AGAIN);
                 }
                 @Override
                 public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONArray errorResponse) {
                     Log.v(TAG, "get | url=" + url + " | failure(JSONArray) | statusCode=" + statusCode + (throwable != null ? " | throwable=" + throwable.getMessage() : "") + (errorResponse != null ? " | response=" + errorResponse.toString() : ""));
                     responseHandler.onNewHandle(null);
-                    responseHandler.onFailure(FAILED_TRY_AGAIN);
+                    responseHandler.onFailure(statusCode, FAILED_TRY_AGAIN);
                 }
                 @Override
                 public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
                     Log.v(TAG, "get | url=" + url + " | failure(String) | statusCode=" + statusCode + (throwable != null ? " | throwable=" + throwable.getMessage() : "") + (responseString != null ? " | response=" + responseString : ""));
                     responseHandler.onNewHandle(null);
-                    responseHandler.onFailure(FAILED_TRY_AGAIN);
+                    responseHandler.onFailure(statusCode, FAILED_TRY_AGAIN);
                 }
-            }));
+            })));
         } else {
             Log.v(TAG, "get | url=" + url + " | offline");
-            responseHandler.onFailure(FAILED_OFFLINE);
+            responseHandler.onFailure(STATUS_CODE_EMPTY, FAILED_OFFLINE);
         }
     }
 
     private static String getAbsoluteUrl(Protocol protocol, String relativeUrl) {
         return getProtocol(protocol) + BASE_URL + "/" + relativeUrl;
     }
-
 }

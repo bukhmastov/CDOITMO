@@ -22,6 +22,7 @@ import com.bukhmastov.cdoitmo.utils.Storage;
 public class SplashActivity extends AppCompatActivity {
 
     private static final String TAG = "SplashActivity";
+    private SplashActivity self = this;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,25 +42,30 @@ public class SplashActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
-        PreferenceManager.setDefaultValues(this, R.xml.pref_general, false);
-        PreferenceManager.setDefaultValues(this, R.xml.pref_cache, false);
-        PreferenceManager.setDefaultValues(this, R.xml.pref_notifications, false);
-        PreferenceManager.setDefaultValues(this, R.xml.pref_additional, false);
-
-        FirebaseCrashProvider.setEnabled(this);
-        FirebaseAnalyticsProvider.setEnabled(this);
-
-        Wipe.check(this);
-
-        Static.init(this);
-
-        LoginActivity.auto_logout = Storage.pref.get(this, "pref_auto_logout", false);
-
-        FirebaseAnalyticsProvider.logEvent(this, FirebaseAnalyticsProvider.Event.APP_OPEN);
-        FirebaseAnalyticsProvider.setUserProperty(this, FirebaseAnalyticsProvider.Property.THEME, Storage.pref.get(this, "pref_dark_theme", false) ? "dark" : "light");
-
-        loaded();
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                // set default preferences
+                PreferenceManager.setDefaultValues(self, R.xml.pref_general, false);
+                PreferenceManager.setDefaultValues(self, R.xml.pref_cache, false);
+                PreferenceManager.setDefaultValues(self, R.xml.pref_notifications, false);
+                PreferenceManager.setDefaultValues(self, R.xml.pref_additional, false);
+                // enable/disable firebase
+                FirebaseCrashProvider.setEnabled(self);
+                FirebaseAnalyticsProvider.setEnabled(self);
+                // apply compatibility changes
+                Wipe.check(self);
+                // init static variables
+                Static.init(self);
+                // set auto_logout value
+                LoginActivity.auto_logout = Storage.pref.get(self, "pref_auto_logout", false);
+                // firebase events and properties
+                FirebaseAnalyticsProvider.logEvent(self, FirebaseAnalyticsProvider.Event.APP_OPEN);
+                FirebaseAnalyticsProvider.setUserProperty(self, FirebaseAnalyticsProvider.Property.THEME, Storage.pref.get(self, "pref_dark_theme", false) ? "dark" : "light");
+                // all done
+                loaded();
+            }
+        });
     }
 
     @Override
@@ -117,11 +123,15 @@ public class SplashActivity extends AppCompatActivity {
     }
 
     private void loaded() {
-        Intent intent = new Intent(this, MainActivity.class);
-        Bundle extras = getIntent().getExtras();
-        if (extras != null) intent.putExtras(extras);
-        startActivity(intent);
-        finish();
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Intent intent = new Intent(self, MainActivity.class);
+                Bundle extras = getIntent().getExtras();
+                if (extras != null) intent.putExtras(extras);
+                startActivity(intent);
+                finish();
+            }
+        });
     }
-
 }

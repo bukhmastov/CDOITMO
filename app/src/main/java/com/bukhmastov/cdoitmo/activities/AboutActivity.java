@@ -141,5 +141,4 @@ public class AboutActivity extends ConnectedActivity {
     protected int getRootViewId() {
         return R.id.about_content;
     }
-
 }

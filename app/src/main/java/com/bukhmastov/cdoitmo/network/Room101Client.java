@@ -26,16 +26,16 @@ public class Room101Client extends Client {
     public static final int FAILED_EXPECTED_REDIRECTION = 3;
     public static final int STATUS_CODE_EMPTY = -1;
 
-    public static void get(final Context context, final String url, final RequestParams params, final Room101ClientResponseHandler responseHandler){
+    public static void get(final Context context, final String url, final RequestParams params, final Room101ClientResponseHandler responseHandler) {
         get(context, DEFAULT_PROTOCOL, url, params, responseHandler);
     }
-    public static void get(final Context context, final Protocol protocol, final String url, final RequestParams params, final Room101ClientResponseHandler responseHandler){
+    public static void get(final Context context, final Protocol protocol, final String url, final RequestParams params, final Room101ClientResponseHandler responseHandler) {
         Log.v(TAG, "get | url=" + url + " | params=" + Static.getSafetyRequestParams(params));
         init();
         if (Static.isOnline(context)) {
             responseHandler.onProgress(STATE_HANDLING);
             renewCookieRoom101(context);
-            responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(protocol, url), params, new AsyncHttpResponseHandler() {
+            responseHandler.onNewHandle(checkHandle(getHttpClient().get(getAbsoluteUrl(protocol, url), params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                     Log.v(TAG, "get | url=" + url + " | success | statusCode=" + statusCode);
@@ -57,22 +57,22 @@ public class Room101Client extends Client {
                     analyseCookie(context, headers);
                     responseHandler.onFailure(FAILED_TRY_AGAIN, statusCode, headers);
                 }
-            }));
+            })));
         } else {
             Log.v(TAG, "get | url=" + url + " | offline");
             responseHandler.onFailure(FAILED_OFFLINE, STATUS_CODE_EMPTY, null);
         }
     }
-    public static void post(final Context context, final String url, final RequestParams params, final Room101ClientResponseHandler responseHandler){
+    public static void post(final Context context, final String url, final RequestParams params, final Room101ClientResponseHandler responseHandler) {
         post(context, DEFAULT_PROTOCOL, url, params, responseHandler);
     }
-    public static void post(final Context context, final Protocol protocol, final String url, final RequestParams params, final Room101ClientResponseHandler responseHandler){
+    public static void post(final Context context, final Protocol protocol, final String url, final RequestParams params, final Room101ClientResponseHandler responseHandler) {
         Log.v(TAG, "post | url=" + url + " | params=" + Static.getSafetyRequestParams(params));
         init();
         if (Static.isOnline(context)) {
             responseHandler.onProgress(STATE_HANDLING);
             renewCookieRoom101(context);
-            responseHandler.onNewHandle(httpclient.post(getAbsoluteUrl(protocol, url), params, new AsyncHttpResponseHandler() {
+            responseHandler.onNewHandle(checkHandle(getHttpClient().post(getAbsoluteUrl(protocol, url), params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                     Log.v(TAG, "post | url=" + url + " | success | statusCode=" + statusCode);
@@ -94,7 +94,7 @@ public class Room101Client extends Client {
                     analyseCookie(context, headers);
                     responseHandler.onFailure(FAILED_TRY_AGAIN, statusCode, headers);
                 }
-            }));
+            })));
         } else {
             Log.v(TAG, "post | url=" + url + " | offline");
             responseHandler.onFailure(FAILED_OFFLINE, STATUS_CODE_EMPTY, null);
@@ -122,6 +122,8 @@ public class Room101Client extends Client {
         httpclient.removeHeader("Cookie");
         httpclient.addHeader("User-Agent", Static.getUserAgent(context));
         httpclient.addHeader("Cookie", "PHPSESSID=" + Storage.file.perm.get(context, "user#phpsessid") + "; autoexit=true;");
+        httpclientsync.removeHeader("Cookie");
+        httpclientsync.addHeader("User-Agent", Static.getUserAgent(context));
+        httpclientsync.addHeader("Cookie", "PHPSESSID=" + Storage.file.perm.get(context, "user#phpsessid") + "; autoexit=true;");
     }
-
 }

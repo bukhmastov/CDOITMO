@@ -39,14 +39,14 @@ public class Room101ReviewBuilder extends Thread {
     public static final int STATE_LOADING = 1;
     public static final int STATE_DONE = 2;
 
-    public Room101ReviewBuilder(Activity activity, register register, JSONArray sessions, response delegate){
+    public Room101ReviewBuilder(Activity activity, register register, JSONArray sessions, response delegate) {
         this.activity = activity;
         this.register = register;
         this.delegate = delegate;
         this.sessions = sessions;
         this.destiny = activity.getResources().getDisplayMetrics().density;
     }
-    public void run(){
+    public void run() {
         try {
             Log.v(TAG, "started");
             delegate.state(STATE_LOADING, inflate(R.layout.state_loading_compact));
@@ -99,5 +99,4 @@ public class Room101ReviewBuilder extends Thread {
     private View inflate(int layout) throws InflateException {
         return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layout, null);
     }
-
 }

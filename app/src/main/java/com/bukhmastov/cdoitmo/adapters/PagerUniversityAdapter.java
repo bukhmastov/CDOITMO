@@ -70,5 +70,4 @@ public class PagerUniversityAdapter extends FragmentStatePagerAdapter {
         }
         return null;
     }
-
 }

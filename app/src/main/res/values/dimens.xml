@@ -27,6 +27,7 @@
     <dimen name="dimen_16dp">16dp</dimen>
     <dimen name="dp16">16dp</dimen>
     <dimen name="dp42">42dp</dimen>
+    <dimen name="dp60">60dp</dimen>
     <dimen name="bottom_extra_bar_height">40dp</dimen>
 
     <dimen name="rating_detailed_height">60dp</dimen>

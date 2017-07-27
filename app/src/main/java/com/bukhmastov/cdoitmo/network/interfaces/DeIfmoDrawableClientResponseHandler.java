@@ -7,6 +7,6 @@ import com.loopj.android.http.RequestHandle;
 public interface DeIfmoDrawableClientResponseHandler {
     void onSuccess(int statusCode, Drawable drawable);
     void onProgress(int state);
-    void onFailure(int state);
+    void onFailure(int statusCode, int state);
     void onNewHandle(RequestHandle requestHandle);
 }

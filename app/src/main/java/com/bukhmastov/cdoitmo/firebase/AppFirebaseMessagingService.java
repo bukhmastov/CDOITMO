@@ -22,40 +22,49 @@ public class AppFirebaseMessagingService extends FirebaseMessagingService {
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         try {
-            String title = remoteMessage.getNotification().getTitle().trim();
-            String text = remoteMessage.getNotification().getBody().trim();
-            long ts = remoteMessage.getSentTime();
+            RemoteMessage.Notification notification = remoteMessage.getNotification();
+            if (notification == null) return;
+            String title = notification.getTitle() == null ? "" : notification.getTitle().trim();
+            String text = notification.getBody() == null ? "" : notification.getBody().trim();
             Log.d(TAG, "-- Got FCM message --");
             Log.d(TAG, "Title: " + title);
             Log.d(TAG, "Text: " + text);
             Log.d(TAG, "---------------------");
-            sendNotification(title, text, ts);
+            sendNotification(title, text, remoteMessage.getSentTime());
         } catch (Throwable e) {
             Static.error(e);
         }
     }
 
-    private void sendNotification(String title, String text, long ts) throws Throwable {
-        if (title.isEmpty() || text.isEmpty()) {
-            Log.w(TAG, "Got FCM message with empty title/text | title='" + title + "' | text='" + text + "'");
-            return;
-        }
-        Log.v(TAG, "sendNotification | title=" + title + " | text=" + text);
-        Intent intent = new Intent(this, SplashActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_ONE_SHOT);
-        Notification.Builder b = new Notification.Builder(this);
-        b.setContentTitle(title).setContentText(text).setStyle(new Notification.BigTextStyle().bigText(text));
-        b.setSmallIcon(R.drawable.cdo).setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher));
-        b.setCategory(Notification.CATEGORY_EVENT);
-        b.setWhen(ts);
-        b.setShowWhen(true);
-        b.setAutoCancel(true);
-        b.setContentIntent(pendingIntent);
-        String ringtonePath = Storage.pref.get(this, "pref_notify_sound");
-        if (!ringtonePath.isEmpty()) b.setSound(Uri.parse(ringtonePath));
-        if (Storage.pref.get(this, "pref_notify_vibrate", false)) b.setDefaults(Notification.DEFAULT_VIBRATE);
-        ((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(-1, b.build());
+    private void sendNotification(final String title, final String text, final long ts) {
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (title.isEmpty() || text.isEmpty()) {
+                        Log.w(TAG, "Got FCM message with empty title/text | title='" + title + "' | text='" + text + "'");
+                        return;
+                    }
+                    Log.v(TAG, "sendNotification | title=" + title + " | text=" + text);
+                    Intent intent = new Intent(getBaseContext(), SplashActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    PendingIntent pendingIntent = PendingIntent.getActivity(getBaseContext(), 0, intent, PendingIntent.FLAG_ONE_SHOT);
+                    Notification.Builder b = new Notification.Builder(getBaseContext());
+                    b.setContentTitle(title).setContentText(text).setStyle(new Notification.BigTextStyle().bigText(text));
+                    b.setSmallIcon(R.drawable.cdo).setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher));
+                    b.setCategory(Notification.CATEGORY_EVENT);
+                    b.setWhen(ts);
+                    b.setShowWhen(true);
+                    b.setAutoCancel(true);
+                    b.setContentIntent(pendingIntent);
+                    String ringtonePath = Storage.pref.get(getBaseContext(), "pref_notify_sound");
+                    if (!ringtonePath.isEmpty()) b.setSound(Uri.parse(ringtonePath));
+                    if (Storage.pref.get(getBaseContext(), "pref_notify_vibrate", false)) b.setDefaults(Notification.DEFAULT_VIBRATE);
+                    ((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(-1, b.build());
+                } catch (Throwable e) {
+                    Static.error(e);
+                }
+            }
+        });
     }
-
 }

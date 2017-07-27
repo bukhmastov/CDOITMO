@@ -49,5 +49,4 @@ public class App extends Application {
         FirebaseCrashProvider.setEnabled(this);
         FirebaseAnalyticsProvider.setEnabled(this);
     }
-
 }

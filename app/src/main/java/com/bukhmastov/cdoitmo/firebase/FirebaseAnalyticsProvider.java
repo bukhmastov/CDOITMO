@@ -100,21 +100,27 @@ public class FirebaseAnalyticsProvider {
         logCurrentScreen(activity, fragment, null);
     }
 
-    public static void setCurrentScreen(Activity activity, Fragment fragment, String view_screen) {
-        try {
-            if (!enabled) return;
-            if (activity == null) return;
-            if (view_screen == null) {
-                if (fragment != null) {
-                    view_screen = fragment.getClass().getSimpleName();
-                } else {
-                    view_screen = activity.getClass().getSimpleName();
+    public static void setCurrentScreen(final Activity activity, final Fragment fragment, final String view_screen) {
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (!enabled) return;
+                    if (activity == null) return;
+                    String vs = view_screen;
+                    if (view_screen == null) {
+                        if (fragment != null) {
+                            vs = fragment.getClass().getSimpleName();
+                        } else {
+                            vs = activity.getClass().getSimpleName();
+                        }
+                    }
+                    getFirebaseAnalytics(activity).setCurrentScreen(activity, vs, null);
+                } catch (Exception e) {
+                    Static.error(e);
                 }
             }
-            getFirebaseAnalytics(activity).setCurrentScreen(activity, view_screen, null);
-        } catch (Exception e) {
-            Static.error(e);
-        }
+        });
     }
 
     public static void logCurrentScreen(Activity activity) {
@@ -196,26 +202,36 @@ public class FirebaseAnalyticsProvider {
         }
     }
 
-    public static void setUserProperty(Context context, String property, String value) {
-        try {
-            if (!enabled) return;
-            getFirebaseAnalytics(context).setUserProperty(property, value);
-        } catch (Exception e) {
-            Static.error(e);
-        }
+    public static void setUserProperty(final Context context, final String property, final String value) {
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (!enabled) return;
+                    getFirebaseAnalytics(context).setUserProperty(property, value);
+                } catch (Exception e) {
+                    Static.error(e);
+                }
+            }
+        });
     }
 
     public static void logEvent(Context context, String name) {
         logEvent(context, name, null);
     }
 
-    public static void logEvent(Context context, String name, Bundle params) {
-        try {
-            if (!enabled) return;
-            getFirebaseAnalytics(context).logEvent(name, params);
-        } catch (Exception e) {
-            Static.error(e);
-        }
+    public static void logEvent(final Context context, final String name, final Bundle params) {
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (!enabled) return;
+                    getFirebaseAnalytics(context).logEvent(name, params);
+                } catch (Exception e) {
+                    Static.error(e);
+                }
+            }
+        });
     }
 
     public static Bundle getBundle(String key, Object value) {

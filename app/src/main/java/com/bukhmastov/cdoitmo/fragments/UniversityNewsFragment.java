@@ -25,7 +25,6 @@ import com.bukhmastov.cdoitmo.adapters.RecyclerViewOnScrollListener;
 import com.bukhmastov.cdoitmo.adapters.UniversityRecyclerViewAdapter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
-import com.bukhmastov.cdoitmo.network.interfaces.IfmoClientResponseHandler;
 import com.bukhmastov.cdoitmo.network.interfaces.IfmoRestClientResponseHandler;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
@@ -52,7 +51,6 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
     private String search = "";
     private NewsRecyclerViewAdapter newsRecyclerViewAdapter = null;
     private long timestamp = 0;
-    private Thread thread = null;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -75,7 +73,7 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
         FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
         if (!loaded) {
             loaded = true;
-            clearAndLoad();
+            load();
         }
     }
 
@@ -83,6 +81,10 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
     public void onPause() {
         super.onPause();
         Log.v(TAG, "paused");
+        if (fragmentRequestHandle != null) {
+            loaded = false;
+            fragmentRequestHandle.cancel(true);
+        }
     }
 
     @Override
@@ -95,204 +97,185 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
     @Override
     public void onRefresh() {
         Log.v(TAG, "refreshed");
-        searchAndLoad(search, 0);
+        load(search, 0);
     }
 
-    private void clearAndLoad() {
-        searchAndLoad("");
-    }
-    private void searchAndLoad(String search) {
-        searchAndLoad(search,
-                Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)
-                        ? Integer.parseInt(Storage.pref.get(getContext(), "pref_dynamic_refresh", "0"))
-                        : 0);
-    }
-    private void searchAndLoad(final String search, final int refresh_rate) {
-        if (thread != null) {
-            if (thread.isAlive() && !thread.isInterrupted()) {
-                thread.interrupt();
-            }
-            thread = null;
-        }
-        thread = new Thread(new Runnable() {
+    private void load() {
+        Static.T.runThread(new Runnable() {
             @Override
             public void run() {
-                String cache = Storage.file.cache.get(getContext(), "university#news").trim();
-                if (cache.isEmpty()) {
-                    searchAndLoad(search, refresh_rate, true);
-                } else {
-                    try {
-                        JSONObject cacheJson = new JSONObject(cache);
-                        news = cacheJson.getJSONObject("data");
-                        timestamp = cacheJson.getLong("timestamp");
-                        if (timestamp + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
-                            searchAndLoad(search, refresh_rate, true);
-                        } else {
-                            searchAndLoad(search, refresh_rate, false);
+                load("");
+            }
+        });
+    }
+    private void load(final String search) {
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                load(search, Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)
+                        ? Integer.parseInt(Storage.pref.get(getContext(), "pref_dynamic_refresh", "0"))
+                        : 0);
+            }
+        });
+    }
+    private void load(final String search, final int refresh_rate) {
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "load | search=" + search + " | refresh_rate=" + refresh_rate);
+                if (Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)) {
+                    String cache = Storage.file.cache.get(getContext(), "university#news").trim();
+                    if (!cache.isEmpty()) {
+                        try {
+                            JSONObject cacheJson = new JSONObject(cache);
+                            news = cacheJson.getJSONObject("data");
+                            timestamp = cacheJson.getLong("timestamp");
+                            if (timestamp + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+                                load(search, true);
+                            } else {
+                                load(search, false);
+                            }
+                        } catch (JSONException e) {
+                            Static.error(e);
+                            load(search, true);
                         }
-                    } catch (JSONException e) {
-                        Static.error(e);
-                        searchAndLoad(search, refresh_rate, true);
+                    } else {
+                        load(search, false);
                     }
+                } else {
+                    load(search, false);
                 }
             }
         });
-        thread.setName("UniversityNewsThread");
-        thread.start();
     }
-    private void searchAndLoad(final String search, final int refresh_rate, final boolean force) {
-        Log.v(TAG, "searchAndLoad | search=" + search + " | refresh_rate=" + refresh_rate + " | force=" + (force ? "true" : "false"));
-        if ((!force || !Static.isOnline(getContext())) && news != null) {
-            display();
-            return;
-        }
-        if (!Static.OFFLINE_MODE) {
-            this.offset = 0;
-            this.search = search;
-            loadProvider(new IfmoRestClientResponseHandler() {
-                @Override
-                public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
-                    if (statusCode == 200) {
-                        long now = Calendar.getInstance().getTimeInMillis();
-                        if (json != null && Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)) {
-                            try {
-                                Storage.file.cache.put(getContext(), "university#news", new JSONObject()
-                                        .put("timestamp", now)
-                                        .put("data", json)
-                                        .toString()
-                                );
-                            } catch (JSONException e) {
-                                Static.error(e);
+    private void load(final String search, final boolean force) {
+        final UniversityNewsFragment self = this;
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "load | search=" + search + " | force=" + (force ? "true" : "false"));
+                if ((!force || !Static.isOnline(getContext())) && news != null) {
+                    display();
+                    return;
+                }
+                if (!Static.OFFLINE_MODE) {
+                    self.offset = 0;
+                    self.search = search;
+                    loadProvider(new IfmoRestClientResponseHandler() {
+                        @Override
+                        public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
+                            if (statusCode == 200) {
+                                long now = Calendar.getInstance().getTimeInMillis();
+                                if (json != null && Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)) {
+                                    try {
+                                        Storage.file.cache.put(getContext(), "university#news", new JSONObject()
+                                                .put("timestamp", now)
+                                                .put("data", json)
+                                                .toString()
+                                        );
+                                    } catch (JSONException e) {
+                                        Static.error(e);
+                                    }
+                                }
+                                news = json;
+                                timestamp = now;
+                                display();
+                            } else {
+                                loadFailed();
                             }
                         }
-                        news = json;
-                        timestamp = now;
-                        display();
-                    } else {
-                        loadFailed();
-                    }
-                }
-                @Override
-                public void onProgress(final int state) {
-                    activity.runOnUiThread(new Runnable() {
                         @Override
-                        public void run() {
-                            Log.v(TAG, "searchAndLoad | progress " + state);
-                            draw(R.layout.state_loading);
-                            if (activity != null) {
-                                TextView loading_message = (TextView) container.findViewById(R.id.loading_message);
-                                if (loading_message != null) {
+                        public void onProgress(final int state) {
+                            Static.T.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.v(TAG, "load | progress " + state);
+                                    draw(R.layout.state_loading);
+                                    if (activity != null) {
+                                        TextView loading_message = (TextView) container.findViewById(R.id.loading_message);
+                                        if (loading_message != null) {
+                                            switch (state) {
+                                                case IfmoRestClient.STATE_HANDLING:
+                                                    loading_message.setText(R.string.loading);
+                                                    break;
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                        @Override
+                        public void onFailure(final int statusCode, final int state) {
+                            Static.T.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.v(TAG, "load | failure " + state);
                                     switch (state) {
-                                        case IfmoRestClient.STATE_HANDLING:
-                                            loading_message.setText(R.string.loading);
+                                        case IfmoRestClient.FAILED_OFFLINE:
+                                            draw(R.layout.state_offline);
+                                            if (activity != null) {
+                                                View offline_reload = container.findViewById(R.id.offline_reload);
+                                                if (offline_reload != null) {
+                                                    offline_reload.setOnClickListener(new View.OnClickListener() {
+                                                        @Override
+                                                        public void onClick(View v) {
+                                                            load();
+                                                        }
+                                                    });
+                                                }
+                                            }
+                                            break;
+                                        case IfmoRestClient.FAILED_TRY_AGAIN:
+                                            draw(R.layout.state_try_again);
+                                            if (activity != null) {
+                                                View try_again_reload = container.findViewById(R.id.try_again_reload);
+                                                if (try_again_reload != null) {
+                                                    try_again_reload.setOnClickListener(new View.OnClickListener() {
+                                                        @Override
+                                                        public void onClick(View v) {
+                                                            load();
+                                                        }
+                                                    });
+                                                }
+                                            }
                                             break;
                                     }
+                                }
+                            });
+                        }
+                        @Override
+                        public void onNewHandle(RequestHandle requestHandle) {
+                            fragmentRequestHandle = requestHandle;
+                        }
+                    });
+                } else {
+                    Static.T.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            draw(R.layout.state_offline);
+                            if (activity != null) {
+                                View offline_reload = activity.findViewById(R.id.offline_reload);
+                                if (offline_reload != null) {
+                                    offline_reload.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            load(search);
+                                        }
+                                    });
                                 }
                             }
                         }
                     });
                 }
-                @Override
-                public void onFailure(final int state) {
-                    activity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Log.v(TAG, "searchAndLoad | failure " + state);
-                            switch (state) {
-                                case IfmoRestClient.FAILED_OFFLINE:
-                                    draw(R.layout.state_offline);
-                                    if (activity != null) {
-                                        View offline_reload = container.findViewById(R.id.offline_reload);
-                                        if (offline_reload != null) {
-                                            offline_reload.setOnClickListener(new View.OnClickListener() {
-                                                @Override
-                                                public void onClick(View v) {
-                                                    clearAndLoad();
-                                                }
-                                            });
-                                        }
-                                    }
-                                    break;
-                                case IfmoRestClient.FAILED_TRY_AGAIN:
-                                    draw(R.layout.state_try_again);
-                                    if (activity != null) {
-                                        View try_again_reload = container.findViewById(R.id.try_again_reload);
-                                        if (try_again_reload != null) {
-                                            try_again_reload.setOnClickListener(new View.OnClickListener() {
-                                                @Override
-                                                public void onClick(View v) {
-                                                    clearAndLoad();
-                                                }
-                                            });
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                    });
-                }
-                @Override
-                public void onNewHandle(RequestHandle requestHandle) {
-                    fragmentRequestHandle = requestHandle;
-                }
-            });
-        } else {
-            draw(R.layout.state_offline);
-            if (activity != null) {
-                View offline_reload = activity.findViewById(R.id.offline_reload);
-                if (offline_reload != null) {
-                    offline_reload.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            searchAndLoad(search, refresh_rate);
-                        }
-                    });
-                }
-            }
-        }
-    }
-    private void loadProvider(IfmoRestClientResponseHandler handler) {
-        loadProvider(handler, 0);
-    }
-    private void loadProvider(final IfmoRestClientResponseHandler handler, final int attempt) {
-        Log.v(TAG, "loadProvider | attempt=" + attempt);
-        IfmoRestClient.getPlainSync(getContext(), "news.ifmo.ru/news?limit=" + limit + "&offset=" + offset + "&search=" + search, null, new IfmoClientResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, String response) {
-                try {
-                    if (statusCode == 200) {
-                        try {
-                            handler.onSuccess(statusCode, new JSONObject(response), null);
-                        } catch (JSONException e) {
-                            handler.onSuccess(statusCode, new JSONObject(Static.parseInvalidIfmoRestClientResponse(response)), null);
-                        }
-                    } else {
-                        handler.onFailure(IfmoRestClient.FAILED_TRY_AGAIN);
-                    }
-                } catch (Exception e) {
-                    if (attempt < 3) {
-                        loadProvider(handler, attempt + 1);
-                    } else {
-                        handler.onFailure(IfmoRestClient.FAILED_TRY_AGAIN);
-                    }
-                }
-            }
-            @Override
-            public void onProgress(int state) {
-                handler.onProgress(state);
-            }
-            @Override
-            public void onFailure(int state) {
-                handler.onFailure(state);
-            }
-            @Override
-            public void onNewHandle(RequestHandle requestHandle) {
-                handler.onNewHandle(requestHandle);
             }
         });
     }
+    private void loadProvider(IfmoRestClientResponseHandler handler) {
+        Log.v(TAG, "loadProvider");
+        IfmoRestClient.get(getContext(), "news.ifmo.ru/news?limit=" + limit + "&offset=" + offset + "&search=" + search, null, handler);
+    }
     private void loadFailed(){
-        activity.runOnUiThread(new Runnable() {
+        Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 Log.v(TAG, "loadFailed");
@@ -305,7 +288,7 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                         try_again_reload.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                clearAndLoad();
+                                load();
                             }
                         });
                     }
@@ -317,7 +300,7 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
     }
     private void display() {
         final SwipeRefreshLayout.OnRefreshListener onRefreshListener = this;
-        activity.runOnUiThread(new Runnable() {
+        Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 Log.v(TAG, "display");
@@ -333,14 +316,14 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                     search_action.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            searchAndLoad(search_input.getText().toString().trim());
+                            load(search_input.getText().toString().trim());
                         }
                     });
                     search_input.setOnKeyListener(new View.OnKeyListener() {
                         @Override
                         public boolean onKey(View v, int keyCode, KeyEvent event) {
                             if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
-                                searchAndLoad(search_input.getText().toString().trim());
+                                load(search_input.getText().toString().trim());
                                 return true;
                             }
                             return false;
@@ -364,19 +347,13 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                             public void onClick(View v) {
                                 offset += limit;
                                 newsRecyclerViewAdapter.setState(R.id.loading_more);
-                                if (thread != null) {
-                                    if (thread.isAlive() && !thread.isInterrupted()) {
-                                        thread.interrupt();
-                                    }
-                                    thread = null;
-                                }
-                                thread = new Thread(new Runnable() {
+                                Static.T.runThread(new Runnable() {
                                     @Override
                                     public void run() {
                                         loadProvider(new IfmoRestClientResponseHandler() {
                                             @Override
                                             public void onSuccess(int statusCode, final JSONObject json, JSONArray responseArr) {
-                                                activity.runOnUiThread(new Runnable() {
+                                                Static.T.runOnUiThread(new Runnable() {
                                                     @Override
                                                     public void run() {
                                                         try {
@@ -387,6 +364,19 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                                                             JSONArray list = json.getJSONArray("list");
                                                             for (int i = 0; i < list.length(); i++) {
                                                                 list_original.put(list.getJSONObject(i));
+                                                            }
+                                                            long now = Calendar.getInstance().getTimeInMillis();
+                                                            timestamp = now;
+                                                            if (Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)) {
+                                                                try {
+                                                                    Storage.file.cache.put(getContext(), "university#news", new JSONObject()
+                                                                            .put("timestamp", now)
+                                                                            .put("data", news)
+                                                                            .toString()
+                                                                    );
+                                                                } catch (JSONException e) {
+                                                                    Static.error(e);
+                                                                }
                                                             }
                                                             displayContent(list);
                                                         } catch (Exception e) {
@@ -399,8 +389,8 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                                             @Override
                                             public void onProgress(int state) {}
                                             @Override
-                                            public void onFailure(int state) {
-                                                activity.runOnUiThread(new Runnable() {
+                                            public void onFailure(int statusCode, int state) {
+                                                Static.T.runOnUiThread(new Runnable() {
                                                     @Override
                                                     public void run() {
                                                         newsRecyclerViewAdapter.setState(R.id.load_more);
@@ -414,8 +404,6 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                                         });
                                     }
                                 });
-                                thread.setName("UniversityNewsThread");
-                                thread.start();
                             }
                         });
                         if (timestamp > 0 && timestamp + 5000 < Calendar.getInstance().getTimeInMillis()) {
@@ -463,7 +451,7 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
         });
     }
     private void displayContent(final JSONArray list) {
-        activity.runOnUiThread(new Runnable() {
+        Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -508,7 +496,7 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
     }
 
     private void draw(final int layoutId){
-        activity.runOnUiThread(new Runnable() {
+        Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 try {

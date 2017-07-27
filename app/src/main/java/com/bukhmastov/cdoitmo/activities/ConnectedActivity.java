@@ -152,27 +152,31 @@ public abstract class ConnectedActivity extends AppCompatActivity {
         Log.v(TAG, "stack.size() = " + stack.size());
     }
 
-    public void updateToolbar(String title, Integer image){
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setTitle(title);
-            if (image == null || !Static.tablet) {
-                actionBar.setHomeButtonEnabled(true);
-                actionBar.setLogo(null);
-            } else {
-                actionBar.setHomeButtonEnabled(false);
-                Drawable drawable = getDrawable(image);
-                if (drawable != null) {
-                    drawable.setTint(Color.parseColor("#FFFFFF"));
-                    actionBar.setLogo(drawable);
+    public void updateToolbar(final String title, final Integer image) {
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                ActionBar actionBar = getSupportActionBar();
+                if (actionBar != null) {
+                    actionBar.setTitle(title);
+                    if (image == null || !Static.tablet) {
+                        actionBar.setHomeButtonEnabled(true);
+                        actionBar.setLogo(null);
+                    } else {
+                        actionBar.setHomeButtonEnabled(false);
+                        Drawable drawable = getDrawable(image);
+                        if (drawable != null) {
+                            drawable.setTint(Color.parseColor("#FFFFFF"));
+                            actionBar.setLogo(drawable);
+                        }
+                    }
                 }
             }
-        }
+        });
     }
 
     @Override
     protected void attachBaseContext(Context context) {
         super.attachBaseContext(CtxWrapper.wrap(context));
     }
-
 }

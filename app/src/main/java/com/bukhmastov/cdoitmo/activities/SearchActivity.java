@@ -32,6 +32,7 @@ import java.util.Locale;
 public abstract class SearchActivity extends AppCompatActivity {
 
     private static final String TAG = "SearchActivity";
+    private SearchActivity self = this;
     private static final int REQ_CODE_SPEECH_INPUT = 1337;
     private enum EXTRA_ACTION_MODE {Speech_recognition, Clear, None}
     private EditText search_edit_text;
@@ -77,72 +78,82 @@ public abstract class SearchActivity extends AppCompatActivity {
         super.attachBaseContext(CtxWrapper.wrap(context));
     }
 
-    private void done(String query, String label){
+    private void done(String query, String label) {
         Log.v(TAG, "done | query=" + query + " | label=" + label);
         onDone(query, label);
         finish();
     }
 
-    private void setMode(EXTRA_ACTION_MODE mode){
-        Log.v(TAG, "setMode | mode=" + mode.toString());
-        ViewGroup search_extra_action = (ViewGroup) findViewById(R.id.search_extra_action);
-        int padding = (int) (Static.destiny * 14);
-        if (search_extra_action != null) {
-            search_extra_action.removeAllViews();
-            search_extra_action.setOnClickListener(null);
-            if (mode != EXTRA_ACTION_MODE.None) {
-                ImageView imageView = new ImageView(this);
-                imageView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-                imageView.setPaddingRelative(padding, padding, padding, padding);
-                switch (mode) {
-                    case Speech_recognition: {
-                        if (!checkVoiceRecognition()) {
-                            Log.v(TAG, "voice recognition not supported");
-                            setMode(EXTRA_ACTION_MODE.None);
-                            return;
+    private void setMode(final EXTRA_ACTION_MODE mode) {
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "setMode | mode=" + mode.toString());
+                ViewGroup search_extra_action = (ViewGroup) findViewById(R.id.search_extra_action);
+                int padding = (int) (Static.destiny * 14);
+                if (search_extra_action != null) {
+                    search_extra_action.removeAllViews();
+                    search_extra_action.setOnClickListener(null);
+                    if (mode != EXTRA_ACTION_MODE.None) {
+                        ImageView imageView = new ImageView(self);
+                        imageView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                        imageView.setPaddingRelative(padding, padding, padding, padding);
+                        switch (mode) {
+                            case Speech_recognition: {
+                                if (!checkVoiceRecognition()) {
+                                    Log.v(TAG, "voice recognition not supported");
+                                    setMode(EXTRA_ACTION_MODE.None);
+                                    return;
+                                }
+                                imageView.setImageDrawable(getDrawable(R.drawable.ic_keyboard_voice));
+                                search_extra_action.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        Log.v(TAG, "speech_recognition clicked");
+                                        startRecognition();
+                                    }
+                                });
+                                break;
+                            }
+                            case Clear: {
+                                imageView.setImageDrawable(getDrawable(R.drawable.ic_close));
+                                search_extra_action.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        Log.v(TAG, "clear clicked");
+                                        search_edit_text.setText("");
+                                    }
+                                });
+                                break;
+                            }
                         }
-                        imageView.setImageDrawable(getDrawable(R.drawable.ic_keyboard_voice));
-                        search_extra_action.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                Log.v(TAG, "speech_recognition clicked");
-                                startRecognition();
-                            }
-                        });
-                        break;
-                    }
-                    case Clear: {
-                        imageView.setImageDrawable(getDrawable(R.drawable.ic_close));
-                        search_extra_action.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                Log.v(TAG, "clear clicked");
-                                search_edit_text.setText("");
-                            }
-                        });
-                        break;
+                        search_extra_action.addView(imageView);
                     }
                 }
-                search_extra_action.addView(imageView);
             }
-        }
+        });
     }
-    private void setSuggestions(final ArrayList<Suggestion> suggestions){
-        Log.v(TAG, "setSuggestions");
-        try {
-            ListView search_suggestions = (ListView) findViewById(R.id.search_suggestions);
-            if (search_suggestions == null) throw new Exception("search_suggestions listview is null");
-            search_suggestions.setDividerHeight(0);
-            search_suggestions.setDivider(null);
-            search_suggestions.setAdapter(new SuggestionsListView(this, suggestions));
-            search_suggestions.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    done(suggestions.get(position).query, suggestions.get(position).label);
+    private void setSuggestions(final ArrayList<Suggestion> suggestions) {
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "setSuggestions");
+                try {
+                    ListView search_suggestions = (ListView) findViewById(R.id.search_suggestions);
+                    if (search_suggestions == null) throw new Exception("search_suggestions listview is null");
+                    search_suggestions.setDividerHeight(0);
+                    search_suggestions.setDivider(null);
+                    search_suggestions.setAdapter(new SuggestionsListView(self, suggestions));
+                    search_suggestions.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                            done(suggestions.get(position).query, suggestions.get(position).label);
+                        }
+                    });
+                } catch (Exception e) {
+                    Static.error(e);
                 }
-            });
-        } catch (Exception e) {
-            Static.error(e);
-        }
+            }
+        });
     }
 
     public boolean checkVoiceRecognition() {
@@ -153,7 +164,7 @@ public abstract class SearchActivity extends AppCompatActivity {
             return false;
         }
     }
-    private void startRecognition(){
+    private void startRecognition() {
         Log.v(TAG, "startRecognition");
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
@@ -167,21 +178,26 @@ public abstract class SearchActivity extends AppCompatActivity {
         }
     }
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        switch (requestCode) {
-            case REQ_CODE_SPEECH_INPUT: {
-                Log.v(TAG, "doneRecognition");
-                if (resultCode == RESULT_OK && data != null) {
-                    ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                    if (result.size() > 0) {
-                        Log.v(TAG, "resultRecognition | " + result.get(0));
-                        search_edit_text.setText(result.get(0));
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                switch (requestCode) {
+                    case REQ_CODE_SPEECH_INPUT: {
+                        Log.v(TAG, "doneRecognition");
+                        if (resultCode == RESULT_OK && data != null) {
+                            ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                            if (result.size() > 0) {
+                                Log.v(TAG, "resultRecognition | " + result.get(0));
+                                search_edit_text.setText(result.get(0));
+                            }
+                        }
+                        break;
                     }
                 }
-                break;
             }
-        }
+        });
     }
 
     private TextWatcher textWatcher = new TextWatcher() {

@@ -76,41 +76,46 @@ public class ScheduleLessonsSearchActivity extends SearchActivity {
     }
 
     @Override
-    void onDone(String query, String label) {
-        Log.v(TAG, "onDone | query=" + query + " | label=" + label);
-        try {
-            String recentString = Storage.file.perm.get(this, "schedule_lessons#recent");
-            JSONArray recent;
-            if (recentString.isEmpty()) {
-                recent = new JSONArray();
-            } else {
-                recent = new JSONArray(recentString);
-            }
-            for (int i = 0; i < recent.length(); i++) {
-                if (recent.getString(i).equals(label)) {
-                    recent.remove(i);
-                    break;
+    void onDone(final String query, final String label) {
+        final ScheduleLessonsSearchActivity self = this;
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "onDone | query=" + query + " | label=" + label);
+                try {
+                    String recentString = Storage.file.perm.get(self, "schedule_lessons#recent");
+                    JSONArray recent;
+                    if (recentString.isEmpty()) {
+                        recent = new JSONArray();
+                    } else {
+                        recent = new JSONArray(recentString);
+                    }
+                    for (int i = 0; i < recent.length(); i++) {
+                        if (recent.getString(i).equals(label)) {
+                            recent.remove(i);
+                            break;
+                        }
+                    }
+                    for (int i = recent.length() - 1; i >= 0; i--) {
+                        recent.put(i + 1, recent.getString(i));
+                    }
+                    recent.put(0, label);
+                    if (recent.length() > maxCountOfSuggestionsToStore) {
+                        for (int i = maxCountOfSuggestionsToStore; i < recent.length(); i++) {
+                            recent.remove(i);
+                        }
+                    }
+                    Storage.file.perm.put(self, "schedule_lessons#recent", recent.toString());
+                } catch (Exception e) {
+                    Static.error(e);
+                    Storage.file.perm.delete(self, "schedule_lessons#recent");
                 }
+                ScheduleLessonsFragment.searchAndClear(query);
             }
-            for (int i = recent.length() - 1; i >= 0; i--) {
-                recent.put(i + 1, recent.getString(i));
-            }
-            recent.put(0, label);
-            if (recent.length() > maxCountOfSuggestionsToStore) {
-                for (int i = maxCountOfSuggestionsToStore; i < recent.length(); i++) {
-                    recent.remove(i);
-                }
-            }
-            Storage.file.perm.put(this, "schedule_lessons#recent", recent.toString());
-        } catch (Exception e) {
-            Static.error(e);
-            Storage.file.perm.delete(this, "schedule_lessons#recent");
-        }
-        ScheduleLessonsFragment.searchAndClear(query);
+        });
     }
 
-    private boolean contains(String first, String second){
+    private boolean contains(String first, String second) {
         return first.toLowerCase().contains(second.toLowerCase()) || Static.Translit.cyr2lat(first).toLowerCase().contains(Static.Translit.cyr2lat(second).toLowerCase());
     }
-
 }

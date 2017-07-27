@@ -9,5 +9,4 @@ public class ScheduleLessonsWidgetService extends RemoteViewsService {
     public RemoteViewsFactory onGetViewFactory(Intent intent) {
         return new ScheduleLessonsWidgetFactory(getApplicationContext(), intent);
     }
-
 }

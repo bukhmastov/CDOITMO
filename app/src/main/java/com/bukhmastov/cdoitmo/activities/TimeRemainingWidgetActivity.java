@@ -202,26 +202,37 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
         message(getString(R.string.widget_stopped));
     }
 
-    private void begin(){
-        Log.v(TAG, "begin");
-        message(getString(R.string.loaded));
-        if (timeRemainingWidget != null) {
-            timeRemainingWidget.stop();
-            timeRemainingWidget = null;
-        }
-        timeRemainingWidget = new TimeRemainingWidget(this);
-        timeRemainingWidget.start(this, schedule);
+    private void begin() {
+        final TimeRemainingWidgetActivity self = this;
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "begin");
+                message(getString(R.string.loaded));
+                if (timeRemainingWidget != null) {
+                    timeRemainingWidget.stop();
+                    timeRemainingWidget = null;
+                }
+                timeRemainingWidget = new TimeRemainingWidget(self);
+                timeRemainingWidget.start(self, schedule);
+            }
+        });
     }
-    private void close(){
-        Log.v(TAG, "close");
-        if (scheduleRequestHandle != null) {
-            scheduleRequestHandle.cancel(true);
-            scheduleRequestHandle = null;
-        }
-        finish();
+    private void close() {
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "close");
+                if (scheduleRequestHandle != null) {
+                    scheduleRequestHandle.cancel(true);
+                    scheduleRequestHandle = null;
+                }
+                finish();
+            }
+        });
     }
-    private void setText(final int layout, final String text){
-        runOnUiThread(new Runnable() {
+    private void setText(final int layout, final String text) {
+        Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 TextView textView = (TextView) findViewById(layout);
@@ -231,8 +242,8 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
             }
         });
     }
-    private void message(final String text){
-        runOnUiThread(new Runnable() {
+    private void message(final String text) {
+        Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 draw(R.layout.layout_time_remaining_widget_message);
@@ -244,8 +255,8 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
             }
         });
     }
-    private void draw(final int layoutId){
-        runOnUiThread(new Runnable() {
+    private void draw(final int layoutId) {
+        Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -260,5 +271,4 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
             }
         });
     }
-
 }

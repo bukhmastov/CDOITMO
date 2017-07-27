@@ -2,8 +2,6 @@ package com.bukhmastov.cdoitmo.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.InflateException;
 import android.view.LayoutInflater;
@@ -17,16 +15,17 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapters.SubjectListView;
+import com.bukhmastov.cdoitmo.converters.ERegisterConverter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoRestClientResponseHandler;
-import com.bukhmastov.cdoitmo.objects.ERegister;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -37,7 +36,7 @@ import java.util.Objects;
 public class ERegisterFragment extends ConnectedFragment implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "ERegisterFragment";
-    public static ERegister eRegister = null;
+    public static JSONObject data = null;
     private String group;
     private int term;
     private boolean spinner_group_blocker = true, spinner_period_blocker = true;
@@ -49,7 +48,6 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
         super.onCreate(savedInstanceState);
         Log.v(TAG, "Fragment created");
         FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
-        eRegister = new ERegister(activity);
         group = Storage.file.cache.get(getContext(), "eregister#params#selected_group", "");
         term = -2;
     }
@@ -89,202 +87,220 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
     @Override
     public void onRefresh() {
         Log.v(TAG, "refreshed");
-        forceLoad();
+        load(true);
     }
 
-    private void load(){
-        load(Storage.pref.get(getContext(), "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(getContext(), "pref_dynamic_refresh", "0")) : 0);
+    private void load() {
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                load(Storage.pref.get(getContext(), "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(getContext(), "pref_dynamic_refresh", "0")) : 0);
+            }
+        });
     }
-    private void load(final int refresh_rate){
-        Log.v(TAG, "load | refresh_rate=" + refresh_rate);
-        draw(R.layout.state_loading);
-        eRegister.is(new ERegister.Callback(){
+    private void load(final int refresh_rate) {
+        Static.T.runThread(new Runnable() {
             @Override
-            public void onDone(JSONObject eregister) {}
-            @Override
-            public void onChecked(boolean is){
-                Log.v(TAG, "load | eRegister.is=" + (is ? "true" : "false"));
-                if (!is || refresh_rate == 0) {
-                    forceLoad();
-                } else if (refresh_rate >= 0){
-                    eRegister.get(new ERegister.Callback() {
-                        @Override
-                        public void onDone(JSONObject eregister){
-                            Log.v(TAG, "load | eRegister.get=" + (eregister == null ? "null" : "notnull"));
-                            try {
-                                if (eregister == null) throw new Exception("eregister is null");
-                                if (eregister.getLong("timestamp") + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
-                                    forceLoad();
-                                } else {
-                                    display();
-                                }
-                            } catch (Exception e) {
-                                Static.error(e);
-                                forceLoad();
+            public void run() {
+                Log.v(TAG, "load | refresh_rate=" + refresh_rate);
+                if (Storage.pref.get(getContext(), "pref_use_cache", true)) {
+                    String cache = Storage.file.cache.get(getContext(), "eregister#core").trim();
+                    if (!cache.isEmpty()) {
+                        try {
+                            data = new JSONObject(cache);
+                            if (data.getLong("timestamp") + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+                                load(true, cache);
+                            } else {
+                                load(false, cache);
                             }
+                        } catch (JSONException e) {
+                            Static.error(e);
+                            load(true, cache);
                         }
-                        @Override
-                        public void onChecked(boolean is) {}
-                    });
+                    } else {
+                        load(false);
+                    }
                 } else {
-                    display();
+                    load(false);
                 }
             }
         });
     }
-    private void forceLoad(){
-        Log.v(TAG, "forceLoad");
-        if (!Static.OFFLINE_MODE) {
-            DeIfmoRestClient.get(getContext(), "eregister", null, new DeIfmoRestClientResponseHandler() {
-                @Override
-                public void onSuccess(int statusCode, JSONObject responseObj, JSONArray responseArr) {
-                    Log.v(TAG, "forceLoad | success | statusCode=" + statusCode + " | responseObj=" + (responseObj == null ? "null" : "notnull"));
-                    if (statusCode == 200 && responseObj != null) {
-                        eRegister.put(responseObj, new Handler(){
-                            @Override
-                            public void handleMessage(Message msg) {
-                                display();
-                            }
-                        });
-                    } else {
-                        eRegister.is(new ERegister.Callback() {
-                            @Override
-                            public void onDone(JSONObject eregister) {}
-                            @Override
-                            public void onChecked(boolean is) {
-                                Log.v(TAG, "forceLoad | eRegister.is=" + (is ? "true" : "false"));
-                                if (is) {
+    private void load(final boolean force) {
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                load(force, "");
+            }
+        });
+    }
+    private void load(final boolean force, final String cache) {
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "load | force=" + (force ? "true" : "false"));
+                if ((!force || !Static.isOnline(getContext())) && Storage.pref.get(getContext(), "pref_use_cache", true)) {
+                    try {
+                        String c = cache.isEmpty() ? Storage.file.cache.get(getContext(), "eregister#core").trim() : cache;
+                        if (!c.isEmpty()) {
+                            Log.v(TAG, "load | from cache");
+                            data = new JSONObject(c);
+                            display();
+                            return;
+                        }
+                    } catch (Exception e) {
+                        Log.v(TAG, "load | failed to load from cache");
+                        Storage.file.cache.delete(getContext(), "eregister#core");
+                    }
+                }
+                if (!Static.OFFLINE_MODE) {
+                    DeIfmoRestClient.get(getContext(), "eregister", null, new DeIfmoRestClientResponseHandler() {
+                        @Override
+                        public void onSuccess(int statusCode, JSONObject responseObj, JSONArray responseArr) {
+                            Log.v(TAG, "load | success | statusCode=" + statusCode + " | responseObj=" + (responseObj == null ? "null" : "notnull"));
+                            if (statusCode == 200 && responseObj != null) {
+                                new ERegisterConverter(new ERegisterConverter.response() {
+                                    @Override
+                                    public void finish(JSONObject json) {
+                                        if (Storage.pref.get(getContext(), "pref_use_cache", true)) {
+                                            Storage.file.cache.put(getContext(), "eregister#core", json.toString());
+                                        }
+                                        data = json;
+                                        display();
+                                    }
+                                }).execute(responseObj);
+                            } else {
+                                if (data != null) {
                                     display();
                                 } else {
                                     loadFailed();
                                 }
                             }
-                        });
-                    }
-                }
-                @Override
-                public void onProgress(int state) {
-                    Log.v(TAG, "forceLoad | progress " + state);
-                    draw(R.layout.state_loading);
-                    if (activity != null) {
-                        TextView loading_message = (TextView) activity.findViewById(R.id.loading_message);
-                        if (loading_message != null) {
-                            switch (state) {
-                                case DeIfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
-                            }
                         }
-                    }
-                }
-                @Override
-                public void onFailure(int state) {
-                    Log.v(TAG, "forceLoad | failure " + state);
-                    switch (state) {
-                        case DeIfmoRestClient.FAILED_OFFLINE:
-                            eRegister.is(new ERegister.Callback() {
+                        @Override
+                        public void onProgress(final int state) {
+                            Static.T.runOnUiThread(new Runnable() {
                                 @Override
-                                public void onDone(JSONObject eregister) {}
-                                @Override
-                                public void onChecked(boolean is) {
-                                    Log.v(TAG, "forceLoad | eRegister.is=" + (is ? "true" : "false"));
-                                    if (is) {
-                                        display();
-                                    } else {
-                                        draw(R.layout.state_offline);
-                                        if (activity != null) {
-                                            View offline_reload = activity.findViewById(R.id.offline_reload);
-                                            if (offline_reload != null) {
-                                                offline_reload.setOnClickListener(new View.OnClickListener() {
-                                                    @Override
-                                                    public void onClick(View v) {
-                                                        forceLoad();
-                                                    }
-                                                });
+                                public void run() {
+                                    Log.v(TAG, "load | progress " + state);
+                                    draw(R.layout.state_loading);
+                                    if (activity != null) {
+                                        TextView loading_message = (TextView) activity.findViewById(R.id.loading_message);
+                                        if (loading_message != null) {
+                                            switch (state) {
+                                                case DeIfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
                                             }
                                         }
                                     }
                                 }
                             });
-                            break;
-                        case DeIfmoRestClient.FAILED_TRY_AGAIN:
-                            draw(R.layout.state_try_again);
-                            if (activity != null) {
-                                View try_again_reload = activity.findViewById(R.id.try_again_reload);
-                                if (try_again_reload != null) {
-                                    try_again_reload.setOnClickListener(new View.OnClickListener() {
-                                        @Override
-                                        public void onClick(View v) {
-                                            forceLoad();
-                                        }
-                                    });
-                                }
-                            }
-                            break;
-                    }
-                }
-                @Override
-                public void onNewHandle(RequestHandle requestHandle) {
-                    fragmentRequestHandle = requestHandle;
-                }
-            });
-        } else {
-            eRegister.is(new ERegister.Callback() {
-                @Override
-                public void onDone(JSONObject eregister) {}
-                @Override
-                public void onChecked(boolean is) {
-                    Log.v(TAG, "forceLoad | eRegister.is=" + (is ? "true" : "false"));
-                    if (is) {
-                        display();
-                    } else {
-                        try {
-                            draw(R.layout.state_offline);
-                            if (activity != null) {
-                                View offline_reload = activity.findViewById(R.id.offline_reload);
-                                if (offline_reload != null) {
-                                    offline_reload.setOnClickListener(new View.OnClickListener() {
-                                        @Override
-                                        public void onClick(View v) {
-                                            forceLoad();
-                                        }
-                                    });
-                                }
-                            }
-                        } catch (Exception e) {
-                            Static.error(e);
                         }
-                    }
+                        @Override
+                        public void onFailure(final int statusCode, final int state) {
+                            Static.T.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.v(TAG, "load | failure " + state);
+                                    switch (state) {
+                                        case DeIfmoRestClient.FAILED_OFFLINE:
+                                            if (data != null) {
+                                                display();
+                                            } else {
+                                                draw(R.layout.state_offline);
+                                                if (activity != null) {
+                                                    View offline_reload = activity.findViewById(R.id.offline_reload);
+                                                    if (offline_reload != null) {
+                                                        offline_reload.setOnClickListener(new View.OnClickListener() {
+                                                            @Override
+                                                            public void onClick(View v) {
+                                                                load();
+                                                            }
+                                                        });
+                                                    }
+                                                }
+                                            }
+                                            break;
+                                        case DeIfmoRestClient.FAILED_TRY_AGAIN:
+                                            draw(R.layout.state_try_again);
+                                            if (activity != null) {
+                                                View try_again_reload = activity.findViewById(R.id.try_again_reload);
+                                                if (try_again_reload != null) {
+                                                    try_again_reload.setOnClickListener(new View.OnClickListener() {
+                                                        @Override
+                                                        public void onClick(View v) {
+                                                            load();
+                                                        }
+                                                    });
+                                                }
+                                            }
+                                            break;
+                                    }
+                                }
+                            });
+                        }
+                        @Override
+                        public void onNewHandle(RequestHandle requestHandle) {
+                            fragmentRequestHandle = requestHandle;
+                        }
+                    });
+                } else {
+                    Static.T.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (data != null) {
+                                display();
+                            } else {
+                                draw(R.layout.state_offline);
+                                if (activity != null) {
+                                    View offline_reload = activity.findViewById(R.id.offline_reload);
+                                    if (offline_reload != null) {
+                                        offline_reload.setOnClickListener(new View.OnClickListener() {
+                                            @Override
+                                            public void onClick(View v) {
+                                                load();
+                                            }
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    });
                 }
-            });
-        }
-    }
-    private void loadFailed(){
-        Log.v(TAG, "loadFailed");
-        try {
-            draw(R.layout.state_try_again);
-            TextView try_again_message = (TextView) activity.findViewById(R.id.try_again_message);
-            if (try_again_message != null) try_again_message.setText(R.string.eregister_load_failed_retry_in_minute);
-            View try_again_reload = activity.findViewById(R.id.try_again_reload);
-            if (try_again_reload != null) {
-                try_again_reload.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        forceLoad();
-                    }
-                });
             }
-        } catch (Exception e) {
-            Static.error(e);
-        }
+        });
     }
-    private void display(){
-        Log.v(TAG, "display");
-        final ERegisterFragment self = this;
-        eRegister.get(new ERegister.Callback() {
+    private void loadFailed() {
+        Static.T.runOnUiThread(new Runnable() {
             @Override
-            public void onDone(JSONObject data){
-                Log.v(TAG, "display | eRegister.get=" + (data == null ? "null" : "notnull"));
+            public void run() {
+                Log.v(TAG, "loadFailed");
                 try {
-                    if (data == null) throw new NullPointerException("parsedERegister cannot be null");
+                    draw(R.layout.state_try_again);
+                    TextView try_again_message = (TextView) activity.findViewById(R.id.try_again_message);
+                    if (try_again_message != null) try_again_message.setText(R.string.eregister_load_failed_retry_in_minute);
+                    View try_again_reload = activity.findViewById(R.id.try_again_reload);
+                    if (try_again_reload != null) {
+                        try_again_reload.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                load();
+                            }
+                        });
+                    }
+                } catch (Exception e) {
+                    Static.error(e);
+                }
+            }
+        });
+    }
+    private void display() {
+        final ERegisterFragment self = this;
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "display");
+                try {
+                    if (data == null) throw new NullPointerException("data cannot be null");
                     checkData(data);
                     // получаем список предметов для отображения
                     final ArrayList<HashMap<String, String>> subjects = new ArrayList<>();
@@ -364,7 +380,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                                 group = spinner_group_arr_names.get(position);
                                 Log.v(TAG, "spinner_group clicked | group=" + group);
                                 Storage.file.cache.put(getContext(), "eregister#params#selected_group", group);
-                                load(-1);
+                                load(false);
                             }
                             public void onNothingSelected(AdapterView<?> parent) {}
                         });
@@ -402,7 +418,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                                 }
                                 term = spinner_period_arr_values.get(position);
                                 Log.v(TAG, "spinner_period clicked | term=" + term);
-                                load(-1);
+                                load(false);
                             }
                             public void onNothingSelected(AdapterView<?> parent) {}
                         });
@@ -413,8 +429,6 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                     loadFailed();
                 }
             }
-            @Override
-            public void onChecked(boolean is) {}
         });
     }
     private void checkData(JSONObject data) throws Exception {
@@ -491,19 +505,23 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
         }
     }
 
-    private void draw(int layoutId){
-        try {
-            ViewGroup vg = ((ViewGroup) activity.findViewById(R.id.container_eregister));
-            if (vg != null) {
-                vg.removeAllViews();
-                vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+    private void draw(final int layoutId) {
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    ViewGroup vg = ((ViewGroup) activity.findViewById(R.id.container_eregister));
+                    if (vg != null) {
+                        vg.removeAllViews();
+                        vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                    }
+                } catch (Exception e){
+                    Static.error(e);
+                }
             }
-        } catch (Exception e){
-            Static.error(e);
-        }
+        });
     }
     private View inflate(int layoutId) throws InflateException {
         return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
-
 }

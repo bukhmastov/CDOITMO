@@ -34,16 +34,16 @@ public class DaysRemainingWidget {
     private response delegate;
     private Executor executor;
 
-    public DaysRemainingWidget(response delegate){
+    public DaysRemainingWidget(response delegate) {
         this.delegate = delegate;
     }
 
-    public void start(Context context, JSONObject schedule){
+    public void start(Context context, JSONObject schedule) {
         Log.v(TAG, "start");
         executor = new Executor(context, schedule);
     }
 
-    public void stop(){
+    public void stop() {
         Log.v(TAG, "stop");
         if (executor != null) {
             executor.cancel();
@@ -65,7 +65,8 @@ public class DaysRemainingWidget {
             this.running = true;
             start();
         }
-        public void run(){
+
+        public void run() {
             while (!Thread.currentThread().isInterrupted() && running) {
                 try {
                     long ts = System.currentTimeMillis();
@@ -144,13 +145,12 @@ public class DaysRemainingWidget {
             }
             if (!Thread.currentThread().isInterrupted() || running) this.cancel();
         }
-        public void cancel(){
+        public void cancel() {
             running = false;
             interrupt();
             delegate.onCancelled();
             Log.i(TAG, "interrupted");
         }
-
     }
     private Time ts2time(long ts) throws Exception {
         Time time = new Time();
@@ -165,5 +165,4 @@ public class DaysRemainingWidget {
         time.sec = days > 0 || hours > 0 || minutes > 0 || seconds > 0 ? String.valueOf(seconds) : null;
         return time;
     }
-
 }

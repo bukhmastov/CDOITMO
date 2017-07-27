@@ -73,7 +73,7 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
     }
 
     @Override
-    protected int getRootViewId(){
+    protected int getRootViewId() {
         return R.id.activity_fragment;
     }
 
@@ -85,29 +85,34 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
         }
     }
 
-    public void invoke(Class connectedFragmentClass, Bundle extras){
-        Log.v(TAG, "invoke | " + connectedFragmentClass.toString());
-        try {
-            ConnectedFragment.Data data = ConnectedFragment.getData(this, connectedFragmentClass);
-            if (data == null) {
-                throw new NullPointerException("data cannot be null");
+    public void invoke(final Class connectedFragmentClass, final Bundle extras) {
+        final FragmentActivity self = this;
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "invoke | " + connectedFragmentClass.toString());
+                try {
+                    ConnectedFragment.Data data = ConnectedFragment.getData(self, connectedFragmentClass);
+                    if (data == null) {
+                        throw new NullPointerException("data cannot be null");
+                    }
+                    if (Static.tablet) {
+                        updateToolbar(data.title, null);
+                    }
+                    ViewGroup root = (ViewGroup) findViewById(getRootViewId());
+                    if (root != null) {
+                        root.removeAllViews();
+                    }
+                    Fragment fragment = (Fragment) data.connectedFragmentClass.newInstance();
+                    if (extras != null) {
+                        fragment.setArguments(extras);
+                    }
+                    getSupportFragmentManager().beginTransaction().replace(getRootViewId(), fragment).commit();
+                } catch (Exception e) {
+                    Static.error(e);
+                    finish();
+                }
             }
-            if (Static.tablet) {
-                updateToolbar(data.title, null);
-            }
-            ViewGroup root = (ViewGroup) findViewById(getRootViewId());
-            if (root != null) {
-                root.removeAllViews();
-            }
-            Fragment fragment = (Fragment) data.connectedFragmentClass.newInstance();
-            if (extras != null) {
-                fragment.setArguments(extras);
-            }
-            getSupportFragmentManager().beginTransaction().replace(getRootViewId(), fragment).commit();
-        } catch (Exception e) {
-            Static.error(e);
-            finish();
-        }
+        });
     }
-
 }

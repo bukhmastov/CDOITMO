@@ -64,11 +64,11 @@ public abstract class SchedulePreference extends DialogPreference {
         setDialogIcon(null);
     }
 
-    protected void setValue(String query, String title){
+    protected void setValue(String query, String title) {
         this.query = query;
         this.title = title;
     }
-    protected void setValue(String value){
+    protected void setValue(String value) {
         try {
             JSONObject jsonValue = new JSONObject(value);
             query = jsonValue.getString("query");
@@ -77,7 +77,7 @@ public abstract class SchedulePreference extends DialogPreference {
             setDefaultValue();
         }
     }
-    protected String getValue(){
+    protected String getValue() {
         try {
             JSONObject jsonValue = new JSONObject();
             jsonValue.put("query", query);
@@ -87,12 +87,12 @@ public abstract class SchedulePreference extends DialogPreference {
             return null;
         }
     }
-    protected void setDefaultValue(){
+    protected void setDefaultValue() {
         setValue("auto", "");
         DEFAULT_VALUE = getValue();
     }
 
-    protected void persist(String value){
+    protected void persist(String value) {
         persistString(value);
         OnPreferenceChangeListener onPreferenceChangeListener = this.getOnPreferenceChangeListener();
         if (onPreferenceChangeListener != null) onPreferenceChangeListener.onPreferenceChange(this, value);
@@ -182,7 +182,7 @@ public abstract class SchedulePreference extends DialogPreference {
         }
     }
     protected abstract void search(String search);
-    protected void loading(String text){
+    protected void loading(String text) {
         if (preference_schedule == null) return;
         FrameLayout schedule_preference_list = (FrameLayout) preference_schedule.findViewById(R.id.schedule_preference_list);
         if (schedule_preference_list != null){
@@ -206,7 +206,7 @@ public abstract class SchedulePreference extends DialogPreference {
             schedule_preference_list.addView(linearLayout);
         }
     }
-    protected void failed(String text){
+    protected void failed(String text) {
         if (preference_schedule == null) return;
         FrameLayout schedule_preference_list = (FrameLayout) preference_schedule.findViewById(R.id.schedule_preference_list);
         if (schedule_preference_list != null){
@@ -231,7 +231,7 @@ public abstract class SchedulePreference extends DialogPreference {
             schedule_preference_list.addView(linearLayout);
         }
     }
-    protected void found(String text){
+    protected void found(String text) {
         if (preference_schedule == null) return;
         FrameLayout schedule_preference_list = (FrameLayout) preference_schedule.findViewById(R.id.schedule_preference_list);
         if (schedule_preference_list != null){

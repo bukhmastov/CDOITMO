@@ -45,13 +45,13 @@ public class ScheduleLessonsBuilder extends Thread {
     public static final int STATE_LOADING = 1;
     public static final int STATE_DONE = 2;
 
-    public ScheduleLessonsBuilder(ConnectedActivity activity, int type, ScheduleLessonsBuilder.response delegate){
+    public ScheduleLessonsBuilder(ConnectedActivity activity, int type, ScheduleLessonsBuilder.response delegate) {
         this.activity = activity;
         this.delegate = delegate;
         this.type = type;
         this.destiny = activity.getResources().getDisplayMetrics().density;
     }
-    public void run(){
+    public void run() {
         Log.v(TAG, "started");
         try {
             LinearLayout schedule_layout = (LinearLayout) inflate(R.layout.layout_schedule);
@@ -180,20 +180,10 @@ public class ScheduleLessonsBuilder extends Thread {
                                                 ScheduleLessons.deleteLesson(activity, cache_token, index, lesson);
                                                 break;
                                             case R.id.copy_lesson:
-                                                try {
-                                                    ScheduleLessons.createLesson(activity, ScheduleLessonsFragment.schedule, lesson, index, type);
-                                                } catch (Exception e) {
-                                                    Static.error(e);
-                                                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                                }
+                                                ScheduleLessons.createLesson(activity, ScheduleLessonsFragment.schedule, lesson, index, type);
                                                 break;
                                             case R.id.edit_lesson:
-                                                try {
-                                                    ScheduleLessons.editLesson(activity, ScheduleLessonsFragment.schedule, lesson, index, type);
-                                                } catch (Exception e) {
-                                                    Static.error(e);
-                                                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                                }
+                                                ScheduleLessons.editLesson(activity, ScheduleLessonsFragment.schedule, lesson, index, type);
                                                 break;
                                         }
                                         return false;
@@ -333,5 +323,4 @@ public class ScheduleLessonsBuilder extends Thread {
             menu.findItem(id).setTitle(text);
         }
     }
-
 }

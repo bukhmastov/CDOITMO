@@ -14,8 +14,8 @@
         android:layout_marginBottom="@dimen/item_padding"
         android:layout_marginStart="@dimen/item_padding_quarter"
         android:layout_marginEnd="@dimen/item_padding_quarter"
-        android:src="@drawable/ic_warning"
-        android:contentDescription="@string/load_failed" />
+        android:src="@drawable/ic_disconnected"
+        android:contentDescription="@string/no_connection" />
 
     <TextView
         android:id="@+id/state_failed_compact_message"
@@ -25,7 +25,7 @@
         android:gravity="center_vertical"
         android:paddingStart="@dimen/item_padding_half"
         android:paddingEnd="0dp"
-        android:text="@string/load_failed"
+        android:text="@string/no_connection"
         android:textAllCaps="true"
         android:textColor="?android:attr/textColorPrimary"
         android:textSize="@dimen/font_size_14" />

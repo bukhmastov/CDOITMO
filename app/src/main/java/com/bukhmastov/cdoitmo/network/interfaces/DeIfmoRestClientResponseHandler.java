@@ -8,6 +8,6 @@ import org.json.JSONObject;
 public interface DeIfmoRestClientResponseHandler {
     void onSuccess(int statusCode, JSONObject responseObj, JSONArray responseArr);
     void onProgress(int state);
-    void onFailure(int state);
+    void onFailure(int statusCode, int state);
     void onNewHandle(RequestHandle requestHandle);
 }

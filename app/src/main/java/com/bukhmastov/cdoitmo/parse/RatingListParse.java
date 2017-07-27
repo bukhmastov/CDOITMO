@@ -49,9 +49,7 @@ public class RatingListParse extends AsyncTask<String, Void, JSONObject> {
                     }
                 }
             }
-            JSONObject json = new JSONObject();
-            json.put("faculties", faculties);
-            return json;
+            return new JSONObject().put("faculties", faculties);
         } catch (Exception e) {
             Static.error(e);
             return null;

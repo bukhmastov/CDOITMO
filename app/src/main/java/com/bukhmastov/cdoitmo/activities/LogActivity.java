@@ -103,7 +103,7 @@ public class LogActivity extends AppCompatActivity implements SwipeRefreshLayout
     }
 
     @Nullable
-    private File getLogFile(String data){
+    private File getLogFile(String data) {
         try {
             File temp = new File(new File(getCacheDir(), "shared"), "log.tmp");
             if (!temp.exists()) {
@@ -124,27 +124,32 @@ public class LogActivity extends AppCompatActivity implements SwipeRefreshLayout
         }
     }
 
-    private void display(){
-        try {
-            extraLog = Log.getExtraLog();
-            ((TextView) findViewById(R.id.warn)).setText(String.valueOf(extraLog.warn));
-            ((TextView) findViewById(R.id.error)).setText(String.valueOf(extraLog.error));
-            ((TextView) findViewById(R.id.exception)).setText(String.valueOf(extraLog.exception));
-            ((TextView) findViewById(R.id.wtf)).setText(String.valueOf(extraLog.wtf));
-            ((TextView) findViewById(R.id.log_container)).setText(extraLog.log_reverse);
-            SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_container);
-            if (mSwipeRefreshLayout != null) {
-                if (mSwipeRefreshLayout.isRefreshing()) {
-                    mSwipeRefreshLayout.setRefreshing(false);
+    private void display() {
+        final LogActivity self = this;
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    extraLog = Log.getExtraLog();
+                    ((TextView) findViewById(R.id.warn)).setText(String.valueOf(extraLog.warn));
+                    ((TextView) findViewById(R.id.error)).setText(String.valueOf(extraLog.error));
+                    ((TextView) findViewById(R.id.exception)).setText(String.valueOf(extraLog.exception));
+                    ((TextView) findViewById(R.id.wtf)).setText(String.valueOf(extraLog.wtf));
+                    ((TextView) findViewById(R.id.log_container)).setText(extraLog.log_reverse);
+                    SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_container);
+                    if (mSwipeRefreshLayout != null) {
+                        if (mSwipeRefreshLayout.isRefreshing()) {
+                            mSwipeRefreshLayout.setRefreshing(false);
+                        }
+                        mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
+                        mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
+                        mSwipeRefreshLayout.setOnRefreshListener(self);
+                    }
+                } catch (Exception e) {
+                    Static.error(e);
+                    Static.toast(self, getString(R.string.something_went_wrong));
                 }
-                mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
-                mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
-                mSwipeRefreshLayout.setOnRefreshListener(this);
             }
-        } catch (Exception e) {
-            Static.error(e);
-            Static.toast(this, getString(R.string.something_went_wrong));
-        }
+        });
     }
-
 }

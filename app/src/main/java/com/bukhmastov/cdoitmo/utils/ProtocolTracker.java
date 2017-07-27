@@ -18,7 +18,7 @@ public class ProtocolTracker {
         this.context = context;
     }
 
-    public ProtocolTracker check(){
+    public ProtocolTracker check() {
         Log.v(TAG, "check");
         boolean enabled = Storage.pref.get(context, "pref_use_notifications", true);
         boolean running = Objects.equals(Storage.file.perm.get(context, "protocol_tracker#job_service_running", "false"), "true");
@@ -40,13 +40,13 @@ public class ProtocolTracker {
         }
         return this;
     }
-    public ProtocolTracker restart(){
+    public ProtocolTracker restart() {
         Log.v(TAG, "restart");
         stop();
         start();
         return this;
     }
-    private ProtocolTracker start(){
+    private ProtocolTracker start() {
         Log.v(TAG, "start");
         boolean enabled = Storage.pref.get(context, "pref_use_notifications", true);
         boolean running = Objects.equals(Storage.file.perm.get(context, "protocol_tracker#job_service_running", "false"), "true");
@@ -69,7 +69,7 @@ public class ProtocolTracker {
         }
         return this;
     }
-    public ProtocolTracker stop(){
+    public ProtocolTracker stop() {
         Log.v(TAG, "stop");
         boolean running = Objects.equals(Storage.file.perm.get(context, "protocol_tracker#job_service_running", "false"), "true");
         if (running) {

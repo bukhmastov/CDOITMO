@@ -31,13 +31,13 @@ public class RatingParse extends AsyncTask<String, Void, JSONObject> {
             List<? extends TagNode> rows = table.getAllElementsList(false).get(0).getAllElementsList(false);
             int max_course = 1;
             JSONArray courses = new JSONArray();
-            for(TagNode row : rows){
-                if(row.getText().toString().contains("Позиция")) continue;
+            for (TagNode row : rows) {
+                if (row.getText().toString().contains("Позиция")) continue;
                 List<? extends TagNode> columns = row.getAllElementsList(false);
                 JSONObject course = new JSONObject();
                 course.put("faculty", columns.get(0).getText().toString().trim());
                 int course_value = Integer.parseInt(columns.get(1).getText().toString().trim());
-                if(course_value > max_course) max_course = course_value;
+                if (course_value > max_course) max_course = course_value;
                 course.put("course", course_value);
                 course.put("position", columns.get(2).getText().toString().trim());
                 courses.put(course);

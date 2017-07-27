@@ -82,22 +82,31 @@ public class FirebaseCrashProvider {
         FirebaseCrashProvider.exception(throwable);
     }
 
-    public static void exception(Throwable throwable) {
-        try {
-            if (!enabled) return;
-            FirebaseCrash.report(throwable);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public static void exception(final Throwable throwable) {
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (!enabled) return;
+                    FirebaseCrash.report(throwable);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
-    public static void log(LEVEL level, String TAG, String log) {
-        try {
-            if (!enabled) return;
-            FirebaseCrash.log(level2string(level) + "/" + TAG + " " + log);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public static void log(final LEVEL level, final String TAG, final String log) {
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (!enabled) return;
+                    FirebaseCrash.log(level2string(level) + "/" + TAG + " " + log);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
-
 }

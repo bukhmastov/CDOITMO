@@ -106,156 +106,194 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
         load();
     }
 
-    private void load(){
-        Log.v(TAG, "load");
-        activity.updateToolbar(getString(R.string.top_rating), R.drawable.ic_rating);
-        if (Static.OFFLINE_MODE) {
-            try {
-                Static.snackBar(activity, getString(R.string.offline_mode_on));
-                draw(R.layout.state_offline);
-                View offline_reload = activity.findViewById(R.id.offline_reload);
-                if (offline_reload != null) {
-                    offline_reload.setOnClickListener(new View.OnClickListener() {
+    private void load() {
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "load");
+                activity.updateToolbar(getString(R.string.top_rating), R.drawable.ic_rating);
+                if (!Static.OFFLINE_MODE) {
+                    DeIfmoClient.get(activity, Client.Protocol.HTTP, "?node=rating&std&depId=" + faculty + "&year=" + course + "&app=" + years, null, new DeIfmoClientResponseHandler() {
                         @Override
-                        public void onClick(View v) {
-                            load();
+                        public void onSuccess(int statusCode, String response) {
+                            Log.v(TAG, "load | success | statusCode=" + statusCode);
+                            if (statusCode == 200) {
+                                new RatingTopListParse(new RatingTopListParse.response() {
+                                    @Override
+                                    public void finish(JSONObject json) {
+                                        display(json);
+                                    }
+                                }).execute(response, Storage.file.perm.get(activity, "user#name"));
+                            } else {
+                                loadFailed();
+                            }
+                        }
+                        @Override
+                        public void onProgress(final int state) {
+                            Static.T.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.v(TAG, "load | progress " + state);
+                                    draw(R.layout.state_loading);
+                                    TextView loading_message = (TextView) activity.findViewById(R.id.loading_message);
+                                    if (loading_message != null) {
+                                        switch (state) {
+                                            case IfmoClient.STATE_HANDLING:
+                                                loading_message.setText(R.string.loading);
+                                                break;
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                        @Override
+                        public void onFailure(final int statusCode, final int state) {
+                            Static.T.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.v(TAG, "load | failure " + state);
+                                    switch (state) {
+                                        case IfmoClient.FAILED_OFFLINE:
+                                            draw(R.layout.state_offline);
+                                            View offline_reload = activity.findViewById(R.id.offline_reload);
+                                            if (offline_reload != null) {
+                                                offline_reload.setOnClickListener(new View.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(View v) {
+                                                        load();
+                                                    }
+                                                });
+                                            }
+                                            break;
+                                        case IfmoClient.FAILED_TRY_AGAIN:
+                                            draw(R.layout.state_try_again);
+                                            View try_again_reload = activity.findViewById(R.id.try_again_reload);
+                                            if (try_again_reload != null) {
+                                                try_again_reload.setOnClickListener(new View.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(View v) {
+                                                        load();
+                                                    }
+                                                });
+                                            }
+                                            break;
+                                    }
+                                }
+                            });
+                        }
+                        @Override
+                        public void onNewHandle(RequestHandle requestHandle) {
+                            fragmentRequestHandle = requestHandle;
+                        }
+                    });
+                } else {
+                    Static.T.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                Static.snackBar(activity, getString(R.string.offline_mode_on));
+                                draw(R.layout.state_offline);
+                                View offline_reload = activity.findViewById(R.id.offline_reload);
+                                if (offline_reload != null) {
+                                    offline_reload.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            load();
+                                        }
+                                    });
+                                }
+                            } catch (Exception e) {
+                                Static.error(e);
+                            }
                         }
                     });
                 }
-            } catch (Exception e) {
-                Static.error(e);
-            }
-            return;
-        }
-        DeIfmoClient.get(activity, Client.Protocol.HTTP, "?node=rating&std&depId=" + faculty + "&year=" + course + "&app=" + years, null, new DeIfmoClientResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, String response) {
-                Log.v(TAG, "load | success | statusCode=" + statusCode);
-                if (statusCode == 200) {
-                    new RatingTopListParse(new RatingTopListParse.response() {
-                        @Override
-                        public void finish(JSONObject json) {
-                            display(json);
-                        }
-                    }).execute(response, Storage.file.perm.get(activity, "user#name"));
-                } else {
-                    loadFailed();
-                }
-            }
-            @Override
-            public void onProgress(int state) {
-                Log.v(TAG, "load | progress " + state);
-                draw(R.layout.state_loading);
-                TextView loading_message = (TextView) activity.findViewById(R.id.loading_message);
-                if (loading_message != null) {
-                    switch (state) {
-                        case IfmoClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
-                    }
-                }
-            }
-            @Override
-            public void onFailure(int state) {
-                Log.v(TAG, "load | failure " + state);
-                switch (state) {
-                    case IfmoClient.FAILED_OFFLINE:
-                        draw(R.layout.state_offline);
-                        View offline_reload = activity.findViewById(R.id.offline_reload);
-                        if (offline_reload != null) {
-                            offline_reload.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    load();
-                                }
-                            });
-                        }
-                        break;
-                    case IfmoClient.FAILED_TRY_AGAIN:
-                        draw(R.layout.state_try_again);
-                        View try_again_reload = activity.findViewById(R.id.try_again_reload);
-                        if (try_again_reload != null) {
-                            try_again_reload.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    load();
-                                }
-                            });
-                        }
-                        break;
-                }
-            }
-            @Override
-            public void onNewHandle(RequestHandle requestHandle) {
-                fragmentRequestHandle = requestHandle;
             }
         });
     }
-    private void loadFailed(){
-        Log.v(TAG, "loadFailed");
-        try {
-            draw(R.layout.state_try_again);
-            View try_again_reload = activity.findViewById(R.id.try_again_reload);
-            if (try_again_reload != null) {
-                try_again_reload.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        load();
+    private void loadFailed() {
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "loadFailed");
+                try {
+                    draw(R.layout.state_try_again);
+                    View try_again_reload = activity.findViewById(R.id.try_again_reload);
+                    if (try_again_reload != null) {
+                        try_again_reload.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                load();
+                            }
+                        });
                     }
-                });
+                } catch (Exception e) {
+                    Static.error(e);
+                }
             }
-        } catch (Exception e) {
-            Static.error(e);
-        }
-    }
-    private void display(JSONObject data){
-        Log.v(TAG, "display");
-        try {
-            if (data == null) throw new NullPointerException("display(JSONObject data) can't be null");
-            activity.updateToolbar(data.getString("header"), R.drawable.ic_rating);
-            // получаем список для отображения рейтинга
-            final ArrayList<HashMap<String, String>> users = new ArrayList<>();
-            JSONArray jsonArray = data.getJSONArray("list");
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject jsonObject = jsonArray.getJSONObject(i);
-                HashMap<String, String> hashMap = new HashMap<>();
-                hashMap.put("number", String.valueOf(jsonObject.getInt("number")));
-                hashMap.put("fio", jsonObject.getString("fio"));
-                hashMap.put("meta", jsonObject.getString("group") + " — " + jsonObject.getString("department"));
-                hashMap.put("is_me", jsonObject.getBoolean("is_me") ? "1" : "0");
-                hashMap.put("change", jsonObject.getString("change"));
-                hashMap.put("delta", jsonObject.getString("delta"));
-                users.add(hashMap);
-            }
-            // отображаем интерфейс
-            draw(R.layout.rating_list_layout);
-            // работаем со списком
-            ListView rl_list_view = (ListView) activity.findViewById(R.id.rl_list_view);
-            if (rl_list_view != null) rl_list_view.setAdapter(new RatingTopListView(activity, users));
-            // работаем со свайпом
-            SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) activity.findViewById(R.id.swipe_container);
-            if (mSwipeRefreshLayout != null) {
-                mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
-                mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
-                mSwipeRefreshLayout.setOnRefreshListener(this);
-            }
-        } catch(Exception e){
-            Static.error(e);
-            loadFailed();
-        }
+        });
     }
 
-    private void draw(int layoutId) {
-        try {
-            ViewGroup vg = ((ViewGroup) activity.findViewById(R.id.rating_list_container));
-            if (vg != null) {
-                vg.removeAllViews();
-                vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+    private void display(final JSONObject data) {
+        final RatingListFragment self = this;
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "display");
+                try {
+                    if (data == null) throw new NullPointerException("display(JSONObject data) can't be null");
+                    activity.updateToolbar(Static.capitalizeFirstLetter(data.getString("header")), R.drawable.ic_rating);
+                    // получаем список для отображения рейтинга
+                    final ArrayList<HashMap<String, String>> users = new ArrayList<>();
+                    JSONArray jsonArray = data.getJSONArray("list");
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        JSONObject jsonObject = jsonArray.getJSONObject(i);
+                        HashMap<String, String> hashMap = new HashMap<>();
+                        hashMap.put("number", String.valueOf(jsonObject.getInt("number")));
+                        hashMap.put("fio", jsonObject.getString("fio"));
+                        hashMap.put("meta", jsonObject.getString("group") + " — " + jsonObject.getString("department"));
+                        hashMap.put("is_me", jsonObject.getBoolean("is_me") ? "1" : "0");
+                        hashMap.put("change", jsonObject.getString("change"));
+                        hashMap.put("delta", jsonObject.getString("delta"));
+                        users.add(hashMap);
+                    }
+                    // отображаем интерфейс
+                    draw(R.layout.rating_list_layout);
+                    // работаем со списком
+                    ListView rl_list_view = (ListView) activity.findViewById(R.id.rl_list_view);
+                    if (rl_list_view != null) rl_list_view.setAdapter(new RatingTopListView(activity, users));
+                    // работаем со свайпом
+                    SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) activity.findViewById(R.id.swipe_container);
+                    if (mSwipeRefreshLayout != null) {
+                        mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
+                        mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
+                        mSwipeRefreshLayout.setOnRefreshListener(self);
+                    }
+                } catch (Exception e) {
+                    Static.error(e);
+                    loadFailed();
+                }
             }
-        } catch (Exception e) {
-            Static.error(e);
-        }
+        });
+    }
+
+    private void draw(final int layoutId) {
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    ViewGroup vg = ((ViewGroup) activity.findViewById(R.id.rating_list_container));
+                    if (vg != null) {
+                        vg.removeAllViews();
+                        vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                    }
+                } catch (Exception e) {
+                    Static.error(e);
+                }
+            }
+        });
     }
     private View inflate(int layoutId) throws InflateException {
         return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
-
 }

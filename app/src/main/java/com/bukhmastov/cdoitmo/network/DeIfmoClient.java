@@ -42,7 +42,7 @@ public class DeIfmoClient extends Client {
     public static final int FAILED_AUTH_CREDENTIALS_REQUIRED = 3;
     public static final int FAILED_AUTH_CREDENTIALS_FAILED = 4;
 
-    public static void check(final Context context, final DeIfmoClientResponseHandler responseHandler){
+    public static void check(final Context context, final DeIfmoClientResponseHandler responseHandler) {
         Log.v(TAG, "check");
         init();
         if (Static.isOnline(context)) {
@@ -58,8 +58,8 @@ public class DeIfmoClient extends Client {
                         responseHandler.onProgress(state);
                     }
                     @Override
-                    public void onFailure(int state) {
-                        responseHandler.onFailure(state);
+                    public void onFailure(int statusCode, int state) {
+                        responseHandler.onFailure(statusCode, state);
                     }
                     @Override
                     public void onNewHandle(RequestHandle requestHandle) {
@@ -100,9 +100,9 @@ public class DeIfmoClient extends Client {
                     @Override
                     public void onProgress(int state) {}
                     @Override
-                    public void onFailure(int state) {
-                        Log.v(TAG, "check | failed | state = " + state);
-                        responseHandler.onFailure(state);
+                    public void onFailure(int statusCode, int state) {
+                        Log.v(TAG, "check | failed | statusCode = " + statusCode + " |state = " + state);
+                        responseHandler.onFailure(statusCode, state);
                     }
                     @Override
                     public void onNewHandle(RequestHandle requestHandle) {
@@ -111,10 +111,10 @@ public class DeIfmoClient extends Client {
                 });
             }
         } else {
-            responseHandler.onFailure(FAILED_OFFLINE);
+            responseHandler.onFailure(STATUS_CODE_EMPTY, FAILED_OFFLINE);
         }
     }
-    public static void authorize(final Context context, final DeIfmoClientResponseHandler responseHandler){
+    public static void authorize(final Context context, final DeIfmoClientResponseHandler responseHandler) {
         Log.v(TAG, "authorize");
         init();
         responseHandler.onProgress(STATE_AUTHORIZATION);
@@ -122,14 +122,14 @@ public class DeIfmoClient extends Client {
         String password = Storage.file.perm.get(context, "user#password");
         if (Objects.equals(login, "") || Objects.equals(password, "")) {
             Log.v(TAG, "authorize | FAILED_AUTH_CREDENTIALS_REQUIRED");
-            responseHandler.onFailure(FAILED_AUTH_CREDENTIALS_REQUIRED);
+            responseHandler.onFailure(STATUS_CODE_EMPTY, FAILED_AUTH_CREDENTIALS_REQUIRED);
         } else {
             RequestParams params = new RequestParams();
             params.put("Rule", "LOGON");
             params.put("LOGIN", login);
             params.put("PASSWD", password);
             renewCookie(context);
-            responseHandler.onNewHandle(httpclient.post(getAbsoluteUrl(DEFAULT_PROTOCOL, "servlet"), params, new AsyncHttpResponseHandler() {
+            responseHandler.onNewHandle(checkHandle(getHttpClient().post(getAbsoluteUrl(DEFAULT_PROTOCOL, "servlet"), params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                     Log.v(TAG, "authorize | success | statusCode=" + statusCode);
@@ -144,7 +144,7 @@ public class DeIfmoClient extends Client {
                                         Storage.file.perm.put(context, "user#jsessionid", cookie[1]);
                                     } else {
                                         Log.e(TAG, "authorize | success | got 'Set-Cookie' header with empty 'JSESSIONID'");
-                                        responseHandler.onFailure(FAILED_AUTH_TRY_AGAIN);
+                                        responseHandler.onFailure(statusCode, FAILED_AUTH_TRY_AGAIN);
                                         return;
                                     }
                                 }
@@ -156,10 +156,10 @@ public class DeIfmoClient extends Client {
                         if (data == null) throw new NullPointerException("data cannot be null");
                         if (data.contains("Access is forbidden") && data.contains("Invalid login/password")) {
                             Log.v(TAG, "authorize | success | FAILED_AUTH_CREDENTIALS_FAILED");
-                            responseHandler.onFailure(FAILED_AUTH_CREDENTIALS_FAILED);
+                            responseHandler.onFailure(statusCode, FAILED_AUTH_CREDENTIALS_FAILED);
                         } else if (data.contains("Выбор группы безопасности") && data.contains("OPTION VALUE=8")) {
                             Log.v(TAG, "authorize | success | going to select security group");
-                            httpclient.get(getAbsoluteUrl(DEFAULT_PROTOCOL, "servlet/distributedCDE?Rule=APPLYSECURITYGROUP&PERSON=" + Storage.file.perm.get(context, "user#login") + "&SECURITYGROUP=8&COMPNAME="), null, new AsyncHttpResponseHandler(){
+                            getHttpClient().get(getAbsoluteUrl(DEFAULT_PROTOCOL, "servlet/distributedCDE?Rule=APPLYSECURITYGROUP&PERSON=" + Storage.file.perm.get(context, "user#login") + "&SECURITYGROUP=8&COMPNAME="), null, new AsyncHttpResponseHandler(){
                                 @Override
                                 public void onSuccess(int statusCode, Header[] headers, byte[] response) {
                                     Log.v(TAG, "authorize | success | security group | authorized | statusCode=" + statusCode);
@@ -169,7 +169,7 @@ public class DeIfmoClient extends Client {
                                 @Override
                                 public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable throwable) {
                                     Log.v(TAG, "authorize | success | security group | FAILED_AUTH_TRY_AGAIN | statusCode=" + statusCode + (throwable != null ? " | throwable=" + throwable.getMessage() : "") + (errorResponse != null ? " | response=" + convert2UTF8(headers, errorResponse) : ""));
-                                    responseHandler.onFailure(FAILED_AUTH_TRY_AGAIN);
+                                    responseHandler.onFailure(statusCode, FAILED_AUTH_TRY_AGAIN);
                                 }
                             });
                         } else if (data.contains("Обучение и аттестация")) {
@@ -178,32 +178,32 @@ public class DeIfmoClient extends Client {
                             responseHandler.onSuccess(statusCode, "authorized");
                         } else {
                             Log.v(TAG, "authorize | success | FAILED_AUTH_TRY_AGAIN");
-                            responseHandler.onFailure(FAILED_AUTH_TRY_AGAIN);
+                            responseHandler.onFailure(statusCode, FAILED_AUTH_TRY_AGAIN);
                         }
                     } catch (Exception e) {
                         Static.error(e);
-                        responseHandler.onFailure(FAILED_AUTH_TRY_AGAIN);
+                        responseHandler.onFailure(statusCode, FAILED_AUTH_TRY_AGAIN);
                     }
                 }
                 @Override
                 public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable throwable) {
                     Log.v(TAG, "authorize | failure | statusCode=" + statusCode + (throwable != null ? " | throwable=" + throwable.getMessage() : "") + (responseBody != null ? " | response=" + convert2UTF8(headers, responseBody) : ""));
                     responseHandler.onNewHandle(null);
-                    responseHandler.onFailure(FAILED_AUTH_TRY_AGAIN);
+                    responseHandler.onFailure(statusCode, FAILED_AUTH_TRY_AGAIN);
                 }
-            }));
+            })));
         }
     }
-    public static void get(final Context context, final String url, final RequestParams params, final DeIfmoClientResponseHandler responseHandler){
+    public static void get(final Context context, final String url, final RequestParams params, final DeIfmoClientResponseHandler responseHandler) {
         get(context, DEFAULT_PROTOCOL, url, params, responseHandler, DEFAULT_RE_AUTH);
     }
-    public static void get(final Context context, final Protocol protocol, final String url, final RequestParams params, final DeIfmoClientResponseHandler responseHandler){
+    public static void get(final Context context, final Protocol protocol, final String url, final RequestParams params, final DeIfmoClientResponseHandler responseHandler) {
         get(context, protocol, url, params, responseHandler, DEFAULT_RE_AUTH);
     }
-    public static void get(final Context context, final String url, final RequestParams params, final DeIfmoClientResponseHandler responseHandler, final boolean reAuth){
+    public static void get(final Context context, final String url, final RequestParams params, final DeIfmoClientResponseHandler responseHandler, final boolean reAuth) {
         get(context, DEFAULT_PROTOCOL, url, params, responseHandler, reAuth);
     }
-    public static void get(final Context context, final Protocol protocol, final String url, final RequestParams params, final DeIfmoClientResponseHandler responseHandler, final boolean reAuth){
+    public static void get(final Context context, final Protocol protocol, final String url, final RequestParams params, final DeIfmoClientResponseHandler responseHandler, final boolean reAuth) {
         Log.v(TAG, "get | url=" + url + " | params=" + Static.getSafetyRequestParams(params));
         init();
         if (Static.isOnline(context)) {
@@ -218,8 +218,8 @@ public class DeIfmoClient extends Client {
                         responseHandler.onProgress(state);
                     }
                     @Override
-                    public void onFailure(int state) {
-                        responseHandler.onFailure(state);
+                    public void onFailure(int statusCode, int state) {
+                        responseHandler.onFailure(statusCode, state);
                     }
                     @Override
                     public void onNewHandle(RequestHandle requestHandle) {
@@ -230,7 +230,7 @@ public class DeIfmoClient extends Client {
             }
             responseHandler.onProgress(STATE_HANDLING);
             renewCookie(context);
-            responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(protocol, url), params, new AsyncHttpResponseHandler() {
+            responseHandler.onNewHandle(checkHandle(getHttpClient().get(getAbsoluteUrl(protocol, url), params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                     Log.v(TAG, "get | url=" + url + " | success | statusCode=" + statusCode);
@@ -251,8 +251,8 @@ public class DeIfmoClient extends Client {
                                         responseHandler.onProgress(state);
                                     }
                                     @Override
-                                    public void onFailure(int state) {
-                                        responseHandler.onFailure(state);
+                                    public void onFailure(int statusCode, int state) {
+                                        responseHandler.onFailure(statusCode, state);
                                     }
                                     @Override
                                     public void onNewHandle(RequestHandle requestHandle) {
@@ -260,32 +260,32 @@ public class DeIfmoClient extends Client {
                                     }
                                 });
                             } else {
-                                responseHandler.onFailure(FAILED_AUTH_CREDENTIALS_REQUIRED);
+                                responseHandler.onFailure(statusCode, FAILED_AUTH_CREDENTIALS_REQUIRED);
                             }
                         } else {
                             responseHandler.onSuccess(statusCode, data);
                         }
                     } catch (Exception e) {
                         Static.error(e);
-                        responseHandler.onFailure(FAILED_TRY_AGAIN);
+                        responseHandler.onFailure(statusCode, FAILED_TRY_AGAIN);
                     }
                 }
                 @Override
                 public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable throwable) {
                     Log.v(TAG, "get | url=" + url + " | failure | statusCode=" + statusCode + (throwable != null ? " | throwable=" + throwable.getMessage() : "") + (responseBody != null ? " | response=" + convert2UTF8(headers, responseBody) : ""));
                     responseHandler.onNewHandle(null);
-                    responseHandler.onFailure(FAILED_TRY_AGAIN);
+                    responseHandler.onFailure(statusCode, FAILED_TRY_AGAIN);
                 }
-            }));
+            })));
         } else {
             Log.v(TAG, "get | offline");
-            responseHandler.onFailure(FAILED_OFFLINE);
+            responseHandler.onFailure(STATUS_CODE_EMPTY, FAILED_OFFLINE);
         }
     }
-    public static void post(final Context context, final String url, final RequestParams params, final DeIfmoClientResponseHandler responseHandler){
+    public static void post(final Context context, final String url, final RequestParams params, final DeIfmoClientResponseHandler responseHandler) {
         post(context, DEFAULT_PROTOCOL, url, params, responseHandler);
     }
-    public static void post(final Context context, final Protocol protocol, final String url, final RequestParams params, final DeIfmoClientResponseHandler responseHandler){
+    public static void post(final Context context, final Protocol protocol, final String url, final RequestParams params, final DeIfmoClientResponseHandler responseHandler) {
         Log.v(TAG, "post | url=" + url + " | params=" + Static.getSafetyRequestParams(params));
         init();
         if (Static.isOnline(context)) {
@@ -300,8 +300,8 @@ public class DeIfmoClient extends Client {
                         responseHandler.onProgress(state);
                     }
                     @Override
-                    public void onFailure(int state) {
-                        responseHandler.onFailure(state);
+                    public void onFailure(int statusCode, int state) {
+                        responseHandler.onFailure(statusCode, state);
                     }
                     @Override
                     public void onNewHandle(RequestHandle requestHandle) {
@@ -312,7 +312,7 @@ public class DeIfmoClient extends Client {
             }
             responseHandler.onProgress(STATE_HANDLING);
             renewCookie(context);
-            responseHandler.onNewHandle(httpclient.post(getAbsoluteUrl(protocol, url), params, new AsyncHttpResponseHandler() {
+            responseHandler.onNewHandle(checkHandle(getHttpClient().post(getAbsoluteUrl(protocol, url), params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                     Log.v(TAG, "post | url=" + url + " | success | statusCode=" + statusCode);
@@ -332,8 +332,8 @@ public class DeIfmoClient extends Client {
                                     responseHandler.onProgress(state);
                                 }
                                 @Override
-                                public void onFailure(int state) {
-                                    responseHandler.onFailure(state);
+                                public void onFailure(int statusCode, int state) {
+                                    responseHandler.onFailure(statusCode, state);
                                 }
                                 @Override
                                 public void onNewHandle(RequestHandle requestHandle) {
@@ -345,25 +345,25 @@ public class DeIfmoClient extends Client {
                         }
                     } catch (Exception e) {
                         Static.error(e);
-                        responseHandler.onFailure(FAILED_TRY_AGAIN);
+                        responseHandler.onFailure(statusCode, FAILED_TRY_AGAIN);
                     }
                 }
                 @Override
                 public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable throwable) {
                     Log.v(TAG, "post | url=" + url + " | failure | statusCode=" + statusCode + (throwable != null ? " | throwable=" + throwable.getMessage() : "") + (responseBody != null ? " | response=" + convert2UTF8(headers, responseBody) : ""));
                     responseHandler.onNewHandle(null);
-                    responseHandler.onFailure(FAILED_TRY_AGAIN);
+                    responseHandler.onFailure(statusCode, FAILED_TRY_AGAIN);
                 }
-            }));
+            })));
         } else {
             Log.v(TAG, "post | offline");
-            responseHandler.onFailure(FAILED_OFFLINE);
+            responseHandler.onFailure(STATUS_CODE_EMPTY, FAILED_OFFLINE);
         }
     }
-    public static void getAvatar(final Context context, final String url, final DeIfmoDrawableClientResponseHandler responseHandler){
+    public static void getAvatar(final Context context, final String url, final DeIfmoDrawableClientResponseHandler responseHandler) {
         getAvatar(context, Protocol.HTTPS, url, responseHandler);
     }
-    public static void getAvatar(final Context context, final Protocol protocol, final String url, final DeIfmoDrawableClientResponseHandler responseHandler){
+    public static void getAvatar(final Context context, final Protocol protocol, final String url, final DeIfmoDrawableClientResponseHandler responseHandler) {
         Log.v(TAG, "getAvatar | url=" + url);
         init();
         if (Static.isOnline(context)) {
@@ -378,8 +378,8 @@ public class DeIfmoClient extends Client {
                         responseHandler.onProgress(state);
                     }
                     @Override
-                    public void onFailure(int state) {
-                        responseHandler.onFailure(state);
+                    public void onFailure(int statusCode, int state) {
+                        responseHandler.onFailure(statusCode, state);
                     }
                     @Override
                     public void onNewHandle(RequestHandle requestHandle) {
@@ -391,7 +391,7 @@ public class DeIfmoClient extends Client {
             responseHandler.onProgress(STATE_HANDLING);
             renewCookie(context);
             String[] allowed = {"image/jpeg;charset=Windows-1251"};
-            responseHandler.onNewHandle(httpclient.get(getAbsoluteUrl(protocol, url), null, new BinaryHttpResponseHandler(allowed) {
+            responseHandler.onNewHandle(checkHandle(getHttpClient().get(getAbsoluteUrl(protocol, url), null, new BinaryHttpResponseHandler(allowed) {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] binaryData) {
                     Log.v(TAG, "getAvatar | url=" + url + " | success | statusCode=" + statusCode);
@@ -401,23 +401,23 @@ public class DeIfmoClient extends Client {
                         responseHandler.onSuccess(statusCode, drawable);
                     } catch (Exception e) {
                         Static.error(e);
-                        responseHandler.onFailure(FAILED_TRY_AGAIN);
+                        responseHandler.onFailure(statusCode, FAILED_TRY_AGAIN);
                     }
                 }
                 @Override
                 public void onFailure(int statusCode, Header[] headers, byte[] binaryData, Throwable throwable) {
                     Log.v(TAG, "getAvatar | url=" + url + " | failure | statusCode=" + statusCode + (throwable != null ? " | throwable=" + throwable.getMessage() : ""));
                     responseHandler.onNewHandle(null);
-                    responseHandler.onFailure(FAILED_TRY_AGAIN);
+                    responseHandler.onFailure(statusCode, FAILED_TRY_AGAIN);
                 }
-            }));
+            })));
         } else {
             Log.v(TAG, "getAvatar | offline");
-            responseHandler.onFailure(FAILED_OFFLINE);
+            responseHandler.onFailure(STATUS_CODE_EMPTY, FAILED_OFFLINE);
         }
     }
+
     private static String getAbsoluteUrl(Protocol protocol, String relativeUrl) {
         return getProtocol(protocol) + BASE_URL + "/" + relativeUrl;
     }
-
 }

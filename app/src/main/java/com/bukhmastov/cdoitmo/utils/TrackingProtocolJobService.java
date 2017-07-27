@@ -44,160 +44,184 @@ public class TrackingProtocolJobService extends JobService {
     @Override
     public boolean onStopJob(JobParameters params) {
         Log.i(TAG, "Stopped");
-        if(jobRequestHandle != null) jobRequestHandle.cancel(true);
+        if (jobRequestHandle != null) jobRequestHandle.cancel(true);
         return true;
     }
 
-    private void request(){
-        Log.v(TAG, "request");
-        try {
-            attempt++;
-            if (attempt > maxAttempts) throw new Exception("Number of attempts exceeded the limit");
-            Log.i(TAG, "Request attempt #" + attempt);
-            DeIfmoRestClient.get(this, "eregisterlog?days=2", null, new DeIfmoRestClientResponseHandler() {
-                @Override
-                public void onSuccess(int statusCode, JSONObject responseObj, JSONArray responseArr) {
-                    if (statusCode == 200 && responseArr != null) {
-                        JSONArray array = new JSONArray();
-                        array.put(0);
-                        new ProtocolConverter(getBaseContext(), new ProtocolConverter.response() {
-                            @Override
-                            public void finish(JSONObject json) {
-                                try {
-                                    analyse(json.getJSONArray("protocol"));
-                                } catch (JSONException e) {
-                                    Log.e(TAG, e.getMessage());
-                                    done();
-                                }
+    private void request() {
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "request");
+                try {
+                    attempt++;
+                    if (attempt > maxAttempts) throw new Exception("Number of attempts exceeded the limit");
+                    Log.i(TAG, "Request attempt #" + attempt);
+                    DeIfmoRestClient.get(getBaseContext(), "eregisterlog?days=2", null, new DeIfmoRestClientResponseHandler() {
+                        @Override
+                        public void onSuccess(int statusCode, JSONObject responseObj, JSONArray responseArr) {
+                            if (statusCode == 200 && responseArr != null) {
+                                JSONArray array = new JSONArray();
+                                array.put(0);
+                                new ProtocolConverter(getBaseContext(), new ProtocolConverter.response() {
+                                    @Override
+                                    public void finish(JSONObject json) {
+                                        try {
+                                            analyse(json.getJSONArray("protocol"));
+                                        } catch (JSONException e) {
+                                            Log.e(TAG, e.getMessage());
+                                            done();
+                                        }
+                                    }
+                                }).execute(responseArr, array);
+                            } else {
+                                w8andRequest();
                             }
-                        }).execute(responseArr, array);
-                    } else {
-                        w8andRequest();
-                    }
+                        }
+                        @Override
+                        public void onProgress(int state) {}
+                        @Override
+                        public void onFailure(int statusCode, int state) {
+                            w8andRequest();
+                        }
+                        @Override
+                        public void onNewHandle(RequestHandle requestHandle) {
+                            jobRequestHandle = requestHandle;
+                        }
+                    });
+                } catch (Exception e){
+                    Log.e(TAG, e.getMessage());
+                    done();
                 }
-                @Override
-                public void onProgress(int state) {}
-                @Override
-                public void onFailure(int state) {
-                    w8andRequest();
-                }
-                @Override
-                public void onNewHandle(RequestHandle requestHandle) {
-                    jobRequestHandle = requestHandle;
-                }
-            });
-        } catch (Exception e){
-            Log.e(TAG, e.getMessage());
-            done();
-        }
+            }
+        });
     }
-    private void w8andRequest(){
-        Log.v(TAG, "w8andRequest");
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        request();
+    private void w8andRequest() {
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "w8andRequest");
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                request();
+            }
+        });
     }
-    private void analyse(JSONArray protocol){
-        Log.v(TAG, "analyse");
-        try {
-            if (protocol == null) throw new NullPointerException("json can't be null");
-            JSONArray history = new JSONArray();
-            boolean first_init = false;
-            try {
-                String historyStr = Storage.file.perm.get(this, "protocol_tracker#protocol");
-                if (Objects.equals(historyStr, "")) {
-                    first_init = true;
-                } else {
-                    history = new JSONArray(historyStr);
-                }
-            } catch(Exception e) {
-                e.printStackTrace();
-            }
-            Storage.file.perm.put(this, "protocol_tracker#protocol", protocol.toString());
-            if (first_init) {
-                done();
-                return;
-            }
-            ArrayList<JSONObject> changes = new ArrayList<>();
-            for (int i = 0; i < protocol.length(); i++) {
-                JSONObject protocolOBJ = protocol.getJSONObject(i);
-                boolean found = false;
-                for (int j = 0; j < history.length(); j++) {
-                    JSONObject historyOBJ = history.getJSONObject(j);
-                    if (Objects.equals(historyOBJ.toString(), protocolOBJ.toString())) {
-                        found = true;
-                        break;
+    private void analyse(final JSONArray protocol) {
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "analyse");
+                try {
+                    if (protocol == null) throw new NullPointerException("json can't be null");
+                    JSONArray history = new JSONArray();
+                    boolean first_init = false;
+                    try {
+                        String historyStr = Storage.file.perm.get(getBaseContext(), "protocol_tracker#protocol");
+                        if (Objects.equals(historyStr, "")) {
+                            first_init = true;
+                        } else {
+                            history = new JSONArray(historyStr);
+                        }
+                    } catch(Exception e) {
+                        e.printStackTrace();
                     }
-                }
-                if (!found) changes.add(protocolOBJ);
-            }
-            if (changes.size() > 0) {
-                long timestamp = System.currentTimeMillis();
-                boolean isSummary = false;
-                if (changes.size() > 1) {
-                    String text = changes.size() + " ";
-                    switch (changes.size() % 100) {
-                        case 10: case 11: case 12: case 13: case 14: text += getString(R.string.action_3); break;
-                        default:
-                            switch (changes.size() % 10) {
-                                case 1: text += getString(R.string.action_1); break;
-                                case 2: case 3: case 4: text += getString(R.string.action_2); break;
-                                default: text += getString(R.string.action_3); break;
+                    Storage.file.perm.put(getBaseContext(), "protocol_tracker#protocol", protocol.toString());
+                    if (first_init) {
+                        done();
+                        return;
+                    }
+                    ArrayList<JSONObject> changes = new ArrayList<>();
+                    for (int i = 0; i < protocol.length(); i++) {
+                        JSONObject protocolOBJ = protocol.getJSONObject(i);
+                        boolean found = false;
+                        for (int j = 0; j < history.length(); j++) {
+                            JSONObject historyOBJ = history.getJSONObject(j);
+                            if (Objects.equals(historyOBJ.toString(), protocolOBJ.toString())) {
+                                found = true;
+                                break;
                             }
-                            break;
+                        }
+                        if (!found) changes.add(protocolOBJ);
                     }
-                    addNotification(getString(R.string.protocol_changes), text, timestamp, true);
-                } else {
-                    isSummary = true;
-                }
-                for (int i = changes.size() - 1; i >= 0; i--) {
-                    JSONObject changeOBJ = changes.get(i);
-                    JSONObject var = changeOBJ.getJSONObject("var");
-                    StringBuilder text = new StringBuilder();
-                    text.append(changeOBJ.getString("value")).append("/").append(var.getString("max")).append(" — ").append(var.getString("name"));
-                    if (changeOBJ.getDouble("cdoitmo_delta_double") != 0) {
-                        text.append(" (").append(changeOBJ.getString("cdoitmo_delta")).append(")");
+                    if (changes.size() > 0) {
+                        long timestamp = System.currentTimeMillis();
+                        boolean isSummary = false;
+                        if (changes.size() > 1) {
+                            String text = changes.size() + " ";
+                            switch (changes.size() % 100) {
+                                case 10: case 11: case 12: case 13: case 14: text += getString(R.string.action_3); break;
+                                default:
+                                    switch (changes.size() % 10) {
+                                        case 1: text += getString(R.string.action_1); break;
+                                        case 2: case 3: case 4: text += getString(R.string.action_2); break;
+                                        default: text += getString(R.string.action_3); break;
+                                    }
+                                    break;
+                            }
+                            addNotification(getString(R.string.protocol_changes), text, timestamp, true);
+                        } else {
+                            isSummary = true;
+                        }
+                        for (int i = changes.size() - 1; i >= 0; i--) {
+                            JSONObject changeOBJ = changes.get(i);
+                            JSONObject var = changeOBJ.getJSONObject("var");
+                            StringBuilder text = new StringBuilder();
+                            text.append(changeOBJ.getString("value")).append("/").append(var.getString("max")).append(" — ").append(var.getString("name"));
+                            if (changeOBJ.getDouble("cdoitmo_delta_double") != 0) {
+                                text.append(" (").append(changeOBJ.getString("cdoitmo_delta")).append(")");
+                            }
+                            addNotification(changeOBJ.getString("subject"), text.toString(), timestamp, isSummary);
+                        }
                     }
-                    addNotification(changeOBJ.getString("subject"), text.toString(), timestamp, isSummary);
+                    done();
+                } catch (Exception e){
+                    done();
                 }
             }
-            done();
-        } catch (Exception e){
-            done();
-        }
+        });
     }
-    private void addNotification(String title, String text, long timestamp, boolean isSummary){
-        Log.v(TAG, "addNotification | title=" + title + " | text=" + text + " | timestamp=" + timestamp + " | isSummary=" + (isSummary ? "true" : "false"));
-        if (c > Integer.MAX_VALUE - 10) c = 0;
-        Intent intent = new Intent(this, SplashActivity.class);
-        intent.addFlags(Static.intentFlagRestart);
-        intent.putExtra("action", "protocol_changes");
-        PendingIntent pIntent = PendingIntent.getActivity(this, (int) System.currentTimeMillis(), intent, 0);
-        Notification.Builder b = new Notification.Builder(this);
-        b.setContentTitle(title).setContentText(text).setStyle(new Notification.BigTextStyle().bigText(text));
-        b.setSmallIcon(R.drawable.cdo).setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher));
-        b.setGroup("protocol_" + timestamp).setGroupSummary(isSummary);
-        b.setCategory(Notification.CATEGORY_EVENT);
-        b.setContentIntent(pIntent);
-        b.setAutoCancel(true);
-        if (isSummary) {
-            String ringtonePath = Storage.pref.get(this, "pref_notify_sound");
-            if (!Objects.equals(ringtonePath, "")) {
-                b.setSound(Uri.parse(ringtonePath));
+    private void addNotification(final String title, final String text, final long timestamp, final boolean isSummary) {
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "addNotification | title=" + title + " | text=" + text + " | timestamp=" + timestamp + " | isSummary=" + (isSummary ? "true" : "false"));
+                if (c > Integer.MAX_VALUE - 10) c = 0;
+                Intent intent = new Intent(getBaseContext(), SplashActivity.class);
+                intent.addFlags(Static.intentFlagRestart);
+                intent.putExtra("action", "protocol_changes");
+                PendingIntent pIntent = PendingIntent.getActivity(getBaseContext(), (int) System.currentTimeMillis(), intent, 0);
+                Notification.Builder b = new Notification.Builder(getBaseContext());
+                b.setContentTitle(title).setContentText(text).setStyle(new Notification.BigTextStyle().bigText(text));
+                b.setSmallIcon(R.drawable.cdo).setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher));
+                b.setGroup("protocol_" + timestamp).setGroupSummary(isSummary);
+                b.setCategory(Notification.CATEGORY_EVENT);
+                b.setContentIntent(pIntent);
+                b.setAutoCancel(true);
+                if (isSummary) {
+                    String ringtonePath = Storage.pref.get(getBaseContext(), "pref_notify_sound");
+                    if (!Objects.equals(ringtonePath, "")) {
+                        b.setSound(Uri.parse(ringtonePath));
+                    }
+                    if (Storage.pref.get(getBaseContext(), "pref_notify_vibrate", false)) {
+                        b.setDefaults(Notification.DEFAULT_VIBRATE);
+                    }
+                }
+                ((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(c++, b.build());
             }
-            if (Storage.pref.get(this, "pref_notify_vibrate", false)) {
-                b.setDefaults(Notification.DEFAULT_VIBRATE);
+        });
+    }
+    private void done() {
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+            @Override
+            public void run() {
+                Log.i(TAG, "Executed");
+                if (jobRequestHandle != null) jobRequestHandle.cancel(true);
+                jobFinished(params, false);
             }
-        }
-        ((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(c++, b.build());
+        });
     }
-    private void done(){
-        Log.i(TAG, "Executed");
-        if (jobRequestHandle != null) jobRequestHandle.cancel(true);
-        jobFinished(this.params, false);
-    }
-
 }

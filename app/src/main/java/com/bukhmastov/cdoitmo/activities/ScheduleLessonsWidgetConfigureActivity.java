@@ -47,6 +47,7 @@ import java.util.Objects;
 public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity implements ScheduleLessons.response {
 
     private static final String TAG = "SLWidgetConfigureActivity";
+    private ScheduleLessonsWidgetConfigureActivity self = this;
     public int mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
     public static RequestHandle widgetRequestHandle = null;
     public static ScheduleLessons scheduleLessons = null;
@@ -237,77 +238,82 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
     }
 
     @Override
-    public void onSuccess(JSONObject json) {
-        Log.v(TAG, "success");
-        try {
-            if (json == null) throw new NullPointerException("json cannot be null");
-            if (Objects.equals(json.getString("type"), "teacher_picker")) {
-                Log.v(TAG, "type=teacher_picker");
-                JSONArray teachers = json.getJSONArray("list");
-                if (teachers.length() > 0) {
-                    if (teachers.length() == 1) {
-                        JSONObject teacher = teachers.getJSONObject(0);
-                        query = teacher.getString("pid");
-                        Log.v(TAG, "found query=" + query);
-                        found(getString(R.string.schedule_teacher_set) + " \"" + teacher.getString("person") + " (" + teacher.getString("post") + ")" + "\"");
-                    } else {
-                        FrameLayout slw_container = (FrameLayout) findViewById(R.id.slw_container);
-                        if (slw_container == null) throw new NullPointerException("slw_container cannot be null");
-                        ListView listView = new ListView(this);
-                        listView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
-                        final ArrayList<HashMap<String, String>> teachersMap = new ArrayList<>();
-                        for (int i = 0; i < teachers.length(); i++) {
-                            JSONObject teacher = teachers.getJSONObject(i);
-                            HashMap<String, String> teacherMap = new HashMap<>();
-                            teacherMap.put("pid", String.valueOf(teacher.getInt("pid")));
-                            teacherMap.put("person", teacher.getString("person"));
-                            teacherMap.put("post", teacher.getString("post"));
-                            teachersMap.add(teacherMap);
-                        }
-                        listView.setAdapter(new TeacherPickerListView(this, teachersMap));
-                        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                                HashMap<String, String> teacherMap = teachersMap.get(position);
-                                query = teacherMap.get("pid");
+    public void onSuccess(final JSONObject json) {
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "success");
+                try {
+                    if (json == null) throw new NullPointerException("json cannot be null");
+                    if (Objects.equals(json.getString("type"), "teacher_picker")) {
+                        Log.v(TAG, "type=teacher_picker");
+                        JSONArray teachers = json.getJSONArray("list");
+                        if (teachers.length() > 0) {
+                            if (teachers.length() == 1) {
+                                JSONObject teacher = teachers.getJSONObject(0);
+                                query = teacher.getString("pid");
                                 Log.v(TAG, "found query=" + query);
-                                found(getString(R.string.schedule_teacher_set) + " \"" + teacherMap.get("person") + " (" + teacherMap.get("post") + ")" + "\"");
+                                found(getString(R.string.schedule_teacher_set) + " \"" + teacher.getString("person") + " (" + teacher.getString("post") + ")" + "\"");
+                            } else {
+                                FrameLayout slw_container = (FrameLayout) findViewById(R.id.slw_container);
+                                if (slw_container == null) throw new NullPointerException("slw_container cannot be null");
+                                ListView listView = new ListView(self);
+                                listView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
+                                final ArrayList<HashMap<String, String>> teachersMap = new ArrayList<>();
+                                for (int i = 0; i < teachers.length(); i++) {
+                                    JSONObject teacher = teachers.getJSONObject(i);
+                                    HashMap<String, String> teacherMap = new HashMap<>();
+                                    teacherMap.put("pid", String.valueOf(teacher.getInt("pid")));
+                                    teacherMap.put("person", teacher.getString("person"));
+                                    teacherMap.put("post", teacher.getString("post"));
+                                    teachersMap.add(teacherMap);
+                                }
+                                listView.setAdapter(new TeacherPickerListView(self, teachersMap));
+                                listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                                        HashMap<String, String> teacherMap = teachersMap.get(position);
+                                        query = teacherMap.get("pid");
+                                        Log.v(TAG, "found query=" + query);
+                                        found(getString(R.string.schedule_teacher_set) + " \"" + teacherMap.get("person") + " (" + teacherMap.get("post") + ")" + "\"");
+                                    }
+                                });
+                                slw_container.removeAllViews();
+                                slw_container.addView(listView);
                             }
-                        });
-                        slw_container.removeAllViews();
-                        slw_container.addView(listView);
-                    }
-                } else {
-                    query = null;
-                    found(getString(R.string.schedule_not_found));
-                }
-            } else {
-                Log.v(TAG, "type=" + json.getString("type"));
-                if (json.getJSONArray("schedule").length() > 0) {
-                    query = json.getString("query");
-                    switch (json.getString("type")) {
-                        case "group":
-                            Log.v(TAG, "found query=" + query);
-                            found(getString(R.string.schedule_group_set) + " \"" + json.getString("label") + "\"");
-                            break;
-                        case "room":
-                            Log.v(TAG, "found query=" + query);
-                            found(getString(R.string.schedule_room_set) + " \"" + json.getString("label") + "\"");
-                            break;
-                        default:
+                        } else {
                             query = null;
                             found(getString(R.string.schedule_not_found));
-                            break;
+                        }
+                    } else {
+                        Log.v(TAG, "type=" + json.getString("type"));
+                        if (json.getJSONArray("schedule").length() > 0) {
+                            query = json.getString("query");
+                            switch (json.getString("type")) {
+                                case "group":
+                                    Log.v(TAG, "found query=" + query);
+                                    found(getString(R.string.schedule_group_set) + " \"" + json.getString("label") + "\"");
+                                    break;
+                                case "room":
+                                    Log.v(TAG, "found query=" + query);
+                                    found(getString(R.string.schedule_room_set) + " \"" + json.getString("label") + "\"");
+                                    break;
+                                default:
+                                    query = null;
+                                    found(getString(R.string.schedule_not_found));
+                                    break;
+                            }
+                        } else {
+                            query = null;
+                            found(getString(R.string.schedule_not_found));
+                        }
                     }
-                } else {
+                } catch (Exception e){
+                    Log.w(TAG, "failed to find schedule");
                     query = null;
                     found(getString(R.string.schedule_not_found));
                 }
             }
-        } catch (Exception e){
-            Log.w(TAG, "failed to find schedule");
-            query = null;
-            found(getString(R.string.schedule_not_found));
-        }
+        });
     }
 
     @Override
@@ -315,7 +321,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
         widgetRequestHandle = requestHandle;
     }
 
-    private boolean setQuery(){
+    private boolean setQuery() {
         Log.v(TAG, "setQuery");
         EditText slw_input = (EditText) findViewById(R.id.slw_input);
         if (slw_input != null) {
@@ -334,66 +340,81 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
         }
     }
 
-    private void loading(String text){
-        Log.v(TAG, "loading | " + text);
-        FrameLayout slw_container = (FrameLayout) findViewById(R.id.slw_container);
-        if (slw_container != null){
-            LinearLayout linearLayout = new LinearLayout(this);
-            linearLayout.setOrientation(LinearLayout.VERTICAL);
-            linearLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-            linearLayout.setPadding((int) (16 * destiny), (int) (10 * destiny), (int) (16 * destiny), (int) (10 * destiny));
-            ProgressBar progressBar = new ProgressBar(this);
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            lp.gravity = Gravity.CENTER;
-            progressBar.setLayoutParams(lp);
-            linearLayout.addView(progressBar);
-            TextView textView = new TextView(this);
-            textView.setText(text);
-            textView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-            textView.setTextColor(textColorPrimary);
-            textView.setGravity(Gravity.CENTER);
-            textView.setPadding(0, (int) (10 * destiny), 0, (int) (10 * destiny));
-            linearLayout.addView(textView);
-            slw_container.removeAllViews();
-            slw_container.addView(linearLayout);
-        }
+    private void loading(final String text) {
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "loading | " + text);
+                FrameLayout slw_container = (FrameLayout) findViewById(R.id.slw_container);
+                if (slw_container != null){
+                    LinearLayout linearLayout = new LinearLayout(self);
+                    linearLayout.setOrientation(LinearLayout.VERTICAL);
+                    linearLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+                    linearLayout.setPadding((int) (16 * destiny), (int) (10 * destiny), (int) (16 * destiny), (int) (10 * destiny));
+                    ProgressBar progressBar = new ProgressBar(self);
+                    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                    lp.gravity = Gravity.CENTER;
+                    progressBar.setLayoutParams(lp);
+                    linearLayout.addView(progressBar);
+                    TextView textView = new TextView(self);
+                    textView.setText(text);
+                    textView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+                    textView.setTextColor(textColorPrimary);
+                    textView.setGravity(Gravity.CENTER);
+                    textView.setPadding(0, (int) (10 * destiny), 0, (int) (10 * destiny));
+                    linearLayout.addView(textView);
+                    slw_container.removeAllViews();
+                    slw_container.addView(linearLayout);
+                }
+            }
+        });
     }
-    private void found(String text){
-        Log.v(TAG, "found | " + text);
-        FrameLayout slw_container = (FrameLayout) findViewById(R.id.slw_container);
-        if (slw_container != null){
-            LinearLayout linearLayout = new LinearLayout(this);
-            linearLayout.setOrientation(LinearLayout.VERTICAL);
-            linearLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-            linearLayout.setPadding((int) (16 * destiny), (int) (10 * destiny), (int) (16 * destiny), (int) (10 * destiny));
-            TextView textView = new TextView(this);
-            textView.setText(text);
-            textView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-            textView.setTextColor(textColorPrimary);
-            textView.setGravity(Gravity.CENTER);
-            textView.setPadding(0, (int) (10 * destiny), 0, (int) (10 * destiny));
-            linearLayout.addView(textView);
-            slw_container.removeAllViews();
-            slw_container.addView(linearLayout);
-        }
+    private void found(final String text) {
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "found | " + text);
+                FrameLayout slw_container = (FrameLayout) findViewById(R.id.slw_container);
+                if (slw_container != null){
+                    LinearLayout linearLayout = new LinearLayout(self);
+                    linearLayout.setOrientation(LinearLayout.VERTICAL);
+                    linearLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+                    linearLayout.setPadding((int) (16 * destiny), (int) (10 * destiny), (int) (16 * destiny), (int) (10 * destiny));
+                    TextView textView = new TextView(self);
+                    textView.setText(text);
+                    textView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+                    textView.setTextColor(textColorPrimary);
+                    textView.setGravity(Gravity.CENTER);
+                    textView.setPadding(0, (int) (10 * destiny), 0, (int) (10 * destiny));
+                    linearLayout.addView(textView);
+                    slw_container.removeAllViews();
+                    slw_container.addView(linearLayout);
+                }
+            }
+        });
     }
 
-    private void updateTimeSummary(){
-        TextView slw_update_time_summary = (TextView) findViewById(R.id.slw_update_time_summary);
-        if (slw_update_time_summary != null) {
-            String summary;
-            switch (updateTime){
-                case 0: summary = getString(R.string.manually); break;
-                case 12: summary = getString(R.string.once_per_12_hours); break;
-                case 24: summary = getString(R.string.once_per_1_day); break;
-                case 168: summary = getString(R.string.once_per_1_week); break;
-                case 672: summary = getString(R.string.once_per_4_weeks); break;
-                default: summary = getString(R.string.unknown); break;
+    private void updateTimeSummary() {
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                TextView slw_update_time_summary = (TextView) findViewById(R.id.slw_update_time_summary);
+                if (slw_update_time_summary != null) {
+                    String summary;
+                    switch (updateTime){
+                        case 0: summary = getString(R.string.manually); break;
+                        case 12: summary = getString(R.string.once_per_12_hours); break;
+                        case 24: summary = getString(R.string.once_per_1_day); break;
+                        case 168: summary = getString(R.string.once_per_1_week); break;
+                        case 672: summary = getString(R.string.once_per_4_weeks); break;
+                        default: summary = getString(R.string.unknown); break;
+                    }
+                    slw_update_time_summary.setText(summary);
+                }
             }
-            slw_update_time_summary.setText(summary);
-        }
+        });
     }
-    private void close(int result, Intent intent){
+    private void close(int result, Intent intent) {
         Log.v(TAG, "close | result=" + result);
         if (intent == null){
             setResult(result);

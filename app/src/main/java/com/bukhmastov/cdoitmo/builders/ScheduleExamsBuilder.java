@@ -35,11 +35,11 @@ public class ScheduleExamsBuilder extends Thread {
     public static final int STATE_LOADING = 1;
     public static final int STATE_DONE = 2;
 
-    public ScheduleExamsBuilder(Activity activity, ScheduleExamsBuilder.response delegate){
+    public ScheduleExamsBuilder(Activity activity, ScheduleExamsBuilder.response delegate) {
         this.activity = activity;
         this.delegate = delegate;
     }
-    public void run(){
+    public void run() {
         Log.v(TAG, "started");
         try {
             LinearLayout schedule_layout = (LinearLayout) inflate(R.layout.layout_schedule);
@@ -80,7 +80,6 @@ public class ScheduleExamsBuilder extends Thread {
                 }
                 if (count == 1) examsLayout.removeView(examsLayout.findViewById(R.id.separator_small));
                 if (count == 0) examsLayout.removeView(examsLayout.findViewById(R.id.separator_big));
-
                 final String group = exam.has("group") ? (Objects.equals(exam.getString("group"), "") ? null : exam.getString("group")) : null;
                 final String teacher = exam.has("teacher") ? (Objects.equals(exam.getString("teacher"), "") ? null : exam.getString("teacher")) : null;
                 if (group != null || teacher != null) {
@@ -142,15 +141,14 @@ public class ScheduleExamsBuilder extends Thread {
         Log.v(TAG, "finished");
     }
 
-    private View inflate(int layout) throws Exception {
-        return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layout, null);
-    }
-    private void bindMenuItem(Menu menu, int id, String text, boolean hide){
+    private void bindMenuItem(Menu menu, int id, String text, boolean hide) {
         if (hide) {
             menu.findItem(id).setVisible(false);
         } else {
             menu.findItem(id).setTitle(text);
         }
     }
-
+    private View inflate(int layout) throws Exception {
+        return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layout, null);
+    }
 }

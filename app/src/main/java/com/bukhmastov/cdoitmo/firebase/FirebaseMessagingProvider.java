@@ -15,36 +15,46 @@ public class FirebaseMessagingProvider {
         public static String OWNER_NOTIFICATION = "owner_notification";
     }
 
-    public static boolean subscribe(String topic) {
-        try {
-            FirebaseMessaging.getInstance().subscribeToTopic(topic);
-            Log.i(TAG, "Firebase Messaging Service: subscribed to '" + topic + "' topic");
-        } catch (Throwable e) {
-            Log.i(TAG, "Firebase Messaging Service: failed to subscribed to '" + topic + "' topic");
-            Static.error(e);
-            return false;
-        }
-        return true;
+    public static void subscribe(final String topic) {
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    FirebaseMessaging.getInstance().subscribeToTopic(topic);
+                    Log.i(TAG, "Firebase Messaging Service: subscribed to '" + topic + "' topic");
+                } catch (Throwable e) {
+                    Log.i(TAG, "Firebase Messaging Service: failed to subscribed to '" + topic + "' topic");
+                    Static.error(e);
+                }
+            }
+        });
     }
 
-    public static boolean unsubscribe(String topic) {
-        try {
-            FirebaseMessaging.getInstance().unsubscribeFromTopic(topic);
-            Log.i(TAG, "Firebase Messaging Service: unsubscribed from '" + topic + "' topic");
-        } catch (Throwable e) {
-            Log.i(TAG, "Firebase Messaging Service: failed to unsubscribed from '" + topic + "' topic");
-            Static.error(e);
-            return false;
-        }
-        return true;
+    public static void unsubscribe(final String topic) {
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    FirebaseMessaging.getInstance().unsubscribeFromTopic(topic);
+                    Log.i(TAG, "Firebase Messaging Service: unsubscribed from '" + topic + "' topic");
+                } catch (Throwable e) {
+                    Log.i(TAG, "Firebase Messaging Service: failed to unsubscribed from '" + topic + "' topic");
+                    Static.error(e);
+                }
+            }
+        });
     }
 
-    public static boolean checkOwnerNotification(Context context){
-        if (Storage.pref.get(context, "pref_allow_owner_notifications", true)) {
-            return subscribe(Channel.OWNER_NOTIFICATION);
-        } else {
-            return unsubscribe(Channel.OWNER_NOTIFICATION);
-        }
+    public static void checkOwnerNotification(final Context context){
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+            @Override
+            public void run() {
+                if (Storage.pref.get(context, "pref_allow_owner_notifications", true)) {
+                    subscribe(Channel.OWNER_NOTIFICATION);
+                } else {
+                    unsubscribe(Channel.OWNER_NOTIFICATION);
+                }
+            }
+        });
     }
-
 }

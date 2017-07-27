@@ -12,6 +12,7 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.objects.ShortcutCreator;
 import com.bukhmastov.cdoitmo.receivers.ShortcutReceiver;
 import com.bukhmastov.cdoitmo.utils.Log;
+import com.bukhmastov.cdoitmo.utils.Static;
 
 public class ShortcutCreateFragment extends ConnectedFragment implements ShortcutCreator.response {
 
@@ -53,13 +54,18 @@ public class ShortcutCreateFragment extends ConnectedFragment implements Shortcu
     }
 
     @Override
-    public void onDisplay(View view) {
-        Log.v(TAG, "onDisplay");
-        ViewGroup shortcut_create_content = (ViewGroup) activity.findViewById(R.id.shortcut_create_content);
-        if (shortcut_create_content != null) {
-            shortcut_create_content.removeAllViews();
-            shortcut_create_content.addView(view);
-        }
+    public void onDisplay(final View view) {
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "onDisplay");
+                ViewGroup shortcut_create_content = (ViewGroup) activity.findViewById(R.id.shortcut_create_content);
+                if (shortcut_create_content != null) {
+                    shortcut_create_content.removeAllViews();
+                    shortcut_create_content.addView(view);
+                }
+            }
+        });
     }
 
     @Override

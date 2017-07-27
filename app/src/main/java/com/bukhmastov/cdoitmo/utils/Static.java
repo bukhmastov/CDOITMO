@@ -9,6 +9,10 @@ import android.content.pm.PackageInfo;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Looper;
+import android.os.Process;
 import android.support.annotation.IdRes;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -42,8 +46,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class Static {
 
@@ -63,6 +65,113 @@ public class Static {
     private static final String USER_AGENT_TEMPLATE = "CDOITMO/{versionName}/{versionCode} Java/Android/{sdkInt}";
     private static String USER_AGENT = null;
 
+    public static class T {
+        private static final String TAG = "Static.T";
+        private static final boolean DEBUG = false;
+        public enum TYPE {FOREGROUND, BACKGROUND}
+        private static class Th {
+            public TYPE type;
+            public HandlerThread thread = null;
+            public String thread_name;
+            public int thread_priority;
+            public Th(TYPE type, String thread_name, int thread_priority) {
+                this.type = type;
+                this.thread_name = thread_name;
+                this.thread_priority = thread_priority;
+            }
+        }
+        private static Th Foreground = new Th(TYPE.FOREGROUND, "CDOExecutorForeground", Process.THREAD_PRIORITY_FOREGROUND);
+        private static Th Background = new Th(TYPE.BACKGROUND, "CDOExecutorBackground", Process.THREAD_PRIORITY_BACKGROUND);
+
+        public static void runThread(final Runnable runnable) {
+            runThread(TYPE.FOREGROUND, runnable);
+        }
+        public static void runThread(final TYPE type, final Runnable runnable) {
+            if (runnable == null) {
+                throw new NullPointerException("Passed runnable is null");
+            }
+            final Th th = getThread(type);
+            if (th.thread != null && !th.thread.isAlive()) {
+                log("runThread | HandlerThread is not alive, going to quit | id = " + th.thread.getId() + " | name = " + th.thread.getName());
+                Looper looper = th.thread.getLooper();
+                if (looper != null) {
+                    looper.quit();
+                }
+                try {
+                    th.thread.interrupt();
+                } catch (Throwable ignore) {
+                    // just ignore
+                }
+                th.thread = null;
+            }
+            if (th.thread == null) {
+                th.thread = new HandlerThread(th.thread_name, th.thread_priority);
+                th.thread.start();
+                log("runThread | initialized new HandlerThread | id = " + th.thread.getId() + " | name = " + th.thread.getName());
+            }
+            log("runThread | run with Handler.post | id = " + th.thread.getId() + " | name = " + th.thread.getName());
+            try {
+                new Handler(th.thread.getLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            runnable.run();
+                        } catch (Throwable throwable) {
+                            Log.exception("Run on " + th.thread.getName() + " thread failed", throwable);
+                        }
+                    }
+                });
+            } catch (Throwable throwable) {
+                Log.exception("Run on " + th.thread.getName() + " thread failed", throwable);
+            }
+        }
+        public static void runOnUiThread(final Runnable runnable) {
+            if (runnable == null) {
+                throw new NullPointerException("Passed runnable is null");
+            }
+            if (isMainThread()) {
+                log("runOnUiThread | run on current thread");
+                try {
+                    runnable.run();
+                } catch (Throwable throwable) {
+                    Log.exception("Run on main thread failed", throwable);
+                }
+            } else {
+                log("runOnUiThread | run with Handler.post");
+                try {
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                runnable.run();
+                            } catch (Throwable throwable) {
+                                Log.exception("Run on main thread failed", throwable);
+                            }
+                        }
+                    });
+                } catch (Throwable throwable) {
+                    Log.exception("Run on main thread failed", throwable);
+                }
+            }
+        }
+        public static boolean isMainThread() {
+            return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? Looper.getMainLooper().isCurrentThread() : Thread.currentThread() == Looper.getMainLooper().getThread();
+        }
+        public static boolean isLooperThread() {
+            return Thread.currentThread() == Foreground.thread || Thread.currentThread() == Background.thread || isMainThread();
+        }
+        private static Th getThread(TYPE type) {
+            switch (type) {
+                case BACKGROUND: return Background;
+                case FOREGROUND: default: return Foreground;
+            }
+        }
+        private static void log(String log) {
+            if (DEBUG) {
+                android.util.Log.v(TAG, log);
+            }
+        }
+    }
     public static void init(Activity activity) {
         Log.i(TAG, "init");
         if (activity == null) {
@@ -262,30 +371,17 @@ public class Static {
         }
         return hash;
     }
-    public static void delay(final Activity activity, final int sleep, final Runnable runnable){
-        Log.v(TAG, "delay | sleep=" + sleep);
-        if (activity == null) {
-            Log.w(TAG, "delay | activity is null");
-            return;
-        }
-        new Thread(new Runnable() {
+    public static void toast(final Context context, final String text){
+        Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                try {
-                    Thread.sleep(sleep);
-                } catch (InterruptedException e) {
-                    Log.w(TAG, "delay | interrupted");
+                if (context == null) {
+                    Log.w(TAG, "toast | context is null");
+                    return;
                 }
-                activity.runOnUiThread(runnable);
+                Toast.makeText(context, text, Toast.LENGTH_SHORT).show();
             }
-        }).start();
-    }
-    public static void toast(Context context, String text){
-        if (context == null) {
-            Log.w(TAG, "toast | context is null");
-            return;
-        }
-        Toast.makeText(context, text, Toast.LENGTH_SHORT).show();
+        });
     }
     public static void snackBar(Activity activity, String text){
         if (activity == null) {
@@ -318,50 +414,64 @@ public class Static {
         }
         Static.snackBar(activity.findViewById(layout), text, action, onClickListener);
     }
-    public static void snackBar(View layout, String text, String action, View.OnClickListener onClickListener){
-        if (layout != null) {
-            Snackbar snackbar = Snackbar.make(layout, text, Snackbar.LENGTH_LONG);
-            snackbar.getView().setBackgroundColor(Static.colorBackgroundSnackBar);
-            if (action != null) snackbar.setAction(action, onClickListener);
-            snackbar.show();
-        }
-    }
-    public static void protocolChangesTrackSetup(final Context context, int attempt){
-        Log.v(TAG, "protocolChangesTrackSetup | attempt=" + attempt);
-        if (!Storage.pref.get(context, "pref_protocol_changes_track", true)) {
-            Log.v(TAG, "protocolChangesTrackSetup | pref_protocol_changes_track=false");
-            return;
-        }
-        if (attempt++ < 3) {
-            final int finalAttempt = attempt;
-            DeIfmoRestClient.get(context, "eregisterlog?days=126", null, new DeIfmoRestClientResponseHandler() {
-                @Override
-                public void onSuccess(int statusCode, JSONObject responseObj, JSONArray responseArr) {
-                    if (statusCode == 200 && responseArr != null) {
-                        try {
-                            JSONArray array = new JSONArray();
-                            array.put(18);
-                            new ProtocolConverter(context, new ProtocolConverter.response() {
-                                @Override
-                                public void finish(JSONObject json) {
-                                    Log.i(TAG, "protocolChangesTrackSetup | uploaded");
-                                }
-                            }).execute(responseArr, array);
-                        } catch (Exception e) {
-                            Static.error(e);
-                        }
-                    } else {
-                        protocolChangesTrackSetup(context, finalAttempt);
-                    }
+    public static void snackBar(final View layout, final String text, final String action, final View.OnClickListener onClickListener){
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (layout != null) {
+                    Snackbar snackbar = Snackbar.make(layout, text, Snackbar.LENGTH_LONG);
+                    snackbar.getView().setBackgroundColor(Static.colorBackgroundSnackBar);
+                    if (action != null) snackbar.setAction(action, onClickListener);
+                    snackbar.show();
                 }
-                @Override
-                public void onProgress(int state) {}
-                @Override
-                public void onFailure(int state) {}
-                @Override
-                public void onNewHandle(RequestHandle requestHandle) {}
-            });
-        }
+            }
+        });
+    }
+    public static void protocolChangesTrackSetup(final Context context, final int attempt){
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "protocolChangesTrackSetup | attempt=" + attempt);
+                if (!Storage.pref.get(context, "pref_protocol_changes_track", true)) {
+                    Log.v(TAG, "protocolChangesTrackSetup | pref_protocol_changes_track=false");
+                    return;
+                }
+                if (attempt < 3) {
+                    DeIfmoRestClient.get(context, "eregisterlog?days=126", null, new DeIfmoRestClientResponseHandler() {
+                        @Override
+                        public void onSuccess(final int statusCode, final JSONObject responseObj, final JSONArray responseArr) {
+                            Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (statusCode == 200 && responseArr != null) {
+                                        try {
+                                            JSONArray array = new JSONArray();
+                                            array.put(18);
+                                            new ProtocolConverter(context, new ProtocolConverter.response() {
+                                                @Override
+                                                public void finish(JSONObject json) {
+                                                    Log.i(TAG, "protocolChangesTrackSetup | uploaded");
+                                                }
+                                            }).execute(responseArr, array);
+                                        } catch (Exception e) {
+                                            Static.error(e);
+                                        }
+                                    } else {
+                                        protocolChangesTrackSetup(context, attempt + 1);
+                                    }
+                                }
+                            });
+                        }
+                        @Override
+                        public void onProgress(int state) {}
+                        @Override
+                        public void onFailure(int statusCode, int state) {}
+                        @Override
+                        public void onNewHandle(RequestHandle requestHandle) {}
+                    });
+                }
+            }
+        });
     }
     public static String getUserAgent(Context context){
         try {
@@ -432,43 +542,58 @@ public class Static {
     }
     public static class NavigationMenu {
         private static RequestHandle navRequestHandle = null;
-        public static void displayEnableDisableOfflineButton(NavigationView navigationView){
-            if (navigationView != null) {
-                try {
-                    Menu menu = navigationView.getMenu();
-                    MenuItem nav_enable_offline_mode = menu.findItem(R.id.nav_enable_offline_mode);
-                    MenuItem nav_disable_offline_mode = menu.findItem(R.id.nav_disable_offline_mode);
-                    if (Static.OFFLINE_MODE) {
-                        nav_enable_offline_mode.setVisible(false);
-                        nav_disable_offline_mode.setVisible(true);
-                    } else {
-                        nav_enable_offline_mode.setVisible(true);
-                        nav_disable_offline_mode.setVisible(false);
+        public static void displayEnableDisableOfflineButton(final NavigationView navigationView) {
+            Static.T.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (navigationView != null) {
+                        try {
+                            Menu menu = navigationView.getMenu();
+                            MenuItem nav_enable_offline_mode = menu.findItem(R.id.nav_enable_offline_mode);
+                            MenuItem nav_disable_offline_mode = menu.findItem(R.id.nav_disable_offline_mode);
+                            if (Static.OFFLINE_MODE) {
+                                nav_enable_offline_mode.setVisible(false);
+                                nav_disable_offline_mode.setVisible(true);
+                            } else {
+                                nav_enable_offline_mode.setVisible(true);
+                                nav_disable_offline_mode.setVisible(false);
+                            }
+                        } catch (Exception e) {
+                            Static.error(e);
+                        }
                     }
-                } catch (Exception e) {
-                    Static.error(e);
                 }
-            }
+            });
         }
-        public static void displayUserData(Context context, NavigationView navigationView){
-            displayUserData(navigationView, R.id.user_name, Storage.file.perm.get(context, "user#name"));
-            displayUserData(navigationView, R.id.user_group, Storage.file.perm.get(context, "user#group"));
-        }
-        public static void displayUserData(NavigationView navigationView, int id, String text){
-            if (navigationView == null) return;
-            View activity_main_nav_header = navigationView.getHeaderView(0);
-            if (activity_main_nav_header == null) return;
-            TextView textView = (TextView) activity_main_nav_header.findViewById(id);
-            if (textView != null) {
-                if (!text.isEmpty()) {
-                    textView.setText(text);
-                    textView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                } else {
-                    textView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0));
+        public static void displayUserData(final Context context, final NavigationView navigationView) {
+            Static.T.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    displayUserData(navigationView, R.id.user_name, Storage.file.perm.get(context, "user#name"));
+                    displayUserData(navigationView, R.id.user_group, Storage.file.perm.get(context, "user#group"));
                 }
-            }
+            });
         }
-        public static void displayUserAvatar(final Context context, final NavigationView navigationView){
+        public static void displayUserData(final NavigationView navigationView, final int id, final String text) {
+            Static.T.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (navigationView == null) return;
+                    View activity_main_nav_header = navigationView.getHeaderView(0);
+                    if (activity_main_nav_header == null) return;
+                    TextView textView = (TextView) activity_main_nav_header.findViewById(id);
+                    if (textView != null) {
+                        if (!text.isEmpty()) {
+                            textView.setText(text);
+                            textView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                        } else {
+                            textView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0));
+                        }
+                    }
+                }
+            });
+        }
+        public static void displayUserAvatar(final Context context, final NavigationView navigationView) {
             /*if (navigationView == null) return;
             String url = Storage.file.perm.get(context, "user#avatar").trim();
             if (!url.isEmpty() && !url.contains("distributedCDE?Rule=GETATTACH&ATT_ID=1941771")) {
@@ -517,23 +642,33 @@ public class Static {
                 }
             }*/
         }
-        public static void snackbarOffline(Activity activity){
-            if (Static.OFFLINE_MODE) {
-                Static.snackBar(activity, activity.getString(R.string.offline_mode_on));
-            }
-        }
-        public static void drawOffline(Menu menu){
-            if (menu != null) {
-                if (Static.OFFLINE_MODE) {
-                    for (int i = 0; i < menu.size(); i++) {
-                        menu.getItem(i).setVisible(false);
+        public static void snackbarOffline(final Activity activity) {
+            Static.T.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (Static.OFFLINE_MODE) {
+                        Static.snackBar(activity, activity.getString(R.string.offline_mode_on));
                     }
                 }
-                MenuItem menuItem = menu.findItem(R.id.offline_mode);
-                if (menuItem != null) {
-                    menuItem.setVisible(Static.OFFLINE_MODE);
+            });
+        }
+        public static void drawOffline(final Menu menu) {
+            Static.T.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (menu != null) {
+                        if (Static.OFFLINE_MODE) {
+                            for (int i = 0; i < menu.size(); i++) {
+                                menu.getItem(i).setVisible(false);
+                            }
+                        }
+                        MenuItem menuItem = menu.findItem(R.id.offline_mode);
+                        if (menuItem != null) {
+                            menuItem.setVisible(Static.OFFLINE_MODE);
+                        }
+                    }
                 }
-            }
+            });
         }
     }
     public static Locale getLocale(Context context) {
@@ -619,12 +754,4 @@ public class Static {
     public static String ldgZero(int number) {
         return String.format("%02d", number);
     }
-    public static String parseInvalidIfmoRestClientResponse(String response) {
-        Matcher m = Pattern.compile("(\\\\u)([0-9a-f]{3})[^0-9a-f]").matcher(response);
-        if (m.find()) {
-            response = m.replaceAll(m.group(1) + "0" + m.group(2));
-        }
-        return response;
-    }
-
 }

@@ -2,8 +2,6 @@ package com.bukhmastov.cdoitmo.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.SparseArray;
 import android.view.InflateException;
@@ -21,16 +19,17 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.MainActivity;
 import com.bukhmastov.cdoitmo.adapters.ProtocolListView;
+import com.bukhmastov.cdoitmo.converters.ProtocolConverter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoRestClientResponseHandler;
-import com.bukhmastov.cdoitmo.objects.Protocol;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -41,7 +40,7 @@ import java.util.Objects;
 public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "ProtocolFragment";
-    private Protocol protocol = null;
+    public static JSONObject data = null;
     private static final int maxAttempts = 3;
     private int number_of_weeks = 1;
     private boolean spinner_weeks_blocker = true;
@@ -54,7 +53,6 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
         Log.v(TAG, "Fragment created");
         FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
         number_of_weeks = Integer.parseInt(Storage.pref.get(getContext(), "pref_protocol_changes_weeks", "1"));
-        protocol = new Protocol(activity);
     }
 
     @Override
@@ -98,7 +96,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                             Storage.pref.put(getContext(), "pref_protocol_changes_mode", "simple");
                             simple.setVisible(false);
                             advanced.setVisible(true);
-                            load(168);
+                            load(false);
                             return false;
                         }
                     });
@@ -108,7 +106,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                             Storage.pref.put(getContext(), "pref_protocol_changes_mode", "advanced");
                             simple.setVisible(true);
                             advanced.setVisible(false);
-                            load(168);
+                            load(false);
                             return false;
                         }
                     });
@@ -136,205 +134,247 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
     @Override
     public void onRefresh() {
         Log.v(TAG, "refreshed");
-        forceLoad();
+        load(true);
     }
 
-    private void load(){
-        load(Storage.pref.get(getContext(), "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(getContext(), "pref_dynamic_refresh", "0")) : 0);
-    }
-    private void load(final int refresh_rate){
-        Log.v(TAG, "load | refresh_rate=" + refresh_rate);
-        draw(R.layout.state_loading);
-        protocol.is(new Protocol.Callback() {
+    private void load() {
+        Static.T.runThread(new Runnable() {
             @Override
-            public void onDone(JSONObject protocol) {}
+            public void run() {
+                load(Storage.pref.get(getContext(), "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(getContext(), "pref_dynamic_refresh", "0")) : 0);
+            }
+        });
+    }
+    private void load(final int refresh_rate) {
+        Static.T.runThread(new Runnable() {
             @Override
-            public void onChecked(boolean is){
-                Log.v(TAG, "load | protocol.is=" + (is ? "true" : "false"));
-                if (!is || refresh_rate == 0) {
-                    forceLoad();
-                } else if (refresh_rate >= 0){
-                    protocol.get(new Protocol.Callback() {
-                        @Override
-                        public void onDone(JSONObject p){
-                            Log.v(TAG, "load | protocol.get=" + (p == null ? "null" : "notnull"));
-                            try {
-                                if (p == null) throw new Exception("protocol is null");
-                                if (p.getLong("timestamp") + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
-                                    forceLoad();
-                                } else {
-                                    display();
-                                }
-                            } catch (Exception e) {
-                                Static.error(e);
-                                forceLoad();
+            public void run() {
+                Log.v(TAG, "load | refresh_rate=" + refresh_rate);
+                if (Storage.pref.get(getContext(), "pref_use_cache", true)) {
+                    String cache = Storage.file.cache.get(getContext(), "protocol#core").trim();
+                    if (!cache.isEmpty()) {
+                        try {
+                            data = new JSONObject(cache);
+                            if (data.getLong("timestamp") + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+                                load(true, cache);
+                            } else {
+                                load(false, cache);
                             }
+                        } catch (JSONException e) {
+                            Static.error(e);
+                            load(true, cache);
                         }
-                        @Override
-                        public void onChecked(boolean is) {}
-                    });
-                } else {
-                    display();
-                }
-            }
-        }, number_of_weeks);
-    }
-    private void forceLoad(){
-        forceLoad(0);
-    }
-    private void forceLoad(int attempt){
-        Log.v(TAG, "forceLoad | attempt=" + attempt);
-        if (!Static.OFFLINE_MODE) {
-            if (++attempt > maxAttempts) {
-                protocol.is(new Protocol.Callback() {
-                    @Override
-                    public void onDone(JSONObject protocol) {}
-                    @Override
-                    public void onChecked(boolean is) {
-                        Log.v(TAG, "forceLoad | protocol.is=" + (is ? "true" : "false"));
-                        if (is) {
-                            display();
-                        } else {
-                            loadFailed();
-                        }
-                    }
-                });
-                return;
-            }
-            final int finalAttempt = attempt;
-            DeIfmoRestClient.get(getContext(), "eregisterlog?days=" + String.valueOf(number_of_weeks * 7), null, new DeIfmoRestClientResponseHandler() {
-                @Override
-                public void onSuccess(int statusCode, JSONObject responseObj, JSONArray responseArr) {
-                    Log.v(TAG, "forceLoad | success | statusCode=" + statusCode + " | responseArr=" + (responseArr == null ? "null" : "notnull"));
-                    if (statusCode == 200 && responseArr != null) {
-                        protocol.put(responseArr, number_of_weeks, new Handler(){
-                            @Override
-                            public void handleMessage (Message msg) {
-                                display();
-                            }
-                        });
                     } else {
-                        forceLoad(finalAttempt);
+                        load(false);
                     }
+                } else {
+                    load(false);
                 }
-                @Override
-                public void onProgress(int state) {
-                    Log.v(TAG, "forceLoad | progress " + state);
-                    draw(R.layout.state_loading);
-                    if (activity != null) {
-                        TextView loading_message = (TextView) activity.findViewById(R.id.loading_message);
-                        if (loading_message != null) {
-                            switch (state) {
-                                case DeIfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
+            }
+        });
+    }
+    private void load(final boolean force) {
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                load(force, "", 0);
+            }
+        });
+    }
+    private void load(final boolean force, final String cache) {
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                load(force, cache, 0);
+            }
+        });
+    }
+    private void load(final boolean force, final String cache, final int attempt) {
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "load | force=" + (force ? "true" : "false") + " | attempt=" + attempt);
+                if ((!force || !Static.isOnline(getContext())) && Storage.pref.get(getContext(), "pref_use_cache", true)) {
+                    try {
+                        String c = cache.isEmpty() ? Storage.file.cache.get(getContext(), "protocol#core").trim() : cache;
+                        if (!c.isEmpty()) {
+                            Log.v(TAG, "load | from cache");
+                            JSONObject d = new JSONObject(c);
+                            if (d.getInt("number_of_weeks") == number_of_weeks || !Static.isOnline(getContext()) || attempt >= maxAttempts) {
+                                data = new JSONObject(c);
+                                display();
+                                return;
                             }
                         }
+                    } catch (Exception e) {
+                        Log.v(TAG, "load | failed to load from cache");
+                        Storage.file.cache.delete(getContext(), "protocol#core");
                     }
                 }
-                @Override
-                public void onFailure(int state) {
-                    Log.v(TAG, "forceLoad | failure " + state);
-                    switch (state) {
-                        case DeIfmoRestClient.FAILED_OFFLINE:
-                            protocol.is(new Protocol.Callback() {
-                                @Override
-                                public void onDone(JSONObject protocol) {}
-                                @Override
-                                public void onChecked(boolean is){
-                                    if (is) {
-                                        display();
-                                    } else {
-                                        draw(R.layout.state_offline);
+                if (!Static.OFFLINE_MODE) {
+                    if (attempt >= maxAttempts) {
+                        if (force) {
+                            load(false, cache, attempt + 1);
+                        } else {
+                            if (data != null) {
+                                display();
+                            } else {
+                                loadFailed();
+                            }
+                        }
+                    } else {
+                        DeIfmoRestClient.get(getContext(), "eregisterlog?days=" + String.valueOf(number_of_weeks * 7), null, new DeIfmoRestClientResponseHandler() {
+                            @Override
+                            public void onSuccess(int statusCode, JSONObject responseObj, JSONArray responseArr) {
+                                Log.v(TAG, "load | success | statusCode=" + statusCode + " | responseArr=" + (responseArr == null ? "null" : "notnull"));
+                                if (statusCode == 200 && responseArr != null) {
+                                    new ProtocolConverter(activity, new ProtocolConverter.response() {
+                                        @Override
+                                        public void finish(JSONObject json) {
+                                            try {
+                                                if (Storage.pref.get(getContext(), "pref_use_cache", true)) {
+                                                    Storage.file.cache.put(getContext(), "protocol#core", json.toString());
+                                                    Storage.file.perm.put(getContext(), "protocol_tracker#protocol", json.getJSONArray("protocol").toString());
+                                                }
+                                            } catch (JSONException e) {
+                                                Static.error(e);
+                                            }
+                                            data = json;
+                                            display();
+                                        }
+                                    }).execute(responseArr, new JSONArray().put(number_of_weeks));
+                                } else {
+                                    load(force, cache, attempt + 1);
+                                }
+                            }
+                            @Override
+                            public void onProgress(final int state) {
+                                Static.T.runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Log.v(TAG, "load | progress " + state);
+                                        draw(R.layout.state_loading);
                                         if (activity != null) {
-                                            View offline_reload = activity.findViewById(R.id.offline_reload);
-                                            if (offline_reload != null) {
-                                                offline_reload.setOnClickListener(new View.OnClickListener() {
-                                                    @Override
-                                                    public void onClick(View v) {
-                                                        forceLoad();
-                                                    }
-                                                });
+                                            TextView loading_message = (TextView) activity.findViewById(R.id.loading_message);
+                                            if (loading_message != null) {
+                                                switch (state) {
+                                                    case DeIfmoRestClient.STATE_HANDLING:
+                                                        loading_message.setText(R.string.loading);
+                                                        break;
+                                                }
                                             }
                                         }
                                     }
-                                }
-                            }, number_of_weeks);
-                            break;
-                        case DeIfmoRestClient.FAILED_TRY_AGAIN:
-                            draw(R.layout.state_try_again);
-                            if (activity != null) {
-                                View try_again_reload = activity.findViewById(R.id.try_again_reload);
-                                if (try_again_reload != null) {
-                                    try_again_reload.setOnClickListener(new View.OnClickListener() {
-                                        @Override
-                                        public void onClick(View v) {
-                                            forceLoad();
-                                        }
-                                    });
-                                }
+                                });
                             }
-                            break;
-                    }
-                }
-                @Override
-                public void onNewHandle(RequestHandle requestHandle) {
-                    fragmentRequestHandle = requestHandle;
-                }
-            });
-        } else {
-            protocol.is(new Protocol.Callback() {
-                @Override
-                public void onDone(JSONObject protocol) {}
-                @Override
-                public void onChecked(boolean is) {
-                    Log.v(TAG, "forceLoad | protocol.is=" + (is ? "true" : "false"));
-                    if (is) {
-                        display();
-                    } else {
-                        draw(R.layout.state_offline);
-                        if (activity != null) {
-                            View offline_reload = activity.findViewById(R.id.offline_reload);
-                            if (offline_reload != null) {
-                                offline_reload.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onFailure(final int statusCode, final int state) {
+                                Static.T.runOnUiThread(new Runnable() {
                                     @Override
-                                    public void onClick(View v) {
-                                        forceLoad();
+                                    public void run() {
+                                        Log.v(TAG, "load | failure " + state);
+                                        switch (state) {
+                                            case DeIfmoRestClient.FAILED_OFFLINE:
+                                                if (data != null) {
+                                                    display();
+                                                } else {
+                                                    draw(R.layout.state_offline);
+                                                    if (activity != null) {
+                                                        View offline_reload = activity.findViewById(R.id.offline_reload);
+                                                        if (offline_reload != null) {
+                                                            offline_reload.setOnClickListener(new View.OnClickListener() {
+                                                                @Override
+                                                                public void onClick(View v) {
+                                                                    load();
+                                                                }
+                                                            });
+                                                        }
+                                                    }
+                                                }
+                                                break;
+                                            case DeIfmoRestClient.FAILED_TRY_AGAIN:
+                                                draw(R.layout.state_try_again);
+                                                if (activity != null) {
+                                                    View try_again_reload = activity.findViewById(R.id.try_again_reload);
+                                                    if (try_again_reload != null) {
+                                                        try_again_reload.setOnClickListener(new View.OnClickListener() {
+                                                            @Override
+                                                            public void onClick(View v) {
+                                                                load();
+                                                            }
+                                                        });
+                                                    }
+                                                }
+                                                break;
+                                        }
                                     }
                                 });
                             }
+                            @Override
+                            public void onNewHandle(RequestHandle requestHandle) {
+                                fragmentRequestHandle = requestHandle;
+                            }
+                        });
+                    }
+                } else {
+                    Static.T.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (data != null) {
+                                display();
+                            } else {
+                                draw(R.layout.state_offline);
+                                if (activity != null) {
+                                    View offline_reload = activity.findViewById(R.id.offline_reload);
+                                    if (offline_reload != null) {
+                                        offline_reload.setOnClickListener(new View.OnClickListener() {
+                                            @Override
+                                            public void onClick(View v) {
+                                                load();
+                                            }
+                                        });
+                                    }
+                                }
+                            }
                         }
-                    }
+                    });
                 }
-            });
-        }
-    }
-    private void loadFailed(){
-        Log.v(TAG, "loadFailed");
-        try {
-            draw(R.layout.state_try_again);
-            TextView try_again_message = (TextView) activity.findViewById(R.id.try_again_message);
-            if (try_again_message != null) try_again_message.setText(R.string.load_failed_retry_in_minute);
-            View try_again_reload = activity.findViewById(R.id.try_again_reload);
-            if (try_again_reload != null) {
-                try_again_reload.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        forceLoad();
-                    }
-                });
+
             }
-        } catch (Exception e) {
-            Static.error(e);
-        }
+        });
     }
-    private void display(){
-        Log.v(TAG, "display");
-        final ProtocolFragment self = this;
-        protocol.get(new Protocol.Callback() {
+    private void loadFailed() {
+        Static.T.runOnUiThread(new Runnable() {
             @Override
-            public void onDone(JSONObject data){
-                Log.v(TAG, "display | protocol.get=" + (data == null ? "null" : "notnull"));
+            public void run() {
+                Log.v(TAG, "loadFailed");
                 try {
-                    if (data == null) throw new NullPointerException("Protocol.protocol can't be null");
+                    draw(R.layout.state_try_again);
+                    TextView try_again_message = (TextView) activity.findViewById(R.id.try_again_message);
+                    if (try_again_message != null) try_again_message.setText(R.string.load_failed_retry_in_minute);
+                    View try_again_reload = activity.findViewById(R.id.try_again_reload);
+                    if (try_again_reload != null) {
+                        try_again_reload.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                load();
+                            }
+                        });
+                    }
+                } catch (Exception e) {
+                    Static.error(e);
+                }
+            }
+        });
+    }
+    private void display() {
+        final ProtocolFragment self = this;
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "display");
+                try {
+                    if (data == null) throw new NullPointerException("data cannot be null");
                     // отображаем интерфейс
                     draw(R.layout.protocol_layout);
                     // отображаем нужный режим
@@ -493,7 +533,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                     if (spinner_weeks != null) {
                         final ArrayList<String> spinner_weeks_arr = new ArrayList<>();
                         final ArrayList<Integer> spinner_weeks_arr_values = new ArrayList<>();
-                        for(int i = 1; i <= 4; i++){
+                        for (int i = 1; i <= 4; i++) {
                             String value = getString(R.string.for_the) + " ";
                             switch (i){
                                 case 1: value += getString(R.string.last_week); break;
@@ -515,7 +555,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                                 }
                                 number_of_weeks = spinner_weeks_arr_values.get(position);
                                 Log.v(TAG, "spinner_weeks clicked | number_of_weeks=" + number_of_weeks);
-                                forceLoad();
+                                load(true);
                             }
                             public void onNothingSelected(AdapterView<?> parent) {}
                         });
@@ -526,24 +566,26 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                     loadFailed();
                 }
             }
-            @Override
-            public void onChecked(boolean is) {}
         });
     }
 
-    private void draw(int layoutId){
-        try {
-            ViewGroup vg = ((ViewGroup) activity.findViewById(R.id.container_protocol));
-            if (vg != null) {
-                vg.removeAllViews();
-                vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+    private void draw(final int layoutId) {
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    ViewGroup vg = ((ViewGroup) activity.findViewById(R.id.container_protocol));
+                    if (vg != null) {
+                        vg.removeAllViews();
+                        vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                    }
+                } catch (Exception e){
+                    Static.error(e);
+                }
             }
-        } catch (Exception e){
-            Static.error(e);
-        }
+        });
     }
     private View inflate(int layoutId) throws InflateException {
         return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
-
 }

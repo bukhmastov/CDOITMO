@@ -208,5 +208,4 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
 
     @Override
     public void onDestroy() {}
-
 }

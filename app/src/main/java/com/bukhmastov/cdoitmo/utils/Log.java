@@ -140,9 +140,12 @@ public class Log {
         return android.util.Log.wtf("Assert", null, throwable);
     }
     public static int exception(Throwable throwable){
+        return exception(null, throwable);
+    }
+    public static int exception(String msg, Throwable throwable){
         FirebaseCrashProvider.exception(throwable);
         addLog(new LogItem(EXCEPTION, throwable));
-        return android.util.Log.e("Exception", null, throwable);
+        return android.util.Log.e("Exception", msg, throwable);
     }
 
     private static class LogItem {

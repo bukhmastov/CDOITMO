@@ -18,7 +18,6 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
-import com.bukhmastov.cdoitmo.network.interfaces.IfmoClientResponseHandler;
 import com.bukhmastov.cdoitmo.network.interfaces.IfmoRestClientResponseHandler;
 import com.bukhmastov.cdoitmo.utils.CircularTransformation;
 import com.bukhmastov.cdoitmo.utils.Log;
@@ -58,7 +57,6 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     private boolean markers_campus = true;
     private boolean markers_dormitory = true;
     private long timestamp = 0;
-    private Thread thread = null;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -78,6 +76,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                 }
             } catch (Exception e) {
                 Static.error(e);
+                loadFailed();
             }
         }
     }
@@ -138,6 +137,9 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                 loadFailed();
             }
         }
+        if (fragmentRequestHandle != null) {
+            fragmentRequestHandle.cancel(true);
+        }
     }
 
     @Override
@@ -190,201 +192,168 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     }
 
     private void load() {
-        load(Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)
-                ? Integer.parseInt(Storage.pref.get(getContext(), "pref_static_refresh", "168"))
-                : 0);
-    }
-    private void load(boolean force) {
-        if (force) {
-            load (0);
-        } else {
-            load(Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)
-                    ? Integer.parseInt(Storage.pref.get(getContext(), "pref_static_refresh", "168"))
-                    : 0);
-        }
-    }
-    private void load(final int refresh_rate) {
-        if (thread != null) {
-            if (thread.isAlive() && !thread.isInterrupted()) {
-                thread.interrupt();
-            }
-            thread = null;
-        }
-        thread = new Thread(new Runnable() {
+        Static.T.runThread(new Runnable() {
             @Override
             public void run() {
-                String cache = Storage.file.cache.get(getContext(), "university#buildings").trim();
-                if (cache.isEmpty()) {
-                    load(refresh_rate, true);
-                } else {
-                    try {
-                        JSONObject cacheJson = new JSONObject(cache);
-                        building_map = cacheJson.getJSONObject("data");
-                        timestamp = cacheJson.getLong("timestamp");
-                        if (timestamp + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
-                            load(refresh_rate, true);
-                        } else {
-                            load(refresh_rate, false);
+                load(Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)
+                        ? Integer.parseInt(Storage.pref.get(getContext(), "pref_static_refresh", "168"))
+                        : 0);
+            }
+        });
+    }
+    private void load(final int refresh_rate) {
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "load | refresh_rate=" + refresh_rate);
+                if (Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)) {
+                    String cache = Storage.file.cache.get(getContext(), "university#buildings").trim();
+                    if (!cache.isEmpty()) {
+                        try {
+                            JSONObject cacheJson = new JSONObject(cache);
+                            building_map = cacheJson.getJSONObject("data");
+                            timestamp = cacheJson.getLong("timestamp");
+                            if (timestamp + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+                                load(true);
+                            } else {
+                                load(false);
+                            }
+                        } catch (JSONException e) {
+                            Static.error(e);
+                            load(true);
                         }
-                    } catch (JSONException e) {
-                        Static.error(e);
-                        load(refresh_rate, true);
+                    } else {
+                        load(false);
                     }
+                } else {
+                    load(false);
                 }
             }
         });
-        thread.setName("UniversityBuildingsThread");
-        thread.start();
     }
-    private void load(final int refresh_rate, final boolean force) {
-        Log.v(TAG, "load | refresh_rate=" + refresh_rate + " | force=" + (force ? "true" : "false"));
-        if ((!force || !Static.isOnline(getContext())) && building_map != null) {
-            display();
-            return;
-        }
-        if (!Static.OFFLINE_MODE) {
-            loadProvider(new IfmoRestClientResponseHandler() {
-                @Override
-                public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
-                    if (statusCode == 200) {
-                        long now = Calendar.getInstance().getTimeInMillis();
-                        if (json != null && Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)) {
-                            try {
-                                Storage.file.cache.put(getContext(), "university#buildings", new JSONObject()
-                                        .put("timestamp", now)
-                                        .put("data", json)
-                                        .toString()
-                                );
-                            } catch (JSONException e) {
-                                Static.error(e);
+    private void load(final boolean force) {
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "load | force=" + (force ? "true" : "false"));
+                if ((!force || !Static.isOnline(getContext())) && building_map != null) {
+                    display();
+                    return;
+                }
+                if (!Static.OFFLINE_MODE) {
+                    loadProvider(new IfmoRestClientResponseHandler() {
+                        @Override
+                        public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
+                            if (statusCode == 200) {
+                                long now = Calendar.getInstance().getTimeInMillis();
+                                if (json != null && Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)) {
+                                    try {
+                                        Storage.file.cache.put(getContext(), "university#buildings", new JSONObject()
+                                                .put("timestamp", now)
+                                                .put("data", json)
+                                                .toString()
+                                        );
+                                    } catch (JSONException e) {
+                                        Static.error(e);
+                                    }
+                                }
+                                building_map = json;
+                                timestamp = now;
+                                display();
+                            } else {
+                                loadFailed();
                             }
                         }
-                        building_map = json;
-                        timestamp = now;
-                        display();
-                    } else {
-                        loadFailed();
-                    }
-                }
-                @Override
-                public void onProgress(final int state) {
-                    activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void onProgress(final int state) {
+                            Static.T.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.v(TAG, "forceLoad | progress " + state);
+                                    draw(R.layout.state_loading);
+                                    if (activity != null) {
+                                        TextView loading_message = (TextView) container.findViewById(R.id.loading_message);
+                                        if (loading_message != null) {
+                                            switch (state) {
+                                                case IfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                        @Override
+                        public void onFailure(final int statusCode, final int state) {
+                            Static.T.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.v(TAG, "forceLoad | failure " + state);
+                                    switch (state) {
+                                        case IfmoRestClient.FAILED_OFFLINE:
+                                            draw(R.layout.state_offline);
+                                            if (activity != null) {
+                                                View offline_reload = container.findViewById(R.id.offline_reload);
+                                                if (offline_reload != null) {
+                                                    offline_reload.setOnClickListener(new View.OnClickListener() {
+                                                        @Override
+                                                        public void onClick(View v) {
+                                                            load();
+                                                        }
+                                                    });
+                                                }
+                                            }
+                                            break;
+                                        case IfmoRestClient.FAILED_TRY_AGAIN:
+                                            draw(R.layout.state_try_again);
+                                            if (activity != null) {
+                                                View try_again_reload = container.findViewById(R.id.try_again_reload);
+                                                if (try_again_reload != null) {
+                                                    try_again_reload.setOnClickListener(new View.OnClickListener() {
+                                                        @Override
+                                                        public void onClick(View v) {
+                                                            load();
+                                                        }
+                                                    });
+                                                }
+                                            }
+                                            break;
+                                    }
+                                }
+                            });
+                        }
+                        @Override
+                        public void onNewHandle(RequestHandle requestHandle) {
+                            fragmentRequestHandle = requestHandle;
+                        }
+                    });
+                } else {
+                    Static.T.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Log.v(TAG, "forceLoad | progress " + state);
-                            draw(R.layout.state_loading);
+                            draw(R.layout.state_offline);
                             if (activity != null) {
-                                TextView loading_message = (TextView) container.findViewById(R.id.loading_message);
-                                if (loading_message != null) {
-                                    switch (state) {
-                                        case IfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
-                                    }
+                                View offline_reload = activity.findViewById(R.id.offline_reload);
+                                if (offline_reload != null) {
+                                    offline_reload.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            load();
+                                        }
+                                    });
                                 }
                             }
                         }
                     });
                 }
-                @Override
-                public void onFailure(final int state) {
-                    activity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Log.v(TAG, "forceLoad | failure " + state);
-                            switch (state) {
-                                case IfmoRestClient.FAILED_OFFLINE:
-                                    draw(R.layout.state_offline);
-                                    if (activity != null) {
-                                        View offline_reload = container.findViewById(R.id.offline_reload);
-                                        if (offline_reload != null) {
-                                            offline_reload.setOnClickListener(new View.OnClickListener() {
-                                                @Override
-                                                public void onClick(View v) {
-                                                    load();
-                                                }
-                                            });
-                                        }
-                                    }
-                                    break;
-                                case IfmoRestClient.FAILED_TRY_AGAIN:
-                                    draw(R.layout.state_try_again);
-                                    if (activity != null) {
-                                        View try_again_reload = container.findViewById(R.id.try_again_reload);
-                                        if (try_again_reload != null) {
-                                            try_again_reload.setOnClickListener(new View.OnClickListener() {
-                                                @Override
-                                                public void onClick(View v) {
-                                                    load();
-                                                }
-                                            });
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                    });
-                }
-                @Override
-                public void onNewHandle(RequestHandle requestHandle) {
-                    fragmentRequestHandle = requestHandle;
-                }
-            });
-        } else {
-            draw(R.layout.state_offline);
-            if (activity != null) {
-                View offline_reload = activity.findViewById(R.id.offline_reload);
-                if (offline_reload != null) {
-                    offline_reload.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            load(refresh_rate);
-                        }
-                    });
-                }
-            }
-        }
-    }
-    private void loadProvider(IfmoRestClientResponseHandler handler) {
-        loadProvider(handler, 0);
-    }
-    private void loadProvider(final IfmoRestClientResponseHandler handler, final int attempt) {
-        Log.v(TAG, "loadProvider | attempt=" + attempt);
-        IfmoRestClient.getPlainSync(getContext(), "building_map", null, new IfmoClientResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, String response) {
-                try {
-                    if (statusCode == 200) {
-                        try {
-                            handler.onSuccess(statusCode, new JSONObject(response), null);
-                        } catch (JSONException e) {
-                            handler.onSuccess(statusCode, new JSONObject(Static.parseInvalidIfmoRestClientResponse(response)), null);
-                        }
-                    } else {
-                        handler.onFailure(IfmoRestClient.FAILED_TRY_AGAIN);
-                    }
-                } catch (Exception e) {
-                    if (attempt < 3) {
-                        loadProvider(handler, attempt + 1);
-                    } else {
-                        handler.onFailure(IfmoRestClient.FAILED_TRY_AGAIN);
-                    }
-                }
-            }
-            @Override
-            public void onProgress(int state) {
-                handler.onProgress(state);
-            }
-            @Override
-            public void onFailure(int state) {
-                handler.onFailure(state);
-            }
-            @Override
-            public void onNewHandle(RequestHandle requestHandle) {
-                handler.onNewHandle(requestHandle);
             }
         });
     }
+    private void loadProvider(IfmoRestClientResponseHandler handler) {
+        Log.v(TAG, "loadProvider");
+        IfmoRestClient.get(getContext(), "building_map", null, handler);
+    }
     private void loadFailed(){
-        activity.runOnUiThread(new Runnable() {
+        Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 Log.v(TAG, "loadFailed");
@@ -419,7 +388,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     }
     private void display() {
         final OnMapReadyCallback onMapReadyCallback = this;
-        activity.runOnUiThread(new Runnable() {
+        Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 draw(R.layout.layout_university_buildings);
@@ -475,61 +444,80 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     }
 
     private void displayMarkers() {
-        try {
-            JSONArray list = building_map.getJSONArray("list");
-            if (list != null) {
-                removeAllMarkers();
-                for (int i = 0; i < list.length(); i++) {
-                    try {
-                        JSONObject building = list.getJSONObject(i);
-                        if (building == null) {
-                            continue;
-                        }
-                        String type = null;
-                        int icon = -1;
-                        switch (building.getInt("type_id")) {
-                            case 1:
-                                if (!markers_campus) {
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    JSONArray list = building_map.getJSONArray("list");
+                    if (list != null) {
+                        removeAllMarkers();
+                        for (int i = 0; i < list.length(); i++) {
+                            try {
+                                final JSONObject building = list.getJSONObject(i);
+                                if (building == null) {
                                     continue;
                                 }
-                                type = activity.getString(R.string.campus);
-                                icon = R.drawable.location_campus;
-                                break;
-                            case 2:
-                                if (!markers_dormitory) {
-                                    continue;
+                                String type = null;
+                                int icon = -1;
+                                switch (building.getInt("type_id")) {
+                                    case 1:
+                                        if (!markers_campus) {
+                                            continue;
+                                        }
+                                        type = activity.getString(R.string.campus);
+                                        icon = R.drawable.location_campus;
+                                        break;
+                                    case 2:
+                                        if (!markers_dormitory) {
+                                            continue;
+                                        }
+                                        type = activity.getString(R.string.dormitory);
+                                        icon = R.drawable.location_dormitory;
+                                        break;
                                 }
-                                type = activity.getString(R.string.dormitory);
-                                icon = R.drawable.location_dormitory;
-                                break;
+                                final MarkerOptions markerOptions = new MarkerOptions();
+                                markerOptions.position(new LatLng(building.getDouble("N"), building.getDouble("E")));
+                                markerOptions.title(building.getString("title"));
+                                markerOptions.zIndex((float) (building.getInt("major") + 1));
+                                if (type != null) {
+                                    markerOptions.snippet(type);
+                                }
+                                if (icon != -1) {
+                                    markerOptions.icon(BitmapDescriptorFactory.fromResource(icon));
+                                }
+                                Static.T.runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        try {
+                                            Marker marker = googleMap.addMarker(markerOptions);
+                                            marker.setTag(building);
+                                            markers.add(marker);
+                                        } catch (Exception e) {
+                                            Static.error(e);
+                                        }
+                                    }
+                                });
+                            } catch (Exception e) {
+                                Static.error(e);
+                            }
                         }
-                        MarkerOptions markerOptions = new MarkerOptions();
-                        markerOptions.position(new LatLng(building.getDouble("N"), building.getDouble("E")));
-                        markerOptions.title(building.getString("title"));
-                        markerOptions.zIndex((float) (building.getInt("major") + 1));
-                        if (type != null) {
-                            markerOptions.snippet(type);
-                        }
-                        if (icon != -1) {
-                            markerOptions.icon(BitmapDescriptorFactory.fromResource(icon));
-                        }
-                        Marker marker = googleMap.addMarker(markerOptions);
-                        marker.setTag(building);
-                        markers.add(marker);
-                    } catch (Exception e) {
-                        Static.error(e);
                     }
+                } catch (Exception e) {
+                    Static.error(e);
                 }
             }
-        } catch (Exception e) {
-            Static.error(e);
-        }
+        });
     }
     private void removeAllMarkers() {
-        for (Marker marker : markers) {
-            marker.remove();
-        }
-        markers.clear();
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                for (Marker marker : markers) {
+                    marker.remove();
+                }
+                markers.clear();
+            }
+        });
     }
 
     @Override
@@ -684,7 +672,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     }
 
     private void draw(final int layoutId){
-        activity.runOnUiThread(new Runnable() {
+        Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 try {

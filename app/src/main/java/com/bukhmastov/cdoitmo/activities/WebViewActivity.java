@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.activities;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
@@ -18,6 +19,7 @@ import com.bukhmastov.cdoitmo.utils.Static;
 public class WebViewActivity extends AppCompatActivity {
 
     private static final String TAG = "WebViewActivity";
+    private Activity activity = this;
     private String url = null;
     private String title = null;
     private WebView webview = null;
@@ -80,7 +82,11 @@ public class WebViewActivity extends AppCompatActivity {
     private class MyWebViewClient extends WebViewClient {
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-            startActivity(new Intent(Intent.ACTION_VIEW, request.getUrl()));
+            try {
+                startActivity(new Intent(Intent.ACTION_VIEW, request.getUrl()));
+            } catch (Exception e) {
+                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+            }
             return true;
         }
     }
