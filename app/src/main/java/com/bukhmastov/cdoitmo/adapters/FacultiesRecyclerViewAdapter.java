@@ -25,8 +25,12 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class FacultiesRecyclerViewAdapter extends UniversityRecyclerViewAdapter {
+
+    private Pattern working_hours_pattern = Pattern.compile("(\\D*/.*\\|?)+");
 
     public FacultiesRecyclerViewAdapter(final Context context) {
         super(context, null);
@@ -145,25 +149,30 @@ public class FacultiesRecyclerViewAdapter extends UniversityRecyclerViewAdapter 
                     }
                 }
                 if (working_hours != null) {
-                    String[] days = working_hours.trim().split("\\|");
-                    ArrayList<String> days_new = new ArrayList<>();
-                    for (String day : days) {
-                        String[] day_split = day.trim().split("/");
-                        String time = "";
-                        for (int i = 1; i < day_split.length; i++) {
-                            time += day_split[i] + "/";
+                    String wh = working_hours.trim();
+                    Matcher m = working_hours_pattern.matcher(wh);
+                    if (m.find()) {
+                        String[] days = wh.split("\\|");
+                        ArrayList<String> days_new = new ArrayList<>();
+                        for (String day : days) {
+                            String[] day_split = day.trim().split("/");
+                            String time = "";
+                            for (int i = 1; i < day_split.length; i++) {
+                                time += day_split[i] + "/";
+                            }
+                            time = time.trim();
+                            if (time.endsWith("/")) {
+                                time = time.trim().substring(0, time.length() - 1);
+                            }
+                            time = time.replace("/", ", ");
+                            if (!time.isEmpty()) {
+                                time = (day_split[0] + " (" + time + ")").trim();
+                            }
+                            days_new.add(time);
                         }
-                        time = time.trim();
-                        if (time.endsWith("/")) {
-                            time = time.trim().substring(0, time.length() - 1);
-                        }
-                        time = time.replace("/", ", ");
-                        if (!time.isEmpty()) {
-                            time = (day_split[0] + " (" + time + ")").trim();
-                        }
-                        days_new.add(time);
+                        wh = TextUtils.join("\n", days_new).trim();
                     }
-                    structure_container.addView(getConnectContainer(R.drawable.ic_access_time, TextUtils.join("\n", days_new).trim(), is_first_container, null));
+                    structure_container.addView(getConnectContainer(R.drawable.ic_access_time, wh, is_first_container, null));
                     is_first_container = true;
                 }
             }

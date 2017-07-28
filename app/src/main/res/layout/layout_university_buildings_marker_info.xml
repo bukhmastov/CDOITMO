@@ -43,16 +43,38 @@
                 android:maxLines="2"
                 android:ellipsize="end" />
 
-            <TextView
-                android:id="@+id/marker_desc"
+            <LinearLayout
+                android:id="@+id/web"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:text="@string/lorem_ipsum"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="@dimen/font_size_14"
-                android:maxLines="6"
-                android:ellipsize="end"/>
+                android:orientation="horizontal">
+
+                <FrameLayout
+                    android:layout_width="@dimen/dp16"
+                    android:layout_height="@dimen/dp16"
+                    android:layout_gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:srcCompat="@drawable/ic_web"
+                        android:tint="?android:attr/textColorSecondary"/>
+
+                </FrameLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/open_ifmo_ru"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="@dimen/font_size_14"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:paddingStart="@dimen/item_padding_eight"
+                    android:paddingEnd="@dimen/item_padding_eight"/>
+
+            </LinearLayout>
 
         </LinearLayout>
 
@@ -61,7 +83,8 @@
             android:layout_width="@dimen/schedule_cache_button"
             android:layout_height="@dimen/schedule_cache_button"
             android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true">
+            android:layout_centerVertical="true"
+            android:background="?attr/selectableItemBackgroundBorderless">
 
             <ImageView
                 android:layout_width="match_parent"

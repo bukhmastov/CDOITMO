@@ -39,22 +39,24 @@
         android:orientation="vertical"
         android:background="?attr/colorBackground" >
 
-        <LinearLayout
+        <RelativeLayout
             android:id="@+id/header"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/search_height"
+            android:layout_height="wrap_content"
             android:layout_margin="@dimen/search_padding"
+            android:minHeight="@dimen/search_height"
             android:background="@drawable/shape_filled_card"
             android:elevation="4dp"
             android:orientation="horizontal"
-            android:paddingEnd="@dimen/item_padding_half"
+            android:paddingEnd="@dimen/item_padding_quarter"
             android:paddingStart="@dimen/item_padding_quarter">
 
             <FrameLayout
                 android:id="@+id/back"
                 android:layout_width="@dimen/search_height"
                 android:layout_height="@dimen/search_height"
-                android:layout_gravity="center_vertical"
+                android:layout_centerVertical="true"
+                android:layout_alignParentStart="true"
                 android:background="?attr/selectableItemBackgroundBorderless">
 
                 <ImageView
@@ -67,16 +69,32 @@
 
             </FrameLayout>
 
+            <FrameLayout
+                android:id="@+id/web"
+                android:layout_width="@dimen/search_height"
+                android:layout_height="@dimen/search_height"
+                android:layout_centerVertical="true"
+                android:layout_alignParentEnd="true"
+                android:background="?attr/selectableItemBackgroundBorderless">
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:padding="@dimen/search_offset_start"
+                    app:srcCompat="@drawable/ic_web"
+                    android:tint="?android:attr/textColorPrimaryInverse"/>
+
+            </FrameLayout>
+
             <LinearLayout
-                android:id="@+id/departament_link"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
+                android:layout_centerVertical="true"
+                android:layout_toStartOf="@id/web"
+                android:layout_toEndOf="@id/back"
                 android:orientation="vertical"
-                android:paddingBottom="@dimen/item_padding_quarter"
-                android:paddingEnd="0dp"
-                android:paddingStart="@dimen/item_padding_quarter"
-                android:paddingTop="@dimen/item_padding_quarter">
+                android:padding="@dimen/item_padding_quarter">
 
                 <TextView
                     android:id="@+id/title"
@@ -85,20 +103,11 @@
                     android:text="@string/lorem_ipsum"
                     android:textColor="?android:attr/textColorPrimaryInverse"
                     android:textSize="@dimen/font_size_16"
-                    android:maxLines="5" />
-
-                <TextView
-                    android:id="@+id/link"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/lorem_ipsum"
-                    android:textColor="?android:attr/textColorPrimaryInverse"
-                    android:textSize="@dimen/font_size_14"
-                    android:maxLines="1" />
+                    android:maxLines="6" />
 
             </LinearLayout>
 
-        </LinearLayout>
+        </RelativeLayout>
 
         <View
             android:id="@+id/separator"

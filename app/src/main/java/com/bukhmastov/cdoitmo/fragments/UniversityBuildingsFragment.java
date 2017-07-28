@@ -2,6 +2,8 @@ package com.bukhmastov.cdoitmo.fragments;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.Nullable;
@@ -477,11 +479,16 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
             ViewGroup marker_info_container = (ViewGroup) container.findViewById(R.id.marker_info_container);
             if (marker_info_container != null) {
                 View marker_info = inflate(R.layout.layout_university_buildings_marker_info);
-                String title = escapeText(building.getString("title"));
-                String text = escapeText(building.getString("text"));
-                String image = building.getString("image");
+                final String title = escapeText(building.getString("title"));
+                final int id = building.getInt("id");
+                final String image = building.getString("image");
                 ((TextView) marker_info.findViewById(R.id.marker_text)).setText(title);
-                ((TextView) marker_info.findViewById(R.id.marker_desc)).setText(text);
+                marker_info.findViewById(R.id.web).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ifmo.ru/ru/map/" + id + "/")));
+                    }
+                });
                 Picasso.with(getContext())
                         .load(image)
                         .error(R.drawable.ic_sentiment_very_satisfied)

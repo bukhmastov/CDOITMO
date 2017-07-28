@@ -2,6 +2,8 @@ package com.bukhmastov.cdoitmo.fragments;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.Nullable;
@@ -338,7 +340,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                             }
                         });
                         ((TextView) container.findViewById(R.id.title)).setText(R.string.unit_general);
-                        Static.removeView(container.findViewById(R.id.link));
+                        Static.removeView(container.findViewById(R.id.web));
                     } else {
                         container.findViewById(R.id.back).setOnClickListener(new View.OnClickListener() {
                             @Override
@@ -353,7 +355,18 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                         } else {
                             Static.removeView(container.findViewById(R.id.title));
                         }
-                        Static.removeView(container.findViewById(R.id.link));
+                        final int unit_id = stack.size() > 0 ? getInt(unit, "unit_id") : -1;
+                        final String link = isValid(unit_id) ? "http://www.ifmo.ru/ru/viewunit/" + unit_id + "/" : null;
+                        if (link != null) {
+                            container.findViewById(R.id.web).setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View view) {
+                                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(link.trim())));
+                                }
+                            });
+                        } else {
+                            Static.removeView(container.findViewById(R.id.web));
+                        }
                     }
                     // список
                     facultiesRecyclerViewAdapter = new FacultiesRecyclerViewAdapter(getContext());

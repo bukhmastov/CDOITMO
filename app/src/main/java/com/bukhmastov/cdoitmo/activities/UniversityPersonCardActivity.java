@@ -66,6 +66,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                 }
             }
             if (!ok) throw new Exception("failed to get info from extras");
+            if (pid < 0) throw new Exception("Invalid person id provided");
         } catch (Exception e) {
             finish();
         }
@@ -251,11 +252,13 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
             public void run() {
                 Log.v(TAG, "loadNotFound");
                 try {
-                    draw(R.layout.nothing_to_display_center);
-                    TextView ntd_text = (TextView) findViewById(R.id.ntd_text);
-                    if (ntd_text != null) {
-                        ntd_text.setText(R.string.no_persons);
-                    }
+                    draw(R.layout.nothing_to_display_center_person);
+                    findViewById(R.id.web).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ifmo.ru/ru/viewperson/" + pid + "/")));
+                        }
+                    });
                 } catch (Exception e) {
                     Static.error(e);
                 }

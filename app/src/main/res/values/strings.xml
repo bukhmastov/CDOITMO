@@ -353,5 +353,6 @@
     <string name="student">студент</string>
     <string name="choose_type">Выберите тип</string>
     <string name="shortcut_creator_need_to_choose_type">Необходимо выбрать тип</string>
+    <string name="open_ifmo_ru">Посмотреть на www.ifmo.ru</string>
 
 </resources>

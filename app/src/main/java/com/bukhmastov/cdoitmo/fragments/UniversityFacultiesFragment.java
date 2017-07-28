@@ -38,6 +38,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Objects;
 
 public class UniversityFacultiesFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
@@ -297,7 +298,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
         }
         IfmoRestClient.get(getContext(), "study_structure" + (dep_id.isEmpty() ? "" : "/" + dep_id), null, handler);
     }
-    private void loadFailed(){
+    private void loadFailed() {
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -345,7 +346,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                             }
                         });
                         ((TextView) container.findViewById(R.id.title)).setText(R.string.division_general);
-                        Static.removeView(container.findViewById(R.id.link));
+                        Static.removeView(container.findViewById(R.id.web));
                     } else {
                         container.findViewById(R.id.back).setOnClickListener(new View.OnClickListener() {
                             @Override
@@ -355,22 +356,23 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                             }
                         });
                         final String name = getString(structure, "name");
-                        final String link = getString(structure, "link");
                         if (name != null && !name.trim().isEmpty()) {
                             ((TextView) container.findViewById(R.id.title)).setText(name.trim());
                         } else {
                             Static.removeView(container.findViewById(R.id.title));
                         }
-                        if (link != null && !link.trim().isEmpty()) {
-                            ((TextView) container.findViewById(R.id.link)).setText(link.trim());
-                            container.findViewById(R.id.departament_link).setOnClickListener(new View.OnClickListener() {
+                        final String type = getString(structure, "type");
+                        final int id_type = stack.size() > 0 ? getInt(structure, "id_type") : -1;
+                        final String link = isValid(getString(structure, "link")) ? getString(structure, "link") : ((isValid(type) && isValid(id_type)) ? "http://www.ifmo.ru/ru/" + (Objects.equals(type, "faculty") ? "viewfaculty" : "viewdepartment") + "/" + id_type + "/" : null);
+                        if (link != null) {
+                            container.findViewById(R.id.web).setOnClickListener(new View.OnClickListener() {
                                 @Override
-                                public void onClick(View v) {
+                                public void onClick(View view) {
                                     startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(link.trim())));
                                 }
                             });
                         } else {
-                            Static.removeView(container.findViewById(R.id.link));
+                            Static.removeView(container.findViewById(R.id.web));
                         }
                     }
                     // список

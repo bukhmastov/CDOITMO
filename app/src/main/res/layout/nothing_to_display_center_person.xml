@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingTop="@dimen/item_padding"
+    android:paddingBottom="@dimen/item_padding"
+    android:paddingStart="@dimen/item_padding"
+    android:paddingEnd="@dimen/item_padding" >
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_alignParentStart="true">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:srcCompat="@drawable/ic_visibility" />
+
+        <TextView
+            android:id="@+id/ntd_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@string/font_bold"
+            android:gravity="center"
+            android:paddingTop="@dimen/item_vertical_padding_half"
+            android:paddingBottom="@dimen/item_vertical_padding_half"
+            android:text="@string/no_persons"
+            android:textAllCaps="true"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="@dimen/font_size_14" />
+
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_margin="@dimen/item_padding_half"
+            android:background="@drawable/shape_border_round"
+            android:padding="@dimen/item_padding_quarter">
+
+            <LinearLayout
+                android:id="@+id/web"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:orientation="horizontal"
+                android:padding="@dimen/item_padding_quarter">
+
+                <ImageView
+                    android:layout_width="@dimen/login_interrupt_icon_width"
+                    android:layout_height="@dimen/login_interrupt_icon_width"
+                    android:layout_gravity="center_vertical"
+                    android:padding="@dimen/login_interrupt_icon_padding"
+                    app:srcCompat="@drawable/ic_web" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/item_padding_quarter"
+                    android:layout_marginStart="@dimen/item_padding_quarter"
+                    android:layout_gravity="center_vertical"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/open_ifmo_ru"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="@dimen/font_size_14"
+                        android:fontFamily="@string/font_bold"
+                        android:textAllCaps="true"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+</RelativeLayout>
