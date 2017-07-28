@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/university_tab_container"
+    android:background="?attr/colorBackground" >
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <com.google.android.gms.maps.MapView
+            android:id="@+id/buildings_map"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <LinearLayout
+            android:id="@+id/status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="end"
+            android:orientation="vertical"
+            android:paddingTop="@dimen/item_padding_quarter"
+            android:paddingBottom="@dimen/item_padding_quarter"
+            android:paddingStart="@dimen/item_padding_quarter"
+            android:paddingEnd="@dimen/item_padding_eight"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true" />
+
+        <LinearLayout
+            android:id="@+id/controls"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="end"
+            android:orientation="vertical"
+            android:paddingTop="@dimen/item_padding_quarter"
+            android:paddingBottom="@dimen/item_padding_quarter"
+            android:paddingStart="@dimen/item_padding_quarter"
+            android:paddingEnd="@dimen/item_padding_eight"
+            android:layout_above="@+id/marker_info_container"
+            android:layout_alignParentEnd="true" >
+
+            <FrameLayout
+                android:id="@+id/view_list"
+                android:layout_width="@dimen/dp42"
+                android:layout_height="@dimen/dp42"
+                android:layout_margin="@dimen/item_padding_eight"
+                android:background="@drawable/shape_border_round_big">
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="@dimen/item_padding_half"
+                    android:tint="?android:attr/textColorPrimary"
+                    app:srcCompat="@drawable/ic_list" />
+
+            </FrameLayout>
+
+            <Switch
+                android:id="@+id/dormitory_switch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/item_padding_eight"
+                android:background="@drawable/shape_border_round_big"
+                android:paddingBottom="@dimen/item_vertical_padding"
+                android:paddingEnd="@dimen/item_horizontal_padding_half"
+                android:paddingStart="@dimen/item_horizontal_padding"
+                android:paddingTop="@dimen/item_vertical_padding"
+                android:switchPadding="@dimen/item_horizontal_padding_half"
+                android:text="@string/dormitories"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="@dimen/font_size_12"
+                android:textAllCaps="true" />
+
+            <Switch
+                android:id="@+id/campus_switch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/item_padding_eight"
+                android:background="@drawable/shape_border_round_big"
+                android:paddingStart="@dimen/item_horizontal_padding"
+                android:paddingEnd="@dimen/item_horizontal_padding_half"
+                android:paddingTop="@dimen/item_vertical_padding"
+                android:paddingBottom="@dimen/item_vertical_padding"
+                android:switchPadding="@dimen/item_horizontal_padding_half"
+                android:text="@string/campuses"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="@dimen/font_size_12"
+                android:textAllCaps="true" />
+
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/marker_info_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true" />
+
+    </RelativeLayout>
+
+</LinearLayout>

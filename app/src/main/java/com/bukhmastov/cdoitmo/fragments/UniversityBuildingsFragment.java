@@ -46,7 +46,7 @@ import java.util.Objects;
 public class UniversityBuildingsFragment extends Fragment implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
     private static final String TAG = "UniversityBuildingsFragment";
-    private Bundle savedInstanceState;
+    private static final String MAPVIEW_BUNDLE_KEY = "MapViewBundleKey";
     private Activity activity;
     private View container;
     private RequestHandle fragmentRequestHandle = null;
@@ -64,21 +64,77 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         Log.v(TAG, "Fragment created");
         activity = getActivity();
         FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
-        this.savedInstanceState = savedInstanceState;
         markers_campus = Storage.pref.get(getContext(), "pref_university_buildings_campus", true);
         markers_dormitory = Storage.pref.get(getContext(), "pref_university_buildings_dormitory", true);
         if (mapView != null) {
             try {
-                try {
-                    mapView.onCreate(getMapBundle(savedInstanceState));
-                } catch (Exception e) {
-                    mapView.onCreate(savedInstanceState);
-                }
+                mapView.onCreate(getMapBundle(savedInstanceState));
             } catch (Exception e) {
                 Static.error(e);
-                loadFailed();
+                failed();
             }
         }
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup cont, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_university_tab_buildings, cont, false);
+        container = view.findViewById(R.id.university_tab_container);
+        return view;
+    }
+
+    @Override
+    public void onViewCreated(final View view, @Nullable final Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        final OnMapReadyCallback self = this;
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mapView = (MapView) view.findViewById(R.id.buildings_map);
+                if (mapView != null) {
+                    try {
+                        mapView.onCreate(getMapBundle(savedInstanceState));
+                        mapView.getMapAsync(self);
+                    } catch (Exception e) {
+                        Static.error(e);
+                        failed();
+                    }
+                }
+                Switch dormitory_switch = (Switch) container.findViewById(R.id.dormitory_switch);
+                if (dormitory_switch != null) {
+                    dormitory_switch.setChecked(markers_dormitory);
+                    dormitory_switch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                        @Override
+                        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                            markers_dormitory = isChecked;
+                            displayMarkers();
+                            Storage.pref.put(getContext(), "pref_university_buildings_dormitory", markers_dormitory);
+                        }
+                    });
+                }
+                Switch campus_switch = (Switch) container.findViewById(R.id.campus_switch);
+                if (campus_switch != null) {
+                    campus_switch.setChecked(markers_campus);
+                    campus_switch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                        @Override
+                        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                            markers_campus = isChecked;
+                            displayMarkers();
+                            Storage.pref.put(getContext(), "pref_university_buildings_campus", markers_campus);
+                        }
+                    });
+                }
+                View view_list = container.findViewById(R.id.view_list);
+                if (view_list != null) {
+                    view_list.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            openList();
+                        }
+                    });
+                }
+            }
+        });
     }
 
     @Override
@@ -89,7 +145,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                 mapView.onStart();
             } catch (Exception e) {
                 Static.error(e);
-                loadFailed();
+                failed();
             }
         }
     }
@@ -120,7 +176,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                 mapView.onResume();
             } catch (Exception e) {
                 Static.error(e);
-                loadFailed();
+                failed();
             }
         }
     }
@@ -134,7 +190,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                 mapView.onPause();
             } catch (Exception e) {
                 Static.error(e);
-                loadFailed();
+                failed();
             }
         }
         if (fragmentRequestHandle != null) {
@@ -150,7 +206,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                 mapView.onStop();
             } catch (Exception e) {
                 Static.error(e);
-                loadFailed();
+                failed();
             }
         }
     }
@@ -158,17 +214,17 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        savedInstanceState = outState;
-        if (mapView != null) {
-            try {
-                try {
-                    mapView.onSaveInstanceState(getMapBundle(savedInstanceState));
-                } catch (Exception e) {
-                    mapView.onSaveInstanceState(savedInstanceState);
-                }
-            } catch (Exception e) {
-                Static.error(e);
+        try {
+            Bundle mapViewBundle = outState.getBundle(MAPVIEW_BUNDLE_KEY);
+            if (mapViewBundle == null) {
+                mapViewBundle = new Bundle();
+                outState.putBundle(MAPVIEW_BUNDLE_KEY, mapViewBundle);
             }
+            if (mapView != null) {
+                mapView.onSaveInstanceState(mapViewBundle);
+            }
+        } catch (Exception e) {
+            Static.error(e);
         }
     }
 
@@ -182,13 +238,6 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                 Static.error(e);
             }
         }
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup cont, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_university_tab, cont, false);
-        container = view.findViewById(R.id.university_tab_container);
-        return view;
     }
 
     private void load() {
@@ -270,15 +319,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                                 @Override
                                 public void run() {
                                     Log.v(TAG, "forceLoad | progress " + state);
-                                    draw(R.layout.state_loading);
-                                    if (activity != null) {
-                                        TextView loading_message = (TextView) container.findViewById(R.id.loading_message);
-                                        if (loading_message != null) {
-                                            switch (state) {
-                                                case IfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
-                                            }
-                                        }
-                                    }
+                                    loading();
                                 }
                             });
                         }
@@ -290,32 +331,10 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                                     Log.v(TAG, "forceLoad | failure " + state);
                                     switch (state) {
                                         case IfmoRestClient.FAILED_OFFLINE:
-                                            draw(R.layout.state_offline);
-                                            if (activity != null) {
-                                                View offline_reload = container.findViewById(R.id.offline_reload);
-                                                if (offline_reload != null) {
-                                                    offline_reload.setOnClickListener(new View.OnClickListener() {
-                                                        @Override
-                                                        public void onClick(View v) {
-                                                            load();
-                                                        }
-                                                    });
-                                                }
-                                            }
+                                            loadOffline();
                                             break;
                                         case IfmoRestClient.FAILED_TRY_AGAIN:
-                                            draw(R.layout.state_try_again);
-                                            if (activity != null) {
-                                                View try_again_reload = container.findViewById(R.id.try_again_reload);
-                                                if (try_again_reload != null) {
-                                                    try_again_reload.setOnClickListener(new View.OnClickListener() {
-                                                        @Override
-                                                        public void onClick(View v) {
-                                                            load();
-                                                        }
-                                                    });
-                                                }
-                                            }
+                                            loadFailed();
                                             break;
                                     }
                                 }
@@ -327,23 +346,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                         }
                     });
                 } else {
-                    Static.T.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            draw(R.layout.state_offline);
-                            if (activity != null) {
-                                View offline_reload = activity.findViewById(R.id.offline_reload);
-                                if (offline_reload != null) {
-                                    offline_reload.setOnClickListener(new View.OnClickListener() {
-                                        @Override
-                                        public void onClick(View v) {
-                                            load();
-                                        }
-                                    });
-                                }
-                            }
-                        }
-                    });
+                    loadOffline();
                 }
             }
         });
@@ -352,102 +355,50 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         Log.v(TAG, "loadProvider");
         IfmoRestClient.get(getContext(), "building_map", null, handler);
     }
-    private void loadFailed(){
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "loadFailed");
-                try {
-                    draw(R.layout.state_try_again);
-                    TextView try_again_message = (TextView) container.findViewById(R.id.try_again_message);
-                    if (try_again_message != null) try_again_message.setText(R.string.load_failed);
-                    View try_again_reload = container.findViewById(R.id.try_again_reload);
-                    if (try_again_reload != null) {
-                        try_again_reload.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                load();
-                            }
-                        });
-                    }
-                } catch (Exception e) {
-                    Static.error(e);
-                }
-            }
-        });
+
+    private void display() {
+        if (building_map != null) {
+            loaded();
+            displayMarkers();
+        } else {
+            loadFailed();
+        }
     }
 
     @Override
-    public void onMapReady(GoogleMap gMap) {
-        googleMap = gMap;
-        mapView.onStart();
-        mapView.onResume();
-        displayMarkers();
-        googleMap.setOnMarkerClickListener(this);
-        googleMap.moveCamera(CameraUpdateFactory.newCameraPosition(new CameraPosition.Builder().target(new LatLng(59.93465, 30.3138391)).zoom(10).build()));
-    }
-    private void display() {
-        final OnMapReadyCallback onMapReadyCallback = this;
+    public void onMapReady(final GoogleMap gMap) {
+        final GoogleMap.OnMarkerClickListener self = this;
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                draw(R.layout.layout_university_buildings);
-                mapView = (MapView) container.findViewById(R.id.buildings_map);
-                if (mapView != null) {
-                    try {
-                        try {
-                            mapView.onCreate(getMapBundle(savedInstanceState));
-                        } catch (Exception e) {
-                            mapView.onCreate(savedInstanceState);
-                        }
-                        mapView.getMapAsync(onMapReadyCallback);
-                    } catch (Exception e) {
-                        Static.error(e);
-                        loadFailed();
-                    }
-                }
-                Switch dormitory_switch = (Switch) container.findViewById(R.id.dormitory_switch);
-                if (dormitory_switch != null) {
-                    dormitory_switch.setChecked(markers_dormitory);
-                    dormitory_switch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                        @Override
-                        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                            markers_dormitory = isChecked;
-                            displayMarkers();
-                            Storage.pref.put(getContext(), "pref_university_buildings_dormitory", markers_dormitory);
-                        }
-                    });
-                }
-                Switch campus_switch = (Switch) container.findViewById(R.id.campus_switch);
-                if (campus_switch != null) {
-                    campus_switch.setChecked(markers_campus);
-                    campus_switch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                        @Override
-                        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                            markers_campus = isChecked;
-                            displayMarkers();
-                            Storage.pref.put(getContext(), "pref_university_buildings_campus", markers_campus);
-                        }
-                    });
-                }
-                View view_list = container.findViewById(R.id.view_list);
-                if (view_list != null) {
-                    view_list.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            openList();
-                        }
-                    });
-                }
+                googleMap = gMap;
+                googleMap.setOnMarkerClickListener(self);
+                displayMarkers();
+                googleMap.moveCamera(CameraUpdateFactory.newCameraPosition(new CameraPosition.Builder().target(new LatLng(59.93465, 30.3138391)).zoom(10).build()));
             }
         });
     }
-
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        try {
+            JSONObject building = (JSONObject) marker.getTag();
+            if (building == null) {
+                throw new NullPointerException("marker's tag is null");
+            }
+            zoomToMarker(marker);
+            return openMarkerInfo(building);
+        } catch (Exception e) {
+            Static.error(e);
+            return false;
+        }
+    }
     private void displayMarkers() {
         Static.T.runThread(new Runnable() {
             @Override
             public void run() {
                 try {
+                    if (building_map == null) return;
+                    if (googleMap == null) return;
                     JSONArray list = building_map.getJSONArray("list");
                     if (list != null) {
                         removeAllMarkers();
@@ -519,21 +470,6 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
             }
         });
     }
-
-    @Override
-    public boolean onMarkerClick(Marker marker) {
-        try {
-            JSONObject building = (JSONObject) marker.getTag();
-            if (building == null) {
-                throw new NullPointerException("marker's tag is null");
-            }
-            zoomToMarker(marker);
-            return openMarkerInfo(building);
-        } catch (Exception e) {
-            Static.error(e);
-            return false;
-        }
-    }
     private boolean openMarkerInfo(JSONObject building) {
         try {
             closeMarkerInfo();
@@ -583,6 +519,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
             closeMarkerInfo();
             closeList();
             ViewGroup marker_info_container = (ViewGroup) container.findViewById(R.id.marker_info_container);
+            if (building_map == null) return;
             JSONArray list = building_map.getJSONArray("list");
             if (marker_info_container != null && list != null) {
                 View layout_university_buildings_list = inflate(R.layout.layout_university_buildings_list);
@@ -666,22 +603,100 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     private Bundle getMapBundle(Bundle bundle) {
         Bundle mapViewBundle = null;
         if (bundle != null) {
-            mapViewBundle = bundle.getBundle("MapViewBundleKey");
+            mapViewBundle = bundle.getBundle(MAPVIEW_BUNDLE_KEY);
         }
         return mapViewBundle;
     }
 
-    private void draw(final int layoutId){
+    private void loading() {
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    ViewGroup vg = ((ViewGroup) container);
+                    ViewGroup vg = container.findViewById(R.id.status);
                     if (vg != null) {
                         vg.removeAllViews();
-                        vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                        vg.addView(inflate(R.layout.layout_university_buildings_status_loading));
                     }
-                } catch (Exception e){
+                } catch (Exception e) {
+                    Static.error(e);
+                }
+            }
+        });
+    }
+    private void loadFailed() {
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    View view = inflate(R.layout.layout_university_buildings_status_image);
+                    ImageView imageView = view.findViewById(R.id.image);
+                    imageView.setImageResource(R.drawable.ic_warning);
+                    view.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            load();
+                        }
+                    });
+                    ViewGroup vg = container.findViewById(R.id.status);
+                    if (vg != null) {
+                        vg.removeAllViews();
+                        vg.addView(view);
+                    }
+                } catch (Exception e) {
+                    Static.error(e);
+                }
+            }
+        });
+    }
+    private void loadOffline() {
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    View view = inflate(R.layout.layout_university_buildings_status_image);
+                    ImageView imageView = view.findViewById(R.id.image);
+                    imageView.setImageResource(R.drawable.ic_disconnected);
+                    ViewGroup vg = container.findViewById(R.id.status);
+                    if (vg != null) {
+                        vg.removeAllViews();
+                        vg.addView(view);
+                    }
+                } catch (Exception e) {
+                    Static.error(e);
+                }
+            }
+        });
+    }
+    private void loaded() {
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    ViewGroup vg = container.findViewById(R.id.status);
+                    if (vg != null) {
+                        vg.removeAllViews();
+                    }
+                } catch (Exception e) {
+                    Static.error(e);
+                }
+            }
+        });
+    }
+    private void failed() {
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    View view = inflate(R.layout.layout_university_buildings_status_image);
+                    ImageView imageView = view.findViewById(R.id.image);
+                    imageView.setImageResource(R.drawable.ic_warning);
+                    ViewGroup vg = container.findViewById(R.id.status);
+                    if (vg != null) {
+                        vg.removeAllViews();
+                        vg.addView(view);
+                    }
+                } catch (Exception e) {
                     Static.error(e);
                 }
             }

@@ -25,6 +25,7 @@
     <dimen name="font_size_18">18sp</dimen>
 
     <dimen name="dimen_16dp">16dp</dimen>
+    <dimen name="dp12">12dp</dimen>
     <dimen name="dp16">16dp</dimen>
     <dimen name="dp42">42dp</dimen>
     <dimen name="dp60">60dp</dimen>
