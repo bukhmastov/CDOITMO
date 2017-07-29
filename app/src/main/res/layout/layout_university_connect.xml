@@ -20,7 +20,7 @@
             android:layout_gravity="center"
             android:padding="@dimen/university_person_card_contact_info_padding"
             app:srcCompat="@drawable/ic_email"
-            android:tint="?attr/colorPrimary"/>
+            android:tint="?attr/colorUniversityIcon"/>
 
     </FrameLayout>
 

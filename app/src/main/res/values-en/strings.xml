@@ -347,5 +347,9 @@
     <string name="choose_type">Choose type</string>
     <string name="shortcut_creator_need_to_choose_type">You must select a shortcut type</string>
     <string name="open_ifmo_ru">View on www.ifmo.ru</string>
+    <string name="auth_help_1">1. If You failed to log in to the DE system try an attempt on the website http://de.ifmo.ru/</string>
+    <string name="auth_help_2">(If on the official site authorization is successful and the application does not, contact the developer (the information icon on the top right of the authorization window))</string>
+    <string name="auth_help_3">2. If you forgot your login/password, please contact the technical support service of the DE system</string>
+    <string name="auth_help_4">3. Login and password issued to students at the beginning of the 1 year. If you do not know your login/password, please contact the technical support service of the DE system to obtain the registration key, then register at http://de.ifmo.ru/</string>
 
 </resources>

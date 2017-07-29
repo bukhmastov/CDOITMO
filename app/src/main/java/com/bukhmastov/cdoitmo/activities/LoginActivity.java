@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
@@ -198,6 +199,25 @@ public class LoginActivity extends AppCompatActivity {
                                 if (input_login != null) login = input_login.getText().toString();
                                 if (input_password != null) password = input_password.getText().toString();
                                 auth(login, password, "student", true);
+                            }
+                        });
+                        layout_login_new_user_tile.findViewById(R.id.help).setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                new AlertDialog.Builder(self)
+                                        .setTitle("Проблемы с авторизацией")
+                                        .setMessage(
+                                                getString(R.string.auth_help_1) +
+                                                "\n" +
+                                                getString(R.string.auth_help_2) +
+                                                "\n\n" +
+                                                getString(R.string.auth_help_3) +
+                                                "\n\n" +
+                                                getString(R.string.auth_help_4)
+                                        )
+                                        .setIcon(R.drawable.ic_help)
+                                        .setNegativeButton(R.string.close, null)
+                                        .create().show();
                             }
                         });
                         login_tiles_container.addView(layout_login_new_user_tile);
@@ -522,6 +542,14 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
+    public int getStatusBarHeight() {
+        int result = 0;
+        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            result = getResources().getDimensionPixelSize(resourceId);
+        }
+        return result;
+    }
     private void draw(final int layoutId) {
         Static.T.runOnUiThread(new Runnable() {
             @Override

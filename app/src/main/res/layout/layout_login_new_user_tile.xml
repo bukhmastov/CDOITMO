@@ -94,6 +94,15 @@
                     android:gravity="end"
                     android:padding="@dimen/item_padding_quarter">
 
+                    <ImageButton
+                        android:id="@+id/help"
+                        style="@style/Widget.AppCompat.ImageButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:src="@drawable/ic_help"
+                        android:padding="@dimen/item_padding_half"/>
+
                     <Button
                         android:id="@+id/login"
                         style="@style/Widget.AppCompat.Button.Borderless"

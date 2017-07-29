@@ -27,8 +27,8 @@ import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
@@ -48,12 +48,10 @@ import java.util.Objects;
 public class UniversityBuildingsFragment extends Fragment implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
     private static final String TAG = "UniversityBuildingsFragment";
-    private static final String MAPVIEW_BUNDLE_KEY = "MapViewBundleKey";
     private Activity activity;
     private View container;
     private RequestHandle fragmentRequestHandle = null;
     private JSONObject building_map = null;
-    private MapView mapView = null;
     private GoogleMap googleMap = null;
     private ArrayList<Marker> markers = new ArrayList<>();
     private boolean markers_campus = true;
@@ -68,101 +66,60 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
         markers_campus = Storage.pref.get(getContext(), "pref_university_buildings_campus", true);
         markers_dormitory = Storage.pref.get(getContext(), "pref_university_buildings_dormitory", true);
-        if (mapView != null) {
-            try {
-                mapView.onCreate(getMapBundle(savedInstanceState));
-            } catch (Exception e) {
-                Static.error(e);
-                failed();
-            }
-        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup cont, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_university_tab_buildings, cont, false);
         container = view.findViewById(R.id.university_tab_container);
-        return view;
-    }
-
-    @Override
-    public void onViewCreated(final View view, @Nullable final Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        final OnMapReadyCallback self = this;
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mapView = (MapView) view.findViewById(R.id.buildings_map);
-                if (mapView != null) {
-                    try {
-                        mapView.onCreate(getMapBundle(savedInstanceState));
-                        mapView.getMapAsync(self);
-                    } catch (Exception e) {
-                        Static.error(e);
-                        failed();
-                    }
-                }
-                Switch dormitory_switch = (Switch) container.findViewById(R.id.dormitory_switch);
-                if (dormitory_switch != null) {
-                    dormitory_switch.setChecked(markers_dormitory);
-                    dormitory_switch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                        @Override
-                        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                            markers_dormitory = isChecked;
-                            displayMarkers();
-                            Storage.pref.put(getContext(), "pref_university_buildings_dormitory", markers_dormitory);
-                        }
-                    });
-                }
-                Switch campus_switch = (Switch) container.findViewById(R.id.campus_switch);
-                if (campus_switch != null) {
-                    campus_switch.setChecked(markers_campus);
-                    campus_switch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                        @Override
-                        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                            markers_campus = isChecked;
-                            displayMarkers();
-                            Storage.pref.put(getContext(), "pref_university_buildings_campus", markers_campus);
-                        }
-                    });
-                }
-                View view_list = container.findViewById(R.id.view_list);
-                if (view_list != null) {
-                    view_list.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            openList();
-                        }
-                    });
-                }
-            }
-        });
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        if (mapView != null) {
-            try {
-                mapView.onStart();
-            } catch (Exception e) {
-                Static.error(e);
-                failed();
-            }
+        try {
+            SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.buildings_map);
+            mapFragment.getMapAsync(this);
+        } catch (Exception e) {
+            Static.error(e);
+            failed();
+            load();
         }
+        Switch dormitory_switch = (Switch) container.findViewById(R.id.dormitory_switch);
+        if (dormitory_switch != null) {
+            dormitory_switch.setChecked(markers_dormitory);
+            dormitory_switch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    markers_dormitory = isChecked;
+                    displayMarkers();
+                    Storage.pref.put(getContext(), "pref_university_buildings_dormitory", markers_dormitory);
+                }
+            });
+        }
+        Switch campus_switch = (Switch) container.findViewById(R.id.campus_switch);
+        if (campus_switch != null) {
+            campus_switch.setChecked(markers_campus);
+            campus_switch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    markers_campus = isChecked;
+                    displayMarkers();
+                    Storage.pref.put(getContext(), "pref_university_buildings_campus", markers_campus);
+                }
+            });
+        }
+        View view_list = container.findViewById(R.id.view_list);
+        if (view_list != null) {
+            view_list.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    openList();
+                }
+            });
+        }
+        return view;
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         Log.v(TAG, "Fragment destroyed");
-        if (mapView != null) {
-            try {
-                mapView.onDestroy();
-            } catch (Exception e) {
-                Static.error(e);
-            }
-        }
     }
 
     @Override
@@ -170,75 +127,14 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         super.onResume();
         Log.v(TAG, "resumed");
         FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
-        if (building_map == null) {
-            load();
-        }
-        if (mapView != null) {
-            try {
-                mapView.onResume();
-            } catch (Exception e) {
-                Static.error(e);
-                failed();
-            }
-        }
     }
 
     @Override
     public void onPause() {
         super.onPause();
         Log.v(TAG, "paused");
-        if (mapView != null) {
-            try {
-                mapView.onPause();
-            } catch (Exception e) {
-                Static.error(e);
-                failed();
-            }
-        }
         if (fragmentRequestHandle != null) {
             fragmentRequestHandle.cancel(true);
-        }
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        if (mapView != null) {
-            try {
-                mapView.onStop();
-            } catch (Exception e) {
-                Static.error(e);
-                failed();
-            }
-        }
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        try {
-            Bundle mapViewBundle = outState.getBundle(MAPVIEW_BUNDLE_KEY);
-            if (mapViewBundle == null) {
-                mapViewBundle = new Bundle();
-                outState.putBundle(MAPVIEW_BUNDLE_KEY, mapViewBundle);
-            }
-            if (mapView != null) {
-                mapView.onSaveInstanceState(mapViewBundle);
-            }
-        } catch (Exception e) {
-            Static.error(e);
-        }
-    }
-
-    @Override
-    public void onLowMemory() {
-        super.onLowMemory();
-        if (mapView != null) {
-            try {
-                mapView.onLowMemory();
-            } catch (Exception e) {
-                Static.error(e);
-            }
         }
     }
 
@@ -357,7 +253,6 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         Log.v(TAG, "loadProvider");
         IfmoRestClient.get(getContext(), "building_map", null, handler);
     }
-
     private void display() {
         if (building_map != null) {
             loaded();
@@ -375,8 +270,12 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
             public void run() {
                 googleMap = gMap;
                 googleMap.setOnMarkerClickListener(self);
-                displayMarkers();
                 googleMap.moveCamera(CameraUpdateFactory.newCameraPosition(new CameraPosition.Builder().target(new LatLng(59.93465, 30.3138391)).zoom(10).build()));
+                if (building_map == null) {
+                    load();
+                } else {
+                    display();
+                }
             }
         });
     }
@@ -606,13 +505,6 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
             Static.error(e);
         }
         return text.trim();
-    }
-    private Bundle getMapBundle(Bundle bundle) {
-        Bundle mapViewBundle = null;
-        if (bundle != null) {
-            mapViewBundle = bundle.getBundle(MAPVIEW_BUNDLE_KEY);
-        }
-        return mapViewBundle;
     }
 
     private void loading() {

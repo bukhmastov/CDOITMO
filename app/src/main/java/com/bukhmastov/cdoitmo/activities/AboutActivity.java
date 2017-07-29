@@ -104,7 +104,7 @@ public class AboutActivity extends ConnectedActivity {
                 public void onClick(View v) {
                     Log.v(TAG, "block_donate clicked  ┬─┬ ノ( ゜-゜ノ)");
                     try {
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://yasobe.ru/na/cdoitmo")));
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://yasobe.ru/na/cdoifmo")));
                     } catch (Exception e) {
                         Static.error(e);
                     }

@@ -15,6 +15,9 @@ import com.bukhmastov.cdoitmo.utils.CircularTransformation;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.squareup.picasso.Picasso;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 
 public class PersonsRecyclerViewAdapter extends UniversityRecyclerViewAdapter {
@@ -64,7 +67,7 @@ public class PersonsRecyclerViewAdapter extends UniversityRecyclerViewAdapter {
     private void bindMain(RecyclerView.ViewHolder holder, final Item item) {
         try {
             ViewHolder viewHolder = (ViewHolder) holder;
-            final String name = (item.data.getString("title_l") + " " + item.data.getString("title_f") + " " + item.data.getString("title_m")).trim();
+            final String name = (getStringIfExists(item.data, "title_l") + " " + getStringIfExists(item.data, "title_f") + " " + getStringIfExists(item.data, "title_m")).trim();
             final String degree = item.data.getString("degree").trim();
             final String image = item.data.getString("image");
             View nameView = viewHolder.container.findViewById(R.id.name);
@@ -122,5 +125,9 @@ public class PersonsRecyclerViewAdapter extends UniversityRecyclerViewAdapter {
         } catch (Exception e) {
             Static.error(e);
         }
+    }
+
+    private String getStringIfExists(JSONObject jsonObject, String key) throws JSONException {
+        return jsonObject.has(key) ? jsonObject.getString(key) : "";
     }
 }

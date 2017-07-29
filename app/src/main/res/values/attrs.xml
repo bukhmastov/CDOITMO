@@ -25,9 +25,12 @@
         <attr name="colorSearchBackgroundToolbar" format="color" />
         <attr name="colorSearchBackground" format="color" />
         <attr name="colorBackground" format="color" />
+        <attr name="colorUniversityIcon" format="color" />
 
         <attr name="ic_cdo_small" format="reference" />
         <attr name="ic_security" format="reference" />
+
+        <attr name="drawableBackgroundImagery" format="reference" />
 
     </declare-styleable>
 
