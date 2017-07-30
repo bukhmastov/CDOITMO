@@ -126,7 +126,7 @@
                     android:layout_gravity="center_vertical"
                     android:adjustViewBounds="true"
                     android:scaleType="centerCrop"
-                    card_view:srcCompat="@drawable/background_imagery" />
+                    card_view:srcCompat="@drawable/background_pattern" />
 
             </FrameLayout>
 

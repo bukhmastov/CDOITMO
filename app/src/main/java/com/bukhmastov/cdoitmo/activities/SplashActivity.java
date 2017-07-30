@@ -59,6 +59,11 @@ public class SplashActivity extends AppCompatActivity {
                 Static.init(self);
                 // set auto_logout value
                 LoginActivity.auto_logout = Storage.pref.get(self, "pref_auto_logout", false);
+                // set first_launch value
+                Static.isFirstLaunchEver = Storage.pref.get(self, "pref_first_launch", false);
+                if (Static.isFirstLaunchEver) {
+                    Storage.pref.put(self, "pref_first_launch", false);
+                }
                 // firebase events and properties
                 FirebaseAnalyticsProvider.logEvent(self, FirebaseAnalyticsProvider.Event.APP_OPEN);
                 FirebaseAnalyticsProvider.setUserProperty(self, FirebaseAnalyticsProvider.Property.THEME, Storage.pref.get(self, "pref_dark_theme", false) ? "dark" : "light");
@@ -117,6 +122,12 @@ public class SplashActivity extends AppCompatActivity {
                     Storage.pref.put(context, "pref_static_refresh", Storage.pref.get(context, "pref_schedule_refresh", "168"));
                     Storage.pref.delete(context, "pref_tab_refresh");
                     Storage.pref.delete(context, "pref_schedule_refresh");
+                    break;
+                }
+                case 71: {
+                    Storage.pref.delete(context, "pref_open_drawer_at_startup");
+                    Storage.pref.put(context, "pref_first_launch", Storage.file.general.get(context, "users#list", "").trim().isEmpty());
+                    break;
                 }
             }
         }
@@ -130,6 +141,9 @@ public class SplashActivity extends AppCompatActivity {
                 Bundle extras = getIntent().getExtras();
                 if (extras != null) intent.putExtras(extras);
                 startActivity(intent);
+                if (Static.isFirstLaunchEver) {
+                    startActivity(new Intent(self, IntroducingActivity.class));
+                }
                 finish();
             }
         });

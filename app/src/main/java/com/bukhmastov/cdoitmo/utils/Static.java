@@ -69,6 +69,7 @@ public class Static {
     public static boolean darkTheme = false;
     public static int intentFlagRestart = 268468224;
     public static boolean tablet = false;
+    public static boolean isFirstLaunchEver = false;
     private static final String USER_AGENT_TEMPLATE = "CDOITMO/{versionName}/{versionCode} Java/Android/{sdkInt}";
     private static String USER_AGENT = null;
 

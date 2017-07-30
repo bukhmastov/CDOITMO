@@ -19,6 +19,8 @@
     <dimen name="font_size_15">17sp</dimen>
     <dimen name="font_size_16">18sp</dimen>
     <dimen name="font_size_18">20sp</dimen>
+    <dimen name="font_size_20">28sp</dimen>
+    <dimen name="font_size_28">36sp</dimen>
 
     <dimen name="dimen_16dp">24dp</dimen>
     <dimen name="dp12">18dp</dimen>

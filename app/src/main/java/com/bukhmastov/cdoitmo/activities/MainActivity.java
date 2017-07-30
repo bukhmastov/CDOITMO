@@ -53,8 +53,8 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
             ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, ((Toolbar) findViewById(R.id.toolbar_main)), R.string.navigation_drawer_open, R.string.navigation_drawer_close);
             mDrawerLayout.addDrawerListener(mDrawerToggle);
             mDrawerToggle.syncState();
-            if (Storage.pref.get(this, "pref_open_drawer_at_startup", true)) {
-                Storage.pref.put(this, "pref_open_drawer_at_startup", false);
+            if (Static.isFirstLaunchEver) {
+                Static.isFirstLaunchEver = false;
                 mDrawerLayout.openDrawer(Gravity.START);
             }
         } else {

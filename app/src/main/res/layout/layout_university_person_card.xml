@@ -9,9 +9,9 @@
         android:id="@+id/person_header"
         android:layout_width="match_parent"
         android:layout_height="170dp"
-        android:background="?attr/drawableBackgroundImagery"
-        android:backgroundTint="#22000000"
-        android:backgroundTintMode="src_over"
+        android:background="@drawable/background_pattern"
+        android:backgroundTint="?attr/colorPrimary"
+        android:backgroundTintMode="multiply"
         android:elevation="4dp">
 
         <RelativeLayout

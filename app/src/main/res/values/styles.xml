@@ -30,7 +30,6 @@
 
         <item name="ic_cdo_small">@drawable/cdo</item>
         <item name="ic_security">@drawable/ic_security</item>
-        <item name="drawableBackgroundImagery">@drawable/background_imagery</item>
         <item name="windowActionModeOverlay">true</item>
     </style>
     <style name="AppTheme.Dark" parent="Theme.AppCompat.NoActionBar">
@@ -63,7 +62,6 @@
 
         <item name="ic_cdo_small">@drawable/cdo</item>
         <item name="ic_security">@drawable/ic_security</item>
-        <item name="drawableBackgroundImagery">@drawable/background_imagery_dark</item>
         <item name="windowActionModeOverlay">true</item>
     </style>
     <style name="AppTheme.Popup" parent="AppTheme">

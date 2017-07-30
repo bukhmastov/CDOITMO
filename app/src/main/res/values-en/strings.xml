@@ -351,5 +351,16 @@
     <string name="auth_help_2">(If on the official site authorization is successful and the application does not, contact the developer (the information icon on the top right of the authorization window))</string>
     <string name="auth_help_3">2. If you forgot your login/password, please contact the technical support service of the DE system</string>
     <string name="auth_help_4">3. Login and password issued to students at the beginning of the 1 year. If you do not know your login/password, please contact the technical support service of the DE system to obtain the registration key, then register at http://de.ifmo.ru/</string>
+    <string name="intro_title_1">Follow the progress</string>
+    <string name="intro_title_2">Come on time</string>
+    <string name="intro_title_3">Register for testing</string>
+    <string name="intro_title_4">Search for information about the university</string>
+    <string name="intro_title_5">Stay Informed</string>
+    <string name="intro_desc_1">Convenient electronic journal, protocol of changes and detailed rating of students</string>
+    <string name="intro_desc_2">Schedule of lessons and exams for groups, teachers and classrooms</string>
+    <string name="intro_desc_3">Convenient management of requests for 101 audiences</string>
+    <string name="intro_desc_4">Staff, faculties, units, buildings. As well as news and announcements.</string>
+    <string name="intro_desc_5">Notifications about new points in the electronic journal, various widgets and labels</string>
+    <string name="skip">Skip</string>
 
 </resources>

@@ -177,6 +177,10 @@
             android:theme="@style/AppTheme.TransparentStatusBar"/>
         <activity android:name=".activities.WebViewActivity" />
 
+        <activity
+            android:name=".activities.IntroducingActivity"
+            android:theme="@style/AppTheme.TransparentStatusBar"/>
+
     </application>
 
 </manifest>
