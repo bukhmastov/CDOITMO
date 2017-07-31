@@ -138,6 +138,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         switch(key){
             case "pref_use_notifications":
             case "pref_notify_frequency":
+            case "pref_notify_network_unmetered":
                 new ProtocolTracker(this).restart();
                 break;
             case "pref_dark_theme":

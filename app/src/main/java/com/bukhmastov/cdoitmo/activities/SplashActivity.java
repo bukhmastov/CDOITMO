@@ -16,6 +16,7 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseCrashProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseMessagingProvider;
 import com.bukhmastov.cdoitmo.utils.CtxWrapper;
 import com.bukhmastov.cdoitmo.utils.Log;
+import com.bukhmastov.cdoitmo.utils.ProtocolTracker;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 
@@ -127,6 +128,7 @@ public class SplashActivity extends AppCompatActivity {
                 case 71: {
                     Storage.pref.delete(context, "pref_open_drawer_at_startup");
                     Storage.pref.put(context, "pref_first_launch", Storage.file.general.get(context, "users#list", "").trim().isEmpty());
+                    new ProtocolTracker(context).reset();
                     break;
                 }
             }

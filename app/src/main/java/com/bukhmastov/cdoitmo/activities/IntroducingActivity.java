@@ -19,6 +19,7 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
+import com.bukhmastov.cdoitmo.views.OnSwipeTouchListener;
 
 import java.util.ArrayList;
 
@@ -107,6 +108,12 @@ public class IntroducingActivity extends ConnectedActivity {
             findViewById(R.id.next).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    next();
+                }
+            });
+            findViewById(R.id.container).setOnTouchListener(new OnSwipeTouchListener(this) {
+                @Override
+                public void onSwipeLeft2Right() {
                     next();
                 }
             });

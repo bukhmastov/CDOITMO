@@ -15,6 +15,13 @@
         android:entryValues="@array/pref_notifications_interval_values"
         android:defaultValue="30" />
 
+    <SwitchPreference
+        android:key="pref_notify_network_unmetered"
+        android:dependency="pref_use_notifications"
+        android:defaultValue="false"
+        android:title="@string/pref_notify_network_unmetered"
+        android:summary="@string/pref_notify_network_unmetered_summary"/>
+
     <RingtonePreference
         android:key="pref_notify_sound"
         android:dependency="pref_use_notifications"

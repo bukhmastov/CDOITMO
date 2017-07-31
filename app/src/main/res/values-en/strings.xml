@@ -48,9 +48,11 @@
     <string name="pref_initial_offline_summary">When the application starts</string>
     <string name="pref_auto_logout">Auto log out</string>
     <string name="pref_auto_logout_summary">Automatically log out of your account</string>
-    <string name="pref_use_notifications">Notifications</string>
-    <string name="pref_use_notifications_summary">Notification of new points</string>
-    <string name="pref_notify_frequency">Update frequency</string>
+    <string name="pref_use_notifications">Notifications of new points</string>
+    <string name="pref_use_notifications_summary">Monitor changes of the protocol of changes</string>
+    <string name="pref_notify_network_unmetered">Monitor only over Wi-Fi</string>
+    <string name="pref_notify_network_unmetered_summary">Do not use mobile data</string>
+    <string name="pref_notify_frequency">Frequency of checking for changes</string>
     <string name="pref_notify_sound">Notification sound</string>
     <string name="pref_ringtone_silent">Soundless</string>
     <string name="pref_notify_vibrate">Vibration</string>

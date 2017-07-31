@@ -51,9 +51,11 @@
     <string name="pref_initial_offline_summary">При старте приложения</string>
     <string name="pref_auto_logout">Автовыход</string>
     <string name="pref_auto_logout_summary">Автоматический выход из аккаунта</string>
-    <string name="pref_use_notifications">Уведомления</string>
-    <string name="pref_use_notifications_summary">Уведомления о новых баллах</string>
-    <string name="pref_notify_frequency">Частота обновления</string>
+    <string name="pref_use_notifications">Уведомления о новых баллах</string>
+    <string name="pref_use_notifications_summary">Отслеживать изменения протокола изменений</string>
+    <string name="pref_notify_network_unmetered">Проверять только по Wi-Fi</string>
+    <string name="pref_notify_network_unmetered_summary">Не использовать мобильные данные</string>
+    <string name="pref_notify_frequency">Частота проверки изменений</string>
     <string name="pref_notify_sound">Звук уведомления</string>
     <string name="pref_ringtone_silent">Без звука</string>
     <string name="pref_notify_vibrate">Вибрация</string>
