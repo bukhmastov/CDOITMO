@@ -2,14 +2,19 @@ package com.bukhmastov.cdoitmo.activities;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
+import android.view.View;
+import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.ProgressBar;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
@@ -23,6 +28,8 @@ public class WebViewActivity extends AppCompatActivity {
     private String url = null;
     private String title = null;
     private WebView webview = null;
+    private ProgressBar webviewProgressBar = null;
+    private SwipeRefreshLayout swipe = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,10 +56,61 @@ public class WebViewActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
             actionBar.setTitle(title == null ? getString(R.string.web_browser) : title);
         }
+        // инициализируем
         webview = (WebView) findViewById(R.id.webview);
+        webviewProgressBar = (ProgressBar) findViewById(R.id.webviewProgressBar);
+        swipe = (SwipeRefreshLayout) findViewById(R.id.swipe);
+        // работаем со свайпом
+        if (swipe != null) {
+            swipe.setColorSchemeColors(Static.colorAccent);
+            swipe.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
+            swipe.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+                @Override
+                public void onRefresh() {
+                    if (swipe != null && swipe.isRefreshing()) {
+                        swipe.setRefreshing(false);
+                    }
+                    if (webview != null) {
+                        webview.stopLoading();
+                        webview.reload();
+                    }
+                }
+            });
+        }
+        // загружаем
         if (webview != null) {
+            webview.setWebViewClient(new WebViewClient() {
+                @Override
+                public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                    try {
+                        startActivity(new Intent(Intent.ACTION_VIEW, request.getUrl()));
+                    } catch (Exception e) {
+                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                    }
+                    return true;
+                }
+                @Override
+                public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                    if (webviewProgressBar != null) {
+                        webviewProgressBar.setVisibility(View.VISIBLE);
+                    }
+                }
+                @Override
+                public void onPageFinished(WebView view, String url) {
+                    if (webviewProgressBar != null) {
+                        webviewProgressBar.setVisibility(View.GONE);
+                    }
+                }
+            });
+            webview.setWebChromeClient(new WebChromeClient() {
+                @Override
+                public void onProgressChanged(WebView view, int progress) {
+                    if (webviewProgressBar != null) {
+                        webviewProgressBar.setProgress(progress);
+                    }
+                }
+            });
             webview.loadUrl(url);
-            webview.setWebViewClient(new MyWebViewClient());
         }
     }
 
@@ -78,17 +136,4 @@ public class WebViewActivity extends AppCompatActivity {
             super.onBackPressed();
         }
     }
-
-    private class MyWebViewClient extends WebViewClient {
-        @Override
-        public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-            try {
-                startActivity(new Intent(Intent.ACTION_VIEW, request.getUrl()));
-            } catch (Exception e) {
-                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-            }
-            return true;
-        }
-    }
-
 }
