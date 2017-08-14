@@ -57,7 +57,7 @@ public class UniversityFragment extends ConnectedFragment implements ViewPager.O
         TabLayout main_tabs = (TabLayout) activity.findViewById(R.id.scrollable_tabs);
         ViewPager university_pager = (ViewPager) activity.findViewById(R.id.university_pager);
         if (university_pager != null) {
-            university_pager.setAdapter(new PagerUniversityAdapter(getFragmentManager(), getContext()));
+            university_pager.setAdapter(new PagerUniversityAdapter(getFragmentManager(), activity));
             university_pager.addOnPageChangeListener(this);
             main_tabs.setupWithViewPager(university_pager);
         }
@@ -76,7 +76,7 @@ public class UniversityFragment extends ConnectedFragment implements ViewPager.O
             }
             if (tab == null) {
                 if (tabSelected == -1) {
-                    int pref = Storage.pref.get(getContext(), "pref_university_tab", -1);
+                    int pref = Storage.pref.get(activity, "pref_university_tab", -1);
                     tab = main_tabs.getTabAt(pref < 0 ? 0 : pref);
                 } else {
                     tab = main_tabs.getTabAt(tabSelected);
@@ -107,7 +107,7 @@ public class UniversityFragment extends ConnectedFragment implements ViewPager.O
     @Override
     public void onPageSelected(int position) {
         tabSelected = position;
-        Storage.pref.put(getContext(), "pref_university_tab", tabSelected);
+        Storage.pref.put(activity, "pref_university_tab", tabSelected);
     }
 
     @Override

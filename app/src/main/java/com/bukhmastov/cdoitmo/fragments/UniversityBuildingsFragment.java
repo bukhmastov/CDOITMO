@@ -64,8 +64,8 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         Log.v(TAG, "Fragment created");
         activity = getActivity();
         FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
-        markers_campus = Storage.pref.get(getContext(), "pref_university_buildings_campus", true);
-        markers_dormitory = Storage.pref.get(getContext(), "pref_university_buildings_dormitory", true);
+        markers_campus = Storage.pref.get(activity, "pref_university_buildings_campus", true);
+        markers_dormitory = Storage.pref.get(activity, "pref_university_buildings_dormitory", true);
     }
 
     @Override
@@ -88,7 +88,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                     markers_dormitory = isChecked;
                     displayMarkers();
-                    Storage.pref.put(getContext(), "pref_university_buildings_dormitory", markers_dormitory);
+                    Storage.pref.put(activity, "pref_university_buildings_dormitory", markers_dormitory);
                 }
             });
         }
@@ -100,7 +100,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                     markers_campus = isChecked;
                     displayMarkers();
-                    Storage.pref.put(getContext(), "pref_university_buildings_campus", markers_campus);
+                    Storage.pref.put(activity, "pref_university_buildings_campus", markers_campus);
                 }
             });
         }
@@ -142,8 +142,8 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         Static.T.runThread(new Runnable() {
             @Override
             public void run() {
-                load(Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)
-                        ? Integer.parseInt(Storage.pref.get(getContext(), "pref_static_refresh", "168"))
+                load(Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)
+                        ? Integer.parseInt(Storage.pref.get(activity, "pref_static_refresh", "168"))
                         : 0);
             }
         });
@@ -153,8 +153,8 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
             @Override
             public void run() {
                 Log.v(TAG, "load | refresh_rate=" + refresh_rate);
-                if (Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)) {
-                    String cache = Storage.file.cache.get(getContext(), "university#buildings").trim();
+                if (Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
+                    String cache = Storage.file.cache.get(activity, "university#buildings").trim();
                     if (!cache.isEmpty()) {
                         try {
                             JSONObject cacheJson = new JSONObject(cache);
@@ -183,7 +183,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
             @Override
             public void run() {
                 Log.v(TAG, "load | force=" + (force ? "true" : "false"));
-                if ((!force || !Static.isOnline(getContext())) && building_map != null) {
+                if ((!force || !Static.isOnline(activity)) && building_map != null) {
                     display();
                     return;
                 }
@@ -193,9 +193,9 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                         public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
                             if (statusCode == 200) {
                                 long now = Calendar.getInstance().getTimeInMillis();
-                                if (json != null && Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)) {
+                                if (json != null && Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
                                     try {
-                                        Storage.file.cache.put(getContext(), "university#buildings", new JSONObject()
+                                        Storage.file.cache.put(activity, "university#buildings", new JSONObject()
                                                 .put("timestamp", now)
                                                 .put("data", json)
                                                 .toString()
@@ -251,7 +251,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     }
     private void loadProvider(IfmoRestClientResponseHandler handler) {
         Log.v(TAG, "loadProvider");
-        IfmoRestClient.get(getContext(), "building_map", null, handler);
+        IfmoRestClient.get(activity, "building_map", null, handler);
     }
     private void display() {
         if (building_map != null) {
@@ -388,7 +388,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                         startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ifmo.ru/ru/map/" + id + "/")));
                     }
                 });
-                Picasso.with(getContext())
+                Picasso.with(activity)
                         .load(image)
                         .error(R.drawable.ic_sentiment_very_satisfied)
                         .transform(new CircularTransformation())

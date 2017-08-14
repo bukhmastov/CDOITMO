@@ -235,7 +235,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                     });
 
                     Spinner lesson_week = (Spinner) activity.findViewById(R.id.lesson_week);
-                    ArrayAdapter<?> lesson_week_adapter = ArrayAdapter.createFromResource(getContext(), R.array.week_types_titles, R.layout.spinner_layout_simple);
+                    ArrayAdapter<?> lesson_week_adapter = ArrayAdapter.createFromResource(activity, R.array.week_types_titles, R.layout.spinner_layout_simple);
                     lesson_week_adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                     lesson_week.setAdapter(lesson_week_adapter);
                     switch (lessonUnit.week) {
@@ -252,7 +252,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                     });
 
                     Spinner lesson_day_of_week = (Spinner) activity.findViewById(R.id.lesson_day_of_week);
-                    ArrayAdapter<?> lesson_day_of_week_adapter = ArrayAdapter.createFromResource(getContext(), R.array.days_of_week_titles, R.layout.spinner_layout_simple);
+                    ArrayAdapter<?> lesson_day_of_week_adapter = ArrayAdapter.createFromResource(activity, R.array.days_of_week_titles, R.layout.spinner_layout_simple);
                     lesson_day_of_week_adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                     lesson_day_of_week.setAdapter(lesson_day_of_week_adapter);
                     lesson_day_of_week.setSelection(lessonUnit.day);
@@ -267,7 +267,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                     final AutoCompleteTextView lesson_type = (AutoCompleteTextView) activity.findViewById(R.id.lesson_type);
                     if (lessonUnit.type != null) lesson_type.setText(lessonUnit.type);
                     lesson_type.setThreshold(1);
-                    lesson_type.setAdapter(ArrayAdapter.createFromResource(getContext(), R.array.lessons_types, android.R.layout.simple_dropdown_item_1line));
+                    lesson_type.setAdapter(ArrayAdapter.createFromResource(activity, R.array.lessons_types, android.R.layout.simple_dropdown_item_1line));
                     lesson_type.addTextChangedListener(new TextWatcher() {
                         @Override
                         public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -294,7 +294,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
 
                     final AutoCompleteTextView lesson_teacher = (AutoCompleteTextView) activity.findViewById(R.id.lesson_teacher);
                     final ProgressBar lesson_teacher_bar = (ProgressBar) activity.findViewById(R.id.lesson_teacher_bar);
-                    final TeacherPickerAdapter teacherPickerAdapter = new TeacherPickerAdapter(getContext(), new ArrayList<JSONObject>());
+                    final TeacherPickerAdapter teacherPickerAdapter = new TeacherPickerAdapter(activity, new ArrayList<JSONObject>());
                     if (lessonUnit.teacher != null) {
                         TeacherSearch.blocked = true;
                         lesson_teacher.setText(lessonUnit.teacher);
@@ -313,7 +313,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                             teacherPickerAdapter.clear();
                             lesson_teacher.dismissDropDown();
                             if (!query.isEmpty()) {
-                                TeacherSearch.search(getContext(), query, lesson_teacher_bar, new TeacherSearch.response() {
+                                TeacherSearch.search(activity, query, lesson_teacher_bar, new TeacherSearch.response() {
                                     @Override
                                     public void onSuccess(final JSONObject json) {
                                         Static.T.runOnUiThread(new Runnable() {
@@ -382,7 +382,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                     AutoCompleteTextView lesson_building = (AutoCompleteTextView) activity.findViewById(R.id.lesson_building);
                     if (lessonUnit.building != null) lesson_building.setText(lessonUnit.building);
                     lesson_building.setThreshold(1);
-                    lesson_building.setAdapter(ArrayAdapter.createFromResource(getContext(), R.array.buildings, android.R.layout.simple_dropdown_item_1line));
+                    lesson_building.setAdapter(ArrayAdapter.createFromResource(activity, R.array.buildings, android.R.layout.simple_dropdown_item_1line));
                     lesson_building.addTextChangedListener(new TextWatcher() {
                         @Override
                         public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -461,7 +461,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
             slc_title.setText(header);
         }
         if (slc_desc != null) {
-            int week = Static.getWeek(getContext());
+            int week = Static.getWeek(activity);
             if (week >= 0) {
                 slc_desc.setText(week + " " + getString(R.string.school_week));
             } else {
@@ -504,7 +504,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
         return value;
     }
     private void retrieveEditingLesson() throws Exception {
-        String addedStr = Storage.file.perm.get(getContext(), "schedule_lessons#added#" + lessonUnit.cache_token, "");
+        String addedStr = Storage.file.perm.get(activity, "schedule_lessons#added#" + lessonUnit.cache_token, "");
         JSONArray added;
         if (addedStr.isEmpty()) {
             added = new JSONArray();

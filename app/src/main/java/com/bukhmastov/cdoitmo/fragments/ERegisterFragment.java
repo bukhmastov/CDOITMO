@@ -48,7 +48,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
         super.onCreate(savedInstanceState);
         Log.v(TAG, "Fragment created");
         FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
-        group = Storage.file.cache.get(getContext(), "eregister#params#selected_group", "");
+        group = Storage.file.cache.get(activity, "eregister#params#selected_group", "");
         term = -2;
     }
 
@@ -94,7 +94,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
         Static.T.runThread(new Runnable() {
             @Override
             public void run() {
-                load(Storage.pref.get(getContext(), "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(getContext(), "pref_dynamic_refresh", "0")) : 0);
+                load(Storage.pref.get(activity, "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(activity, "pref_dynamic_refresh", "0")) : 0);
             }
         });
     }
@@ -103,8 +103,8 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
             @Override
             public void run() {
                 Log.v(TAG, "load | refresh_rate=" + refresh_rate);
-                if (Storage.pref.get(getContext(), "pref_use_cache", true)) {
-                    String cache = Storage.file.cache.get(getContext(), "eregister#core").trim();
+                if (Storage.pref.get(activity, "pref_use_cache", true)) {
+                    String cache = Storage.file.cache.get(activity, "eregister#core").trim();
                     if (!cache.isEmpty()) {
                         try {
                             data = new JSONObject(cache);
@@ -139,9 +139,9 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
             @Override
             public void run() {
                 Log.v(TAG, "load | force=" + (force ? "true" : "false"));
-                if ((!force || !Static.isOnline(getContext())) && Storage.pref.get(getContext(), "pref_use_cache", true)) {
+                if ((!force || !Static.isOnline(activity)) && Storage.pref.get(activity, "pref_use_cache", true)) {
                     try {
-                        String c = cache.isEmpty() ? Storage.file.cache.get(getContext(), "eregister#core").trim() : cache;
+                        String c = cache.isEmpty() ? Storage.file.cache.get(activity, "eregister#core").trim() : cache;
                         if (!c.isEmpty()) {
                             Log.v(TAG, "load | from cache");
                             data = new JSONObject(c);
@@ -150,11 +150,11 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                         }
                     } catch (Exception e) {
                         Log.v(TAG, "load | failed to load from cache");
-                        Storage.file.cache.delete(getContext(), "eregister#core");
+                        Storage.file.cache.delete(activity, "eregister#core");
                     }
                 }
                 if (!Static.OFFLINE_MODE) {
-                    DeIfmoRestClient.get(getContext(), "eregister", null, new DeIfmoRestClientResponseHandler() {
+                    DeIfmoRestClient.get(activity, "eregister", null, new DeIfmoRestClientResponseHandler() {
                         @Override
                         public void onSuccess(int statusCode, JSONObject responseObj, JSONArray responseArr) {
                             Log.v(TAG, "load | success | statusCode=" + statusCode + " | responseObj=" + (responseObj == null ? "null" : "notnull"));
@@ -162,8 +162,8 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                                 new ERegisterConverter(new ERegisterConverter.response() {
                                     @Override
                                     public void finish(JSONObject json) {
-                                        if (Storage.pref.get(getContext(), "pref_use_cache", true)) {
-                                            Storage.file.cache.put(getContext(), "eregister#core", json.toString());
+                                        if (Storage.pref.get(activity, "pref_use_cache", true)) {
+                                            Storage.file.cache.put(activity, "eregister#core", json.toString());
                                         }
                                         data = json;
                                         display();
@@ -379,7 +379,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                                 }
                                 group = spinner_group_arr_names.get(position);
                                 Log.v(TAG, "spinner_group clicked | group=" + group);
-                                Storage.file.cache.put(getContext(), "eregister#params#selected_group", group);
+                                Storage.file.cache.put(activity, "eregister#params#selected_group", group);
                                 load(false);
                             }
                             public void onNothingSelected(AdapterView<?> parent) {}
@@ -449,7 +449,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                 if (this.term == -2) {
                     JSONArray years = group.getJSONArray("years");
                     if (year == years.getInt(month > Calendar.AUGUST ? 0 : 1)) {
-                        if (Integer.parseInt(Storage.pref.get(getContext(), "pref_e_journal_term", "0")) == 1) {
+                        if (Integer.parseInt(Storage.pref.get(activity, "pref_e_journal_term", "0")) == 1) {
                             this.term = -1;
                         } else {
                             this.term = group.getJSONArray("terms").getJSONObject(month > Calendar.AUGUST || month == Calendar.JANUARY ? 0 : 1).getInt("number");
@@ -476,7 +476,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                 if (currentGroup.isEmpty()) {
                     if (year == years.getInt(month > Calendar.AUGUST ? 0 : 1)) {
                         currentGroup = group.getString("name");
-                        if (Integer.parseInt(Storage.pref.get(getContext(), "pref_e_journal_term", "0")) == 1) {
+                        if (Integer.parseInt(Storage.pref.get(activity, "pref_e_journal_term", "0")) == 1) {
                             currentTerm = -1;
                         } else {
                             currentTerm = group.getJSONArray("terms").getJSONObject(month > Calendar.AUGUST || month == Calendar.JANUARY ? 0 : 1).getInt("number");

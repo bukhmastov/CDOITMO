@@ -99,7 +99,6 @@ public class Log {
             }
             logList.add(logItem);
         } catch (Throwable throwable) {
-            FirebaseCrashProvider.exception(throwable);
             android.util.Log.e("Log.addLog", null, throwable);
         }
     }

@@ -36,12 +36,12 @@ public class ShortcutCreateFragment extends ConnectedFragment implements Shortcu
         super.onResume();
         Log.v(TAG, "Fragment resumed");
         FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
-        Data data = getData(getContext(), this.getClass());
+        Data data = getData(activity, this.getClass());
         if (data != null) {
             activity.updateToolbar(data.title, data.image);
         }
         activity.registerReceiver(receiver, new IntentFilter(ShortcutReceiver.ACTION_INSTALL_SHORTCUT));
-        if (shortcutCreator == null) shortcutCreator = new ShortcutCreator(getContext(), this);
+        if (shortcutCreator == null) shortcutCreator = new ShortcutCreator(activity, this);
         shortcutCreator.onResume();
     }
 

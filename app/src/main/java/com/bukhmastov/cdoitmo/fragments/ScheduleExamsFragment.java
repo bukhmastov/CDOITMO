@@ -55,7 +55,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
         super.onCreate(savedInstanceState);
         Log.v(TAG, "Fragment created");
         FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
-        scheduleExams = new ScheduleExams(getContext());
+        scheduleExams = new ScheduleExams(activity);
         scheduleExams.setHandler(this);
     }
 
@@ -79,7 +79,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
                         @Override
                         public boolean onMenuItemClick(MenuItem item) {
                             Log.v(TAG, "action_schedule_exams_search clicked");
-                            startActivity(new Intent(getContext(), ScheduleExamsSearchActivity.class));
+                            startActivity(new Intent(activity, ScheduleExamsSearchActivity.class));
                             return false;
                         }
                     });
@@ -260,7 +260,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
                             }
                             TextView schedule_exams_week = (TextView) activity.findViewById(R.id.schedule_exams_week);
                             if (schedule_exams_week != null) {
-                                int week = Static.getWeek(getContext());
+                                int week = Static.getWeek(activity);
                                 if (week >= 0) {
                                     schedule_exams_week.setText(week + " " + getString(R.string.school_week));
                                 } else {
@@ -269,7 +269,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
                             }
                             FrameLayout schedule_exams_cache = (FrameLayout) activity.findViewById(R.id.schedule_exams_cache);
                             if (schedule_exams_cache != null) {
-                                ImageView cacheImage = new ImageView(getContext());
+                                ImageView cacheImage = new ImageView(activity);
                                 cacheImage.setImageDrawable(activity.getResources().getDrawable(ScheduleExamsFragment.schedule_cached ? R.drawable.ic_cached : R.drawable.ic_cache, activity.getTheme()));
                                 cacheImage.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
                                 int padding = (int) (activity.getResources().getDisplayMetrics().density * 4);
@@ -288,7 +288,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
                                                 Static.snackBar(activity, result ? getString(R.string.cache_true) : getString(R.string.cache_false));
                                                 FrameLayout schedule_exams_cache = (FrameLayout) activity.findViewById(R.id.schedule_exams_cache);
                                                 if (schedule_exams_cache != null) {
-                                                    ImageView cacheImage = new ImageView(getContext());
+                                                    ImageView cacheImage = new ImageView(activity);
                                                     cacheImage.setImageDrawable(activity.getResources().getDrawable(result ? R.drawable.ic_cached : R.drawable.ic_cache, activity.getTheme()));
                                                     cacheImage.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
                                                     int padding = (int) (activity.getResources().getDisplayMetrics().density * 4);

@@ -112,8 +112,8 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
         Static.T.runThread(new Runnable() {
             @Override
             public void run() {
-                load(search, Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)
-                        ? Integer.parseInt(Storage.pref.get(getContext(), "pref_dynamic_refresh", "0"))
+                load(search, Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)
+                        ? Integer.parseInt(Storage.pref.get(activity, "pref_dynamic_refresh", "0"))
                         : 0);
             }
         });
@@ -123,8 +123,8 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
             @Override
             public void run() {
                 Log.v(TAG, "load | search=" + search + " | refresh_rate=" + refresh_rate);
-                if (Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)) {
-                    String cache = Storage.file.cache.get(getContext(), "university#events").trim();
+                if (Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
+                    String cache = Storage.file.cache.get(activity, "university#events").trim();
                     if (!cache.isEmpty()) {
                         try {
                             JSONObject cacheJson = new JSONObject(cache);
@@ -154,7 +154,7 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
             @Override
             public void run() {
                 Log.v(TAG, "load | search=" + search + " | force=" + (force ? "true" : "false"));
-                if ((!force || !Static.isOnline(getContext())) && events != null) {
+                if ((!force || !Static.isOnline(activity)) && events != null) {
                     display();
                     return;
                 }
@@ -166,9 +166,9 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
                         public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
                             if (statusCode == 200) {
                                 long now = Calendar.getInstance().getTimeInMillis();
-                                if (json != null && Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)) {
+                                if (json != null && Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
                                     try {
-                                        Storage.file.cache.put(getContext(), "university#events", new JSONObject()
+                                        Storage.file.cache.put(activity, "university#events", new JSONObject()
                                                 .put("timestamp", now)
                                                 .put("data", json)
                                                 .toString()
@@ -272,7 +272,7 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
     }
     private void loadProvider(IfmoRestClientResponseHandler handler) {
         Log.v(TAG, "loadProvider");
-        IfmoRestClient.get(getContext(), "event?limit=" + limit + "&offset=" + offset + "&search=" + search, null, handler);
+        IfmoRestClient.get(activity, "event?limit=" + limit + "&offset=" + offset + "&search=" + search, null, handler);
     }
     private void loadFailed() {
         Static.T.runOnUiThread(new Runnable() {
@@ -337,9 +337,9 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
                     // список
                     JSONArray list = events.getJSONArray("list");
                     if (list.length() > 0) {
-                        eventsRecyclerViewAdapter = new EventsRecyclerViewAdapter(getContext());
+                        eventsRecyclerViewAdapter = new EventsRecyclerViewAdapter(activity);
                         final RecyclerView events_list = (RecyclerView) container.findViewById(R.id.events_list);
-                        events_list.setLayoutManager(new LinearLayoutManager(getContext()));
+                        events_list.setLayoutManager(new LinearLayoutManager(activity));
                         events_list.setAdapter(eventsRecyclerViewAdapter);
                         events_list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
                         eventsRecyclerViewAdapter.setOnStateClickListener(R.id.load_more, new View.OnClickListener() {
@@ -367,9 +367,9 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
                                                             }
                                                             long now = Calendar.getInstance().getTimeInMillis();
                                                             timestamp = now;
-                                                            if (Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)) {
+                                                            if (Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
                                                                 try {
-                                                                    Storage.file.cache.put(getContext(), "university#events", new JSONObject()
+                                                                    Storage.file.cache.put(activity, "university#events", new JSONObject()
                                                                             .put("timestamp", now)
                                                                             .put("data", events)
                                                                             .toString()

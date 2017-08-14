@@ -63,8 +63,8 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
         FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
         data.put(TYPE.common, new Info(STATUS.empty, null));
         data.put(TYPE.own,    new Info(STATUS.empty, null));
-        rating_list_choose_faculty = Storage.file.cache.get(getContext(), "rating#choose#faculty");
-        rating_list_choose_course = Storage.file.cache.get(getContext(), "rating#choose#course");
+        rating_list_choose_faculty = Storage.file.cache.get(activity, "rating#choose#faculty");
+        rating_list_choose_course = Storage.file.cache.get(activity, "rating#choose#course");
     }
 
     @Override
@@ -119,11 +119,11 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
             public void run() {
                 switch (type) {
                     case common: {
-                        load(type, Storage.pref.get(getContext(), "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(getContext(), "pref_static_refresh", "168")) : 0);
+                        load(type, Storage.pref.get(activity, "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(activity, "pref_static_refresh", "168")) : 0);
                         break;
                     }
                     case own: {
-                        load(type, Storage.pref.get(getContext(), "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(getContext(), "pref_dynamic_refresh", "0")) : 0);
+                        load(type, Storage.pref.get(activity, "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(activity, "pref_dynamic_refresh", "0")) : 0);
                         break;
                     }
                 }
@@ -135,15 +135,15 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
             @Override
             public void run() {
                 Log.v(TAG, "load | type=" + type.toString() + " | refresh_rate=" + refresh_rate);
-                if (Storage.pref.get(getContext(), "pref_use_cache", true)) {
+                if (Storage.pref.get(activity, "pref_use_cache", true)) {
                     String cache = "";
                     switch (type) {
                         case common: {
-                            cache = Storage.file.cache.get(getContext(), "rating#list").trim();
+                            cache = Storage.file.cache.get(activity, "rating#list").trim();
                             break;
                         }
                         case own: {
-                            cache = Storage.file.cache.get(getContext(), "rating#core").trim();
+                            cache = Storage.file.cache.get(activity, "rating#core").trim();
                             break;
                         }
                     }
@@ -193,17 +193,17 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
             @Override
             public void run() {
                 Log.v(TAG, "load | type=" + type.toString() + " | force=" + (force ? "true" : "false"));
-                if ((!force || !Static.isOnline(getContext())) && Storage.pref.get(getContext(), "pref_use_cache", true)) {
+                if ((!force || !Static.isOnline(activity)) && Storage.pref.get(activity, "pref_use_cache", true)) {
                     try {
                         String c = "";
                         if (cache.isEmpty()) {
                             switch (type) {
                                 case common: {
-                                    c = Storage.file.cache.get(getContext(), "rating#list").trim();
+                                    c = Storage.file.cache.get(activity, "rating#list").trim();
                                     break;
                                 }
                                 case own: {
-                                    c = Storage.file.cache.get(getContext(), "rating#core").trim();
+                                    c = Storage.file.cache.get(activity, "rating#core").trim();
                                     break;
                                 }
                             }
@@ -220,11 +220,11 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                         Log.v(TAG, "load | type=" + type.toString() + " | failed to load from cache");
                         switch (type) {
                             case common: {
-                                Storage.file.cache.delete(getContext(), "rating#list");
+                                Storage.file.cache.delete(activity, "rating#list");
                                 break;
                             }
                             case own: {
-                                Storage.file.cache.delete(getContext(), "rating#core");
+                                Storage.file.cache.delete(activity, "rating#core");
                                 break;
                             }
                         }
@@ -242,7 +242,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                             break;
                         }
                     }
-                    DeIfmoClient.get(getContext(), url, null, new DeIfmoClientResponseHandler() {
+                    DeIfmoClient.get(activity, url, null, new DeIfmoClientResponseHandler() {
                         @Override
                         public void onSuccess(int statusCode, String response) {
                             Log.v(TAG, "load | type=" + type + " | success | statusCode=" + statusCode + " | response=" + (response == null ? "null" : "notnull"));
@@ -257,8 +257,8 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                                                         json = new JSONObject()
                                                                 .put("timestamp", Calendar.getInstance().getTimeInMillis())
                                                                 .put("rating", json);
-                                                        if (Storage.pref.get(getContext(), "pref_use_cache", true)) {
-                                                            Storage.file.cache.put(getContext(), "rating#list", json.toString());
+                                                        if (Storage.pref.get(activity, "pref_use_cache", true)) {
+                                                            Storage.file.cache.put(activity, "rating#list", json.toString());
                                                         }
                                                         data.put(type, new Info(STATUS.loaded, json));
                                                     } catch (JSONException e) {
@@ -292,8 +292,8 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                                                         json = new JSONObject()
                                                                 .put("timestamp", Calendar.getInstance().getTimeInMillis())
                                                                 .put("rating", json);
-                                                        if (Storage.pref.get(getContext(), "pref_use_cache", true)) {
-                                                            Storage.file.cache.put(getContext(), "rating#core", json.toString());
+                                                        if (Storage.pref.get(activity, "pref_use_cache", true)) {
+                                                            Storage.file.cache.put(activity, "rating#core", json.toString());
                                                         }
                                                         data.put(type, new Info(STATUS.loaded, json));
                                                     } catch (JSONException e) {
@@ -453,7 +453,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                                 public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
                                     rating_list_choose_faculty = rl_spinner_faculty_arr_ids.get(position);
                                     Log.v(TAG, "rl_spinner_faculty clicked | rating_list_choose_faculty=" + rating_list_choose_faculty);
-                                    Storage.file.cache.put(getContext(), "rating#choose#faculty", rating_list_choose_faculty);
+                                    Storage.file.cache.put(activity, "rating#choose#faculty", rating_list_choose_faculty);
                                 }
                                 public void onNothingSelected(AdapterView<?> parent) {}
                             });
@@ -477,7 +477,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                                 public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
                                     rating_list_choose_course = rl_spinner_course_arr_ids.get(position);
                                     Log.v(TAG, "rl_spinner_course clicked | rating_list_choose_course=" + rating_list_choose_course);
-                                    Storage.file.cache.put(getContext(), "rating#choose#course", rating_list_choose_course);
+                                    Storage.file.cache.put(activity, "rating#choose#course", rating_list_choose_course);
                                 }
                                 public void onNothingSelected(AdapterView<?> parent) {}
                             });
@@ -582,7 +582,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
             public void run() {
                 try {
                     Log.v(TAG, "gotoLogin | state=" + state);
-                    Intent intent = new Intent(getContext(), LoginActivity.class);
+                    Intent intent = new Intent(activity, LoginActivity.class);
                     intent.putExtra("state", state);
                     startActivity(intent);
                 } catch (Exception e) {

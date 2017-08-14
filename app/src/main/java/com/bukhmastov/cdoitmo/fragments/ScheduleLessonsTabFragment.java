@@ -23,6 +23,8 @@ import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 
+import org.json.JSONObject;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -79,7 +81,7 @@ public class ScheduleLessonsTabFragment extends Fragment {
         super.onResume();
         Log.v(TAG, "resumed | TYPE=" + TYPE);
         if (!displayed) {
-            display();
+            check();
         }
     }
 
@@ -89,32 +91,56 @@ public class ScheduleLessonsTabFragment extends Fragment {
         Log.v(TAG, "paused | TYPE=" + TYPE);
     }
 
-    private void display() {
+    private void check() {
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "check | TYPE=" + TYPE);
+                try {
+                    if (ScheduleLessonsFragment.schedule != null) {
+                        display(ScheduleLessonsFragment.schedule);
+                    } else {
+                        Log.v(TAG, "check | TYPE=" + TYPE + " | ScheduleLessonsFragment.schedule is null, going to get schedule manually");
+                        ScheduleLessonsFragment.getSchedule(activity, new ScheduleLessonsFragment.getScheduleResponse() {
+                            @Override
+                            public void onReady(JSONObject json) {
+                                display(json);
+                            }
+                        });
+                    }
+                } catch (Exception e){
+                    Static.error(e);
+                    failed();
+                }
+            }
+        });
+    }
+    private void display(final JSONObject schedule) {
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 Log.v(TAG, "display | TYPE=" + TYPE);
                 try {
-                    if (TYPE < 0) throw new NullPointerException("ScheduleLessonsTabFragment.TYPE negative");
+                    if (TYPE < 0) throw new Exception("ScheduleLessonsTabFragment.TYPE negative");
                     if (container == null) throw new NullPointerException("ScheduleLessonsTabFragment.container cannot be null");
-                    if (ScheduleLessonsFragment.schedule == null) throw new NullPointerException("ScheduleLessonsFragment.schedule cannot be null");
+                    if (schedule == null) throw new NullPointerException("schedule cannot be null");
                     TextView schedule_c_header = (TextView) container.findViewById(R.id.schedule_lessons_header);
-                    switch (ScheduleLessonsFragment.schedule.getString("type")){
+                    switch (schedule.getString("type")){
                         case "group":
                         case "room":
                         case "teacher":
                             if (schedule_c_header != null) {
-                                schedule_c_header.setText(ScheduleLessonsFragment.schedule.getString("title") + " " + ScheduleLessonsFragment.schedule.getString("label"));
+                                schedule_c_header.setText(schedule.getString("title") + " " + schedule.getString("label"));
                             }
                             break;
                         default:
-                            String exception = "Wrong ScheduleLessonsFragment.schedule.TYPE value: " + ScheduleLessonsFragment.schedule.getString("type");
+                            String exception = "Wrong schedule.TYPE value: " + schedule.getString("type");
                             Log.wtf(TAG, exception);
                             throw new Exception(exception);
                     }
                     TextView schedule_lessons_all_week = (TextView) container.findViewById(R.id.schedule_lessons_week);
                     if (schedule_lessons_all_week != null) {
-                        int week = Static.getWeek(getContext());
+                        int week = Static.getWeek(activity);
                         if (week >= 0) {
                             schedule_lessons_all_week.setText(week + " " + getString(R.string.school_week));
                         } else {
@@ -123,7 +149,7 @@ public class ScheduleLessonsTabFragment extends Fragment {
                     }
                     FrameLayout schedule_lessons_cache = (FrameLayout) container.findViewById(R.id.schedule_lessons_cache);
                     if (schedule_lessons_cache != null) {
-                        ImageView cacheImage = new ImageView(getContext());
+                        ImageView cacheImage = new ImageView(activity);
                         cacheImage.setImageDrawable(activity.getResources().getDrawable(ScheduleLessonsFragment.schedule_cached ? R.drawable.ic_cached : R.drawable.ic_cache, activity.getTheme()));
                         cacheImage.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
                         int padding = (int) (activity.getResources().getDisplayMetrics().density * 4);
@@ -143,7 +169,7 @@ public class ScheduleLessonsTabFragment extends Fragment {
                                         if (container != null) {
                                             FrameLayout schedule_lessons_cache = (FrameLayout) container.findViewById(R.id.schedule_lessons_cache);
                                             if (schedule_lessons_cache != null) {
-                                                ImageView cacheImage = new ImageView(getContext());
+                                                ImageView cacheImage = new ImageView(activity);
                                                 cacheImage.setImageDrawable(activity.getResources().getDrawable(result ? R.drawable.ic_cached : R.drawable.ic_cache, activity.getTheme()));
                                                 cacheImage.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
                                                 int padding = (int) (activity.getResources().getDisplayMetrics().density * 4);
@@ -179,7 +205,7 @@ public class ScheduleLessonsTabFragment extends Fragment {
                                             if (state == ScheduleLessonsBuilder.STATE_DONE) {
                                                 schedule_lessons_content.addView(layout);
                                                 displayed = true;
-                                                if (Storage.pref.get(getContext(), "pref_schedule_lessons_scroll_to_day", true)) {
+                                                if (Storage.pref.get(activity, "pref_schedule_lessons_scroll_to_day", true)) {
                                                     final ScrollView scroll_schedule_lessons = (ScrollView) container.findViewById(R.id.scroll_schedule_lessons);
                                                     scroll_schedule_lessons.post(new Runnable() {
                                                         @Override

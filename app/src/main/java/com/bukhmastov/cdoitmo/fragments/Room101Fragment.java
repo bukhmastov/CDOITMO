@@ -111,7 +111,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                     Log.v(TAG, "onDenyRequest rejected: offline mode");
                     Static.snackBar(activity, R.id.room101_review_swipe, getString(R.string.device_offline_action_refused));
                 } else {
-                    (new AlertDialog.Builder(getContext())
+                    (new AlertDialog.Builder(activity)
                             .setTitle(R.string.request_deny)
                             .setMessage(getString(R.string.request_deny_1) + "\n" + getString(R.string.request_deny_2))
                             .setCancelable(true)
@@ -145,9 +145,9 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                     default: params.put("getFunc", "delRequest"); break;
                 }
                 params.put("reid", reid);
-                params.put("login", Storage.file.perm.get(getContext(), "user#login"));
-                params.put("password", Storage.file.perm.get(getContext(), "user#password"));
-                Room101Client.post(getContext(), "delRequest.php", params, new Room101ClientResponseHandler() {
+                params.put("login", Storage.file.perm.get(activity, "user#login"));
+                params.put("password", Storage.file.perm.get(activity, "user#password"));
+                Room101Client.post(activity, "delRequest.php", params, new Room101ClientResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final String response) {
                         Static.T.runOnUiThread(new Runnable() {
@@ -194,7 +194,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                                 if (statusCode == 302) {
                                     load(true);
                                     FirebaseAnalyticsProvider.logEvent(
-                                            getContext(),
+                                            activity,
                                             FirebaseAnalyticsProvider.Event.ROOM101_REQUEST_DENIED
                                     );
                                 } else {
@@ -428,7 +428,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
         Static.T.runThread(new Runnable() {
             @Override
             public void run() {
-                load(Storage.pref.get(getContext(), "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(getContext(), "pref_dynamic_refresh", "0")) : 0);
+                load(Storage.pref.get(activity, "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(activity, "pref_dynamic_refresh", "0")) : 0);
             }
         });
     }
@@ -437,8 +437,8 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
             @Override
             public void run() {
                 Log.v(TAG, "load | refresh_rate=" + refresh_rate);
-                if (Storage.pref.get(getContext(), "pref_use_cache", true)) {
-                    String cache = Storage.file.cache.get(getContext(), "room101#core").trim();
+                if (Storage.pref.get(activity, "pref_use_cache", true)) {
+                    String cache = Storage.file.cache.get(activity, "room101#core").trim();
                     if (!cache.isEmpty()) {
                         try {
                             data = new JSONObject(cache);
@@ -473,9 +473,9 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
             @Override
             public void run() {
                 Log.v(TAG, "load | force=" + (force ? "true" : "false"));
-                if ((!force || !Static.isOnline(getContext())) && Storage.pref.get(getContext(), "pref_use_cache", true)) {
+                if ((!force || !Static.isOnline(activity)) && Storage.pref.get(activity, "pref_use_cache", true)) {
                     try {
-                        String c = cache.isEmpty() ? Storage.file.cache.get(getContext(), "room101#core").trim() : cache;
+                        String c = cache.isEmpty() ? Storage.file.cache.get(activity, "room101#core").trim() : cache;
                         if (!c.isEmpty()) {
                             Log.v(TAG, "load | from cache");
                             data = new JSONObject(c);
@@ -484,11 +484,11 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                         }
                     } catch (Exception e) {
                         Log.v(TAG, "load | failed to load from cache");
-                        Storage.file.cache.delete(getContext(), "room101#core");
+                        Storage.file.cache.delete(activity, "room101#core");
                     }
                 }
                 if (!Static.OFFLINE_MODE) {
-                    execute(getContext(), "delRequest", new Room101ClientResponseHandler() {
+                    execute(activity, "delRequest", new Room101ClientResponseHandler() {
                         @Override
                         public void onSuccess(int statusCode, String response) {
                             Log.v(TAG, "load | success | statusCode=" + statusCode);
@@ -501,8 +501,8 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                                                 json = new JSONObject()
                                                         .put("timestamp", Calendar.getInstance().getTimeInMillis())
                                                         .put("data", json);
-                                                if (Storage.pref.get(getContext(), "pref_use_cache", true)) {
-                                                    Storage.file.cache.put(getContext(), "room101#core", json.toString());
+                                                if (Storage.pref.get(activity, "pref_use_cache", true)) {
+                                                    Storage.file.cache.put(activity, "room101#core", json.toString());
                                                 }
                                                 data = json;
                                                 display();
@@ -522,7 +522,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                                             }
                                         }
                                     }
-                                }, getContext()).execute(response);
+                                }, activity).execute(response);
                             } else {
                                 if (data != null) {
                                     display();

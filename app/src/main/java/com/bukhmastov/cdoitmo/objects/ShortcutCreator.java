@@ -182,81 +182,95 @@ public class ShortcutCreator {
                             scheduleLessonsProvider.setHandler(new ScheduleLessons.response() {
                                 @Override
                                 public void onProgress(int state) {
-                                    try {
-                                        if (shortcut_creator_result != null) {
-                                            shortcut_creator_result.removeAllViews();
-                                            shortcut_creator_result.addView(inflate(R.layout.state_loading_compact));
+                                    Static.T.runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            try {
+                                                if (shortcut_creator_result != null) {
+                                                    shortcut_creator_result.removeAllViews();
+                                                    shortcut_creator_result.addView(inflate(R.layout.state_loading_compact));
+                                                }
+                                            } catch (Exception e) {
+                                                Static.error(e);
+                                            }
                                         }
-                                    } catch (Exception e) {
-                                        Static.error(e);
-                                    }
+                                    });
                                 }
                                 @Override
                                 public void onFailure(int state) {
-                                    try {
-                                        if (shortcut_creator_result != null) {
-                                            shortcut_creator_result.removeAllViews();
-                                            shortcut_creator_result.addView(inflate(R.layout.state_failed_compact));
+                                    Static.T.runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            try {
+                                                if (shortcut_creator_result != null) {
+                                                    shortcut_creator_result.removeAllViews();
+                                                    shortcut_creator_result.addView(inflate(R.layout.state_failed_compact));
+                                                }
+                                            } catch (Exception e) {
+                                                Static.error(e);
+                                            }
                                         }
-                                    } catch (Exception e) {
-                                        Static.error(e);
-                                    }
+                                    });
                                 }
                                 @Override
-                                public void onSuccess(JSONObject json) {
-                                    try {
-                                        if (json == null) throw new Exception("json is null");
-                                        if (Objects.equals(json.getString("type"), "teacher_picker")) {
-                                            JSONArray teachers = json.getJSONArray("list");
-                                            if (teachers.length() > 0) {
-                                                if (teachers.length() == 1) {
-                                                    JSONObject teacher = teachers.getJSONObject(0);
-                                                    additional = new Additional(teacher.getString("person") + " (" + teacher.getString("post")+ ")", teacher.getString("pid"));
-                                                    next();
-                                                } else {
-                                                    ListView listView = new ListView(context);
-                                                    listView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
-                                                    listView.setMinimumHeight((int) (Static.destiny * 120));
-                                                    final ArrayList<HashMap<String, String>> teachersMap = new ArrayList<>();
-                                                    for (int i = 0; i < teachers.length(); i++) {
-                                                        JSONObject teacher = teachers.getJSONObject(i);
-                                                        HashMap<String, String> teacherMap = new HashMap<>();
-                                                        teacherMap.put("pid", String.valueOf(teacher.getInt("pid")));
-                                                        teacherMap.put("person", teacher.getString("person"));
-                                                        teacherMap.put("post", teacher.getString("post"));
-                                                        teachersMap.add(teacherMap);
-                                                    }
-                                                    listView.setAdapter(new TeacherPickerListView((Activity) context, teachersMap));
-                                                    listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                                                        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                                                            HashMap<String, String> teacherMap = teachersMap.get(position);
-                                                            additional = new Additional(teacherMap.get("person") + " (" + teacherMap.get("post")+ ")", teacherMap.get("pid"));
-                                                            next();
-                                                        }
-                                                    });
-                                                    shortcut_creator_result.removeAllViews();
-                                                    shortcut_creator_result.addView(listView);
-                                                }
-                                            } else {
-                                                shortcut_creator_result.removeAllViews();
-                                                shortcut_creator_result.addView(scheduleLessonsProvider.getFailed(context.getString(R.string.schedule_not_found)));
-                                            }
-                                        } else {
-                                            additional = new Additional(json.getString("label"), json.getString("query"));
-                                            next();
-                                        }
-                                    } catch (Exception e) {
-                                        if (shortcut_creator_result != null) {
+                                public void onSuccess(final JSONObject json) {
+                                    Static.T.runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
                                             try {
-                                                shortcut_creator_result.removeAllViews();
-                                                shortcut_creator_result.addView(scheduleLessonsProvider.getFailed(context.getString(R.string.schedule_not_found)));
-                                            } catch (Exception e1) {
-                                                Static.error(e1);
+                                                if (json == null) throw new Exception("json is null");
+                                                if (Objects.equals(json.getString("type"), "teacher_picker")) {
+                                                    JSONArray teachers = json.getJSONArray("list");
+                                                    if (teachers.length() > 0) {
+                                                        if (teachers.length() == 1) {
+                                                            JSONObject teacher = teachers.getJSONObject(0);
+                                                            additional = new Additional(teacher.getString("person") + " (" + teacher.getString("post")+ ")", teacher.getString("pid"));
+                                                            next();
+                                                        } else {
+                                                            ListView listView = new ListView(context);
+                                                            listView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
+                                                            listView.setMinimumHeight((int) (Static.destiny * 120));
+                                                            final ArrayList<HashMap<String, String>> teachersMap = new ArrayList<>();
+                                                            for (int i = 0; i < teachers.length(); i++) {
+                                                                JSONObject teacher = teachers.getJSONObject(i);
+                                                                HashMap<String, String> teacherMap = new HashMap<>();
+                                                                teacherMap.put("pid", String.valueOf(teacher.getInt("pid")));
+                                                                teacherMap.put("person", teacher.getString("person"));
+                                                                teacherMap.put("post", teacher.getString("post"));
+                                                                teachersMap.add(teacherMap);
+                                                            }
+                                                            listView.setAdapter(new TeacherPickerListView((Activity) context, teachersMap));
+                                                            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                                                                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                                                                    HashMap<String, String> teacherMap = teachersMap.get(position);
+                                                                    additional = new Additional(teacherMap.get("person") + " (" + teacherMap.get("post")+ ")", teacherMap.get("pid"));
+                                                                    next();
+                                                                }
+                                                            });
+                                                            shortcut_creator_result.removeAllViews();
+                                                            shortcut_creator_result.addView(listView);
+                                                        }
+                                                    } else {
+                                                        shortcut_creator_result.removeAllViews();
+                                                        shortcut_creator_result.addView(scheduleLessonsProvider.getFailed(context.getString(R.string.schedule_not_found)));
+                                                    }
+                                                } else {
+                                                    additional = new Additional(json.getString("label"), json.getString("query"));
+                                                    next();
+                                                }
+                                            } catch (Exception e) {
+                                                if (shortcut_creator_result != null) {
+                                                    try {
+                                                        shortcut_creator_result.removeAllViews();
+                                                        shortcut_creator_result.addView(scheduleLessonsProvider.getFailed(context.getString(R.string.schedule_not_found)));
+                                                    } catch (Exception e1) {
+                                                        Static.error(e1);
+                                                    }
+                                                }
+                                                Static.error(e);
                                             }
                                         }
-                                        Static.error(e);
-                                    }
-
+                                    });
                                 }
                                 @Override
                                 public void onNewHandle(RequestHandle requestHandle) {
@@ -287,87 +301,101 @@ public class ShortcutCreator {
                             scheduleExamsProvider.setHandler(new ScheduleExams.response() {
                                 @Override
                                 public void onProgress(int state) {
-                                    try {
-                                        if (shortcut_creator_result != null) {
-                                            shortcut_creator_result.removeAllViews();
-                                            shortcut_creator_result.addView(inflate(R.layout.state_loading_compact));
+                                    Static.T.runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            try {
+                                                if (shortcut_creator_result != null) {
+                                                    shortcut_creator_result.removeAllViews();
+                                                    shortcut_creator_result.addView(inflate(R.layout.state_loading_compact));
+                                                }
+                                            } catch (Exception e) {
+                                                Static.error(e);
+                                            }
                                         }
-                                    } catch (Exception e) {
-                                        Static.error(e);
-                                    }
+                                    });
                                 }
                                 @Override
                                 public void onFailure(int state) {
-                                    try {
-                                        if (shortcut_creator_result != null) {
-                                            shortcut_creator_result.removeAllViews();
-                                            shortcut_creator_result.addView(inflate(R.layout.state_failed_compact));
+                                    Static.T.runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            try {
+                                                if (shortcut_creator_result != null) {
+                                                    shortcut_creator_result.removeAllViews();
+                                                    shortcut_creator_result.addView(inflate(R.layout.state_failed_compact));
+                                                }
+                                            } catch (Exception e) {
+                                                Static.error(e);
+                                            }
                                         }
-                                    } catch (Exception e) {
-                                        Static.error(e);
-                                    }
+                                    });
                                 }
                                 @Override
-                                public void onSuccess(JSONObject json) {
-                                    try {
-                                        if (json == null) throw new Exception("json is null");
-                                        if (Objects.equals(json.getString("type"), "teacher_picker")) {
-                                            JSONArray teachers = json.getJSONArray("teachers");
-                                            if (teachers.length() > 0) {
-                                                if (teachers.length() == 1) {
-                                                    JSONObject teacher = teachers.getJSONObject(0);
-                                                    additional = new Additional(teacher.getString("name"), teacher.getString("scope"));
-                                                    next();
-                                                } else {
-                                                    ListView listView = new ListView(context);
-                                                    listView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
-                                                    listView.setMinimumHeight((int) (Static.destiny * 120));
-                                                    final ArrayList<HashMap<String, String>> teachersMap = new ArrayList<>();
-                                                    for (int i = 0; i < teachers.length(); i++) {
-                                                        JSONObject teacher = teachers.getJSONObject(i);
-                                                        HashMap<String, String> teacherMap = new HashMap<>();
-                                                        teacherMap.put("pid", teacher.getString("scope"));
-                                                        teacherMap.put("person", teacher.getString("name"));
-                                                        teacherMap.put("post", "");
-                                                        teachersMap.add(teacherMap);
-                                                    }
-                                                    listView.setAdapter(new TeacherPickerListView((Activity) context, teachersMap));
-                                                    listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                                                        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                                                            HashMap<String, String> teacherMap = teachersMap.get(position);
-                                                            additional = new Additional(teacherMap.get("person"), teacherMap.get("pid"));
-                                                            next();
-                                                        }
-                                                    });
-                                                    shortcut_creator_result.removeAllViews();
-                                                    shortcut_creator_result.addView(listView);
-                                                }
-                                            } else {
-                                                shortcut_creator_result.removeAllViews();
-                                                shortcut_creator_result.addView(scheduleExamsProvider.getFailed(context.getString(R.string.schedule_not_found)));
-                                            }
-                                        } else {
-                                            JSONArray schedule = json.getJSONArray("schedule");
-                                            if (schedule.length() > 0) {
-                                                additional = new Additional(json.getString("scope"), json.getString("scope"));
-                                                next();
-                                            } else {
-                                                shortcut_creator_result.removeAllViews();
-                                                shortcut_creator_result.addView(scheduleExamsProvider.getFailed(context.getString(R.string.schedule_not_found)));
-                                            }
-                                        }
-                                    } catch (Exception e) {
-                                        if (shortcut_creator_result != null) {
+                                public void onSuccess(final JSONObject json) {
+                                    Static.T.runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
                                             try {
-                                                shortcut_creator_result.removeAllViews();
-                                                shortcut_creator_result.addView(scheduleExamsProvider.getFailed(context.getString(R.string.schedule_not_found)));
-                                            } catch (Exception e1) {
-                                                Static.error(e1);
+                                                if (json == null) throw new Exception("json is null");
+                                                if (Objects.equals(json.getString("type"), "teacher_picker")) {
+                                                    JSONArray teachers = json.getJSONArray("teachers");
+                                                    if (teachers.length() > 0) {
+                                                        if (teachers.length() == 1) {
+                                                            JSONObject teacher = teachers.getJSONObject(0);
+                                                            additional = new Additional(teacher.getString("name"), teacher.getString("scope"));
+                                                            next();
+                                                        } else {
+                                                            ListView listView = new ListView(context);
+                                                            listView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
+                                                            listView.setMinimumHeight((int) (Static.destiny * 120));
+                                                            final ArrayList<HashMap<String, String>> teachersMap = new ArrayList<>();
+                                                            for (int i = 0; i < teachers.length(); i++) {
+                                                                JSONObject teacher = teachers.getJSONObject(i);
+                                                                HashMap<String, String> teacherMap = new HashMap<>();
+                                                                teacherMap.put("pid", teacher.getString("scope"));
+                                                                teacherMap.put("person", teacher.getString("name"));
+                                                                teacherMap.put("post", "");
+                                                                teachersMap.add(teacherMap);
+                                                            }
+                                                            listView.setAdapter(new TeacherPickerListView((Activity) context, teachersMap));
+                                                            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                                                                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                                                                    HashMap<String, String> teacherMap = teachersMap.get(position);
+                                                                    additional = new Additional(teacherMap.get("person"), teacherMap.get("pid"));
+                                                                    next();
+                                                                }
+                                                            });
+                                                            shortcut_creator_result.removeAllViews();
+                                                            shortcut_creator_result.addView(listView);
+                                                        }
+                                                    } else {
+                                                        shortcut_creator_result.removeAllViews();
+                                                        shortcut_creator_result.addView(scheduleExamsProvider.getFailed(context.getString(R.string.schedule_not_found)));
+                                                    }
+                                                } else {
+                                                    JSONArray schedule = json.getJSONArray("schedule");
+                                                    if (schedule.length() > 0) {
+                                                        additional = new Additional(json.getString("scope"), json.getString("scope"));
+                                                        next();
+                                                    } else {
+                                                        shortcut_creator_result.removeAllViews();
+                                                        shortcut_creator_result.addView(scheduleExamsProvider.getFailed(context.getString(R.string.schedule_not_found)));
+                                                    }
+                                                }
+                                            } catch (Exception e) {
+                                                if (shortcut_creator_result != null) {
+                                                    try {
+                                                        shortcut_creator_result.removeAllViews();
+                                                        shortcut_creator_result.addView(scheduleExamsProvider.getFailed(context.getString(R.string.schedule_not_found)));
+                                                    } catch (Exception e1) {
+                                                        Static.error(e1);
+                                                    }
+                                                }
+                                                Static.error(e);
                                             }
                                         }
-                                        Static.error(e);
-                                    }
-
+                                    });
                                 }
                                 @Override
                                 public void onNewHandle(RequestHandle requestHandle) {

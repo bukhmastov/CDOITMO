@@ -104,8 +104,8 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
         Static.T.runThread(new Runnable() {
             @Override
             public void run() {
-                load(Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)
-                        ? Integer.parseInt(Storage.pref.get(getContext(), "pref_static_refresh", "168"))
+                load(Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)
+                        ? Integer.parseInt(Storage.pref.get(activity, "pref_static_refresh", "168"))
                         : 0);
             }
         });
@@ -116,8 +116,8 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
             public void run() {
                 Log.v(TAG, "load | refresh_rate=" + refresh_rate);
                 String fid = stack.size() == 0 ? "0" : stack.get(stack.size() - 1);
-                if (Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)) {
-                    String cache = Storage.file.cache.get(getContext(), "university#faculties#" + fid).trim();
+                if (Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
+                    String cache = Storage.file.cache.get(activity, "university#faculties#" + fid).trim();
                     if (!cache.isEmpty()) {
                         try {
                             JSONObject cacheJson = new JSONObject(cache);
@@ -167,9 +167,9 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                         history.remove(fid);
                     }
                 }
-                if ((!force || !Static.isOnline(getContext())) && Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)) {
+                if ((!force || !Static.isOnline(activity)) && Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
                     try {
-                        String c = cache.isEmpty() ? Storage.file.cache.get(getContext(), "university#faculties#" + fid).trim() : cache;
+                        String c = cache.isEmpty() ? Storage.file.cache.get(activity, "university#faculties#" + fid).trim() : cache;
                         if (!c.isEmpty()) {
                             Log.v(TAG, "load | from cache");
                             display(new JSONObject(c).getJSONObject("data"));
@@ -177,7 +177,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                         }
                     } catch (Exception e) {
                         Log.v(TAG, "load | failed to load from cache");
-                        Storage.file.cache.delete(getContext(), "university#faculties#" + fid);
+                        Storage.file.cache.delete(activity, "university#faculties#" + fid);
                     }
                 }
                 if (!Static.OFFLINE_MODE) {
@@ -186,9 +186,9 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                         public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
                             if (statusCode == 200) {
                                 long now = Calendar.getInstance().getTimeInMillis();
-                                if (json != null && Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)) {
+                                if (json != null && Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
                                     try {
-                                        Storage.file.cache.put(getContext(), "university#faculties#" + fid, new JSONObject()
+                                        Storage.file.cache.put(activity, "university#faculties#" + fid, new JSONObject()
                                                 .put("timestamp", now)
                                                 .put("data", json)
                                                 .toString()
@@ -296,7 +296,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
         if (stack.size() > 0) {
             dep_id = stack.get(stack.size() - 1);
         }
-        IfmoRestClient.get(getContext(), "study_structure" + (dep_id.isEmpty() ? "" : "/" + dep_id), null, handler);
+        IfmoRestClient.get(activity, "study_structure" + (dep_id.isEmpty() ? "" : "/" + dep_id), null, handler);
     }
     private void loadFailed() {
         Static.T.runOnUiThread(new Runnable() {
@@ -376,9 +376,9 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                         }
                     }
                     // список
-                    facultiesRecyclerViewAdapter = new FacultiesRecyclerViewAdapter(getContext());
+                    facultiesRecyclerViewAdapter = new FacultiesRecyclerViewAdapter(activity);
                     final RecyclerView list = (RecyclerView) container.findViewById(R.id.list);
-                    list.setLayoutManager(new LinearLayoutManager(getContext()));
+                    list.setLayoutManager(new LinearLayoutManager(activity));
                     list.setAdapter(facultiesRecyclerViewAdapter);
                     list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
                     displayContent(structure, divisions);

@@ -112,8 +112,8 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
         Static.T.runThread(new Runnable() {
             @Override
             public void run() {
-                load(search, Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)
-                                ? Integer.parseInt(Storage.pref.get(getContext(), "pref_static_refresh", "168"))
+                load(search, Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)
+                                ? Integer.parseInt(Storage.pref.get(activity, "pref_static_refresh", "168"))
                                 : 0);
             }
         });
@@ -123,8 +123,8 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
             @Override
             public void run() {
                 Log.v(TAG, "load | search=" + search + " | refresh_rate=" + refresh_rate);
-                if (Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)) {
-                    String cache = Storage.file.cache.get(getContext(), "university#persons").trim();
+                if (Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
+                    String cache = Storage.file.cache.get(activity, "university#persons").trim();
                     if (!cache.isEmpty()) {
                         try {
                             JSONObject cacheJson = new JSONObject(cache);
@@ -154,7 +154,7 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
             @Override
             public void run() {
                 Log.v(TAG, "load | search=" + search + " | force=" + (force ? "true" : "false"));
-                if ((!force || !Static.isOnline(getContext())) && persons != null) {
+                if ((!force || !Static.isOnline(activity)) && persons != null) {
                     display();
                     return;
                 }
@@ -166,9 +166,9 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
                         public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
                             if (statusCode == 200) {
                                 long now = Calendar.getInstance().getTimeInMillis();
-                                if (json != null && Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)) {
+                                if (json != null && Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
                                     try {
-                                        Storage.file.cache.put(getContext(), "university#persons", new JSONObject()
+                                        Storage.file.cache.put(activity, "university#persons", new JSONObject()
                                                 .put("timestamp", now)
                                                 .put("data", json)
                                                 .toString()
@@ -272,7 +272,7 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
     }
     private void loadProvider(final IfmoRestClientResponseHandler handler) {
         Log.v(TAG, "loadProvider");
-        IfmoRestClient.get(getContext(), "person?limit=" + limit + "&offset=" + offset + "&search=" + search, null, handler);
+        IfmoRestClient.get(activity, "person?limit=" + limit + "&offset=" + offset + "&search=" + search, null, handler);
     }
     private void loadFailed(){
         Static.T.runOnUiThread(new Runnable() {
@@ -337,9 +337,9 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
                     // список
                     JSONArray list = persons.getJSONArray("list");
                     if (list.length() > 0) {
-                        personsRecyclerViewAdapter = new PersonsRecyclerViewAdapter(getContext());
+                        personsRecyclerViewAdapter = new PersonsRecyclerViewAdapter(activity);
                         final RecyclerView persons_list = (RecyclerView) container.findViewById(R.id.persons_list);
-                        persons_list.setLayoutManager(new LinearLayoutManager(getContext()));
+                        persons_list.setLayoutManager(new LinearLayoutManager(activity));
                         persons_list.setAdapter(personsRecyclerViewAdapter);
                         persons_list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
                         personsRecyclerViewAdapter.setOnStateClickListener(R.id.load_more, new View.OnClickListener() {
@@ -367,9 +367,9 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
                                                             }
                                                             long now = Calendar.getInstance().getTimeInMillis();
                                                             timestamp = now;
-                                                            if (Storage.pref.get(getContext(), "pref_use_cache", true) && Storage.pref.get(getContext(), "pref_use_university_cache", false)) {
+                                                            if (Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
                                                                 try {
-                                                                    Storage.file.cache.put(getContext(), "university#persons", new JSONObject()
+                                                                    Storage.file.cache.put(activity, "university#persons", new JSONObject()
                                                                             .put("timestamp", now)
                                                                             .put("data", persons)
                                                                             .toString()

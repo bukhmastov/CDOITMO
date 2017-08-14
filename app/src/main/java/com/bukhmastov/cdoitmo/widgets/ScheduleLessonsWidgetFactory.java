@@ -97,6 +97,9 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
     @Override
     public RemoteViews getViewAt(int position) {
         try {
+            if (position >= this.lessons.length()) {
+                return null;
+            }
             RemoteViews remoteViews = new RemoteViews(context.getPackageName(), darkTheme ? R.layout.schedule_lessons_widget_item : R.layout.schedule_lessons_widget_item);
             JSONObject lesson = this.lessons.getJSONObject(position);
             if (lesson == null) throw new NullPointerException("lesson cannot be null");

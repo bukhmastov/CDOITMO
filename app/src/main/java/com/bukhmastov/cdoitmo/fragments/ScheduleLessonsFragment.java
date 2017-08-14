@@ -55,7 +55,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
         super.onCreate(savedInstanceState);
         Log.v(TAG, "Fragment created");
         FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
-        scheduleLessons = new ScheduleLessons(getContext());
+        scheduleLessons = new ScheduleLessons(activity);
         scheduleLessons.setHandler(this);
     }
 
@@ -78,7 +78,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
                         @Override
                         public boolean onMenuItemClick(MenuItem item) {
                             Log.v(TAG, "action_schedule_lessons_search clicked");
-                            startActivity(new Intent(getContext(), ScheduleLessonsSearchActivity.class));
+                            startActivity(new Intent(activity, ScheduleLessonsSearchActivity.class));
                             return false;
                         }
                     });
@@ -265,15 +265,15 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
                             draw(R.layout.layout_schedule_lessons_tabs);
                             ViewPager schedule_view = (ViewPager) activity.findViewById(R.id.schedule_pager);
                             if (schedule_view != null) {
-                                schedule_view.setAdapter(new PagerLessonsAdapter(getFragmentManager(), getContext()));
+                                schedule_view.setAdapter(new PagerLessonsAdapter(getFragmentManager(), activity));
                                 schedule_view.addOnPageChangeListener(self);
                                 schedule_tabs.setupWithViewPager(schedule_view);
                             }
                             TabLayout.Tab tab;
                             if (ScheduleLessonsFragment.tabSelected == -1) {
-                                int pref = Integer.parseInt(Storage.pref.get(getContext(), "pref_schedule_lessons_week", "-1"));
+                                int pref = Integer.parseInt(Storage.pref.get(activity, "pref_schedule_lessons_week", "-1"));
                                 if (pref == -1) {
-                                    int week = Static.getWeek(getContext());
+                                    int week = Static.getWeek(activity);
                                     tab = schedule_tabs.getTabAt(week >= 0 ? (week % 2) + 1 : 0);
                                 } else {
                                     tab = schedule_tabs.getTabAt(pref);
@@ -369,6 +369,53 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
                         }
                     }
                 }).execute(schedule);
+            }
+        });
+    }
+
+    public interface getScheduleResponse {
+        void onReady(JSONObject json);
+    }
+    public static void getSchedule(final Context context, final getScheduleResponse handler) {
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (schedule == null) {
+                        Log.v(TAG, "getSchedule | with download");
+                        ScheduleLessons scheduleLessons = new ScheduleLessons(context);
+                        scheduleLessons.setHandler(new ScheduleLessons.response() {
+                            @Override
+                            public void onSuccess(JSONObject json) {
+                                Log.v(TAG, "getSchedule | with download | onSuccess | json=" + (json == null ? "null" : "notnull"));
+                                if (json != null) {
+                                    schedule = json;
+                                }
+                                handler.onReady(json);
+                            }
+                            @Override
+                            public void onFailure(int state) {
+                                Log.v(TAG, "getSchedule | with download | onFailure");
+                                handler.onReady(null);
+                            }
+                            @Override
+                            public void onProgress(int state) {}
+                            @Override
+                            public void onNewHandle(RequestHandle requestHandle) {}
+                        });
+                        String scope = query;
+                        if (scope == null) {
+                            scope = scheduleLessons.getDefault();
+                        }
+                        scheduleLessons.search(scope);
+                    } else {
+                        Log.v(TAG, "getSchedule | without download");
+                        handler.onReady(schedule);
+                    }
+                } catch (Exception e) {
+                    Static.error(e);
+                    handler.onReady(null);
+                }
             }
         });
     }
