@@ -371,5 +371,7 @@
     <string name="intro_desc_4">Персонал, факультеты, подразделения, корпуса и общежития. А также новости и анонсы.</string>
     <string name="intro_desc_5">Уведомления о новых баллах в электронном журнале, различные виджеты и ярлыки</string>
     <string name="skip">Пропустить</string>
+    <string name="rate_app">Оценить приложение</string>
+    <string name="goto_google_play">Перейти в Google Play</string>
 
 </resources>

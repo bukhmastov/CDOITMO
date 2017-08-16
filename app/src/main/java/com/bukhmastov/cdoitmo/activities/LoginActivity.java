@@ -204,6 +204,7 @@ public class LoginActivity extends AppCompatActivity {
                         layout_login_new_user_tile.findViewById(R.id.help).setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
+                                FirebaseAnalyticsProvider.logBasicEvent(getBaseContext(), "Help with login clicked");
                                 new AlertDialog.Builder(self)
                                         .setTitle("Проблемы с авторизацией")
                                         .setMessage(
@@ -392,6 +393,9 @@ public class LoginActivity extends AppCompatActivity {
                 Log.v(TAG, "authorized | newUser=" + (newUser ? "true" : "false"));
                 String current_login = Storage.file.general.get(self, "users#current_login");
                 if (!current_login.isEmpty()) {
+                    if (newUser) {
+                        FirebaseAnalyticsProvider.logBasicEvent(getBaseContext(), "New user authorized");
+                    }
                     accounts.push(self, current_login);
                     Static.authorized = true;
                     Static.protocolTracker = new ProtocolTracker(self);

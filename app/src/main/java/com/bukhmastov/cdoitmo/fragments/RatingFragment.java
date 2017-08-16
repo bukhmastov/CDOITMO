@@ -488,6 +488,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                             rl_button.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
+                                    FirebaseAnalyticsProvider.logBasicEvent(activity, "Detailed rating used");
                                     Bundle extras = new Bundle();
                                     extras.putString("faculty", rating_list_choose_faculty);
                                     extras.putString("course", rating_list_choose_course);
@@ -523,6 +524,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                             rl_list_view.setAdapter(new RatingListView(activity, courses));
                             rl_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                                    FirebaseAnalyticsProvider.logBasicEvent(activity, "Own rating used");
                                     Log.v(TAG, "rl_list_view clicked");
                                     try {
                                         if (common.status == STATUS.loaded && common.data != null) {

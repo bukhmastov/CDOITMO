@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.activities;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -24,12 +25,14 @@ public class AboutActivity extends ConnectedActivity {
     private final Random random = new Random();
     private int counterToPika = 0;
     private int tapsToPika = 5;
+    private Activity activity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         if (Static.darkTheme) setTheme(R.style.AppTheme_Dark);
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
+        activity = this;
         FirebaseAnalyticsProvider.logCurrentScreen(this);
         setContentView(R.layout.activity_about);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar_about));
@@ -76,7 +79,7 @@ public class AboutActivity extends ConnectedActivity {
                         emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{"bukhmastov-alex@ya.ru"});
                         startActivity(Intent.createChooser(emailIntent, getString(R.string.send_mail) + "..."));
                     } catch (Exception e) {
-                        Static.error(e);
+                        Static.snackBar(activity, getString(R.string.something_went_wrong));
                     }
                 }
             });
@@ -91,7 +94,23 @@ public class AboutActivity extends ConnectedActivity {
                     try {
                         startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://vk.com/write9780714")));
                     } catch (Exception e) {
-                        Static.error(e);
+                        Static.snackBar(activity, getString(R.string.something_went_wrong));
+                    }
+                }
+            });
+        }
+
+        View block_rate = findViewById(R.id.block_rate);
+        if (block_rate != null) {
+            block_rate.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.v(TAG, "block_rate clicked");
+                    FirebaseAnalyticsProvider.logBasicEvent(activity, "app rate clicked");
+                    try {
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.bukhmastov.cdoitmo")));
+                    } catch (Exception e) {
+                        Static.snackBar(activity, getString(R.string.something_went_wrong));
                     }
                 }
             });
@@ -103,10 +122,11 @@ public class AboutActivity extends ConnectedActivity {
                 @Override
                 public void onClick(View v) {
                     Log.v(TAG, "block_donate clicked  ┬─┬ ノ( ゜-゜ノ)");
+                    FirebaseAnalyticsProvider.logBasicEvent(activity, "donate clicked");
                     try {
                         startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://yasobe.ru/na/cdoifmo")));
                     } catch (Exception e) {
-                        Static.error(e);
+                        Static.snackBar(activity, getString(R.string.something_went_wrong));
                     }
                 }
             });

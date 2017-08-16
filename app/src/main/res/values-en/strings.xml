@@ -364,5 +364,7 @@
     <string name="intro_desc_4">Staff, faculties, units, buildings. As well as news and announcements.</string>
     <string name="intro_desc_5">Notifications about new points in the electronic journal, various widgets and labels</string>
     <string name="skip">Skip</string>
+    <string name="rate_app">Rate app</string>
+    <string name="goto_google_play">Go to Google Play</string>
 
 </resources>

@@ -33,8 +33,8 @@ public class FirebaseAnalyticsProvider {
         public static String SCHEDULE_LESSON_REDUCE = "cdo_schedule_lesson_reduce"; // скрытие занятия в расписании
         public static String ROOM101_REQUEST_ADDED = "cdo_room101_request_added";   // оставлен запрос на тестирование в 101 кабинете
         public static String ROOM101_REQUEST_DENIED = "cdo_room101_request_denied"; // отозван запрос на тестирование в 101 кабинете
+        public static String EVENT = "cdo_event";                                   // обычное событие, не подходящее под остальные типы событий
     }
-
     public static class Param {
         // 25 unique Params with each Event type | 40 characters long | values 100 characters long
         public static String GROUP_ID = "cdo_group_id";
@@ -45,8 +45,8 @@ public class FirebaseAnalyticsProvider {
         public static String WIDGET_QUERY = "cdo_widget_query";
         public static String LESSON_TITLE = "cdo_lesson_title";
         public static String ROOM101_REQUEST_DETAILS = "cdo_room101_request_details";
+        public static String EVENT_EXTRA = "cdo_event_extra";
     }
-
     public static class Property {
         // 25 unique UserProperties | 24 characters long | values 36 characters long
         public static String FACULTY = "cdo_user_faculty";
@@ -91,15 +91,12 @@ public class FirebaseAnalyticsProvider {
     public static void setCurrentScreen(Activity activity) {
         setCurrentScreen(activity, null, null);
     }
-
     public static void setCurrentScreen(Activity activity, String screenOverride) {
         logCurrentScreen(activity, null, screenOverride);
     }
-
     public static void setCurrentScreen(Activity activity, Fragment fragment) {
         logCurrentScreen(activity, fragment, null);
     }
-
     public static void setCurrentScreen(final Activity activity, final Fragment fragment, final String view_screen) {
         Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
             @Override
@@ -126,15 +123,12 @@ public class FirebaseAnalyticsProvider {
     public static void logCurrentScreen(Activity activity) {
         logCurrentScreen(activity, null, null);
     }
-
     public static void logCurrentScreen(Activity activity, String screenOverride) {
         logCurrentScreen(activity, null, screenOverride);
     }
-
     public static void logCurrentScreen(Activity activity, Fragment fragment) {
         logCurrentScreen(activity, fragment, null);
     }
-
     public static void logCurrentScreen(Activity activity, Fragment fragment, String view_screen) {
         try {
             if (!enabled) return;
@@ -201,7 +195,6 @@ public class FirebaseAnalyticsProvider {
             Static.error(e);
         }
     }
-
     public static void setUserProperty(final Context context, final String property, final String value) {
         Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
             @Override
@@ -219,7 +212,6 @@ public class FirebaseAnalyticsProvider {
     public static void logEvent(Context context, String name) {
         logEvent(context, name, null);
     }
-
     public static void logEvent(final Context context, final String name, final Bundle params) {
         Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
             @Override
@@ -233,19 +225,32 @@ public class FirebaseAnalyticsProvider {
             }
         });
     }
+    public static void logBasicEvent(final Context context, final String content) {
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (!enabled) return;
+                    getFirebaseAnalytics(context).logEvent(
+                            Event.EVENT,
+                            FirebaseAnalyticsProvider.getBundle(Param.EVENT_EXTRA, content)
+                    );
+                } catch (Exception e) {
+                    Static.error(e);
+                }
+            }
+        });
+    }
 
     public static Bundle getBundle(String key, Object value) {
         return getBundle(key, value, null);
     }
-
     public static Bundle getBundle(String key, int value) {
         return getBundle(key, value, null);
     }
-
     public static Bundle getBundle(String key, int value, Bundle bundle) {
         return getBundle(key, (Integer) value, bundle);
     }
-
     public static Bundle getBundle(String key, Object value, Bundle bundle) {
         if (bundle == null) {
             bundle = new Bundle();
@@ -258,5 +263,4 @@ public class FirebaseAnalyticsProvider {
         }
         return bundle;
     }
-
 }
