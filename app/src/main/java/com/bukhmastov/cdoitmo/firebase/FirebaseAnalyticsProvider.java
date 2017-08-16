@@ -23,6 +23,7 @@ public class FirebaseAnalyticsProvider {
         // 500 different types of Events | 40 characters long
         public static String JOIN_GROUP = "cdo_join_group";                         // присоединен к определеннйо группе
         public static String APP_OPEN = "cdo_app_open";                             // приложение запущено
+        public static String LOGIN_REQUIRED = "cdo_login_required";                 // нужна авторизация
         public static String LOGIN = "cdo_login";                                   // авторизован
         public static String LOGOUT = "cdo_logout";                                 // разлогинен
         public static String APP_VIEW = "cdo_app_view";                             // переход на новый экран

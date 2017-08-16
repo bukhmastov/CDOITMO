@@ -737,14 +737,17 @@ public class Static {
         }
         return locale;
     }
-    public static boolean removeView(View view) {
-        try {
-            ((ViewGroup) view.getParent()).removeView(view);
-        } catch (Throwable e) {
-            Static.error(e);
-            return false;
-        }
-        return true;
+    public static void removeView(final View view) {
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    ((ViewGroup) view.getParent()).removeView(view);
+                } catch (Throwable e) {
+                    Static.error(e);
+                }
+            }
+        });
     }
     public static String capitalizeFirstLetter(String text) {
         return text.substring(0, 1).toUpperCase() + text.substring(1);

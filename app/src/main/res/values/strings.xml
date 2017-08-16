@@ -356,6 +356,7 @@
     <string name="choose_type">Выберите тип</string>
     <string name="shortcut_creator_need_to_choose_type">Необходимо выбрать тип</string>
     <string name="open_ifmo_ru">Посмотреть на www.ifmo.ru</string>
+    <string name="auth_help_0">Проблемы с авторизацией</string>
     <string name="auth_help_1">1. Если Вам неудается авторизироваться в системе ДО, попробуйте попытку на сайте http://de.ifmo.ru/</string>
     <string name="auth_help_2">(Если на официальном сайте авторизация успешна, а в приложении нет, свяжитесь с разработчиком (иконка информации сверху справа окна авторизации))</string>
     <string name="auth_help_3">2. Если Вы забыли свой логин/пароль, обратитесь в службу технической поддержки системы ДО</string>

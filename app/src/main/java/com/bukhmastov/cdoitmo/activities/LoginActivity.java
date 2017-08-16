@@ -60,7 +60,6 @@ public class LoginActivity extends AppCompatActivity {
             actionBar.setTitle(getString(R.string.title_activity_login));
             actionBar.setLogo(obtainStyledAttributes(new int[] { R.attr.ic_security }).getDrawable(0));
         }
-
         if (LoginActivity.auto_logout) {
             LoginActivity.auto_logout = false;
             route(SIGNAL_LOGOUT);
@@ -72,7 +71,6 @@ public class LoginActivity extends AppCompatActivity {
                 route(SIGNAL_LOGIN);
             }
         }
-
     }
 
     @Override
@@ -172,11 +170,12 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void show() {
-        Static.T.runOnUiThread(new Runnable() {
+        Static.T.runThread(new Runnable() {
             @Override
             public void run() {
                 Log.v(TAG, "show");
                 try {
+                    FirebaseAnalyticsProvider.logEvent(self, FirebaseAnalyticsProvider.Event.LOGIN_REQUIRED);
                     String current_login = Storage.file.general.get(self, "users#current_login");
                     if (!current_login.isEmpty()) {
                         String login = Storage.file.perm.get(self, "user#login");
@@ -206,7 +205,7 @@ public class LoginActivity extends AppCompatActivity {
                             public void onClick(View view) {
                                 FirebaseAnalyticsProvider.logBasicEvent(getBaseContext(), "Help with login clicked");
                                 new AlertDialog.Builder(self)
-                                        .setTitle("Проблемы с авторизацией")
+                                        .setTitle(R.string.auth_help_0)
                                         .setMessage(
                                                 getString(R.string.auth_help_1) +
                                                 "\n" +
