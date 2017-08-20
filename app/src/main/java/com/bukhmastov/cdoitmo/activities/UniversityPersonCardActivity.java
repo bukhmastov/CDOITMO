@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.activities;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -30,6 +31,7 @@ import org.json.JSONObject;
 public class UniversityPersonCardActivity extends ConnectedActivity implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "UniversityPersonCard";
+    private Activity activity = this;
     private RequestHandle fragmentRequestHandle = null;
     private boolean loaded = false;
     private boolean first_load = true;
@@ -337,7 +339,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                                         Intent emailIntent = new Intent(Intent.ACTION_SEND);
                                         emailIntent.setType("message/rfc822");
                                         emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{email.trim()});
-                                        startActivity(Intent.createChooser(emailIntent, getString(R.string.send_mail) + "..."));
+                                        startActivity(Intent.createChooser(emailIntent, activity.getString(R.string.send_mail) + "..."));
                                     }
                                 }));
                                 exists = true;
@@ -361,13 +363,13 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                         final String post = person.getString("post").trim();
                         final String bio = person.getString("text").trim();
                         if (!rank.isEmpty()) {
-                            info_about_container.addView(getAboutContainer(getString(R.string.person_rank), Static.capitalizeFirstLetter(rank)));
+                            info_about_container.addView(getAboutContainer(activity.getString(R.string.person_rank), Static.capitalizeFirstLetter(rank)));
                         }
                         if (!post.isEmpty()) {
-                            info_about_container.addView(getAboutContainer(getString(R.string.person_post), Static.capitalizeFirstLetter(post)));
+                            info_about_container.addView(getAboutContainer(activity.getString(R.string.person_post), Static.capitalizeFirstLetter(post)));
                         }
                         if (!bio.isEmpty()) {
-                            info_about_container.addView(getAboutContainer(getString(R.string.person_bio), bio));
+                            info_about_container.addView(getAboutContainer(activity.getString(R.string.person_bio), bio));
                         }
                     }
                     // работаем со свайпом

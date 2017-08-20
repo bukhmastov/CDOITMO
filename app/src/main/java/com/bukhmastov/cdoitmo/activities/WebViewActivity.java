@@ -54,7 +54,7 @@ public class WebViewActivity extends AppCompatActivity {
         if (actionBar != null) {
             actionBar.setHomeButtonEnabled(true);
             actionBar.setDisplayHomeAsUpEnabled(true);
-            actionBar.setTitle(title == null ? getString(R.string.web_browser) : title);
+            actionBar.setTitle(title == null ? activity.getString(R.string.web_browser) : title);
         }
         // инициализируем
         webview = (WebView) findViewById(R.id.webview);

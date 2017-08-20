@@ -245,7 +245,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                             ((NavigationView) findViewById(R.id.nav_view)).setCheckedItem(section);
                             selectedSection = section;
                         } else {
-                            Static.snackBar(self, getString(R.string.failed_to_open_fragment), getString(R.string.redo), new View.OnClickListener() {
+                            Static.snackBar(self, self.getString(R.string.failed_to_open_fragment), self.getString(R.string.redo), new View.OnClickListener() {
                                 @Override
                                 public void onClick(View view) {
                                     selectSection(section);

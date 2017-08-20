@@ -22,7 +22,7 @@ import org.json.JSONObject;
 
 import java.util.Objects;
 
-public class ScheduleExamsBuilder extends Thread {
+public class ScheduleExamsBuilder implements Runnable {
 
     private static final String TAG = "ScheduleExamsBuilder";
     public interface response {

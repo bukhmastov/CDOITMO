@@ -44,7 +44,7 @@ public class AboutActivity extends ConnectedActivity {
 
         TextView app_version = (TextView) findViewById(R.id.app_version);
         if (app_version != null) {
-            app_version.setText(getString(R.string.version) + " " + Static.versionName + " (" + getString(R.string.build) + " " + Static.versionCode + ")");
+            app_version.setText(activity.getString(R.string.version) + " " + Static.versionName + " (" + activity.getString(R.string.build) + " " + Static.versionCode + ")");
         }
 
         View block_pika = findViewById(R.id.block_pika);
@@ -77,9 +77,9 @@ public class AboutActivity extends ConnectedActivity {
                         Intent emailIntent = new Intent(Intent.ACTION_SEND);
                         emailIntent.setType("message/rfc822");
                         emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{"bukhmastov-alex@ya.ru"});
-                        startActivity(Intent.createChooser(emailIntent, getString(R.string.send_mail) + "..."));
+                        startActivity(Intent.createChooser(emailIntent, activity.getString(R.string.send_mail) + "..."));
                     } catch (Exception e) {
-                        Static.snackBar(activity, getString(R.string.something_went_wrong));
+                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 }
             });
@@ -94,7 +94,7 @@ public class AboutActivity extends ConnectedActivity {
                     try {
                         startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://vk.com/write9780714")));
                     } catch (Exception e) {
-                        Static.snackBar(activity, getString(R.string.something_went_wrong));
+                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 }
             });
@@ -110,7 +110,7 @@ public class AboutActivity extends ConnectedActivity {
                     try {
                         startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.bukhmastov.cdoitmo")));
                     } catch (Exception e) {
-                        Static.snackBar(activity, getString(R.string.something_went_wrong));
+                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 }
             });
@@ -126,7 +126,7 @@ public class AboutActivity extends ConnectedActivity {
                     try {
                         startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://yasobe.ru/na/cdoifmo")));
                     } catch (Exception e) {
-                        Static.snackBar(activity, getString(R.string.something_went_wrong));
+                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 }
             });

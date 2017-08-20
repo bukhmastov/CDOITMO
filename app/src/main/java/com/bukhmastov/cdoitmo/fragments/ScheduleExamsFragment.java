@@ -312,7 +312,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
                             }
                             // отображаем расписание
                             final ViewGroup linearLayout = (ViewGroup) activity.findViewById(R.id.schedule_exams_content);
-                            (new ScheduleExamsBuilder(activity, new ScheduleExamsBuilder.response(){
+                            Static.T.runThread(new ScheduleExamsBuilder(activity, new ScheduleExamsBuilder.response(){
                                 public void state(final int state, final View layout){
                                     try {
                                         Static.T.runOnUiThread(new Runnable() {
@@ -333,7 +333,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
                                         onFailure(ScheduleExams.FAILED_LOAD);
                                     }
                                 }
-                            })).start();
+                            }));
                         } else {
                             notFound();
                         }

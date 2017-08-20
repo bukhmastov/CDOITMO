@@ -512,7 +512,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                         for (int i = 0; i < jsonArray.length(); i++) {
                             JSONObject jsonObject = jsonArray.getJSONObject(i);
                             HashMap<String, String> hashMap = new HashMap<>();
-                            hashMap.put("name", jsonObject.getString("faculty") + " — " + jsonObject.getInt("course") + " " + getString(R.string.course));
+                            hashMap.put("name", jsonObject.getString("faculty") + " — " + jsonObject.getInt("course") + " " + activity.getString(R.string.course));
                             hashMap.put("position", jsonObject.getString("position"));
                             hashMap.put("faculty", jsonObject.getString("faculty"));
                             hashMap.put("course", String.valueOf(jsonObject.getInt("course")));

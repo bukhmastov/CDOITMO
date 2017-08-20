@@ -103,8 +103,8 @@ public class TrackingProtocolJobService extends JobService {
                 Log.v(TAG, "w8andRequest");
                 try {
                     Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                } catch (InterruptedException ignore) {
+                    // just ignore
                 }
                 request();
             }

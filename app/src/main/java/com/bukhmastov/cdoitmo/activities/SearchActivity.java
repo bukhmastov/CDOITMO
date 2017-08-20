@@ -32,7 +32,7 @@ import java.util.Locale;
 public abstract class SearchActivity extends AppCompatActivity {
 
     private static final String TAG = "SearchActivity";
-    private SearchActivity self = this;
+    protected SearchActivity self = this;
     private static final int REQ_CODE_SPEECH_INPUT = 1337;
     private enum EXTRA_ACTION_MODE {Speech_recognition, Clear, None}
     private EditText search_edit_text;

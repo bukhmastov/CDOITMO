@@ -47,6 +47,7 @@ import java.util.Objects;
 public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity implements ScheduleLessons.response {
 
     private static final String TAG = "SLWidgetConfigureActivity";
+    private Activity activity = this;
     private ScheduleLessonsWidgetConfigureActivity self = this;
     public int mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
     public static RequestHandle widgetRequestHandle = null;
@@ -172,12 +173,11 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
             });
         }
         updateTimeSummary();
-        final Activity activity = this;
         findViewById(R.id.add_button).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Log.v(TAG, "add_button clicked");
                 if (query == null) {
-                    Static.snackBar(activity, getString(R.string.need_to_pick_schedule));
+                    Static.snackBar(activity, activity.getString(R.string.need_to_pick_schedule));
                 } else {
                     try {
                         JSONObject jsonObject = new JSONObject();
@@ -198,7 +198,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
                     } catch (Exception e) {
                         Log.w(TAG, "failed to create widget");
                         Static.error(e);
-                        Static.snackBar(activity, getString(R.string.failed_to_create_widget));
+                        Static.snackBar(activity, activity.getString(R.string.failed_to_create_widget));
                     }
                 }
             }
@@ -220,7 +220,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
     public void onProgress(int state) {
         Log.v(TAG, "progress " + state);
         switch (state) {
-            case IfmoRestClient.STATE_HANDLING: loading(getString(R.string.loading)); break;
+            case IfmoRestClient.STATE_HANDLING: loading(activity.getString(R.string.loading)); break;
         }
     }
 
@@ -231,7 +231,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
             case IfmoRestClient.FAILED_OFFLINE:
             case IfmoRestClient.FAILED_TRY_AGAIN:
             case ScheduleLessons.FAILED_LOAD:
-                Static.toast(this, getString(R.string.widget_creation_failed));
+                Static.toast(this, activity.getString(R.string.widget_creation_failed));
                 close(RESULT_CANCELED, null);
                 break;
         }
@@ -253,7 +253,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
                                 JSONObject teacher = teachers.getJSONObject(0);
                                 query = teacher.getString("pid");
                                 Log.v(TAG, "found query=" + query);
-                                found(getString(R.string.schedule_teacher_set) + " \"" + teacher.getString("person") + " (" + teacher.getString("post") + ")" + "\"");
+                                found(activity.getString(R.string.schedule_teacher_set) + " \"" + teacher.getString("person") + " (" + teacher.getString("post") + ")" + "\"");
                             } else {
                                 FrameLayout slw_container = (FrameLayout) findViewById(R.id.slw_container);
                                 if (slw_container == null) throw new NullPointerException("slw_container cannot be null");
@@ -274,7 +274,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
                                         HashMap<String, String> teacherMap = teachersMap.get(position);
                                         query = teacherMap.get("pid");
                                         Log.v(TAG, "found query=" + query);
-                                        found(getString(R.string.schedule_teacher_set) + " \"" + teacherMap.get("person") + " (" + teacherMap.get("post") + ")" + "\"");
+                                        found(activity.getString(R.string.schedule_teacher_set) + " \"" + teacherMap.get("person") + " (" + teacherMap.get("post") + ")" + "\"");
                                     }
                                 });
                                 slw_container.removeAllViews();
@@ -282,7 +282,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
                             }
                         } else {
                             query = null;
-                            found(getString(R.string.schedule_not_found));
+                            found(activity.getString(R.string.schedule_not_found));
                         }
                     } else {
                         Log.v(TAG, "type=" + json.getString("type"));
@@ -291,26 +291,26 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
                             switch (json.getString("type")) {
                                 case "group":
                                     Log.v(TAG, "found query=" + query);
-                                    found(getString(R.string.schedule_group_set) + " \"" + json.getString("label") + "\"");
+                                    found(activity.getString(R.string.schedule_group_set) + " \"" + json.getString("label") + "\"");
                                     break;
                                 case "room":
                                     Log.v(TAG, "found query=" + query);
-                                    found(getString(R.string.schedule_room_set) + " \"" + json.getString("label") + "\"");
+                                    found(activity.getString(R.string.schedule_room_set) + " \"" + json.getString("label") + "\"");
                                     break;
                                 default:
                                     query = null;
-                                    found(getString(R.string.schedule_not_found));
+                                    found(activity.getString(R.string.schedule_not_found));
                                     break;
                             }
                         } else {
                             query = null;
-                            found(getString(R.string.schedule_not_found));
+                            found(activity.getString(R.string.schedule_not_found));
                         }
                     }
                 } catch (Exception e){
                     Log.w(TAG, "failed to find schedule");
                     query = null;
-                    found(getString(R.string.schedule_not_found));
+                    found(activity.getString(R.string.schedule_not_found));
                 }
             }
         });
@@ -402,12 +402,12 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
                 if (slw_update_time_summary != null) {
                     String summary;
                     switch (updateTime){
-                        case 0: summary = getString(R.string.manually); break;
-                        case 12: summary = getString(R.string.once_per_12_hours); break;
-                        case 24: summary = getString(R.string.once_per_1_day); break;
-                        case 168: summary = getString(R.string.once_per_1_week); break;
-                        case 672: summary = getString(R.string.once_per_4_weeks); break;
-                        default: summary = getString(R.string.unknown); break;
+                        case 0: summary = activity.getString(R.string.manually); break;
+                        case 12: summary = activity.getString(R.string.once_per_12_hours); break;
+                        case 24: summary = activity.getString(R.string.once_per_1_day); break;
+                        case 168: summary = activity.getString(R.string.once_per_1_week); break;
+                        case 672: summary = activity.getString(R.string.once_per_4_weeks); break;
+                        default: summary = activity.getString(R.string.unknown); break;
                     }
                     slw_update_time_summary.setText(summary);
                 }

@@ -194,7 +194,7 @@ public class ScheduleLessonsTabFragment extends Fragment {
                     }
                     // отображаем расписание
                     final ViewGroup schedule_lessons_content = (ViewGroup) container.findViewById(R.id.schedule_lessons_content);
-                    (new ScheduleLessonsBuilder(activity, TYPE, new ScheduleLessonsBuilder.response(){
+                    Static.T.runThread(new ScheduleLessonsBuilder(activity, TYPE, new ScheduleLessonsBuilder.response(){
                         public void state(final int state, final View layout) {
                             try {
                                 Static.T.runOnUiThread(new Runnable() {
@@ -276,7 +276,7 @@ public class ScheduleLessonsTabFragment extends Fragment {
                                 failed();
                             }
                         }
-                    })).start();
+                    }));
                 } catch (Exception e){
                     Static.error(e);
                     failed();

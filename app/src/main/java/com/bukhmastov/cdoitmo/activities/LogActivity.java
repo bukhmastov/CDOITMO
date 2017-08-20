@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.activities;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -26,6 +27,7 @@ import java.io.FileWriter;
 public class LogActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "LogActivity";
+    private Activity activity = this;
     private Log.ExtraLog extraLog = null;
 
     @Override
@@ -74,7 +76,7 @@ public class LogActivity extends AppCompatActivity implements SwipeRefreshLayout
                         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                         intent.setType(getContentResolver().getType(tempUri));
                         intent.putExtra(Intent.EXTRA_STREAM, tempUri);
-                        startActivity(Intent.createChooser(intent, getString(R.string.share) + "..."));
+                        startActivity(Intent.createChooser(intent, activity.getString(R.string.share) + "..."));
                     }
                 }
                 return true;
@@ -89,7 +91,7 @@ public class LogActivity extends AppCompatActivity implements SwipeRefreshLayout
                         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                         intent.setType(getContentResolver().getType(tempUri));
                         intent.putExtra(Intent.EXTRA_STREAM, tempUri);
-                        startActivity(Intent.createChooser(intent, getString(R.string.send_mail) + "..."));
+                        startActivity(Intent.createChooser(intent, activity.getString(R.string.send_mail) + "..."));
                     }
                 }
                 return true;
@@ -119,7 +121,7 @@ public class LogActivity extends AppCompatActivity implements SwipeRefreshLayout
             return temp;
         } catch (Exception e) {
             Static.error(e);
-            Static.toast(this, getString(R.string.something_went_wrong));
+            Static.toast(this, activity.getString(R.string.something_went_wrong));
             return null;
         }
     }
@@ -147,7 +149,7 @@ public class LogActivity extends AppCompatActivity implements SwipeRefreshLayout
                     }
                 } catch (Exception e) {
                     Static.error(e);
-                    Static.toast(self, getString(R.string.something_went_wrong));
+                    Static.toast(self, activity.getString(R.string.something_went_wrong));
                 }
             }
         });

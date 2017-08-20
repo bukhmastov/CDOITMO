@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.activities;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -28,6 +29,7 @@ import java.util.ArrayList;
 public class DaysRemainingWidgetActivity extends AppCompatActivity implements ScheduleExams.response, DaysRemainingWidget.response {
 
     private static final String TAG = "DRWidgetActivity";
+    private Activity activity = this;
     private DaysRemainingWidget daysRemainingWidget = null;
     private ScheduleExams scheduleExams = null;
     private String query = null;
@@ -127,7 +129,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
     @Override
     public void onProgress(int state) {
         Log.v(TAG, "progress " + state);
-        message(getString(R.string.loading));
+        message(activity.getString(R.string.loading));
     }
 
     @Override
@@ -137,11 +139,11 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
             switch (state) {
                 case IfmoClient.FAILED_OFFLINE:
                 case ScheduleExams.FAILED_OFFLINE:
-                    message(getString(R.string.no_connection));
+                    message(activity.getString(R.string.no_connection));
                     break;
                 case IfmoClient.FAILED_TRY_AGAIN:
                 case ScheduleExams.FAILED_LOAD:
-                    message(getString(R.string.load_failed));
+                    message(activity.getString(R.string.load_failed));
                     break;
             }
         } catch (Exception e){
@@ -176,7 +178,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
     @Override
     public void onAction(ArrayList<DaysRemainingWidget.Data> data) {
         if (data.size() == 0) {
-            message(getString(R.string.exams_gone));
+            message(activity.getString(R.string.exams_gone));
         } else {
             if (is_message_displaying) {
                 draw(R.layout.layout_days_remaining_widget);
@@ -195,7 +197,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
     @Override
     public void onCancelled() {
         Log.v(TAG, "onCancelled");
-        message(getString(R.string.widget_stopped));
+        message(activity.getString(R.string.widget_stopped));
     }
 
     private void begin() {
@@ -204,7 +206,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
             @Override
             public void run() {
                 Log.v(TAG, "begin");
-                message(getString(R.string.loaded));
+                message(activity.getString(R.string.loaded));
                 if (daysRemainingWidget != null) {
                     daysRemainingWidget.stop();
                     daysRemainingWidget = null;

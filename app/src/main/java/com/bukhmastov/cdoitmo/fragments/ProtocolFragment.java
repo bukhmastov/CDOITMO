@@ -534,12 +534,12 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                         final ArrayList<String> spinner_weeks_arr = new ArrayList<>();
                         final ArrayList<Integer> spinner_weeks_arr_values = new ArrayList<>();
                         for (int i = 1; i <= 4; i++) {
-                            String value = getString(R.string.for_the) + " ";
+                            String value = activity.getString(R.string.for_the) + " ";
                             switch (i){
-                                case 1: value += getString(R.string.last_week); break;
-                                case 2: value += getString(R.string.last_2_weeks); break;
-                                case 3: value += getString(R.string.last_3_weeks); break;
-                                case 4: value += getString(R.string.last_4_weeks); break;
+                                case 1: value += activity.getString(R.string.last_week); break;
+                                case 2: value += activity.getString(R.string.last_2_weeks); break;
+                                case 3: value += activity.getString(R.string.last_3_weeks); break;
+                                case 4: value += activity.getString(R.string.last_4_weeks); break;
                             }
                             spinner_weeks_arr.add(value);
                             spinner_weeks_arr_values.add(i);

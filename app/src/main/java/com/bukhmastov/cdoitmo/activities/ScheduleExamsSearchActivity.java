@@ -31,7 +31,7 @@ public class ScheduleExamsSearchActivity extends SearchActivity {
     @Override
     String getHint() {
         Log.v(TAG, "getHint");
-        return getString(R.string.schedule_exams_search_view_hint);
+        return self.getString(R.string.schedule_exams_search_view_hint);
     }
 
     @Override

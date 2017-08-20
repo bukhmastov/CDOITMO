@@ -57,7 +57,7 @@ public class LoginActivity extends AppCompatActivity {
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar_login));
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
-            actionBar.setTitle(getString(R.string.title_activity_login));
+            actionBar.setTitle(self.getString(R.string.title_activity_login));
             actionBar.setLogo(obtainStyledAttributes(new int[] { R.attr.ic_security }).getDrawable(0));
         }
         if (LoginActivity.auto_logout) {
@@ -144,7 +144,7 @@ public class LoginActivity extends AppCompatActivity {
                         Storage.file.perm.delete(self, "user#jsessionid");
                         Static.logoutCurrent(self);
                         Static.authorized = false;
-                        Static.snackBar(self, getString(R.string.required_login_password));
+                        Static.snackBar(self, self.getString(R.string.required_login_password));
                         show();
                         break;
                     }
@@ -154,7 +154,7 @@ public class LoginActivity extends AppCompatActivity {
                         Storage.file.perm.delete(self, "user#password");
                         Static.logoutCurrent(self);
                         Static.authorized = false;
-                        Static.snackBar(self, getString(R.string.invalid_login_password));
+                        Static.snackBar(self, self.getString(R.string.invalid_login_password));
                         show();
                         break;
                     }
@@ -207,13 +207,13 @@ public class LoginActivity extends AppCompatActivity {
                                 new AlertDialog.Builder(self)
                                         .setTitle(R.string.auth_help_0)
                                         .setMessage(
-                                                getString(R.string.auth_help_1) +
+                                                self.getString(R.string.auth_help_1) +
                                                 "\n" +
-                                                getString(R.string.auth_help_2) +
+                                                self.getString(R.string.auth_help_2) +
                                                 "\n\n" +
-                                                getString(R.string.auth_help_3) +
+                                                self.getString(R.string.auth_help_3) +
                                                 "\n\n" +
-                                                getString(R.string.auth_help_4)
+                                                self.getString(R.string.auth_help_4)
                                         )
                                         .setIcon(R.drawable.ic_help)
                                         .setNegativeButton(R.string.close, null)
@@ -240,7 +240,7 @@ public class LoginActivity extends AppCompatActivity {
                                 }
                                 switch (role) {
                                     case "student": {
-                                        desc += desc.isEmpty() ? getString(R.string.student) : " (" + getString(R.string.student) + ")";
+                                        desc += desc.isEmpty() ? self.getString(R.string.student) : " (" + self.getString(R.string.student) + ")";
                                         break;
                                     }
                                     default: {
@@ -286,7 +286,7 @@ public class LoginActivity extends AppCompatActivity {
                     }
                 } catch (Exception e) {
                     Static.error(e);
-                    Static.snackBar(self, getString(R.string.something_went_wrong));
+                    Static.snackBar(self, self.getString(R.string.something_went_wrong));
                 }
             }
         });
@@ -299,7 +299,7 @@ public class LoginActivity extends AppCompatActivity {
                 if (!login.isEmpty() && !password.isEmpty()) {
                     if (Objects.equals(login, "general")) {
                         Log.w(TAG, "auth | got login=general that does not supported");
-                        Static.snackBar(self, getString(R.string.wrong_login_general));
+                        Static.snackBar(self, self.getString(R.string.wrong_login_general));
                         return;
                     }
                     Storage.file.general.put(self, "users#current_login", login);
@@ -356,16 +356,16 @@ public class LoginActivity extends AppCompatActivity {
                                             break;
                                         case DeIfmoClient.FAILED_TRY_AGAIN:
                                         case DeIfmoClient.FAILED_AUTH_TRY_AGAIN:
-                                            Static.snackBar(self, getString(R.string.auth_failed));
+                                            Static.snackBar(self, self.getString(R.string.auth_failed));
                                             route(SIGNAL_CHANGE_ACCOUNT);
                                             break;
                                         case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
-                                            Static.snackBar(self, getString(R.string.required_login_password));
+                                            Static.snackBar(self, self.getString(R.string.required_login_password));
                                             logoutDone(login, false);
                                             route(SIGNAL_CHANGE_ACCOUNT);
                                             break;
                                         case DeIfmoClient.FAILED_AUTH_CREDENTIALS_FAILED:
-                                            Static.snackBar(self, getString(R.string.invalid_login_password));
+                                            Static.snackBar(self, self.getString(R.string.invalid_login_password));
                                             logoutDone(login, false);
                                             route(SIGNAL_CHANGE_ACCOUNT);
                                             break;
@@ -380,7 +380,7 @@ public class LoginActivity extends AppCompatActivity {
                     });
                 } else {
                     Log.v(TAG, "auth | empty fields");
-                    Static.snackBar(self, getString(R.string.fill_fields));
+                    Static.snackBar(self, self.getString(R.string.fill_fields));
                 }
             }
         });
@@ -402,7 +402,7 @@ public class LoginActivity extends AppCompatActivity {
                     finish();
                 } else {
                     Log.w(TAG, "authorized | current_login is empty");
-                    Static.snackBar(self, getString(R.string.something_went_wrong));
+                    Static.snackBar(self, self.getString(R.string.something_went_wrong));
                     show();
                 }
             }
@@ -433,7 +433,7 @@ public class LoginActivity extends AppCompatActivity {
                                 }
                                 TextView loading_message = (TextView) findViewById(R.id.loading_message);
                                 if (loading_message != null) {
-                                    loading_message.setText(getString(R.string.exiting) + "\n" + Storage.file.perm.get(getBaseContext(), "user#name"));
+                                    loading_message.setText(self.getString(R.string.exiting) + "\n" + Storage.file.perm.get(getBaseContext(), "user#name"));
                                 }
                             }
                         });
@@ -457,7 +457,7 @@ public class LoginActivity extends AppCompatActivity {
                 accounts.remove(self, login);
                 Storage.file.general.put(self, "users#current_login", login);
                 Static.logout(self);
-                if (showSnackBar) Static.snackBar(self, getString(R.string.logged_out));
+                if (showSnackBar) Static.snackBar(self, self.getString(R.string.logged_out));
                 show();
             }
         });

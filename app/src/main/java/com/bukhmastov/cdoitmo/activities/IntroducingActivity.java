@@ -2,6 +2,7 @@ package com.bukhmastov.cdoitmo.activities;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 public class IntroducingActivity extends ConnectedActivity {
 
     private static final String TAG = "IntroducingActivity";
+    private Activity activity = this;
     private ArrayList<Screen> screens = new ArrayList<>();
     private int position = -1;
     private String colorIndicatorActive = "#FFFFFFFF";
@@ -38,8 +40,8 @@ public class IntroducingActivity extends ConnectedActivity {
         public String colorBackground;
         public String colorAccent;
         public Screen(@StringRes int title, @StringRes int desc, @DrawableRes int image, String colorBackground, String colorAccent) {
-            this.title = getString(title);
-            this.desc = getString(desc);
+            this.title = activity.getString(title);
+            this.desc = activity.getString(desc);
             this.image = image;
             this.colorBackground = colorBackground;
             this.colorAccent = colorAccent;

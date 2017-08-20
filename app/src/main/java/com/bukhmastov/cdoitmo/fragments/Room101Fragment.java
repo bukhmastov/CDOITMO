@@ -691,10 +691,10 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                     if (room101_last != null) room101_last.setText(viewRequest.getString("left"));
                     if (room101_penalty != null) room101_penalty.setText(viewRequest.getString("penalty"));
                     final LinearLayout room101_review_container = (LinearLayout) activity.findViewById(R.id.room101_review_container);
-                    (new Room101ReviewBuilder(activity, self, viewRequest.getJSONArray("sessions"), new Room101ReviewBuilder.response(){
+                    Static.T.runThread(new Room101ReviewBuilder(activity, self, viewRequest.getJSONArray("sessions"), new Room101ReviewBuilder.response(){
                         public void state(final int state, final View layout){
                             try {
-                                activity.runOnUiThread(new Runnable() {
+                                Static.T.runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
                                         if (room101_review_container != null) {
@@ -712,7 +712,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                                 loadFailed();
                             }
                         }
-                    })).start();
+                    }));
                     // работаем со свайпом
                     SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) activity.findViewById(R.id.room101_review_swipe);
                     if (mSwipeRefreshLayout != null) {

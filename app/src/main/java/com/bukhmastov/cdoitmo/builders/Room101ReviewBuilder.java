@@ -19,7 +19,7 @@ import org.json.JSONObject;
 
 import java.util.Objects;
 
-public class Room101ReviewBuilder extends Thread {
+public class Room101ReviewBuilder implements Runnable {
 
     private static final String TAG = "Room101ReviewBuilder";
 

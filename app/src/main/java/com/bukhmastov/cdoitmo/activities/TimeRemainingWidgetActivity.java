@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.activities;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -25,6 +26,7 @@ import org.json.JSONObject;
 public class TimeRemainingWidgetActivity extends AppCompatActivity implements ScheduleLessons.response, TimeRemainingWidget.response {
 
     private static final String TAG = "TRWidgetActivity";
+    private Activity activity = this;
     private TimeRemainingWidget timeRemainingWidget = null;
     private ScheduleLessons scheduleLessons = null;
     private String query = null;
@@ -121,7 +123,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
     @Override
     public void onProgress(int state) {
         Log.v(TAG, "progress " + state);
-        message(getString(R.string.loading));
+        message(activity.getString(R.string.loading));
     }
 
     @Override
@@ -131,11 +133,11 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
             switch (state) {
                 case IfmoRestClient.FAILED_OFFLINE:
                 case ScheduleLessons.FAILED_OFFLINE:
-                    message(getString(R.string.no_connection));
+                    message(activity.getString(R.string.no_connection));
                     break;
                 case IfmoRestClient.FAILED_TRY_AGAIN:
                 case ScheduleLessons.FAILED_LOAD:
-                    message(getString(R.string.load_failed));
+                    message(activity.getString(R.string.load_failed));
                     break;
             }
         } catch (Exception e){
@@ -171,25 +173,25 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
     @Override
     public void onAction(TimeRemainingWidget.Data data) {
         if (data.current == null && data.next == null && data.day == null) {
-            message(getString(R.string.lessons_gone));
+            message(activity.getString(R.string.lessons_gone));
         } else {
             if (is_message_displaying) {
                 draw(R.layout.layout_time_remaining_widget);
                 is_message_displaying = false;
             }
             if (data.current != null) {
-                setText(R.id.lesson_title, getString(R.string.current_lesson));
+                setText(R.id.lesson_title, activity.getString(R.string.current_lesson));
                 setText(R.id.lesson_remaining, data.current);
             } else {
-                setText(R.id.lesson_title, getString(R.string.next_lesson));
+                setText(R.id.lesson_title, activity.getString(R.string.next_lesson));
                 if (data.next == null) {
-                    setText(R.id.day_remaining, getString(R.string.unknown));
+                    setText(R.id.day_remaining, activity.getString(R.string.unknown));
                 } else {
                     setText(R.id.lesson_remaining, data.next);
                 }
             }
             if (data.day == null) {
-                setText(R.id.day_remaining, getString(R.string.unknown));
+                setText(R.id.day_remaining, activity.getString(R.string.unknown));
             } else {
                 setText(R.id.day_remaining, data.day);
             }
@@ -199,7 +201,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
     @Override
     public void onCancelled() {
         Log.v(TAG, "onCancelled");
-        message(getString(R.string.widget_stopped));
+        message(activity.getString(R.string.widget_stopped));
     }
 
     private void begin() {
@@ -208,7 +210,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
             @Override
             public void run() {
                 Log.v(TAG, "begin");
-                message(getString(R.string.loaded));
+                message(activity.getString(R.string.loaded));
                 if (timeRemainingWidget != null) {
                     timeRemainingWidget.stop();
                     timeRemainingWidget = null;
