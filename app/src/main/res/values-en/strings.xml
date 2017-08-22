@@ -67,6 +67,7 @@
     <string name="action_1">change</string>
     <string name="action_2">changes</string>
     <string name="action_3">changes</string>
+    <string name="pref_light_theme">Light theme</string>
     <string name="pref_dark_theme">Dark theme</string>
     <string name="pref_dark_theme_summary">The application will be restarted</string>
     <string name="about">About</string>
@@ -367,5 +368,16 @@
     <string name="skip">Skip</string>
     <string name="rate_app">Rate app</string>
     <string name="goto_google_play">Go to Google Play</string>
+    <string name="need_to_choose_schedule">Необходимо выбрать расписание</string>
+    <string name="schedule_to_display">Расписание для показа</string>
+    <string name="theme">Тема оформления</string>
+    <string name="color_hex">Цвет в формате hex</string>
+    <string name="background_color">Цвет фона</string>
+    <string name="text_color">Цвет текста</string>
+    <string name="background_opacity">Прозрачность фона</string>
+    <string name="custom_theme">Настроить тему</string>
+    <string name="apply">Применить</string>
+    <string name="choose_color">Выберите цвет</string>
+    <!-- TODO translate this -->
 
 </resources>

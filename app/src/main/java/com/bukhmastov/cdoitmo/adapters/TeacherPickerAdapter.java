@@ -73,5 +73,4 @@ public class TeacherPickerAdapter extends ArrayAdapter<JSONObject> {
             return super.getView(position, convertView, parent);
         }
     }
-
 }

@@ -1,34 +1,34 @@
 package com.bukhmastov.cdoitmo.activities;
 
 import android.app.Activity;
+import android.app.WallpaperManager;
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.util.TypedValue;
-import android.view.Gravity;
-import android.view.KeyEvent;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.InflateException;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.CompoundButton;
+import android.widget.AutoCompleteTextView;
+import android.widget.Button;
 import android.widget.EditText;
-import android.widget.FrameLayout;
-import android.widget.LinearLayout;
-import android.widget.ListView;
-import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
-import android.widget.Switch;
+import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.adapters.TeacherPickerListView;
+import com.bukhmastov.cdoitmo.adapters.TeacherPickerAdapter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
 import com.bukhmastov.cdoitmo.utils.CtxWrapper;
 import com.bukhmastov.cdoitmo.utils.Log;
@@ -41,168 +41,69 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Objects;
 
-public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity implements ScheduleLessons.response {
+public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
 
     private static final String TAG = "SLWidgetConfigureActivity";
     private Activity activity = this;
-    private ScheduleLessonsWidgetConfigureActivity self = this;
-    public int mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
-    public static RequestHandle widgetRequestHandle = null;
-    public static ScheduleLessons scheduleLessons = null;
-    private String query = null;
-    private boolean darkTheme = false;
-    private int updateTime = 168;
-    private int textColorPrimary;
-    private float destiny;
-
-    public ScheduleLessonsWidgetConfigureActivity() {
-        super();
+    private int mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
+    private boolean isDarkTheme = false;
+    private RequestHandle widgetRequestHandle = null;
+    private static class Settings {
+        private static class Schedule {
+            private static String query = "";
+            private static String label = "";
+        }
+        private static class Theme {
+            private static String text = "#FFFFFF";
+            private static String background = "#000000";
+            private static int opacity = 150;
+        }
+        private static int updateTime = 168;
+    }
+    public static final class Default {
+        public static final class Schedule {
+            public static final String query = "";
+            public static final String label = "";
+        }
+        public static final class Theme {
+            public static final class Dark {
+                public static final String text = "#FFFFFF";
+                public static final String background = "#000000";
+                public static final int opacity = 150;
+            }
+            public static final class Light {
+                public static final String text = "#000000";
+                public static final String background = "#FFFFFF";
+                public static final int opacity = 150;
+            }
+        }
+        public static final int updateTime = 168;
     }
 
     @Override
     public void onCreate(Bundle icicle) {
+        isDarkTheme = Storage.pref.get(this, "pref_dark_theme", false);
+        if (isDarkTheme) setTheme(R.style.AppTheme_Dark);
         super.onCreate(icicle);
+        setContentView(R.layout.schedule_lessons_widget_configure);
         Log.i(TAG, "Activity created");
         FirebaseAnalyticsProvider.logCurrentScreen(this);
         setResult(RESULT_CANCELED);
-        boolean isDarkTheme = Storage.pref.get(this, "pref_dark_theme", false);
-        if (isDarkTheme) setTheme(R.style.AppTheme_Dark);
-        setContentView(R.layout.schedule_lessons_widget_configure);
         Intent intent = getIntent();
         Bundle extras = intent.getExtras();
-        if (extras != null) mAppWidgetId = extras.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
+        if (extras != null) {
+            mAppWidgetId = extras.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
+        }
         if (mAppWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
-            Log.w(TAG, "wrong AppWidgetId provided by intent's extra");
+            Log.w(TAG, "Wrong AppWidgetId provided by intent's extra");
             close(RESULT_CANCELED, null);
             return;
         }
-        setSupportActionBar((Toolbar) findViewById(R.id.toolbar_widget));
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setTitle(R.string.configure_schedule_widget);
-        }
-        scheduleLessons = new ScheduleLessons(this);
-        scheduleLessons.setHandler(this);
-        TypedValue typedValue = new TypedValue();
-        getTheme().resolveAttribute(android.R.attr.textColorPrimary, typedValue, true);
-        textColorPrimary = obtainStyledAttributes(typedValue.data, new int[]{android.R.attr.textColorPrimary}).getColor(0, -1);
-        destiny = getResources().getDisplayMetrics().density;
-        EditText slw_input = (EditText) findViewById(R.id.slw_input);
-        if (slw_input != null) {
-            slw_input.setOnKeyListener(new View.OnKeyListener() {
-                public boolean onKey(View v, int keyCode, KeyEvent event) {
-                    return event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER && setQuery();
-                }
-            });
-            String group = Storage.file.perm.get(this, "user#group");
-            if (!Objects.equals(group, "")) {
-                slw_input.setText(group);
-                setQuery();
-            }
-        }
-        final Switch slw_switch_theme = (Switch) findViewById(R.id.slw_switch_theme);
-        if (slw_switch_theme != null){
-            slw_switch_theme.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    Log.v(TAG, "switch_theme clicked | darkTheme=" + (isChecked ? "true" : "false"));
-                    darkTheme = isChecked;
-                }
-            });
-            slw_switch_theme.setChecked(isDarkTheme);
-        }
-        final RelativeLayout slw_theme = (RelativeLayout) findViewById(R.id.slw_theme);
-        if (slw_theme != null) {
-            slw_theme.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Log.v(TAG, "slw_theme clicked");
-                    if (slw_switch_theme != null){
-                        darkTheme = !slw_switch_theme.isChecked();
-                        slw_switch_theme.setChecked(darkTheme);
-                    } else {
-                        Log.w(TAG, "slw_switch_theme is null");
-                    }
-                }
-            });
-        }
-        LinearLayout slw_update_time = (LinearLayout) findViewById(R.id.slw_update_time);
-        if (slw_update_time != null) {
-            slw_update_time.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Log.v(TAG, "slw_update_time clicked");
-                    AlertDialog.Builder builder = new AlertDialog.Builder(ScheduleLessonsWidgetConfigureActivity.this);
-                    builder.setTitle(R.string.update_interval);
-                    int select = 0;
-                    switch (updateTime){
-                        case 0: select = 0; break;
-                        case 12: select = 1; break;
-                        case 24: select = 2; break;
-                        case 168: select = 3; break;
-                        case 672: select = 4; break;
-                    }
-                    builder.setSingleChoiceItems(R.array.pref_widget_refresh_titles, select, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            Log.v(TAG, "slw_update_time dialog selected " + which);
-                            switch (which){
-                                case 0: updateTime = 0; break;
-                                case 1: updateTime = 12; break;
-                                case 2: updateTime = 24; break;
-                                case 3: updateTime = 168; break;
-                                case 4: updateTime = 672; break;
-                            }
-                            updateTimeSummary();
-                            dialog.dismiss();
-                        }
-                    });
-                    builder.setCancelable(true);
-                    builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            Log.v(TAG, "slw_update_time dialog dismissed");
-                            dialog.dismiss();
-                        }
-                    });
-                    builder.create().show();
-                }
-            });
-        }
-        updateTimeSummary();
-        findViewById(R.id.add_button).setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Log.v(TAG, "add_button clicked");
-                if (query == null) {
-                    Static.snackBar(activity, activity.getString(R.string.need_to_pick_schedule));
-                } else {
-                    try {
-                        JSONObject jsonObject = new JSONObject();
-                        jsonObject.put("query", query);
-                        jsonObject.put("darkTheme", darkTheme);
-                        jsonObject.put("updateTime", updateTime);
-                        Context context = ScheduleLessonsWidgetConfigureActivity.this;
-                        savePref(context, mAppWidgetId, "settings", jsonObject.toString());
-                        ScheduleLessonsWidget.updateAppWidget(context, AppWidgetManager.getInstance(context), mAppWidgetId, false);
-                        Intent resultValue = new Intent();
-                        resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
-                        close(RESULT_OK, resultValue);
-                        FirebaseAnalyticsProvider.logEvent(
-                                context,
-                                FirebaseAnalyticsProvider.Event.WIDGET_INSTALL,
-                                FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.WIDGET_QUERY, query)
-                        );
-                    } catch (Exception e) {
-                        Log.w(TAG, "failed to create widget");
-                        Static.error(e);
-                        Static.snackBar(activity, activity.getString(R.string.failed_to_create_widget));
-                    }
-                }
-            }
-        });
+        Settings.Schedule.query = Default.Schedule.query;
+        Settings.Schedule.label = Default.Schedule.label;
+        init();
     }
 
     @Override
@@ -216,192 +117,742 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
         super.attachBaseContext(CtxWrapper.wrap(context));
     }
 
-    @Override
-    public void onProgress(int state) {
-        Log.v(TAG, "progress " + state);
-        switch (state) {
-            case IfmoRestClient.STATE_HANDLING: loading(activity.getString(R.string.loading)); break;
-        }
+    private void init() {
+        initPartPreview();
+        initPartSchedule();
+        initPartTheme();
+        initPartUpdate();
+        initFinishButton();
     }
-
-    @Override
-    public void onFailure(int state) {
-        Log.v(TAG, "failure " + state);
-        switch (state) {
-            case IfmoRestClient.FAILED_OFFLINE:
-            case IfmoRestClient.FAILED_TRY_AGAIN:
-            case ScheduleLessons.FAILED_LOAD:
-                Static.toast(this, activity.getString(R.string.widget_creation_failed));
-                close(RESULT_CANCELED, null);
-                break;
-        }
-    }
-
-    @Override
-    public void onSuccess(final JSONObject json) {
-        Static.T.runOnUiThread(new Runnable() {
+    private void initPartPreview() {
+        Log.v(TAG, "initPartPreview");
+        Static.T.runThread(new Runnable() {
             @Override
             public void run() {
-                Log.v(TAG, "success");
                 try {
-                    if (json == null) throw new NullPointerException("json cannot be null");
-                    if (Objects.equals(json.getString("type"), "teacher_picker")) {
-                        Log.v(TAG, "type=teacher_picker");
-                        JSONArray teachers = json.getJSONArray("list");
-                        if (teachers.length() > 0) {
-                            if (teachers.length() == 1) {
-                                JSONObject teacher = teachers.getJSONObject(0);
-                                query = teacher.getString("pid");
-                                Log.v(TAG, "found query=" + query);
-                                found(activity.getString(R.string.schedule_teacher_set) + " \"" + teacher.getString("person") + " (" + teacher.getString("post") + ")" + "\"");
-                            } else {
-                                FrameLayout slw_container = (FrameLayout) findViewById(R.id.slw_container);
-                                if (slw_container == null) throw new NullPointerException("slw_container cannot be null");
-                                ListView listView = new ListView(self);
-                                listView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
-                                final ArrayList<HashMap<String, String>> teachersMap = new ArrayList<>();
-                                for (int i = 0; i < teachers.length(); i++) {
-                                    JSONObject teacher = teachers.getJSONObject(i);
-                                    HashMap<String, String> teacherMap = new HashMap<>();
-                                    teacherMap.put("pid", String.valueOf(teacher.getInt("pid")));
-                                    teacherMap.put("person", teacher.getString("person"));
-                                    teacherMap.put("post", teacher.getString("post"));
-                                    teachersMap.add(teacherMap);
-                                }
-                                listView.setAdapter(new TeacherPickerListView(self, teachersMap));
-                                listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                                        HashMap<String, String> teacherMap = teachersMap.get(position);
-                                        query = teacherMap.get("pid");
-                                        Log.v(TAG, "found query=" + query);
-                                        found(activity.getString(R.string.schedule_teacher_set) + " \"" + teacherMap.get("person") + " (" + teacherMap.get("post") + ")" + "\"");
-                                    }
-                                });
-                                slw_container.removeAllViews();
-                                slw_container.addView(listView);
-                            }
-                        } else {
-                            query = null;
-                            found(activity.getString(R.string.schedule_not_found));
-                        }
-                    } else {
-                        Log.v(TAG, "type=" + json.getString("type"));
-                        if (json.getJSONArray("schedule").length() > 0) {
-                            query = json.getString("query");
-                            switch (json.getString("type")) {
-                                case "group":
-                                    Log.v(TAG, "found query=" + query);
-                                    found(activity.getString(R.string.schedule_group_set) + " \"" + json.getString("label") + "\"");
-                                    break;
-                                case "room":
-                                    Log.v(TAG, "found query=" + query);
-                                    found(activity.getString(R.string.schedule_room_set) + " \"" + json.getString("label") + "\"");
-                                    break;
-                                default:
-                                    query = null;
-                                    found(activity.getString(R.string.schedule_not_found));
-                                    break;
-                            }
-                        } else {
-                            query = null;
-                            found(activity.getString(R.string.schedule_not_found));
-                        }
+                    final WallpaperManager wallpaperManager = WallpaperManager.getInstance(activity);
+                    if (wallpaperManager == null) {
+                        throw new NullPointerException("WallpaperManager is null");
                     }
-                } catch (Exception e){
-                    Log.w(TAG, "failed to find schedule");
-                    query = null;
-                    found(activity.getString(R.string.schedule_not_found));
+                    final Drawable wallpaperDrawable = wallpaperManager.getDrawable();
+                    if (wallpaperDrawable == null) {
+                        throw new NullPointerException("WallpaperDrawable is null");
+                    }
+                    Static.T.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            ImageView part_preview_background = activity.findViewById(R.id.part_preview_background);
+                            part_preview_background.setImageDrawable(wallpaperDrawable);
+                        }
+                    });
+                } catch (Exception ignore) {
+                    // just ignore
+                }
+                Settings.Theme.background = isDarkTheme ? Default.Theme.Dark.background : Default.Theme.Light.background;
+                Settings.Theme.text       = isDarkTheme ? Default.Theme.Dark.text       : Default.Theme.Light.text;
+                updateDemo();
+            }
+        });
+    }
+    private void initPartSchedule() {
+        Log.v(TAG, "initPartSchedule");
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    ViewGroup part_schedule = activity.findViewById(R.id.part_schedule);
+                    part_schedule.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            if (Settings.Schedule.query.isEmpty()) {
+                                String group = Storage.file.perm.get(activity, "user#group");
+                                if (group.isEmpty()) {
+                                    activatePartSchedule();
+                                } else {
+                                    activatePartSchedule(group);
+                                }
+                            } else {
+                                activatePartSchedule(Settings.Schedule.query);
+                            }
+                        }
+                    });
+                    updateScheduleSummary();
+                } catch (Exception e) {
+                    Static.error(e);
+                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                }
+            }
+        });
+    }
+    private void initPartTheme() {
+        Log.v(TAG, "initPartTheme");
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    ViewGroup part_theme = activity.findViewById(R.id.part_theme);
+                    part_theme.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            activatePartTheme();
+                        }
+                    });
+                    updateThemeSummary();
+                } catch (Exception e) {
+                    Static.error(e);
+                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                }
+            }
+        });
+    }
+    private void initPartUpdate() {
+        Log.v(TAG, "initPartUpdate");
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    ViewGroup part_update = activity.findViewById(R.id.part_update);
+                    part_update.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            activatePartUpdate();
+                        }
+                    });
+                    updateUpdateSummary();
+                } catch (Exception e) {
+                    Static.error(e);
+                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                }
+            }
+        });
+    }
+    private void initFinishButton() {
+        Log.v(TAG, "initFinishButton");
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Button add_button = activity.findViewById(R.id.add_button);
+                    add_button.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            activateFinish();
+                        }
+                    });
+                } catch (Exception e) {
+                    Static.error(e);
+                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 }
             }
         });
     }
 
-    @Override
-    public void onNewHandle(RequestHandle requestHandle) {
-        widgetRequestHandle = requestHandle;
+    private void activatePartSchedule() {
+        activatePartSchedule(null);
     }
-
-    private boolean setQuery() {
-        Log.v(TAG, "setQuery");
-        EditText slw_input = (EditText) findViewById(R.id.slw_input);
-        if (slw_input != null) {
-            query = null;
-            String search = slw_input.getText().toString().trim();
-            if (!Objects.equals(search, "")) {
-                Log.v(TAG, "setQuery and search | " + search);
-                scheduleLessons.search(search);
-                slw_input.clearFocus();
-                return true;
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
-    }
-
-    private void loading(final String text) {
-        Static.T.runOnUiThread(new Runnable() {
+    private void activatePartSchedule(final String scope) {
+        Log.v(TAG, "activatePartSchedule | scope=" + scope);
+        Static.T.runThread(new Runnable() {
             @Override
             public void run() {
-                Log.v(TAG, "loading | " + text);
-                FrameLayout slw_container = (FrameLayout) findViewById(R.id.slw_container);
-                if (slw_container != null){
-                    LinearLayout linearLayout = new LinearLayout(self);
-                    linearLayout.setOrientation(LinearLayout.VERTICAL);
-                    linearLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                    linearLayout.setPadding((int) (16 * destiny), (int) (10 * destiny), (int) (16 * destiny), (int) (10 * destiny));
-                    ProgressBar progressBar = new ProgressBar(self);
-                    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                    lp.gravity = Gravity.CENTER;
-                    progressBar.setLayoutParams(lp);
-                    linearLayout.addView(progressBar);
-                    TextView textView = new TextView(self);
-                    textView.setText(text);
-                    textView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                    textView.setTextColor(textColorPrimary);
-                    textView.setGravity(Gravity.CENTER);
-                    textView.setPadding(0, (int) (10 * destiny), 0, (int) (10 * destiny));
-                    linearLayout.addView(textView);
-                    slw_container.removeAllViews();
-                    slw_container.addView(linearLayout);
+                try {
+                    final ViewGroup layout = (ViewGroup) inflate(R.layout.layout_widget_schedule_lessons_create_search);
+                    final AlertDialog alertDialog = new AlertDialog.Builder(activity)
+                            .setView(layout)
+                            .setNegativeButton(R.string.do_cancel, null)
+                            .create();
+                    final AutoCompleteTextView search_text_view = layout.findViewById(R.id.search_text_view);
+                    final ViewGroup search_action = layout.findViewById(R.id.search_action);
+                    final ViewGroup search_loading = layout.findViewById(R.id.search_loading);
+                    final TeacherPickerAdapter teacherPickerAdapter = new TeacherPickerAdapter(activity, new ArrayList<JSONObject>());
+                    if (scope != null) {
+                        search_text_view.setText(scope);
+                    }
+                    teacherPickerAdapter.setNotifyOnChange(true);
+                    search_text_view.setAdapter(teacherPickerAdapter);
+                    search_text_view.addTextChangedListener(new TextWatcher() {
+                        @Override
+                        public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+                        @Override
+                        public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+                        @Override
+                        public void afterTextChanged(Editable editable) {
+                            Static.T.runThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    teacherPickerAdapter.clear();
+                                    search_text_view.dismissDropDown();
+                                }
+                            });
+                        }
+                    });
+                    search_action.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            Static.T.runThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    final String query = search_text_view.getText().toString().trim();
+                                    Log.v(TAG, "activatePartSchedule | search action | clicked | query=" + query);
+                                    if (!query.isEmpty()) {
+                                        if (widgetRequestHandle != null) {
+                                            widgetRequestHandle.cancel(true);
+                                        }
+                                        ScheduleLessons scheduleLessons = new ScheduleLessons(activity);
+                                        scheduleLessons.setHandler(new ScheduleLessons.response() {
+                                            @Override
+                                            public void onNewHandle(RequestHandle requestHandle) {
+                                                widgetRequestHandle = requestHandle;
+                                            }
+                                            @Override
+                                            public void onProgress(final int state) {
+                                                Log.v(TAG, "activatePartSchedule | search action | onProgress | state=" + state);
+                                                Static.T.runThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        search_loading.setVisibility(View.VISIBLE);
+                                                        search_action.setVisibility(View.GONE);
+                                                    }
+                                                });
+                                            }
+                                            @Override
+                                            public void onFailure(final int state) {
+                                                Log.v(TAG, "activatePartSchedule | search action | onFailure | state=" + state);
+                                                Static.T.runThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        search_loading.setVisibility(View.GONE);
+                                                        search_action.setVisibility(View.VISIBLE);
+                                                        Static.snackBar(activity, activity.getString(R.string.schedule_not_found));
+                                                    }
+                                                });
+                                            }
+                                            @Override
+                                            public void onSuccess(final JSONObject json) {
+                                                Log.v(TAG, "activatePartSchedule | search action | onSuccess | json=" + (json == null ? "null" : "notnull"));
+                                                Static.T.runThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        search_loading.setVisibility(View.GONE);
+                                                        search_action.setVisibility(View.VISIBLE);
+                                                        if (json == null) {
+                                                            Static.snackBar(activity, activity.getString(R.string.schedule_not_found));
+                                                        } else {
+                                                            try {
+                                                                String type = json.getString("type");
+                                                                String query = json.getString("query");
+                                                                Log.v(TAG, "activatePartSchedule | search action | onSuccess | type=" + type);
+                                                                switch (type) {
+                                                                    case "group": case "room": case "teacher": {
+                                                                        String label = json.getString("label");
+                                                                        Settings.Schedule.query = query;
+                                                                        switch (type) {
+                                                                            case "group": case "teacher": {
+                                                                                Settings.Schedule.label = label;
+                                                                                break;
+                                                                            }
+                                                                            case "room": {
+                                                                                Settings.Schedule.label = activity.getString(R.string.room) + " " + label;
+                                                                                break;
+                                                                            }
+                                                                        }
+                                                                        Log.v(TAG, "activatePartSchedule | search action | onSuccess | done | query=" + Settings.Schedule.query + " | label=" + Settings.Schedule.label);
+                                                                        if (alertDialog != null && alertDialog.isShowing()) {
+                                                                            alertDialog.cancel();
+                                                                        }
+                                                                        updateScheduleSummary();
+                                                                        break;
+                                                                    }
+                                                                    case "teacher_picker": {
+                                                                        teacherPickerAdapter.clear();
+                                                                        JSONArray list = json.getJSONArray("list");
+                                                                        Log.v(TAG, "activatePartSchedule | search action | onSuccess | type=" + type + " | length=" + list.length());
+                                                                        if (list.length() == 1) {
+                                                                            JSONObject item = list.getJSONObject(0);
+                                                                            if (item != null) {
+                                                                                Settings.Schedule.query = item.getString("pid");
+                                                                                Settings.Schedule.label = item.getString("person");
+                                                                                Log.v(TAG, "activatePartSchedule | search action | onSuccess | done | query=" + Settings.Schedule.query + " | label=" + Settings.Schedule.label);
+                                                                                if (alertDialog.isShowing()) {
+                                                                                    alertDialog.cancel();
+                                                                                }
+                                                                                updateScheduleSummary();
+                                                                            } else {
+                                                                                Static.snackBar(activity, getString(R.string.something_went_wrong));
+                                                                            }
+                                                                        } else {
+                                                                            ArrayList<JSONObject> arrayList = new ArrayList<>();
+                                                                            for (int i = 0; i < list.length(); i++) {
+                                                                                arrayList.add(list.getJSONObject(i));
+                                                                            }
+                                                                            teacherPickerAdapter.addAll(arrayList);
+                                                                            teacherPickerAdapter.addTeachers(arrayList);
+                                                                            if (arrayList.size() > 0) {
+                                                                                search_text_view.showDropDown();
+                                                                            }
+                                                                        }
+                                                                        break;
+                                                                    }
+                                                                    default: {
+                                                                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                                                        break;
+                                                                    }
+                                                                }
+                                                            } catch (Exception e) {
+                                                                Static.error(e);
+                                                                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                                            }
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                        });
+                                        scheduleLessons.search(query);
+                                    }
+                                }
+                            });
+                        }
+                    });
+                    search_text_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                        @Override
+                        public void onItemClick(final AdapterView<?> parent, final View view, final int position, final long id) {
+                            Static.T.runThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        Log.v(TAG, "activatePartSchedule | search list selected");
+                                        JSONObject item = teacherPickerAdapter.getItem(position);
+                                        if (item != null) {
+                                            Settings.Schedule.query = item.getString("pid");
+                                            Settings.Schedule.label = item.getString("person");
+                                            Log.v(TAG, "activatePartSchedule | search list selected | query=" + Settings.Schedule.query + " | label=" + Settings.Schedule.label);
+                                            if (alertDialog.isShowing()) {
+                                                alertDialog.cancel();
+                                            }
+                                            updateScheduleSummary();
+                                        } else {
+                                            Static.snackBar(activity, getString(R.string.something_went_wrong));
+                                        }
+                                    } catch (Exception e) {
+                                        Static.error(e);
+                                        Static.snackBar(activity, getString(R.string.something_went_wrong));
+                                    }
+                                }
+                            });
+                        }
+                    });
+                    alertDialog.show();
+                    search_action.setVisibility(View.VISIBLE);
+                } catch (Exception e) {
+                    Static.error(e);
+                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 }
             }
         });
     }
-    private void found(final String text) {
-        Static.T.runOnUiThread(new Runnable() {
+    private void activatePartTheme() {
+        Log.v(TAG, "activatePartTheme");
+        Static.T.runThread(new Runnable() {
             @Override
             public void run() {
-                Log.v(TAG, "found | " + text);
-                FrameLayout slw_container = (FrameLayout) findViewById(R.id.slw_container);
-                if (slw_container != null){
-                    LinearLayout linearLayout = new LinearLayout(self);
-                    linearLayout.setOrientation(LinearLayout.VERTICAL);
-                    linearLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                    linearLayout.setPadding((int) (16 * destiny), (int) (10 * destiny), (int) (16 * destiny), (int) (10 * destiny));
-                    TextView textView = new TextView(self);
-                    textView.setText(text);
-                    textView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                    textView.setTextColor(textColorPrimary);
-                    textView.setGravity(Gravity.CENTER);
-                    textView.setPadding(0, (int) (10 * destiny), 0, (int) (10 * destiny));
-                    linearLayout.addView(textView);
-                    slw_container.removeAllViews();
-                    slw_container.addView(linearLayout);
+                try {
+                    final ViewGroup layout = (ViewGroup) inflate(R.layout.layout_widget_schedule_lessons_create_theme);
+                    final ViewGroup set_light_theme = layout.findViewById(R.id.set_light_theme);
+                    final ViewGroup set_dark_theme = layout.findViewById(R.id.set_dark_theme);
+                    final EditText background_color_input = layout.findViewById(R.id.background_color_input);
+                    final EditText text_color_input = layout.findViewById(R.id.text_color_input);
+                    final EditText background_opacity_input = layout.findViewById(R.id.background_opacity_input);
+                    final ViewGroup background_color_picker = layout.findViewById(R.id.background_color_picker);
+                    final ViewGroup text_color_picker = layout.findViewById(R.id.text_color_picker);
+                    final SeekBar background_opacity_seek_bar = layout.findViewById(R.id.background_opacity_seek_bar);
+                    final TextView default_theme_light_background = layout.findViewById(R.id.default_theme_light_background);
+                    final TextView default_theme_light_text = layout.findViewById(R.id.default_theme_light_text);
+                    final TextView default_theme_light_opacity = layout.findViewById(R.id.default_theme_light_opacity);
+                    final TextView default_theme_dark_background = layout.findViewById(R.id.default_theme_dark_background);
+                    final TextView default_theme_dark_text = layout.findViewById(R.id.default_theme_dark_text);
+                    final TextView default_theme_dark_opacity = layout.findViewById(R.id.default_theme_dark_opacity);
+                    final AlertDialog alertDialog = new AlertDialog.Builder(activity)
+                            .setView(layout)
+                            .setPositiveButton(R.string.apply, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    Log.v(TAG, "activatePartTheme | apply");
+                                    Static.T.runThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            try {
+                                                String background = background_color_input.getText().toString().trim();
+                                                Color.parseColor(background);
+                                                Settings.Theme.background = background;
+                                            } catch (Exception ignore) {
+                                                // just ignore
+                                            }
+                                            try {
+                                                String text = text_color_input.getText().toString().trim();
+                                                Color.parseColor(text);
+                                                Settings.Theme.text = text;
+                                            } catch (Exception ignore) {
+                                                // just ignore
+                                            }
+                                            try {
+                                                int opacity = Integer.parseInt(background_opacity_input.getText().toString().trim());
+                                                if (opacity >= 0 && opacity <= 255) {
+                                                    Settings.Theme.opacity = opacity;
+                                                }
+                                            } catch (Exception ignore) {
+                                                // just ignore
+                                            }
+                                            Log.v(TAG, "activatePartTheme | apply | background=" + Settings.Theme.background + " | text=" + Settings.Theme.text + " | opacity=" + Settings.Theme.opacity);
+                                            updateDemo();
+                                            updateThemeSummary();
+                                        }
+                                    });
+                                }
+                            })
+                            .setNegativeButton(R.string.do_cancel, null)
+                            .create();
+                    default_theme_light_background.setText(activity.getString(R.string.background_color) + ": " + Default.Theme.Light.background);
+                    default_theme_light_text.setText(activity.getString(R.string.text_color) + ": " + Default.Theme.Light.text);
+                    default_theme_light_opacity.setText(activity.getString(R.string.background_opacity) + ": " + Default.Theme.Light.opacity);
+                    default_theme_dark_background.setText(activity.getString(R.string.background_color) + ": " + Default.Theme.Dark.background);
+                    default_theme_dark_text.setText(activity.getString(R.string.text_color) + ": " + Default.Theme.Dark.text);
+                    default_theme_dark_opacity.setText(activity.getString(R.string.background_opacity) + ": " + Default.Theme.Dark.opacity);
+                    background_color_input.setText(Settings.Theme.background);
+                    text_color_input.setText(Settings.Theme.text);
+                    background_opacity_input.setText(String.valueOf(Settings.Theme.opacity));
+                    background_opacity_seek_bar.setProgress(Settings.Theme.opacity);
+                    set_light_theme.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            Static.T.runThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.v(TAG, "activatePartTheme | light theme selected");
+                                    try {
+                                        Settings.Theme.text       = Default.Theme.Light.text;
+                                        Settings.Theme.background = Default.Theme.Light.background;
+                                        Settings.Theme.opacity    = Default.Theme.Light.opacity;
+                                        if (alertDialog != null && alertDialog.isShowing()) {
+                                            alertDialog.cancel();
+                                        }
+                                        updateDemo();
+                                        updateThemeSummary();
+                                    } catch (Exception e) {
+                                        Static.error(e);
+                                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                    }
+                                }
+                            });
+                        }
+                    });
+                    set_dark_theme.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            Static.T.runThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.v(TAG, "activatePartTheme | dark theme selected");
+                                    try {
+                                        Settings.Theme.text       = Default.Theme.Dark.text;
+                                        Settings.Theme.background = Default.Theme.Dark.background;
+                                        Settings.Theme.opacity    = Default.Theme.Dark.opacity;
+                                        if (alertDialog != null && alertDialog.isShowing()) {
+                                            alertDialog.cancel();
+                                        }
+                                        updateDemo();
+                                        updateThemeSummary();
+                                    } catch (Exception e) {
+                                        Static.error(e);
+                                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                    }
+                                }
+                            });
+                        }
+                    });
+                    background_opacity_input.addTextChangedListener(new TextWatcher() {
+                        @Override
+                        public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+                        @Override
+                        public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+                        @Override
+                        public void afterTextChanged(Editable editable) {
+                            try {
+                                int value = Integer.parseInt(editable.toString().trim());
+                                if (value < 0) {
+                                    value = 0;
+                                }
+                                if (value > 255) {
+                                    value = 255;
+                                }
+                                background_opacity_seek_bar.setProgress(value);
+                            } catch (Exception ignore) {
+                                // just ignore
+                            }
+                        }
+                    });
+                    background_opacity_seek_bar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                        @Override
+                        public void onProgressChanged(SeekBar seekBar, int progress, boolean b) {
+                            try {
+                                if (progress < 0) {
+                                    progress = 0;
+                                }
+                                if (progress > 255) {
+                                    progress = 255;
+                                }
+                                try {
+                                    int selection = background_opacity_input.getSelectionStart();
+                                    background_opacity_input.setText(String.valueOf(progress));
+                                    background_opacity_input.setSelection(selection);
+                                } catch (Exception ignore) {
+                                    // just ignore
+                                }
+                            } catch (Exception e) {
+                                Static.error(e);
+                                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                            }
+                        }
+                        @Override
+                        public void onStartTrackingTouch(SeekBar seekBar) {}
+                        @Override
+                        public void onStopTrackingTouch(SeekBar seekBar) {}
+                    });
+                    background_color_picker.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            Static.T.runThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.v(TAG, "activatePartTheme | background color picker clicked");
+                                    Static.ColorPicker.get(activity, new Static.ColorPicker.ColorPickerCallback() {
+                                        @Override
+                                        public void result(final String hex) {
+                                            Static.T.runThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    Log.v(TAG, "activatePartTheme | background color picker | hex=" + hex);
+                                                    background_color_input.setText(hex);
+                                                }
+                                            });
+                                        }
+                                        @Override
+                                        public void exception(Exception e) {
+                                            Static.error(e);
+                                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                        }
+                                    }).show();
+                                }
+                            });
+                        }
+                    });
+                    text_color_picker.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            Static.T.runThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.v(TAG, "activatePartTheme | text color picker clicked");
+                                    Static.ColorPicker.get(activity, new Static.ColorPicker.ColorPickerCallback() {
+                                        @Override
+                                        public void result(final String hex) {
+                                            Static.T.runThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    Log.v(TAG, "activatePartTheme | text color picker | hex=" + hex);
+                                                    text_color_input.setText(hex);
+                                                }
+                                            });
+                                        }
+                                        @Override
+                                        public void exception(Exception e) {
+                                            Static.error(e);
+                                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                        }
+                                    }).show();
+                                }
+                            });
+                        }
+                    });
+                    alertDialog.show();
+                } catch (Exception e) {
+                    Static.error(e);
+                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                }
+            }
+        });
+    }
+    private void activatePartUpdate() {
+        Log.v(TAG, "activatePartUpdate");
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    int select = 0;
+                    switch (Settings.updateTime){
+                        case 0: select = 0; break;
+                        case 12: select = 1; break;
+                        case 24: select = 2; break;
+                        case 168: select = 3; break;
+                        case 672: select = 4; break;
+                    }
+                    final AlertDialog alertDialog = new AlertDialog.Builder(activity)
+                            .setTitle(R.string.update_interval)
+                            .setSingleChoiceItems(R.array.pref_widget_refresh_titles, select, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(final DialogInterface dialog, final int which) {
+                                    Log.v(TAG, "activatePartUpdate | apply");
+                                    Static.T.runThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            switch (which){
+                                                case 0: Settings.updateTime = 0; break;
+                                                case 1: Settings.updateTime = 12; break;
+                                                case 2: Settings.updateTime = 24; break;
+                                                case 3: Settings.updateTime = 168; break;
+                                                case 4: Settings.updateTime = 672; break;
+                                            }
+                                            Log.v(TAG, "activatePartUpdate | apply | which=" + which + " | updateTime=" + Settings.updateTime);
+                                            updateUpdateSummary();
+                                            dialog.dismiss();
+                                        }
+                                    });
+                                }
+                            })
+                            .setNegativeButton(R.string.do_cancel, null)
+                            .create();
+                    alertDialog.show();
+                } catch (Exception e) {
+                    Static.error(e);
+                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                }
+            }
+        });
+    }
+    private void activateFinish() {
+        Log.v(TAG, "activateFinish");
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (Settings.Schedule.query == null || Settings.Schedule.query.trim().isEmpty()) {
+                        Static.snackBar(activity, activity.getString(R.string.need_to_choose_schedule));
+                        return;
+                    }
+                    JSONObject theme = new JSONObject();
+                    theme.put("background", Settings.Theme.background);
+                    theme.put("text", Settings.Theme.text);
+                    theme.put("opacity", Settings.Theme.opacity);
+                    JSONObject settings = new JSONObject();
+                    settings.put("query", Settings.Schedule.query);
+                    settings.put("theme", theme);
+                    settings.put("updateTime", Settings.updateTime);
+                    Log.v(TAG, "activateFinish | settings=" + settings.toString());
+                    savePref(activity, mAppWidgetId, "settings", settings.toString());
+                    ScheduleLessonsWidget.updateAppWidget(activity, AppWidgetManager.getInstance(activity), mAppWidgetId, false);
+                    Intent resultValue = new Intent();
+                    resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
+                    close(RESULT_OK, resultValue);
+                    FirebaseAnalyticsProvider.logEvent(
+                            activity,
+                            FirebaseAnalyticsProvider.Event.WIDGET_INSTALL,
+                            FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.WIDGET_QUERY, Settings.Schedule.query)
+                    );
+                } catch (Exception e) {
+                    Log.w(TAG, "activateFinish | failed to create widget");
+                    Static.error(e);
+                    Static.snackBar(activity, activity.getString(R.string.failed_to_create_widget));
                 }
             }
         });
     }
 
-    private void updateTimeSummary() {
+    private void updateDemo() {
+        Log.w(TAG, "updateDemo");
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                TextView slw_update_time_summary = (TextView) findViewById(R.id.slw_update_time_summary);
-                if (slw_update_time_summary != null) {
+                try {
+                    int background = parseColor(Settings.Theme.background, Settings.Theme.opacity);
+                    int text = parseColor(Settings.Theme.text);
+                    ViewGroup widget_content = activity.findViewById(R.id.widget_content);
+                    if (widget_content != null) {
+                        ViewGroup widget_header = widget_content.findViewById(R.id.widget_header);
+                        TextView widget_title = widget_content.findViewById(R.id.widget_title);
+                        TextView widget_day_title = widget_content.findViewById(R.id.widget_day_title);
+                        ImageView widget_status = widget_content.findViewById(R.id.widget_status);
+                        TextView slw_item_time_start = widget_content.findViewById(R.id.slw_item_time_start);
+                        ImageView slw_item_time_icon = widget_content.findViewById(R.id.slw_item_time_icon);
+                        TextView slw_item_time_end = widget_content.findViewById(R.id.slw_item_time_end);
+                        TextView slw_item_title = widget_content.findViewById(R.id.slw_item_title);
+                        TextView slw_item_desc = widget_content.findViewById(R.id.slw_item_desc);
+                        TextView slw_item_meta = widget_content.findViewById(R.id.slw_item_meta);
+                        widget_content.setBackgroundColor(background);
+                        widget_header.setBackgroundColor(background);
+                        widget_title.setTextColor(text);
+                        widget_day_title.setTextColor(text);
+                        widget_status.setImageTintList(ColorStateList.valueOf(text));
+                        slw_item_time_start.setTextColor(text);
+                        slw_item_time_icon.setImageTintList(ColorStateList.valueOf(text));
+                        slw_item_time_end.setTextColor(text);
+                        slw_item_title.setTextColor(text);
+                        slw_item_desc.setTextColor(text);
+                        slw_item_meta.setTextColor(text);
+                    }
+                } catch (Exception e) {
+                    Static.error(e);
+                }
+            }
+        });
+    }
+    private void updateScheduleSummary() {
+        Log.w(TAG, "updateScheduleSummary");
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    TextView part_schedule_summary = activity.findViewById(R.id.part_schedule_summary);
+                    part_schedule_summary.setText(!Settings.Schedule.query.isEmpty() ? Settings.Schedule.label : getString(R.string.need_to_choose_schedule));
+                } catch (Exception e) {
+                    Static.error(e);
+                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                }
+            }
+        });
+    }
+    private void updateThemeSummary() {
+        Log.w(TAG, "updateThemeSummary");
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    TextView part_theme_summary = activity.findViewById(R.id.part_theme_summary);
                     String summary;
-                    switch (updateTime){
+                    if (Settings.Theme.opacity == Default.Theme.Light.opacity && Objects.equals(Settings.Theme.background.toUpperCase(), Default.Theme.Light.background) && Objects.equals(Settings.Theme.text.toUpperCase(), Default.Theme.Light.text)) {
+                        summary = activity.getString(R.string.pref_light_theme);
+                    } else if (Settings.Theme.opacity == Default.Theme.Dark.opacity && Objects.equals(Settings.Theme.background.toUpperCase(), Default.Theme.Dark.background) && Objects.equals(Settings.Theme.text.toUpperCase(), Default.Theme.Dark.text)) {
+                        summary = activity.getString(R.string.pref_dark_theme);
+                    } else {
+                        summary  = "Фон" + ": " + Settings.Theme.background + ", ";
+                        summary += "Текст" + ": " + Settings.Theme.text + ", ";
+                        summary += "Прозрачность" + ": " + Settings.Theme.opacity;
+                    }
+                    part_theme_summary.setText(summary);
+                } catch (Exception e) {
+                    Static.error(e);
+                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                }
+            }
+        });
+    }
+    private void updateUpdateSummary() {
+        Log.w(TAG, "updateUpdateSummary");
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    TextView part_update_summary = activity.findViewById(R.id.part_update_summary);
+                    String summary;
+                    switch (Settings.updateTime){
                         case 0: summary = activity.getString(R.string.manually); break;
                         case 12: summary = activity.getString(R.string.once_per_12_hours); break;
                         case 24: summary = activity.getString(R.string.once_per_1_day); break;
@@ -409,20 +860,22 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
                         case 672: summary = activity.getString(R.string.once_per_4_weeks); break;
                         default: summary = activity.getString(R.string.unknown); break;
                     }
-                    slw_update_time_summary.setText(summary);
+                    part_update_summary.setText(summary);
+                } catch (Exception e) {
+                    Static.error(e);
+                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 }
             }
         });
     }
-    private void close(int result, Intent intent) {
-        Log.v(TAG, "close | result=" + result);
-        if (intent == null){
-            setResult(result);
-        } else {
-            setResult(result, intent);
-        }
-        if (widgetRequestHandle != null) widgetRequestHandle.cancel(true);
-        finish();
+
+    private static int parseColor(String color) {
+        return parseColor(color, 255);
+    }
+    private static int parseColor(String color, int opacity) {
+        Log.w(TAG, "parseColor | color=" + color + " | opacity=" + opacity);
+        int parsed = Color.parseColor(color);
+        return Color.argb(opacity, Color.red(parsed), Color.green(parsed), Color.blue(parsed));
     }
 
     public static void savePref(Context context, int appWidgetId, String type, String text) {
@@ -453,6 +906,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
         return pref.isEmpty() ? null : pref;
     }
     public static JSONObject getPrefJson(Context context, int appWidgetId, String type) {
+        Log.v(TAG, "getPrefJson | appWidgetId=" + appWidgetId + " | type=" + type);
         JSONObject pref;
         try {
             String tmp = ScheduleLessonsWidgetConfigureActivity.getPref(context, appWidgetId, type);
@@ -464,5 +918,17 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity im
         return pref;
     }
 
+    private void close(int result, Intent intent) {
+        Log.v(TAG, "close | result=" + result);
+        if (intent == null){
+            setResult(result);
+        } else {
+            setResult(result, intent);
+        }
+        if (widgetRequestHandle != null) widgetRequestHandle.cancel(true);
+        finish();
+    }
+    private View inflate(int layoutId) throws InflateException {
+        return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
+    }
 }
-

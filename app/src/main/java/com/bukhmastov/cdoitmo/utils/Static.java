@@ -3,9 +3,11 @@ package com.bukhmastov.cdoitmo.utils;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
+import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -13,6 +15,7 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
+import android.graphics.drawable.GradientDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
@@ -23,11 +26,18 @@ import android.os.Process;
 import android.support.annotation.IdRes;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
+import android.support.v7.app.AlertDialog;
 import android.util.TypedValue;
+import android.view.InflateException;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.BaseAdapter;
+import android.widget.GridView;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -53,6 +63,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Objects;
 
 public class Static {
 
@@ -804,5 +815,254 @@ public class Static {
     public static String ldgZero(int number) {
         return String.format("%02d", number);
     }
-
+    public static class ColorPicker {
+        private static final String TAG = "Static.ColorPicker";
+        private static final String[][] COLORS = {
+                {"#F44336", "#FFEBEE", "#FFCDD2", "#EF9A9A", "#E57373", "#EF5350", "#F44336", "#E53935", "#D32F2F", "#C62828", "#B71C1C"}, /* Red */
+                {"#E91E63", "#FCE4EC", "#F8BBD0", "#F48FB1", "#F06292", "#EC407A", "#E91E63", "#D81B60", "#C2185B", "#AD1457", "#880E4F"}, /* Pink */
+                {"#9C27B0", "#F3E5F5", "#E1BEE7", "#CE93D8", "#BA68C8", "#AB47BC", "#9C27B0", "#8E24AA", "#7B1FA2", "#6A1B9A", "#4A148C"}, /* Purple */
+                {"#673AB7", "#EDE7F6", "#D1C4E9", "#B39DDB", "#9575CD", "#7E57C2", "#673AB7", "#5E35B1", "#512DA8", "#4527A0", "#311B92"}, /* Deep Purple */
+                {"#3F51B5", "#E8EAF6", "#C5CAE9", "#9FA8DA", "#7986CB", "#5C6BC0", "#3F51B5", "#3949AB", "#303F9F", "#283593", "#1A237E"}, /* Indigo */
+                {"#2196F3", "#E3F2FD", "#BBDEFB", "#90CAF9", "#64B5F6", "#42A5F5", "#2196F3", "#1E88E5", "#1976D2", "#1565C0", "#0D47A1"}, /* Blue */
+                {"#03A9F4", "#E1F5FE", "#B3E5FC", "#81D4FA", "#4FC3F7", "#29B6F6", "#03A9F4", "#039BE5", "#0288D1", "#0277BD", "#01579B"}, /* Light Blue */
+                {"#00BCD4", "#E0F7FA", "#B2EBF2", "#80DEEA", "#4DD0E1", "#26C6DA", "#00BCD4", "#00ACC1", "#0097A7", "#00838F", "#006064"}, /* Cyan */
+                {"#009688", "#E0F2F1", "#B2DFDB", "#80CBC4", "#4DB6AC", "#26A69A", "#009688", "#00897B", "#00796B", "#00695C", "#004D40"}, /* Teal */
+                {"#4CAF50", "#E8F5E9", "#C8E6C9", "#A5D6A7", "#81C784", "#66BB6A", "#4CAF50", "#43A047", "#388E3C", "#2E7D32", "#1B5E20"}, /* Green */
+                {"#8BC34A", "#F1F8E9", "#DCEDC8", "#C5E1A5", "#AED581", "#9CCC65", "#8BC34A", "#7CB342", "#689F38", "#558B2F", "#33691E"}, /* Light Green */
+                {"#CDDC39", "#F9FBE7", "#F0F4C3", "#E6EE9C", "#DCE775", "#D4E157", "#CDDC39", "#C0CA33", "#AFB42B", "#9E9D24", "#827717"}, /* Lime */
+                {"#FFEB3B", "#FFFDE7", "#FFF9C4", "#FFF59D", "#FFF176", "#FFEE58", "#FFEB3B", "#FDD835", "#FBC02D", "#F9A825", "#F57F17"}, /* Yellow */
+                {"#FFC107", "#FFF8E1", "#FFECB3", "#FFE082", "#FFD54F", "#FFCA28", "#FFC107", "#FFB300", "#FFA000", "#FF8F00", "#FF6F00"}, /* Amber */
+                {"#FF9800", "#FFF3E0", "#FFE0B2", "#FFCC80", "#FFB74D", "#FFA726", "#FF9800", "#FB8C00", "#F57C00", "#EF6C00", "#E65100"}, /* Orange */
+                {"#FF5722", "#FBE9E7", "#FFCCBC", "#FFAB91", "#FF8A65", "#FF7043", "#FF5722", "#F4511E", "#E64A19", "#D84315", "#BF360C"}, /* Deep Orange */
+                {"#795548", "#EFEBE9", "#D7CCC8", "#BCAAA4", "#A1887F", "#8D6E63", "#795548", "#6D4C41", "#5D4037", "#4E342E", "#3E2723"}, /* Brown */
+                {"#9E9E9E", "#FAFAFA", "#F5F5F5", "#EEEEEE", "#E0E0E0", "#BDBDBD", "#9E9E9E", "#757575", "#616161", "#424242", "#212121"}, /* Grey */
+                {"#607D8B", "#ECEFF1", "#CFD8DC", "#B0BEC5", "#90A4AE", "#78909C", "#607D8B", "#546E7A", "#455A64", "#37474F", "#263238"}, /* Blue Grey */
+                {"#000000"}, /* Black */
+                {"#FFFFFF"}  /* White */
+        };
+        public static class Instance {
+            private Context context;
+            private ColorPickerCallback callback;
+            private AlertDialog alertDialog = null;
+            private GridView container = null;
+            private GridAdapter gridAdapter = null;
+            private String selected = "";
+            public Instance(final Context context, final ColorPickerCallback callback) {
+                Log.v(TAG, "new Instance");
+                this.context = context;
+                this.callback = callback;
+                Static.T.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            ViewGroup layout = (ViewGroup) inflate(context, R.layout.layout_color_picker_dialog);
+                            container = layout.findViewById(R.id.colorPickerContainer);
+                            alertDialog = new AlertDialog.Builder(context)
+                                    .setTitle(R.string.choose_color)
+                                    .setView(layout)
+                                    .setPositiveButton(R.string.apply, new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialogInterface, int i) {
+                                            Log.v(TAG, "apply | selected=" + selected);
+                                            if (!selected.isEmpty()) {
+                                                callback.result(selected);
+                                            }
+                                        }
+                                    })
+                                    .setNegativeButton(R.string.do_cancel, null)
+                                    .create();
+                        } catch (Exception e) {
+                            callback.exception(e);
+                        }
+                    }
+                });
+            }
+            public void show() {
+                Log.v(TAG, "show");
+                Static.T.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            if (alertDialog != null && !alertDialog.isShowing()) {
+                                alertDialog.show();
+                                displayColors(-1);
+                            }
+                        } catch (Exception e) {
+                            callback.exception(e);
+                        }
+                    }
+                });
+            }
+            public void close() {
+                Log.v(TAG, "close");
+                Static.T.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            if (alertDialog != null && alertDialog.isShowing()) {
+                                alertDialog.dismiss();
+                            }
+                        } catch (Exception e) {
+                            callback.exception(e);
+                        }
+                    }
+                });
+            }
+            private void displayColors(final int index) {
+                Log.v(TAG, "displayColors | index=" + index);
+                Static.T.runThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            final boolean modeAllColors = index < 0 || index > COLORS.length;
+                            final String[] colors;
+                            if (modeAllColors) { // display all colors
+                                colors = new String[COLORS.length];
+                                for (int i = 0; i < COLORS.length; i++) {
+                                    colors[i] = COLORS[i][0];
+                                }
+                            } else { // display certain colors
+                                colors = new String[COLORS[index].length];
+                                System.arraycopy(COLORS[index], 1, colors, 0, COLORS[index].length - 1);
+                                colors[COLORS[index].length - 1] = "back";
+                            }
+                            Static.T.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        if (gridAdapter == null) {
+                                            gridAdapter = new GridAdapter(context);
+                                            container.setAdapter(gridAdapter);
+                                        }
+                                        container.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                                            @Override
+                                            public void onItemClick(AdapterView<?> adapterView, View view, final int i, long l) {
+                                                Log.v(TAG, "color clicked | i=" + i);
+                                                Static.T.runThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        try {
+                                                            if (modeAllColors) {
+                                                                if (COLORS[i].length > 1) {
+                                                                    displayColors(i);
+                                                                } else {
+                                                                    String color = gridAdapter.getItem(i);
+                                                                    if (Objects.equals(color, "back")) {
+                                                                        Log.v(TAG, "back clicked");
+                                                                        displayColors(-1);
+                                                                    } else {
+                                                                        Log.v(TAG, "color selected | color=" + color);
+                                                                        selected = color;
+                                                                        Static.T.runOnUiThread(new Runnable() {
+                                                                            @Override
+                                                                            public void run() {
+                                                                                gridAdapter.notifyDataSetChanged();
+                                                                            }
+                                                                        });
+                                                                    }
+                                                                }
+                                                            } else {
+                                                                String color = gridAdapter.getItem(i);
+                                                                if (Objects.equals(color, "back")) {
+                                                                    Log.v(TAG, "back clicked");
+                                                                    displayColors(-1);
+                                                                } else {
+                                                                    Log.v(TAG, "color selected | color=" + color);
+                                                                    selected = color;
+                                                                    Static.T.runOnUiThread(new Runnable() {
+                                                                        @Override
+                                                                        public void run() {
+                                                                            gridAdapter.notifyDataSetChanged();
+                                                                        }
+                                                                    });
+                                                                }
+                                                            }
+                                                        } catch (Exception e) {
+                                                            callback.exception(e);
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                        });
+                                        gridAdapter.updateColors(colors);
+                                        gridAdapter.notifyDataSetChanged();
+                                    } catch (Exception e) {
+                                        callback.exception(e);
+                                    }
+                                }
+                            });
+                        } catch (Exception e) {
+                            callback.exception(e);
+                        }
+                    }
+                });
+            }
+            private class GridAdapter extends BaseAdapter {
+                private Context context;
+                private String[] colors;
+                private GridAdapter(Context context) {
+                    this.context = context;
+                    this.colors = new String[0];
+                }
+                private void updateColors(String[] colors) {
+                    this.colors = colors;
+                }
+                @Override
+                public int getCount() {
+                    return colors.length;
+                }
+                @Override
+                public String getItem(int position) {
+                    return colors[position];
+                }
+                @Override
+                public long getItemId(int position) {
+                    return position;
+                }
+                @Override
+                public View getView(int position, View convertView, ViewGroup parent) {
+                    try {
+                        if (convertView == null) {
+                            LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                            convertView = inflater.inflate(R.layout.layout_color_picker_dialog_item, parent, false);
+                        }
+                        String color = getItem(position);
+                        if (Objects.equals(color, "back")) {
+                            GradientDrawable sd = (GradientDrawable) convertView.getBackground();
+                            sd.setColor(Color.BLACK);
+                            convertView.findViewById(R.id.sign_selected).setVisibility(View.GONE);
+                            convertView.findViewById(R.id.sign_back).setVisibility(View.VISIBLE);
+                            ImageView sign_selected_mark = convertView.findViewById(R.id.sign_back_mark);
+                            sign_selected_mark.setImageTintList(ColorStateList.valueOf(Color.WHITE));
+                        } else {
+                            GradientDrawable sd = (GradientDrawable) convertView.getBackground();
+                            sd.setColor(Color.parseColor(color));
+                            if (Objects.equals(selected.toLowerCase(), color.toLowerCase())) {
+                                convertView.findViewById(R.id.sign_selected).setVisibility(View.VISIBLE);
+                                ImageView sign_selected_mark = convertView.findViewById(R.id.sign_selected_mark);
+                                sign_selected_mark.setImageTintList(ColorStateList.valueOf(Color.parseColor(color) > Color.parseColor("#757575") ? Color.BLACK : Color.WHITE));
+                            } else {
+                                convertView.findViewById(R.id.sign_selected).setVisibility(View.GONE);
+                            }
+                            convertView.findViewById(R.id.sign_back).setVisibility(View.GONE);
+                        }
+                        return convertView;
+                    } catch (Exception e) {
+                        callback.exception(e);
+                        return null;
+                    }
+                }
+            }
+        }
+        public static Instance get(final Context context, final ColorPickerCallback callback) {
+            return new Instance(context, callback);
+        }
+        public interface ColorPickerCallback {
+            void result(String hex);
+            void exception(Exception e);
+        }
+        private static View inflate(Context context, int layoutId) throws InflateException {
+            return ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
+        }
+    }
 }

@@ -25,6 +25,8 @@
     <dimen name="dimen_16dp">24dp</dimen>
     <dimen name="dp12">18dp</dimen>
     <dimen name="dp16">24dp</dimen>
+    <dimen name="dp20">30dp</dimen>
+    <dimen name="dp24">36dp</dimen>
     <dimen name="dp42">60dp</dimen>
     <dimen name="dp60">80dp</dimen>
     <dimen name="bottom_extra_bar_height">50dp</dimen>
@@ -68,10 +70,12 @@
     <dimen name="login_interrupt_icon_width">32dp</dimen>
     <dimen name="login_interrupt_icon_padding">6dp</dimen>
 
-    <dimen name="widget_schedule_lessons_header_height">24dp</dimen>
+    <dimen name="widget_schedule_lessons_header_height">48dp</dimen>
     <dimen name="widget_schedule_lessons_second_header_height">18dp</dimen>
-    <dimen name="widget_schedule_lessons_header_icon_padding">3dp</dimen>
-    <dimen name="widget_schedule_lessons_padding">6dp</dimen>
+    <dimen name="widget_schedule_lessons_header_icon">20dp</dimen>
+    <dimen name="widget_schedule_lessons_header_icon_padding">2dp</dimen>
+    <dimen name="widget_schedule_lessons_padding_vertical">2dp</dimen>
+    <dimen name="widget_schedule_lessons_padding_horizontal">6dp</dimen>
     <dimen name="widget_schedule_lessons_item_padding_top">2dp</dimen>
     <dimen name="widget_schedule_lessons_item_padding_bottom">5dp</dimen>
     <dimen name="widget_schedule_lessons_item_min_width">52dp</dimen>
@@ -80,6 +84,7 @@
     <dimen name="widget_schedule_lessons_configure_min_height">36dp</dimen>
     <dimen name="widget_schedule_lessons_configure_min_height2">26dp</dimen>
     <dimen name="widget_schedule_lessons_configure_min_height3">16dp</dimen>
+    <dimen name="widget_schedule_lessons_configure_demo_height">170dp</dimen>
 
     <dimen name="university_person_card_small_avatar">48dp</dimen>
     <dimen name="university_person_card_big_avatar">72dp</dimen>

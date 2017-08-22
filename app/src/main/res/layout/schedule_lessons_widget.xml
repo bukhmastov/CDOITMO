@@ -1,42 +1,68 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_content"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="@dimen/widget_margin"
-    android:id="@+id/widget_content"
     android:background="#96000000">
 
-    <RelativeLayout
+    <LinearLayout
+        android:id="@+id/widget_header"
+        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:id="@+id/widget_title_layout"
-        android:layout_height="@dimen/widget_schedule_lessons_header_height"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
         android:background="#96000000">
 
         <TextView
             android:id="@+id/widget_title"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_toStartOf="@+id/widget_status"
-            android:gravity="center_vertical"
-            android:paddingStart="@dimen/widget_schedule_lessons_padding"
-            android:paddingEnd="@dimen/widget_schedule_lessons_padding"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/widget_schedule_lessons_padding_horizontal"
+            android:paddingEnd="@dimen/widget_schedule_lessons_padding_horizontal"
+            android:layout_marginStart="0dp"
+            android:layout_marginEnd="@dimen/widget_schedule_lessons_header_icon"
+            android:maxLines="1"
             android:text="@string/schedule_lessons"
             android:textColor="#FFFFFF"
             android:textSize="@dimen/font_size_14" />
 
+        <TextView
+            android:id="@+id/widget_day_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/widget_schedule_lessons_padding_horizontal"
+            android:paddingEnd="@dimen/widget_schedule_lessons_padding_horizontal"
+            android:maxLines="1"
+            android:textAllCaps="true"
+            android:text="@string/lorem_ipsum"
+            android:textColor="#FFFFFF"
+            android:textSize="@dimen/font_size_10"
+            android:visibility="gone"/>
+
+    </LinearLayout>
+
+    <RelativeLayout
+        android:id="@+id/widget_status_container"
+        android:layout_width="@dimen/widget_schedule_lessons_header_height"
+        android:layout_height="@dimen/widget_schedule_lessons_header_height"
+        android:layout_alignParentEnd="true">
+
         <ImageView
-            android:layout_alignParentEnd="true"
             android:id="@+id/widget_status"
-            android:layout_width="@dimen/widget_schedule_lessons_header_height"
-            android:layout_height="@dimen/widget_schedule_lessons_header_height"
-            android:padding="@dimen/widget_schedule_lessons_header_icon_padding" />
+            android:layout_height="@dimen/widget_schedule_lessons_header_icon"
+            android:layout_width="@dimen/widget_schedule_lessons_header_icon"
+            android:layout_margin="@dimen/widget_schedule_lessons_header_icon_padding"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:src="@drawable/ic_widget_refresh"/>
 
     </RelativeLayout>
 
     <FrameLayout
+        android:id="@+id/widget_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/widget_title_layout"
-        android:id="@+id/widget_container" >
+        android:layout_below="@+id/widget_header" >
 
         <ProgressBar
             style="?android:attr/progressBarStyle"

@@ -3,7 +3,6 @@ package com.bukhmastov.cdoitmo.widgets;
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
@@ -21,26 +20,25 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
 
     private Context context;
     private int appWidgetId;
-    private boolean darkTheme;
+    private ScheduleLessonsWidget.Colors colors;
     private String type;
     private JSONArray lessons;
 
     ScheduleLessonsWidgetFactory(Context context, Intent intent) {
         this.context = context;
         this.appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
+        this.lessons = new JSONArray();
         try {
             JSONObject settings = ScheduleLessonsWidgetConfigureActivity.getPrefJson(context, appWidgetId, "settings");
             if (settings == null) throw new NullPointerException("settings cannot be null");
-            this.darkTheme = settings.getBoolean("darkTheme");
+            colors = ScheduleLessonsWidget.getColors(settings);
         } catch (Exception e) {
-            this.darkTheme = true;
+            colors = ScheduleLessonsWidget.getColors();
         }
     }
 
     @Override
-    public void onCreate() {
-        this.lessons = new JSONArray();
-    }
+    public void onCreate() {}
 
     @Override
     public void onDataSetChanged() {
@@ -100,15 +98,14 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
             if (position >= this.lessons.length()) {
                 return null;
             }
-            RemoteViews remoteViews = new RemoteViews(context.getPackageName(), darkTheme ? R.layout.schedule_lessons_widget_item : R.layout.schedule_lessons_widget_item);
+            RemoteViews remoteViews = new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget_item);
             JSONObject lesson = this.lessons.getJSONObject(position);
             if (lesson == null) throw new NullPointerException("lesson cannot be null");
-            int textColor = Color.parseColor(darkTheme ? "#FFFFFF" : "#000000");
             remoteViews.setTextViewText(R.id.slw_item_time_start, lesson.getString("timeStart"));
-            remoteViews.setInt(R.id.slw_item_time_start, "setTextColor", textColor);
+            remoteViews.setInt(R.id.slw_item_time_start, "setTextColor", colors.text);
             remoteViews.setTextViewText(R.id.slw_item_time_end, lesson.getString("timeEnd"));
-            remoteViews.setInt(R.id.slw_item_time_end, "setTextColor", textColor);
-            remoteViews.setImageViewResource(R.id.slw_item_time_icon, darkTheme ? R.drawable.ic_widget_time : R.drawable.ic_widget_time_dark);
+            remoteViews.setInt(R.id.slw_item_time_end, "setTextColor", colors.text);
+            remoteViews.setImageViewBitmap(R.id.slw_item_time_icon, ScheduleLessonsWidget.getBitmap(context, R.drawable.ic_widget_time, colors.text));
             String title = lesson.getString("subject");
             String type = lesson.getString("type").trim();
             switch (type) {
@@ -127,7 +124,7 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
                 }
             }
             remoteViews.setTextViewText(R.id.slw_item_title, title);
-            remoteViews.setInt(R.id.slw_item_title, "setTextColor", textColor);
+            remoteViews.setInt(R.id.slw_item_title, "setTextColor", colors.text);
             String desc = "";
             switch (this.type) {
                 case "group":
@@ -149,7 +146,7 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
             }
             if (!Objects.equals(desc, "")) {
                 remoteViews.setTextViewText(R.id.slw_item_desc, desc);
-                remoteViews.setInt(R.id.slw_item_desc, "setTextColor", textColor);
+                remoteViews.setInt(R.id.slw_item_desc, "setTextColor", colors.text);
             } else {
                 remoteViews.setInt(R.id.slw_item_desc, "setHeight", 0);
             }
@@ -173,7 +170,7 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
             }
             if (!Objects.equals(meta, "")) {
                 remoteViews.setTextViewText(R.id.slw_item_meta, meta);
-                remoteViews.setInt(R.id.slw_item_meta, "setTextColor", textColor);
+                remoteViews.setInt(R.id.slw_item_meta, "setTextColor", colors.text);
             } else {
                 remoteViews.setInt(R.id.slw_item_meta, "setHeight", 0);
             }

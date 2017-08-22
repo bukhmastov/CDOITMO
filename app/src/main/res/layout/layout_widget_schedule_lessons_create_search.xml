@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="@dimen/item_padding"
+    android:paddingBottom="0dp"
+    android:paddingStart="@dimen/item_padding"
+    android:paddingEnd="@dimen/item_padding">
+
+    <AutoCompleteTextView
+        android:id="@+id/search_text_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="100"
+        android:hint="@string/schedule_lessons_search_view_hint"
+        android:inputType="text|textCapSentences"
+        android:maxLines="1"
+        android:selectAllOnFocus="true"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="@dimen/font_size_14" />
+
+    <FrameLayout
+        android:id="@+id/search_action"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical|end"
+        android:layout_weight="1"
+        android:padding="@dimen/item_padding_quarter"
+        android:visibility="gone"
+        android:background="?android:attr/selectableItemBackgroundBorderless">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:srcCompat="@drawable/ic_search"
+            android:tint="?android:attr/textColorPrimary"/>
+
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/search_loading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical|end"
+        android:layout_weight="1"
+        android:padding="@dimen/item_padding_quarter"
+        android:visibility="gone">
+
+        <ProgressBar
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:indeterminate="true" />
+
+    </FrameLayout>
+
+</LinearLayout>

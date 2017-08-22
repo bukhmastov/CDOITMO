@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GridView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/colorPickerContainer"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:paddingTop="@dimen/item_padding"
+    android:paddingBottom="0dp"
+    android:paddingStart="@dimen/item_padding"
+    android:paddingEnd="@dimen/item_padding"
+    android:numColumns="6"
+    android:gravity="center"
+    android:verticalSpacing="@dimen/item_padding_quarter"
+    android:horizontalSpacing="@dimen/item_padding_quarter" />

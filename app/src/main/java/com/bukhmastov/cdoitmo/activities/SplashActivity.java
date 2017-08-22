@@ -20,6 +20,10 @@ import com.bukhmastov.cdoitmo.utils.ProtocolTracker;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+
 public class SplashActivity extends AppCompatActivity {
 
     private static final String TAG = "SplashActivity";
@@ -129,6 +133,40 @@ public class SplashActivity extends AppCompatActivity {
                     Storage.pref.delete(context, "pref_open_drawer_at_startup");
                     Storage.pref.put(context, "pref_first_launch", Storage.file.general.get(context, "users#list", "").trim().isEmpty());
                     new ProtocolTracker(context).reset();
+                    break;
+                }
+                case 78: {
+                    ArrayList<String> appWidgetIds = Storage.file.general.list(context, "widget_schedule_lessons");
+                    for (String appWidgetId : appWidgetIds) {
+                        String settings = Storage.file.general.get(context, "widget_schedule_lessons#" + appWidgetId + "#settings", "");
+                        if (settings != null) {
+                            settings = settings.trim();
+                            if (!settings.isEmpty()) {
+                                try {
+                                    JSONObject settingsJson = new JSONObject(settings);
+                                    if (settingsJson.has("darkTheme")) {
+                                        boolean darkTheme = settingsJson.getBoolean("darkTheme");
+                                        JSONObject theme = new JSONObject();
+                                        if (darkTheme) {
+                                            theme.put("background", ScheduleLessonsWidgetConfigureActivity.Default.Theme.Dark.background);
+                                            theme.put("text", ScheduleLessonsWidgetConfigureActivity.Default.Theme.Dark.text);
+                                            theme.put("opacity", ScheduleLessonsWidgetConfigureActivity.Default.Theme.Dark.opacity);
+                                        } else {
+                                            theme.put("background", ScheduleLessonsWidgetConfigureActivity.Default.Theme.Light.background);
+                                            theme.put("text", ScheduleLessonsWidgetConfigureActivity.Default.Theme.Light.text);
+                                            theme.put("opacity", ScheduleLessonsWidgetConfigureActivity.Default.Theme.Light.opacity);
+                                        }
+                                        settingsJson.remove("darkTheme");
+                                        settingsJson.put("theme", theme);
+                                        Storage.file.general.put(context, "widget_schedule_lessons#" + appWidgetId + "#settings", settingsJson.toString());
+                                    }
+                                } catch (Exception e) {
+                                    Static.error(e);
+                                    Storage.file.general.delete(context, "widget_schedule_lessons#" + appWidgetId + "#settings");
+                                }
+                            }
+                        }
+                    }
                     break;
                 }
             }
