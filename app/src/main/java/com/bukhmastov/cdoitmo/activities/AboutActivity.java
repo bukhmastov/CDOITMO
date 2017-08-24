@@ -54,9 +54,6 @@ public class AboutActivity extends ConnectedActivity {
                 @Override
                 public void onClick(View v) {
                     if (counterToPika >= tapsToPika) {
-                        if (app_icon != null) {
-                            app_icon.setImageDrawable(getDrawable(random.nextInt(100) % 10 == 0 ? R.mipmap.ic_launcher_round : R.mipmap.ic_launcher));
-                        }
                         if (random.nextInt(200) % 10 == 0) {
                             startActivity(new Intent(getBaseContext(), PikaActivity.class));
                         }

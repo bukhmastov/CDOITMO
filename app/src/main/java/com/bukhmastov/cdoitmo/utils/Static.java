@@ -78,7 +78,7 @@ public class Static {
     public static boolean authorized = false;
     public static ProtocolTracker protocolTracker = null;
     public static boolean darkTheme = false;
-    public static int intentFlagRestart = 268468224;
+    public static int intentFlagRestart = Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK;
     public static boolean tablet = false;
     public static boolean isFirstLaunchEver = false;
     private static final String USER_AGENT_TEMPLATE = "CDOITMO/{versionName}/{versionCode} Java/Android/{sdkInt}";
@@ -729,6 +729,7 @@ public class Static {
             });
         }
     }
+    @SuppressWarnings("deprecation")
     public static Locale getLocale(Context context) {
         Locale locale;
         String lang = Storage.pref.get(context, "pref_lang", "default");
@@ -763,6 +764,7 @@ public class Static {
     public static String capitalizeFirstLetter(String text) {
         return text.substring(0, 1).toUpperCase() + text.substring(1);
     }
+    @SuppressWarnings("deprecation")
     public static String escapeString(String text) {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
             return android.text.Html.fromHtml(text, android.text.Html.FROM_HTML_MODE_LEGACY).toString().trim();
