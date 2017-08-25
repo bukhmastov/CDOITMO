@@ -205,7 +205,9 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                         }
                     }).execute(cache.getJSONObject("content"));
                 } catch (Exception e) {
-                    Static.error(e);
+                    if (!(Objects.equals(e.getMessage(), "settings cannot be null") || Objects.equals(e.getMessage(), "cache cannot be null"))) {
+                        Static.error(e);
+                    }
                     if (Objects.equals(e.getMessage(), "settings cannot be null")) {
                         needPreparations(context, appWidgetManager, appWidgetId);
                     } else {

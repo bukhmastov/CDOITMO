@@ -74,4 +74,22 @@
             android:title="@string/clear_schedule_cache" />
     </PreferenceCategory>
 
+    <PreferenceCategory android:title="@string/pref_category_system">
+        <SwitchPreference
+            android:key="pref_allow_send_reports"
+            android:defaultValue="true"
+            android:title="@string/pref_allow_send_reports"
+            android:summary="@string/pref_allow_send_reports_summary"/>
+        <SwitchPreference
+            android:key="pref_allow_collect_analytics"
+            android:defaultValue="true"
+            android:title="@string/pref_allow_collect_analytics"
+            android:summary="@string/pref_allow_collect_analytics_summary"/>
+        <SwitchPreference
+            android:key="pref_allow_owner_notifications"
+            android:defaultValue="true"
+            android:title="@string/pref_allow_owner_notifications"
+            android:summary="@string/pref_allow_owner_notifications_summary"/>
+    </PreferenceCategory>
+
 </PreferenceScreen>
