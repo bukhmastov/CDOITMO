@@ -35,6 +35,10 @@
         android:summary="@string/pref_dark_theme_summary" />
 
     <Preference
+        android:key="pref_open_system_settings"
+        android:title="@string/pref_open_system_settings" />
+
+    <Preference
         android:key="pref_reset_application"
         android:title="@string/pref_reset_application_summary" />
 

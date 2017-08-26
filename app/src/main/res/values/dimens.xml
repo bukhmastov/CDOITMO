@@ -68,8 +68,8 @@
     <dimen name="shortcut_create_step_padding">2dp</dimen>
     <dimen name="shortcut_create_step_margin">4dp</dimen>
 
-    <dimen name="about_icon_width">50dp</dimen>
-    <dimen name="about_icon_padding">12dp</dimen>
+    <dimen name="about_icon_width">42dp</dimen>
+    <dimen name="about_icon_padding">10dp</dimen>
 
     <dimen name="login_interrupt_icon_width">32dp</dimen>
     <dimen name="login_interrupt_icon_padding">6dp</dimen>

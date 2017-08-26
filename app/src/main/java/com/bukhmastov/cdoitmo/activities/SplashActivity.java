@@ -139,6 +139,7 @@ public class SplashActivity extends AppCompatActivity {
                     ArrayList<String> appWidgetIds = Storage.file.general.list(context, "widget_schedule_lessons");
                     for (String appWidgetId : appWidgetIds) {
                         String settings = Storage.file.general.get(context, "widget_schedule_lessons#" + appWidgetId + "#settings", "");
+                        boolean empty_settings = false;
                         if (settings != null) {
                             settings = settings.trim();
                             if (!settings.isEmpty()) {
@@ -164,7 +165,16 @@ public class SplashActivity extends AppCompatActivity {
                                     Static.error(e);
                                     Storage.file.general.delete(context, "widget_schedule_lessons#" + appWidgetId + "#settings");
                                 }
+                            } else {
+                                empty_settings = true;
                             }
+                        } else {
+                            empty_settings = true;
+                        }
+                        if (empty_settings) {
+                            Storage.file.general.delete(context, "widget_schedule_lessons#" + appWidgetId + "#settings");
+                            Storage.file.general.delete(context, "widget_schedule_lessons#" + appWidgetId + "#cache");
+                            Storage.file.general.delete(context, "widget_schedule_lessons#" + appWidgetId + "#cache_converted");
                         }
                     }
                     break;

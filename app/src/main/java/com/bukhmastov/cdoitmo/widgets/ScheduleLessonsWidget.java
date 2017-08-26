@@ -87,6 +87,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 Log.i(TAG, "delete | appWidgetId=" + appWidgetId);
                 ScheduleLessonsWidgetConfigureActivity.deletePref(context, appWidgetId, "settings");
                 ScheduleLessonsWidgetConfigureActivity.deletePref(context, appWidgetId, "cache");
+                ScheduleLessonsWidgetConfigureActivity.deletePref(context, appWidgetId, "cache_converted");
             }
         });
     }

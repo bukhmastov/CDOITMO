@@ -113,6 +113,22 @@ public class AboutActivity extends ConnectedActivity {
             });
         }
 
+        View block_github = findViewById(R.id.block_github);
+        if (block_github != null) {
+            block_github.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.v(TAG, "block_github clicked");
+                    FirebaseAnalyticsProvider.logBasicEvent(activity, "view github clicked");
+                    try {
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/bukhmastov/cdoitmo")));
+                    } catch (Exception e) {
+                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                    }
+                }
+            });
+        }
+
         View block_donate = findViewById(R.id.block_donate);
         if (block_donate != null) {
             block_donate.setOnClickListener(new View.OnClickListener() {
@@ -128,7 +144,6 @@ public class AboutActivity extends ConnectedActivity {
                 }
             });
         }
-
     }
 
     @Override

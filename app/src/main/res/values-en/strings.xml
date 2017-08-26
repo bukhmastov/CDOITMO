@@ -276,7 +276,7 @@
     <string name="lesson_building">Building</string>
     <string name="lesson_week">Week</string>
     <string name="lesson_day_of_week">Day of the week</string>
-    <string name="pref_reset_application_warning">When you reset an application, the following actions are performed: \n1. All stored data will be erased. \n2. All working widgets will stop working. \n3. You log out of the account. \n4. The application will be restarted.</string>
+    <string name="pref_reset_application_warning">When you reset an application, the following actions are performed: \n1. All stored data will be erased. \n2. All working widgets will stop working. \n3. You log out of all accounts. \n4. The application will be restarted.</string>
     <string name="proceed">Continue</string>
     <string name="pref_schedule_lessons_clear_additional_warning">When cleaning user changes, the following actions are performed: \n1. Hidden lessons will be restored. \n2. All added lessons will be deleted.</string>
     <string name="wrong_login_general">The application does not support users with the login \"general\"</string>
@@ -378,5 +378,11 @@
     <string name="custom_theme">Customize theme</string>
     <string name="apply">Apply</string>
     <string name="choose_color">Choose color</string>
+    <string name="notifications_protocol_changes">Notification of new points</string>
+    <string name="notifications_system">System notifications</string>
+    <string name="pref_open_system_settings">Open system settings</string>
+    <string name="pref_open_system_notifications_settings">Open notification settings</string>
+    <string name="open_source_software">Open source software</string>
+    <string name="view_source_code">View source code</string>
 
 </resources>

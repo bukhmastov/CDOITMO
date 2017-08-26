@@ -29,7 +29,7 @@
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="@dimen/item_padding_half"
+                android:layout_margin="@dimen/item_padding_quarter"
                 android:background="@drawable/shape_border_round"
                 android:padding="@dimen/item_padding_quarter">
 
@@ -73,7 +73,7 @@
                             android:maxLines="1"
                             android:text="@string/lorem_ipsum"
                             android:textColor="?android:attr/textColorSecondary"
-                            android:textSize="@dimen/font_size_14" />
+                            android:textSize="@dimen/font_size_13" />
 
                     </LinearLayout>
 
@@ -84,7 +84,7 @@
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="@dimen/item_padding_half"
+                android:layout_margin="@dimen/item_padding_quarter"
                 android:background="@drawable/shape_border_round"
                 android:padding="@dimen/item_padding_quarter">
 
@@ -126,7 +126,7 @@
                             android:maxLines="1"
                             android:text="@string/app_info_mail_dev"
                             android:textColor="?android:attr/textColorSecondary"
-                            android:textSize="@dimen/font_size_14" />
+                            android:textSize="@dimen/font_size_13" />
 
                     </LinearLayout>
 
@@ -137,7 +137,7 @@
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="@dimen/item_padding_half"
+                android:layout_margin="@dimen/item_padding_quarter"
                 android:background="@drawable/shape_border_round"
                 android:padding="@dimen/item_padding_quarter">
 
@@ -179,7 +179,7 @@
                             android:maxLines="1"
                             android:text="@string/app_info_dev"
                             android:textColor="?android:attr/textColorSecondary"
-                            android:textSize="@dimen/font_size_14" />
+                            android:textSize="@dimen/font_size_13" />
 
                     </LinearLayout>
 
@@ -190,7 +190,7 @@
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="@dimen/item_padding_half"
+                android:layout_margin="@dimen/item_padding_quarter"
                 android:background="@drawable/shape_border_round"
                 android:padding="@dimen/item_padding_quarter">
 
@@ -232,7 +232,7 @@
                             android:maxLines="1"
                             android:text="@string/goto_google_play"
                             android:textColor="?android:attr/textColorSecondary"
-                            android:textSize="@dimen/font_size_14" />
+                            android:textSize="@dimen/font_size_13" />
 
                     </LinearLayout>
 
@@ -243,7 +243,60 @@
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="@dimen/item_padding_half"
+                android:layout_margin="@dimen/item_padding_quarter"
+                android:background="@drawable/shape_border_round"
+                android:padding="@dimen/item_padding_quarter">
+
+                <LinearLayout
+                    android:id="@+id/block_github"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:orientation="horizontal"
+                    android:padding="@dimen/item_padding_half">
+
+                    <ImageView
+                        android:layout_width="@dimen/about_icon_width"
+                        android:layout_height="@dimen/about_icon_width"
+                        android:layout_marginStart="0dp"
+                        android:layout_marginEnd="@dimen/item_padding_half"
+                        android:padding="@dimen/about_icon_padding"
+                        app:srcCompat="@drawable/ic_github" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center_vertical"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:text="@string/open_source_software"
+                            android:textColor="?android:attr/textColorPrimary"
+                            android:textSize="@dimen/font_size_14" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:text="@string/view_source_code"
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:textSize="@dimen/font_size_13" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </FrameLayout>
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/item_padding_quarter"
                 android:background="@drawable/shape_border_round"
                 android:padding="@dimen/item_padding_quarter">
 
@@ -285,7 +338,7 @@
                             android:maxLines="1"
                             android:text="@string/support_dev_desc"
                             android:textColor="?android:attr/textColorSecondary"
-                            android:textSize="@dimen/font_size_14" />
+                            android:textSize="@dimen/font_size_13" />
 
                     </LinearLayout>
 

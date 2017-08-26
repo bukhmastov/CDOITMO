@@ -279,7 +279,7 @@
     <string name="lesson_building">Корпус</string>
     <string name="lesson_week">Неделя</string>
     <string name="lesson_day_of_week">День недели</string>
-    <string name="pref_reset_application_warning">При очистке приложения выполнятся следующие действия: \n1. Все сохраненные данные будут стерты. \n2. Все работающие виджеты прекратят свою работу. \n3. Вы выйдите из аккаунта. \n4. Приложение будет перезапущено.</string>
+    <string name="pref_reset_application_warning">При очистке приложения выполнятся следующие действия: \n1. Все сохраненные данные будут стерты. \n2. Все работающие виджеты прекратят свою работу. \n3. Вы выйдите из всех аккаунтов. \n4. Приложение будет перезапущено.</string>
     <string name="proceed">Продолжить</string>
     <string name="pref_schedule_lessons_clear_additional_warning">При очистке пользовательских изменений выполнятся следующие действия: \n1. Вы скрытые занятия будут восстановлены. \n2. Все добавленные в ручную занятия будут удалены.</string>
     <string name="wrong_login_general">Приложение не поддерживает пользователей с логином \"general\"</string>
@@ -385,5 +385,11 @@
     <string name="custom_theme">Настроить тему</string>
     <string name="apply">Применить</string>
     <string name="choose_color">Выберите цвет</string>
+    <string name="notifications_protocol_changes">Уведомления о новых баллах</string>
+    <string name="notifications_system">Системные уведомления</string>
+    <string name="pref_open_system_settings">Открыть системные настройки</string>
+    <string name="pref_open_system_notifications_settings">Открыть настройки уведомлений</string>
+    <string name="open_source_software">Открытое программное обеспечение</string>
+    <string name="view_source_code">Посмотреть исходный код</string>
 
 </resources>

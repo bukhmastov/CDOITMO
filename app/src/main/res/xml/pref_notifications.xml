@@ -35,4 +35,8 @@
         android:defaultValue="true"
         android:title="@string/pref_notify_vibrate" />
 
+    <Preference
+        android:key="pref_open_system_notifications_settings"
+        android:title="@string/pref_open_system_notifications_settings" />
+
 </PreferenceScreen>

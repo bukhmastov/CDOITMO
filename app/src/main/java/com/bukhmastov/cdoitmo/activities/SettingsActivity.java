@@ -246,6 +246,30 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                     }
                 });
             }
+            Preference pref_open_system_settings = findPreference("pref_open_system_settings");
+            if (pref_open_system_settings != null) {
+                pref_open_system_settings.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        try {
+                            Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                            intent.setData(android.net.Uri.parse("package:" + activity.getPackageName()));
+                            intent.addCategory(Intent.CATEGORY_DEFAULT);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent);
+                        } catch (Exception e) {
+                            try {
+                                Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS);
+                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(intent);
+                            } catch (Exception ignore) {
+                                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                            }
+                        }
+                        return false;
+                    }
+                });
+            }
         }
         @Override
         public void onResume() {
@@ -327,6 +351,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         }
     }
 
+    // TODO sync app and general notifications settings for android >= 26 (if possible)
     public static class NotificationsPreferenceFragment extends TemplatePreferenceFragment {
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -338,6 +363,25 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             setHasOptionsMenu(true);
             bindPreferenceSummaryToValue(findPreference("pref_notify_frequency"));
             bindPreferenceSummaryToValue(findPreference("pref_notify_sound"));
+            Preference pref_open_system_notifications_settings = findPreference("pref_open_system_notifications_settings");
+            if (pref_open_system_notifications_settings != null) {
+                pref_open_system_notifications_settings.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        try {
+                            Intent intent = new Intent("android.settings.APP_NOTIFICATION_SETTINGS");
+                            intent.putExtra("android.provider.extra.APP_PACKAGE", activity.getPackageName());
+                            intent.putExtra("app_package", activity.getPackageName());
+                            intent.putExtra("app_uid", activity.getApplicationInfo().uid);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent);
+                        } catch (Exception e) {
+                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        }
+                        return false;
+                    }
+                });
+            }
         }
         @Override
         public void onResume() {
@@ -462,7 +506,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
 
     private static void bindPreferenceSummaryToValue(Preference preference) {
         preference.setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
-        sBindPreferenceSummaryToValueListener.onPreferenceChange(preference, PreferenceManager.getDefaultSharedPreferences(preference.getContext()).getString(preference.getKey(), ""));
+        notifyPreferenceChanged(preference, PreferenceManager.getDefaultSharedPreferences(preference.getContext()).getString(preference.getKey(), ""));
+    }
+    private static void notifyPreferenceChanged(Preference preference, Object value) {
+        if (preference == null || value == null) return;
+        sBindPreferenceSummaryToValueListener.onPreferenceChange(preference, value);
     }
 
     private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {

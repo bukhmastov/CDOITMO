@@ -34,14 +34,14 @@ public class ScheduleLessonsConverter extends AsyncTask<JSONObject, Void, JSONOb
                 JSONObject dayObj = new JSONObject();
                 dayObj.put("index", i);
                 switch (i) {
-                    case 0: dayObj.put("title", "Понедельник"); dayObj.put("titleShort", "Пн"); break;
-                    case 1: dayObj.put("title", "Вторник"); dayObj.put("titleShort", "Вт"); break;
-                    case 2: dayObj.put("title", "Среда"); dayObj.put("titleShort", "Ср"); break;
-                    case 3: dayObj.put("title", "Четверг"); dayObj.put("titleShort", "Чт"); break;
-                    case 4: dayObj.put("title", "Пятница"); dayObj.put("titleShort", "Пт"); break;
-                    case 5: dayObj.put("title", "Суббота"); dayObj.put("titleShort", "Сб"); break;
-                    case 6: dayObj.put("title", "Воскресенье"); dayObj.put("titleShort", "Вс"); break;
-                    default: dayObj.put("title", ""); dayObj.put("titleShort", ""); break;
+                    case 0: dayObj.put("title", "Понедельник"); break;
+                    case 1: dayObj.put("title", "Вторник"); break;
+                    case 2: dayObj.put("title", "Среда"); break;
+                    case 3: dayObj.put("title", "Четверг"); break;
+                    case 4: dayObj.put("title", "Пятница"); break;
+                    case 5: dayObj.put("title", "Суббота"); break;
+                    case 6: dayObj.put("title", "Воскресенье"); break;
+                    default: dayObj.put("title", ""); break;
                 }
                 JSONArray lessons = new JSONArray();
                 for (int j = 0; j < remoteSchedule.length(); j++) {
@@ -51,9 +51,12 @@ public class ScheduleLessonsConverter extends AsyncTask<JSONObject, Void, JSONOb
                         String subject = get(remoteLesson, "title", "");
                         String note = get(remoteLesson, "note", null);
                         String status = get(remoteLesson, "status", "");
-                        if (note != null) {
-                            if (!Objects.equals(subject, "")) subject += ": ";
-                            subject += note;
+                        if (subject != null) {
+                            subject = Static.escapeString(subject.trim());
+                        }
+                        if (note != null && subject != null) {
+                            if (!subject.isEmpty()) subject += ": ";
+                            subject += Static.escapeString(note.trim());
                         }
                         lesson.put("subject", subject);
                         lesson.put("week", remoteLesson.has("data_week") ? remoteLesson.getInt("data_week") - 1 : 2);

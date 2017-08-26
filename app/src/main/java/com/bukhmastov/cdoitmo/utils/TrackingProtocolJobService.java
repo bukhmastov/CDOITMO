@@ -1,13 +1,9 @@
 package com.bukhmastov.cdoitmo.utils;
 
-import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
 import android.content.Intent;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.SplashActivity;
@@ -190,27 +186,14 @@ public class TrackingProtocolJobService extends JobService {
             public void run() {
                 Log.v(TAG, "addNotification | title=" + title + " | text=" + text + " | timestamp=" + timestamp + " | isSummary=" + (isSummary ? "true" : "false"));
                 if (c > Integer.MAX_VALUE - 10) c = 0;
+                // prepare intent
                 Intent intent = new Intent(getBaseContext(), SplashActivity.class);
                 intent.addFlags(Static.intentFlagRestart);
                 intent.putExtra("action", "protocol_changes");
                 PendingIntent pIntent = PendingIntent.getActivity(getBaseContext(), (int) System.currentTimeMillis(), intent, 0);
-                Notification.Builder b = new Notification.Builder(getBaseContext());
-                b.setContentTitle(title).setContentText(text).setStyle(new Notification.BigTextStyle().bigText(text));
-                b.setSmallIcon(R.drawable.cdo).setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher));
-                b.setGroup("protocol_" + timestamp).setGroupSummary(isSummary);
-                b.setCategory(Notification.CATEGORY_EVENT);
-                b.setContentIntent(pIntent);
-                b.setAutoCancel(true);
-                if (isSummary) {
-                    String ringtonePath = Storage.pref.get(getBaseContext(), "pref_notify_sound");
-                    if (!Objects.equals(ringtonePath, "")) {
-                        b.setSound(Uri.parse(ringtonePath));
-                    }
-                    if (Storage.pref.get(getBaseContext(), "pref_notify_vibrate", false)) {
-                        b.setDefaults(Notification.DEFAULT_VIBRATE);
-                    }
-                }
-                ((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).notify(c++, b.build());
+                // prepare and send notification
+                Notifications notifications = new Notifications(getBaseContext());
+                notifications.notify(c++, notifications.getProtocol(getBaseContext(), title, text, timestamp, isSummary, pIntent));
             }
         });
     }
