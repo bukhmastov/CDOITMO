@@ -16,6 +16,7 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
+import android.preference.PreferenceScreen;
 import android.preference.RingtonePreference;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
@@ -351,7 +352,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         }
     }
 
-    // TODO sync app and general notifications settings for android >= 26 (if possible)
     public static class NotificationsPreferenceFragment extends TemplatePreferenceFragment {
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -362,7 +362,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             addPreferencesFromResource(R.xml.pref_notifications);
             setHasOptionsMenu(true);
             bindPreferenceSummaryToValue(findPreference("pref_notify_frequency"));
-            bindPreferenceSummaryToValue(findPreference("pref_notify_sound"));
             Preference pref_open_system_notifications_settings = findPreference("pref_open_system_notifications_settings");
             if (pref_open_system_notifications_settings != null) {
                 pref_open_system_notifications_settings.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -381,6 +380,17 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                         return false;
                     }
                 });
+            }
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                try {
+                    PreferenceScreen preferenceScreen = getPreferenceScreen();
+                    preferenceScreen.removePreference(findPreference("pref_notify_sound"));
+                    preferenceScreen.removePreference(findPreference("pref_notify_vibrate"));
+                } catch (Exception e) {
+                    Static.error(e);
+                }
+            } else {
+                bindPreferenceSummaryToValue(findPreference("pref_notify_sound"));
             }
         }
         @Override
