@@ -391,5 +391,12 @@
     <string name="pref_open_system_notifications_settings">Открыть настройки уведомлений</string>
     <string name="open_source_software">Открытое программное обеспечение</string>
     <string name="view_source_code">Посмотреть исходный код</string>
+    <string name="send_reports_on_failures">Автоматически отправлять отчеты об ошибках</string>
+    <string name="send_reports_on_failures_summary">Поможет разработчику оперативно исправлять ошибки</string>
+    <string name="track_logs">Записывать логи</string>
+    <string name="track_logs_summary">С возможностью просмотреть, скачать и отослать разработчику вручную</string>
+    <string name="tracked_logs">Записанные логи</string>
+    <string name="send_logs">Выслать логи</string>
+    <string name="download_logs">Скачать логи</string>
 
 </resources>

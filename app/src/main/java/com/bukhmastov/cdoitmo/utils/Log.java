@@ -2,7 +2,6 @@ package com.bukhmastov.cdoitmo.utils;
 
 import android.os.Build;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashProvider;
 
@@ -12,6 +11,35 @@ import java.util.Locale;
 
 public class Log {
 
+    private static boolean enabled = false;
+    public static void setEnabled(boolean enabled) {
+        Log.enabled = enabled;
+        if (!Log.enabled && logList != null) {
+            logList.clear();
+        }
+    }
+
+    private static SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.SSS", Locale.getDefault());
+    private static ArrayList<LogItem> logList = null;
+    private static class LogItem {
+        public int type;
+        public long ts;
+        public String TAG;
+        public String log;
+        public Throwable throwable;
+        public LogItem(int type, String TAG, String log){
+            this.type = type;
+            this.ts = System.currentTimeMillis();
+            this.TAG = TAG;
+            this.log = log;
+        }
+        public LogItem(int type, Throwable throwable){
+            this.type = type;
+            this.ts = System.currentTimeMillis();
+            this.throwable = throwable;
+        }
+    }
+
     private static final int VERBOSE = android.util.Log.VERBOSE;
     private static final int DEBUG = android.util.Log.DEBUG;
     private static final int INFO = android.util.Log.INFO;
@@ -20,27 +48,22 @@ public class Log {
     private static final int EXCEPTION = 7331;
     private static final int WTF = android.util.Log.ASSERT;
     private static final int WTF_EXCEPTION = 8442;
-
-    private static SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.SSS", Locale.getDefault());
-    private static ArrayList<LogItem> logList = null;
-    @Nullable
-    public static ArrayList<LogItem> getRawLog(){
-        try {
-            if (logList == null) {
-                logList = new ArrayList<>();
-            }
-            return logList;
-        } catch (Throwable t) {
-            android.util.Log.e("Log.getRawLog", null, t);
-            return null;
-        }
+    public static class Metrics {
+        public static int warn = 0;
+        public static int error = 0;
+        public static int exception = 0;
+        public static int wtf = 0;
     }
+
     @NonNull
-    public static String getLog(){
+    public static String getLog() {
         return getLog(true);
     }
     @NonNull
-    public static String getLog(boolean reverse){
+    public static String getLog(boolean reverse) {
+        if (logList == null) {
+            logList = new ArrayList<>();
+        }
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("-------Device--------").append("\n");
         stringBuilder.append("DEVICE: ").append(Build.DEVICE).append("\n");
@@ -77,101 +100,97 @@ public class Log {
         }
         return stringBuilder.toString();
     }
-    public static ExtraLog getExtraLog(){
-        ExtraLog extraLog = new ExtraLog();
-        for (int i = 0; i < logList.size(); i++) {
-            LogItem logItem = logList.get(i);
-            switch (logItem.type) {
-                case WARN: extraLog.warn++; break;
-                case ERROR: extraLog.error++; break;
-                case EXCEPTION: extraLog.exception++; break;
-                case WTF: case WTF_EXCEPTION: extraLog.wtf++; break;
-            }
+
+    public static int v(String TAG, String log) {
+        FirebaseCrashProvider.v(TAG, log);
+        if (enabled) {
+            addLog(new LogItem(VERBOSE, TAG, log));
+            return android.util.Log.v(TAG, log);
+        } else {
+            return 0;
         }
-        extraLog.log = getLog(false);
-        extraLog.log_reverse = getLog(true);
-        return extraLog;
     }
-    private static void addLog(LogItem logItem){
+    public static int d(String TAG, String log) {
+        FirebaseCrashProvider.d(TAG, log);
+        if (enabled) {
+            addLog(new LogItem(DEBUG, TAG, log));
+            return android.util.Log.d(TAG, log);
+        } else {
+            return 0;
+        }
+    }
+    public static int i(String TAG, String log) {
+        FirebaseCrashProvider.i(TAG, log);
+        if (enabled) {
+            addLog(new LogItem(INFO, TAG, log));
+            return android.util.Log.i(TAG, log);
+        } else {
+            return 0;
+        }
+    }
+    public static int w(String TAG, String log) {
+        Metrics.warn++;
+        FirebaseCrashProvider.w(TAG, log);
+        if (enabled) {
+            addLog(new LogItem(WARN, TAG, log));
+            return android.util.Log.w(TAG, log);
+        } else {
+            return 0;
+        }
+    }
+    public static int e(String TAG, String log) {
+        Metrics.error++;
+        FirebaseCrashProvider.e(TAG, log);
+        if (enabled) {
+            addLog(new LogItem(ERROR, TAG, log));
+            return android.util.Log.e(TAG, log);
+        } else {
+            return 0;
+        }
+    }
+    public static int wtf(String TAG, String log) {
+        Metrics.wtf++;
+        FirebaseCrashProvider.wtf(TAG, log);
+        if (enabled) {
+            addLog(new LogItem(WTF, TAG, log));
+            return android.util.Log.wtf(TAG, log);
+        } else {
+            return 0;
+        }
+    }
+    public static int wtf(Throwable throwable) {
+        Metrics.wtf++;
+        FirebaseCrashProvider.wtf(throwable);
+        if (enabled) {
+            addLog(new LogItem(WTF_EXCEPTION, throwable));
+            return android.util.Log.wtf("Assert", null, throwable);
+        } else {
+            return 0;
+        }
+    }
+    public static int exception(Throwable throwable) {
+        return exception(null, throwable);
+    }
+    public static int exception(String msg, Throwable throwable) {
+        Metrics.exception++;
+        FirebaseCrashProvider.exception(throwable);
+        if (enabled) {
+            addLog(new LogItem(EXCEPTION, throwable));
+            return android.util.Log.e("Exception", msg, throwable);
+        } else {
+            return 0;
+        }
+    }
+    private static void addLog(LogItem logItem) {
         try {
             if (logList == null) {
                 logList = new ArrayList<>();
             }
-            logList.add(logItem);
+            if (enabled) {
+                logList.add(logItem);
+            }
         } catch (Throwable throwable) {
             android.util.Log.e("Log.addLog", null, throwable);
         }
     }
-
-    public static int v(String TAG, String log){
-        FirebaseCrashProvider.v(TAG, log);
-        addLog(new LogItem(VERBOSE, TAG, log));
-        return android.util.Log.v(TAG, log);
-    }
-    public static int d(String TAG, String log){
-        FirebaseCrashProvider.d(TAG, log);
-        addLog(new LogItem(DEBUG, TAG, log));
-        return android.util.Log.d(TAG, log);
-    }
-    public static int i(String TAG, String log){
-        FirebaseCrashProvider.i(TAG, log);
-        addLog(new LogItem(INFO, TAG, log));
-        return android.util.Log.i(TAG, log);
-    }
-    public static int w(String TAG, String log){
-        FirebaseCrashProvider.w(TAG, log);
-        addLog(new LogItem(WARN, TAG, log));
-        return android.util.Log.w(TAG, log);
-    }
-    public static int e(String TAG, String log){
-        FirebaseCrashProvider.e(TAG, log);
-        addLog(new LogItem(ERROR, TAG, log));
-        return android.util.Log.e(TAG, log);
-    }
-    public static int wtf(String TAG, String log){
-        FirebaseCrashProvider.wtf(TAG, log);
-        addLog(new LogItem(WTF, TAG, log));
-        return android.util.Log.wtf(TAG, log);
-    }
-    public static int wtf(Throwable throwable){
-        FirebaseCrashProvider.wtf(throwable);
-        addLog(new LogItem(WTF_EXCEPTION, throwable));
-        return android.util.Log.wtf("Assert", null, throwable);
-    }
-    public static int exception(Throwable throwable){
-        return exception(null, throwable);
-    }
-    public static int exception(String msg, Throwable throwable){
-        FirebaseCrashProvider.exception(throwable);
-        addLog(new LogItem(EXCEPTION, throwable));
-        return android.util.Log.e("Exception", msg, throwable);
-    }
-
-    private static class LogItem {
-        public int type;
-        public long ts;
-        public String TAG;
-        public String log;
-        public Throwable throwable;
-        public LogItem(int type, String TAG, String log){
-            this.type = type;
-            this.ts = System.currentTimeMillis();
-            this.TAG = TAG;
-            this.log = log;
-        }
-        public LogItem(int type, Throwable throwable){
-            this.type = type;
-            this.ts = System.currentTimeMillis();
-            this.throwable = throwable;
-        }
-    }
-    public static class ExtraLog {
-        public int warn = 0;
-        public int error = 0;
-        public int exception = 0;
-        public int wtf = 0;
-        public String log = "";
-        public String log_reverse = "";
-    }
-
 }

@@ -384,5 +384,12 @@
     <string name="pref_open_system_notifications_settings">Open notification settings</string>
     <string name="open_source_software">Open source software</string>
     <string name="view_source_code">View source code</string>
+    <string name="send_reports_on_failures">Automatically send bug reports</string>
+    <string name="send_reports_on_failures_summary">Will help the developer to quickly correct bugs</string>
+    <string name="track_logs">Record logs</string>
+    <string name="track_logs_summary">With the ability to view, download and send to the developer manually</string>
+    <string name="tracked_logs">Recorded logs</string>
+    <string name="send_logs">Send logs</string>
+    <string name="download_logs">Download logs</string>
 
 </resources>
