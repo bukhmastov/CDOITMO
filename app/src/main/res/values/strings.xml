@@ -398,5 +398,6 @@
     <string name="tracked_logs">Записанные логи</string>
     <string name="send_logs">Выслать логи</string>
     <string name="download_logs">Скачать логи</string>
+    <string name="schedule_lessons_unstable_warning">Расписание может меняться в ближайшее время</string>
 
 </resources>

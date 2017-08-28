@@ -90,6 +90,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
         setContentView(R.layout.schedule_lessons_widget_configure);
         Log.i(TAG, "Activity created");
         FirebaseAnalyticsProvider.logCurrentScreen(this);
+        Static.init(this);
         setResult(RESULT_CANCELED);
         Intent intent = getIntent();
         Bundle extras = intent.getExtras();
@@ -767,7 +768,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
     }
 
     private void updateDemo() {
-        Log.w(TAG, "updateDemo");
+        Log.v(TAG, "updateDemo");
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -805,7 +806,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
         });
     }
     private void updateScheduleSummary() {
-        Log.w(TAG, "updateScheduleSummary");
+        Log.v(TAG, "updateScheduleSummary");
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -820,7 +821,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
         });
     }
     private void updateThemeSummary() {
-        Log.w(TAG, "updateThemeSummary");
+        Log.v(TAG, "updateThemeSummary");
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -845,7 +846,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
         });
     }
     private void updateUpdateSummary() {
-        Log.w(TAG, "updateUpdateSummary");
+        Log.v(TAG, "updateUpdateSummary");
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -873,7 +874,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
         return parseColor(color, 255);
     }
     private static int parseColor(String color, int opacity) {
-        Log.w(TAG, "parseColor | color=" + color + " | opacity=" + opacity);
+        Log.v(TAG, "parseColor | color=" + color + " | opacity=" + opacity);
         int parsed = Color.parseColor(color);
         return Color.argb(opacity, Color.red(parsed), Color.green(parsed), Color.blue(parsed));
     }

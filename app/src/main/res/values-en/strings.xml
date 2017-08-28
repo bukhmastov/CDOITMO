@@ -391,5 +391,6 @@
     <string name="tracked_logs">Recorded logs</string>
     <string name="send_logs">Send logs</string>
     <string name="download_logs">Download logs</string>
+    <string name="schedule_lessons_unstable_warning">The schedule may change in the near future</string>
 
 </resources>

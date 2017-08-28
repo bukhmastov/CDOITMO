@@ -27,6 +27,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Calendar;
 import java.util.Objects;
 
 public class ScheduleLessonsBuilder implements Runnable {
@@ -203,14 +204,23 @@ public class ScheduleLessonsBuilder implements Runnable {
                 }
             }
             ViewGroup lessons_update_time_container = (ViewGroup) schedule_layout.findViewById(R.id.lessons_update_time_container);
+            ViewGroup lessons_warning_container = (ViewGroup) schedule_layout.findViewById(R.id.lessons_warning_container);
             if (daysCount == 0) {
                 Log.v(TAG, "daysCount == 0");
                 schedule_layout.removeView(lessons_update_time_container);
+                schedule_layout.removeView(lessons_warning_container);
                 View view = inflate(R.layout.nothing_to_display);
                 ((TextView) view.findViewById(R.id.ntd_text)).setText(activity.getString(R.string.no_lessons));
                 container.addView(view);
             } else {
                 ((TextView) lessons_update_time_container.findViewById(R.id.lessons_update_time)).setText(activity.getString(R.string.update_date) + " " + Static.getUpdateTime(activity, ScheduleLessonsFragment.schedule.getLong("timestamp")));
+                int month = Calendar.getInstance().get(Calendar.MONTH);
+                int day = Calendar.getInstance().get(Calendar.DAY_OF_MONTH);
+                if (month == Calendar.AUGUST && day > 21 || month == Calendar.SEPTEMBER && day < 21 || month == Calendar.JANUARY && day > 14 || month == Calendar.FEBRUARY && day < 14) {
+                    ((TextView) lessons_warning_container.findViewById(R.id.lessons_warning)).setText(R.string.schedule_lessons_unstable_warning);
+                } else {
+                    schedule_layout.removeView(lessons_warning_container);
+                }
             }
             delegate.state(STATE_DONE, schedule_layout);
         } catch (Exception e){

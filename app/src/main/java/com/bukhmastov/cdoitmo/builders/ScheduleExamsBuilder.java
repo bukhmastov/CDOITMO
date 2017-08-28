@@ -124,6 +124,7 @@ public class ScheduleExamsBuilder implements Runnable {
                 container.addView(examsLayout);
             }
             ViewGroup lessons_update_time_container = (ViewGroup) schedule_layout.findViewById(R.id.lessons_update_time_container);
+            schedule_layout.removeView(schedule_layout.findViewById(R.id.lessons_warning_container));
             if (schedule.length() == 0) {
                 Log.v(TAG, "schedule.length() == 0");
                 schedule_layout.removeView(lessons_update_time_container);
