@@ -42,6 +42,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
     private Context context;
     public static final int FAILED_LOAD = 100;
     public static final int FAILED_OFFLINE = 101;
+    public static final int FAILED_EMPTY_QUERY = 102;
 
     public ScheduleLessons(Context context) {
         this.context = context;
@@ -97,6 +98,10 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                 Log.v(TAG, "search | query=" + query + " | refresh_rate=" + refresh_rate + " | toCache=" + (toCache ? "true" : "false") + " | additionalConversion=" + (additionalConversion ? "true" : "false"));
                 if (handler == null) return;
                 String q = query.trim();
+                if (q.isEmpty()) {
+                    handler.onFailure(FAILED_EMPTY_QUERY);
+                    return;
+                }
                 if (ScheduleLessonsFragment.fragmentRequestHandle != null) ScheduleLessonsFragment.fragmentRequestHandle.cancel(true);
                 Matcher matcherGroup = Pattern.compile("^([a-zA-Z]{1,3})(\\d+[a-zA-Z]?)$").matcher(q);
                 if (matcherGroup.find()) {
@@ -432,8 +437,8 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                     try {
                         Log.v(TAG, "searchTeacher | from cache");
                         JSONObject list = new JSONObject(cache);
-                        if (list.getJSONArray("teachers").length() == 1) {
-                            search(list.getJSONArray("teachers").getJSONObject(0).getString("scope"), refresh_rate, toCache);
+                        if (list.getJSONArray("list").length() == 1) {
+                            search(list.getJSONArray("list").getJSONObject(0).getString("pid"), refresh_rate, toCache);
                         } else {
                             handler.onSuccess(list);
                         }

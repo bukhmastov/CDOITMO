@@ -32,7 +32,7 @@
             android:padding="@dimen/room101_deny_button_padding"
             app:srcCompat="@drawable/ic_close"
             android:contentDescription="@string/close"
-            android:background="?attr/selectableItemBackground" />
+            android:background="?attr/selectableItemBackgroundBorderless" />
 
     </LinearLayout>
 
@@ -81,7 +81,8 @@
             android:layout_alignParentTop="true"
             android:layout_alignParentStart="true"
             android:paddingStart="0dp"
-            android:paddingEnd="@dimen/room101_add_nav_bar_padding">
+            android:paddingEnd="@dimen/room101_add_nav_bar_padding"
+            android:background="?attr/selectableItemBackgroundBorderless">
 
             <ImageView
                 android:layout_height="match_parent"
@@ -124,7 +125,8 @@
             android:layout_alignParentEnd="true"
             android:layout_width="wrap_content"
             android:paddingEnd="0dp"
-            android:paddingStart="@dimen/room101_add_nav_bar_padding">
+            android:paddingStart="@dimen/room101_add_nav_bar_padding"
+            android:background="?attr/selectableItemBackgroundBorderless">
 
             <TextView
                 android:id="@+id/room101_forward_text"

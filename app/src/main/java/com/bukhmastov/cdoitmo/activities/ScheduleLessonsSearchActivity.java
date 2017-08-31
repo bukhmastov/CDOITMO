@@ -14,6 +14,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class ScheduleLessonsSearchActivity extends SearchActivity {
 
@@ -60,8 +61,10 @@ public class ScheduleLessonsSearchActivity extends SearchActivity {
                 if (!cachedFile.isEmpty()) {
                     try {
                         JSONObject object = new JSONObject(cachedFile);
-                        if (query.isEmpty() || contains(object.getString("label"), query)) {
-                            suggestions.add(new Suggestion(object.getString("query"), object.getString("label"), R.drawable.ic_save));
+                        if (object.has("type") && !Objects.equals(object.getString("type"), "teacher_picker")) {
+                            if (query.isEmpty() || (object.has("label") && contains(object.getString("label"), query))) {
+                                suggestions.add(new Suggestion(object.getString("query"), object.getString("label"), R.drawable.ic_save));
+                            }
                         }
                     } catch (Exception e) {
                         Static.error(e);

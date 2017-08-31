@@ -153,6 +153,8 @@ public class FirebaseAnalyticsProvider {
 
     public static void setUserProperties(Context context, String group) {
         try {
+            group = group.trim();
+            if (group.isEmpty()) return;
             Matcher m = Pattern.compile("(\\w)(\\d)(\\d)(\\d)(\\d)(\\w?)").matcher(group);
             if (m.find()) {
                 String faculty = m.group(1).trim().toUpperCase();

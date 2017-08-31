@@ -47,6 +47,8 @@ import org.json.JSONObject;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class SettingsActivity extends AppCompatPreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
@@ -171,6 +173,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                     Storage.file.cache.clear(this, "university");
                 }
                 break;
+            case "pref_group_force_override":
+                Matcher m = Pattern.compile("([a-z])(\\d{4}\\S?)").matcher(Storage.pref.get(this, "pref_group_force_override", ""));
+                if (m.find()) {
+                    Storage.pref.put(this, "pref_group_force_override", m.group(1).toUpperCase() + m.group(2).toLowerCase());
+                }
+                break;
         }
     }
 
@@ -222,6 +230,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
             bindPreferenceSummaryToValue(findPreference("pref_default_fragment"));
+            bindPreferenceSummaryToValue(findPreference("pref_group_force_override"));
             Preference pref_reset_application = findPreference("pref_reset_application");
             if (pref_reset_application != null) {
                 pref_reset_application.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -559,7 +568,21 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                     }
                 }
             } else {
-                preference.setSummary(stringValue);
+                switch (preference.getKey()) {
+                    case "pref_group_force_override": {
+                        stringValue = stringValue.trim();
+                        if (stringValue.isEmpty()) {
+                            preference.setSummary(preference.getContext().getString(R.string.pref_group_force_override_summary));
+                        } else {
+                            preference.setSummary(stringValue);
+                        }
+                        break;
+                    }
+                    default: {
+                        preference.setSummary(stringValue);
+                        break;
+                    }
+                }
             }
             return true;
         }

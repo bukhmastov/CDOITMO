@@ -34,6 +34,14 @@
         android:title="@string/pref_dark_theme"
         android:summary="@string/pref_dark_theme_summary" />
 
+    <EditTextPreference
+        android:key="pref_group_force_override"
+        android:title="@string/pref_group_force_override"
+        android:summary="@string/pref_group_force_override_summary"
+        android:dialogMessage="@string/pref_group_force_override_message"
+        android:hint="@string/pref_group_force_override_hint"
+        android:singleLine="true"/>
+
     <Preference
         android:key="pref_open_system_settings"
         android:title="@string/pref_open_system_settings" />

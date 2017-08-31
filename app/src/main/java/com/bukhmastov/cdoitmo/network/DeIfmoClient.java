@@ -75,8 +75,14 @@ public class DeIfmoClient extends Client {
                             public void finish(HashMap<String, String> result) {
                                 if (result != null) {
                                     Log.v(TAG, "check | success | parsed");
+                                    String pref_group_force_override = Storage.pref.get(context, "pref_group_force_override", "");
+                                    if (pref_group_force_override == null) {
+                                        pref_group_force_override = "";
+                                    } else {
+                                        pref_group_force_override = pref_group_force_override.trim();
+                                    }
                                     Storage.file.perm.put(context, "user#name", result.get("name"));
-                                    Storage.file.perm.put(context, "user#group", result.get("group"));
+                                    Storage.file.perm.put(context, "user#group", pref_group_force_override.isEmpty() ? result.get("group") : pref_group_force_override);
                                     Storage.file.perm.put(context, "user#avatar", result.get("avatar"));
                                     try {
                                         JSONObject jsonObject = new JSONObject();

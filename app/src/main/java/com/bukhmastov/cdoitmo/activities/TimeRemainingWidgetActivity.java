@@ -137,6 +137,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
                     break;
                 case IfmoRestClient.FAILED_TRY_AGAIN:
                 case ScheduleLessons.FAILED_LOAD:
+                case ScheduleLessons.FAILED_EMPTY_QUERY:
                     message(activity.getString(R.string.load_failed));
                     break;
             }

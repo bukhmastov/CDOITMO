@@ -143,6 +143,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
                     break;
                 case IfmoClient.FAILED_TRY_AGAIN:
                 case ScheduleExams.FAILED_LOAD:
+                case ScheduleExams.FAILED_EMPTY_QUERY:
                     message(activity.getString(R.string.load_failed));
                     break;
             }

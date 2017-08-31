@@ -35,6 +35,7 @@ public class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
     private Context context;
     public static final int FAILED_LOAD = 100;
     public static final int FAILED_OFFLINE = 101;
+    public static final int FAILED_EMPTY_QUERY = 102;
 
     public ScheduleExams(Context context) {
         this.context = context;
@@ -82,6 +83,10 @@ public class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
                 Log.v(TAG, "search | query=" + query + " | refresh_rate=" + refresh_rate + " | toCache=" + (toCache ? "true" : "false"));
                 if (handler == null) return;
                 String q = query.trim();
+                if (q.isEmpty()) {
+                    handler.onFailure(FAILED_EMPTY_QUERY);
+                    return;
+                }
                 ScheduleExamsFragment.query = q;
                 if (ScheduleExamsFragment.fragmentRequestHandle != null) ScheduleExamsFragment.fragmentRequestHandle.cancel(true);
                 if (Pattern.compile("^\\w{1,3}\\d{4}\\w?$").matcher(q).find()) {

@@ -280,7 +280,7 @@ public abstract class SchedulePreference extends DialogPreference {
             case IfmoClient.FAILED_OFFLINE:
                 failed(getContext().getString(R.string.device_offline_action_refused));
                 break;
-            case IfmoClient.FAILED_TRY_AGAIN:
+            case IfmoClient.FAILED_TRY_AGAIN: default:
                 failed(getContext().getString(R.string.load_failed));
                 break;
         }

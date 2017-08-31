@@ -392,5 +392,12 @@
     <string name="send_logs">Send logs</string>
     <string name="download_logs">Download logs</string>
     <string name="schedule_lessons_unstable_warning">The schedule may change in the near future</string>
+    <string name="schedule_empty_query_title">The system could not determine your group or an empty query was specified</string>
+    <string name="schedule_empty_query_use_seqrch">Select the desired schedule using the search in the upper right corner</string>
+    <string name="schedule_empty_query_settings">You can configure the default schedule display by following the steps:</string>
+    <string name="pref_group_force_override">Override group</string>
+    <string name="pref_group_force_override_summary">If your group is determined incorrectly</string>
+    <string name="pref_group_force_override_message">Leave the field blank to allow the system to automatically define a group. You must restart the application to accept the changes.</string>
+    <string name="pref_group_force_override_hint">Group number</string>
 
 </resources>

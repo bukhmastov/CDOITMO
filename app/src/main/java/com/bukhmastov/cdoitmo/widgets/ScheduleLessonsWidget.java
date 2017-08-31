@@ -109,6 +109,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                             case IfmoRestClient.FAILED_OFFLINE:
                             case IfmoRestClient.FAILED_TRY_AGAIN:
                             case ScheduleLessons.FAILED_LOAD:
+                            case ScheduleLessons.FAILED_EMPTY_QUERY:
                                 failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_load_schedule));
                                 break;
                         }
