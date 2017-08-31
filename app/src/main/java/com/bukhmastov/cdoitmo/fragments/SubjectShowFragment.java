@@ -116,7 +116,7 @@ public class SubjectShowFragment extends ConnectedFragment {
             TextView as_result = (TextView) activity.findViewById(R.id.as_result);
             TextView as_current_points = (TextView) activity.findViewById(R.id.as_current_points);
             if (as_info_term != null) {
-                as_info_term.setText(termSub + " " + getString(R.string.semester));
+                as_info_term.setText(termSub + " " + activity.getString(R.string.semester));
             }
             if (as_info_type != null) {
                 if (!Objects.equals(subject.getString("type"), "")) {
@@ -185,7 +185,7 @@ public class SubjectShowFragment extends ConnectedFragment {
                             as_container.addView(view);
                         } catch (Exception e) {
                             Static.error(e);
-                            Static.snackBar(activity, getString(R.string.something_went_wrong));
+                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                         }
                     }
                 }

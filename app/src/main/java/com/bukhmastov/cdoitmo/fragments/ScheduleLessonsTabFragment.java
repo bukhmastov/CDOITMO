@@ -142,7 +142,7 @@ public class ScheduleLessonsTabFragment extends Fragment {
                     if (schedule_lessons_all_week != null) {
                         int week = Static.getWeek(activity);
                         if (week >= 0) {
-                            schedule_lessons_all_week.setText(week + " " + getString(R.string.school_week));
+                            schedule_lessons_all_week.setText(week + " " + activity.getString(R.string.school_week));
                         } else {
                             schedule_lessons_all_week.setText(new SimpleDateFormat("dd.MM.yyyy", Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis())));
                         }
@@ -163,9 +163,9 @@ public class ScheduleLessonsTabFragment extends Fragment {
                                     Boolean result = ScheduleLessonsFragment.scheduleLessons.toggleCache();
                                     if (result == null) {
                                         Log.w(TAG, "failed to toggle cache");
-                                        Static.snackBar(activity, getString(R.string.cache_failed));
+                                        Static.snackBar(activity, activity.getString(R.string.cache_failed));
                                     } else {
-                                        Static.snackBar(activity, result ? getString(R.string.cache_true) : getString(R.string.cache_false));
+                                        Static.snackBar(activity, result ? activity.getString(R.string.cache_true) : activity.getString(R.string.cache_false));
                                         if (container != null) {
                                             FrameLayout schedule_lessons_cache = (FrameLayout) container.findViewById(R.id.schedule_lessons_cache);
                                             if (schedule_lessons_cache != null) {

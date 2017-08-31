@@ -75,8 +75,8 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                 throw new NullPointerException("type cannot be null");
             }
             switch (type) {
-                case create: activity.updateToolbar(getString(R.string.lesson_creation), R.drawable.ic_schedule_lessons); break;
-                case edit: activity.updateToolbar(getString(R.string.lesson_editing), R.drawable.ic_schedule_lessons); break;
+                case create: activity.updateToolbar(activity.getString(R.string.lesson_creation), R.drawable.ic_schedule_lessons); break;
+                case edit: activity.updateToolbar(activity.getString(R.string.lesson_editing), R.drawable.ic_schedule_lessons); break;
                 default:
                     Exception exception = new Exception("got wrong type from arguments bundle: " + type.toString());
                     Log.wtf(exception);
@@ -361,7 +361,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                 lesson_teacher.setText(lessonUnit.teacher);
                             } catch (Exception e) {
                                 Static.error(e);
-                                Static.snackBar(activity, getString(R.string.something_went_wrong));
+                                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                             }
                         }
                     });
@@ -396,8 +396,8 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
 
                     Button lesson_create_button = (Button) activity.findViewById(R.id.lesson_create_button);
                     switch (type) {
-                        case create: lesson_create_button.setText(getString(R.string.create)); break;
-                        case edit: lesson_create_button.setText(getString(R.string.save)); break;
+                        case create: lesson_create_button.setText(activity.getString(R.string.create)); break;
+                        case edit: lesson_create_button.setText(activity.getString(R.string.save)); break;
                     }
                     lesson_create_button.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -405,18 +405,18 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                             Log.v(TAG, "create_button clicked");
                             if (lessonUnit.title == null || lessonUnit.title.isEmpty()) {
                                 Log.v(TAG, "lessonUnit.title required");
-                                Static.snackBar(activity, getString(R.string.lesson_title_required));
+                                Static.snackBar(activity, activity.getString(R.string.lesson_title_required));
                                 return;
                             }
                             if (lessonUnit.timeStart == null || lessonUnit.timeStart.isEmpty()) {
                                 Log.v(TAG, "lessonUnit.timeStart required");
-                                Static.snackBar(activity, getString(R.string.lesson_time_start_required));
+                                Static.snackBar(activity, activity.getString(R.string.lesson_time_start_required));
                                 return;
                             }
                             if (lessonUnit.type != null) {
-                                if (Objects.equals(lessonUnit.type.toLowerCase(), getString(R.string.lecture).toLowerCase())) lessonUnit.type = "lecture";
-                                if (Objects.equals(lessonUnit.type.toLowerCase(), getString(R.string.practice).toLowerCase())) lessonUnit.type = "practice";
-                                if (Objects.equals(lessonUnit.type.toLowerCase(), getString(R.string.lab).toLowerCase())) lessonUnit.type = "lab";
+                                if (Objects.equals(lessonUnit.type.toLowerCase(), activity.getString(R.string.lecture).toLowerCase())) lessonUnit.type = "lecture";
+                                if (Objects.equals(lessonUnit.type.toLowerCase(), activity.getString(R.string.practice).toLowerCase())) lessonUnit.type = "practice";
+                                if (Objects.equals(lessonUnit.type.toLowerCase(), activity.getString(R.string.lab).toLowerCase())) lessonUnit.type = "lab";
                             }
                             switch (type) {
                                 case create: {
@@ -425,7 +425,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                         activity.back();
                                     } else {
                                         Log.w(TAG, "failed to create lesson");
-                                        Static.snackBar(activity, getString(R.string.something_went_wrong));
+                                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                     }
                                     break;
                                 }
@@ -435,7 +435,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                         activity.back();
                                     } else {
                                         Log.w(TAG, "failed to edit lesson");
-                                        Static.snackBar(activity, getString(R.string.something_went_wrong));
+                                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                     }
                                     break;
                                 }
@@ -444,7 +444,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                     });
                 } catch (Exception e) {
                     Static.error(e);
-                    Static.snackBar(activity, getString(R.string.something_went_wrong));
+                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     activity.back();
                 }
             }
@@ -463,7 +463,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
         if (slc_desc != null) {
             int week = Static.getWeek(activity);
             if (week >= 0) {
-                slc_desc.setText(week + " " + getString(R.string.school_week));
+                slc_desc.setText(week + " " + activity.getString(R.string.school_week));
             } else {
                 slc_desc.setText(new SimpleDateFormat("dd.MM.yyyy", Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis())));
             }
@@ -486,9 +486,9 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
         lessonUnit.room = getStringExtra(extras, "room", false);
         lessonUnit.building = getStringExtra(extras, "building", false);
         switch (lessonUnit.type) {
-            case "practice": lessonUnit.type = getString(R.string.practice); break;
-            case "lecture": lessonUnit.type = getString(R.string.lecture); break;
-            case "lab": lessonUnit.type = getString(R.string.lab); break;
+            case "practice": lessonUnit.type = activity.getString(R.string.practice); break;
+            case "lecture": lessonUnit.type = activity.getString(R.string.lecture); break;
+            case "lab": lessonUnit.type = activity.getString(R.string.lab); break;
         }
         return lessonUnit;
     }
@@ -530,9 +530,9 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                         if (lesson.getString("building") != null) lessonUnit.building = lesson.getString("building");
                         if (lessonUnit.type != null) {
                             switch (lessonUnit.type) {
-                                case "practice": lessonUnit.type = getString(R.string.practice); break;
-                                case "lecture": lessonUnit.type = getString(R.string.lecture); break;
-                                case "lab": lessonUnit.type = getString(R.string.lab); break;
+                                case "practice": lessonUnit.type = activity.getString(R.string.practice); break;
+                                case "lecture": lessonUnit.type = activity.getString(R.string.lecture); break;
+                                case "lab": lessonUnit.type = activity.getString(R.string.lab); break;
                             }
                         }
                         found = true;

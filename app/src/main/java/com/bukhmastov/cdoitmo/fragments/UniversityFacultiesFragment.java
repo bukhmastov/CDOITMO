@@ -385,7 +385,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                     if (timestamp > 0 && timestamp + 5000 < Calendar.getInstance().getTimeInMillis()) {
                         UniversityRecyclerViewAdapter.Item item = new UniversityRecyclerViewAdapter.Item();
                         item.type = UniversityRecyclerViewAdapter.TYPE_INFO_ABOUT_UPDATE_TIME;
-                        item.data = new JSONObject().put("title", getString(R.string.update_date) + " " + Static.getUpdateTime(activity, timestamp));
+                        item.data = new JSONObject().put("title", activity.getString(R.string.update_date) + " " + Static.getUpdateTime(activity, timestamp));
                         facultiesRecyclerViewAdapter.addItem(item);
                     }
                     // добавляем отступ
@@ -438,7 +438,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                                     FacultiesRecyclerViewAdapter.Item item = new FacultiesRecyclerViewAdapter.Item();
                                     item.type = FacultiesRecyclerViewAdapter.TYPE_UNIT_STRUCTURE_COMMON;
                                     item.data = new JSONObject()
-                                            .put("header", getString(R.string.faculty_section_general))
+                                            .put("header", activity.getString(R.string.faculty_section_general))
                                             .put("address", isValid(address) ? address : null)
                                             .put("phone", isValid(phone) ? phone : null)
                                             .put("site", isValid(site) ? site : null);
@@ -452,7 +452,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                                     FacultiesRecyclerViewAdapter.Item item = new FacultiesRecyclerViewAdapter.Item();
                                     item.type = FacultiesRecyclerViewAdapter.TYPE_UNIT_STRUCTURE_DEANERY;
                                     item.data = new JSONObject()
-                                            .put("header", getString(R.string.faculty_section_deanery))
+                                            .put("header", activity.getString(R.string.faculty_section_deanery))
                                             .put("deanery_address", isValid(deanery_address) ? deanery_address : null)
                                             .put("deanery_phone", isValid(deanery_phone) ? deanery_phone : null)
                                             .put("deanery_email", isValid(deanery_email) ? deanery_email : null);
@@ -471,7 +471,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                                     FacultiesRecyclerViewAdapter.Item item = new FacultiesRecyclerViewAdapter.Item();
                                     item.type = FacultiesRecyclerViewAdapter.TYPE_UNIT_STRUCTURE_HEAD;
                                     item.data = new JSONObject()
-                                            .put("header", isValid(head_post) ? head_post : getString(R.string.faculty_section_head))
+                                            .put("header", isValid(head_post) ? head_post : activity.getString(R.string.faculty_section_head))
                                             .put("head_lastname", isValid(head_lastname) ? head_lastname : null)
                                             .put("head_firstname", isValid(head_firstname) ? head_firstname : null)
                                             .put("head_middlename", isValid(head_middlename) ? head_middlename : null)
@@ -496,7 +496,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                             FacultiesRecyclerViewAdapter.Item item = new FacultiesRecyclerViewAdapter.Item();
                             item.type = FacultiesRecyclerViewAdapter.TYPE_UNIT_DIVISIONS;
                             item.data = new JSONObject()
-                                    .put("header", stack.size() == 0 ? null : getString(R.string.faculty_section_divisions))
+                                    .put("header", stack.size() == 0 ? null : activity.getString(R.string.faculty_section_divisions))
                                     .put("divisions", d);
                             items.add(item);
                             facultiesRecyclerViewAdapter.setOnDivisionClickListener(new FacultiesRecyclerViewAdapter.OnDivisionClickListener() {

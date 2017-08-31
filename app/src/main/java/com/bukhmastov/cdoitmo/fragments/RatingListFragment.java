@@ -55,7 +55,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        activity.updateToolbar(getString(R.string.top_rating), R.drawable.ic_rating);
+        activity.updateToolbar(activity.getString(R.string.top_rating), R.drawable.ic_rating);
         try {
             Bundle extras = getArguments();
             if (extras == null) {
@@ -111,7 +111,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
             @Override
             public void run() {
                 Log.v(TAG, "load");
-                activity.updateToolbar(getString(R.string.top_rating), R.drawable.ic_rating);
+                activity.updateToolbar(activity.getString(R.string.top_rating), R.drawable.ic_rating);
                 if (!Static.OFFLINE_MODE) {
                     DeIfmoClient.get(activity, Client.Protocol.HTTP, "?node=rating&std&depId=" + faculty + "&year=" + course + "&app=" + years, null, new DeIfmoClientResponseHandler() {
                         @Override
@@ -191,7 +191,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                         @Override
                         public void run() {
                             try {
-                                Static.snackBar(activity, getString(R.string.offline_mode_on));
+                                Static.snackBar(activity, activity.getString(R.string.offline_mode_on));
                                 draw(R.layout.state_offline);
                                 View offline_reload = activity.findViewById(R.id.offline_reload);
                                 if (offline_reload != null) {

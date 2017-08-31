@@ -109,11 +109,11 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                 Log.v(TAG, "onDenyRequest | reid=" + reid + " | status=" + status);
                 if (Static.OFFLINE_MODE) {
                     Log.v(TAG, "onDenyRequest rejected: offline mode");
-                    Static.snackBar(activity, R.id.room101_review_swipe, getString(R.string.device_offline_action_refused));
+                    Static.snackBar(activity, R.id.room101_review_swipe, activity.getString(R.string.device_offline_action_refused));
                 } else {
                     (new AlertDialog.Builder(activity)
                             .setTitle(R.string.request_deny)
-                            .setMessage(getString(R.string.request_deny_1) + "\n" + getString(R.string.request_deny_2))
+                            .setMessage(activity.getString(R.string.request_deny_1) + "\n" + activity.getString(R.string.request_deny_2))
                             .setCancelable(true)
                             .setPositiveButton(R.string.delete, new DialogInterface.OnClickListener() {
                                 @Override
@@ -230,7 +230,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                 Log.v(TAG, "addRequest");
                 if (Static.OFFLINE_MODE) {
                     Log.v(TAG, "addRequest rejected: offline mode");
-                    Static.snackBar(activity, R.id.room101_review_swipe, getString(R.string.device_offline_action_refused));
+                    Static.snackBar(activity, R.id.room101_review_swipe, activity.getString(R.string.device_offline_action_refused));
                 } else {
                     draw(R.layout.layout_room101_add_request);
                     final View room101_close_add_request = activity.findViewById(R.id.room101_close_add_request);
@@ -286,7 +286,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                                         }
                                     } catch (Exception e){
                                         Static.error(e);
-                                        Static.snackBar(activity, R.id.room101_review_swipe, getString(R.string.error_occurred_while_room101_request));
+                                        Static.snackBar(activity, R.id.room101_review_swipe, activity.getString(R.string.error_occurred_while_room101_request));
                                         load(false);
                                     }
                                 }
@@ -305,7 +305,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                                         }
                                     } catch (Exception e){
                                         Static.error(e);
-                                        Static.snackBar(activity, R.id.room101_review_swipe, getString(R.string.error_occurred));
+                                        Static.snackBar(activity, R.id.room101_review_swipe, activity.getString(R.string.error_occurred));
                                         load(false);
                                     }
                                 }

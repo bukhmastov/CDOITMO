@@ -269,7 +269,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
                             if (schedule_exams_week != null) {
                                 int week = Static.getWeek(activity);
                                 if (week >= 0) {
-                                    schedule_exams_week.setText(week + " " + getString(R.string.school_week));
+                                    schedule_exams_week.setText(week + " " + activity.getString(R.string.school_week));
                                 } else {
                                     schedule_exams_week.setText(new SimpleDateFormat("dd.MM.yyyy", Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis())));
                                 }
@@ -290,9 +290,9 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
                                             Boolean result = ScheduleExamsFragment.scheduleExams.toggleCache();
                                             if (result == null) {
                                                 Log.w(TAG, "failed to toggle cache");
-                                                Static.snackBar(activity, getString(R.string.cache_failed));
+                                                Static.snackBar(activity, activity.getString(R.string.cache_failed));
                                             } else {
-                                                Static.snackBar(activity, result ? getString(R.string.cache_true) : getString(R.string.cache_false));
+                                                Static.snackBar(activity, result ? activity.getString(R.string.cache_true) : activity.getString(R.string.cache_false));
                                                 FrameLayout schedule_exams_cache = (FrameLayout) activity.findViewById(R.id.schedule_exams_cache);
                                                 if (schedule_exams_cache != null) {
                                                     ImageView cacheImage = new ImageView(activity);
@@ -362,7 +362,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
                 if (container_schedule != null) {
                     container_schedule.removeAllViews();
                     View view = inflate(R.layout.nothing_to_display);
-                    ((TextView) view.findViewById(R.id.ntd_text)).setText(getString(R.string.on_demand) + " \"" + query + "\" " + getString(R.string.schedule_not_found_2));
+                    ((TextView) view.findViewById(R.id.ntd_text)).setText(activity.getString(R.string.on_demand) + " \"" + query + "\" " + activity.getString(R.string.schedule_not_found_2));
                     container_schedule.addView(view);
                 }
             }

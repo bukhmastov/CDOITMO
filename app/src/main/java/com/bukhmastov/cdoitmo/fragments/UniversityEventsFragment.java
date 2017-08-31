@@ -409,7 +409,7 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
                         if (timestamp > 0 && timestamp + 5000 < Calendar.getInstance().getTimeInMillis()) {
                             UniversityRecyclerViewAdapter.Item item = new UniversityRecyclerViewAdapter.Item();
                             item.type = UniversityRecyclerViewAdapter.TYPE_INFO_ABOUT_UPDATE_TIME;
-                            item.data = new JSONObject().put("title", getString(R.string.update_date) + " " + Static.getUpdateTime(activity, timestamp));
+                            item.data = new JSONObject().put("title", activity.getString(R.string.update_date) + " " + Static.getUpdateTime(activity, timestamp));
                             eventsRecyclerViewAdapter.addItem(item);
                         }
                         displayContent(list);

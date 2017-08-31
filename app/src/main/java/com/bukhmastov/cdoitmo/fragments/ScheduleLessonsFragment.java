@@ -348,7 +348,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
                 if (container_schedule != null) {
                     container_schedule.removeAllViews();
                     View view = inflate(R.layout.nothing_to_display);
-                    ((TextView) view.findViewById(R.id.ntd_text)).setText(getString(R.string.on_demand) + " \"" + query + "\" " + getString(R.string.schedule_not_found_2));
+                    ((TextView) view.findViewById(R.id.ntd_text)).setText(activity.getString(R.string.on_demand) + " \"" + query + "\" " + activity.getString(R.string.schedule_not_found_2));
                     container_schedule.addView(view);
                 }
             }
