@@ -1,60 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:paddingTop="@dimen/item_padding"
-    android:paddingBottom="@dimen/item_padding"
-    android:paddingStart="@dimen/item_padding"
-    android:paddingEnd="@dimen/item_padding" >
+    android:layout_height="match_parent">
 
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="32dp"
-        app:srcCompat="@drawable/ic_search"
-        android:tint="?attr/colorIcXml"/>
-
-    <TextView
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:fontFamily="@string/font_bold"
-        android:gravity="center"
-        android:paddingTop="@dimen/item_vertical_padding_half"
-        android:paddingBottom="@dimen/item_vertical_padding_half"
-        android:text="@string/schedule_empty_query_title"
-        android:textAllCaps="true"
-        android:textColor="?android:attr/textColorPrimary"
-        android:textSize="@dimen/font_size_14" />
+        android:paddingTop="@dimen/item_padding"
+        android:paddingBottom="@dimen/item_padding"
+        android:paddingStart="@dimen/item_padding"
+        android:paddingEnd="@dimen/item_padding" >
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:paddingTop="@dimen/item_vertical_padding_half"
-        android:paddingBottom="@dimen/item_vertical_padding_half"
-        android:text="@string/schedule_empty_query_use_seqrch"
-        android:textColor="?android:attr/textColorPrimary"
-        android:textSize="@dimen/font_size_14" />
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="32dp"
+            app:srcCompat="@drawable/ic_search"
+            android:tint="?attr/colorIcXml"/>
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:paddingTop="@dimen/item_vertical_padding_half"
-        android:paddingBottom="0dp"
-        android:text="@string/schedule_empty_query_settings"
-        android:textColor="?android:attr/textColorPrimary"
-        android:textSize="@dimen/font_size_14" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@string/font_bold"
+            android:gravity="center"
+            android:paddingTop="@dimen/item_vertical_padding_half"
+            android:paddingBottom="@dimen/item_vertical_padding_half"
+            android:text="@string/schedule_empty_query_title"
+            android:textAllCaps="true"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="@dimen/font_size_14" />
 
-    <TextView
-        android:id="@+id/seq_text"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:paddingTop="0dp"
-        android:paddingBottom="@dimen/item_vertical_padding_half"
-        android:textColor="?android:attr/textColorPrimary"
-        android:textSize="@dimen/font_size_14" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:paddingTop="@dimen/item_vertical_padding_half"
+            android:paddingBottom="@dimen/item_vertical_padding_half"
+            android:text="@string/schedule_empty_query_use_seqrch"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="@dimen/font_size_14" />
 
-</LinearLayout>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:paddingTop="@dimen/item_vertical_padding_half"
+            android:paddingBottom="0dp"
+            android:text="@string/schedule_empty_query_settings"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="@dimen/font_size_14" />
+
+        <TextView
+            android:id="@+id/seq_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:paddingTop="0dp"
+            android:paddingBottom="@dimen/item_vertical_padding_half"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="@dimen/font_size_14" />
+
+    </LinearLayout>
+
+</ScrollView>
