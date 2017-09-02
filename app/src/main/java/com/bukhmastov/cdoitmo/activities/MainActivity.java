@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.activities;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -31,7 +32,7 @@ import com.bukhmastov.cdoitmo.utils.Storage;
 public class MainActivity extends ConnectedActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "MainActivity";
-    private MainActivity self = this;
+    private final Activity activity = this;
     private static final String STATE_SELECTED_SELECTION = "selectedSection";
     public static int selectedSection = R.id.nav_e_register;
     public static Menu menu;
@@ -47,7 +48,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
         setContentView(R.layout.activity_main);
 
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar_main));
-        DrawerLayout mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout mDrawerLayout = findViewById(R.id.drawer_layout);
         if (mDrawerLayout != null) {
             Static.tablet = false;
             ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, ((Toolbar) findViewById(R.id.toolbar_main)), R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -60,7 +61,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
         } else {
             Static.tablet = true;
         }
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
         FirebaseAnalyticsProvider.setUserProperty(this, FirebaseAnalyticsProvider.Property.DEVICE, Static.tablet ? "tablet" : "mobile");
@@ -72,7 +73,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
         Log.i(TAG, "mode=" + (Static.OFFLINE_MODE ? "offline" : "online"));
 
         String action = getIntent().getStringExtra("action");
-        if (savedInstanceState == null || action != null) {
+        if (action != null || !(savedInstanceState != null && savedInstanceState.containsKey(STATE_SELECTED_SELECTION))) {
             String act = action == null ? Storage.pref.get(this, "pref_default_fragment", "e_journal") : action;
             Log.v(TAG, "Section = " + act + " from " + (action == null ? "preference" : "intent's extras"));
             switch (act) {
@@ -102,13 +103,6 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
         super.onResume();
         Log.v(TAG, "Activity resumed");
         Static.NavigationMenu.displayEnableDisableOfflineButton((NavigationView) findViewById(R.id.nav_view));
-        if (selectedMenuItem != null) {
-            try {
-                selectSection(selectedMenuItem.getItemId());
-            } finally {
-                selectedMenuItem = null;
-            }
-        }
         if (Static.OFFLINE_MODE) {
             authorized();
         } else {
@@ -136,7 +130,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
     @Override
     public boolean onNavigationItemSelected(@NonNull final MenuItem item) {
         Log.v(TAG, "NavigationItemSelected " + item.getTitle());
-        DrawerLayout drawer_layout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer_layout = findViewById(R.id.drawer_layout);
         if (drawer_layout != null) drawer_layout.closeDrawer(GravityCompat.START);
         selectSection(item.getItemId());
         return true;
@@ -145,7 +139,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
     @Override
     public void onBackPressed() {
         try {
-            DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+            DrawerLayout drawer = findViewById(R.id.drawer_layout);
             if (drawer == null) {
                 throw new Exception("");
             } else {
@@ -193,7 +187,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
             public void run() {
                 Log.v(TAG, "authorize | state=" + state);
                 loaded = false;
-                Intent intent = new Intent(self, LoginActivity.class);
+                Intent intent = new Intent(activity, LoginActivity.class);
                 intent.putExtra("state", state);
                 startActivity(intent);
             }
@@ -206,13 +200,17 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                 Log.v(TAG, "authorized");
                 if (!loaded) {
                     loaded = true;
-                    if (Static.protocolTracker == null) Static.protocolTracker = new ProtocolTracker(self);
-                    Static.protocolTracker.check();
+                    new ProtocolTracker(activity).check();
                     selectSection(selectedSection);
-                    Static.NavigationMenu.displayUserData(self, (NavigationView) findViewById(R.id.nav_view));
-                    Static.NavigationMenu.displayUserAvatar(self, (NavigationView) findViewById(R.id.nav_view));
-                    Static.NavigationMenu.snackbarOffline(self);
+                    Static.NavigationMenu.displayUserData(activity, (NavigationView) findViewById(R.id.nav_view));
+                    Static.NavigationMenu.snackbarOffline(activity);
                     Static.NavigationMenu.drawOffline(menu);
+                } else if (selectedMenuItem != null) {
+                    try {
+                        selectSection(selectedMenuItem.getItemId());
+                    } finally {
+                        selectedMenuItem = null;
+                    }
                 }
             }
         });
@@ -245,7 +243,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                             ((NavigationView) findViewById(R.id.nav_view)).setCheckedItem(section);
                             selectedSection = section;
                         } else {
-                            Static.snackBar(self, self.getString(R.string.failed_to_open_fragment), self.getString(R.string.redo), new View.OnClickListener() {
+                            Static.snackBar(activity, activity.getString(R.string.failed_to_open_fragment), activity.getString(R.string.redo), new View.OnClickListener() {
                                 @Override
                                 public void onClick(View view) {
                                     selectSection(section);
@@ -264,7 +262,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                             }
                         }
                         break;
-                    case R.id.nav_settings: startActivity(new Intent(self, SettingsActivity.class)); break;
+                    case R.id.nav_settings: startActivity(new Intent(activity, SettingsActivity.class)); break;
                     case R.id.nav_enable_offline_mode:
                     case R.id.nav_disable_offline_mode:
                     case R.id.nav_change_account:

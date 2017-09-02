@@ -28,8 +28,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/lorem_ipsum"
-            android:textColor="?android:attr/textColorSecondary"
-            android:textSize="@dimen/font_size_14" />
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="@dimen/font_size_14"
+            android:alpha="0.75"/>
 
     </LinearLayout>
 
@@ -45,8 +46,10 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
-            android:text="@string/lorem_ipsum"
-            android:textAppearance="@style/TextAppearance.AppCompat.Button"
+            android:text="@string/lorem_number"
+            android:fontFamily="@string/font_bold"
+            android:textAllCaps="true"
+            android:textColor="?android:attr/textColorPrimary"
             android:textSize="@dimen/font_size_18" />
 
     </FrameLayout>

@@ -15,16 +15,16 @@ import java.util.ArrayList;
 public class PagerLessonsAdapter extends FragmentStatePagerAdapter {
 
     private class Element {
-        public int id;
-        public String title;
-        public int type;
+        public final int id;
+        public final String title;
+        public final int type;
         Element(int id, String title, int type){
             this.id = id;
             this.title = title;
             this.type = type;
         }
     }
-    private ArrayList<Element> tabs = new ArrayList<>();
+    private final ArrayList<Element> tabs = new ArrayList<>();
 
     public PagerLessonsAdapter(FragmentManager fm, Context context) {
         super(fm);

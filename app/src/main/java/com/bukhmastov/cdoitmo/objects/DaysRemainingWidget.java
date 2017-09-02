@@ -31,7 +31,7 @@ public class DaysRemainingWidget {
         public String min = null;
         public String sec = null;
     }
-    private response delegate;
+    private final response delegate;
     private Executor executor;
 
     public DaysRemainingWidget(response delegate) {
@@ -54,9 +54,9 @@ public class DaysRemainingWidget {
 
         private static final String TAG = "DRWidget.Executor";
         private boolean running = false;
-        private long delay = 1000;
-        private JSONObject full_schedule;
-        private Context context;
+        private final long delay = 1000;
+        private final JSONObject full_schedule;
+        private final Context context;
 
         Executor(Context context, JSONObject full_schedule){
             Log.i(TAG, "started");
@@ -152,7 +152,7 @@ public class DaysRemainingWidget {
             Log.i(TAG, "interrupted");
         }
     }
-    private Time ts2time(long ts) throws Exception {
+    private Time ts2time(long ts) {
         Time time = new Time();
         int elapsed = (int) (ts / 1000L);
         int days = elapsed / 86400;

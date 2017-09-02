@@ -39,7 +39,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
         void onNewHandle(RequestHandle requestHandle);
     }
     private ScheduleLessons.response handler = null;
-    private Context context;
+    private final Context context;
     public static final int FAILED_LOAD = 100;
     public static final int FAILED_OFFLINE = 101;
     public static final int FAILED_EMPTY_QUERY = 102;

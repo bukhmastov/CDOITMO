@@ -35,5 +35,4 @@ public class ShortcutReceiverActivity extends AppCompatActivity {
     protected void attachBaseContext(Context context) {
         super.attachBaseContext(CtxWrapper.wrap(context));
     }
-
 }

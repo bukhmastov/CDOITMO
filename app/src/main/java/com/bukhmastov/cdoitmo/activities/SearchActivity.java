@@ -32,7 +32,7 @@ import java.util.Locale;
 public abstract class SearchActivity extends AppCompatActivity {
 
     private static final String TAG = "SearchActivity";
-    protected SearchActivity self = this;
+    protected final SearchActivity self = this;
     private static final int REQ_CODE_SPEECH_INPUT = 1337;
     private enum EXTRA_ACTION_MODE {Speech_recognition, Clear, None}
     private EditText search_edit_text;
@@ -60,7 +60,7 @@ public abstract class SearchActivity extends AppCompatActivity {
                 finish();
             }
         });
-        search_edit_text = (EditText) findViewById(R.id.search_edittext);
+        search_edit_text = findViewById(R.id.search_edittext);
         search_edit_text.setHint(getHint());
         search_edit_text.addTextChangedListener(textWatcher);
         search_edit_text.setOnKeyListener(onKeyListener);
@@ -89,7 +89,7 @@ public abstract class SearchActivity extends AppCompatActivity {
             @Override
             public void run() {
                 Log.v(TAG, "setMode | mode=" + mode.toString());
-                ViewGroup search_extra_action = (ViewGroup) findViewById(R.id.search_extra_action);
+                ViewGroup search_extra_action = findViewById(R.id.search_extra_action);
                 int padding = (int) (Static.destiny * 14);
                 if (search_extra_action != null) {
                     search_extra_action.removeAllViews();
@@ -139,7 +139,7 @@ public abstract class SearchActivity extends AppCompatActivity {
             public void run() {
                 Log.v(TAG, "setSuggestions");
                 try {
-                    ListView search_suggestions = (ListView) findViewById(R.id.search_suggestions);
+                    ListView search_suggestions = findViewById(R.id.search_suggestions);
                     if (search_suggestions == null) throw new Exception("search_suggestions listview is null");
                     search_suggestions.setDividerHeight(0);
                     search_suggestions.setDivider(null);
@@ -200,7 +200,7 @@ public abstract class SearchActivity extends AppCompatActivity {
         });
     }
 
-    private TextWatcher textWatcher = new TextWatcher() {
+    private final TextWatcher textWatcher = new TextWatcher() {
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
         @Override
@@ -216,7 +216,7 @@ public abstract class SearchActivity extends AppCompatActivity {
             setSuggestions(getSuggestions(query));
         }
     };
-    private View.OnKeyListener onKeyListener = new View.OnKeyListener() {
+    private final View.OnKeyListener onKeyListener = new View.OnKeyListener() {
         public boolean onKey(View v, int keyCode, KeyEvent event) {
             if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
                 String query = search_edit_text.getText().toString().trim();

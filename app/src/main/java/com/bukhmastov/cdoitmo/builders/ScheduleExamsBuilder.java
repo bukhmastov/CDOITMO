@@ -29,7 +29,7 @@ public class ScheduleExamsBuilder implements Runnable {
         void state(int state, View layout);
     }
     private response delegate = null;
-    private Activity activity;
+    private final Activity activity;
 
     public static final int STATE_FAILED = 0;
     public static final int STATE_LOADING = 1;
@@ -43,7 +43,7 @@ public class ScheduleExamsBuilder implements Runnable {
         Log.v(TAG, "started");
         try {
             LinearLayout schedule_layout = (LinearLayout) inflate(R.layout.layout_schedule);
-            LinearLayout container = (LinearLayout) schedule_layout.findViewById(R.id.lessons_container);
+            LinearLayout container = schedule_layout.findViewById(R.id.lessons_container);
             delegate.state(STATE_LOADING, inflate(R.layout.state_loading_compact));
             JSONArray schedule = ScheduleExamsFragment.schedule.getJSONArray("schedule");
             String type = ScheduleExamsFragment.schedule.getString("type");
@@ -123,7 +123,7 @@ public class ScheduleExamsBuilder implements Runnable {
                 }
                 container.addView(examsLayout);
             }
-            ViewGroup lessons_update_time_container = (ViewGroup) schedule_layout.findViewById(R.id.lessons_update_time_container);
+            ViewGroup lessons_update_time_container = schedule_layout.findViewById(R.id.lessons_update_time_container);
             schedule_layout.removeView(schedule_layout.findViewById(R.id.lessons_warning_container));
             if (schedule.length() == 0) {
                 Log.v(TAG, "schedule.length() == 0");

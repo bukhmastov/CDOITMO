@@ -18,8 +18,8 @@ import java.util.Objects;
 
 class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFactory {
 
-    private Context context;
-    private int appWidgetId;
+    private final Context context;
+    private final int appWidgetId;
     private ScheduleLessonsWidget.Colors colors;
     private String type;
     private JSONArray lessons;

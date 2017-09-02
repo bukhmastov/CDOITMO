@@ -27,18 +27,19 @@ import java.util.ArrayList;
 public class IntroducingActivity extends ConnectedActivity {
 
     private static final String TAG = "IntroducingActivity";
-    private Activity activity = this;
-    private ArrayList<Screen> screens = new ArrayList<>();
+    private final Activity activity = this;
+    private final ArrayList<Screen> screens = new ArrayList<>();
     private int position = -1;
-    private String colorIndicatorActive = "#FFFFFFFF";
-    private String colorIndicatorInActive = "#88FFFFFF";
+    private static final String colorIndicatorActive = "#FFFFFFFF";
+    private static final String colorIndicatorInActive = "#88FFFFFF";
 
     private class Screen {
-        public String title;
-        public String desc;
-        public @DrawableRes int image;
-        public String colorBackground;
-        public String colorAccent;
+        public final String title;
+        public final String desc;
+        public @DrawableRes
+        final int image;
+        public final String colorBackground;
+        public final String colorAccent;
         public Screen(@StringRes int title, @StringRes int desc, @DrawableRes int image, String colorBackground, String colorAccent) {
             this.title = activity.getString(title);
             this.desc = activity.getString(desc);

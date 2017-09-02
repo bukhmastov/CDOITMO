@@ -46,7 +46,7 @@ public class ScheduleLessonsConverter extends AsyncTask<JSONObject, Void, JSONOb
                 JSONArray lessons = new JSONArray();
                 for (int j = 0; j < remoteSchedule.length(); j++) {
                     JSONObject remoteLesson = remoteSchedule.getJSONObject(j);
-                    if (remoteLesson.getInt("data_day") == i) {
+                    if (remoteLesson.has("data_day") && !remoteLesson.isNull("data_day") && remoteLesson.getInt("data_day") == i) {
                         JSONObject lesson = new JSONObject();
                         String subject = get(remoteLesson, "title", "");
                         String note = get(remoteLesson, "note", null);
@@ -99,5 +99,4 @@ public class ScheduleLessonsConverter extends AsyncTask<JSONObject, Void, JSONOb
         Log.i(TAG, "finished");
         delegate.finish(json);
     }
-
 }

@@ -255,7 +255,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                                         Log.v(TAG, "load | progress " + state);
                                         draw(R.layout.state_loading);
                                         if (activity != null) {
-                                            TextView loading_message = (TextView) activity.findViewById(R.id.loading_message);
+                                            TextView loading_message = activity.findViewById(R.id.loading_message);
                                             if (loading_message != null) {
                                                 switch (state) {
                                                     case DeIfmoRestClient.STATE_HANDLING:
@@ -350,7 +350,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                 Log.v(TAG, "loadFailed");
                 try {
                     draw(R.layout.state_try_again);
-                    TextView try_again_message = (TextView) activity.findViewById(R.id.try_again_message);
+                    TextView try_again_message = activity.findViewById(R.id.try_again_message);
                     if (try_again_message != null) try_again_message.setText(R.string.load_failed_retry_in_minute);
                     View try_again_reload = activity.findViewById(R.id.try_again_reload);
                     if (try_again_reload != null) {
@@ -380,7 +380,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                     // отображаем нужный режим
                     switch (Storage.pref.get(activity, "pref_protocol_changes_mode", "advanced")) {
                         case "simple": {
-                            ViewGroup protocol_container = (ViewGroup) activity.findViewById(R.id.protocol_container);
+                            ViewGroup protocol_container = activity.findViewById(R.id.protocol_container);
                             if (protocol_container == null) throw new NullPointerException("");
                             protocol_container.addView(inflate(R.layout.protocol_layout_mode_simple));
                             // получаем список предметов для отображения
@@ -401,7 +401,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                                 changes.add(hashMap);
                             }
                             // работаем со списком
-                            ListView pl_list_view = (ListView) activity.findViewById(R.id.pl_list_view);
+                            ListView pl_list_view = activity.findViewById(R.id.pl_list_view);
                             if (pl_list_view != null) {
                                 if (changes.size() > 0) {
                                     pl_list_view.setAdapter(new ProtocolListView(activity, changes));
@@ -466,10 +466,10 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                                 }
                             }
                             // Отображаем группированный список изменений
-                            ViewGroup protocol_container = (ViewGroup) activity.findViewById(R.id.protocol_container);
+                            ViewGroup protocol_container = activity.findViewById(R.id.protocol_container);
                             if (protocol_container == null) throw new NullPointerException("");
                             protocol_container.addView(inflate(R.layout.protocol_layout_mode_advanced));
-                            ViewGroup pl_advanced_container = (ViewGroup) activity.findViewById(R.id.pl_advanced_container);
+                            ViewGroup pl_advanced_container = activity.findViewById(R.id.pl_advanced_container);
                             if (protocol.length() == 0) {
                                 ViewGroup mSwipeRefreshLayout = (SwipeRefreshLayout) activity.findViewById(R.id.swipe_container);
                                 if (mSwipeRefreshLayout != null) {
@@ -496,7 +496,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                                         ((TextView) element.findViewById(R.id.lv_protocol_desc)).setText(var.getString("name") + " [" + var.getString("min") + "/" + var.getString("threshold") + "/" + var.getString("max") + "]");
                                         ((TextView) element.findViewById(R.id.lv_protocol_meta)).setText(Objects.equals(change.getString("sign"), "..") ? "" : change.getString("sign") + " | " + change.getString("date"));
                                         ((TextView) element.findViewById(R.id.lv_protocol_value)).setText(change.getString("value"));
-                                        TextView lv_protocol_delta = ((TextView) element.findViewById(R.id.lv_protocol_delta));
+                                        TextView lv_protocol_delta = element.findViewById(R.id.lv_protocol_delta);
                                         if (change.getDouble("cdoitmo_delta_double") != 0.0) {
                                             lv_protocol_delta.setText(change.getString("cdoitmo_delta"));
                                             try {
@@ -522,14 +522,14 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                         }
                     }
                     // работаем со свайпом
-                    SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) activity.findViewById(R.id.swipe_container);
+                    SwipeRefreshLayout mSwipeRefreshLayout = activity.findViewById(R.id.swipe_container);
                     if (mSwipeRefreshLayout != null) {
                         mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
                         mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
                         mSwipeRefreshLayout.setOnRefreshListener(self);
                     }
                     // работаем с раскрывающимся списком
-                    Spinner spinner_weeks = (Spinner) activity.findViewById(R.id.pl_weeks_spinner);
+                    Spinner spinner_weeks = activity.findViewById(R.id.pl_weeks_spinner);
                     if (spinner_weeks != null) {
                         final ArrayList<String> spinner_weeks_arr = new ArrayList<>();
                         final ArrayList<Integer> spinner_weeks_arr_values = new ArrayList<>();
@@ -574,7 +574,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
             @Override
             public void run() {
                 try {
-                    ViewGroup vg = ((ViewGroup) activity.findViewById(R.id.container_protocol));
+                    ViewGroup vg = activity.findViewById(R.id.container_protocol);
                     if (vg != null) {
                         vg.removeAllViews();
                         vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));

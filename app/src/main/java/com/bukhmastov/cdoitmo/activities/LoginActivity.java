@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.activities;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -23,7 +24,6 @@ import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoClientResponseHandler;
 import com.bukhmastov.cdoitmo.utils.CtxWrapper;
 import com.bukhmastov.cdoitmo.utils.Log;
-import com.bukhmastov.cdoitmo.utils.ProtocolTracker;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 import com.loopj.android.http.RequestHandle;
@@ -36,7 +36,7 @@ import java.util.Objects;
 public class LoginActivity extends AppCompatActivity {
 
     private static final String TAG = "LoginActivity";
-    private LoginActivity self = this;
+    private final Activity activity = this;
     public static final int SIGNAL_LOGIN = 0;
     public static final int SIGNAL_RECONNECT = 1;
     public static final int SIGNAL_GO_OFFLINE = 2;
@@ -57,7 +57,7 @@ public class LoginActivity extends AppCompatActivity {
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar_login));
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
-            actionBar.setTitle(self.getString(R.string.title_activity_login));
+            actionBar.setTitle(activity.getString(R.string.title_activity_login));
             actionBar.setLogo(obtainStyledAttributes(new int[] { R.attr.ic_security }).getDrawable(0));
         }
         if (LoginActivity.auto_logout) {
@@ -124,14 +124,14 @@ public class LoginActivity extends AppCompatActivity {
                     }
                     case SIGNAL_CHANGE_ACCOUNT: {
                         Static.OFFLINE_MODE = false;
-                        Static.logoutCurrent(self);
+                        Static.logoutCurrent(activity);
                         Static.authorized = false;
                         show();
                         break;
                     }
                     case SIGNAL_LOGOUT: {
                         Static.OFFLINE_MODE = false;
-                        String current_login = Storage.file.general.get(self, "users#current_login");
+                        String current_login = Storage.file.general.get(activity, "users#current_login");
                         if (!current_login.isEmpty()) {
                             logout(current_login);
                         } else {
@@ -141,20 +141,20 @@ public class LoginActivity extends AppCompatActivity {
                     }
                     case SIGNAL_CREDENTIALS_REQUIRED: {
                         Static.OFFLINE_MODE = false;
-                        Storage.file.perm.delete(self, "user#jsessionid");
-                        Static.logoutCurrent(self);
+                        Storage.file.perm.delete(activity, "user#jsessionid");
+                        Static.logoutCurrent(activity);
                         Static.authorized = false;
-                        Static.snackBar(self, self.getString(R.string.required_login_password));
+                        Static.snackBar(activity, activity.getString(R.string.required_login_password));
                         show();
                         break;
                     }
                     case SIGNAL_CREDENTIALS_FAILED: {
                         Static.OFFLINE_MODE = false;
-                        Storage.file.perm.delete(self, "user#jsessionid");
-                        Storage.file.perm.delete(self, "user#password");
-                        Static.logoutCurrent(self);
+                        Storage.file.perm.delete(activity, "user#jsessionid");
+                        Storage.file.perm.delete(activity, "user#password");
+                        Static.logoutCurrent(activity);
                         Static.authorized = false;
-                        Static.snackBar(self, self.getString(R.string.invalid_login_password));
+                        Static.snackBar(activity, activity.getString(R.string.invalid_login_password));
                         show();
                         break;
                     }
@@ -175,20 +175,20 @@ public class LoginActivity extends AppCompatActivity {
             public void run() {
                 Log.v(TAG, "show");
                 try {
-                    FirebaseAnalyticsProvider.logEvent(self, FirebaseAnalyticsProvider.Event.LOGIN_REQUIRED);
-                    String current_login = Storage.file.general.get(self, "users#current_login");
+                    FirebaseAnalyticsProvider.logEvent(activity, FirebaseAnalyticsProvider.Event.LOGIN_REQUIRED);
+                    String current_login = Storage.file.general.get(activity, "users#current_login");
                     if (!current_login.isEmpty()) {
-                        String login = Storage.file.perm.get(self, "user#login");
-                        String password = Storage.file.perm.get(self, "user#password");
-                        String role = Storage.file.perm.get(self, "user#role");
+                        String login = Storage.file.perm.get(activity, "user#login");
+                        String password = Storage.file.perm.get(activity, "user#password");
+                        String role = Storage.file.perm.get(activity, "user#role");
                         auth(login, password, role, false);
                     } else {
-                        LinearLayout login_tiles_container = new LinearLayout(self);
+                        LinearLayout login_tiles_container = new LinearLayout(activity);
                         login_tiles_container.setOrientation(LinearLayout.VERTICAL);
                         login_tiles_container.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                         FrameLayout layout_login_new_user_tile = (FrameLayout) inflate(R.layout.layout_login_new_user_tile);
-                        final EditText input_login = (EditText) layout_login_new_user_tile.findViewById(R.id.input_login);
-                        final EditText input_password = (EditText) layout_login_new_user_tile.findViewById(R.id.input_password);
+                        final EditText input_login = layout_login_new_user_tile.findViewById(R.id.input_login);
+                        final EditText input_password = layout_login_new_user_tile.findViewById(R.id.input_password);
                         layout_login_new_user_tile.findViewById(R.id.login).setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
@@ -204,16 +204,16 @@ public class LoginActivity extends AppCompatActivity {
                             @Override
                             public void onClick(View view) {
                                 FirebaseAnalyticsProvider.logBasicEvent(getBaseContext(), "Help with login clicked");
-                                new AlertDialog.Builder(self)
+                                new AlertDialog.Builder(activity)
                                         .setTitle(R.string.auth_help_0)
                                         .setMessage(
-                                                self.getString(R.string.auth_help_1) +
+                                                activity.getString(R.string.auth_help_1) +
                                                 "\n" +
-                                                self.getString(R.string.auth_help_2) +
+                                                activity.getString(R.string.auth_help_2) +
                                                 "\n\n" +
-                                                self.getString(R.string.auth_help_3) +
+                                                activity.getString(R.string.auth_help_3) +
                                                 "\n\n" +
-                                                self.getString(R.string.auth_help_4)
+                                                activity.getString(R.string.auth_help_4)
                                         )
                                         .setIcon(R.drawable.ic_help)
                                         .setNegativeButton(R.string.close, null)
@@ -221,16 +221,16 @@ public class LoginActivity extends AppCompatActivity {
                             }
                         });
                         login_tiles_container.addView(layout_login_new_user_tile);
-                        JSONArray accounts = LoginActivity.accounts.get(self);
+                        JSONArray accounts = LoginActivity.accounts.get(activity);
                         for (int i = 0; i < accounts.length(); i++) {
                             try {
                                 Log.v(TAG, "account in accounts " + accounts.getString(i));
-                                Storage.file.general.put(self, "users#current_login", accounts.getString(i));
-                                final String login = Storage.file.perm.get(self, "user#login");
-                                final String password = Storage.file.perm.get(self, "user#password");
-                                final String role = Storage.file.perm.get(self, "user#role");
-                                final String name = Storage.file.perm.get(self, "user#name").trim();
-                                Storage.file.general.delete(self, "users#current_login");
+                                Storage.file.general.put(activity, "users#current_login", accounts.getString(i));
+                                final String login = Storage.file.perm.get(activity, "user#login");
+                                final String password = Storage.file.perm.get(activity, "user#password");
+                                final String role = Storage.file.perm.get(activity, "user#role");
+                                final String name = Storage.file.perm.get(activity, "user#name").trim();
+                                Storage.file.general.delete(activity, "users#current_login");
                                 ViewGroup layout_login_user_tile = (ViewGroup) inflate(R.layout.layout_login_user_tile);
                                 View nameView = layout_login_user_tile.findViewById(R.id.name);
                                 View descView = layout_login_user_tile.findViewById(R.id.desc);
@@ -240,7 +240,7 @@ public class LoginActivity extends AppCompatActivity {
                                 }
                                 switch (role) {
                                     case "student": {
-                                        desc += desc.isEmpty() ? self.getString(R.string.student) : " (" + self.getString(R.string.student) + ")";
+                                        desc += desc.isEmpty() ? activity.getString(R.string.student) : " (" + activity.getString(R.string.student) + ")";
                                         break;
                                     }
                                     default: {
@@ -286,7 +286,7 @@ public class LoginActivity extends AppCompatActivity {
                     }
                 } catch (Exception e) {
                     Static.error(e);
-                    Static.snackBar(self, self.getString(R.string.something_went_wrong));
+                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 }
             }
         });
@@ -299,14 +299,14 @@ public class LoginActivity extends AppCompatActivity {
                 if (!login.isEmpty() && !password.isEmpty()) {
                     if (Objects.equals(login, "general")) {
                         Log.w(TAG, "auth | got login=general that does not supported");
-                        Static.snackBar(self, self.getString(R.string.wrong_login_general));
+                        Static.snackBar(activity, activity.getString(R.string.wrong_login_general));
                         return;
                     }
-                    Storage.file.general.put(self, "users#current_login", login);
-                    Storage.file.perm.put(self, "user#login", login);
-                    Storage.file.perm.put(self, "user#password", password);
-                    Storage.file.perm.put(self, "user#role", role);
-                    DeIfmoClient.check(self, new DeIfmoClientResponseHandler() {
+                    Storage.file.general.put(activity, "users#current_login", login);
+                    Storage.file.perm.put(activity, "user#login", login);
+                    Storage.file.perm.put(activity, "user#password", password);
+                    Storage.file.perm.put(activity, "user#role", role);
+                    DeIfmoClient.check(activity, new DeIfmoClientResponseHandler() {
                         @Override
                         public void onSuccess(final int statusCode, final String response) {
                             Log.v(TAG, "auth | check | success");
@@ -333,7 +333,7 @@ public class LoginActivity extends AppCompatActivity {
                                             }
                                         });
                                     }
-                                    TextView loading_message = (TextView) findViewById(R.id.loading_message);
+                                    TextView loading_message = findViewById(R.id.loading_message);
                                     if (loading_message != null) {
                                         switch (state) {
                                             case DeIfmoClient.STATE_CHECKING: loading_message.setText(R.string.auth_check); break;
@@ -356,16 +356,16 @@ public class LoginActivity extends AppCompatActivity {
                                             break;
                                         case DeIfmoClient.FAILED_TRY_AGAIN:
                                         case DeIfmoClient.FAILED_AUTH_TRY_AGAIN:
-                                            Static.snackBar(self, self.getString(R.string.auth_failed));
+                                            Static.snackBar(activity, activity.getString(R.string.auth_failed));
                                             route(SIGNAL_CHANGE_ACCOUNT);
                                             break;
                                         case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
-                                            Static.snackBar(self, self.getString(R.string.required_login_password));
+                                            Static.snackBar(activity, activity.getString(R.string.required_login_password));
                                             logoutDone(login, false);
                                             route(SIGNAL_CHANGE_ACCOUNT);
                                             break;
                                         case DeIfmoClient.FAILED_AUTH_CREDENTIALS_FAILED:
-                                            Static.snackBar(self, self.getString(R.string.invalid_login_password));
+                                            Static.snackBar(activity, activity.getString(R.string.invalid_login_password));
                                             logoutDone(login, false);
                                             route(SIGNAL_CHANGE_ACCOUNT);
                                             break;
@@ -380,7 +380,7 @@ public class LoginActivity extends AppCompatActivity {
                     });
                 } else {
                     Log.v(TAG, "auth | empty fields");
-                    Static.snackBar(self, self.getString(R.string.fill_fields));
+                    Static.snackBar(activity, activity.getString(R.string.fill_fields));
                 }
             }
         });
@@ -390,19 +390,18 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void run() {
                 Log.v(TAG, "authorized | newUser=" + (newUser ? "true" : "false"));
-                String current_login = Storage.file.general.get(self, "users#current_login");
+                String current_login = Storage.file.general.get(activity, "users#current_login");
                 if (!current_login.isEmpty()) {
                     if (newUser) {
                         FirebaseAnalyticsProvider.logBasicEvent(getBaseContext(), "New user authorized");
                     }
-                    accounts.push(self, current_login);
+                    accounts.push(activity, current_login);
                     Static.authorized = true;
-                    Static.protocolTracker = new ProtocolTracker(self);
-                    if (newUser) Static.protocolChangesTrackSetup(self, 0);
+                    if (newUser) Static.protocolChangesTrackSetup(activity, 0);
                     finish();
                 } else {
                     Log.w(TAG, "authorized | current_login is empty");
-                    Static.snackBar(self, self.getString(R.string.something_went_wrong));
+                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     show();
                 }
             }
@@ -413,8 +412,8 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void run() {
                 Log.v(TAG, "logout | login=" + login);
-                Storage.file.general.put(self, "users#current_login", login);
-                DeIfmoClient.get(self, "servlet/distributedCDE?Rule=SYSTEM_EXIT", null, new DeIfmoClientResponseHandler() {
+                Storage.file.general.put(activity, "users#current_login", login);
+                DeIfmoClient.get(activity, "servlet/distributedCDE?Rule=SYSTEM_EXIT", null, new DeIfmoClientResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, String response) {
                         Log.v(TAG, "logout | success");
@@ -431,9 +430,9 @@ public class LoginActivity extends AppCompatActivity {
                                 if (interrupt_auth != null) {
                                     Static.removeView(interrupt_auth);
                                 }
-                                TextView loading_message = (TextView) findViewById(R.id.loading_message);
+                                TextView loading_message = findViewById(R.id.loading_message);
                                 if (loading_message != null) {
-                                    loading_message.setText(self.getString(R.string.exiting) + "\n" + Storage.file.perm.get(getBaseContext(), "user#name"));
+                                    loading_message.setText(activity.getString(R.string.exiting) + "\n" + Storage.file.perm.get(getBaseContext(), "user#name"));
                                 }
                             }
                         });
@@ -454,10 +453,10 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void run() {
                 Log.v(TAG, "logoutDone | login=" + login);
-                accounts.remove(self, login);
-                Storage.file.general.put(self, "users#current_login", login);
-                Static.logout(self);
-                if (showSnackBar) Static.snackBar(self, self.getString(R.string.logged_out));
+                accounts.remove(activity, login);
+                Storage.file.general.put(activity, "users#current_login", login);
+                Static.logout(activity);
+                if (showSnackBar) Static.snackBar(activity, activity.getString(R.string.logged_out));
                 show();
             }
         });
@@ -545,20 +544,12 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-    public int getStatusBarHeight() {
-        int result = 0;
-        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
-        if (resourceId > 0) {
-            result = getResources().getDimensionPixelSize(resourceId);
-        }
-        return result;
-    }
     private void draw(final int layoutId) {
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    ViewGroup vg = ((ViewGroup) findViewById(R.id.login_content));
+                    ViewGroup vg = findViewById(R.id.login_content);
                     if (vg != null) {
                         vg.removeAllViews();
                         vg.addView(((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
@@ -574,7 +565,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    ViewGroup vg = ((ViewGroup) findViewById(R.id.login_content));
+                    ViewGroup vg = findViewById(R.id.login_content);
                     if (vg != null) {
                         vg.removeAllViews();
                         vg.addView(view);

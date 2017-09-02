@@ -189,5 +189,4 @@ public class ERegisterConverter extends AsyncTask<JSONObject, Void, JSONObject> 
         Log.i(TAG, "finished");
         delegate.finish(json);
     }
-
 }

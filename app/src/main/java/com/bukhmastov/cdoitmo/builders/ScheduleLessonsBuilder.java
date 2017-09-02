@@ -37,9 +37,9 @@ public class ScheduleLessonsBuilder implements Runnable {
         void state(int state, View layout);
     }
     private response delegate = null;
-    private ConnectedActivity activity;
-    private int type;
-    private float destiny;
+    private final ConnectedActivity activity;
+    private final int type;
+    private final float destiny;
     private int colorScheduleFlagTEXT = -1, colorScheduleFlagCommonBG = -1, colorScheduleFlagPracticeBG = -1, colorScheduleFlagLectureBG = -1, colorScheduleFlagLabBG = -1;
 
     public static final int STATE_FAILED = 0;
@@ -56,7 +56,7 @@ public class ScheduleLessonsBuilder implements Runnable {
         Log.v(TAG, "started");
         try {
             LinearLayout schedule_layout = (LinearLayout) inflate(R.layout.layout_schedule);
-            LinearLayout container = (LinearLayout) schedule_layout.findViewById(R.id.lessons_container);
+            LinearLayout container = schedule_layout.findViewById(R.id.lessons_container);
             delegate.state(STATE_LOADING, inflate(R.layout.state_loading_compact));
             final JSONArray schedule = ScheduleLessonsFragment.schedule.getJSONArray("schedule");
             final String cache_token = ScheduleLessonsFragment.schedule.getString("cache_token");
@@ -89,7 +89,7 @@ public class ScheduleLessonsBuilder implements Runnable {
                     case 5: dayLayout.setId(R.id.saturday); break;
                     case 6: dayLayout.setId(R.id.sunday); break;
                 }
-                LinearLayout lessonsLayout = (LinearLayout) dayLayout.findViewById(R.id.day_schedule);
+                LinearLayout lessonsLayout = dayLayout.findViewById(R.id.day_schedule);
                 for (int j = 0; j < lessons.length(); j++) {
                     final JSONObject lesson = lessons.getJSONObject(j);
                     if (!(type == 2 || type == lesson.getInt("week") || lesson.getInt("week") == 2)) continue;
@@ -203,8 +203,8 @@ public class ScheduleLessonsBuilder implements Runnable {
                     daysCount++;
                 }
             }
-            ViewGroup lessons_update_time_container = (ViewGroup) schedule_layout.findViewById(R.id.lessons_update_time_container);
-            ViewGroup lessons_warning_container = (ViewGroup) schedule_layout.findViewById(R.id.lessons_warning_container);
+            ViewGroup lessons_update_time_container = schedule_layout.findViewById(R.id.lessons_update_time_container);
+            ViewGroup lessons_warning_container = schedule_layout.findViewById(R.id.lessons_warning_container);
             if (daysCount == 0) {
                 Log.v(TAG, "daysCount == 0");
                 schedule_layout.removeView(lessons_update_time_container);
@@ -317,7 +317,7 @@ public class ScheduleLessonsBuilder implements Runnable {
     }
     private FrameLayout getFlag(String text, int textColor, int backgroundColor) throws Exception {
         FrameLayout flagContainer = (FrameLayout) inflate(R.layout.layout_schedule_lessons_flag);
-        TextView flag_content = (TextView) flagContainer.findViewById(R.id.flag_content);
+        TextView flag_content = flagContainer.findViewById(R.id.flag_content);
         flag_content.setText(text);
         flag_content.setBackgroundColor(backgroundColor);
         flag_content.setTextColor(textColor);

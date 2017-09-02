@@ -27,7 +27,7 @@ public class TimeRemainingWidget {
         public String next = null;
         public String day = null;
     }
-    private response delegate;
+    private final response delegate;
     private Executor executor;
 
     public TimeRemainingWidget(response delegate) {
@@ -50,10 +50,10 @@ public class TimeRemainingWidget {
 
         private static final String TAG = "TRWidget.Executor";
         private boolean running = false;
-        private long delay = 1000;
-        private JSONObject full_schedule;
+        private final long delay = 1000;
+        private final JSONObject full_schedule;
         private JSONArray lessons;
-        private Context context;
+        private final Context context;
         private boolean first_init = true;
         private int week = -1;
         private int day_of_the_week = -1;

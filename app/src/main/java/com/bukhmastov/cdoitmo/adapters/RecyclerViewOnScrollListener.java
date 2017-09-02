@@ -48,7 +48,7 @@ public class RecyclerViewOnScrollListener extends RecyclerView.OnScrollListener 
 
     private void show() {
         if (container != null) {
-            ViewGroup top_panel = (ViewGroup) container.findViewById(R.id.top_panel);
+            ViewGroup top_panel = container.findViewById(R.id.top_panel);
             if (top_panel != null) {
                 top_panel.animate().translationY(0).setInterpolator(new DecelerateInterpolator(1)).start();
             }
@@ -56,7 +56,7 @@ public class RecyclerViewOnScrollListener extends RecyclerView.OnScrollListener 
     }
     private void hide() {
         if (container != null) {
-            ViewGroup top_panel = (ViewGroup) container.findViewById(R.id.top_panel);
+            ViewGroup top_panel = container.findViewById(R.id.top_panel);
             if (top_panel != null) {
                 top_panel.animate().translationY(-top_panel.getHeight()).setInterpolator(new AccelerateInterpolator(1)).start();
             }

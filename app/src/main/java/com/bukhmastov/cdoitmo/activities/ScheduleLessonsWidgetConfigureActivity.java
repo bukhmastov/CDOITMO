@@ -46,7 +46,7 @@ import java.util.Objects;
 public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
 
     private static final String TAG = "SLWidgetConfigureActivity";
-    private Activity activity = this;
+    private final Activity activity = this;
     private int mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
     private boolean isDarkTheme = false;
     private RequestHandle widgetRequestHandle = null;

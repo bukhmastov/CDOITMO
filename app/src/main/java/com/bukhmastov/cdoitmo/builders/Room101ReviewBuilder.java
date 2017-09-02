@@ -31,9 +31,9 @@ public class Room101ReviewBuilder implements Runnable {
     }
     private response delegate = null;
     private register register = null;
-    private Activity activity;
-    private JSONArray sessions;
-    private float destiny;
+    private final Activity activity;
+    private final JSONArray sessions;
+    private final float destiny;
 
     public static final int STATE_FAILED = 0;
     public static final int STATE_LOADING = 1;
@@ -53,7 +53,7 @@ public class Room101ReviewBuilder implements Runnable {
             if (sessions.length() > 0) {
                 LinearLayout container = (LinearLayout) inflate(R.layout.layout_room101_review_requests);
                 Log.v(TAG, "sessions.length() == " + sessions.length());
-                LinearLayout review_requests_container = (LinearLayout) container.findViewById(R.id.review_requests_container);
+                LinearLayout review_requests_container = container.findViewById(R.id.review_requests_container);
                 for (int i = sessions.length() - 1; i >= 0; i--) {
                     JSONObject request = sessions.getJSONObject(i);
                     RelativeLayout requestLayout = (RelativeLayout) inflate(R.layout.layout_room101_review_requests_item);

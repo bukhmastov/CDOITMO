@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.activities;
 
+import android.app.Activity;
 import android.app.job.JobScheduler;
 import android.content.Context;
 import android.content.Intent;
@@ -27,7 +28,7 @@ import java.util.ArrayList;
 public class SplashActivity extends AppCompatActivity {
 
     private static final String TAG = "SplashActivity";
-    private SplashActivity self = this;
+    private final Activity activity = this;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,27 +52,27 @@ public class SplashActivity extends AppCompatActivity {
             @Override
             public void run() {
                 // set default preferences
-                PreferenceManager.setDefaultValues(self, R.xml.pref_general, false);
-                PreferenceManager.setDefaultValues(self, R.xml.pref_cache, false);
-                PreferenceManager.setDefaultValues(self, R.xml.pref_notifications, false);
-                PreferenceManager.setDefaultValues(self, R.xml.pref_additional, false);
+                PreferenceManager.setDefaultValues(activity, R.xml.pref_general, false);
+                PreferenceManager.setDefaultValues(activity, R.xml.pref_cache, false);
+                PreferenceManager.setDefaultValues(activity, R.xml.pref_notifications, false);
+                PreferenceManager.setDefaultValues(activity, R.xml.pref_additional, false);
                 // enable/disable firebase
-                FirebaseCrashProvider.setEnabled(self);
-                FirebaseAnalyticsProvider.setEnabled(self);
+                FirebaseCrashProvider.setEnabled(activity);
+                FirebaseAnalyticsProvider.setEnabled(activity);
                 // apply compatibility changes
-                Wipe.check(self);
+                Wipe.check(activity);
                 // init static variables
-                Static.init(self);
+                Static.init(activity);
                 // set auto_logout value
-                LoginActivity.auto_logout = Storage.pref.get(self, "pref_auto_logout", false);
+                LoginActivity.auto_logout = Storage.pref.get(activity, "pref_auto_logout", false);
                 // set first_launch value
-                Static.isFirstLaunchEver = Storage.pref.get(self, "pref_first_launch", false);
+                Static.isFirstLaunchEver = Storage.pref.get(activity, "pref_first_launch", false);
                 if (Static.isFirstLaunchEver) {
-                    Storage.pref.put(self, "pref_first_launch", false);
+                    Storage.pref.put(activity, "pref_first_launch", false);
                 }
                 // firebase events and properties
-                FirebaseAnalyticsProvider.logEvent(self, FirebaseAnalyticsProvider.Event.APP_OPEN);
-                FirebaseAnalyticsProvider.setUserProperty(self, FirebaseAnalyticsProvider.Property.THEME, Storage.pref.get(self, "pref_dark_theme", false) ? "dark" : "light");
+                FirebaseAnalyticsProvider.logEvent(activity, FirebaseAnalyticsProvider.Event.APP_OPEN);
+                FirebaseAnalyticsProvider.setUserProperty(activity, FirebaseAnalyticsProvider.Property.THEME, Storage.pref.get(activity, "pref_dark_theme", false) ? "dark" : "light");
                 // all done
                 loaded();
             }
@@ -187,12 +188,12 @@ public class SplashActivity extends AppCompatActivity {
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Intent intent = new Intent(self, MainActivity.class);
+                Intent intent = new Intent(activity, MainActivity.class);
                 Bundle extras = getIntent().getExtras();
                 if (extras != null) intent.putExtras(extras);
                 startActivity(intent);
                 if (Static.isFirstLaunchEver) {
-                    startActivity(new Intent(self, IntroducingActivity.class));
+                    startActivity(new Intent(activity, IntroducingActivity.class));
                 }
                 finish();
             }

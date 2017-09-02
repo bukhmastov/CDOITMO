@@ -19,11 +19,11 @@ public class Log {
         }
     }
 
-    private static SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.SSS", Locale.getDefault());
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.SSS", Locale.getDefault());
     private static ArrayList<LogItem> logList = null;
     private static class LogItem {
-        public int type;
-        public long ts;
+        public final int type;
+        public final long ts;
         public String TAG;
         public String log;
         public Throwable throwable;

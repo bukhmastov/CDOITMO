@@ -21,44 +21,44 @@ public class FirebaseAnalyticsProvider {
 
     public static class Event {
         // 500 different types of Events | 40 characters long
-        public static String JOIN_GROUP = "cdo_join_group";                         // присоединен к определеннйо группе
-        public static String APP_OPEN = "cdo_app_open";                             // приложение запущено
-        public static String LOGIN_REQUIRED = "cdo_login_required";                 // нужна авторизация
-        public static String LOGIN = "cdo_login";                                   // авторизован
-        public static String LOGOUT = "cdo_logout";                                 // разлогинен
-        public static String APP_VIEW = "cdo_app_view";                             // переход на новый экран
-        public static String SHORTCUT_INSTALL = "cdo_shortcut_install";             // установка ярлыка
-        public static String SHORTCUT_USE = "cdo_shortcut_use";                     // использование ярлыка
-        public static String WIDGET_INSTALL = "cdo_widget_install";                 // установка виджета расписания
-        public static String SCHEDULE_LESSON_ADD = "cdo_schedule_lesson_add";       // ручное добавление занятия в расписание
-        public static String SCHEDULE_LESSON_REDUCE = "cdo_schedule_lesson_reduce"; // скрытие занятия в расписании
-        public static String ROOM101_REQUEST_ADDED = "cdo_room101_request_added";   // оставлен запрос на тестирование в 101 кабинете
-        public static String ROOM101_REQUEST_DENIED = "cdo_room101_request_denied"; // отозван запрос на тестирование в 101 кабинете
-        public static String EVENT = "cdo_event";                                   // обычное событие, не подходящее под остальные типы событий
+        public static final String JOIN_GROUP = "cdo_join_group";                         // присоединен к определеннйо группе
+        public static final String APP_OPEN = "cdo_app_open";                             // приложение запущено
+        public static final String LOGIN_REQUIRED = "cdo_login_required";                 // нужна авторизация
+        public static final String LOGIN = "cdo_login";                                   // авторизован
+        public static final String LOGOUT = "cdo_logout";                                 // разлогинен
+        public static final String APP_VIEW = "cdo_app_view";                             // переход на новый экран
+        public static final String SHORTCUT_INSTALL = "cdo_shortcut_install";             // установка ярлыка
+        public static final String SHORTCUT_USE = "cdo_shortcut_use";                     // использование ярлыка
+        public static final String WIDGET_INSTALL = "cdo_widget_install";                 // установка виджета расписания
+        public static final String SCHEDULE_LESSON_ADD = "cdo_schedule_lesson_add";       // ручное добавление занятия в расписание
+        public static final String SCHEDULE_LESSON_REDUCE = "cdo_schedule_lesson_reduce"; // скрытие занятия в расписании
+        public static final String ROOM101_REQUEST_ADDED = "cdo_room101_request_added";   // оставлен запрос на тестирование в 101 кабинете
+        public static final String ROOM101_REQUEST_DENIED = "cdo_room101_request_denied"; // отозван запрос на тестирование в 101 кабинете
+        public static final String EVENT = "cdo_event";                                   // обычное событие, не подходящее под остальные типы событий
     }
     public static class Param {
         // 25 unique Params with each Event type | 40 characters long | values 100 characters long
-        public static String GROUP_ID = "cdo_group_id";
-        public static String LOGIN_COUNT = "cdo_login_count";
-        public static String LOGIN_NEW = "cdo_login_new";
-        public static String APP_VIEW_SCREEN = "cdo_view_screen";
-        public static String SHORTCUT_INFO = "cdo_shortcut_info";
-        public static String WIDGET_QUERY = "cdo_widget_query";
-        public static String LESSON_TITLE = "cdo_lesson_title";
-        public static String ROOM101_REQUEST_DETAILS = "cdo_room101_request_details";
-        public static String EVENT_EXTRA = "cdo_event_extra";
+        public static final String GROUP_ID = "cdo_group_id";
+        public static final String LOGIN_COUNT = "cdo_login_count";
+        public static final String LOGIN_NEW = "cdo_login_new";
+        public static final String APP_VIEW_SCREEN = "cdo_view_screen";
+        public static final String SHORTCUT_INFO = "cdo_shortcut_info";
+        public static final String WIDGET_QUERY = "cdo_widget_query";
+        public static final String LESSON_TITLE = "cdo_lesson_title";
+        public static final String ROOM101_REQUEST_DETAILS = "cdo_room101_request_details";
+        public static final String EVENT_EXTRA = "cdo_event_extra";
     }
     public static class Property {
         // 25 unique UserProperties | 24 characters long | values 36 characters long
-        public static String FACULTY = "cdo_user_faculty";
-        public static String LEVEL = "cdo_user_level";
-        public static String COURSE = "cdo_user_course";
-        public static String GROUP = "cdo_user_group";
-        public static String THEME = "cdo_theme";
-        public static String DEVICE = "cdo_device";
+        public static final String FACULTY = "cdo_user_faculty";
+        public static final String LEVEL = "cdo_user_level";
+        public static final String COURSE = "cdo_user_course";
+        public static final String GROUP = "cdo_user_group";
+        public static final String THEME = "cdo_theme";
+        public static final String DEVICE = "cdo_device";
     }
 
-    private static FirebaseAnalytics getFirebaseAnalytics(Context context) throws Exception {
+    private static FirebaseAnalytics getFirebaseAnalytics(Context context) {
         if (firebaseAnalytics == null) {
             firebaseAnalytics = FirebaseAnalytics.getInstance(context);
         }

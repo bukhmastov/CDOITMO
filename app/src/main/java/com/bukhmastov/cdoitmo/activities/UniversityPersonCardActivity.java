@@ -31,7 +31,7 @@ import org.json.JSONObject;
 public class UniversityPersonCardActivity extends ConnectedActivity implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "UniversityPersonCard";
-    private Activity activity = this;
+    private final Activity activity = this;
     private RequestHandle fragmentRequestHandle = null;
     private boolean loaded = false;
     private boolean first_load = true;
@@ -126,7 +126,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                         Static.T.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.person_swipe);
+                                SwipeRefreshLayout mSwipeRefreshLayout = findViewById(R.id.person_swipe);
                                 if (mSwipeRefreshLayout != null) {
                                     mSwipeRefreshLayout.setRefreshing(false);
                                 }
@@ -138,10 +138,11 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
                                     json.put("post", android.text.Html.fromHtml(post, android.text.Html.FROM_HTML_MODE_LEGACY));
                                 } else {
+                                    //noinspection deprecation
                                     json.put("post", android.text.Html.fromHtml(post));
                                 }
-                            } catch (Exception e) {
-                                // ok
+                            } catch (Exception ignore) {
+                                // ignore
                             }
                             person = json;
                             display();
@@ -157,7 +158,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                                 Log.v(TAG, "load | progress " + state);
                                 if (first_load) {
                                     draw(R.layout.state_loading);
-                                    TextView loading_message = (TextView) findViewById(R.id.loading_message);
+                                    TextView loading_message = findViewById(R.id.loading_message);
                                     if (loading_message != null) {
                                         switch (state) {
                                             case IfmoRestClient.STATE_HANDLING:
@@ -175,7 +176,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                             @Override
                             public void run() {
                                 Log.v(TAG, "load | statusCode = " + statusCode + " | failure " + state);
-                                SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.person_swipe);
+                                SwipeRefreshLayout mSwipeRefreshLayout = findViewById(R.id.person_swipe);
                                 if (mSwipeRefreshLayout != null) {
                                     mSwipeRefreshLayout.setRefreshing(false);
                                 }
@@ -231,7 +232,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                 Log.v(TAG, "loadFailed");
                 try {
                     draw(R.layout.state_try_again);
-                    TextView try_again_message = (TextView) findViewById(R.id.try_again_message);
+                    TextView try_again_message = findViewById(R.id.try_again_message);
                     if (try_again_message != null) try_again_message.setText(R.string.load_failed);
                     View try_again_reload = findViewById(R.id.try_again_reload);
                     if (try_again_reload != null) {
@@ -312,7 +313,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                             .transform(new CircularTransformation())
                             .into((ImageView) findViewById(R.id.avatar));
                     // контент
-                    ViewGroup info_connect_container = (ViewGroup) findViewById(R.id.info_connect_container);
+                    ViewGroup info_connect_container = findViewById(R.id.info_connect_container);
                     if (info_connect_container != null) {
                         boolean exists = false;
                         final String[] phones = person.getString("phone").trim().split(";|,");
@@ -357,7 +358,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                             }
                         }
                     }
-                    ViewGroup info_about_container = (ViewGroup) findViewById(R.id.info_about_container);
+                    ViewGroup info_about_container = findViewById(R.id.info_about_container);
                     if (info_about_container != null) {
                         final String rank = person.getString("rank").trim();
                         final String post = person.getString("post").trim();
@@ -373,7 +374,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                         }
                     }
                     // работаем со свайпом
-                    SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.person_swipe);
+                    SwipeRefreshLayout mSwipeRefreshLayout = findViewById(R.id.person_swipe);
                     if (mSwipeRefreshLayout != null) {
                         mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
                         mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
@@ -400,10 +401,11 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
     private View getAboutContainer(String title, String text) {
         View activity_university_person_card_about = inflate(R.layout.layout_university_person_card_about);
         ((TextView) activity_university_person_card_about.findViewById(R.id.title)).setText(title);
-        TextView textView = (TextView) activity_university_person_card_about.findViewById(R.id.text);
+        TextView textView = activity_university_person_card_about.findViewById(R.id.text);
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
             textView.setText(android.text.Html.fromHtml(text, android.text.Html.FROM_HTML_MODE_LEGACY).toString().trim());
         } else {
+            //noinspection deprecation
             textView.setText(android.text.Html.fromHtml(text).toString().trim());
         }
         return activity_university_person_card_about;
@@ -414,7 +416,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
             @Override
             public void run() {
                 try {
-                    ViewGroup vg = ((ViewGroup) findViewById(R.id.person_common_container));
+                    ViewGroup vg = findViewById(R.id.person_common_container);
                     if (vg != null) {
                         vg.removeAllViews();
                         vg.addView(inflate(layoutId));

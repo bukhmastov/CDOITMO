@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.activities;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
@@ -80,6 +81,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         PreferenceManager.getDefaultSharedPreferences(this).unregisterOnSharedPreferenceChangeListener(this);
     }
 
+    @SuppressLint("ObsoleteSdkInt")
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         Log.v(TAG, "onPostCreate");
@@ -90,7 +92,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             bar = (Toolbar) LayoutInflater.from(this).inflate(R.layout.toolbar_settings, root, false);
             root.addView(bar, 0);
         } else {
-            ViewGroup root = (ViewGroup) findViewById(android.R.id.content);
+            ViewGroup root = findViewById(android.R.id.content);
             ListView content = (ListView) root.getChildAt(0);
             root.removeAllViews();
             bar = (Toolbar) LayoutInflater.from(this).inflate(R.layout.toolbar_settings, root, false);
@@ -532,7 +534,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         sBindPreferenceSummaryToValueListener.onPreferenceChange(preference, value);
     }
 
-    private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
+    private static final Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
         @Override
         public boolean onPreferenceChange(Preference preference, Object value) {
             String stringValue = value.toString();
@@ -587,5 +589,4 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             return true;
         }
     };
-
 }

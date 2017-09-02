@@ -36,8 +36,8 @@ public class RatingListView extends ArrayAdapter<HashMap<String, String>> {
                 convertView = inflater.inflate(R.layout.listview_rating, parent, false);
             }
             HashMap<String, String> change = courses.get(position);
-            TextView lv_rating_name = ((TextView) convertView.findViewById(R.id.lv_rating_name));
-            TextView lv_rating_position = ((TextView) convertView.findViewById(R.id.lv_rating_position));
+            TextView lv_rating_name = convertView.findViewById(R.id.lv_rating_name);
+            TextView lv_rating_position = convertView.findViewById(R.id.lv_rating_position);
             if (lv_rating_name != null) lv_rating_name.setText(change.get("name"));
             if (lv_rating_position != null) lv_rating_position.setText(change.get("position"));
             return convertView;

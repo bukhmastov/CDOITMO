@@ -53,7 +53,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     private RequestHandle fragmentRequestHandle = null;
     private JSONObject building_map = null;
     private GoogleMap googleMap = null;
-    private ArrayList<Marker> markers = new ArrayList<>();
+    private final ArrayList<Marker> markers = new ArrayList<>();
     private boolean markers_campus = true;
     private boolean markers_dormitory = true;
     private long timestamp = 0;
@@ -80,7 +80,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
             failed();
             load();
         }
-        Switch dormitory_switch = (Switch) container.findViewById(R.id.dormitory_switch);
+        Switch dormitory_switch = container.findViewById(R.id.dormitory_switch);
         if (dormitory_switch != null) {
             dormitory_switch.setChecked(markers_dormitory);
             dormitory_switch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -92,7 +92,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                 }
             });
         }
-        Switch campus_switch = (Switch) container.findViewById(R.id.campus_switch);
+        Switch campus_switch = container.findViewById(R.id.campus_switch);
         if (campus_switch != null) {
             campus_switch.setChecked(markers_campus);
             campus_switch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -375,7 +375,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         try {
             closeMarkerInfo();
             closeList();
-            ViewGroup marker_info_container = (ViewGroup) container.findViewById(R.id.marker_info_container);
+            ViewGroup marker_info_container = container.findViewById(R.id.marker_info_container);
             if (marker_info_container != null) {
                 View marker_info = inflate(R.layout.layout_university_buildings_marker_info);
                 final String title = escapeText(building.getString("title"));
@@ -424,7 +424,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         try {
             closeMarkerInfo();
             closeList();
-            ViewGroup marker_info_container = (ViewGroup) container.findViewById(R.id.marker_info_container);
+            ViewGroup marker_info_container = container.findViewById(R.id.marker_info_container);
             if (building_map == null) return;
             JSONArray list = building_map.getJSONArray("list");
             if (marker_info_container != null && list != null) {
@@ -435,7 +435,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                         closeList();
                     }
                 });
-                ViewGroup list_container = (ViewGroup) layout_university_buildings_list.findViewById(R.id.list_container);
+                ViewGroup list_container = layout_university_buildings_list.findViewById(R.id.list_container);
                 for (int i = 0; i < list.length(); i++) {
                     try {
                         JSONObject building = list.getJSONObject(i);
@@ -459,8 +459,8 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                                             onMarkerClick(marker);
                                             break;
                                         }
-                                    } catch (Exception e) {
-                                        // norm
+                                    } catch (Exception ignore) {
+                                        // ignore
                                     }
                                 }
                             }
@@ -494,6 +494,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 1000, null);
     }
 
+    @SuppressWarnings("deprecation")
     private String escapeText(String text) {
         try {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {

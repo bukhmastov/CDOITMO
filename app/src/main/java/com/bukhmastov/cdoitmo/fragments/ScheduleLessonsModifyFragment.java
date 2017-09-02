@@ -105,7 +105,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                         retrieveEditingLesson();
                     }
 
-                    TextInputEditText lesson_title = (TextInputEditText) activity.findViewById(R.id.lesson_title);
+                    TextInputEditText lesson_title = activity.findViewById(R.id.lesson_title);
                     if (lessonUnit.title != null) lesson_title.setText(lessonUnit.title);
                     lesson_title.requestFocus();
                     lesson_title.addTextChangedListener(new TextWatcher() {
@@ -119,8 +119,8 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                         }
                     });
 
-                    final TextInputEditText lesson_time_start = (TextInputEditText) activity.findViewById(R.id.lesson_time_start);
-                    final TextInputEditText lesson_time_end = (TextInputEditText) activity.findViewById(R.id.lesson_time_end);
+                    final TextInputEditText lesson_time_start = activity.findViewById(R.id.lesson_time_start);
+                    final TextInputEditText lesson_time_end = activity.findViewById(R.id.lesson_time_end);
                     if (lessonUnit.timeStart != null) lesson_time_start.setText(lessonUnit.timeStart);
                     if (lessonUnit.timeEnd != null) lesson_time_end.setText(lessonUnit.timeEnd);
                     lesson_time_start.addTextChangedListener(new TextWatcher() {
@@ -234,7 +234,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                         }
                     });
 
-                    Spinner lesson_week = (Spinner) activity.findViewById(R.id.lesson_week);
+                    Spinner lesson_week = activity.findViewById(R.id.lesson_week);
                     ArrayAdapter<?> lesson_week_adapter = ArrayAdapter.createFromResource(activity, R.array.week_types_titles, R.layout.spinner_layout_simple);
                     lesson_week_adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                     lesson_week.setAdapter(lesson_week_adapter);
@@ -251,7 +251,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                         public void onNothingSelected(AdapterView<?> parent) {}
                     });
 
-                    Spinner lesson_day_of_week = (Spinner) activity.findViewById(R.id.lesson_day_of_week);
+                    Spinner lesson_day_of_week = activity.findViewById(R.id.lesson_day_of_week);
                     ArrayAdapter<?> lesson_day_of_week_adapter = ArrayAdapter.createFromResource(activity, R.array.days_of_week_titles, R.layout.spinner_layout_simple);
                     lesson_day_of_week_adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                     lesson_day_of_week.setAdapter(lesson_day_of_week_adapter);
@@ -264,7 +264,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                         public void onNothingSelected(AdapterView<?> parent) {}
                     });
 
-                    final AutoCompleteTextView lesson_type = (AutoCompleteTextView) activity.findViewById(R.id.lesson_type);
+                    final AutoCompleteTextView lesson_type = activity.findViewById(R.id.lesson_type);
                     if (lessonUnit.type != null) lesson_type.setText(lessonUnit.type);
                     lesson_type.setThreshold(1);
                     lesson_type.setAdapter(ArrayAdapter.createFromResource(activity, R.array.lessons_types, android.R.layout.simple_dropdown_item_1line));
@@ -279,7 +279,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                         }
                     });
 
-                    TextInputEditText lesson_group = (TextInputEditText) activity.findViewById(R.id.lesson_group);
+                    TextInputEditText lesson_group = activity.findViewById(R.id.lesson_group);
                     if (lessonUnit.group != null) lesson_group.setText(lessonUnit.group);
                     lesson_group.addTextChangedListener(new TextWatcher() {
                         @Override
@@ -292,8 +292,8 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                         }
                     });
 
-                    final AutoCompleteTextView lesson_teacher = (AutoCompleteTextView) activity.findViewById(R.id.lesson_teacher);
-                    final ProgressBar lesson_teacher_bar = (ProgressBar) activity.findViewById(R.id.lesson_teacher_bar);
+                    final AutoCompleteTextView lesson_teacher = activity.findViewById(R.id.lesson_teacher);
+                    final ProgressBar lesson_teacher_bar = activity.findViewById(R.id.lesson_teacher_bar);
                     final TeacherPickerAdapter teacherPickerAdapter = new TeacherPickerAdapter(activity, new ArrayList<JSONObject>());
                     if (lessonUnit.teacher != null) {
                         TeacherSearch.blocked = true;
@@ -366,7 +366,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                         }
                     });
 
-                    TextInputEditText lesson_room = (TextInputEditText) activity.findViewById(R.id.lesson_room);
+                    TextInputEditText lesson_room = activity.findViewById(R.id.lesson_room);
                     if (lessonUnit.room != null) lesson_room.setText(lessonUnit.room);
                     lesson_room.addTextChangedListener(new TextWatcher() {
                         @Override
@@ -379,7 +379,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                         }
                     });
 
-                    AutoCompleteTextView lesson_building = (AutoCompleteTextView) activity.findViewById(R.id.lesson_building);
+                    AutoCompleteTextView lesson_building = activity.findViewById(R.id.lesson_building);
                     if (lessonUnit.building != null) lesson_building.setText(lessonUnit.building);
                     lesson_building.setThreshold(1);
                     lesson_building.setAdapter(ArrayAdapter.createFromResource(activity, R.array.buildings, android.R.layout.simple_dropdown_item_1line));
@@ -394,7 +394,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                         }
                     });
 
-                    Button lesson_create_button = (Button) activity.findViewById(R.id.lesson_create_button);
+                    Button lesson_create_button = activity.findViewById(R.id.lesson_create_button);
                     switch (type) {
                         case create: lesson_create_button.setText(activity.getString(R.string.create)); break;
                         case edit: lesson_create_button.setText(activity.getString(R.string.save)); break;
@@ -455,8 +455,8 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
             throw new NullPointerException("extras cannot be null");
         }
         String header = getStringExtra(extras, "header", true);
-        TextView slc_title = (TextView) activity.findViewById(R.id.slc_title);
-        TextView slc_desc = (TextView) activity.findViewById(R.id.slc_desc);
+        TextView slc_title = activity.findViewById(R.id.slc_title);
+        TextView slc_desc = activity.findViewById(R.id.slc_desc);
         if (slc_title != null) {
             slc_title.setText(header);
         }

@@ -37,13 +37,13 @@ public abstract class UniversityRecyclerViewAdapter extends RecyclerView.Adapter
         }
     }
     protected static class ViewHolder extends RecyclerView.ViewHolder {
-        protected ViewGroup container;
+        protected final ViewGroup container;
         protected ViewHolder(ViewGroup container) {
             super(container);
             this.container = container;
         }
     }
-    protected Context context;
+    protected final Context context;
     protected ArrayList<Item> dataset = new ArrayList<>();
 
     public UniversityRecyclerViewAdapter(final Context context) {
@@ -81,7 +81,7 @@ public abstract class UniversityRecyclerViewAdapter extends RecyclerView.Adapter
         }
     }
 
-    protected ArrayMap<Integer, View.OnClickListener> onStateClickListeners = new ArrayMap<>();
+    protected final ArrayMap<Integer, View.OnClickListener> onStateClickListeners = new ArrayMap<>();
     public void setOnStateClickListener(int layout, View.OnClickListener onClickListener) {
         onStateClickListeners.put(layout, onClickListener);
     }

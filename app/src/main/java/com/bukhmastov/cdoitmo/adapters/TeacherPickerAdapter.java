@@ -21,7 +21,7 @@ import java.util.Objects;
 
 public class TeacherPickerAdapter extends ArrayAdapter<JSONObject> {
 
-    private Context context;
+    private final Context context;
     private ArrayList<JSONObject> teachers;
 
     public TeacherPickerAdapter(Context context, ArrayList<JSONObject> teachers) {

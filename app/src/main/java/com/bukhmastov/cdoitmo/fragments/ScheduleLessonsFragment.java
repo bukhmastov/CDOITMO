@@ -46,7 +46,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
     public static String query = null;
     public static JSONObject schedule;
     public static boolean schedule_cached = false;
-    public static SparseIntArray scroll = new SparseIntArray();
+    public static final SparseIntArray scroll = new SparseIntArray();
     public static int tabSelected = -1;
     public static boolean reScheduleRequired = false;
 
@@ -153,7 +153,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
                 try {
                     activity.findViewById(R.id.fixed_tabs).setVisibility(View.GONE);
                     draw(R.layout.state_loading);
-                    TextView loading_message = (TextView) activity.findViewById(R.id.loading_message);
+                    TextView loading_message = activity.findViewById(R.id.loading_message);
                     if (loading_message != null) {
                         switch (state) {
                             case IfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
@@ -240,8 +240,8 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
                                 return;
                             }
                             draw(R.layout.layout_schedule_lessons_teacher_picker);
-                            TextView teacher_picker_header = (TextView) activity.findViewById(R.id.teacher_picker_header);
-                            ListView teacher_picker_list_view = (ListView) activity.findViewById(R.id.teacher_picker_list_view);
+                            TextView teacher_picker_header = activity.findViewById(R.id.teacher_picker_header);
+                            ListView teacher_picker_list_view = activity.findViewById(R.id.teacher_picker_list_view);
                             if (teacher_picker_header != null) teacher_picker_header.setText(R.string.choose_teacher);
                             if (teacher_picker_list_view != null) {
                                 final ArrayList<HashMap<String, String>> teachersMap = new ArrayList<>();
@@ -267,10 +267,10 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
                     } else {
                         schedule_cached = !Objects.equals(scheduleLessons.getCache(schedule.getString("cache_token")), "");
                         if (schedule.getJSONArray("schedule").length() > 0) {
-                            TabLayout schedule_tabs = (TabLayout) activity.findViewById(R.id.fixed_tabs);
+                            TabLayout schedule_tabs = activity.findViewById(R.id.fixed_tabs);
                             schedule_tabs.setVisibility(View.VISIBLE);
                             draw(R.layout.layout_schedule_lessons_tabs);
-                            ViewPager schedule_view = (ViewPager) activity.findViewById(R.id.schedule_pager);
+                            ViewPager schedule_view = activity.findViewById(R.id.schedule_pager);
                             if (schedule_view != null) {
                                 schedule_view.setAdapter(new PagerLessonsAdapter(getFragmentManager(), activity));
                                 schedule_view.addOnPageChangeListener(self);
@@ -344,7 +344,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
             @Override
             public void run() {
                 Log.v(TAG, "notFound");
-                ViewGroup container_schedule = ((ViewGroup) activity.findViewById(R.id.container_schedule));
+                ViewGroup container_schedule = activity.findViewById(R.id.container_schedule);
                 if (container_schedule != null) {
                     container_schedule.removeAllViews();
                     View view = inflate(R.layout.nothing_to_display);
@@ -432,7 +432,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
             @Override
             public void run() {
                 try {
-                    ViewGroup vg = ((ViewGroup) activity.findViewById(R.id.container_schedule));
+                    ViewGroup vg = activity.findViewById(R.id.container_schedule);
                     if (vg != null) {
                         vg.removeAllViews();
                         vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));

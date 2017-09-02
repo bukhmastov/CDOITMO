@@ -46,7 +46,7 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
     private RequestHandle fragmentRequestHandle = null;
     private boolean loaded = false;
     private JSONObject news = null;
-    private int limit = 10;
+    private final int limit = 10;
     private int offset = 0;
     private String search = "";
     private NewsRecyclerViewAdapter newsRecyclerViewAdapter = null;
@@ -192,7 +192,7 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                                     Log.v(TAG, "load | progress " + state);
                                     draw(R.layout.state_loading);
                                     if (activity != null) {
-                                        TextView loading_message = (TextView) container.findViewById(R.id.loading_message);
+                                        TextView loading_message = container.findViewById(R.id.loading_message);
                                         if (loading_message != null) {
                                             switch (state) {
                                                 case IfmoRestClient.STATE_HANDLING:
@@ -281,7 +281,7 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                 Log.v(TAG, "loadFailed");
                 try {
                     draw(R.layout.state_try_again);
-                    TextView try_again_message = (TextView) container.findViewById(R.id.try_again_message);
+                    TextView try_again_message = container.findViewById(R.id.try_again_message);
                     if (try_again_message != null) try_again_message.setText(R.string.load_failed);
                     View try_again_reload = container.findViewById(R.id.try_again_reload);
                     if (try_again_reload != null) {
@@ -311,8 +311,8 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                 try {
                     draw(R.layout.layout_university_news_list);
                     // поиск
-                    final EditText search_input = (EditText) container.findViewById(R.id.search_input);
-                    final FrameLayout search_action = (FrameLayout) container.findViewById(R.id.search_action);
+                    final EditText search_input = container.findViewById(R.id.search_input);
+                    final FrameLayout search_action = container.findViewById(R.id.search_action);
                     search_action.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
@@ -331,14 +331,14 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                     });
                     search_input.setText(search);
                     // очищаем сообщение
-                    ViewGroup news_list_info = (ViewGroup) container.findViewById(R.id.news_list_info);
+                    ViewGroup news_list_info = container.findViewById(R.id.news_list_info);
                     news_list_info.removeAllViews();
                     news_list_info.setPadding(0, 0, 0, 0);
                     // список
                     JSONArray list = news.getJSONArray("list");
                     if (list.length() > 0) {
                         newsRecyclerViewAdapter = new NewsRecyclerViewAdapter(activity);
-                        final RecyclerView news_list = (RecyclerView) container.findViewById(R.id.news_list);
+                        final RecyclerView news_list = container.findViewById(R.id.news_list);
                         news_list.setLayoutManager(new LinearLayoutManager(activity));
                         news_list.setAdapter(newsRecyclerViewAdapter);
                         news_list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
@@ -424,10 +424,10 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                         public void run() {
                             try {
                                 int height = container.findViewById(R.id.top_panel).getHeight();
-                                RecyclerView news_list = (RecyclerView) container.findViewById(R.id.news_list);
+                                RecyclerView news_list = container.findViewById(R.id.news_list);
                                 news_list.setPadding(0, height, 0, 0);
                                 news_list.scrollToPosition(0);
-                                LinearLayout news_list_info = (LinearLayout) container.findViewById(R.id.news_list_info);
+                                LinearLayout news_list_info = container.findViewById(R.id.news_list_info);
                                 if (news_list_info.getChildCount() > 0) {
                                     news_list_info.setPadding(0, height, 0, 0);
                                 }
@@ -437,7 +437,7 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                         }
                     });
                     // работаем со свайпом
-                    SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) container.findViewById(R.id.news_list_swipe);
+                    SwipeRefreshLayout mSwipeRefreshLayout = container.findViewById(R.id.news_list_swipe);
                     if (mSwipeRefreshLayout != null) {
                         mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
                         mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);

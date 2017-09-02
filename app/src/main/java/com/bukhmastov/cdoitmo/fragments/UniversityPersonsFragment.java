@@ -46,7 +46,7 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
     private RequestHandle fragmentRequestHandle = null;
     private boolean loaded = false;
     private JSONObject persons = null;
-    private int limit = 20;
+    private final int limit = 20;
     private int offset = 0;
     private String search = "";
     private PersonsRecyclerViewAdapter personsRecyclerViewAdapter = null;
@@ -192,7 +192,7 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
                                     Log.v(TAG, "load | progress " + state);
                                     draw(R.layout.state_loading);
                                     if (activity != null) {
-                                        TextView loading_message = (TextView) container.findViewById(R.id.loading_message);
+                                        TextView loading_message = container.findViewById(R.id.loading_message);
                                         if (loading_message != null) {
                                             switch (state) {
                                                 case IfmoRestClient.STATE_HANDLING:
@@ -281,7 +281,7 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
                 Log.v(TAG, "loadFailed");
                 try {
                     draw(R.layout.state_try_again);
-                    TextView try_again_message = (TextView) container.findViewById(R.id.try_again_message);
+                    TextView try_again_message = container.findViewById(R.id.try_again_message);
                     if (try_again_message != null) try_again_message.setText(R.string.load_failed);
                     View try_again_reload = container.findViewById(R.id.try_again_reload);
                     if (try_again_reload != null) {
@@ -311,8 +311,8 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
                 try {
                     draw(R.layout.layout_university_persons_list);
                     // поиск
-                    final EditText search_input = (EditText) container.findViewById(R.id.search_input);
-                    final FrameLayout search_action = (FrameLayout) container.findViewById(R.id.search_action);
+                    final EditText search_input = container.findViewById(R.id.search_input);
+                    final FrameLayout search_action = container.findViewById(R.id.search_action);
                     search_action.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
@@ -331,14 +331,14 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
                     });
                     search_input.setText(search);
                     // очищаем сообщение
-                    ViewGroup persons_list_info = (ViewGroup) container.findViewById(R.id.persons_list_info);
+                    ViewGroup persons_list_info = container.findViewById(R.id.persons_list_info);
                     persons_list_info.removeAllViews();
                     persons_list_info.setPadding(0, 0, 0, 0);
                     // список
                     JSONArray list = persons.getJSONArray("list");
                     if (list.length() > 0) {
                         personsRecyclerViewAdapter = new PersonsRecyclerViewAdapter(activity);
-                        final RecyclerView persons_list = (RecyclerView) container.findViewById(R.id.persons_list);
+                        final RecyclerView persons_list = container.findViewById(R.id.persons_list);
                         persons_list.setLayoutManager(new LinearLayoutManager(activity));
                         persons_list.setAdapter(personsRecyclerViewAdapter);
                         persons_list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
@@ -424,10 +424,10 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
                         public void run() {
                             try {
                                 int height = container.findViewById(R.id.top_panel).getHeight();
-                                RecyclerView persons_list = (RecyclerView) container.findViewById(R.id.persons_list);
+                                RecyclerView persons_list = container.findViewById(R.id.persons_list);
                                 persons_list.setPadding(0, height, 0, 0);
                                 persons_list.scrollToPosition(0);
-                                LinearLayout persons_list_info = (LinearLayout) container.findViewById(R.id.persons_list_info);
+                                LinearLayout persons_list_info = container.findViewById(R.id.persons_list_info);
                                 if (persons_list_info.getChildCount() > 0) {
                                     persons_list_info.setPadding(0, height, 0, 0);
                                 }
@@ -437,7 +437,7 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
                         }
                     });
                     // работаем со свайпом
-                    SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) container.findViewById(R.id.persons_list_swipe);
+                    SwipeRefreshLayout mSwipeRefreshLayout = container.findViewById(R.id.persons_list_swipe);
                     if (mSwipeRefreshLayout != null) {
                         mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
                         mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);

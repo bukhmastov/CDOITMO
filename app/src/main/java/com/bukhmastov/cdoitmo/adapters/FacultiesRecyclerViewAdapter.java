@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
 
 public class FacultiesRecyclerViewAdapter extends UniversityRecyclerViewAdapter {
 
-    private Pattern working_hours_pattern = Pattern.compile("(\\D*/.*\\|?)+");
+    private final Pattern working_hours_pattern = Pattern.compile("(\\D*/.*\\|?)+");
 
     public FacultiesRecyclerViewAdapter(final Context context) {
         super(context, null);
@@ -86,7 +86,7 @@ public class FacultiesRecyclerViewAdapter extends UniversityRecyclerViewAdapter 
             } else {
                 Static.removeView(viewHolder.container.findViewById(R.id.structure_header));
             }
-            ViewGroup structure_container = (ViewGroup) viewHolder.container.findViewById(R.id.structure_container);
+            ViewGroup structure_container = viewHolder.container.findViewById(R.id.structure_container);
             if (structure_container == null) {
                 return;
             }
@@ -286,7 +286,7 @@ public class FacultiesRecyclerViewAdapter extends UniversityRecyclerViewAdapter 
             } else {
                 Static.removeView(viewHolder.container.findViewById(R.id.structure_header));
             }
-            ViewGroup structure_container = (ViewGroup) viewHolder.container.findViewById(R.id.structure_container);
+            ViewGroup structure_container = viewHolder.container.findViewById(R.id.structure_container);
             if (structure_container == null) {
                 return;
             }

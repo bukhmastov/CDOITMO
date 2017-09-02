@@ -18,8 +18,8 @@ import cz.msebera.android.httpclient.Header;
 public abstract class Client {
 
     private static final String TAG = "Client";
-    static AsyncHttpClient httpclient = new AsyncHttpClient();
-    static SyncHttpClient httpclientsync = new SyncHttpClient();
+    static final AsyncHttpClient httpclient = new AsyncHttpClient();
+    static final SyncHttpClient httpclientsync = new SyncHttpClient();
     private static boolean initialized = false;
     private static final long jsessionid_ts_limit = 1200000L; // 20min // 20 * 60 * 1000
     public static final int STATUS_CODE_EMPTY = -1;

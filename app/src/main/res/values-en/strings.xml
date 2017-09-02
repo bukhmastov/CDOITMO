@@ -148,10 +148,8 @@
     <string name="request_denied">Failed to submit request</string>
     <string name="configure_schedule_widget">Configure widget of the schedule</string>
     <string name="add_widget">Add widget</string>
-    <string name="use_dark_theme">Use a dark theme</string>
     <string name="schedule_not_found">Schedule not found</string>
     <string name="schedule_not_found_2">schedule not found</string>
-    <string name="widget_creation_failed">Failed to create widget</string>
     <string name="failed_to_create_widget">Failed to create widget</string>
     <string name="failed_to_load_schedule">Failed to load the schedule</string>
     <string name="need_to_config_widget">It is necessary to adjust the widget</string>
@@ -293,11 +291,8 @@
     <string name="speech_recognition_is_not_supported">Speech recognition not supported</string>
     <string name="lesson_title_required">You must specify the title of the lesson</string>
     <string name="lesson_time_start_required">You must specify the start time for lesson</string>
-    <string name="need_to_pick_schedule">You must select a schedule to display</string>
     <string name="log">Log</string>
     <string name="share">Share</string>
-    <string name="download_file">Upload file</string>
-    <string name="send_log">Send log to developer</string>
     <string name="exams_gone">No exams</string>
     <string name="days">Days</string>
     <string name="hours">Hours</string>
@@ -399,5 +394,6 @@
     <string name="pref_group_force_override_summary">If your group is determined incorrectly</string>
     <string name="pref_group_force_override_message">Leave the field blank to allow the system to automatically define a group. You must restart the application to accept the changes.</string>
     <string name="pref_group_force_override_hint">Group number</string>
+    <string name="no_rating">No rating available</string>
 
 </resources>

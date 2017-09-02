@@ -31,7 +31,7 @@ import java.io.FileWriter;
 public class LogActivity extends AppCompatActivity {
 
     private static final String TAG = "LogActivity";
-    private Activity activity = this;
+    private final Activity activity = this;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

@@ -26,7 +26,7 @@ public class ScheduleLessonsAdditionalConverter extends AsyncTask<JSONObject, Vo
     public interface response {
         void finish(JSONObject json);
     }
-    private Context context;
+    private final Context context;
     private response delegate = null;
 
     public ScheduleLessonsAdditionalConverter(Context context, response delegate){
@@ -128,8 +128,8 @@ public class ScheduleLessonsAdditionalConverter extends AsyncTask<JSONObject, Vo
         public long end;
     }
     private class LessonSort {
-        public long ts;
-        public JSONObject lesson;
+        public final long ts;
+        public final JSONObject lesson;
         LessonSort(long ts, JSONObject lesson){
             this.ts = ts;
             this.lesson = lesson;
@@ -141,5 +141,4 @@ public class ScheduleLessonsAdditionalConverter extends AsyncTask<JSONObject, Vo
         Log.i(TAG, "finished");
         delegate.finish(json);
     }
-
 }

@@ -37,7 +37,7 @@ public class TeacherPickerListView extends ArrayAdapter<HashMap<String, String>>
                 convertView = inflater.inflate(R.layout.listview_teacher_picker, parent, false);
             }
             HashMap<String, String> teacherMap = teachersMap.get(position);
-            TextView lv_teacher_picker_name = (TextView) convertView.findViewById(R.id.lv_teacher_picker_name);
+            TextView lv_teacher_picker_name = convertView.findViewById(R.id.lv_teacher_picker_name);
             if (lv_teacher_picker_name != null) {
                 String text = teacherMap.get("person");
                 if (teacherMap.get("post") != null && !Objects.equals(teacherMap.get("post"), "") && !Objects.equals(teacherMap.get("post"), "null")) {

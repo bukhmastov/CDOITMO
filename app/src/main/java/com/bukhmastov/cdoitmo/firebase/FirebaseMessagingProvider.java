@@ -12,7 +12,7 @@ public class FirebaseMessagingProvider {
     private static final String TAG = "FirebaseMessagingProvider";
 
     public static class Channel {
-        public static String OWNER_NOTIFICATION = "owner_notification";
+        public static final String OWNER_NOTIFICATION = "owner_notification";
     }
 
     public static void subscribe(final String topic) {

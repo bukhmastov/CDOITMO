@@ -45,7 +45,7 @@ public class Room101AddRequest {
         void onClose();
         void onDone();
     }
-    private callback callback;
+    private final callback callback;
     public static final int STAGE_PICK_DATE_LOAD = 0;
     public static final int STAGE_PICK_DATE = 1;
     public static final int STAGE_PICK_TIME_START_LOAD = 2;
@@ -59,7 +59,7 @@ public class Room101AddRequest {
     public static final int STAGES_COUNT = 9;
     private int CURRENT_STAGE = 0;
     private Activity activity = null;
-    private Pattern timePickerPattern = Pattern.compile("^(\\d{1,2}:\\d{2})\\s?(\\((Свободных мест:\\s)?(\\d*)\\))?$");
+    private final Pattern timePickerPattern = Pattern.compile("^(\\d{1,2}:\\d{2})\\s?(\\((Свободных мест:\\s)?(\\d*)\\))?$");
     private RequestHandle ARequestHandle = null;
 
     private JSONObject data = null;
@@ -572,7 +572,7 @@ public class Room101AddRequest {
         }
         ((TextView) view.findViewById(R.id.ars_request_content_header)).setText(header);
         if (array != null && array.length() > 0) {
-            RadioGroup radioGroup = (RadioGroup) view.findViewById(R.id.ars_request_chooser);
+            RadioGroup radioGroup = view.findViewById(R.id.ars_request_chooser);
             for (int i = 0; i < array.length(); i++) {
                 try {
                     JSONObject session = array.getJSONObject(i);

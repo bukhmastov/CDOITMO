@@ -125,8 +125,8 @@ public abstract class SchedulePreference extends DialogPreference {
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                final RadioGroup radioTypePicker = (RadioGroup) preference_schedule.findViewById(R.id.radioTypePicker);
-                final FrameLayout ps_content = (FrameLayout) preference_schedule.findViewById(R.id.ps_content);
+                final RadioGroup radioTypePicker = preference_schedule.findViewById(R.id.radioTypePicker);
+                final FrameLayout ps_content = preference_schedule.findViewById(R.id.ps_content);
                 if (radioTypePicker != null) {
                     radioTypePicker.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
                         @Override
@@ -146,7 +146,7 @@ public abstract class SchedulePreference extends DialogPreference {
                                 if (Objects.equals(query, "auto")) setValue("", "");
                                 if (ps_content != null) {
                                     ps_content.addView(((LayoutInflater) getContext().getSystemService(android.content.Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.preference_schedule_defined, null));
-                                    EditText editText = (EditText) preference_schedule.findViewById(R.id.schedule_preference_edit_text);
+                                    EditText editText = preference_schedule.findViewById(R.id.schedule_preference_edit_text);
                                     if (editText != null) {
                                         editText.setOnKeyListener(new View.OnKeyListener() {
                                             public boolean onKey(View v, int keyCode, KeyEvent event) {
@@ -172,7 +172,7 @@ public abstract class SchedulePreference extends DialogPreference {
     }
     protected boolean setQuery() {
         if (preference_schedule == null) return false;
-        EditText editText = (EditText) preference_schedule.findViewById(R.id.schedule_preference_edit_text);
+        EditText editText = preference_schedule.findViewById(R.id.schedule_preference_edit_text);
         if (editText != null) {
             String search = editText.getText().toString().trim();
             if (!Objects.equals(search, "")) {
@@ -192,7 +192,7 @@ public abstract class SchedulePreference extends DialogPreference {
             @Override
             public void run() {
                 if (preference_schedule == null) return;
-                FrameLayout schedule_preference_list = (FrameLayout) preference_schedule.findViewById(R.id.schedule_preference_list);
+                FrameLayout schedule_preference_list = preference_schedule.findViewById(R.id.schedule_preference_list);
                 if (schedule_preference_list != null){
                     LinearLayout linearLayout = new LinearLayout(getContext());
                     linearLayout.setOrientation(LinearLayout.VERTICAL);
@@ -221,7 +221,7 @@ public abstract class SchedulePreference extends DialogPreference {
             @Override
             public void run() {
                 if (preference_schedule == null) return;
-                FrameLayout schedule_preference_list = (FrameLayout) preference_schedule.findViewById(R.id.schedule_preference_list);
+                FrameLayout schedule_preference_list = preference_schedule.findViewById(R.id.schedule_preference_list);
                 if (schedule_preference_list != null){
                     LinearLayout linearLayout = new LinearLayout(getContext());
                     linearLayout.setOrientation(LinearLayout.VERTICAL);
@@ -251,7 +251,7 @@ public abstract class SchedulePreference extends DialogPreference {
             @Override
             public void run() {
                 if (preference_schedule == null) return;
-                FrameLayout schedule_preference_list = (FrameLayout) preference_schedule.findViewById(R.id.schedule_preference_list);
+                FrameLayout schedule_preference_list = preference_schedule.findViewById(R.id.schedule_preference_list);
                 if (schedule_preference_list != null){
                     LinearLayout linearLayout = new LinearLayout(getContext());
                     linearLayout.setOrientation(LinearLayout.VERTICAL);

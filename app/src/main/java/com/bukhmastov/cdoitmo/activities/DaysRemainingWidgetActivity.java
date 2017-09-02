@@ -29,16 +29,16 @@ import java.util.ArrayList;
 public class DaysRemainingWidgetActivity extends AppCompatActivity implements ScheduleExams.response, DaysRemainingWidget.response {
 
     private static final String TAG = "DRWidgetActivity";
-    private Activity activity = this;
+    private final Activity activity = this;
     private DaysRemainingWidget daysRemainingWidget = null;
     private ScheduleExams scheduleExams = null;
     private String query = null;
     private JSONObject schedule = null;
     private RequestHandle scheduleRequestHandle = null;
     private boolean is_message_displaying = false;
-    private LinearLayout.LayoutParams hide = new LinearLayout.LayoutParams(0, 0);
-    private LinearLayout.LayoutParams show = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-    private LinearLayout.LayoutParams showMatch = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+    private final LinearLayout.LayoutParams hide = new LinearLayout.LayoutParams(0, 0);
+    private final LinearLayout.LayoutParams show = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+    private final LinearLayout.LayoutParams showMatch = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -234,7 +234,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                TextView textView = (TextView) findViewById(layout);
+                TextView textView = findViewById(layout);
                 if (textView != null) {
                     if (text == null || text.isEmpty()) {
                         if (textView.getLayoutParams() == showMatch || textView.getLayoutParams() != hide) {
@@ -265,7 +265,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
                         if (view != null && (view.getLayoutParams() == hide || view.getLayoutParams() != show)) {
                             view.setLayoutParams(show);
                         }
-                        TextView textView = (TextView) findViewById(layout);
+                        TextView textView = findViewById(layout);
                         if (textView != null) {
                             textView.setText(text);
                         }
@@ -282,7 +282,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
             public void run() {
                 draw(R.layout.layout_days_remaining_widget_message);
                 is_message_displaying = true;
-                TextView drw_message = (TextView) findViewById(R.id.drw_message);
+                TextView drw_message = findViewById(R.id.drw_message);
                 if (drw_message != null) {
                     drw_message.setText(text);
                 }
@@ -294,7 +294,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
             @Override
             public void run() {
                 try {
-                    ViewGroup vg = ((ViewGroup) findViewById(R.id.drw_container));
+                    ViewGroup vg = findViewById(R.id.drw_container);
                     if (vg != null) {
                         vg.removeAllViews();
                         vg.addView(((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));

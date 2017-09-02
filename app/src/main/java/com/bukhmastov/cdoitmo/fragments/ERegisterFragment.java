@@ -185,7 +185,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                                     Log.v(TAG, "load | progress " + state);
                                     draw(R.layout.state_loading);
                                     if (activity != null) {
-                                        TextView loading_message = (TextView) activity.findViewById(R.id.loading_message);
+                                        TextView loading_message = activity.findViewById(R.id.loading_message);
                                         if (loading_message != null) {
                                             switch (state) {
                                                 case DeIfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
@@ -276,7 +276,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                 Log.v(TAG, "loadFailed");
                 try {
                     draw(R.layout.state_try_again);
-                    TextView try_again_message = (TextView) activity.findViewById(R.id.try_again_message);
+                    TextView try_again_message = activity.findViewById(R.id.try_again_message);
                     if (try_again_message != null) try_again_message.setText(R.string.eregister_load_failed_retry_in_minute);
                     View try_again_reload = activity.findViewById(R.id.try_again_reload);
                     if (try_again_reload != null) {
@@ -332,7 +332,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                     // отображаем интерфейс
                     draw(R.layout.eregister_layout);
                     // работаем со списком
-                    ListView erl_list_view = (ListView) activity.findViewById(R.id.erl_list_view);
+                    ListView erl_list_view = activity.findViewById(R.id.erl_list_view);
                     if (erl_list_view != null) {
                         erl_list_view.setAdapter(new SubjectListView(activity, subjects));
                         erl_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -348,7 +348,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                         });
                     }
                     // работаем со свайпом
-                    SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) activity.findViewById(R.id.swipe_container);
+                    SwipeRefreshLayout mSwipeRefreshLayout = activity.findViewById(R.id.swipe_container);
                     if (mSwipeRefreshLayout != null) {
                         mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
                         mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
@@ -357,7 +357,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                     // работаем с раскрывающимися списками
                     int selection = 0, counter = 0;
                     // список групп
-                    Spinner spinner_group = (Spinner) activity.findViewById(R.id.erl_group_spinner);
+                    Spinner spinner_group = activity.findViewById(R.id.erl_group_spinner);
                     if (spinner_group != null) {
                         final ArrayList<String> spinner_group_arr = new ArrayList<>();
                         final ArrayList<String> spinner_group_arr_names = new ArrayList<>();
@@ -386,7 +386,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                         });
                     }
                     // список семестров
-                    Spinner spinner_period = (Spinner) activity.findViewById(R.id.erl_period_spinner);
+                    Spinner spinner_period = activity.findViewById(R.id.erl_period_spinner);
                     if (spinner_period != null) {
                         final ArrayList<String> spinner_period_arr = new ArrayList<>();
                         final ArrayList<Integer> spinner_period_arr_values = new ArrayList<>();
@@ -510,7 +510,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
             @Override
             public void run() {
                 try {
-                    ViewGroup vg = ((ViewGroup) activity.findViewById(R.id.container_eregister));
+                    ViewGroup vg = activity.findViewById(R.id.container_eregister);
                     if (vg != null) {
                         vg.removeAllViews();
                         vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));

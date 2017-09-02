@@ -11,8 +11,8 @@ import java.util.Objects;
 public class ProtocolTracker {
 
     private static final String TAG = "ProtocolTracker";
-    private Context context;
-    private int jobID = 0;
+    private final Context context;
+    private final int jobID = 0;
 
     public ProtocolTracker(Context context) {
         this.context = context;

@@ -41,8 +41,8 @@ public class ShortcutCreator {
         void onDisplay(View view);
         void onError();
     }
-    private Context context;
-    private response delegate;
+    private final Context context;
+    private final response delegate;
     private int step = 0;
     private boolean displayed = false;
     public static RequestHandle shortcutRequestHandle = null;
@@ -106,7 +106,7 @@ public class ShortcutCreator {
                     ((TextView) layout_vertical_stepper_item.findViewById(R.id.stepper_step_number)).setText("1");
                     ((TextView) layout_vertical_stepper_item.findViewById(R.id.stepper_header)).setText(R.string.choose_shortcut);
                     ViewGroup stepper_content = (ViewGroup) inflate(R.layout.layout_shortcut_creator_step_1);
-                    Spinner shortcut_creator_spinner = (Spinner) stepper_content.findViewById(R.id.shortcut_creator_spinner);
+                    Spinner shortcut_creator_spinner = stepper_content.findViewById(R.id.shortcut_creator_spinner);
                     final ArrayList<String> spinner_layout_normal_labels = new ArrayList<>();
                     final ArrayList<TYPES> spinner_layout_normal_values = new ArrayList<>();
                     for (TYPES type : TYPES.values()) {
@@ -168,7 +168,7 @@ public class ShortcutCreator {
                             ((TextView) layout_vertical_stepper_item.findViewById(R.id.stepper_step_number)).setText("2");
                             ((TextView) layout_vertical_stepper_item.findViewById(R.id.stepper_header)).setText(R.string.choose_schedule_for_display);
                             ViewGroup stepper_content = (ViewGroup) inflate(R.layout.layout_shortcut_creator_step_choose_schedule);
-                            EditText shortcut_creator_input = (EditText) stepper_content.findViewById(R.id.shortcut_creator_input);
+                            EditText shortcut_creator_input = stepper_content.findViewById(R.id.shortcut_creator_input);
                             shortcut_creator_input.setHint(R.string.schedule_lessons_search_view_hint);
                             shortcut_creator_input.requestFocus();
                             shortcut_creator_input.setOnKeyListener(new View.OnKeyListener() {
@@ -176,7 +176,7 @@ public class ShortcutCreator {
                                     return event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER && scheduleLessonsProvider.setQuery();
                                 }
                             });
-                            final FrameLayout shortcut_creator_result = (FrameLayout) stepper_content.findViewById(R.id.shortcut_creator_result);
+                            final FrameLayout shortcut_creator_result = stepper_content.findViewById(R.id.shortcut_creator_result);
                             ((ViewGroup) layout_vertical_stepper_item.findViewById(R.id.stepper_content)).addView(stepper_content);
                             content.addView(layout_vertical_stepper_item);
                             scheduleLessonsProvider.setHandler(new ScheduleLessons.response() {
@@ -287,7 +287,7 @@ public class ShortcutCreator {
                             ((TextView) layout_vertical_stepper_item.findViewById(R.id.stepper_step_number)).setText("2");
                             ((TextView) layout_vertical_stepper_item.findViewById(R.id.stepper_header)).setText(R.string.choose_schedule_for_display);
                             ViewGroup stepper_content = (ViewGroup) inflate(R.layout.layout_shortcut_creator_step_choose_schedule);
-                            EditText shortcut_creator_input = (EditText) stepper_content.findViewById(R.id.shortcut_creator_input);
+                            EditText shortcut_creator_input = stepper_content.findViewById(R.id.shortcut_creator_input);
                             shortcut_creator_input.setHint(R.string.schedule_lessons_search_view_hint);
                             shortcut_creator_input.requestFocus();
                             shortcut_creator_input.setOnKeyListener(new View.OnKeyListener() {
@@ -295,7 +295,7 @@ public class ShortcutCreator {
                                     return event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER && scheduleExamsProvider.setQuery();
                                 }
                             });
-                            final FrameLayout shortcut_creator_result = (FrameLayout) stepper_content.findViewById(R.id.shortcut_creator_result);
+                            final FrameLayout shortcut_creator_result = stepper_content.findViewById(R.id.shortcut_creator_result);
                             ((ViewGroup) layout_vertical_stepper_item.findViewById(R.id.stepper_content)).addView(stepper_content);
                             content.addView(layout_vertical_stepper_item);
                             scheduleExamsProvider.setHandler(new ScheduleExams.response() {
@@ -409,7 +409,7 @@ public class ShortcutCreator {
                             ((TextView) layout_vertical_stepper_item.findViewById(R.id.stepper_step_number)).setText("2");
                             ((TextView) layout_vertical_stepper_item.findViewById(R.id.stepper_header)).setText(R.string.choose_type);
                             ViewGroup stepper_content = (ViewGroup) inflate(R.layout.layout_shortcut_creator_step_1);
-                            Spinner shortcut_creator_spinner = (Spinner) stepper_content.findViewById(R.id.shortcut_creator_spinner);
+                            Spinner shortcut_creator_spinner = stepper_content.findViewById(R.id.shortcut_creator_spinner);
                             final ArrayList<String> spinner_layout_normal_labels = new ArrayList<>(Arrays.asList(new String[] {
                                     context.getString(R.string.shortcut_creator_need_to_choose_type),
                                     context.getString(R.string.persons),
@@ -579,7 +579,7 @@ public class ShortcutCreator {
     }
 
     private class ScheduleLessonsProvider {
-        private Context context;
+        private final Context context;
         private ScheduleLessons scheduleLessons;
         ScheduleLessonsProvider(Context context) {
             this.context = context;
@@ -590,7 +590,7 @@ public class ShortcutCreator {
         }
         boolean setQuery() {
             if (scheduleLessons == null) return false;
-            EditText shortcut_creator_input = (EditText) ((Activity) context).findViewById(R.id.shortcut_creator_input);
+            EditText shortcut_creator_input = ((Activity) context).findViewById(R.id.shortcut_creator_input);
             if (shortcut_creator_input != null) {
                 String search = shortcut_creator_input.getText().toString().trim();
                 if (!Objects.equals(search, "")) {
@@ -611,7 +611,7 @@ public class ShortcutCreator {
         }
     }
     private class ScheduleExamsProvider {
-        private Context context;
+        private final Context context;
         private ScheduleExams scheduleExams;
         ScheduleExamsProvider(Context context) {
             this.context = context;
@@ -622,7 +622,7 @@ public class ShortcutCreator {
         }
         boolean setQuery() {
             if (scheduleExams == null) return false;
-            EditText shortcut_creator_input = (EditText) ((Activity) context).findViewById(R.id.shortcut_creator_input);
+            EditText shortcut_creator_input = ((Activity) context).findViewById(R.id.shortcut_creator_input);
             if (shortcut_creator_input != null) {
                 String search = shortcut_creator_input.getText().toString().trim();
                 if (!Objects.equals(search, "")) {
@@ -643,8 +643,8 @@ public class ShortcutCreator {
         }
     }
     private class Additional {
-        String label;
-        String query;
+        final String label;
+        final String query;
         Additional(String label, String query) {
             this.label = label;
             this.query = query;

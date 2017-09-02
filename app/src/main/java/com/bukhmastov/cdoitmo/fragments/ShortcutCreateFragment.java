@@ -18,7 +18,7 @@ public class ShortcutCreateFragment extends ConnectedFragment implements Shortcu
 
     private static final String TAG = "ShortcutCreateFragment";
     private ShortcutCreator shortcutCreator = null;
-    private ShortcutReceiver receiver = new ShortcutReceiver();
+    private final ShortcutReceiver receiver = new ShortcutReceiver();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -59,7 +59,7 @@ public class ShortcutCreateFragment extends ConnectedFragment implements Shortcu
             @Override
             public void run() {
                 Log.v(TAG, "onDisplay");
-                ViewGroup shortcut_create_content = (ViewGroup) activity.findViewById(R.id.shortcut_create_content);
+                ViewGroup shortcut_create_content = activity.findViewById(R.id.shortcut_create_content);
                 if (shortcut_create_content != null) {
                     shortcut_create_content.removeAllViews();
                     shortcut_create_content.addView(view);

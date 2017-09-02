@@ -24,7 +24,7 @@ import com.bukhmastov.cdoitmo.utils.Static;
 public class WebViewActivity extends AppCompatActivity {
 
     private static final String TAG = "WebViewActivity";
-    private Activity activity = this;
+    private final Activity activity = this;
     private String url = null;
     private String title = null;
     private WebView webview = null;
@@ -57,9 +57,9 @@ public class WebViewActivity extends AppCompatActivity {
             actionBar.setTitle(title == null ? activity.getString(R.string.web_browser) : title);
         }
         // инициализируем
-        webview = (WebView) findViewById(R.id.webview);
-        webviewProgressBar = (ProgressBar) findViewById(R.id.webviewProgressBar);
-        swipe = (SwipeRefreshLayout) findViewById(R.id.swipe);
+        webview = findViewById(R.id.webview);
+        webviewProgressBar = findViewById(R.id.webviewProgressBar);
+        swipe = findViewById(R.id.swipe);
         // работаем со свайпом
         if (swipe != null) {
             swipe.setColorSchemeColors(Static.colorAccent);

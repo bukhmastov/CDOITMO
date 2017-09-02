@@ -41,7 +41,7 @@ public class ProtocolListView extends ArrayAdapter<HashMap<String, String>> {
             ((TextView) convertView.findViewById(R.id.lv_protocol_desc)).setText(change.get("desc"));
             ((TextView) convertView.findViewById(R.id.lv_protocol_meta)).setText(change.get("meta"));
             ((TextView) convertView.findViewById(R.id.lv_protocol_value)).setText(change.get("value"));
-            TextView lv_protocol_delta = ((TextView) convertView.findViewById(R.id.lv_protocol_delta));
+            TextView lv_protocol_delta = convertView.findViewById(R.id.lv_protocol_delta);
             if (Objects.equals(change.get("delta_here"), "true")) {
                 lv_protocol_delta.setText(change.get("delta"));
                 try {

@@ -146,7 +146,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
                 Log.v(TAG, "progress " + state);
                 try {
                     draw(R.layout.state_loading);
-                    TextView loading_message = (TextView) activity.findViewById(R.id.loading_message);
+                    TextView loading_message = activity.findViewById(R.id.loading_message);
                     if (loading_message != null) {
                         switch (state) {
                             case IfmoClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
@@ -227,8 +227,8 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
                         JSONArray teachers = json.getJSONArray("teachers");
                         if (teachers.length() > 0) {
                             draw(R.layout.layout_schedule_lessons_teacher_picker);
-                            TextView teacher_picker_header = (TextView) activity.findViewById(R.id.teacher_picker_header);
-                            ListView teacher_picker_list_view = (ListView) activity.findViewById(R.id.teacher_picker_list_view);
+                            TextView teacher_picker_header = activity.findViewById(R.id.teacher_picker_header);
+                            ListView teacher_picker_list_view = activity.findViewById(R.id.teacher_picker_list_view);
                             if (teacher_picker_header != null) teacher_picker_header.setText(R.string.choose_teacher);
                             if (teacher_picker_list_view != null) {
                                 final ArrayList<HashMap<String, String>> teachersMap = new ArrayList<>();
@@ -256,7 +256,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
                         schedule_cached = !Objects.equals(scheduleExams.getCache(schedule.getString("cache_token")), "");
                         if (schedule.getJSONArray("schedule").length() > 0) {
                             draw(R.layout.layout_schedule_exams);
-                            TextView schedule_exams_header = (TextView) activity.findViewById(R.id.schedule_exams_header);
+                            TextView schedule_exams_header = activity.findViewById(R.id.schedule_exams_header);
                             switch (schedule.getString("type")){
                                 case "group": if (schedule_exams_header != null) schedule_exams_header.setText("Расписание группы" + " " + schedule.getString("scope")); break;
                                 case "teacher": if (schedule_exams_header != null) schedule_exams_header.setText("Расписание преподавателя" + " " + schedule.getString("scope")); break;
@@ -265,7 +265,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
                                     Log.wtf(TAG, exception);
                                     throw new Exception(exception);
                             }
-                            TextView schedule_exams_week = (TextView) activity.findViewById(R.id.schedule_exams_week);
+                            TextView schedule_exams_week = activity.findViewById(R.id.schedule_exams_week);
                             if (schedule_exams_week != null) {
                                 int week = Static.getWeek(activity);
                                 if (week >= 0) {
@@ -274,7 +274,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
                                     schedule_exams_week.setText(new SimpleDateFormat("dd.MM.yyyy", Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis())));
                                 }
                             }
-                            FrameLayout schedule_exams_cache = (FrameLayout) activity.findViewById(R.id.schedule_exams_cache);
+                            FrameLayout schedule_exams_cache = activity.findViewById(R.id.schedule_exams_cache);
                             if (schedule_exams_cache != null) {
                                 ImageView cacheImage = new ImageView(activity);
                                 cacheImage.setImageDrawable(activity.getResources().getDrawable(ScheduleExamsFragment.schedule_cached ? R.drawable.ic_cached : R.drawable.ic_cache, activity.getTheme()));
@@ -293,7 +293,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
                                                 Static.snackBar(activity, activity.getString(R.string.cache_failed));
                                             } else {
                                                 Static.snackBar(activity, result ? activity.getString(R.string.cache_true) : activity.getString(R.string.cache_false));
-                                                FrameLayout schedule_exams_cache = (FrameLayout) activity.findViewById(R.id.schedule_exams_cache);
+                                                FrameLayout schedule_exams_cache = activity.findViewById(R.id.schedule_exams_cache);
                                                 if (schedule_exams_cache != null) {
                                                     ImageView cacheImage = new ImageView(activity);
                                                     cacheImage.setImageDrawable(activity.getResources().getDrawable(result ? R.drawable.ic_cached : R.drawable.ic_cache, activity.getTheme()));
@@ -311,14 +311,14 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
                                 });
                             }
                             // работаем со свайпом
-                            SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) activity.findViewById(R.id.swipe_schedule_exams);
+                            SwipeRefreshLayout mSwipeRefreshLayout = activity.findViewById(R.id.swipe_schedule_exams);
                             if (mSwipeRefreshLayout != null) {
                                 mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
                                 mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
                                 mSwipeRefreshLayout.setOnRefreshListener(scheduleExams);
                             }
                             // отображаем расписание
-                            final ViewGroup linearLayout = (ViewGroup) activity.findViewById(R.id.schedule_exams_content);
+                            final ViewGroup linearLayout = activity.findViewById(R.id.schedule_exams_content);
                             Static.T.runThread(new ScheduleExamsBuilder(activity, new ScheduleExamsBuilder.response(){
                                 public void state(final int state, final View layout){
                                     try {
@@ -358,7 +358,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
             @Override
             public void run() {
                 Log.v(TAG, "notFound");
-                ViewGroup container_schedule = ((ViewGroup) activity.findViewById(R.id.container_schedule_exams));
+                ViewGroup container_schedule = activity.findViewById(R.id.container_schedule_exams);
                 if (container_schedule != null) {
                     container_schedule.removeAllViews();
                     View view = inflate(R.layout.nothing_to_display);
@@ -374,7 +374,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
             @Override
             public void run() {
                 try {
-                    ViewGroup vg = ((ViewGroup) activity.findViewById(R.id.container_schedule_exams));
+                    ViewGroup vg = activity.findViewById(R.id.container_schedule_exams);
                     if (vg != null) {
                         vg.removeAllViews();
                         vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));

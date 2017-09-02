@@ -46,8 +46,8 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
     private View container;
     private RequestHandle fragmentRequestHandle = null;
     private boolean loaded = false;
-    private ArrayList<String> stack = new ArrayList<>();
-    private ArrayMap<String, String> history = new ArrayMap<>();
+    private final ArrayList<String> stack = new ArrayList<>();
+    private final ArrayMap<String, String> history = new ArrayMap<>();
     private FacultiesRecyclerViewAdapter facultiesRecyclerViewAdapter = null;
     private long timestamp = 0;
 
@@ -213,7 +213,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                                     Log.v(TAG, "forceLoad | progress " + state);
                                     draw(R.layout.state_loading);
                                     if (activity != null) {
-                                        TextView loading_message = (TextView) container.findViewById(R.id.loading_message);
+                                        TextView loading_message = container.findViewById(R.id.loading_message);
                                         if (loading_message != null) {
                                             switch (state) {
                                                 case IfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
@@ -304,7 +304,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                 Log.v(TAG, "loadFailed");
                 try {
                     draw(R.layout.state_try_again);
-                    TextView try_again_message = (TextView) container.findViewById(R.id.try_again_message);
+                    TextView try_again_message = container.findViewById(R.id.try_again_message);
                     if (try_again_message != null) try_again_message.setText(R.string.load_failed);
                     View try_again_reload = container.findViewById(R.id.try_again_reload);
                     if (try_again_reload != null) {
@@ -370,7 +370,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                     }
                     // список
                     facultiesRecyclerViewAdapter = new FacultiesRecyclerViewAdapter(activity);
-                    final RecyclerView list = (RecyclerView) container.findViewById(R.id.list);
+                    final RecyclerView list = container.findViewById(R.id.list);
                     list.setLayoutManager(new LinearLayoutManager(activity));
                     list.setAdapter(facultiesRecyclerViewAdapter);
                     list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
@@ -387,10 +387,10 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                         public void run() {
                             try {
                                 int height = container.findViewById(R.id.top_panel).getHeight();
-                                RecyclerView list = (RecyclerView) container.findViewById(R.id.list);
+                                RecyclerView list = container.findViewById(R.id.list);
                                 list.setPadding(0, height, 0, 0);
                                 list.scrollToPosition(0);
-                                LinearLayout list_info = (LinearLayout) container.findViewById(R.id.list_info);
+                                LinearLayout list_info = container.findViewById(R.id.list_info);
                                 if (list_info.getChildCount() > 0) {
                                     list_info.setPadding(0, height, 0, 0);
                                 }
@@ -400,7 +400,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                         }
                     });
                     // работаем со свайпом
-                    SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) container.findViewById(R.id.list_swipe);
+                    SwipeRefreshLayout mSwipeRefreshLayout = container.findViewById(R.id.list_swipe);
                     if (mSwipeRefreshLayout != null) {
                         mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
                         mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);

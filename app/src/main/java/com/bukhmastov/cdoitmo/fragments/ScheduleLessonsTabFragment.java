@@ -124,7 +124,7 @@ public class ScheduleLessonsTabFragment extends Fragment {
                     if (TYPE < 0) throw new Exception("ScheduleLessonsTabFragment.TYPE negative");
                     if (container == null) throw new NullPointerException("ScheduleLessonsTabFragment.container cannot be null");
                     if (schedule == null) throw new NullPointerException("schedule cannot be null");
-                    TextView schedule_c_header = (TextView) container.findViewById(R.id.schedule_lessons_header);
+                    TextView schedule_c_header = container.findViewById(R.id.schedule_lessons_header);
                     switch (schedule.getString("type")){
                         case "group":
                         case "room":
@@ -138,7 +138,7 @@ public class ScheduleLessonsTabFragment extends Fragment {
                             Log.wtf(TAG, exception);
                             throw new Exception(exception);
                     }
-                    TextView schedule_lessons_all_week = (TextView) container.findViewById(R.id.schedule_lessons_week);
+                    TextView schedule_lessons_all_week = container.findViewById(R.id.schedule_lessons_week);
                     if (schedule_lessons_all_week != null) {
                         int week = Static.getWeek(activity);
                         if (week >= 0) {
@@ -147,7 +147,7 @@ public class ScheduleLessonsTabFragment extends Fragment {
                             schedule_lessons_all_week.setText(new SimpleDateFormat("dd.MM.yyyy", Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis())));
                         }
                     }
-                    FrameLayout schedule_lessons_cache = (FrameLayout) container.findViewById(R.id.schedule_lessons_cache);
+                    FrameLayout schedule_lessons_cache = container.findViewById(R.id.schedule_lessons_cache);
                     if (schedule_lessons_cache != null) {
                         ImageView cacheImage = new ImageView(activity);
                         cacheImage.setImageDrawable(activity.getResources().getDrawable(ScheduleLessonsFragment.schedule_cached ? R.drawable.ic_cached : R.drawable.ic_cache, activity.getTheme()));
@@ -167,7 +167,7 @@ public class ScheduleLessonsTabFragment extends Fragment {
                                     } else {
                                         Static.snackBar(activity, result ? activity.getString(R.string.cache_true) : activity.getString(R.string.cache_false));
                                         if (container != null) {
-                                            FrameLayout schedule_lessons_cache = (FrameLayout) container.findViewById(R.id.schedule_lessons_cache);
+                                            FrameLayout schedule_lessons_cache = container.findViewById(R.id.schedule_lessons_cache);
                                             if (schedule_lessons_cache != null) {
                                                 ImageView cacheImage = new ImageView(activity);
                                                 cacheImage.setImageDrawable(activity.getResources().getDrawable(result ? R.drawable.ic_cached : R.drawable.ic_cache, activity.getTheme()));
@@ -186,14 +186,14 @@ public class ScheduleLessonsTabFragment extends Fragment {
                         });
                     }
                     // работаем со свайпом
-                    SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) container.findViewById(R.id.swipe_schedule_lessons);
+                    SwipeRefreshLayout mSwipeRefreshLayout = container.findViewById(R.id.swipe_schedule_lessons);
                     if (mSwipeRefreshLayout != null) {
                         mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
                         mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
                         mSwipeRefreshLayout.setOnRefreshListener(ScheduleLessonsFragment.scheduleLessons);
                     }
                     // отображаем расписание
-                    final ViewGroup schedule_lessons_content = (ViewGroup) container.findViewById(R.id.schedule_lessons_content);
+                    final ViewGroup schedule_lessons_content = container.findViewById(R.id.schedule_lessons_content);
                     Static.T.runThread(new ScheduleLessonsBuilder(activity, TYPE, new ScheduleLessonsBuilder.response(){
                         public void state(final int state, final View layout) {
                             try {
@@ -206,7 +206,7 @@ public class ScheduleLessonsTabFragment extends Fragment {
                                                 schedule_lessons_content.addView(layout);
                                                 displayed = true;
                                                 if (Storage.pref.get(activity, "pref_schedule_lessons_scroll_to_day", true)) {
-                                                    final ScrollView scroll_schedule_lessons = (ScrollView) container.findViewById(R.id.scroll_schedule_lessons);
+                                                    final ScrollView scroll_schedule_lessons = container.findViewById(R.id.scroll_schedule_lessons);
                                                     scroll_schedule_lessons.post(new Runnable() {
                                                         @Override
                                                         public void run() {
@@ -314,7 +314,7 @@ public class ScheduleLessonsTabFragment extends Fragment {
             public void run() {
                 try {
                     if (container == null) throw new NullPointerException("ScheduleLessonsTabFragment.container cannot be null");
-                    ViewGroup vg = ((ViewGroup) container.findViewById(R.id.container_schedule_lessons));
+                    ViewGroup vg = container.findViewById(R.id.container_schedule_lessons);
                     if (vg != null) {
                         vg.removeAllViews();
                         vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));

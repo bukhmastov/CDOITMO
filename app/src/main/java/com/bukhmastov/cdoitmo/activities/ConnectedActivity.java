@@ -21,14 +21,14 @@ import java.util.ArrayList;
 public abstract class ConnectedActivity extends AppCompatActivity {
 
     private static final String TAG = "ConnectedActivity";
-    private ArrayList<StackElement> stack = new ArrayList<>();
+    private final ArrayList<StackElement> stack = new ArrayList<>();
 
     protected abstract @IdRes int getRootViewId();
 
     private class StackElement {
-        public Class connectedFragmentClass;
-        public Bundle extras;
-        public TYPE type;
+        public final Class connectedFragmentClass;
+        public final Bundle extras;
+        public final TYPE type;
         public StackElement(TYPE type, Class connectedFragmentClass, Bundle extras) {
             this.connectedFragmentClass = connectedFragmentClass;
             this.extras = extras;
@@ -65,7 +65,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
             if (data == null) {
                 throw new NullPointerException("data cannot be null");
             }
-            ViewGroup root_layout = (ViewGroup) findViewById(getRootViewId());
+            ViewGroup root_layout = findViewById(getRootViewId());
             if (root_layout != null) {
                 root_layout.removeAllViews();
             }

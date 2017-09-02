@@ -66,7 +66,7 @@ public class ScheduleLessonsPreference extends SchedulePreference implements Sch
                                 found(getContext().getString(R.string.schedule_teacher_set) + " \"" + name + "\"");
                             } else {
                                 if (preference_schedule == null) return;
-                                FrameLayout schedule_preference_list = (FrameLayout) preference_schedule.findViewById(R.id.schedule_preference_list);
+                                FrameLayout schedule_preference_list = preference_schedule.findViewById(R.id.schedule_preference_list);
                                 if (schedule_preference_list == null) throw new NullPointerException("slw_container cannot be null");
                                 ListView listView = new ListView(getContext());
                                 listView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));

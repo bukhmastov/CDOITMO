@@ -21,7 +21,7 @@ public class ProtocolConverter extends AsyncTask<JSONArray, Void, JSONObject> {
     public interface response {
         void finish(JSONObject json);
     }
-    private Context context;
+    private final Context context;
     private response delegate = null;
 
     public ProtocolConverter(Context context, response delegate){
@@ -106,10 +106,10 @@ public class ProtocolConverter extends AsyncTask<JSONArray, Void, JSONObject> {
         item.put("var", var);
         return item;
     }
-    public static String markConverter(String value){
+    private static String markConverter(String value){
         return markConverter(value, false);
     }
-    public static String markConverter(String value, boolean withSign){
+    private static String markConverter(String value, boolean withSign){
         Matcher m;
         value = value.replace(",", ".").trim();
         m = Pattern.compile("^\\.(.+)").matcher(value);
@@ -124,7 +124,7 @@ public class ProtocolConverter extends AsyncTask<JSONArray, Void, JSONObject> {
         }
         return value;
     }
-    public static double string2double(String string){
+    private static double string2double(String string){
         try {
             return Double.parseDouble(string);
         } catch (NumberFormatException e) {
@@ -137,5 +137,4 @@ public class ProtocolConverter extends AsyncTask<JSONArray, Void, JSONObject> {
         int i = (int) Math.round(d);
         return (double) i / precise;
     }
-
 }

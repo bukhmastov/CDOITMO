@@ -135,7 +135,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                                 public void run() {
                                     Log.v(TAG, "load | progress " + state);
                                     draw(R.layout.state_loading);
-                                    TextView loading_message = (TextView) activity.findViewById(R.id.loading_message);
+                                    TextView loading_message = activity.findViewById(R.id.loading_message);
                                     if (loading_message != null) {
                                         switch (state) {
                                             case IfmoClient.STATE_HANDLING:
@@ -245,29 +245,34 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                     activity.updateToolbar(Static.capitalizeFirstLetter(data.getString("header")), R.drawable.ic_rating);
                     // получаем список для отображения рейтинга
                     final ArrayList<HashMap<String, String>> users = new ArrayList<>();
-                    JSONArray jsonArray = data.getJSONArray("list");
-                    for (int i = 0; i < jsonArray.length(); i++) {
-                        JSONObject jsonObject = jsonArray.getJSONObject(i);
-                        HashMap<String, String> hashMap = new HashMap<>();
-                        hashMap.put("number", String.valueOf(jsonObject.getInt("number")));
-                        hashMap.put("fio", jsonObject.getString("fio"));
-                        hashMap.put("meta", jsonObject.getString("group") + " — " + jsonObject.getString("department"));
-                        hashMap.put("is_me", jsonObject.getBoolean("is_me") ? "1" : "0");
-                        hashMap.put("change", jsonObject.getString("change"));
-                        hashMap.put("delta", jsonObject.getString("delta"));
-                        users.add(hashMap);
-                    }
-                    // отображаем интерфейс
-                    draw(R.layout.rating_list_layout);
-                    // работаем со списком
-                    ListView rl_list_view = (ListView) activity.findViewById(R.id.rl_list_view);
-                    if (rl_list_view != null) rl_list_view.setAdapter(new RatingTopListView(activity, users));
-                    // работаем со свайпом
-                    SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) activity.findViewById(R.id.swipe_container);
-                    if (mSwipeRefreshLayout != null) {
-                        mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
-                        mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
-                        mSwipeRefreshLayout.setOnRefreshListener(self);
+                    JSONArray list = data.getJSONArray("list");
+                    if (list.length() > 0) {
+                        for (int i = 0; i < list.length(); i++) {
+                            JSONObject jsonObject = list.getJSONObject(i);
+                            HashMap<String, String> hashMap = new HashMap<>();
+                            hashMap.put("number", String.valueOf(jsonObject.getInt("number")));
+                            hashMap.put("fio", jsonObject.getString("fio"));
+                            hashMap.put("meta", jsonObject.getString("group") + " — " + jsonObject.getString("department"));
+                            hashMap.put("is_me", jsonObject.getBoolean("is_me") ? "1" : "0");
+                            hashMap.put("change", jsonObject.getString("change"));
+                            hashMap.put("delta", jsonObject.getString("delta"));
+                            users.add(hashMap);
+                        }
+                        // отображаем интерфейс
+                        draw(R.layout.rating_list_layout);
+                        // работаем со списком
+                        ListView rl_list_view = activity.findViewById(R.id.rl_list_view);
+                        if (rl_list_view != null) rl_list_view.setAdapter(new RatingTopListView(activity, users));
+                        // работаем со свайпом
+                        SwipeRefreshLayout swipe_container = activity.findViewById(R.id.swipe_container);
+                        if (swipe_container != null) {
+                            swipe_container.setColorSchemeColors(Static.colorAccent);
+                            swipe_container.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
+                            swipe_container.setOnRefreshListener(self);
+                        }
+                    } else {
+                        draw(R.layout.nothing_to_display);
+                        ((TextView) activity.findViewById(R.id.ntd_text)).setText(R.string.no_rating);
                     }
                 } catch (Exception e) {
                     Static.error(e);
@@ -282,7 +287,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
             @Override
             public void run() {
                 try {
-                    ViewGroup vg = ((ViewGroup) activity.findViewById(R.id.rating_list_container));
+                    ViewGroup vg = activity.findViewById(R.id.rating_list_container);
                     if (vg != null) {
                         vg.removeAllViews();
                         vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));

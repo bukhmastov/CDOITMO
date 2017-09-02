@@ -19,16 +19,16 @@ import java.util.ArrayList;
 public class PagerUniversityAdapter extends FragmentStatePagerAdapter {
 
     private class Element {
-        public int id;
-        public String title;
-        public Class fragment;
+        public final int id;
+        public final String title;
+        public final Class fragment;
         Element(int id, String title, Class fragment){
             this.id = id;
             this.title = title;
             this.fragment = fragment;
         }
     }
-    private ArrayList<Element> tabs = new ArrayList<>();
+    private final ArrayList<Element> tabs = new ArrayList<>();
 
     public PagerUniversityAdapter(FragmentManager fm, Context context) {
         super(fm);

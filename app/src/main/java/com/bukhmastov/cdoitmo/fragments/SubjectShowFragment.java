@@ -111,10 +111,10 @@ public class SubjectShowFragment extends ConnectedFragment {
             // отображаем заголовок
             activity.updateToolbar(subject.getString("name"), R.drawable.ic_e_journal);
             // отображаем шапку
-            TextView as_info_term = (TextView) activity.findViewById(R.id.as_info_term);
-            TextView as_info_type = (TextView) activity.findViewById(R.id.as_info_type);
-            TextView as_result = (TextView) activity.findViewById(R.id.as_result);
-            TextView as_current_points = (TextView) activity.findViewById(R.id.as_current_points);
+            TextView as_info_term = activity.findViewById(R.id.as_info_term);
+            TextView as_info_type = activity.findViewById(R.id.as_info_type);
+            TextView as_result = activity.findViewById(R.id.as_result);
+            TextView as_current_points = activity.findViewById(R.id.as_current_points);
             if (as_info_term != null) {
                 as_info_term.setText(termSub + " " + activity.getString(R.string.semester));
             }
@@ -150,7 +150,7 @@ public class SubjectShowFragment extends ConnectedFragment {
             }
             // отображаем список оценок
             JSONArray points = subject.getJSONArray("points");
-            LinearLayout as_container = (LinearLayout) activity.findViewById(R.id.as_container);
+            LinearLayout as_container = activity.findViewById(R.id.as_container);
             if (as_container != null) {
                 if (points.length() == 0) {
                     View view = inflate(R.layout.nothing_to_display);

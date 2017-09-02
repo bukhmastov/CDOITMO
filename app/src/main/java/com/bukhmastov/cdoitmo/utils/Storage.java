@@ -377,9 +377,9 @@ public class Storage {
 
     private static class proxy {
         private static long requests = 0;
-        private static int maxStack = 8;
-        private static HashMap<String, ElementMeta> stackOfMeta = new HashMap<>();
-        private static HashMap<String, ElementData> stackOfData = new HashMap<>();
+        private static final int maxStack = 8;
+        private static final HashMap<String, ElementMeta> stackOfMeta = new HashMap<>();
+        private static final HashMap<String, ElementData> stackOfData = new HashMap<>();
         private static class ElementMeta {
             String path = "";
             double priority = 1;

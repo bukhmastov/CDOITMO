@@ -36,7 +36,7 @@ public class RatingTopListView extends ArrayAdapter<HashMap<String, String>> {
             convertView = inflater.inflate(R.layout.listview_rating_list, parent, false);
             HashMap<String, String> user = users.get(position);
             if (Objects.equals(user.get("is_me"), "1")) {
-                ViewGroup vg = ((ViewGroup) convertView.findViewById(R.id.lvrl_number_layout));
+                ViewGroup vg = convertView.findViewById(R.id.lvrl_number_layout);
                 if (vg != null) {
                     vg.removeAllViews();
                     vg.addView(((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.triangle_mark_layout, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
@@ -48,7 +48,7 @@ public class RatingTopListView extends ArrayAdapter<HashMap<String, String>> {
             ((TextView) convertView.findViewById(R.id.lvrl_fio)).setText(user.get("fio"));
             ((TextView) convertView.findViewById(R.id.lvrl_meta)).setText(user.get("meta"));
             if (!Objects.equals(user.get("change"), "none")) {
-                TextView lvrl_delta = (TextView) convertView.findViewById(R.id.lvrl_delta);
+                TextView lvrl_delta = convertView.findViewById(R.id.lvrl_delta);
                 if (lvrl_delta != null) {
                     lvrl_delta.setText(user.get("delta"));
                     switch (user.get("change")) {

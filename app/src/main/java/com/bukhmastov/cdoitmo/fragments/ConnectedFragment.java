@@ -48,14 +48,13 @@ public abstract class ConnectedFragment extends Fragment {
     }
 
     public static class Data {
-        public Class connectedFragmentClass;
-        public String title;
-        public Integer image;
+        public final Class connectedFragmentClass;
+        public final String title;
+        public final Integer image;
         public Data(Class connectedFragmentClass, String title, Integer image){
             this.connectedFragmentClass = connectedFragmentClass;
             this.title = title;
             this.image = image;
         }
     }
-
 }

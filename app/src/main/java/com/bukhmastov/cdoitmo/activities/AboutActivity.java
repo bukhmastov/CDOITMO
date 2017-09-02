@@ -9,7 +9,6 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
@@ -24,7 +23,7 @@ public class AboutActivity extends ConnectedActivity {
     private static final String TAG = "AboutActivity";
     private final Random random = new Random();
     private int counterToPika = 0;
-    private int tapsToPika = 5;
+    private final int tapsToPika = 5;
     private Activity activity;
 
     @Override
@@ -42,13 +41,12 @@ public class AboutActivity extends ConnectedActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        TextView app_version = (TextView) findViewById(R.id.app_version);
+        TextView app_version = findViewById(R.id.app_version);
         if (app_version != null) {
             app_version.setText(activity.getString(R.string.version) + " " + Static.versionName + " (" + activity.getString(R.string.build) + " " + Static.versionCode + ")");
         }
 
         View block_pika = findViewById(R.id.block_pika);
-        final ImageView app_icon = (ImageView) findViewById(R.id.app_icon);
         if (block_pika != null) {
             block_pika.setOnClickListener(new View.OnClickListener() {
                 @Override

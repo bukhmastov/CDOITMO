@@ -26,7 +26,7 @@ import org.json.JSONObject;
 public class TimeRemainingWidgetActivity extends AppCompatActivity implements ScheduleLessons.response, TimeRemainingWidget.response {
 
     private static final String TAG = "TRWidgetActivity";
-    private Activity activity = this;
+    private final Activity activity = this;
     private TimeRemainingWidget timeRemainingWidget = null;
     private ScheduleLessons scheduleLessons = null;
     private String query = null;
@@ -238,7 +238,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                TextView textView = (TextView) findViewById(layout);
+                TextView textView = findViewById(layout);
                 if (textView != null) {
                     textView.setText(text);
                 }
@@ -251,7 +251,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
             public void run() {
                 draw(R.layout.layout_time_remaining_widget_message);
                 is_message_displaying = true;
-                TextView trw_message = (TextView) findViewById(R.id.trw_message);
+                TextView trw_message = findViewById(R.id.trw_message);
                 if (trw_message != null) {
                     trw_message.setText(text);
                 }
@@ -263,7 +263,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
             @Override
             public void run() {
                 try {
-                    ViewGroup vg = ((ViewGroup) findViewById(R.id.trw_container));
+                    ViewGroup vg = findViewById(R.id.trw_container);
                     if (vg != null) {
                         vg.removeAllViews();
                         vg.addView(((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));

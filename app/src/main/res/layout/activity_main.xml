@@ -50,7 +50,6 @@
 
         <LinearLayout
             xmlns:android="http://schemas.android.com/apk/res/android"
-            xmlns:tools="http://schemas.android.com/tools"
             tools:activity="com.bukhmastov.cdoitmo.activities.MainActivity"
             android:id="@+id/activity_main"
             android:orientation="vertical"

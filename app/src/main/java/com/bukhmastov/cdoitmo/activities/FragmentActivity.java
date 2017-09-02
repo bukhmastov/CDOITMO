@@ -43,27 +43,20 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
             Static.error(e);
             finish();
         }
-
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        NavigationView navigationView = findViewById(R.id.nav_view);
         Static.NavigationMenu.displayEnableDisableOfflineButton(navigationView);
         Static.NavigationMenu.displayUserData(this, navigationView);
-        Static.NavigationMenu.displayUserAvatar(this, navigationView);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
     }
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         Log.v(TAG, "NavigationItemSelected " + item.getTitle());
-        DrawerLayout drawer_layout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer_layout = findViewById(R.id.drawer_layout);
         if (drawer_layout != null) {
             drawer_layout.closeDrawer(GravityCompat.START);
         }
@@ -99,7 +92,7 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
                     if (Static.tablet) {
                         updateToolbar(data.title, null);
                     }
-                    ViewGroup root = (ViewGroup) findViewById(getRootViewId());
+                    ViewGroup root = findViewById(getRootViewId());
                     if (root != null) {
                         root.removeAllViews();
                     }
