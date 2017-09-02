@@ -102,6 +102,7 @@ public class Log {
     }
 
     public static int v(String TAG, String log) {
+        log = wrapLog(log);
         FirebaseCrashProvider.v(TAG, log);
         if (enabled) {
             addLog(new LogItem(VERBOSE, TAG, log));
@@ -111,6 +112,7 @@ public class Log {
         }
     }
     public static int d(String TAG, String log) {
+        log = wrapLog(log);
         FirebaseCrashProvider.d(TAG, log);
         if (enabled) {
             addLog(new LogItem(DEBUG, TAG, log));
@@ -120,6 +122,7 @@ public class Log {
         }
     }
     public static int i(String TAG, String log) {
+        log = wrapLog(log);
         FirebaseCrashProvider.i(TAG, log);
         if (enabled) {
             addLog(new LogItem(INFO, TAG, log));
@@ -130,6 +133,7 @@ public class Log {
     }
     public static int w(String TAG, String log) {
         Metrics.warn++;
+        log = wrapLog(log);
         FirebaseCrashProvider.w(TAG, log);
         if (enabled) {
             addLog(new LogItem(WARN, TAG, log));
@@ -140,6 +144,7 @@ public class Log {
     }
     public static int e(String TAG, String log) {
         Metrics.error++;
+        log = wrapLog(log);
         FirebaseCrashProvider.e(TAG, log);
         if (enabled) {
             addLog(new LogItem(ERROR, TAG, log));
@@ -150,6 +155,7 @@ public class Log {
     }
     public static int wtf(String TAG, String log) {
         Metrics.wtf++;
+        log = wrapLog(log);
         FirebaseCrashProvider.wtf(TAG, log);
         if (enabled) {
             addLog(new LogItem(WTF, TAG, log));
@@ -163,7 +169,7 @@ public class Log {
         FirebaseCrashProvider.wtf(throwable);
         if (enabled) {
             addLog(new LogItem(WTF_EXCEPTION, throwable));
-            return android.util.Log.wtf("Assert", null, throwable);
+            return android.util.Log.wtf("Assert", wrapLog(null), throwable);
         } else {
             return 0;
         }
@@ -173,6 +179,7 @@ public class Log {
     }
     public static int exception(String msg, Throwable throwable) {
         Metrics.exception++;
+        msg = wrapLog(msg);
         FirebaseCrashProvider.exception(throwable);
         if (enabled) {
             addLog(new LogItem(EXCEPTION, throwable));
@@ -192,5 +199,9 @@ public class Log {
         } catch (Throwable throwable) {
             android.util.Log.e("Log.addLog", null, throwable);
         }
+    }
+
+    private static String wrapLog(String log) {
+        return "[" + Thread.currentThread().getName() + ":" + Thread.currentThread().getId() + "] " + (log == null ? "" : log);
     }
 }
