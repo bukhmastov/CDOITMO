@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
 import android.util.SparseIntArray;
 import android.view.InflateException;
@@ -228,6 +229,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
     @Override
     public void onSuccess(final JSONObject json) {
         final ScheduleLessonsFragment self = this;
+        final FragmentManager fragmentManager = getFragmentManager();
         Static.T.runThread(new Runnable() {
             @Override
             public void run() {
@@ -304,9 +306,8 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
                                         schedule_tabs.setVisibility(View.VISIBLE);
                                         draw(R.layout.layout_schedule_lessons_tabs);
                                         ViewPager schedule_view = activity.findViewById(R.id.schedule_pager);
-                                        if (schedule_view != null) {
-                                            // TODO here Fatal app crash, reason: getFragmentManager()
-                                            schedule_view.setAdapter(new PagerLessonsAdapter(getFragmentManager(), activity));
+                                        if (schedule_view != null && fragmentManager != null) {
+                                            schedule_view.setAdapter(new PagerLessonsAdapter(fragmentManager, activity));
                                             schedule_view.addOnPageChangeListener(self);
                                             schedule_tabs.setupWithViewPager(schedule_view);
                                         }
