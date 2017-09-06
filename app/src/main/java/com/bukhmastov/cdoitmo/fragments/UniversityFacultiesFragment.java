@@ -96,7 +96,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
 
     @Override
     public void onRefresh() {
-        Log.v(TAG, "refreshed");
+        Log.v(TAG, "refreshing");
         load(true);
     }
 
@@ -183,28 +183,33 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                 if (!Static.OFFLINE_MODE) {
                     loadProvider(new IfmoRestClientResponseHandler() {
                         @Override
-                        public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
-                            if (statusCode == 200) {
-                                long now = Calendar.getInstance().getTimeInMillis();
-                                if (json != null && Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
-                                    try {
-                                        Storage.file.cache.put(activity, "university#faculties#" + fid, new JSONObject()
-                                                .put("timestamp", now)
-                                                .put("data", json)
-                                                .toString()
-                                        );
-                                    } catch (JSONException e) {
-                                        Static.error(e);
+                        public void onSuccess(final int statusCode, final JSONObject json, final JSONArray responseArr) {
+                            Static.T.runThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (statusCode == 200) {
+                                        long now = Calendar.getInstance().getTimeInMillis();
+                                        if (json != null && Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
+                                            try {
+                                                Storage.file.cache.put(activity, "university#faculties#" + fid, new JSONObject()
+                                                        .put("timestamp", now)
+                                                        .put("data", json)
+                                                        .toString()
+                                                );
+                                            } catch (JSONException e) {
+                                                Static.error(e);
+                                            }
+                                        }
+                                        timestamp = now;
+                                        if (json != null) {
+                                            history.put(fid, json.toString());
+                                        }
+                                        display(json);
+                                    } else {
+                                        loadFailed();
                                     }
                                 }
-                                timestamp = now;
-                                if (json != null) {
-                                    history.put(fid, json.toString());
-                                }
-                                display(json);
-                            } else {
-                                loadFailed();
-                            }
+                            });
                         }
                         @Override
                         public void onProgress(final int state) {
@@ -401,8 +406,8 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                                 if (list_info.getChildCount() > 0) {
                                     list_info.setPadding(0, height, 0, 0);
                                 }
-                            } catch (Exception e) {
-                                e.printStackTrace();
+                            } catch (Exception ignore) {
+                                // ignore
                             }
                         }
                     });
@@ -421,94 +426,99 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
         });
     }
     private void displayContent(final JSONObject structure, final JSONArray divisions) {
-        Static.T.runOnUiThread(new Runnable() {
+        Static.T.runThread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    if (facultiesRecyclerViewAdapter != null) {
-                        ArrayList<FacultiesRecyclerViewAdapter.Item> items = new ArrayList<>();
-                        if (structure != null) {
-                            final JSONObject info = getJsonObject(structure, "info");
-                            if (info != null) {
-                                // основная информация
-                                final String address = getString(info, "adres");
-                                final String phone = getString(info, "phone");
-                                final String site = getString(info, "site");
-                                if (isValid(address) || isValid(phone) || isValid(site)) {
-                                    FacultiesRecyclerViewAdapter.Item item = new FacultiesRecyclerViewAdapter.Item();
-                                    item.type = FacultiesRecyclerViewAdapter.TYPE_UNIT_STRUCTURE_COMMON;
-                                    item.data = new JSONObject()
-                                            .put("header", activity.getString(R.string.faculty_section_general))
-                                            .put("address", isValid(address) ? address : null)
-                                            .put("phone", isValid(phone) ? phone : null)
-                                            .put("site", isValid(site) ? site : null);
-                                    items.add(item);
-                                }
-                                // деканат
-                                final String deanery_address = getString(info, "dekanat_adres");
-                                final String deanery_phone = getString(info, "dekanat_phone");
-                                final String deanery_email = getString(info, "dekanat_email");
-                                if (isValid(deanery_address) || isValid(deanery_phone) || isValid(deanery_email)) {
-                                    FacultiesRecyclerViewAdapter.Item item = new FacultiesRecyclerViewAdapter.Item();
-                                    item.type = FacultiesRecyclerViewAdapter.TYPE_UNIT_STRUCTURE_DEANERY;
-                                    item.data = new JSONObject()
-                                            .put("header", activity.getString(R.string.faculty_section_deanery))
-                                            .put("deanery_address", isValid(deanery_address) ? deanery_address : null)
-                                            .put("deanery_phone", isValid(deanery_phone) ? deanery_phone : null)
-                                            .put("deanery_email", isValid(deanery_email) ? deanery_email : null);
-                                    items.add(item);
-                                }
-                                // глава
-                                final String head_post = getString(info, "person_post");
-                                final String head_lastname = getString(info, "lastname");
-                                final String head_firstname = getString(info, "firstname");
-                                final String head_middlename = getString(info, "middlename");
-                                final String head_avatar = getString(info, "person_avatar");
-                                final String head_degree = getString(info, "person_degree");
-                                final int head_pid = getInt(info, "ifmo_person_id");
-                                final String head_email = getString(info, "email");
-                                if (isValid(head_lastname) || isValid(head_firstname) || isValid(head_middlename) || isValid(head_email)) {
-                                    FacultiesRecyclerViewAdapter.Item item = new FacultiesRecyclerViewAdapter.Item();
-                                    item.type = FacultiesRecyclerViewAdapter.TYPE_UNIT_STRUCTURE_HEAD;
-                                    item.data = new JSONObject()
-                                            .put("header", isValid(head_post) ? head_post : activity.getString(R.string.faculty_section_head))
-                                            .put("head_lastname", isValid(head_lastname) ? head_lastname : null)
-                                            .put("head_firstname", isValid(head_firstname) ? head_firstname : null)
-                                            .put("head_middlename", isValid(head_middlename) ? head_middlename : null)
-                                            .put("head_avatar", isValid(head_avatar) ? head_avatar : null)
-                                            .put("head_degree", isValid(head_degree) ? head_degree : null)
-                                            .put("head_pid", isValid(head_pid) ? head_pid : -1)
-                                            .put("head_email", isValid(head_email) ? head_email : null);
-                                    items.add(item);
-                                }
+                    final ArrayList<FacultiesRecyclerViewAdapter.Item> items = new ArrayList<>();
+                    if (structure != null) {
+                        final JSONObject info = getJsonObject(structure, "info");
+                        if (info != null) {
+                            // основная информация
+                            final String address = getString(info, "adres");
+                            final String phone = getString(info, "phone");
+                            final String site = getString(info, "site");
+                            if (isValid(address) || isValid(phone) || isValid(site)) {
+                                FacultiesRecyclerViewAdapter.Item item = new FacultiesRecyclerViewAdapter.Item();
+                                item.type = FacultiesRecyclerViewAdapter.TYPE_UNIT_STRUCTURE_COMMON;
+                                item.data = new JSONObject()
+                                        .put("header", activity.getString(R.string.faculty_section_general))
+                                        .put("address", isValid(address) ? address : null)
+                                        .put("phone", isValid(phone) ? phone : null)
+                                        .put("site", isValid(site) ? site : null);
+                                items.add(item);
+                            }
+                            // деканат
+                            final String deanery_address = getString(info, "dekanat_adres");
+                            final String deanery_phone = getString(info, "dekanat_phone");
+                            final String deanery_email = getString(info, "dekanat_email");
+                            if (isValid(deanery_address) || isValid(deanery_phone) || isValid(deanery_email)) {
+                                FacultiesRecyclerViewAdapter.Item item = new FacultiesRecyclerViewAdapter.Item();
+                                item.type = FacultiesRecyclerViewAdapter.TYPE_UNIT_STRUCTURE_DEANERY;
+                                item.data = new JSONObject()
+                                        .put("header", activity.getString(R.string.faculty_section_deanery))
+                                        .put("deanery_address", isValid(deanery_address) ? deanery_address : null)
+                                        .put("deanery_phone", isValid(deanery_phone) ? deanery_phone : null)
+                                        .put("deanery_email", isValid(deanery_email) ? deanery_email : null);
+                                items.add(item);
+                            }
+                            // глава
+                            final String head_post = getString(info, "person_post");
+                            final String head_lastname = getString(info, "lastname");
+                            final String head_firstname = getString(info, "firstname");
+                            final String head_middlename = getString(info, "middlename");
+                            final String head_avatar = getString(info, "person_avatar");
+                            final String head_degree = getString(info, "person_degree");
+                            final int head_pid = getInt(info, "ifmo_person_id");
+                            final String head_email = getString(info, "email");
+                            if (isValid(head_lastname) || isValid(head_firstname) || isValid(head_middlename) || isValid(head_email)) {
+                                FacultiesRecyclerViewAdapter.Item item = new FacultiesRecyclerViewAdapter.Item();
+                                item.type = FacultiesRecyclerViewAdapter.TYPE_UNIT_STRUCTURE_HEAD;
+                                item.data = new JSONObject()
+                                        .put("header", isValid(head_post) ? head_post : activity.getString(R.string.faculty_section_head))
+                                        .put("head_lastname", isValid(head_lastname) ? head_lastname : null)
+                                        .put("head_firstname", isValid(head_firstname) ? head_firstname : null)
+                                        .put("head_middlename", isValid(head_middlename) ? head_middlename : null)
+                                        .put("head_avatar", isValid(head_avatar) ? head_avatar : null)
+                                        .put("head_degree", isValid(head_degree) ? head_degree : null)
+                                        .put("head_pid", isValid(head_pid) ? head_pid : -1)
+                                        .put("head_email", isValid(head_email) ? head_email : null);
+                                items.add(item);
                             }
                         }
-                        if (divisions != null && divisions.length() > 0) {
-                            // дивизионы
-                            JSONArray d = new JSONArray();
-                            for (int i = 0; i < divisions.length(); i++) {
-                                final JSONObject division = divisions.getJSONObject(i);
-                                d.put(new JSONObject()
-                                        .put("title", getString(division, "name"))
-                                        .put("id", getInt(division, "cis_dep_id"))
-                                );
-                            }
-                            FacultiesRecyclerViewAdapter.Item item = new FacultiesRecyclerViewAdapter.Item();
-                            item.type = FacultiesRecyclerViewAdapter.TYPE_UNIT_DIVISIONS;
-                            item.data = new JSONObject()
-                                    .put("header", stack.size() == 0 ? null : activity.getString(R.string.faculty_section_divisions))
-                                    .put("divisions", d);
-                            items.add(item);
-                            facultiesRecyclerViewAdapter.setOnDivisionClickListener(new FacultiesRecyclerViewAdapter.OnDivisionClickListener() {
-                                @Override
-                                public void onClick(int dep_id) {
-                                    stack.add(String.valueOf(dep_id));
-                                    load();
-                                }
-                            });
-                        }
-                        facultiesRecyclerViewAdapter.addItem(items);
                     }
+                    if (divisions != null && divisions.length() > 0) {
+                        // дивизионы
+                        JSONArray d = new JSONArray();
+                        for (int i = 0; i < divisions.length(); i++) {
+                            final JSONObject division = divisions.getJSONObject(i);
+                            d.put(new JSONObject()
+                                    .put("title", getString(division, "name"))
+                                    .put("id", getInt(division, "cis_dep_id"))
+                            );
+                        }
+                        FacultiesRecyclerViewAdapter.Item item = new FacultiesRecyclerViewAdapter.Item();
+                        item.type = FacultiesRecyclerViewAdapter.TYPE_UNIT_DIVISIONS;
+                        item.data = new JSONObject()
+                                .put("header", stack.size() == 0 ? null : activity.getString(R.string.faculty_section_divisions))
+                                .put("divisions", d);
+                        items.add(item);
+                    }
+                    Static.T.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (facultiesRecyclerViewAdapter != null) {
+                                facultiesRecyclerViewAdapter.setOnDivisionClickListener(new FacultiesRecyclerViewAdapter.OnDivisionClickListener() {
+                                    @Override
+                                    public void onClick(int dep_id) {
+                                        stack.add(String.valueOf(dep_id));
+                                        load();
+                                    }
+                                });
+                                facultiesRecyclerViewAdapter.addItem(items);
+                            }
+                        }
+                    });
                 } catch (Exception e) {
                     Static.error(e);
                     loadFailed();
@@ -584,7 +594,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
         }
     }
 
-    private void draw(final int layoutId){
+    private void draw(final int layoutId) {
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {

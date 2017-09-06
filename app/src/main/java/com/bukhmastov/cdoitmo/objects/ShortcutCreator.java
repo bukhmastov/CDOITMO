@@ -17,7 +17,6 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapters.TeacherPickerListView;
@@ -501,7 +500,7 @@ public class ShortcutCreator {
         });
     }
     private void complete() {
-        Static.T.runOnUiThread(new Runnable() {
+        Static.T.runThread(new Runnable() {
             @Override
             public void run() {
                 Log.v(TAG, "complete");
@@ -568,11 +567,11 @@ public class ShortcutCreator {
         });
     }
     private void error() {
-        Static.T.runOnUiThread(new Runnable() {
+        Static.T.runThread(new Runnable() {
             @Override
             public void run() {
                 Log.v(TAG, "error");
-                Toast.makeText(context, R.string.error_occurred, Toast.LENGTH_SHORT).show();
+                Static.toast(context, context.getString(R.string.error_occurred));
                 delegate.onError();
             }
         });

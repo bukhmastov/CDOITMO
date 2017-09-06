@@ -43,7 +43,7 @@ public class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
 
     @Override
     public void onRefresh() {
-        Log.v(TAG, "refreshed");
+        Log.v(TAG, "refreshing");
         search(ScheduleExamsFragment.query, 0);
     }
 
@@ -110,35 +110,40 @@ public class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
                 if (getForce(cache, refresh_rate) && !Static.OFFLINE_MODE) {
                     IfmoClient.get(context, "ru/exam/0/" + group + "/raspisanie_sessii.htm", null, new IfmoClientResponseHandler() {
                         @Override
-                        public void onSuccess(int statusCode, String response) {
-                            if (statusCode == 200) {
-                                new ScheduleExamsGroupParse(new ScheduleExamsGroupParse.response() {
-                                    @Override
-                                    public void finish(JSONObject json) {
-                                        try {
-                                            if (json == null) throw new NullPointerException("json cannot be null");
-                                            if (toCache || Objects.equals(Storage.file.perm.get(context, "user#group").toUpperCase(), group)){
-                                                if(json.getJSONArray("schedule").length() > 0) putCache(cache_token, json.toString(), toCache);
+                        public void onSuccess(final int statusCode, final String response) {
+                            Static.T.runThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (statusCode == 200) {
+                                        new ScheduleExamsGroupParse(response, cache_token, new ScheduleExamsGroupParse.response() {
+                                            @Override
+                                            public void finish(JSONObject json) {
+                                                try {
+                                                    if (json == null) throw new NullPointerException("json cannot be null");
+                                                    if (toCache || Objects.equals(Storage.file.perm.get(context, "user#group").toUpperCase(), group)) {
+                                                        if (json.getJSONArray("schedule").length() > 0) putCache(cache_token, json.toString(), toCache);
+                                                    }
+                                                    handler.onSuccess(json);
+                                                } catch (Exception e) {
+                                                    Static.error(e);
+                                                    handler.onFailure(FAILED_LOAD);
+                                                }
                                             }
-                                            handler.onSuccess(json);
-                                        } catch (Exception e) {
-                                            Static.error(e);
+                                        }).run();
+                                    } else {
+                                        if (Objects.equals(cache, "")) {
                                             handler.onFailure(FAILED_LOAD);
+                                        } else {
+                                            try {
+                                                handler.onSuccess(new JSONObject(cache));
+                                            } catch (JSONException e) {
+                                                Static.error(e);
+                                                handler.onFailure(FAILED_LOAD);
+                                            }
                                         }
                                     }
-                                }).execute(response, cache_token);
-                            } else {
-                                if (Objects.equals(cache, "")) {
-                                    handler.onFailure(FAILED_LOAD);
-                                } else {
-                                    try {
-                                        handler.onSuccess(new JSONObject(cache));
-                                    } catch (JSONException e) {
-                                        Static.error(e);
-                                        handler.onFailure(FAILED_LOAD);
-                                    }
                                 }
-                            }
+                            });
                         }
                         @Override
                         public void onProgress(int state) {
@@ -178,44 +183,49 @@ public class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
                 if (getForce(cache, refresh_rate) && !Static.OFFLINE_MODE) {
                     IfmoClient.get(context, "ru/exam/1/" + teacher + "/raspisanie_sessii.htm", null, new IfmoClientResponseHandler() {
                         @Override
-                        public void onSuccess(int statusCode, String response) {
-                            if (statusCode == 200) {
-                                new ScheduleExamsTeacherPickerParse(new ScheduleExamsTeacherPickerParse.response() {
-                                    @Override
-                                    public void finish(JSONObject json) {
-                                        try {
-                                            if (json == null) throw new NullPointerException("json cannot be null");
-                                            if (toCache){
-                                                if(json.getJSONArray("teachers").length() > 0) putCache(cache_token, json.toString(), toCache);
+                        public void onSuccess(final int statusCode, final String response) {
+                            Static.T.runThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (statusCode == 200) {
+                                        new ScheduleExamsTeacherPickerParse(response, cache_token, new ScheduleExamsTeacherPickerParse.response() {
+                                            @Override
+                                            public void finish(JSONObject json) {
+                                                try {
+                                                    if (json == null) throw new NullPointerException("json cannot be null");
+                                                    if (toCache) {
+                                                        if (json.getJSONArray("teachers").length() > 0) putCache(cache_token, json.toString(), toCache);
+                                                    }
+                                                    if (json.getJSONArray("teachers").length() == 1) {
+                                                        search(json.getJSONArray("teachers").getJSONObject(0).getString("scope"), refresh_rate, toCache);
+                                                    } else {
+                                                        handler.onSuccess(json);
+                                                    }
+                                                } catch (Exception e) {
+                                                    Static.error(e);
+                                                    handler.onFailure(FAILED_LOAD);
+                                                }
                                             }
-                                            if (json.getJSONArray("teachers").length() == 1){
-                                                search(json.getJSONArray("teachers").getJSONObject(0).getString("scope"), refresh_rate, toCache);
-                                            } else {
-                                                handler.onSuccess(json);
-                                            }
-                                        } catch (Exception e) {
-                                            Static.error(e);
+                                        }).run();
+                                    } else {
+                                        if (Objects.equals(cache, "")) {
                                             handler.onFailure(FAILED_LOAD);
-                                        }
-                                    }
-                                }).execute(response, cache_token);
-                            } else {
-                                if (Objects.equals(cache, "")) {
-                                    handler.onFailure(FAILED_LOAD);
-                                } else {
-                                    try {
-                                        JSONObject list = new JSONObject(cache);
-                                        if (list.getJSONArray("teachers").length() == 1) {
-                                            search(list.getJSONArray("teachers").getJSONObject(0).getString("scope"), refresh_rate, toCache);
                                         } else {
-                                            handler.onSuccess(list);
+                                            try {
+                                                JSONObject list = new JSONObject(cache);
+                                                if (list.getJSONArray("teachers").length() == 1) {
+                                                    search(list.getJSONArray("teachers").getJSONObject(0).getString("scope"), refresh_rate, toCache);
+                                                } else {
+                                                    handler.onSuccess(list);
+                                                }
+                                            } catch (JSONException e) {
+                                                Static.error(e);
+                                                handler.onFailure(FAILED_LOAD);
+                                            }
                                         }
-                                    } catch (JSONException e) {
-                                        Static.error(e);
-                                        handler.onFailure(FAILED_LOAD);
                                     }
                                 }
-                            }
+                            });
                         }
                         @Override
                         public void onProgress(int state) {
@@ -263,35 +273,40 @@ public class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
                     if (getForce(cache, refresh_rate) && !Static.OFFLINE_MODE) {
                         IfmoClient.get(context, "ru/exam/3/" + id + "/raspisanie_sessii.htm", null, new IfmoClientResponseHandler() {
                             @Override
-                            public void onSuccess(int statusCode, String response) {
-                                if (statusCode == 200) {
-                                    new ScheduleExamsTeacherParse(new ScheduleExamsTeacherParse.response() {
-                                        @Override
-                                        public void finish(JSONObject json) {
-                                            try {
-                                                if (json == null) throw new NullPointerException("json cannot be null");
-                                                if (toCache) {
-                                                    if(json.getJSONArray("schedule").length() > 0) putCache(cache_token, json.toString(), toCache);
+                            public void onSuccess(final int statusCode, final String response) {
+                                Static.T.runThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if (statusCode == 200) {
+                                            new ScheduleExamsTeacherParse(response, cache_token, new ScheduleExamsTeacherParse.response() {
+                                                @Override
+                                                public void finish(JSONObject json) {
+                                                    try {
+                                                        if (json == null) throw new NullPointerException("json cannot be null");
+                                                        if (toCache) {
+                                                            if (json.getJSONArray("schedule").length() > 0) putCache(cache_token, json.toString(), toCache);
+                                                        }
+                                                        handler.onSuccess(json);
+                                                    } catch (Exception e) {
+                                                        Static.error(e);
+                                                        handler.onFailure(FAILED_LOAD);
+                                                    }
                                                 }
-                                                handler.onSuccess(json);
-                                            } catch (Exception e) {
-                                                Static.error(e);
+                                            }).run();
+                                        } else {
+                                            if (Objects.equals(cache, "")) {
                                                 handler.onFailure(FAILED_LOAD);
+                                            } else {
+                                                try {
+                                                    handler.onSuccess(new JSONObject(cache));
+                                                } catch (JSONException e) {
+                                                    Static.error(e);
+                                                    handler.onFailure(FAILED_LOAD);
+                                                }
                                             }
                                         }
-                                    }).execute(response, cache_token);
-                                } else {
-                                    if(Objects.equals(cache, "")){
-                                        handler.onFailure(FAILED_LOAD);
-                                    } else {
-                                        try {
-                                            handler.onSuccess(new JSONObject(cache));
-                                        } catch (JSONException e) {
-                                            Static.error(e);
-                                            handler.onFailure(FAILED_LOAD);
-                                        }
                                     }
-                                }
+                                });
                             }
                             @Override
                             public void onProgress(int state) {

@@ -1,7 +1,6 @@
 package com.bukhmastov.cdoitmo.parse;
 
-import android.os.AsyncTask;
-
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 
 import org.htmlcleaner.HtmlCleaner;
@@ -13,19 +12,26 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class UserDataParse extends AsyncTask<String, Void, HashMap<String, String>> {
+public class UserDataParse implements Runnable {
+
+    private static final String TAG = "UserDataParse";
     public interface response {
         void finish(HashMap<String, String> result);
     }
     private response delegate = null;
-    public UserDataParse(response delegate){
+    private String data;
+
+    public UserDataParse(String data, response delegate) {
+        this.data = data;
         this.delegate = delegate;
     }
+
     @Override
-    protected HashMap<String, String> doInBackground(String... params) {
+    public void run() {
+        Log.v(TAG, "parsing");
         try {
             HashMap<String, String> response = new HashMap<>();
-            TagNode root = new HtmlCleaner().clean(params[0].replace("&nbsp;", " "));
+            TagNode root = new HtmlCleaner().clean(data.replace("&nbsp;", " "));
             // находим имя пользователя
             TagNode fio = root.findElementByAttValue("id", "fio", true, false);
             response.put("name", fio.getText().toString().trim());
@@ -58,15 +64,10 @@ public class UserDataParse extends AsyncTask<String, Void, HashMap<String, Strin
             if (m.find()) {
                 response.put("week", m.group(1));
             }
-            return response;
+            delegate.finish(response);
         } catch (Exception e){
             Static.error(e);
-            return null;
+            delegate.finish(null);
         }
     }
-    @Override
-    protected void onPostExecute(HashMap<String, String> result) {
-        delegate.finish(result);
-    }
 }
-

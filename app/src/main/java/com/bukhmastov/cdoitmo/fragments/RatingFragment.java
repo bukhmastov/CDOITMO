@@ -101,7 +101,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
 
     @Override
     public void onRefresh() {
-        Log.v(TAG, "refreshed");
+        Log.v(TAG, "refreshing");
         load(TYPE.common, true);
     }
 
@@ -244,120 +244,130 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                     }
                     DeIfmoClient.get(activity, url, null, new DeIfmoClientResponseHandler() {
                         @Override
-                        public void onSuccess(int statusCode, String response) {
-                            Log.v(TAG, "load | type=" + type + " | success | statusCode=" + statusCode + " | response=" + (response == null ? "null" : "notnull"));
-                            if (statusCode == 200) {
-                                switch (type) {
-                                    case common: {
-                                        new RatingListParse(new RatingListParse.response() {
-                                            @Override
-                                            public void finish(JSONObject json) {
-                                                if (json != null) {
-                                                    try {
-                                                        json = new JSONObject()
-                                                                .put("timestamp", Calendar.getInstance().getTimeInMillis())
-                                                                .put("rating", json);
-                                                        if (Storage.pref.get(activity, "pref_use_cache", true)) {
-                                                            Storage.file.cache.put(activity, "rating#list", json.toString());
-                                                        }
-                                                        data.put(type, new Info(STATUS.loaded, json));
-                                                    } catch (JSONException e) {
-                                                        Static.error(e);
-                                                        if (data.get(type).data != null) {
-                                                            data.get(type).status = STATUS.loaded;
-                                                            loaded(type);
+                        public void onSuccess(final int statusCode, final String response) {
+                            Static.T.runThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.v(TAG, "load | type=" + type + " | success | statusCode=" + statusCode + " | response=" + (response == null ? "null" : "notnull"));
+                                    if (statusCode == 200) {
+                                        switch (type) {
+                                            case common: {
+                                                new RatingListParse(response, new RatingListParse.response() {
+                                                    @Override
+                                                    public void finish(JSONObject json) {
+                                                        if (json != null) {
+                                                            try {
+                                                                json = new JSONObject()
+                                                                        .put("timestamp", Calendar.getInstance().getTimeInMillis())
+                                                                        .put("rating", json);
+                                                                if (Storage.pref.get(activity, "pref_use_cache", true)) {
+                                                                    Storage.file.cache.put(activity, "rating#list", json.toString());
+                                                                }
+                                                                data.put(type, new Info(STATUS.loaded, json));
+                                                            } catch (JSONException e) {
+                                                                Static.error(e);
+                                                                if (data.get(type).data != null) {
+                                                                    data.get(type).status = STATUS.loaded;
+                                                                    loaded(type);
+                                                                } else {
+                                                                    data.put(type, new Info(STATUS.failed, null));
+                                                                }
+                                                            }
                                                         } else {
-                                                            data.put(type, new Info(STATUS.failed, null));
+                                                            if (data.get(type).data != null) {
+                                                                data.get(type).status = STATUS.loaded;
+                                                                loaded(type);
+                                                            } else {
+                                                                data.put(type, new Info(STATUS.failed, null));
+                                                            }
                                                         }
-                                                    }
-                                                } else {
-                                                    if (data.get(type).data != null) {
-                                                        data.get(type).status = STATUS.loaded;
                                                         loaded(type);
-                                                    } else {
-                                                        data.put(type, new Info(STATUS.failed, null));
                                                     }
-                                                }
-                                                loaded(type);
+                                                }).run();
+                                                break;
                                             }
-                                        }).execute(response);
-                                        break;
-                                    }
-                                    case own: {
-                                        new RatingParse(new RatingParse.response() {
-                                            @Override
-                                            public void finish(JSONObject json) {
-                                                if (json != null) {
-                                                    try {
-                                                        json = new JSONObject()
-                                                                .put("timestamp", Calendar.getInstance().getTimeInMillis())
-                                                                .put("rating", json);
-                                                        if (Storage.pref.get(activity, "pref_use_cache", true)) {
-                                                            Storage.file.cache.put(activity, "rating#core", json.toString());
-                                                        }
-                                                        data.put(type, new Info(STATUS.loaded, json));
-                                                    } catch (JSONException e) {
-                                                        Static.error(e);
-                                                        if (data.get(type).data != null) {
-                                                            data.get(type).status = STATUS.loaded;
-                                                            loaded(type);
+                                            case own: {
+                                                new RatingParse(response, new RatingParse.response() {
+                                                    @Override
+                                                    public void finish(JSONObject json) {
+                                                        if (json != null) {
+                                                            try {
+                                                                json = new JSONObject()
+                                                                        .put("timestamp", Calendar.getInstance().getTimeInMillis())
+                                                                        .put("rating", json);
+                                                                if (Storage.pref.get(activity, "pref_use_cache", true)) {
+                                                                    Storage.file.cache.put(activity, "rating#core", json.toString());
+                                                                }
+                                                                data.put(type, new Info(STATUS.loaded, json));
+                                                            } catch (JSONException e) {
+                                                                Static.error(e);
+                                                                if (data.get(type).data != null) {
+                                                                    data.get(type).status = STATUS.loaded;
+                                                                    loaded(type);
+                                                                } else {
+                                                                    data.put(type, new Info(STATUS.failed, null));
+                                                                }
+                                                            }
                                                         } else {
-                                                            data.put(type, new Info(STATUS.failed, null));
+                                                            if (data.get(type).data != null) {
+                                                                data.get(type).status = STATUS.loaded;
+                                                                loaded(type);
+                                                            } else {
+                                                                data.put(type, new Info(STATUS.failed, null));
+                                                            }
                                                         }
-                                                    }
-                                                } else {
-                                                    if (data.get(type).data != null) {
-                                                        data.get(type).status = STATUS.loaded;
                                                         loaded(type);
-                                                    } else {
-                                                        data.put(type, new Info(STATUS.failed, null));
                                                     }
-                                                }
-                                                loaded(type);
+                                                }).run();
+                                                break;
                                             }
-                                        }).execute(response);
-                                        break;
+                                        }
+                                    } else {
+                                        if (data.get(type).data != null) {
+                                            data.get(type).status = STATUS.loaded;
+                                            loaded(type);
+                                        } else {
+                                            data.put(type, new Info(STATUS.failed, null));
+                                            loaded(type);
+                                        }
                                     }
                                 }
-                            } else {
-                                if (data.get(type).data != null) {
-                                    data.get(type).status = STATUS.loaded;
-                                    loaded(type);
-                                } else {
-                                    data.put(type, new Info(STATUS.failed, null));
-                                    loaded(type);
-                                }
-                            }
+                            });
                         }
                         @Override
                         public void onProgress(int state) {
                             Log.v(TAG, "load | type=" + type.toString() + " | progress " + state);
                         }
                         @Override
-                        public void onFailure(int statusCode, int state) {
-                            Log.v(TAG, "load | type=" + type.toString() + " | failure " + state);
-                            switch (state) {
-                                case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED: {
-                                    loaded = false;
-                                    gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED);
-                                    break;
-                                }
-                                case DeIfmoClient.FAILED_AUTH_CREDENTIALS_FAILED: {
-                                    loaded = false;
-                                    gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED);
-                                    break;
-                                }
-                                default: {
-                                    if (data.get(type).data != null) {
-                                        data.get(type).status = STATUS.loaded;
-                                        loaded(type);
-                                    } else {
-                                        data.put(type, new Info(STATUS.failed, null));
-                                        loaded(type);
+                        public void onFailure(final int statusCode, final int state) {
+                            Static.T.runThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.v(TAG, "load | type=" + type.toString() + " | failure " + state);
+                                    switch (state) {
+                                        case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED: {
+                                            loaded = false;
+                                            gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_REQUIRED);
+                                            break;
+                                        }
+                                        case DeIfmoClient.FAILED_AUTH_CREDENTIALS_FAILED: {
+                                            loaded = false;
+                                            gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED);
+                                            break;
+                                        }
+                                        default: {
+                                            if (data.get(type).data != null) {
+                                                data.get(type).status = STATUS.loaded;
+                                                loaded(type);
+                                            } else {
+                                                data.put(type, new Info(STATUS.failed, null));
+                                                loaded(type);
+                                            }
+                                            break;
+                                        }
                                     }
-                                    break;
                                 }
-                            }
+                            });
                         }
                         @Override
                         public void onNewHandle(RequestHandle requestHandle) {
@@ -415,161 +425,201 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
             }
         });
     }
-
     private void display() {
         final RatingFragment self = this;
-        Static.T.runOnUiThread(new Runnable() {
+        Static.T.runThread(new Runnable() {
             @Override
             public void run() {
                 Log.v(TAG, "display");
                 try {
-                    // отображаем интерфейс
-                    draw(R.layout.rating_layout);
                     // извлекаем информацию
                     final Info common = data.get(TYPE.common);
-                    final Info own = data.get(TYPE.own);
-                    // работаем со свайпом
-                    SwipeRefreshLayout swipe_container = activity.findViewById(R.id.swipe_container);
-                    if (swipe_container != null) {
-                        swipe_container.setColorSchemeColors(Static.colorAccent);
-                        swipe_container.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
-                        swipe_container.setOnRefreshListener(self);
-                    }
-                    // подробный рейтинг
-                    if (common.status == STATUS.loaded && common.data != null) {
-                        ArrayAdapter<String> adapter;
-                        int choose;
-                        // работаем с выбором факультета
-                        Spinner rl_spinner_faculty = activity.findViewById(R.id.rl_spinner_faculty);
-                        if (rl_spinner_faculty != null) {
-                            final ArrayList<String> rl_spinner_faculty_arr = new ArrayList<>();
-                            final ArrayList<String> rl_spinner_faculty_arr_ids = new ArrayList<>();
-                            JSONArray array = common.data.getJSONObject("rating").getJSONArray("faculties");
-                            choose = 0;
-                            for (int i = 0; i < array.length(); i++) {
-                                JSONObject obj = array.getJSONObject(i);
-                                rl_spinner_faculty_arr.add(obj.getString("name"));
-                                rl_spinner_faculty_arr_ids.add(obj.getString("depId"));
-                                if (Objects.equals(rating_list_choose_faculty, obj.getString("depId"))) choose = i;
-                            }
-                            adapter = new ArrayAdapter<>(activity, R.layout.spinner_rating_layout, rl_spinner_faculty_arr);
-                            adapter.setDropDownViewResource(R.layout.spinner_rating_dropdown_layout);
-                            rl_spinner_faculty.setAdapter(adapter);
-                            rl_spinner_faculty.setSelection(choose);
-                            rl_spinner_faculty.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                                public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
-                                    rating_list_choose_faculty = rl_spinner_faculty_arr_ids.get(position);
-                                    Log.v(TAG, "rl_spinner_faculty clicked | rating_list_choose_faculty=" + rating_list_choose_faculty);
-                                    Storage.file.cache.put(activity, "rating#choose#faculty", rating_list_choose_faculty);
-                                }
-                                public void onNothingSelected(AdapterView<?> parent) {}
-                            });
+                    final Info own    = data.get(TYPE.own);
+                    final boolean common_available = common.status == STATUS.loaded && common.data != null;
+                    final boolean own_available    = own.status == STATUS.loaded && own.data != null;
+                    // извлекаем информацию подробного рейтинга
+                    final ArrayList<String> rl_spinner_faculty_arr = new ArrayList<>();
+                    final ArrayList<String> rl_spinner_faculty_arr_ids = new ArrayList<>();
+                    final ArrayList<String> rl_spinner_course_arr = new ArrayList<>();
+                    final ArrayList<String> rl_spinner_course_arr_ids = new ArrayList<>();
+                    final ArrayList<Integer> choose = new ArrayList<>();
+                    if (common_available) {
+                        JSONArray faculties = common.data.getJSONObject("rating").getJSONArray("faculties");
+                        choose.add(0, 0);
+                        choose.add(1, 0);
+                        for (int i = 0; i < faculties.length(); i++) {
+                            JSONObject faculty = faculties.getJSONObject(i);
+                            rl_spinner_faculty_arr.add(faculty.getString("name"));
+                            rl_spinner_faculty_arr_ids.add(faculty.getString("depId"));
+                            if (Objects.equals(rating_list_choose_faculty, faculty.getString("depId"))) choose.add(0, i);
                         }
-                        // работаем с выбором курса
-                        Spinner rl_spinner_course = activity.findViewById(R.id.rl_spinner_course);
-                        if (rl_spinner_course != null) {
-                            final ArrayList<String> rl_spinner_course_arr = new ArrayList<>();
-                            final ArrayList<String> rl_spinner_course_arr_ids = new ArrayList<>();
-                            choose = 0;
-                            for (int i = 1; i <= 4; i++) {
-                                rl_spinner_course_arr.add(i + " " + activity.getString(R.string.course));
-                                rl_spinner_course_arr_ids.add(String.valueOf(i));
-                                if (Objects.equals(rating_list_choose_course, String.valueOf(i))) choose = i - 1;
-                            }
-                            adapter = new ArrayAdapter<>(activity, R.layout.spinner_rating_layout, rl_spinner_course_arr);
-                            adapter.setDropDownViewResource(R.layout.spinner_rating_dropdown_layout);
-                            rl_spinner_course.setAdapter(adapter);
-                            rl_spinner_course.setSelection(choose);
-                            rl_spinner_course.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                                public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
-                                    rating_list_choose_course = rl_spinner_course_arr_ids.get(position);
-                                    Log.v(TAG, "rl_spinner_course clicked | rating_list_choose_course=" + rating_list_choose_course);
-                                    Storage.file.cache.put(activity, "rating#choose#course", rating_list_choose_course);
-                                }
-                                public void onNothingSelected(AdapterView<?> parent) {}
-                            });
-                        }
-                        // инициализируем кнопку
-                        ImageButton rl_button = activity.findViewById(R.id.rl_button);
-                        if (rl_button != null) {
-                            rl_button.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    FirebaseAnalyticsProvider.logBasicEvent(activity, "Detailed rating used");
-                                    Bundle extras = new Bundle();
-                                    extras.putString("faculty", rating_list_choose_faculty);
-                                    extras.putString("course", rating_list_choose_course);
-                                    activity.openActivityOrFragment(RatingListFragment.class, extras);
-                                    Log.v(TAG, "rl_button clicked | faculty=" + rating_list_choose_faculty + " | course=" + rating_list_choose_course);
-                                }
-                            });
-                        }
-                    } else {
-                        ViewGroup vg = activity.findViewById(R.id.rl_list_container);
-                        if (vg != null) {
-                            vg.removeAllViews();
-                            vg.addView(inflate(common.status == STATUS.offline ? R.layout.state_offline_compact : R.layout.state_failed_compact));
+                        for (int i = 1; i <= 4; i++) {
+                            rl_spinner_course_arr.add(i + " " + activity.getString(R.string.course));
+                            rl_spinner_course_arr_ids.add(String.valueOf(i));
+                            if (Objects.equals(rating_list_choose_course, String.valueOf(i))) choose.add(1, i - 1);
                         }
                     }
-                    // ваш рейтинг
-                    if (own.status == STATUS.loaded && own.data != null) {
-                        // получаем список для отображения
-                        final ArrayList<HashMap<String, String>> courses = new ArrayList<>();
-                        JSONArray jsonArray = own.data.getJSONObject("rating").getJSONArray("courses");
-                        for (int i = 0; i < jsonArray.length(); i++) {
-                            JSONObject jsonObject = jsonArray.getJSONObject(i);
+                    // извлекаем информацию личного рейтинга
+                    final ArrayList<HashMap<String, String>> courses = new ArrayList<>();
+                    if (own_available) {
+                        JSONArray coursesArr = own.data.getJSONObject("rating").getJSONArray("courses");
+                        for (int i = 0; i < coursesArr.length(); i++) {
+                            JSONObject course = coursesArr.getJSONObject(i);
                             HashMap<String, String> hashMap = new HashMap<>();
-                            hashMap.put("name", jsonObject.getString("faculty") + " — " + jsonObject.getInt("course") + " " + activity.getString(R.string.course));
-                            hashMap.put("position", jsonObject.getString("position"));
-                            hashMap.put("faculty", jsonObject.getString("faculty"));
-                            hashMap.put("course", String.valueOf(jsonObject.getInt("course")));
+                            hashMap.put("name", course.getString("faculty") + " — " + course.getInt("course") + " " + activity.getString(R.string.course));
+                            hashMap.put("position", course.getString("position"));
+                            hashMap.put("faculty", course.getString("faculty"));
+                            hashMap.put("course", String.valueOf(course.getInt("course")));
                             courses.add(hashMap);
                         }
-                        // работаем со списком
-                        ListView rl_list_view = activity.findViewById(R.id.rl_list_view);
-                        if (rl_list_view != null) {
-                            rl_list_view.setAdapter(new RatingListView(activity, courses));
-                            rl_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                                    FirebaseAnalyticsProvider.logBasicEvent(activity, "Own rating used");
-                                    Log.v(TAG, "rl_list_view clicked");
-                                    try {
-                                        if (common.status == STATUS.loaded && common.data != null) {
-                                            HashMap<String, String> hashMap = courses.get(position);
-                                            JSONArray array = common.data.getJSONObject("rating").getJSONArray("faculties");
-                                            int max_course = own.data.getJSONObject("rating").getInt("max_course");
-                                            for (int i = 0; i < array.length(); i++) {
-                                                JSONObject obj = array.getJSONObject(i);
-                                                if (obj.getString("name").contains(hashMap.get("faculty"))) {
-                                                    int course_delta = (max_course - Integer.parseInt(hashMap.get("course")));
-                                                    Calendar now = Calendar.getInstance();
-                                                    int year = now.get(Calendar.YEAR) - course_delta;
-                                                    int month = now.get(Calendar.MONTH);
-                                                    String years = month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year;
-                                                    Bundle extras = new Bundle();
-                                                    extras.putString("faculty", obj.getString("depId"));
-                                                    extras.putString("course", hashMap.get("course"));
-                                                    extras.putString("years", years);
-                                                    activity.openActivityOrFragment(RatingListFragment.class, extras);
-                                                    Log.v(TAG, "rl_list_view clicked and found | faculty=" + obj.getString("depId") + " | course=" + hashMap.get("course") + " | years=" + years);
-                                                    break;
-                                                }
+                    }
+                    Static.T.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                // отображаем интерфейс
+                                draw(R.layout.rating_layout);
+                                // работаем со свайпом
+                                SwipeRefreshLayout swipe_container = activity.findViewById(R.id.swipe_container);
+                                if (swipe_container != null) {
+                                    swipe_container.setColorSchemeColors(Static.colorAccent);
+                                    swipe_container.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
+                                    swipe_container.setOnRefreshListener(self);
+                                }
+                                // отображаем подробный рейтинг
+                                if (common_available) {
+                                    // работаем с выбором факультета
+                                    Spinner rl_spinner_faculty = activity.findViewById(R.id.rl_spinner_faculty);
+                                    if (rl_spinner_faculty != null) {
+                                        ArrayAdapter<String> adapter = new ArrayAdapter<>(activity, R.layout.spinner_rating_layout, rl_spinner_faculty_arr);
+                                        adapter.setDropDownViewResource(R.layout.spinner_rating_dropdown_layout);
+                                        rl_spinner_faculty.setAdapter(adapter);
+                                        rl_spinner_faculty.setSelection(choose.get(0));
+                                        rl_spinner_faculty.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                                            public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
+                                                Static.T.runThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        rating_list_choose_faculty = rl_spinner_faculty_arr_ids.get(position);
+                                                        Log.v(TAG, "rl_spinner_faculty clicked | rating_list_choose_faculty=" + rating_list_choose_faculty);
+                                                        Storage.file.cache.put(activity, "rating#choose#faculty", rating_list_choose_faculty);
+                                                    }
+                                                });
                                             }
-                                        } else {
-                                            Log.v(TAG, "Info.common is null");
-                                        }
-                                    } catch (Exception e) {
-                                        Static.error(e);
+                                            public void onNothingSelected(AdapterView<?> parent) {}
+                                        });
+                                    }
+                                    // работаем с выбором курса
+                                    Spinner rl_spinner_course = activity.findViewById(R.id.rl_spinner_course);
+                                    if (rl_spinner_course != null) {
+                                        ArrayAdapter<String> adapter = new ArrayAdapter<>(activity, R.layout.spinner_rating_layout, rl_spinner_course_arr);
+                                        adapter.setDropDownViewResource(R.layout.spinner_rating_dropdown_layout);
+                                        rl_spinner_course.setAdapter(adapter);
+                                        rl_spinner_course.setSelection(choose.get(1));
+                                        rl_spinner_course.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                                            public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
+                                                Static.T.runThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        rating_list_choose_course = rl_spinner_course_arr_ids.get(position);
+                                                        Log.v(TAG, "rl_spinner_course clicked | rating_list_choose_course=" + rating_list_choose_course);
+                                                        Storage.file.cache.put(activity, "rating#choose#course", rating_list_choose_course);
+                                                    }
+                                                });
+                                            }
+                                            public void onNothingSelected(AdapterView<?> parent) {}
+                                        });
+                                    }
+                                    // инициализируем кнопку
+                                    ImageButton rl_button = activity.findViewById(R.id.rl_button);
+                                    if (rl_button != null) {
+                                        rl_button.setOnClickListener(new View.OnClickListener() {
+                                            @Override
+                                            public void onClick(View v) {
+                                                Static.T.runThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        FirebaseAnalyticsProvider.logBasicEvent(activity, "Detailed rating used");
+                                                        Bundle extras = new Bundle();
+                                                        extras.putString("faculty", rating_list_choose_faculty);
+                                                        extras.putString("course", rating_list_choose_course);
+                                                        activity.openActivityOrFragment(RatingListFragment.class, extras);
+                                                        Log.v(TAG, "rl_button clicked | faculty=" + rating_list_choose_faculty + " | course=" + rating_list_choose_course);
+                                                    }
+                                                });
+                                            }
+                                        });
+                                    }
+                                } else {
+                                    ViewGroup vg = activity.findViewById(R.id.rl_list_container);
+                                    if (vg != null) {
+                                        vg.removeAllViews();
+                                        vg.addView(inflate(common.status == STATUS.offline ? R.layout.state_offline_compact : R.layout.state_failed_compact));
                                     }
                                 }
-                            });
+                                // отображаем личный рейтинг
+                                if (own_available) {
+                                    // работаем со списком
+                                    ListView rl_list_view = activity.findViewById(R.id.rl_list_view);
+                                    if (rl_list_view != null) {
+                                        rl_list_view.setAdapter(new RatingListView(activity, courses));
+                                        rl_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                                            public void onItemClick(final AdapterView<?> parent, final View view, final int position, final long id) {
+                                                Static.T.runThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        FirebaseAnalyticsProvider.logBasicEvent(activity, "Own rating used");
+                                                        Log.v(TAG, "rl_list_view clicked");
+                                                        try {
+                                                            if (common.status == STATUS.loaded && common.data != null) {
+                                                                HashMap<String, String> hashMap = courses.get(position);
+                                                                JSONArray array = common.data.getJSONObject("rating").getJSONArray("faculties");
+                                                                int max_course = own.data.getJSONObject("rating").getInt("max_course");
+                                                                for (int i = 0; i < array.length(); i++) {
+                                                                    JSONObject obj = array.getJSONObject(i);
+                                                                    if (obj.getString("name").contains(hashMap.get("faculty"))) {
+                                                                        int course_delta = (max_course - Integer.parseInt(hashMap.get("course")));
+                                                                        Calendar now = Calendar.getInstance();
+                                                                        int year = now.get(Calendar.YEAR) - course_delta;
+                                                                        int month = now.get(Calendar.MONTH);
+                                                                        String years = month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year;
+                                                                        Log.v(TAG, "rl_list_view clicked and found | faculty=" + obj.getString("depId") + " | course=" + hashMap.get("course") + " | years=" + years);
+                                                                        final Bundle extras = new Bundle();
+                                                                        extras.putString("faculty", obj.getString("depId"));
+                                                                        extras.putString("course", hashMap.get("course"));
+                                                                        extras.putString("years", years);
+                                                                        Static.T.runOnUiThread(new Runnable() {
+                                                                            @Override
+                                                                            public void run() {
+                                                                                activity.openActivityOrFragment(RatingListFragment.class, extras);
+                                                                            }
+                                                                        });
+                                                                        break;
+                                                                    }
+                                                                }
+                                                            } else {
+                                                                Log.v(TAG, "Info.common is null");
+                                                            }
+                                                        } catch (Exception e) {
+                                                            Static.error(e);
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                        });
+                                    }
+                                } else {
+                                    if (swipe_container != null) {
+                                        swipe_container.removeAllViews();
+                                        swipe_container.addView(inflate(own.status == STATUS.offline ? R.layout.state_offline_compact : R.layout.state_failed_compact));
+                                    }
+                                }
+                            } catch (Exception e) {
+                                Static.error(e);
+                                loadFailed();
+                            }
                         }
-                    } else {
-                        if (swipe_container != null) {
-                            swipe_container.removeAllViews();
-                            swipe_container.addView(inflate(own.status == STATUS.offline ? R.layout.state_offline_compact : R.layout.state_failed_compact));
-                        }
-                    }
+                    });
                 } catch (Exception e) {
                     Static.error(e);
                     loadFailed();
@@ -577,8 +627,9 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
             }
         });
     }
+
     private void gotoLogin(final int state) {
-        Static.T.runOnUiThread(new Runnable() {
+        Static.T.runThread(new Runnable() {
             @Override
             public void run() {
                 try {

@@ -30,75 +30,105 @@ public class Room101Client extends Client {
         get(context, DEFAULT_PROTOCOL, url, params, responseHandler);
     }
     public static void get(final Context context, final Protocol protocol, final String url, final RequestParams params, final Room101ClientResponseHandler responseHandler) {
-        Log.v(TAG, "get | url=" + url + " | params=" + Static.getSafetyRequestParams(params));
-        init();
-        if (Static.isOnline(context)) {
-            responseHandler.onProgress(STATE_HANDLING);
-            renewCookieRoom101(context);
-            responseHandler.onNewHandle(checkHandle(getHttpClient().get(getAbsoluteUrl(protocol, url), params, new AsyncHttpResponseHandler() {
-                @Override
-                public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                    Log.v(TAG, "get | url=" + url + " | success | statusCode=" + statusCode);
-                    responseHandler.onNewHandle(null);
-                    analyseCookie(context, headers);
-                    try {
-                        String data = convert2UTF8(headers, responseBody);
-                        if (data == null) throw new NullPointerException("data cannot be null");
-                        responseHandler.onSuccess(statusCode, data);
-                    } catch (Exception e) {
-                        Static.error(e);
-                        responseHandler.onFailure(FAILED_TRY_AGAIN, statusCode, headers);
-                    }
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "get | url=" + url + " | params=" + Static.getSafetyRequestParams(params));
+                init();
+                if (Static.isOnline(context)) {
+                    responseHandler.onProgress(STATE_HANDLING);
+                    renewCookieRoom101(context);
+                    responseHandler.onNewHandle(checkHandle(getHttpClient().get(getAbsoluteUrl(protocol, url), params, new AsyncHttpResponseHandler() {
+                        @Override
+                        public void onSuccess(final int statusCode, final Header[] headers, final byte[] responseBody) {
+                            Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.v(TAG, "get | url=" + url + " | success | statusCode=" + statusCode);
+                                    responseHandler.onNewHandle(null);
+                                    analyseCookie(context, headers);
+                                    try {
+                                        String data = convert2UTF8(headers, responseBody);
+                                        if (data == null) throw new NullPointerException("data cannot be null");
+                                        responseHandler.onSuccess(statusCode, data);
+                                    } catch (Exception e) {
+                                        Static.error(e);
+                                        responseHandler.onFailure(FAILED_TRY_AGAIN, statusCode, headers);
+                                    }
+                                }
+                            });
+                        }
+                        @Override
+                        public void onFailure(final int statusCode, final Header[] headers, final byte[] responseBody, final Throwable throwable) {
+                            Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.v(TAG, "get | url=" + url + " | failure | statusCode=" + statusCode + (throwable != null ? " | throwable=" + throwable.getMessage() : "") + (responseBody != null ? " | response=" + convert2UTF8(headers, responseBody) : ""));
+                                    responseHandler.onNewHandle(null);
+                                    analyseCookie(context, headers);
+                                    responseHandler.onFailure(FAILED_TRY_AGAIN, statusCode, headers);
+                                }
+                            });
+                        }
+                    })));
+                } else {
+                    Log.v(TAG, "get | url=" + url + " | offline");
+                    responseHandler.onFailure(FAILED_OFFLINE, STATUS_CODE_EMPTY, null);
                 }
-                @Override
-                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable throwable) {
-                    Log.v(TAG, "get | url=" + url + " | failure | statusCode=" + statusCode + (throwable != null ? " | throwable=" + throwable.getMessage() : "") + (responseBody != null ? " | response=" + convert2UTF8(headers, responseBody) : ""));
-                    responseHandler.onNewHandle(null);
-                    analyseCookie(context, headers);
-                    responseHandler.onFailure(FAILED_TRY_AGAIN, statusCode, headers);
-                }
-            })));
-        } else {
-            Log.v(TAG, "get | url=" + url + " | offline");
-            responseHandler.onFailure(FAILED_OFFLINE, STATUS_CODE_EMPTY, null);
-        }
+            }
+        });
     }
     public static void post(final Context context, final String url, final RequestParams params, final Room101ClientResponseHandler responseHandler) {
         post(context, DEFAULT_PROTOCOL, url, params, responseHandler);
     }
     public static void post(final Context context, final Protocol protocol, final String url, final RequestParams params, final Room101ClientResponseHandler responseHandler) {
-        Log.v(TAG, "post | url=" + url + " | params=" + Static.getSafetyRequestParams(params));
-        init();
-        if (Static.isOnline(context)) {
-            responseHandler.onProgress(STATE_HANDLING);
-            renewCookieRoom101(context);
-            responseHandler.onNewHandle(checkHandle(getHttpClient().post(getAbsoluteUrl(protocol, url), params, new AsyncHttpResponseHandler() {
-                @Override
-                public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                    Log.v(TAG, "post | url=" + url + " | success | statusCode=" + statusCode);
-                    responseHandler.onNewHandle(null);
-                    analyseCookie(context, headers);
-                    try {
-                        String data = convert2UTF8(headers, responseBody);
-                        if (data == null) throw new NullPointerException("data cannot be null");
-                        responseHandler.onSuccess(statusCode, data);
-                    } catch (Exception e) {
-                        Static.error(e);
-                        responseHandler.onFailure(FAILED_TRY_AGAIN, statusCode, headers);
-                    }
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+            @Override
+            public void run() {
+                Log.v(TAG, "post | url=" + url + " | params=" + Static.getSafetyRequestParams(params));
+                init();
+                if (Static.isOnline(context)) {
+                    responseHandler.onProgress(STATE_HANDLING);
+                    renewCookieRoom101(context);
+                    responseHandler.onNewHandle(checkHandle(getHttpClient().post(getAbsoluteUrl(protocol, url), params, new AsyncHttpResponseHandler() {
+                        @Override
+                        public void onSuccess(final int statusCode, final Header[] headers, final byte[] responseBody) {
+                            Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.v(TAG, "post | url=" + url + " | success | statusCode=" + statusCode);
+                                    responseHandler.onNewHandle(null);
+                                    analyseCookie(context, headers);
+                                    try {
+                                        String data = convert2UTF8(headers, responseBody);
+                                        if (data == null) throw new NullPointerException("data cannot be null");
+                                        responseHandler.onSuccess(statusCode, data);
+                                    } catch (Exception e) {
+                                        Static.error(e);
+                                        responseHandler.onFailure(FAILED_TRY_AGAIN, statusCode, headers);
+                                    }
+                                }
+                            });
+                        }
+                        @Override
+                        public void onFailure(final int statusCode, final Header[] headers, final byte[] responseBody, final Throwable throwable) {
+                            Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.v(TAG, "post | url=" + url + " | failure | statusCode=" + statusCode + (throwable != null ? " | throwable=" + throwable.getMessage() : "") + (responseBody != null ? " | response=" + convert2UTF8(headers, responseBody) : ""));
+                                    responseHandler.onNewHandle(null);
+                                    analyseCookie(context, headers);
+                                    responseHandler.onFailure(FAILED_TRY_AGAIN, statusCode, headers);
+                                }
+                            });
+                        }
+                    })));
+                } else {
+                    Log.v(TAG, "post | url=" + url + " | offline");
+                    responseHandler.onFailure(FAILED_OFFLINE, STATUS_CODE_EMPTY, null);
                 }
-                @Override
-                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable throwable) {
-                    Log.v(TAG, "post | url=" + url + " | failure | statusCode=" + statusCode + (throwable != null ? " | throwable=" + throwable.getMessage() : "") + (responseBody != null ? " | response=" + convert2UTF8(headers, responseBody) : ""));
-                    responseHandler.onNewHandle(null);
-                    analyseCookie(context, headers);
-                    responseHandler.onFailure(FAILED_TRY_AGAIN, statusCode, headers);
-                }
-            })));
-        } else {
-            Log.v(TAG, "post | url=" + url + " | offline");
-            responseHandler.onFailure(FAILED_OFFLINE, STATUS_CODE_EMPTY, null);
-        }
+            }
+        });
     }
 
     private static String getAbsoluteUrl(Protocol protocol, String relativeUrl) {

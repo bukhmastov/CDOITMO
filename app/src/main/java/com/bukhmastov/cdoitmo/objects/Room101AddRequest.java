@@ -148,22 +148,27 @@ public class Room101AddRequest {
                     pick_date = null;
                     Room101Fragment.execute(activity, "newRequest", new Room101ClientResponseHandler() {
                         @Override
-                        public void onSuccess(int statusCode, String response) {
-                            if (statusCode == 200) {
-                                new Room101DatePickParse(new Room101DatePickParse.response() {
-                                    @Override
-                                    public void finish(JSONObject json) {
-                                        if (json != null) {
-                                            data = json;
-                                            loadDatePick(1);
-                                        } else {
-                                            failed();
-                                        }
+                        public void onSuccess(final int statusCode, final String response) {
+                            Static.T.runThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (statusCode == 200) {
+                                        new Room101DatePickParse(response, new Room101DatePickParse.response() {
+                                            @Override
+                                            public void finish(JSONObject json) {
+                                                if (json != null) {
+                                                    data = json;
+                                                    loadDatePick(1);
+                                                } else {
+                                                    failed();
+                                                }
+                                            }
+                                        }).run();
+                                    } else {
+                                        failed();
                                     }
-                                }).execute(response);
-                            } else {
-                                failed();
-                            }
+                                }
+                            });
                         }
                         @Override
                         public void onProgress(int state) {}
@@ -183,33 +188,38 @@ public class Room101AddRequest {
                     params.put("password", Storage.file.perm.get(activity, "user#password"));
                     Room101Client.post(activity, "newRequest.php", params, new Room101ClientResponseHandler() {
                         @Override
-                        public void onSuccess(int statusCode, String response) {
-                            if (statusCode == 200) {
-                                new Room101DatePickParse(new Room101DatePickParse.response() {
-                                    @Override
-                                    public void finish(JSONObject json) {
-                                        if (json != null) {
-                                            if (data == null) {
-                                                data = json;
-                                            } else {
-                                                try {
-                                                    JSONArray jsonArray = data.getJSONArray("data");
-                                                    JSONArray jsonArrayNew = json.getJSONArray("data");
-                                                    for (int i = 0; i < jsonArrayNew.length(); i++) jsonArray.put(jsonArrayNew.getJSONObject(i));
-                                                    data.put("data", jsonArray);
-                                                } catch (Exception e) {
-                                                    Static.error(e);
-                                                    data = json;
+                        public void onSuccess(final int statusCode, final String response) {
+                            Static.T.runThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (statusCode == 200) {
+                                        new Room101DatePickParse(response, new Room101DatePickParse.response() {
+                                            @Override
+                                            public void finish(JSONObject json) {
+                                                if (json != null) {
+                                                    if (data == null) {
+                                                        data = json;
+                                                    } else {
+                                                        try {
+                                                            JSONArray jsonArray = data.getJSONArray("data");
+                                                            JSONArray jsonArrayNew = json.getJSONArray("data");
+                                                            for (int i = 0; i < jsonArrayNew.length(); i++) jsonArray.put(jsonArrayNew.getJSONObject(i));
+                                                            data.put("data", jsonArray);
+                                                        } catch (Exception e) {
+                                                            Static.error(e);
+                                                            data = json;
+                                                        }
+                                                    }
                                                 }
+                                                CURRENT_STAGE++;
+                                                proceedStage();
                                             }
-                                        }
-                                        CURRENT_STAGE++;
-                                        proceedStage();
+                                        }).run();
+                                    } else {
+                                        failed();
                                     }
-                                }).execute(response);
-                            } else {
-                                failed();
-                            }
+                                }
+                            });
                         }
                         @Override
                         public void onProgress(int state) {}
@@ -245,23 +255,28 @@ public class Room101AddRequest {
                 params.put("password", Storage.file.perm.get(activity, "user#password"));
                 Room101Client.post(activity, "newRequest.php", params, new Room101ClientResponseHandler() {
                     @Override
-                    public void onSuccess(int statusCode, String response) {
-                        if (statusCode == 200) {
-                            new Room101TimeStartPickParse(new Room101TimeStartPickParse.response() {
-                                @Override
-                                public void finish(JSONObject json) {
-                                    if (json != null) {
-                                        data = json;
-                                        CURRENT_STAGE++;
-                                        proceedStage();
-                                    } else {
-                                        failed();
-                                    }
+                    public void onSuccess(final int statusCode, final String response) {
+                        Static.T.runThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (statusCode == 200) {
+                                    new Room101TimeStartPickParse(response, new Room101TimeStartPickParse.response() {
+                                        @Override
+                                        public void finish(JSONObject json) {
+                                            if (json != null) {
+                                                data = json;
+                                                CURRENT_STAGE++;
+                                                proceedStage();
+                                            } else {
+                                                failed();
+                                            }
+                                        }
+                                    }).run();
+                                } else {
+                                    failed();
                                 }
-                            }).execute(response);
-                        } else {
-                            failed();
-                        }
+                            }
+                        });
                     }
                     @Override
                     public void onProgress(int state) {}
@@ -294,23 +309,28 @@ public class Room101AddRequest {
                 params.put("password", Storage.file.perm.get(activity, "user#password"));
                 Room101Client.post(activity, "newRequest.php", params, new Room101ClientResponseHandler() {
                     @Override
-                    public void onSuccess(int statusCode, String response) {
-                        if (statusCode == 200) {
-                            new Room101TimeEndPickParse(new Room101TimeEndPickParse.response() {
-                                @Override
-                                public void finish(JSONObject json) {
-                                    if (json != null) {
-                                        data = json;
-                                        CURRENT_STAGE++;
-                                        proceedStage();
-                                    } else {
-                                        failed();
-                                    }
+                    public void onSuccess(final int statusCode, final String response) {
+                        Static.T.runThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (statusCode == 200) {
+                                    new Room101TimeEndPickParse(response, new Room101TimeEndPickParse.response() {
+                                        @Override
+                                        public void finish(JSONObject json) {
+                                            if (json != null) {
+                                                data = json;
+                                                CURRENT_STAGE++;
+                                                proceedStage();
+                                            } else {
+                                                failed();
+                                            }
+                                        }
+                                    }).run();
+                                } else {
+                                    failed();
                                 }
-                            }).execute(response);
-                        } else {
-                            failed();
-                        }
+                            }
+                        });
                     }
                     @Override
                     public void onProgress(int state) {}

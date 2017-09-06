@@ -1,7 +1,6 @@
 package com.bukhmastov.cdoitmo.parse;
 
-import android.os.AsyncTask;
-
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 
 import org.htmlcleaner.HtmlCleaner;
@@ -13,20 +12,29 @@ import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ScheduleExamsTeacherPickerParse extends AsyncTask<String, Void, JSONObject> {
+public class ScheduleExamsTeacherPickerParse implements Runnable {
+
+    private static final String TAG = "SETeacherPickerParse";
     public interface response {
         void finish(JSONObject json);
     }
     private response delegate = null;
-    public ScheduleExamsTeacherPickerParse(response delegate){
+    private String data;
+    private String cache_token;
+
+    public ScheduleExamsTeacherPickerParse(String data, String cache_token, response delegate) {
+        this.data = data;
+        this.cache_token = cache_token;
         this.delegate = delegate;
     }
+
     @Override
-    protected JSONObject doInBackground(String... params) {
+    public void run() {
+        Log.v(TAG, "parsing");
         try {
             Matcher m;
             HtmlCleaner cleaner = new HtmlCleaner();
-            TagNode root = cleaner.clean(params[0].replace("&nbsp;", " "));
+            TagNode root = cleaner.clean(data.replace("&nbsp;", " "));
             TagNode content = root.getElementsByAttValue("class", "content_block", true, false)[0];
             JSONArray teachers = new JSONArray();
             TagNode[] p = content.getElementsByName("p", false);
@@ -50,15 +58,11 @@ public class ScheduleExamsTeacherPickerParse extends AsyncTask<String, Void, JSO
             response.put("type", "teacher_picker");
             response.put("timestamp", Calendar.getInstance().getTimeInMillis());
             response.put("teachers", teachers);
-            response.put("cache_token", params[1]);
-            return response;
+            response.put("cache_token", cache_token);
+            delegate.finish(response);
         } catch (Exception e) {
             Static.error(e);
-            return null;
+            delegate.finish(null);
         }
-    }
-    @Override
-    protected void onPostExecute(JSONObject json) {
-        delegate.finish(json);
     }
 }

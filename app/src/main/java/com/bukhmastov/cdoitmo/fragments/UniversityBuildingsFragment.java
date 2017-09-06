@@ -190,30 +190,35 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                 if (!Static.OFFLINE_MODE) {
                     loadProvider(new IfmoRestClientResponseHandler() {
                         @Override
-                        public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
-                            if (statusCode == 200) {
-                                long now = Calendar.getInstance().getTimeInMillis();
-                                if (json != null && Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
-                                    try {
-                                        Storage.file.cache.put(activity, "university#buildings", new JSONObject()
-                                                .put("timestamp", now)
-                                                .put("data", json)
-                                                .toString()
-                                        );
-                                    } catch (JSONException e) {
-                                        Static.error(e);
+                        public void onSuccess(final int statusCode, final JSONObject json, final JSONArray responseArr) {
+                            Static.T.runThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (statusCode == 200) {
+                                        long now = Calendar.getInstance().getTimeInMillis();
+                                        if (json != null && Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
+                                            try {
+                                                Storage.file.cache.put(activity, "university#buildings", new JSONObject()
+                                                        .put("timestamp", now)
+                                                        .put("data", json)
+                                                        .toString()
+                                                );
+                                            } catch (JSONException e) {
+                                                Static.error(e);
+                                            }
+                                        }
+                                        building_map = json;
+                                        timestamp = now;
+                                        display();
+                                    } else {
+                                        loadFailed();
                                     }
                                 }
-                                building_map = json;
-                                timestamp = now;
-                                display();
-                            } else {
-                                loadFailed();
-                            }
+                            });
                         }
                         @Override
                         public void onProgress(final int state) {
-                            Static.T.runOnUiThread(new Runnable() {
+                            Static.T.runThread(new Runnable() {
                                 @Override
                                 public void run() {
                                     Log.v(TAG, "forceLoad | progress " + state);
@@ -223,7 +228,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                         }
                         @Override
                         public void onFailure(final int statusCode, final int state) {
-                            Static.T.runOnUiThread(new Runnable() {
+                            Static.T.runThread(new Runnable() {
                                 @Override
                                 public void run() {
                                     Log.v(TAG, "forceLoad | failure " + state);
@@ -408,90 +413,110 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         }
     }
     private void closeMarkerInfo() {
-        try {
-            View marker_info_container = container.findViewById(R.id.marker_info_container);
-            if (marker_info_container != null) {
-                View marker_info = marker_info_container.findViewById(R.id.marker_info);
-                if (marker_info != null) {
-                    Static.removeView(marker_info);
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    View marker_info_container = container.findViewById(R.id.marker_info_container);
+                    if (marker_info_container != null) {
+                        View marker_info = marker_info_container.findViewById(R.id.marker_info);
+                        if (marker_info != null) {
+                            Static.removeView(marker_info);
+                        }
+                    }
+                } catch (Exception e) {
+                    Static.error(e);
                 }
             }
-        } catch (Exception e) {
-            Static.error(e);
-        }
+        });
     }
     private void openList() {
-        try {
-            closeMarkerInfo();
-            closeList();
-            ViewGroup marker_info_container = container.findViewById(R.id.marker_info_container);
-            if (building_map == null) return;
-            JSONArray list = building_map.getJSONArray("list");
-            if (marker_info_container != null && list != null) {
-                View layout_university_buildings_list = inflate(R.layout.layout_university_buildings_list);
-                layout_university_buildings_list.findViewById(R.id.list_close).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        closeList();
-                    }
-                });
-                ViewGroup list_container = layout_university_buildings_list.findViewById(R.id.list_container);
-                for (int i = 0; i < list.length(); i++) {
-                    try {
-                        JSONObject building = list.getJSONObject(i);
-                        if (building == null) {
-                            continue;
-                        }
-                        final String title = building.getString("title");
-                        View item = inflate(R.layout.layout_university_faculties_divisions_list_item);
-                        ((TextView) item.findViewById(R.id.title)).setText(title);
-                        item.setOnClickListener(new View.OnClickListener() {
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    closeMarkerInfo();
+                    closeList();
+                    ViewGroup marker_info_container = container.findViewById(R.id.marker_info_container);
+                    if (building_map == null) return;
+                    JSONArray list = building_map.getJSONArray("list");
+                    if (marker_info_container != null && list != null) {
+                        View layout_university_buildings_list = inflate(R.layout.layout_university_buildings_list);
+                        layout_university_buildings_list.findViewById(R.id.list_close).setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                for (Marker marker : markers) {
-                                    try {
-                                        JSONObject building = (JSONObject) marker.getTag();
-                                        if (building == null) {
-                                            continue;
-                                        }
-                                        if (Objects.equals(building.getString("title"), title)) {
-                                            closeList();
-                                            onMarkerClick(marker);
-                                            break;
-                                        }
-                                    } catch (Exception ignore) {
-                                        // ignore
-                                    }
-                                }
+                                closeList();
                             }
                         });
-                        list_container.addView(item);
-                    } catch (Exception e) {
-                        Static.error(e);
+                        ViewGroup list_container = layout_university_buildings_list.findViewById(R.id.list_container);
+                        for (int i = 0; i < list.length(); i++) {
+                            try {
+                                JSONObject building = list.getJSONObject(i);
+                                if (building == null) {
+                                    continue;
+                                }
+                                final String title = building.getString("title");
+                                View item = inflate(R.layout.layout_university_faculties_divisions_list_item);
+                                ((TextView) item.findViewById(R.id.title)).setText(title);
+                                item.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        for (Marker marker : markers) {
+                                            try {
+                                                JSONObject building = (JSONObject) marker.getTag();
+                                                if (building == null) {
+                                                    continue;
+                                                }
+                                                if (Objects.equals(building.getString("title"), title)) {
+                                                    closeList();
+                                                    onMarkerClick(marker);
+                                                    break;
+                                                }
+                                            } catch (Exception ignore) {
+                                                // ignore
+                                            }
+                                        }
+                                    }
+                                });
+                                list_container.addView(item);
+                            } catch (Exception e) {
+                                Static.error(e);
+                            }
+                        }
+                        marker_info_container.addView(layout_university_buildings_list);
                     }
+                } catch (Exception e) {
+                    Static.error(e);
                 }
-                marker_info_container.addView(layout_university_buildings_list);
             }
-        } catch (Exception e) {
-            Static.error(e);
-        }
+        });
     }
     private void closeList() {
-        try {
-            View marker_info_container = container.findViewById(R.id.marker_info_container);
-            if (marker_info_container != null) {
-                View list = marker_info_container.findViewById(R.id.list);
-                if (list != null) {
-                    Static.removeView(list);
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    View marker_info_container = container.findViewById(R.id.marker_info_container);
+                    if (marker_info_container != null) {
+                        View list = marker_info_container.findViewById(R.id.list);
+                        if (list != null) {
+                            Static.removeView(list);
+                        }
+                    }
+                } catch (Exception e) {
+                    Static.error(e);
                 }
             }
-        } catch (Exception e) {
-            Static.error(e);
-        }
+        });
     }
-    private void zoomToMarker(Marker marker) {
-        CameraPosition cameraPosition = new CameraPosition.Builder().target(marker.getPosition()).zoom(15).build();
-        googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 1000, null);
+    private void zoomToMarker(final Marker marker) {
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                CameraPosition cameraPosition = new CameraPosition.Builder().target(marker.getPosition()).zoom(15).build();
+                googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 1000, null);
+            }
+        });
     }
 
     @SuppressWarnings("deprecation")

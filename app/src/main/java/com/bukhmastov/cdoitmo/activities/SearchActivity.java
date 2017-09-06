@@ -206,14 +206,19 @@ public abstract class SearchActivity extends AppCompatActivity {
         @Override
         public void onTextChanged(CharSequence s, int start, int before, int count) {}
         @Override
-        public void afterTextChanged(Editable s) {
-            String query = s.toString().trim();
-            if (query.isEmpty()) {
-                setMode(EXTRA_ACTION_MODE.Speech_recognition);
-            } else {
-                setMode(EXTRA_ACTION_MODE.Clear);
-            }
-            setSuggestions(getSuggestions(query));
+        public void afterTextChanged(final Editable s) {
+            Static.T.runThread(new Runnable() {
+                @Override
+                public void run() {
+                    String query = s.toString().trim();
+                    if (query.isEmpty()) {
+                        setMode(EXTRA_ACTION_MODE.Speech_recognition);
+                    } else {
+                        setMode(EXTRA_ACTION_MODE.Clear);
+                    }
+                    setSuggestions(getSuggestions(query));
+                }
+            });
         }
     };
     private final View.OnKeyListener onKeyListener = new View.OnKeyListener() {

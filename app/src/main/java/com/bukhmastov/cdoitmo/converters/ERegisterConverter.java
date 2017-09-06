@@ -1,7 +1,5 @@
 package com.bukhmastov.cdoitmo.converters;
 
-import android.os.AsyncTask;
-
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 
@@ -18,24 +16,25 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ERegisterConverter extends AsyncTask<JSONObject, Void, JSONObject> {
+public class ERegisterConverter implements Runnable {
 
     private static final String TAG = "ERegisterConverter";
     public interface response {
         void finish(JSONObject json);
     }
     private response delegate = null;
+    private JSONObject eregister;
 
-    public ERegisterConverter(response delegate){
+    public ERegisterConverter(JSONObject eregister, response delegate) {
+        this.eregister = eregister;
         this.delegate = delegate;
     }
 
     @Override
-    protected JSONObject doInBackground(JSONObject... params) {
-        Log.i(TAG, "started");
+    public void run() {
+        Log.v(TAG, "converting");
         JSONObject response = new JSONObject();
         try {
-            JSONObject eregister = params[0];
             JSONArray years = eregister.getJSONArray("years");
             JSONArray yearsOut = new JSONArray();
             for (int i = 0; i < years.length(); i++) {
@@ -135,7 +134,7 @@ public class ERegisterConverter extends AsyncTask<JSONObject, Void, JSONObject> 
         } catch (Exception e) {
             Static.error(e);
         }
-        return response;
+        delegate.finish(response);
     }
 
     private double mark2double(String string){
@@ -182,11 +181,5 @@ public class ERegisterConverter extends AsyncTask<JSONObject, Void, JSONObject> 
             }
         });
         return new JSONArray(sort);
-    }
-
-    @Override
-    protected void onPostExecute(JSONObject json) {
-        Log.i(TAG, "finished");
-        delegate.finish(json);
     }
 }

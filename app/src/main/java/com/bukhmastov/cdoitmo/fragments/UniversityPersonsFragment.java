@@ -96,7 +96,7 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
 
     @Override
     public void onRefresh() {
-        Log.v(TAG, "refreshed");
+        Log.v(TAG, "refreshing");
         load(search, true);
     }
 
@@ -163,26 +163,31 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
                     self.search = search;
                     loadProvider(new IfmoRestClientResponseHandler() {
                         @Override
-                        public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
-                            if (statusCode == 200) {
-                                long now = Calendar.getInstance().getTimeInMillis();
-                                if (json != null && Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
-                                    try {
-                                        Storage.file.cache.put(activity, "university#persons", new JSONObject()
-                                                .put("timestamp", now)
-                                                .put("data", json)
-                                                .toString()
-                                        );
-                                    } catch (JSONException e) {
-                                        Static.error(e);
+                        public void onSuccess(final int statusCode, final JSONObject json, final JSONArray responseArr) {
+                            Static.T.runThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (statusCode == 200) {
+                                        long now = Calendar.getInstance().getTimeInMillis();
+                                        if (json != null && Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
+                                            try {
+                                                Storage.file.cache.put(activity, "university#persons", new JSONObject()
+                                                        .put("timestamp", now)
+                                                        .put("data", json)
+                                                        .toString()
+                                                );
+                                            } catch (JSONException e) {
+                                                Static.error(e);
+                                            }
+                                        }
+                                        persons = json;
+                                        timestamp = now;
+                                        display();
+                                    } else {
+                                        loadFailed();
                                     }
                                 }
-                                persons = json;
-                                timestamp = now;
-                                display();
-                            } else {
-                                loadFailed();
-                            }
+                            });
                         }
                         @Override
                         public void onProgress(final int state) {
@@ -274,7 +279,7 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
         Log.v(TAG, "loadProvider");
         IfmoRestClient.get(activity, "person?limit=" + limit + "&offset=" + offset + "&search=" + search, null, handler);
     }
-    private void loadFailed(){
+    private void loadFailed() {
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -353,7 +358,7 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
                                         loadProvider(new IfmoRestClientResponseHandler() {
                                             @Override
                                             public void onSuccess(int statusCode, final JSONObject json, JSONArray responseArr) {
-                                                Static.T.runOnUiThread(new Runnable() {
+                                                Static.T.runThread(new Runnable() {
                                                     @Override
                                                     public void run() {
                                                         try {
@@ -381,7 +386,12 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
                                                             displayContent(list);
                                                         } catch (Exception e) {
                                                             Static.error(e);
-                                                            personsRecyclerViewAdapter.setState(R.id.load_more);
+                                                            Static.T.runOnUiThread(new Runnable() {
+                                                                @Override
+                                                                public void run() {
+                                                                    personsRecyclerViewAdapter.setState(R.id.load_more);
+                                                                }
+                                                            });
                                                         }
                                                     }
                                                 });
@@ -431,8 +441,8 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
                                 if (persons_list_info.getChildCount() > 0) {
                                     persons_list_info.setPadding(0, height, 0, 0);
                                 }
-                            } catch (Exception e) {
-                                e.printStackTrace();
+                            } catch (Exception ignore) {
+                                // ignore
                             }
                         }
                     });
@@ -451,30 +461,40 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
         });
     }
     private void displayContent(final JSONArray list) {
-        Static.T.runOnUiThread(new Runnable() {
+        Static.T.runThread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    if (personsRecyclerViewAdapter != null) {
-                        ArrayList<PersonsRecyclerViewAdapter.Item> items = new ArrayList<>();
-                        for (int i = 0; i < list.length(); i++) {
-                            try {
-                                final JSONObject news = list.getJSONObject(i);
-                                PersonsRecyclerViewAdapter.Item item = new PersonsRecyclerViewAdapter.Item();
-                                item.type = PersonsRecyclerViewAdapter.TYPE_MAIN;
-                                item.data = news;
-                                items.add(item);
-                            } catch (Exception e) {
-                                Static.error(e);
-                            }
-                        }
-                        personsRecyclerViewAdapter.addItem(items);
-                        if (offset + limit < persons.getInt("count")) {
-                            personsRecyclerViewAdapter.setState(R.id.load_more);
-                        } else {
-                            personsRecyclerViewAdapter.setState(R.id.no_more);
+                    final ArrayList<PersonsRecyclerViewAdapter.Item> items = new ArrayList<>();
+                    for (int i = 0; i < list.length(); i++) {
+                        try {
+                            final JSONObject news = list.getJSONObject(i);
+                            PersonsRecyclerViewAdapter.Item item = new PersonsRecyclerViewAdapter.Item();
+                            item.type = PersonsRecyclerViewAdapter.TYPE_MAIN;
+                            item.data = news;
+                            items.add(item);
+                        } catch (Exception e) {
+                            Static.error(e);
                         }
                     }
+                    Static.T.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                if (personsRecyclerViewAdapter != null) {
+                                    personsRecyclerViewAdapter.addItem(items);
+                                    if (offset + limit < persons.getInt("count")) {
+                                        personsRecyclerViewAdapter.setState(R.id.load_more);
+                                    } else {
+                                        personsRecyclerViewAdapter.setState(R.id.no_more);
+                                    }
+                                }
+                            } catch (Exception e) {
+                                Static.error(e);
+                                loadFailed();
+                            }
+                        }
+                    });
                 } catch (Exception e) {
                     Static.error(e);
                     loadFailed();

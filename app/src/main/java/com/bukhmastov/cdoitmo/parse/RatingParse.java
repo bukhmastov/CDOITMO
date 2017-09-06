@@ -1,7 +1,6 @@
 package com.bukhmastov.cdoitmo.parse;
 
-import android.os.AsyncTask;
-
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 
 import org.htmlcleaner.HtmlCleaner;
@@ -11,18 +10,25 @@ import org.json.JSONObject;
 
 import java.util.List;
 
-public class RatingParse extends AsyncTask<String, Void, JSONObject> {
+public class RatingParse implements Runnable {
+
+    private static final String TAG = "RatingParse";
     public interface response {
         void finish(JSONObject json);
     }
     private response delegate = null;
-    public RatingParse(response delegate){
+    private String data;
+
+    public RatingParse(String data, response delegate) {
+        this.data = data;
         this.delegate = delegate;
     }
+
     @Override
-    protected JSONObject doInBackground(String... params) {
+    public void run() {
+        Log.v(TAG, "parsing");
         try {
-            String response = params[0].replace("&nbsp;", " ");
+            String response = data.replace("&nbsp;", " ");
             HtmlCleaner cleaner = new HtmlCleaner();
             TagNode root = cleaner.clean(response);
             JSONObject json = new JSONObject();
@@ -44,14 +50,10 @@ public class RatingParse extends AsyncTask<String, Void, JSONObject> {
             }
             json.put("courses", courses);
             json.put("max_course", max_course);
-            return json;
+            delegate.finish(json);
         } catch (Exception e) {
             Static.error(e);
-            return null;
+            delegate.finish(null);
         }
-    }
-    @Override
-    protected void onPostExecute(JSONObject json) {
-        delegate.finish(json);
     }
 }

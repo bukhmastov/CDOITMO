@@ -182,7 +182,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
     }
 
     private void authorize(final int state) {
-        Static.T.runOnUiThread(new Runnable() {
+        Static.T.runThread(new Runnable() {
             @Override
             public void run() {
                 Log.v(TAG, "authorize | state=" + state);
@@ -194,13 +194,18 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
         });
     }
     private void authorized() {
-        Static.T.runOnUiThread(new Runnable() {
+        Static.T.runThread(new Runnable() {
             @Override
             public void run() {
                 Log.v(TAG, "authorized");
                 if (!loaded) {
                     loaded = true;
-                    new ProtocolTracker(activity).check();
+                    Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+                        @Override
+                        public void run() {
+                            new ProtocolTracker(activity).check();
+                        }
+                    });
                     selectSection(selectedSection);
                     Static.NavigationMenu.displayUserData(activity, (NavigationView) findViewById(R.id.nav_view));
                     Static.NavigationMenu.snackbarOffline(activity);
@@ -217,7 +222,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
     }
 
     private void selectSection(final int section) {
-        Static.T.runOnUiThread(new Runnable() {
+        Static.T.runThread(new Runnable() {
             @Override
             public void run() {
                 switch (section) {
@@ -228,7 +233,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                     case R.id.nav_schedule_exams:
                     case R.id.nav_room101:
                     case R.id.nav_university: {
-                        Class connectedFragmentClass;
+                        final Class connectedFragmentClass;
                         switch (section) {
                             default:
                             case R.id.nav_e_register: connectedFragmentClass = ERegisterFragment.class; break;
@@ -239,28 +244,38 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                             case R.id.nav_room101: connectedFragmentClass = Room101Fragment.class; break;
                             case R.id.nav_university: connectedFragmentClass = UniversityFragment.class; break;
                         }
-                        if (openFragment(TYPE.root, connectedFragmentClass, null)) {
-                            ((NavigationView) findViewById(R.id.nav_view)).setCheckedItem(section);
-                            selectedSection = section;
-                        } else {
-                            Static.snackBar(activity, activity.getString(R.string.failed_to_open_fragment), activity.getString(R.string.redo), new View.OnClickListener() {
-                                @Override
-                                public void onClick(View view) {
-                                    selectSection(section);
+                        Static.T.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (openFragment(TYPE.root, connectedFragmentClass, null)) {
+                                    ((NavigationView) findViewById(R.id.nav_view)).setCheckedItem(section);
+                                    selectedSection = section;
+                                } else {
+                                    Static.snackBar(activity, activity.getString(R.string.failed_to_open_fragment), activity.getString(R.string.redo), new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View view) {
+                                            selectSection(section);
+                                        }
+                                    });
                                 }
-                            });
-                        }
+                            }
+                        });
                         break;
                     }
                     case R.id.nav_shortcuts:
-                        if (openActivityOrFragment(TYPE.stackable, ShortcutCreateFragment.class, null)) {
-                            if (Static.tablet) {
-                                Menu menu = ((NavigationView) findViewById(R.id.nav_view)).getMenu();
-                                for (int i = 0; i < menu.size(); i++) {
-                                    menu.getItem(i).setChecked(false);
+                        Static.T.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (openActivityOrFragment(TYPE.stackable, ShortcutCreateFragment.class, null)) {
+                                    if (Static.tablet) {
+                                        Menu menu = ((NavigationView) findViewById(R.id.nav_view)).getMenu();
+                                        for (int i = 0; i < menu.size(); i++) {
+                                            menu.getItem(i).setChecked(false);
+                                        }
+                                    }
                                 }
                             }
-                        }
+                        });
                         break;
                     case R.id.nav_settings: startActivity(new Intent(activity, SettingsActivity.class)); break;
                     case R.id.nav_enable_offline_mode:
@@ -285,5 +300,4 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
     protected int getRootViewId() {
         return R.id.activity_main;
     }
-
 }

@@ -1,7 +1,6 @@
 package com.bukhmastov.cdoitmo.converters;
 
 import android.content.Context;
-import android.os.AsyncTask;
 
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
@@ -15,26 +14,29 @@ import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ProtocolConverter extends AsyncTask<JSONArray, Void, JSONObject> {
+public class ProtocolConverter implements Runnable {
 
     private static final String TAG = "ProtocolConverter";
     public interface response {
         void finish(JSONObject json);
     }
     private final Context context;
-    private response delegate = null;
+    private response delegate;
+    private JSONArray protocol;
+    private int number_of_weeks;
 
-    public ProtocolConverter(Context context, response delegate){
+    public ProtocolConverter(Context context, JSONArray protocol, int number_of_weeks, response delegate) {
         this.context = context;
+        this.protocol = protocol;
+        this.number_of_weeks = number_of_weeks;
         this.delegate = delegate;
     }
 
     @Override
-    protected JSONObject doInBackground(JSONArray... params) {
-        Log.i(TAG, "started");
+    public void run() {
+        Log.v(TAG, "converting");
         JSONObject response = new JSONObject();
         try {
-            JSONArray protocol = params[0];
             for (int i = 0; i < protocol.length(); i++) {
                 JSONObject item = markConvert(protocol.getJSONObject(i));
                 String hash = Static.crypt(getCast(item));
@@ -72,18 +74,12 @@ public class ProtocolConverter extends AsyncTask<JSONArray, Void, JSONObject> {
                 protocol.put(i, item);
             }
             response.put("timestamp", Calendar.getInstance().getTimeInMillis());
-            response.put("number_of_weeks", params[1].getInt(0));
+            response.put("number_of_weeks", number_of_weeks);
             response.put("protocol", protocol);
         } catch (Exception e) {
             Static.error(e);
         }
-        return response;
-    }
-
-    @Override
-    protected void onPostExecute(JSONObject json) {
-        Log.i(TAG, "finished");
-        delegate.finish(json);
+        delegate.finish(response);
     }
 
     private static String getCast(JSONObject item) throws JSONException {

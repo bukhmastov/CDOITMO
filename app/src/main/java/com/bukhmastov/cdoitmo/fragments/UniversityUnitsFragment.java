@@ -95,7 +95,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
 
     @Override
     public void onRefresh() {
-        Log.v(TAG, "refreshed");
+        Log.v(TAG, "refreshing");
         load(true);
     }
 
@@ -182,28 +182,33 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                 if (!Static.OFFLINE_MODE) {
                     loadProvider(new IfmoRestClientResponseHandler() {
                         @Override
-                        public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
-                            if (statusCode == 200) {
-                                long now = Calendar.getInstance().getTimeInMillis();
-                                if (json != null && Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
-                                    try {
-                                        Storage.file.cache.put(activity, "university#units#" + uid, new JSONObject()
-                                                .put("timestamp", now)
-                                                .put("data", json)
-                                                .toString()
-                                        );
-                                    } catch (JSONException e) {
-                                        Static.error(e);
+                        public void onSuccess(final int statusCode, final JSONObject json, final JSONArray responseArr) {
+                            Static.T.runThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (statusCode == 200) {
+                                        long now = Calendar.getInstance().getTimeInMillis();
+                                        if (json != null && Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
+                                            try {
+                                                Storage.file.cache.put(activity, "university#units#" + uid, new JSONObject()
+                                                        .put("timestamp", now)
+                                                        .put("data", json)
+                                                        .toString()
+                                                );
+                                            } catch (JSONException e) {
+                                                Static.error(e);
+                                            }
+                                        }
+                                        timestamp = now;
+                                        if (json != null) {
+                                            history.put(uid, json.toString());
+                                        }
+                                        display(json);
+                                    } else {
+                                        loadFailed();
                                     }
                                 }
-                                timestamp = now;
-                                if (json != null) {
-                                    history.put(uid, json.toString());
-                                }
-                                display(json);
-                            } else {
-                                loadFailed();
-                            }
+                            });
                         }
                         @Override
                         public void onProgress(final int state) {
@@ -297,7 +302,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
         }
         IfmoRestClient.get(activity, "unit" + (unit_id.isEmpty() ? "" : "/" + unit_id), null, handler);
     }
-    private void loadFailed(){
+    private void loadFailed() {
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -394,8 +399,8 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                                 if (list_info.getChildCount() > 0) {
                                     list_info.setPadding(0, height, 0, 0);
                                 }
-                            } catch (Exception e) {
-                                e.printStackTrace();
+                            } catch (Exception ignore) {
+                                // ignore
                             }
                         }
                     });
@@ -414,77 +419,82 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
         });
     }
     private void displayContent(final JSONObject unit, final JSONArray divisions) {
-        Static.T.runOnUiThread(new Runnable() {
+        Static.T.runThread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    if (facultiesRecyclerViewAdapter != null) {
-                        ArrayList<FacultiesRecyclerViewAdapter.Item> items = new ArrayList<>();
-                        if (unit != null) {
-                            // основная информация
-                            final String address = getString(unit, "address");
-                            final String phone = getString(unit, "phone");
-                            final String email = getString(unit, "email");
-                            final String site = getString(unit, "site");
-                            final String working_hours = getString(unit, "working_hours");
-                            if (isValid(address) || isValid(phone) || isValid(email) || isValid(site) || isValid(working_hours)) {
-                                FacultiesRecyclerViewAdapter.Item item = new FacultiesRecyclerViewAdapter.Item();
-                                item.type = FacultiesRecyclerViewAdapter.TYPE_UNIT_STRUCTURE_COMMON;
-                                item.data = new JSONObject()
-                                        .put("header", activity.getString(R.string.faculty_section_general))
-                                        .put("address", isValid(address) ? address : null)
-                                        .put("phone", isValid(phone) ? phone : null)
-                                        .put("email", isValid(email) ? email : null)
-                                        .put("site", isValid(site) ? site : null)
-                                        .put("working_hours", isValid(working_hours) ? working_hours : null);
-                                items.add(item);
-                            }
-                            // глава
-                            final String head_post = getString(unit, "post");
-                            final String head_lastname = getString(unit, "lastname");
-                            final String head_firstname = getString(unit, "firstname");
-                            final String head_middlename = getString(unit, "middlename");
-                            final String head_avatar = getString(unit, "avatar");
-                            final int head_pid = getInt(unit, "ifmo_person_id");
-                            if (isValid(head_lastname) || isValid(head_firstname) || isValid(head_middlename)) {
-                                FacultiesRecyclerViewAdapter.Item item = new FacultiesRecyclerViewAdapter.Item();
-                                item.type = FacultiesRecyclerViewAdapter.TYPE_UNIT_STRUCTURE_HEAD;
-                                item.data = new JSONObject()
-                                        .put("header", isValid(head_post) ? head_post : activity.getString(R.string.faculty_section_head))
-                                        .put("head_lastname", isValid(head_lastname) ? head_lastname : null)
-                                        .put("head_firstname", isValid(head_firstname) ? head_firstname : null)
-                                        .put("head_middlename", isValid(head_middlename) ? head_middlename : null)
-                                        .put("head_avatar", isValid(head_avatar) ? head_avatar : null)
-                                        .put("head_pid", isValid(head_pid) ? head_pid : -1);
-                                items.add(item);
-                            }
-                        }
-                        if (divisions != null && divisions.length() > 0) {
-                            // дивизионы
-                            JSONArray d = new JSONArray();
-                            for (int i = 0; i < divisions.length(); i++) {
-                                final JSONObject division = divisions.getJSONObject(i);
-                                d.put(new JSONObject()
-                                        .put("title", getString(division, "unit_title"))
-                                        .put("id", getInt(division, "unit_id"))
-                                );
-                            }
+                    final ArrayList<FacultiesRecyclerViewAdapter.Item> items = new ArrayList<>();
+                    if (unit != null) {
+                        // основная информация
+                        final String address = getString(unit, "address");
+                        final String phone = getString(unit, "phone");
+                        final String email = getString(unit, "email");
+                        final String site = getString(unit, "site");
+                        final String working_hours = getString(unit, "working_hours");
+                        if (isValid(address) || isValid(phone) || isValid(email) || isValid(site) || isValid(working_hours)) {
                             FacultiesRecyclerViewAdapter.Item item = new FacultiesRecyclerViewAdapter.Item();
-                            item.type = FacultiesRecyclerViewAdapter.TYPE_UNIT_DIVISIONS;
+                            item.type = FacultiesRecyclerViewAdapter.TYPE_UNIT_STRUCTURE_COMMON;
                             item.data = new JSONObject()
-                                    .put("header", stack.size() == 0 ? null : activity.getString(R.string.faculty_section_divisions))
-                                    .put("divisions", d);
+                                    .put("header", activity.getString(R.string.faculty_section_general))
+                                    .put("address", isValid(address) ? address : null)
+                                    .put("phone", isValid(phone) ? phone : null)
+                                    .put("email", isValid(email) ? email : null)
+                                    .put("site", isValid(site) ? site : null)
+                                    .put("working_hours", isValid(working_hours) ? working_hours : null);
                             items.add(item);
-                            facultiesRecyclerViewAdapter.setOnDivisionClickListener(new FacultiesRecyclerViewAdapter.OnDivisionClickListener() {
-                                @Override
-                                public void onClick(int dep_id) {
-                                    stack.add(String.valueOf(dep_id));
-                                    load();
-                                }
-                            });
                         }
-                        facultiesRecyclerViewAdapter.addItem(items);
+                        // глава
+                        final String head_post = getString(unit, "post");
+                        final String head_lastname = getString(unit, "lastname");
+                        final String head_firstname = getString(unit, "firstname");
+                        final String head_middlename = getString(unit, "middlename");
+                        final String head_avatar = getString(unit, "avatar");
+                        final int head_pid = getInt(unit, "ifmo_person_id");
+                        if (isValid(head_lastname) || isValid(head_firstname) || isValid(head_middlename)) {
+                            FacultiesRecyclerViewAdapter.Item item = new FacultiesRecyclerViewAdapter.Item();
+                            item.type = FacultiesRecyclerViewAdapter.TYPE_UNIT_STRUCTURE_HEAD;
+                            item.data = new JSONObject()
+                                    .put("header", isValid(head_post) ? head_post : activity.getString(R.string.faculty_section_head))
+                                    .put("head_lastname", isValid(head_lastname) ? head_lastname : null)
+                                    .put("head_firstname", isValid(head_firstname) ? head_firstname : null)
+                                    .put("head_middlename", isValid(head_middlename) ? head_middlename : null)
+                                    .put("head_avatar", isValid(head_avatar) ? head_avatar : null)
+                                    .put("head_pid", isValid(head_pid) ? head_pid : -1);
+                            items.add(item);
+                        }
                     }
+                    if (divisions != null && divisions.length() > 0) {
+                        // дивизионы
+                        JSONArray d = new JSONArray();
+                        for (int i = 0; i < divisions.length(); i++) {
+                            final JSONObject division = divisions.getJSONObject(i);
+                            d.put(new JSONObject()
+                                    .put("title", getString(division, "unit_title"))
+                                    .put("id", getInt(division, "unit_id"))
+                            );
+                        }
+                        FacultiesRecyclerViewAdapter.Item item = new FacultiesRecyclerViewAdapter.Item();
+                        item.type = FacultiesRecyclerViewAdapter.TYPE_UNIT_DIVISIONS;
+                        item.data = new JSONObject()
+                                .put("header", stack.size() == 0 ? null : activity.getString(R.string.faculty_section_divisions))
+                                .put("divisions", d);
+                        items.add(item);
+                    }
+                    Static.T.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (facultiesRecyclerViewAdapter != null) {
+                                facultiesRecyclerViewAdapter.setOnDivisionClickListener(new FacultiesRecyclerViewAdapter.OnDivisionClickListener() {
+                                    @Override
+                                    public void onClick(int dep_id) {
+                                        stack.add(String.valueOf(dep_id));
+                                        load();
+                                    }
+                                });
+                                facultiesRecyclerViewAdapter.addItem(items);
+                            }
+                        }
+                    });
                 } catch (Exception e) {
                     Static.error(e);
                     loadFailed();
@@ -560,7 +570,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
         }
     }
 
-    private void draw(final int layoutId){
+    private void draw(final int layoutId) {
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {

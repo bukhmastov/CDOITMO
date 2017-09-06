@@ -7,6 +7,8 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.IdRes;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.ViewGroup;
@@ -71,10 +73,21 @@ public abstract class ConnectedActivity extends AppCompatActivity {
             }
             Fragment fragment = (Fragment) data.connectedFragmentClass.newInstance();
             if (stackElement.extras != null) fragment.setArguments(stackElement.extras);
-            getSupportFragmentManager().beginTransaction().replace(getRootViewId(), fragment).commit();
-            pushFragment(stackElement);
-            updateToolbar(data.title, data.image);
-            return true;
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            if (fragmentManager != null) {
+                FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                if (fragmentTransaction != null) {
+                    fragmentTransaction.replace(getRootViewId(), fragment);
+                    fragmentTransaction.commit();
+                    pushFragment(stackElement);
+                    updateToolbar(data.title, data.image);
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
         } catch (Exception e) {
             Static.error(e);
             return false;

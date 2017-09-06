@@ -107,7 +107,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
 
     @Override
     public void onRefresh() {
-        Log.v(TAG, "refreshed");
+        Log.v(TAG, "refreshing");
         person = null;
         load();
     }
@@ -122,7 +122,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                 }
                 loadProvider(new IfmoRestClientResponseHandler() {
                     @Override
-                    public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
+                    public void onSuccess(final int statusCode, final JSONObject json, final JSONArray responseArr) {
                         Static.T.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -132,23 +132,28 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                                 }
                             }
                         });
-                        if (statusCode == 200) {
-                            try {
-                                String post = json.getString("post");
-                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                                    json.put("post", android.text.Html.fromHtml(post, android.text.Html.FROM_HTML_MODE_LEGACY));
+                        Static.T.runThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (statusCode == 200) {
+                                    try {
+                                        String post = json.getString("post");
+                                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                                            json.put("post", android.text.Html.fromHtml(post, android.text.Html.FROM_HTML_MODE_LEGACY));
+                                        } else {
+                                            //noinspection deprecation
+                                            json.put("post", android.text.Html.fromHtml(post));
+                                        }
+                                    } catch (Exception ignore) {
+                                        // ignore
+                                    }
+                                    person = json;
+                                    display();
                                 } else {
-                                    //noinspection deprecation
-                                    json.put("post", android.text.Html.fromHtml(post));
+                                    loadFailed();
                                 }
-                            } catch (Exception ignore) {
-                                // ignore
                             }
-                            person = json;
-                            display();
-                        } else {
-                            loadFailed();
-                        }
+                        });
                     }
                     @Override
                     public void onProgress(final int state) {

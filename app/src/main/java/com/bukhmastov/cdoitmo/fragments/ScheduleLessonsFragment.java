@@ -87,30 +87,35 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
         } catch (Exception e){
             Static.error(e);
         }
-        if (!loaded) {
-            loaded = true;
-            String scope = null;
-            Activity activity = getActivity();
-            if (activity != null) {
-                Intent intent = activity.getIntent();
-                if (intent != null) {
-                    String action_extra = intent.getStringExtra("action_extra");
-                    if (action_extra != null) {
-                        intent.removeExtra("action_extra");
-                        scope = action_extra;
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                if (!loaded) {
+                    loaded = true;
+                    String scope = null;
+                    Activity activity = getActivity();
+                    if (activity != null) {
+                        Intent intent = activity.getIntent();
+                        if (intent != null) {
+                            String action_extra = intent.getStringExtra("action_extra");
+                            if (action_extra != null) {
+                                intent.removeExtra("action_extra");
+                                scope = action_extra;
+                            }
+                        }
                     }
+                    if (scope == null) {
+                        scope = scheduleLessons.getDefault();
+                    }
+                    Log.v(TAG, "search(" + scope + ")");
+                    search(scope);
+                }
+                if (reScheduleRequired) {
+                    reScheduleRequired = false;
+                    reSchedule(activity);
                 }
             }
-            if (scope == null) {
-                scope = scheduleLessons.getDefault();
-            }
-            Log.v(TAG, "search(" + scope + ")");
-            search(scope);
-        }
-        if (reScheduleRequired) {
-            reScheduleRequired = false;
-            reSchedule(activity);
-        }
+        });
     }
 
     @Override
@@ -223,14 +228,19 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
     @Override
     public void onSuccess(final JSONObject json) {
         final ScheduleLessonsFragment self = this;
-        Static.T.runOnUiThread(new Runnable() {
+        Static.T.runThread(new Runnable() {
             @Override
             public void run() {
                 Log.v(TAG, "success | json=" + (json == null ? "null" : "notnull"));
                 try {
                     if (json == null) throw new NullPointerException("json cannot be null");
                     schedule = json;
-                    activity.findViewById(R.id.fixed_tabs).setVisibility(View.GONE);
+                    Static.T.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            activity.findViewById(R.id.fixed_tabs).setVisibility(View.GONE);
+                        }
+                    });
                     if (Objects.equals(json.getString("type"), "teacher_picker")) {
                         schedule_cached = false;
                         JSONArray teachers = json.getJSONArray("list");
@@ -239,60 +249,88 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
                                 search(teachers.getJSONObject(0).getString("pid"));
                                 return;
                             }
-                            draw(R.layout.layout_schedule_lessons_teacher_picker);
-                            TextView teacher_picker_header = activity.findViewById(R.id.teacher_picker_header);
-                            ListView teacher_picker_list_view = activity.findViewById(R.id.teacher_picker_list_view);
-                            if (teacher_picker_header != null) teacher_picker_header.setText(R.string.choose_teacher);
-                            if (teacher_picker_list_view != null) {
-                                final ArrayList<HashMap<String, String>> teachersMap = new ArrayList<>();
-                                for (int i = 0; i < teachers.length(); i++) {
-                                    JSONObject teacher = teachers.getJSONObject(i);
-                                    HashMap<String, String> teacherMap = new HashMap<>();
-                                    teacherMap.put("pid", String.valueOf(teacher.getInt("pid")));
-                                    teacherMap.put("person", teacher.getString("person"));
-                                    teacherMap.put("post", teacher.getString("post"));
-                                    teachersMap.add(teacherMap);
-                                }
-                                teacher_picker_list_view.setAdapter(new TeacherPickerListView(activity, teachersMap));
-                                teacher_picker_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                                        Log.v(TAG, "teacher_picker_list_view clicked | scope=" + teachersMap.get(position).get("pid"));
-                                        search(teachersMap.get(position).get("pid"));
-                                    }
-                                });
+                            final ArrayList<HashMap<String, String>> teachersMap = new ArrayList<>();
+                            for (int i = 0; i < teachers.length(); i++) {
+                                JSONObject teacher = teachers.getJSONObject(i);
+                                HashMap<String, String> teacherMap = new HashMap<>();
+                                teacherMap.put("pid", String.valueOf(teacher.getInt("pid")));
+                                teacherMap.put("person", teacher.getString("person"));
+                                teacherMap.put("post", teacher.getString("post"));
+                                teachersMap.add(teacherMap);
                             }
+                            Static.T.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        draw(R.layout.layout_schedule_lessons_teacher_picker);
+                                        TextView teacher_picker_header = activity.findViewById(R.id.teacher_picker_header);
+                                        ListView teacher_picker_list_view = activity.findViewById(R.id.teacher_picker_list_view);
+                                        if (teacher_picker_header != null) {
+                                            teacher_picker_header.setText(R.string.choose_teacher);
+                                        }
+                                        if (teacher_picker_list_view != null) {
+                                            teacher_picker_list_view.setAdapter(new TeacherPickerListView(activity, teachersMap));
+                                            teacher_picker_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                                                public void onItemClick(final AdapterView<?> parent, final View view, final int position, final long id) {
+                                                    Static.T.runThread(new Runnable() {
+                                                        @Override
+                                                        public void run() {
+                                                            Log.v(TAG, "teacher_picker_list_view clicked | scope=" + teachersMap.get(position).get("pid"));
+                                                            search(teachersMap.get(position).get("pid"));
+                                                        }
+                                                    });
+                                                }
+                                            });
+                                        }
+                                    } catch (Exception e) {
+                                        Static.error(e);
+                                        onFailure(ScheduleLessons.FAILED_LOAD);
+                                    }
+                                }
+                            });
                         } else {
                             notFound();
                         }
                     } else {
                         schedule_cached = !Objects.equals(scheduleLessons.getCache(schedule.getString("cache_token")), "");
                         if (schedule.getJSONArray("schedule").length() > 0) {
-                            TabLayout schedule_tabs = activity.findViewById(R.id.fixed_tabs);
-                            schedule_tabs.setVisibility(View.VISIBLE);
-                            draw(R.layout.layout_schedule_lessons_tabs);
-                            ViewPager schedule_view = activity.findViewById(R.id.schedule_pager);
-                            if (schedule_view != null) {
-                                schedule_view.setAdapter(new PagerLessonsAdapter(getFragmentManager(), activity));
-                                schedule_view.addOnPageChangeListener(self);
-                                schedule_tabs.setupWithViewPager(schedule_view);
-                            }
-                            TabLayout.Tab tab;
-                            if (ScheduleLessonsFragment.tabSelected == -1) {
-                                int pref = Integer.parseInt(Storage.pref.get(activity, "pref_schedule_lessons_week", "-1"));
-                                if (pref == -1) {
-                                    int week = Static.getWeek(activity);
-                                    tab = schedule_tabs.getTabAt(week >= 0 ? (week % 2) + 1 : 0);
-                                } else {
-                                    tab = schedule_tabs.getTabAt(pref);
+                            final int week = Static.getWeek(activity);
+                            final int pref = Integer.parseInt(Storage.pref.get(activity, "pref_schedule_lessons_week", "-1"));
+                            Static.T.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        TabLayout schedule_tabs = activity.findViewById(R.id.fixed_tabs);
+                                        schedule_tabs.setVisibility(View.VISIBLE);
+                                        draw(R.layout.layout_schedule_lessons_tabs);
+                                        ViewPager schedule_view = activity.findViewById(R.id.schedule_pager);
+                                        if (schedule_view != null) {
+                                            // TODO here Fatal app crash, reason: getFragmentManager()
+                                            schedule_view.setAdapter(new PagerLessonsAdapter(getFragmentManager(), activity));
+                                            schedule_view.addOnPageChangeListener(self);
+                                            schedule_tabs.setupWithViewPager(schedule_view);
+                                        }
+                                        TabLayout.Tab tab;
+                                        if (ScheduleLessonsFragment.tabSelected == -1) {
+                                            if (pref == -1) {
+                                                tab = schedule_tabs.getTabAt(week >= 0 ? (week % 2) + 1 : 0);
+                                            } else {
+                                                tab = schedule_tabs.getTabAt(pref);
+                                            }
+                                        } else {
+                                            try {
+                                                tab = schedule_tabs.getTabAt(ScheduleLessonsFragment.tabSelected);
+                                            } catch (Exception e) {
+                                                tab = null;
+                                            }
+                                        }
+                                        if (tab != null) tab.select();
+                                    } catch (Exception e) {
+                                        Static.error(e);
+                                        onFailure(ScheduleLessons.FAILED_LOAD);
+                                    }
                                 }
-                            } else {
-                                try {
-                                    tab = schedule_tabs.getTabAt(ScheduleLessonsFragment.tabSelected);
-                                } catch (Exception e) {
-                                    tab = null;
-                                }
-                            }
-                            if (tab != null) tab.select();
+                            });
                         } else {
                             notFound();
                         }
@@ -359,7 +397,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
             @Override
             public void run() {
                 Log.v(TAG, "reSchedule");
-                new ScheduleLessonsAdditionalConverter(context, new ScheduleLessonsAdditionalConverter.response() {
+                new ScheduleLessonsAdditionalConverter(context, schedule, new ScheduleLessonsAdditionalConverter.response() {
                     @Override
                     public void finish(JSONObject json) {
                         Log.v(TAG, "reScheduled");
@@ -375,7 +413,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
                             Static.error(e);
                         }
                     }
-                }).execute(schedule);
+                }).run();
             }
         });
     }
@@ -393,12 +431,17 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
                         ScheduleLessons scheduleLessons = new ScheduleLessons(context);
                         scheduleLessons.setHandler(new ScheduleLessons.response() {
                             @Override
-                            public void onSuccess(JSONObject json) {
-                                Log.v(TAG, "getSchedule | with download | onSuccess | json=" + (json == null ? "null" : "notnull"));
-                                if (json != null) {
-                                    schedule = json;
-                                }
-                                handler.onReady(json);
+                            public void onSuccess(final JSONObject json) {
+                                Static.T.runThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Log.v(TAG, "getSchedule | with download | onSuccess | json=" + (json == null ? "null" : "notnull"));
+                                        if (json != null) {
+                                            schedule = json;
+                                        }
+                                        handler.onReady(json);
+                                    }
+                                });
                             }
                             @Override
                             public void onFailure(int state) {

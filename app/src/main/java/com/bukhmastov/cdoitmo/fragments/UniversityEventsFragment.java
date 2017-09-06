@@ -96,7 +96,7 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
 
     @Override
     public void onRefresh() {
-        Log.v(TAG, "refreshed");
+        Log.v(TAG, "refreshing");
         load(search, true);
     }
 
@@ -163,26 +163,31 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
                     self.search = search;
                     loadProvider(new IfmoRestClientResponseHandler() {
                         @Override
-                        public void onSuccess(int statusCode, JSONObject json, JSONArray responseArr) {
-                            if (statusCode == 200) {
-                                long now = Calendar.getInstance().getTimeInMillis();
-                                if (json != null && Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
-                                    try {
-                                        Storage.file.cache.put(activity, "university#events", new JSONObject()
-                                                .put("timestamp", now)
-                                                .put("data", json)
-                                                .toString()
-                                        );
-                                    } catch (JSONException e) {
-                                        Static.error(e);
+                        public void onSuccess(final int statusCode, final JSONObject json, final JSONArray responseArr) {
+                            Static.T.runThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (statusCode == 200) {
+                                        long now = Calendar.getInstance().getTimeInMillis();
+                                        if (json != null && Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
+                                            try {
+                                                Storage.file.cache.put(activity, "university#events", new JSONObject()
+                                                        .put("timestamp", now)
+                                                        .put("data", json)
+                                                        .toString()
+                                                );
+                                            } catch (JSONException e) {
+                                                Static.error(e);
+                                            }
+                                        }
+                                        events = json;
+                                        timestamp = now;
+                                        display();
+                                    } else {
+                                        loadFailed();
                                     }
                                 }
-                                events = json;
-                                timestamp = now;
-                                display();
-                            } else {
-                                loadFailed();
-                            }
+                            });
                         }
                         @Override
                         public void onProgress(final int state) {
@@ -353,7 +358,7 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
                                         loadProvider(new IfmoRestClientResponseHandler() {
                                             @Override
                                             public void onSuccess(int statusCode, final JSONObject json, JSONArray responseArr) {
-                                                Static.T.runOnUiThread(new Runnable() {
+                                                Static.T.runThread(new Runnable() {
                                                     @Override
                                                     public void run() {
                                                         try {
@@ -381,7 +386,12 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
                                                             displayContent(list);
                                                         } catch (Exception e) {
                                                             Static.error(e);
-                                                            eventsRecyclerViewAdapter.setState(R.id.load_more);
+                                                            Static.T.runOnUiThread(new Runnable() {
+                                                                @Override
+                                                                public void run() {
+                                                                    eventsRecyclerViewAdapter.setState(R.id.load_more);
+                                                                }
+                                                            });
                                                         }
                                                     }
                                                 });
@@ -431,8 +441,8 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
                                 if (events_list_info.getChildCount() > 0) {
                                     events_list_info.setPadding(0, height, 0, 0);
                                 }
-                            } catch (Exception e) {
-                                e.printStackTrace();
+                            } catch (Exception ignore) {
+                                // ignore
                             }
                         }
                     });
@@ -451,30 +461,40 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
         });
     }
     private void displayContent(final JSONArray list) {
-        Static.T.runOnUiThread(new Runnable() {
+        Static.T.runThread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    if (eventsRecyclerViewAdapter != null) {
-                        ArrayList<EventsRecyclerViewAdapter.Item> items = new ArrayList<>();
-                        for (int i = 0; i < list.length(); i++) {
-                            try {
-                                final JSONObject event = list.getJSONObject(i);
-                                EventsRecyclerViewAdapter.Item item = new EventsRecyclerViewAdapter.Item();
-                                item.type = EventsRecyclerViewAdapter.TYPE_MINOR;
-                                item.data = event;
-                                items.add(item);
-                            } catch (Exception e) {
-                                Static.error(e);
-                            }
-                        }
-                        eventsRecyclerViewAdapter.addItem(items);
-                        if (offset + limit < events.getInt("count")) {
-                            eventsRecyclerViewAdapter.setState(R.id.load_more);
-                        } else {
-                            eventsRecyclerViewAdapter.setState(R.id.no_more);
+                    final ArrayList<EventsRecyclerViewAdapter.Item> items = new ArrayList<>();
+                    for (int i = 0; i < list.length(); i++) {
+                        try {
+                            final JSONObject event = list.getJSONObject(i);
+                            EventsRecyclerViewAdapter.Item item = new EventsRecyclerViewAdapter.Item();
+                            item.type = EventsRecyclerViewAdapter.TYPE_MINOR;
+                            item.data = event;
+                            items.add(item);
+                        } catch (Exception e) {
+                            Static.error(e);
                         }
                     }
+                    Static.T.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                if (eventsRecyclerViewAdapter != null) {
+                                    eventsRecyclerViewAdapter.addItem(items);
+                                    if (offset + limit < events.getInt("count")) {
+                                        eventsRecyclerViewAdapter.setState(R.id.load_more);
+                                    } else {
+                                        eventsRecyclerViewAdapter.setState(R.id.no_more);
+                                    }
+                                }
+                            } catch (Exception e) {
+                                Static.error(e);
+                                loadFailed();
+                            }
+                        }
+                    });
                 } catch (Exception e) {
                     Static.error(e);
                     loadFailed();

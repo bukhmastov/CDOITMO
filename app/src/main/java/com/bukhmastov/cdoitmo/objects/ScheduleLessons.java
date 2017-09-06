@@ -50,7 +50,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
 
     @Override
     public void onRefresh() {
-        Log.v(TAG, "refreshed");
+        Log.v(TAG, "refreshing");
         search(ScheduleLessonsFragment.query, 0);
     }
 
@@ -127,46 +127,51 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                 if (getForce(cache, refresh_rate) && !Static.OFFLINE_MODE) {
                     IfmoRestClient.get(context, "schedule_lesson_group/" + group, null, new IfmoRestClientResponseHandler() {
                         @Override
-                        public void onSuccess(int statusCode, JSONObject responseObj, JSONArray responseArr) {
-                            if (statusCode == 200 && responseObj != null) {
-                                JSONObject template = getTemplate("group", cache_token, responseObj);
-                                if (template == null) {
-                                    handler.onFailure(FAILED_LOAD);
-                                    return;
-                                }
-                                new ScheduleLessonsConverter(new ScheduleLessonsConverter.response() {
-                                    @Override
-                                    public void finish(JSONObject json) {
-                                        try {
-                                            if (json.getJSONArray("schedule").length() > 0) putCache(cache_token, json.toString(), toCache);
-                                            if (additionalConversion) {
-                                                new ScheduleLessonsAdditionalConverter(context, new ScheduleLessonsAdditionalConverter.response() {
-                                                    @Override
-                                                    public void finish(JSONObject json) {
+                        public void onSuccess(final int statusCode, final JSONObject responseObj, final JSONArray responseArr) {
+                            Static.T.runThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (statusCode == 200 && responseObj != null) {
+                                        JSONObject template = getTemplate("group", cache_token, responseObj);
+                                        if (template == null) {
+                                            handler.onFailure(FAILED_LOAD);
+                                            return;
+                                        }
+                                        new ScheduleLessonsConverter(responseObj, template, new ScheduleLessonsConverter.response() {
+                                            @Override
+                                            public void finish(JSONObject json) {
+                                                try {
+                                                    if (json.getJSONArray("schedule").length() > 0) putCache(cache_token, json.toString(), toCache);
+                                                    if (additionalConversion) {
+                                                        new ScheduleLessonsAdditionalConverter(context, json, new ScheduleLessonsAdditionalConverter.response() {
+                                                            @Override
+                                                            public void finish(JSONObject json) {
+                                                                handler.onSuccess(json);
+                                                            }
+                                                        }).run();
+                                                    } else {
                                                         handler.onSuccess(json);
                                                     }
-                                                }).execute(json);
-                                            } else {
-                                                handler.onSuccess(json);
+                                                } catch (Exception e) {
+                                                    Static.error(e);
+                                                    handler.onSuccess(json);
+                                                }
                                             }
-                                        } catch (Exception e) {
-                                            Static.error(e);
-                                            handler.onSuccess(json);
+                                        }).run();
+                                    } else {
+                                        if (Objects.equals(cache, "")) {
+                                            handler.onFailure(FAILED_LOAD);
+                                        } else {
+                                            try {
+                                                handler.onSuccess(new JSONObject(cache));
+                                            } catch (JSONException e) {
+                                                Static.error(e);
+                                                handler.onFailure(FAILED_LOAD);
+                                            }
                                         }
                                     }
-                                }).execute(responseObj, template);
-                            } else {
-                                if (Objects.equals(cache, "")) {
-                                    handler.onFailure(FAILED_LOAD);
-                                } else {
-                                    try {
-                                        handler.onSuccess(new JSONObject(cache));
-                                    } catch (JSONException e) {
-                                        Static.error(e);
-                                        handler.onFailure(FAILED_LOAD);
-                                    }
                                 }
-                            }
+                            });
                         }
                         @Override
                         public void onProgress(int state) {
@@ -188,12 +193,12 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                     try {
                         Log.v(TAG, "searchGroup | from cache");
                         if (additionalConversion) {
-                            new ScheduleLessonsAdditionalConverter(context, new ScheduleLessonsAdditionalConverter.response() {
+                            new ScheduleLessonsAdditionalConverter(context, new JSONObject(cache), new ScheduleLessonsAdditionalConverter.response() {
                                 @Override
                                 public void finish(JSONObject json) {
                                     handler.onSuccess(json);
                                 }
-                            }).execute(new JSONObject(cache));
+                            }).run();
                         } else {
                             handler.onSuccess(new JSONObject(cache));
                         }
@@ -215,46 +220,51 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                 if (getForce(cache, refresh_rate) && !Static.OFFLINE_MODE) {
                     IfmoRestClient.get(context, "schedule_lesson_room/" + room, null, new IfmoRestClientResponseHandler() {
                         @Override
-                        public void onSuccess(int statusCode, JSONObject responseObj, JSONArray responseArr) {
-                            if (statusCode == 200 && responseObj != null) {
-                                JSONObject template = getTemplate("room", cache_token, responseObj);
-                                if (template == null) {
-                                    handler.onFailure(FAILED_LOAD);
-                                    return;
-                                }
-                                new ScheduleLessonsConverter(new ScheduleLessonsConverter.response() {
-                                    @Override
-                                    public void finish(JSONObject json) {
-                                        try {
-                                            if (json.getJSONArray("schedule").length() > 0) putCache(cache_token, json.toString(), toCache);
-                                            if (additionalConversion) {
-                                                new ScheduleLessonsAdditionalConverter(context, new ScheduleLessonsAdditionalConverter.response() {
-                                                    @Override
-                                                    public void finish(JSONObject json) {
+                        public void onSuccess(final int statusCode, final JSONObject responseObj, final JSONArray responseArr) {
+                            Static.T.runThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (statusCode == 200 && responseObj != null) {
+                                        JSONObject template = getTemplate("room", cache_token, responseObj);
+                                        if (template == null) {
+                                            handler.onFailure(FAILED_LOAD);
+                                            return;
+                                        }
+                                        new ScheduleLessonsConverter(responseObj, template, new ScheduleLessonsConverter.response() {
+                                            @Override
+                                            public void finish(JSONObject json) {
+                                                try {
+                                                    if (json.getJSONArray("schedule").length() > 0) putCache(cache_token, json.toString(), toCache);
+                                                    if (additionalConversion) {
+                                                        new ScheduleLessonsAdditionalConverter(context, json, new ScheduleLessonsAdditionalConverter.response() {
+                                                            @Override
+                                                            public void finish(JSONObject json) {
+                                                                handler.onSuccess(json);
+                                                            }
+                                                        }).run();
+                                                    } else {
                                                         handler.onSuccess(json);
                                                     }
-                                                }).execute(json);
-                                            } else {
-                                                handler.onSuccess(json);
+                                                } catch (Exception e) {
+                                                    Static.error(e);
+                                                    handler.onSuccess(json);
+                                                }
                                             }
-                                        } catch (Exception e) {
-                                            Static.error(e);
-                                            handler.onSuccess(json);
+                                        }).run();
+                                    } else {
+                                        if (Objects.equals(cache, "")) {
+                                            handler.onFailure(FAILED_LOAD);
+                                        } else {
+                                            try {
+                                                handler.onSuccess(new JSONObject(cache));
+                                            } catch (JSONException e) {
+                                                Static.error(e);
+                                                handler.onFailure(FAILED_LOAD);
+                                            }
                                         }
                                     }
-                                }).execute(responseObj, template);
-                            } else {
-                                if (Objects.equals(cache, "")) {
-                                    handler.onFailure(FAILED_LOAD);
-                                } else {
-                                    try {
-                                        handler.onSuccess(new JSONObject(cache));
-                                    } catch (JSONException e) {
-                                        Static.error(e);
-                                        handler.onFailure(FAILED_LOAD);
-                                    }
                                 }
-                            }
+                            });
                         }
                         @Override
                         public void onProgress(int state) {
@@ -276,12 +286,12 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                     try {
                         Log.v(TAG, "searchRoom | from cache");
                         if (additionalConversion) {
-                            new ScheduleLessonsAdditionalConverter(context, new ScheduleLessonsAdditionalConverter.response() {
+                            new ScheduleLessonsAdditionalConverter(context, new JSONObject(cache), new ScheduleLessonsAdditionalConverter.response() {
                                 @Override
                                 public void finish(JSONObject json) {
                                     handler.onSuccess(json);
                                 }
-                            }).execute(new JSONObject(cache));
+                            }).run();
                         } else {
                             handler.onSuccess(new JSONObject(cache));
                         }
@@ -303,46 +313,51 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                 if(getForce(cache, refresh_rate) && !Static.OFFLINE_MODE) {
                     IfmoRestClient.get(context, "schedule_lesson_person/" + teacherId, null, new IfmoRestClientResponseHandler() {
                         @Override
-                        public void onSuccess(int statusCode, JSONObject responseObj, JSONArray responseArr) {
-                            if (statusCode == 200 && responseObj != null) {
-                                JSONObject template = getTemplate("teacher", cache_token, responseObj);
-                                if (template == null) {
-                                    handler.onFailure(FAILED_LOAD);
-                                    return;
-                                }
-                                new ScheduleLessonsConverter(new ScheduleLessonsConverter.response() {
-                                    @Override
-                                    public void finish(JSONObject json) {
-                                        try {
-                                            if (json.getJSONArray("schedule").length() > 0) putCache(cache_token, json.toString(), toCache);
-                                            if (additionalConversion) {
-                                                new ScheduleLessonsAdditionalConverter(context, new ScheduleLessonsAdditionalConverter.response() {
-                                                    @Override
-                                                    public void finish(JSONObject json) {
+                        public void onSuccess(final int statusCode, final JSONObject responseObj, final JSONArray responseArr) {
+                            Static.T.runThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (statusCode == 200 && responseObj != null) {
+                                        JSONObject template = getTemplate("teacher", cache_token, responseObj);
+                                        if (template == null) {
+                                            handler.onFailure(FAILED_LOAD);
+                                            return;
+                                        }
+                                        new ScheduleLessonsConverter(responseObj, template, new ScheduleLessonsConverter.response() {
+                                            @Override
+                                            public void finish(JSONObject json) {
+                                                try {
+                                                    if (json.getJSONArray("schedule").length() > 0) putCache(cache_token, json.toString(), toCache);
+                                                    if (additionalConversion) {
+                                                        new ScheduleLessonsAdditionalConverter(context, json, new ScheduleLessonsAdditionalConverter.response() {
+                                                            @Override
+                                                            public void finish(JSONObject json) {
+                                                                handler.onSuccess(json);
+                                                            }
+                                                        }).run();
+                                                    } else {
                                                         handler.onSuccess(json);
                                                     }
-                                                }).execute(json);
-                                            } else {
-                                                handler.onSuccess(json);
+                                                } catch (Exception e) {
+                                                    Static.error(e);
+                                                    handler.onSuccess(json);
+                                                }
                                             }
-                                        } catch (Exception e) {
-                                            Static.error(e);
-                                            handler.onSuccess(json);
+                                        }).run();
+                                    } else {
+                                        if (Objects.equals(cache, "")) {
+                                            handler.onFailure(FAILED_LOAD);
+                                        } else {
+                                            try {
+                                                handler.onSuccess(new JSONObject(cache));
+                                            } catch (JSONException e) {
+                                                Static.error(e);
+                                                handler.onFailure(FAILED_LOAD);
+                                            }
                                         }
                                     }
-                                }).execute(responseObj, template);
-                            } else {
-                                if (Objects.equals(cache, "")) {
-                                    handler.onFailure(FAILED_LOAD);
-                                } else {
-                                    try {
-                                        handler.onSuccess(new JSONObject(cache));
-                                    } catch (JSONException e) {
-                                        Static.error(e);
-                                        handler.onFailure(FAILED_LOAD);
-                                    }
                                 }
-                            }
+                            });
                         }
                         @Override
                         public void onProgress(int state) {
@@ -364,12 +379,12 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                     try {
                         Log.v(TAG, "searchDefinedTeacher | from cache");
                         if (additionalConversion) {
-                            new ScheduleLessonsAdditionalConverter(context, new ScheduleLessonsAdditionalConverter.response() {
+                            new ScheduleLessonsAdditionalConverter(context, new JSONObject(cache), new ScheduleLessonsAdditionalConverter.response() {
                                 @Override
                                 public void finish(JSONObject json) {
                                     handler.onSuccess(json);
                                 }
-                            }).execute(new JSONObject(cache));
+                            }).run();
                         } else {
                             handler.onSuccess(new JSONObject(cache));
                         }

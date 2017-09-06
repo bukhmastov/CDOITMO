@@ -133,7 +133,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
 
     @Override
     public void onRefresh() {
-        Log.v(TAG, "refreshed");
+        Log.v(TAG, "refreshing");
         load(true);
     }
 
@@ -225,27 +225,32 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                     } else {
                         DeIfmoRestClient.get(activity, "eregisterlog?days=" + String.valueOf(number_of_weeks * 7), null, new DeIfmoRestClientResponseHandler() {
                             @Override
-                            public void onSuccess(int statusCode, JSONObject responseObj, JSONArray responseArr) {
-                                Log.v(TAG, "load | success | statusCode=" + statusCode + " | responseArr=" + (responseArr == null ? "null" : "notnull"));
-                                if (statusCode == 200 && responseArr != null) {
-                                    new ProtocolConverter(activity, new ProtocolConverter.response() {
-                                        @Override
-                                        public void finish(JSONObject json) {
-                                            try {
-                                                if (Storage.pref.get(activity, "pref_use_cache", true)) {
-                                                    Storage.file.cache.put(activity, "protocol#core", json.toString());
-                                                    Storage.file.perm.put(activity, "protocol_tracker#protocol", json.getJSONArray("protocol").toString());
+                            public void onSuccess(final int statusCode, final JSONObject responseObj, final JSONArray responseArr) {
+                                Static.T.runThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Log.v(TAG, "load | success | statusCode=" + statusCode + " | responseArr=" + (responseArr == null ? "null" : "notnull"));
+                                        if (statusCode == 200 && responseArr != null) {
+                                            new ProtocolConverter(activity, responseArr, number_of_weeks, new ProtocolConverter.response() {
+                                                @Override
+                                                public void finish(JSONObject json) {
+                                                    try {
+                                                        if (Storage.pref.get(activity, "pref_use_cache", true)) {
+                                                            Storage.file.cache.put(activity, "protocol#core", json.toString());
+                                                            Storage.file.perm.put(activity, "protocol_tracker#protocol", json.getJSONArray("protocol").toString());
+                                                        }
+                                                    } catch (JSONException e) {
+                                                        Static.error(e);
+                                                    }
+                                                    data = json;
+                                                    display();
                                                 }
-                                            } catch (JSONException e) {
-                                                Static.error(e);
-                                            }
-                                            data = json;
-                                            display();
+                                            }).run();
+                                        } else {
+                                            load(force, cache, attempt + 1);
                                         }
-                                    }).execute(responseArr, new JSONArray().put(number_of_weeks));
-                                } else {
-                                    load(force, cache, attempt + 1);
-                                }
+                                    }
+                                });
                             }
                             @Override
                             public void onProgress(final int state) {
@@ -368,21 +373,15 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
         });
     }
     private void display() {
-        final ProtocolFragment self = this;
-        Static.T.runOnUiThread(new Runnable() {
+        Static.T.runThread(new Runnable() {
             @Override
             public void run() {
                 Log.v(TAG, "display");
                 try {
                     if (data == null) throw new NullPointerException("data cannot be null");
-                    // отображаем интерфейс
-                    draw(R.layout.protocol_layout);
                     // отображаем нужный режим
                     switch (Storage.pref.get(activity, "pref_protocol_changes_mode", "advanced")) {
                         case "simple": {
-                            ViewGroup protocol_container = activity.findViewById(R.id.protocol_container);
-                            if (protocol_container == null) throw new NullPointerException("");
-                            protocol_container.addView(inflate(R.layout.protocol_layout_mode_simple));
                             // получаем список предметов для отображения
                             number_of_weeks = data.getInt("number_of_weeks");
                             JSONArray jsonArray = data.getJSONArray("protocol");
@@ -400,27 +399,44 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                                 hashMap.put("delta_negative", jsonObject.getDouble("cdoitmo_delta_double") < 0 ? "true" : "false");
                                 changes.add(hashMap);
                             }
-                            // работаем со списком
-                            ListView pl_list_view = activity.findViewById(R.id.pl_list_view);
-                            if (pl_list_view != null) {
-                                if (changes.size() > 0) {
-                                    pl_list_view.setAdapter(new ProtocolListView(activity, changes));
-                                } else {
-                                    ViewGroup mSwipeRefreshLayout = (SwipeRefreshLayout) activity.findViewById(R.id.swipe_container);
-                                    if (mSwipeRefreshLayout != null) {
-                                        mSwipeRefreshLayout.removeView(pl_list_view);
-                                        View view = inflate(R.layout.nothing_to_display);
-                                        ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_changes_for_period);
-                                        mSwipeRefreshLayout.addView(view);
+                            Static.T.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        // отображаем интерфейс
+                                        draw(R.layout.protocol_layout);
+                                        // отображаем интерфейс простого режима
+                                        ViewGroup protocol_container = activity.findViewById(R.id.protocol_container);
+                                        if (protocol_container == null) throw new NullPointerException("protocol_container is null");
+                                        protocol_container.addView(inflate(R.layout.protocol_layout_mode_simple));
+                                        // работаем со списком
+                                        ListView pl_list_view = activity.findViewById(R.id.pl_list_view);
+                                        if (pl_list_view != null) {
+                                            if (changes.size() == 0) {
+                                                ViewGroup swipe_container = activity.findViewById(R.id.swipe_container);
+                                                if (swipe_container != null) {
+                                                    swipe_container.removeView(pl_list_view);
+                                                    View view = inflate(R.layout.nothing_to_display);
+                                                    ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_changes_for_period);
+                                                    swipe_container.addView(view);
+                                                }
+                                            } else {
+                                                pl_list_view.setAdapter(new ProtocolListView(activity, changes));
+                                            }
+                                        }
+                                        displayCommonPart();
+                                    } catch (Exception e) {
+                                        Static.error(e);
+                                        loadFailed();
                                     }
                                 }
-                            }
+                            });
                             break;
                         }
                         case "advanced": {
                             // Формируем группированный список из изменений по предметам и датам
-                            JSONArray protocol = data.getJSONArray("protocol");
-                            SparseArray<JSONObject> groups = new SparseArray<>();
+                            final JSONArray protocol = data.getJSONArray("protocol");
+                            final SparseArray<JSONObject> groups = new SparseArray<>();
                             int key = 0;
                             for (int i = 0; i < protocol.length(); i++) {
                                 JSONObject item = protocol.getJSONObject(i);
@@ -465,53 +481,66 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                                     i--;
                                 }
                             }
-                            // Отображаем группированный список изменений
-                            ViewGroup protocol_container = activity.findViewById(R.id.protocol_container);
-                            if (protocol_container == null) throw new NullPointerException("");
-                            protocol_container.addView(inflate(R.layout.protocol_layout_mode_advanced));
-                            ViewGroup pl_advanced_container = activity.findViewById(R.id.pl_advanced_container);
-                            if (protocol.length() == 0) {
-                                ViewGroup mSwipeRefreshLayout = (SwipeRefreshLayout) activity.findViewById(R.id.swipe_container);
-                                if (mSwipeRefreshLayout != null) {
-                                    mSwipeRefreshLayout.removeAllViews();
-                                    View view = inflate(R.layout.nothing_to_display);
-                                    ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_changes_for_period);
-                                    mSwipeRefreshLayout.addView(view);
-                                }
-                            } else {
-                                for (int j = 0; j < groups.size(); j++) {
-                                    JSONObject group = groups.get(groups.keyAt(j));
-                                    String title = group.getString("subject");
-                                    JSONArray changes = group.getJSONArray("changes");
-                                    LinearLayout header = (LinearLayout) inflate(R.layout.protocol_layout_mode_advanced_header);
-                                    ((TextView) header.findViewById(R.id.lv_protocol_name)).setText(title);
-                                    pl_advanced_container.addView(header);
-                                    for (int i = 0; i < changes.length(); i++) {
-                                        JSONObject change = changes.getJSONObject(i);
-                                        JSONObject var = change.getJSONObject("var");
-                                        LinearLayout element = (LinearLayout) inflate(R.layout.protocol_layout_mode_advanced_change);
-                                        if (i == changes.length() - 1 && j != groups.size() - 1) {
-                                            Static.removeView(element.findViewById(R.id.lv_protocol_separator));
-                                        }
-                                        ((TextView) element.findViewById(R.id.lv_protocol_desc)).setText(var.getString("name") + " [" + var.getString("min") + "/" + var.getString("threshold") + "/" + var.getString("max") + "]");
-                                        ((TextView) element.findViewById(R.id.lv_protocol_meta)).setText(Objects.equals(change.getString("sign"), "..") ? "" : change.getString("sign") + " | " + change.getString("date"));
-                                        ((TextView) element.findViewById(R.id.lv_protocol_value)).setText(change.getString("value"));
-                                        TextView lv_protocol_delta = element.findViewById(R.id.lv_protocol_delta);
-                                        if (change.getDouble("cdoitmo_delta_double") != 0.0) {
-                                            lv_protocol_delta.setText(change.getString("cdoitmo_delta"));
-                                            try {
-                                                lv_protocol_delta.setTextColor(Static.resolveColor(activity, change.getDouble("cdoitmo_delta_double") < 0.0 ? R.attr.textColorDegrade : R.attr.textColorPassed));
-                                            } catch (Exception e) {
-                                                Static.error(e);
+                            Static.T.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        // отображаем интерфейс
+                                        draw(R.layout.protocol_layout);
+                                        // Отображаем группированный список изменений
+                                        ViewGroup protocol_container = activity.findViewById(R.id.protocol_container);
+                                        if (protocol_container == null) throw new NullPointerException("");
+                                        protocol_container.addView(inflate(R.layout.protocol_layout_mode_advanced));
+                                        ViewGroup pl_advanced_container = activity.findViewById(R.id.pl_advanced_container);
+                                        if (protocol.length() == 0) {
+                                            ViewGroup swipe_container = activity.findViewById(R.id.swipe_container);
+                                            if (swipe_container != null) {
+                                                swipe_container.removeAllViews();
+                                                View view = inflate(R.layout.nothing_to_display);
+                                                ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_changes_for_period);
+                                                swipe_container.addView(view);
                                             }
                                         } else {
-                                            lv_protocol_delta.setWidth(0);
-                                            lv_protocol_delta.setHeight(0);
+                                            for (int j = 0; j < groups.size(); j++) {
+                                                JSONObject group = groups.get(groups.keyAt(j));
+                                                String title = group.getString("subject");
+                                                JSONArray changes = group.getJSONArray("changes");
+                                                LinearLayout header = (LinearLayout) inflate(R.layout.protocol_layout_mode_advanced_header);
+                                                ((TextView) header.findViewById(R.id.lv_protocol_name)).setText(title);
+                                                pl_advanced_container.addView(header);
+                                                for (int i = 0; i < changes.length(); i++) {
+                                                    JSONObject change = changes.getJSONObject(i);
+                                                    JSONObject var = change.getJSONObject("var");
+                                                    LinearLayout element = (LinearLayout) inflate(R.layout.protocol_layout_mode_advanced_change);
+                                                    if (i == changes.length() - 1 && j != groups.size() - 1) {
+                                                        Static.removeView(element.findViewById(R.id.lv_protocol_separator));
+                                                    }
+                                                    ((TextView) element.findViewById(R.id.lv_protocol_desc)).setText(var.getString("name") + " [" + var.getString("min") + "/" + var.getString("threshold") + "/" + var.getString("max") + "]");
+                                                    ((TextView) element.findViewById(R.id.lv_protocol_meta)).setText(Objects.equals(change.getString("sign"), "..") ? "" : change.getString("sign") + " | " + change.getString("date"));
+                                                    ((TextView) element.findViewById(R.id.lv_protocol_value)).setText(change.getString("value"));
+                                                    TextView lv_protocol_delta = element.findViewById(R.id.lv_protocol_delta);
+                                                    if (change.getDouble("cdoitmo_delta_double") != 0.0) {
+                                                        lv_protocol_delta.setText(change.getString("cdoitmo_delta"));
+                                                        try {
+                                                            lv_protocol_delta.setTextColor(Static.resolveColor(activity, change.getDouble("cdoitmo_delta_double") < 0.0 ? R.attr.textColorDegrade : R.attr.textColorPassed));
+                                                        } catch (Exception e) {
+                                                            Static.error(e);
+                                                        }
+                                                    } else {
+                                                        lv_protocol_delta.setWidth(0);
+                                                        lv_protocol_delta.setHeight(0);
+                                                    }
+                                                    pl_advanced_container.addView(element);
+                                                }
+                                            }
                                         }
-                                        pl_advanced_container.addView(element);
+                                        displayCommonPart();
+                                    } catch (Exception e) {
+                                        Static.error(e);
+                                        loadFailed();
                                     }
                                 }
-                            }
+                            });
                             break;
                         }
                         default: {
@@ -521,12 +550,25 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                             break;
                         }
                     }
+                } catch (Exception e) {
+                    Static.error(e);
+                    loadFailed();
+                }
+            }
+        });
+    }
+    private void displayCommonPart() {
+        final ProtocolFragment self = this;
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
                     // работаем со свайпом
-                    SwipeRefreshLayout mSwipeRefreshLayout = activity.findViewById(R.id.swipe_container);
-                    if (mSwipeRefreshLayout != null) {
-                        mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
-                        mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
-                        mSwipeRefreshLayout.setOnRefreshListener(self);
+                    SwipeRefreshLayout swipe_container = activity.findViewById(R.id.swipe_container);
+                    if (swipe_container != null) {
+                        swipe_container.setColorSchemeColors(Static.colorAccent);
+                        swipe_container.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
+                        swipe_container.setOnRefreshListener(self);
                     }
                     // работаем с раскрывающимся списком
                     Spinner spinner_weeks = activity.findViewById(R.id.pl_weeks_spinner);
@@ -548,14 +590,19 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                         spinner_weeks.setSelection(data.getInt("number_of_weeks") - 1);
                         spinner_weeks_blocker = true;
                         spinner_weeks.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                            public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
-                                if (spinner_weeks_blocker) {
-                                    spinner_weeks_blocker = false;
-                                    return;
-                                }
-                                number_of_weeks = spinner_weeks_arr_values.get(position);
-                                Log.v(TAG, "spinner_weeks clicked | number_of_weeks=" + number_of_weeks);
-                                load(true);
+                            public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
+                                Static.T.runThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if (spinner_weeks_blocker) {
+                                            spinner_weeks_blocker = false;
+                                            return;
+                                        }
+                                        number_of_weeks = spinner_weeks_arr_values.get(position);
+                                        Log.v(TAG, "spinner_weeks clicked | number_of_weeks=" + number_of_weeks);
+                                        load(true);
+                                    }
+                                });
                             }
                             public void onNothingSelected(AdapterView<?> parent) {}
                         });

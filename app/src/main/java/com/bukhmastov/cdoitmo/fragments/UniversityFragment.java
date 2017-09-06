@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -56,8 +57,9 @@ public class UniversityFragment extends ConnectedFragment implements ViewPager.O
         super.onViewCreated(view, savedInstanceState);
         TabLayout main_tabs = activity.findViewById(R.id.scrollable_tabs);
         ViewPager university_pager = activity.findViewById(R.id.university_pager);
-        if (university_pager != null) {
-            university_pager.setAdapter(new PagerUniversityAdapter(getFragmentManager(), activity));
+        FragmentManager fragmentManager = getFragmentManager();
+        if (university_pager != null && fragmentManager != null) {
+            university_pager.setAdapter(new PagerUniversityAdapter(fragmentManager, activity));
             university_pager.addOnPageChangeListener(this);
             main_tabs.setupWithViewPager(university_pager);
         }
@@ -115,5 +117,4 @@ public class UniversityFragment extends ConnectedFragment implements ViewPager.O
 
     @Override
     public void onPageScrollStateChanged(int state) {}
-
 }

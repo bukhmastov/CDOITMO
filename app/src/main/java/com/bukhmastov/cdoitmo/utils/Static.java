@@ -263,16 +263,26 @@ public class Static {
         }
         return -1;
     }
-    public static void logout(Context context){
+    public static void logout(final Context context){
         Log.i(TAG, "logout");
-        new ProtocolTracker(context).stop();
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+            @Override
+            public void run() {
+                new ProtocolTracker(context).stop();
+            }
+        });
         Storage.file.all.clear(context);
         Static.logoutCurrent(context);
         Static.authorized = false;
     }
-    public static void logoutCurrent(Context context){
+    public static void logoutCurrent(final Context context){
         Log.i(TAG, "logoutCurrent");
-        new ProtocolTracker(context).stop();
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+            @Override
+            public void run() {
+                new ProtocolTracker(context).stop();
+            }
+        });
         Storage.file.general.delete(context, "users#current_login");
     }
     public static void lockOrientation(Activity activity, boolean lock){
@@ -455,18 +465,12 @@ public class Static {
                                 @Override
                                 public void run() {
                                     if (statusCode == 200 && responseArr != null) {
-                                        try {
-                                            JSONArray array = new JSONArray();
-                                            array.put(18);
-                                            new ProtocolConverter(context, new ProtocolConverter.response() {
-                                                @Override
-                                                public void finish(JSONObject json) {
-                                                    Log.i(TAG, "protocolChangesTrackSetup | uploaded");
-                                                }
-                                            }).execute(responseArr, array);
-                                        } catch (Exception e) {
-                                            Static.error(e);
-                                        }
+                                        new ProtocolConverter(context, responseArr, 18, new ProtocolConverter.response() {
+                                            @Override
+                                            public void finish(JSONObject json) {
+                                                Log.i(TAG, "protocolChangesTrackSetup | uploaded");
+                                            }
+                                        }).run();
                                     } else {
                                         protocolChangesTrackSetup(context, attempt + 1);
                                     }
@@ -502,6 +506,7 @@ public class Static {
         }
     }
     public static String getSafetyRequestParams(RequestParams params){
+        // TODO getSafetyRequestParams
         return (params == null ? "null" : (params.has("password") ? "<HIDDEN due to presence of the password>" : params.toString()));
     }
     public static class Translit {
@@ -577,11 +582,18 @@ public class Static {
             });
         }
         public static void displayUserData(final Context context, final NavigationView navigationView) {
-            Static.T.runOnUiThread(new Runnable() {
+            Static.T.runThread(new Runnable() {
                 @Override
                 public void run() {
-                    displayUserData(navigationView, R.id.user_name, Storage.file.perm.get(context, "user#name"));
-                    displayUserData(navigationView, R.id.user_group, Storage.file.perm.get(context, "user#group"));
+                    final String name = Storage.file.perm.get(context, "user#name");
+                    final String group = Storage.file.perm.get(context, "user#group");
+                    Static.T.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            displayUserData(navigationView, R.id.user_name, name);
+                            displayUserData(navigationView, R.id.user_group, group);
+                        }
+                    });
                 }
             });
         }

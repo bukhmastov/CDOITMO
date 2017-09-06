@@ -1,7 +1,6 @@
 package com.bukhmastov.cdoitmo.parse;
 
-import android.os.AsyncTask;
-
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 
 import org.htmlcleaner.HtmlCleaner;
@@ -9,25 +8,33 @@ import org.htmlcleaner.TagNode;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class Room101TimeEndPickParse extends AsyncTask<String, Void, JSONObject> {
+public class Room101TimeEndPickParse implements Runnable {
+
+    private static final String TAG = "R101TimeEndPickParse";
     public interface response {
         void finish(JSONObject json);
     }
     private response delegate = null;
-    public Room101TimeEndPickParse(response delegate){
+    private String data;
+
+    public Room101TimeEndPickParse(String data, response delegate) {
+        this.data = data;
         this.delegate = delegate;
     }
+
     @Override
-    protected JSONObject doInBackground(String... params) {
+    public void run() {
+        Log.v(TAG, "parsing");
         try {
             JSONObject response = new JSONObject();
             response.put("type", "time_end_pick");
             HtmlCleaner cleaner = new HtmlCleaner();
-            TagNode root = cleaner.clean(params[0].replace("&nbsp;", " "));
+            TagNode root = cleaner.clean(data.replace("&nbsp;", " "));
             TagNode[] tables = root.getElementsByAttValue("class", "d_table min_lmargin_table", true, false);
             if (tables == null || tables.length == 0) {
                 response.put("data", new JSONArray());
-                return response;
+                delegate.finish(response);
+                return;
             }
             TagNode table = tables[0];
             TagNode[] trs = table.getElementsByName("tbody", false)[0].getElementsByName("tr", false);
@@ -55,14 +62,10 @@ public class Room101TimeEndPickParse extends AsyncTask<String, Void, JSONObject>
                 }
             }
             response.put("data", times);
-            return response;
+            delegate.finish(response);
         } catch (Exception e) {
             Static.error(e);
-            return null;
+            delegate.finish(null);
         }
-    }
-    @Override
-    protected void onPostExecute(JSONObject json) {
-        delegate.finish(json);
     }
 }

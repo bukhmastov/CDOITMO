@@ -1,7 +1,5 @@
 package com.bukhmastov.cdoitmo.converters;
 
-import android.os.AsyncTask;
-
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 
@@ -11,24 +9,27 @@ import org.json.JSONObject;
 
 import java.util.Objects;
 
-public class ScheduleLessonsConverter extends AsyncTask<JSONObject, Void, JSONObject> {
+public class ScheduleLessonsConverter implements Runnable {
 
     private static final String TAG = "SLConverter";
     public interface response {
         void finish(JSONObject json);
     }
     private response delegate = null;
+    private JSONObject data;
+    private JSONObject template;
 
-    public ScheduleLessonsConverter(response delegate){
+    public ScheduleLessonsConverter(JSONObject data, JSONObject template, response delegate) {
+        this.data = data;
+        this.template = template;
         this.delegate = delegate;
     }
 
     @Override
-    protected JSONObject doInBackground(JSONObject... params) {
-        Log.i(TAG, "started");
-        JSONObject response = params[1];
+    public void run() {
+        Log.v(TAG, "converting");
         try {
-            JSONArray remoteSchedule = params[0].getJSONArray("schedule");
+            JSONArray remoteSchedule = data.getJSONArray("schedule");
             JSONArray schedule = new JSONArray();
             for (int i = 0; i < 7; i++) {
                 JSONObject dayObj = new JSONObject();
@@ -83,20 +84,14 @@ public class ScheduleLessonsConverter extends AsyncTask<JSONObject, Void, JSONOb
                 dayObj.put("lessons", lessons);
                 schedule.put(i, dayObj);
             }
-            response.put("schedule", schedule);
+            template.put("schedule", schedule);
         } catch (Exception e) {
             Static.error(e);
         }
-        return response;
+        delegate.finish(template);
     }
 
     private String get(JSONObject json, String key, String replace) throws JSONException {
         return json.has(key) && json.get(key).toString() != null && !Objects.equals(json.get(key).toString(), "") && !Objects.equals(json.get(key).toString(), "null") ? json.get(key).toString() : replace;
-    }
-
-    @Override
-    protected void onPostExecute(JSONObject json) {
-        Log.i(TAG, "finished");
-        delegate.finish(json);
     }
 }

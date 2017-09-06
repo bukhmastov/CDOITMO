@@ -305,5 +305,4 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
             }
         });
     }
-
 }

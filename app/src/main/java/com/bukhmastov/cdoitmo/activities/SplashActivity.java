@@ -99,7 +99,7 @@ public class SplashActivity extends AppCompatActivity {
                 Static.error(e);
             }
         }
-        private static void apply(Context context, int versionCode) {
+        private static void apply(final Context context, final int versionCode) {
             Log.i(TAG, "Wipe apply for versionCode " + versionCode);
             switch (versionCode) {
                 case 26: {
@@ -133,7 +133,12 @@ public class SplashActivity extends AppCompatActivity {
                 case 71: {
                     Storage.pref.delete(context, "pref_open_drawer_at_startup");
                     Storage.pref.put(context, "pref_first_launch", Storage.file.general.get(context, "users#list", "").trim().isEmpty());
-                    new ProtocolTracker(context).reset();
+                    Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+                        @Override
+                        public void run() {
+                            new ProtocolTracker(context).reset();
+                        }
+                    });
                     break;
                 }
                 case 78: {

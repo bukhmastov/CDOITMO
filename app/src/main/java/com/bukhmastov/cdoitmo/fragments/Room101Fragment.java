@@ -97,7 +97,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
 
     @Override
     public void onRefresh() {
-        Log.v(TAG, "refreshed");
+        Log.v(TAG, "refreshing");
         load(true);
     }
 
@@ -364,57 +364,72 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                 params.put("password", Storage.file.perm.get(context, "user#password"));
                 Room101Client.post(context, "index.php", params, new Room101ClientResponseHandler() {
                     @Override
-                    public void onSuccess(int statusCode, String response) {
-                        Log.v(TAG, "execute | scope=" + scope + " | success(not really) | statusCode=" + statusCode);
-                        if (response.contains("Доступ запрещен") || (response.contains("Неверный") && response.contains("логин/пароль"))) {
-                            responseHandler.onFailure(Room101Client.FAILED_AUTH, Room101Client.STATUS_CODE_EMPTY, null);
-                        } else {
-                            responseHandler.onFailure(Room101Client.FAILED_EXPECTED_REDIRECTION, Room101Client.STATUS_CODE_EMPTY, null);
-                        }
-                    }
-                    @Override
-                    public void onProgress(int state) {
-                        Log.v(TAG, "execute | scope=" + scope + " | progress " + state);
-                        responseHandler.onProgress(state);
-                    }
-                    @Override
-                    public void onFailure(int state, int statusCode, Header[] headers) {
-                        Log.v(TAG, "execute | scope=" + scope + " | failure(rather success) | statusCode=" + statusCode);
-                        if (statusCode == 302) {
-                            boolean found = false;
-                            for (Header header : headers) {
-                                if (Objects.equals(header.getName(), "Location")) {
-                                    String url = header.getValue().trim();
-                                    if (!url.isEmpty()) {
-                                        found = true;
-                                        Room101Client.get(context, url, null, new Room101ClientResponseHandler() {
-                                            @Override
-                                            public void onSuccess(int statusCode, String response) {
-                                                responseHandler.onSuccess(statusCode, response);
-                                            }
-                                            @Override
-                                            public void onProgress(int state) {
-                                                responseHandler.onProgress(state);
-                                            }
-                                            @Override
-                                            public void onFailure(int state, int statusCode, Header[] headers) {
-                                                responseHandler.onFailure(state, statusCode, headers);
-                                            }
-                                            @Override
-                                            public void onNewHandle(RequestHandle requestHandle) {
-                                                responseHandler.onNewHandle(requestHandle);
-                                            }
-                                        });
-                                    }
-                                    break;
+                    public void onSuccess(final int statusCode, final String response) {
+                        Static.T.runThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Log.v(TAG, "execute | scope=" + scope + " | success(not really) | statusCode=" + statusCode);
+                                if (response.contains("Доступ запрещен") || (response.contains("Неверный") && response.contains("логин/пароль"))) {
+                                    responseHandler.onFailure(Room101Client.FAILED_AUTH, Room101Client.STATUS_CODE_EMPTY, null);
+                                } else {
+                                    responseHandler.onFailure(Room101Client.FAILED_EXPECTED_REDIRECTION, Room101Client.STATUS_CODE_EMPTY, null);
                                 }
                             }
-                            if (!found) {
-                                responseHandler.onFailure(Room101Client.FAILED_EXPECTED_REDIRECTION, Room101Client.STATUS_CODE_EMPTY, null);
+                        });
+                    }
+                    @Override
+                    public void onProgress(final int state) {
+                        Static.T.runThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Log.v(TAG, "execute | scope=" + scope + " | progress " + state);
+                                responseHandler.onProgress(state);
                             }
-                        } else {
-                            responseHandler.onFailure(Room101Client.FAILED_EXPECTED_REDIRECTION, Room101Client.STATUS_CODE_EMPTY, null);
-                        }
+                        });
+                    }
+                    @Override
+                    public void onFailure(final int state, final int statusCode, final Header[] headers) {
+                        Static.T.runThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Log.v(TAG, "execute | scope=" + scope + " | failure(rather success) | statusCode=" + statusCode);
+                                if (statusCode == 302) {
+                                    boolean found = false;
+                                    for (Header header : headers) {
+                                        if (Objects.equals(header.getName(), "Location")) {
+                                            String url = header.getValue().trim();
+                                            if (!url.isEmpty()) {
+                                                found = true;
+                                                Room101Client.get(context, url, null, new Room101ClientResponseHandler() {
+                                                    @Override
+                                                    public void onSuccess(int statusCode, String response) {
+                                                        responseHandler.onSuccess(statusCode, response);
+                                                    }
+                                                    @Override
+                                                    public void onProgress(int state) {
+                                                        responseHandler.onProgress(state);
+                                                    }
+                                                    @Override
+                                                    public void onFailure(int state, int statusCode, Header[] headers) {
+                                                        responseHandler.onFailure(state, statusCode, headers);
+                                                    }
+                                                    @Override
+                                                    public void onNewHandle(RequestHandle requestHandle) {
+                                                        responseHandler.onNewHandle(requestHandle);
+                                                    }
+                                                });
+                                            }
+                                            break;
+                                        }
+                                    }
+                                    if (!found) {
+                                        responseHandler.onFailure(Room101Client.FAILED_EXPECTED_REDIRECTION, Room101Client.STATUS_CODE_EMPTY, null);
+                                    }
+                                } else {
+                                    responseHandler.onFailure(Room101Client.FAILED_EXPECTED_REDIRECTION, Room101Client.STATUS_CODE_EMPTY, null);
+                                }
+                            }
+                        });
                     }
                     @Override
                     public void onNewHandle(RequestHandle requestHandle) {
@@ -468,7 +483,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
             }
         });
     }
-    private void load(final boolean force, final String cache){
+    private void load(final boolean force, final String cache) {
         Static.T.runThread(new Runnable() {
             @Override
             public void run() {
@@ -490,46 +505,51 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                 if (!Static.OFFLINE_MODE) {
                     execute(activity, "delRequest", new Room101ClientResponseHandler() {
                         @Override
-                        public void onSuccess(int statusCode, String response) {
-                            Log.v(TAG, "load | success | statusCode=" + statusCode);
-                            if (statusCode == 200) {
-                                new Room101ViewRequestParse(new Room101ViewRequestParse.response() {
-                                    @Override
-                                    public void finish(JSONObject json) {
-                                        if (json != null) {
-                                            try {
-                                                json = new JSONObject()
-                                                        .put("timestamp", Calendar.getInstance().getTimeInMillis())
-                                                        .put("data", json);
-                                                if (Storage.pref.get(activity, "pref_use_cache", true)) {
-                                                    Storage.file.cache.put(activity, "room101#core", json.toString());
-                                                }
-                                                data = json;
-                                                display();
-                                            } catch (JSONException e) {
-                                                Static.error(e);
-                                                if (data != null) {
-                                                    display();
+                        public void onSuccess(final int statusCode, final String response) {
+                            Static.T.runThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.v(TAG, "load | success | statusCode=" + statusCode);
+                                    if (statusCode == 200) {
+                                        new Room101ViewRequestParse(activity, response, new Room101ViewRequestParse.response() {
+                                            @Override
+                                            public void finish(JSONObject json) {
+                                                if (json != null) {
+                                                    try {
+                                                        json = new JSONObject()
+                                                                .put("timestamp", Calendar.getInstance().getTimeInMillis())
+                                                                .put("data", json);
+                                                        if (Storage.pref.get(activity, "pref_use_cache", true)) {
+                                                            Storage.file.cache.put(activity, "room101#core", json.toString());
+                                                        }
+                                                        data = json;
+                                                        display();
+                                                    } catch (JSONException e) {
+                                                        Static.error(e);
+                                                        if (data != null) {
+                                                            display();
+                                                        } else {
+                                                            loadFailed();
+                                                        }
+                                                    }
                                                 } else {
-                                                    loadFailed();
+                                                    if (data != null) {
+                                                        display();
+                                                    } else {
+                                                        loadFailed();
+                                                    }
                                                 }
                                             }
+                                        }).run();
+                                    } else {
+                                        if (data != null) {
+                                            display();
                                         } else {
-                                            if (data != null) {
-                                                display();
-                                            } else {
-                                                loadFailed();
-                                            }
+                                            loadFailed();
                                         }
                                     }
-                                }, activity).execute(response);
-                            } else {
-                                if (data != null) {
-                                    display();
-                                } else {
-                                    loadFailed();
                                 }
-                            }
+                            });
                         }
                         @Override
                         public void onProgress(final int state) {

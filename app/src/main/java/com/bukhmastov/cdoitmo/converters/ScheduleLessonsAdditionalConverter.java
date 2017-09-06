@@ -1,7 +1,6 @@
 package com.bukhmastov.cdoitmo.converters;
 
 import android.content.Context;
-import android.os.AsyncTask;
 
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
 import com.bukhmastov.cdoitmo.utils.Log;
@@ -20,28 +19,29 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ScheduleLessonsAdditionalConverter extends AsyncTask<JSONObject, Void, JSONObject> {
+public class ScheduleLessonsAdditionalConverter implements Runnable {
 
     private static final String TAG = "SLAdditionalConverter";
     public interface response {
         void finish(JSONObject json);
     }
     private final Context context;
+    private JSONObject data;
     private response delegate = null;
 
-    public ScheduleLessonsAdditionalConverter(Context context, response delegate){
+    public ScheduleLessonsAdditionalConverter(Context context, JSONObject data, response delegate) {
         this.context = context;
+        this.data = data;
         this.delegate = delegate;
     }
 
     @Override
-    protected JSONObject doInBackground(JSONObject... params) {
-        Log.i(TAG, "started");
-        JSONObject response = params[0];
+    public void run() {
+        Log.v(TAG, "converting");
         try {
-            String cache_token = response.getString("cache_token");
+            String cache_token = data.getString("cache_token");
             if (cache_token.isEmpty()) throw new Exception("cache_token is empty");
-            JSONArray schedule = response.getJSONArray("schedule");
+            JSONArray schedule = data.getJSONArray("schedule");
             JSONArray scheduleAdded = string2json(Storage.file.perm.get(context, "schedule_lessons#added#" + cache_token, ""));
             JSONArray scheduleReduced = string2json(Storage.file.perm.get(context, "schedule_lessons#reduced#" + cache_token, ""));
             for (int i = 0; i < schedule.length(); i++) {
@@ -92,7 +92,7 @@ public class ScheduleLessonsAdditionalConverter extends AsyncTask<JSONObject, Vo
         } catch (Exception e) {
             Static.error(e);
         }
-        return response;
+        delegate.finish(data);
     }
 
     private JSONArray string2json(String text) throws JSONException {
@@ -134,11 +134,5 @@ public class ScheduleLessonsAdditionalConverter extends AsyncTask<JSONObject, Vo
             this.ts = ts;
             this.lesson = lesson;
         }
-    }
-
-    @Override
-    protected void onPostExecute(JSONObject json) {
-        Log.i(TAG, "finished");
-        delegate.finish(json);
     }
 }

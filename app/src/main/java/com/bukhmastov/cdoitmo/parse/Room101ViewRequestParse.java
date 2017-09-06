@@ -1,8 +1,8 @@
 package com.bukhmastov.cdoitmo.parse;
 
 import android.content.Context;
-import android.os.AsyncTask;
 
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 
 import org.htmlcleaner.HtmlCleaner;
@@ -15,22 +15,29 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Room101ViewRequestParse extends AsyncTask<String, Void, JSONObject> {
+public class Room101ViewRequestParse implements Runnable {
+
+    private static final String TAG = "R101ViewRequestParse";
     public interface response {
         void finish(JSONObject json);
     }
     private response delegate = null;
     private Context context = null;
-    public Room101ViewRequestParse(response delegate, Context context){
-        this.delegate = delegate;
+    private String data;
+
+    public Room101ViewRequestParse(Context context, String data, response delegate) {
         this.context = context;
+        this.data = data;
+        this.delegate = delegate;
     }
+
     @Override
-    protected JSONObject doInBackground(String... params) {
+    public void run() {
+        Log.v(TAG, "parsing");
         try {
             Matcher m;
             HtmlCleaner cleaner = new HtmlCleaner();
-            TagNode root = cleaner.clean(params[0].replace("&nbsp;", " "));
+            TagNode root = cleaner.clean(data.replace("&nbsp;", " "));
             JSONObject response = new JSONObject();
             TagNode multi_table = root.getElementsByAttValue("class", "multi_table", true, false)[0];
             TagNode[] d_table = multi_table.getElementsByName("table", true);
@@ -82,14 +89,10 @@ public class Room101ViewRequestParse extends AsyncTask<String, Void, JSONObject>
                 }
             }
             response.put("sessions", sessions);
-            return response;
+            delegate.finish(response);
         } catch (Exception e) {
             Static.error(e);
-            return null;
+            delegate.finish(null);
         }
-    }
-    @Override
-    protected void onPostExecute(JSONObject json) {
-        delegate.finish(json);
     }
 }

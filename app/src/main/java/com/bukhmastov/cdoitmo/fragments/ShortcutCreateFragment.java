@@ -73,5 +73,4 @@ public class ShortcutCreateFragment extends ConnectedFragment implements Shortcu
         Log.v(TAG, "onError");
         activity.back();
     }
-
 }

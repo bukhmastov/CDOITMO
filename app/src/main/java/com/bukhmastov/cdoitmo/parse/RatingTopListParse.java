@@ -1,7 +1,6 @@
 package com.bukhmastov.cdoitmo.parse;
 
-import android.os.AsyncTask;
-
+import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 
 import org.htmlcleaner.HtmlCleaner;
@@ -13,18 +12,27 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class RatingTopListParse extends AsyncTask<String, Void, JSONObject> {
+public class RatingTopListParse implements Runnable {
+
+    private static final String TAG = "RatingTopListParse";
     public interface response {
         void finish(JSONObject json);
     }
     private response delegate = null;
-    public RatingTopListParse(response delegate){
+    private String data;
+    private String username;
+
+    public RatingTopListParse(String data, String username, response delegate) {
+        this.data = data;
+        this.username = username;
         this.delegate = delegate;
     }
+
     @Override
-    protected JSONObject doInBackground(String... params) {
+    public void run() {
+        Log.v(TAG, "parsing");
         try {
-            String response = params[0].replace("&nbsp;", " ");
+            String response = data.replace("&nbsp;", " ");
             HtmlCleaner cleaner = new HtmlCleaner();
             TagNode root = cleaner.clean(response);
             JSONObject json = new JSONObject();
@@ -59,7 +67,7 @@ public class RatingTopListParse extends AsyncTask<String, Void, JSONObject> {
                     user.put("group", "");
                     user.put("department", "");
                 }
-                user.put("is_me", Objects.equals(fio, params[1]));
+                user.put("is_me", Objects.equals(fio, username));
                 TagNode[] is = tds[2].getAllElements(false);
                 if(is != null && is.length > 0){
                     m = Pattern.compile("^icon-expand_.* (.*)$").matcher(is[0].getAttributeByName("class"));
@@ -76,14 +84,10 @@ public class RatingTopListParse extends AsyncTask<String, Void, JSONObject> {
                 list.put(user);
             }
             json.put("list", list);
-            return json;
+            delegate.finish(json);
         } catch (Exception e) {
             Static.error(e);
-            return null;
+            delegate.finish(null);
         }
-    }
-    @Override
-    protected void onPostExecute(JSONObject json) {
-        delegate.finish(json);
     }
 }

@@ -115,17 +115,22 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                         }
                     }
                     @Override
-                    public void onSuccess(JSONObject json) {
-                        try {
-                            JSONObject jsonObject = new JSONObject();
-                            jsonObject.put("timestamp", Calendar.getInstance().getTimeInMillis());
-                            jsonObject.put("content", json);
-                            ScheduleLessonsWidgetConfigureActivity.savePref(context, appWidgetId, "cache", jsonObject.toString());
-                            display(context, appWidgetManager, appWidgetId);
-                        } catch (Exception e){
-                            Static.error(e);
-                            failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_show_schedule));
-                        }
+                    public void onSuccess(final JSONObject json) {
+                        Static.T.runThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    JSONObject jsonObject = new JSONObject();
+                                    jsonObject.put("timestamp", Calendar.getInstance().getTimeInMillis());
+                                    jsonObject.put("content", json);
+                                    ScheduleLessonsWidgetConfigureActivity.savePref(context, appWidgetId, "cache", jsonObject.toString());
+                                    display(context, appWidgetManager, appWidgetId);
+                                } catch (Exception e) {
+                                    Static.error(e);
+                                    failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_show_schedule));
+                                }
+                            }
+                        });
                     }
                     @Override
                     public void onNewHandle(RequestHandle requestHandle) {}
@@ -140,12 +145,12 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         });
     }
     private static void progress(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final JSONObject settings) {
-        Static.T.runOnUiThread(new Runnable() {
+        Static.T.runThread(new Runnable() {
             @Override
             public void run() {
                 Log.v(TAG, "progress | appWidgetId=" + appWidgetId);
                 Colors colors = getColors(settings);
-                RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget);
+                final RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget);
                 views.setInt(R.id.widget_content, "setBackgroundColor", colors.background);
                 views.setInt(R.id.widget_header, "setBackgroundColor", colors.background);
                 views.setInt(R.id.widget_title, "setTextColor", colors.text);
@@ -154,12 +159,17 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 views.addView(R.id.widget_container, new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget_loading));
                 views.setInt(R.id.slw_loading_text, "setTextColor", colors.text);
                 bindOpen(context, appWidgetId, views);
-                appWidgetManager.updateAppWidget(appWidgetId, views);
+                Static.T.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        appWidgetManager.updateAppWidget(appWidgetId, views);
+                    }
+                });
             }
         });
     }
     private static void display(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId) {
-        Static.T.runOnUiThread(new Runnable() {
+        Static.T.runThread(new Runnable() {
             @Override
             public void run() {
                 Log.v(TAG, "display | appWidgetId=" + appWidgetId);
@@ -192,9 +202,9 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                     views.setViewVisibility(R.id.widget_day_title, View.VISIBLE);
                     views.setTextViewText(R.id.widget_day_title, title + (week == 0 ? " (" + context.getString(R.string.tab_even) + ")" : (week == 1 ? " (" + context.getString(R.string.tab_odd) + ")" : "")));
                     views.setInt(R.id.widget_day_title, "setTextColor", colors.text);
-                    new ScheduleLessonsAdditionalConverter(context, new ScheduleLessonsAdditionalConverter.response() {
+                    new ScheduleLessonsAdditionalConverter(context, cache.getJSONObject("content"), new ScheduleLessonsAdditionalConverter.response() {
                         @Override
-                        public void finish(JSONObject content) {
+                        public void finish(final JSONObject content) {
                             ScheduleLessonsWidgetConfigureActivity.savePref(context, appWidgetId, "cache_converted", content.toString());
                             Intent adapter = new Intent(context, ScheduleLessonsWidgetService.class);
                             adapter.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
@@ -202,10 +212,15 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                             views.setRemoteAdapter(R.id.slw_day_schedule, adapter);
                             bindRefresh(context, appWidgetId, views);
                             bindOpen(context, appWidgetId, views);
-                            appWidgetManager.updateAppWidget(appWidgetId, views);
-                            appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.slw_day_schedule);
+                            Static.T.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    appWidgetManager.updateAppWidget(appWidgetId, views);
+                                    appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.slw_day_schedule);
+                                }
+                            });
                         }
-                    }).execute(cache.getJSONObject("content"));
+                    }).run();
                 } catch (Exception e) {
                     if (!(Objects.equals(e.getMessage(), "settings cannot be null") || Objects.equals(e.getMessage(), "cache cannot be null"))) {
                         Static.error(e);
@@ -220,12 +235,12 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         });
     }
     private static void failed(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final JSONObject settings, final String text) {
-        Static.T.runOnUiThread(new Runnable() {
+        Static.T.runThread(new Runnable() {
             @Override
             public void run() {
                 Log.v(TAG, "failed | appWidgetId=" + appWidgetId + " | text=" + text);
                 Colors colors = getColors(settings);
-                RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget);
+                final RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget);
                 views.setInt(R.id.widget_content, "setBackgroundColor", colors.background);
                 views.setInt(R.id.widget_header, "setBackgroundColor", colors.background);
                 views.setInt(R.id.widget_title, "setTextColor", colors.text);
@@ -238,17 +253,22 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 views.setImageViewBitmap(R.id.slw_message_icon, getBitmap(context, R.drawable.ic_widget_error_outline, colors.text));
                 bindRefresh(context, appWidgetId, views);
                 bindOpen(context, appWidgetId, views);
-                appWidgetManager.updateAppWidget(appWidgetId, views);
+                Static.T.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        appWidgetManager.updateAppWidget(appWidgetId, views);
+                    }
+                });
             }
         });
     }
     private static void needPreparations(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId) {
-        Static.T.runOnUiThread(new Runnable() {
+        Static.T.runThread(new Runnable() {
             @Override
             public void run() {
                 Log.v(TAG, "needPreparations | appWidgetId=" + appWidgetId);
                 Colors colors = getColors();
-                RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget);
+                final RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget);
                 views.setInt(R.id.widget_content, "setBackgroundColor", colors.background);
                 views.setInt(R.id.widget_header, "setBackgroundColor", colors.background);
                 views.setInt(R.id.widget_title, "setTextColor", colors.text);
@@ -260,7 +280,12 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 views.setImageViewBitmap(R.id.slw_message_icon, getBitmap(context, R.drawable.ic_widget_info_outline, colors.text));
                 bindRefresh(context, appWidgetId, views);
                 bindOpen(context, appWidgetId, views);
-                appWidgetManager.updateAppWidget(appWidgetId, views);
+                Static.T.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        appWidgetManager.updateAppWidget(appWidgetId, views);
+                    }
+                });
             }
         });
     }

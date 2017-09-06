@@ -140,11 +140,17 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
     @Override
     public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, String key) {
         Log.v(TAG, "onSharedPreferenceChanged | key="+key);
-        switch(key){
+        switch (key) {
             case "pref_use_notifications":
             case "pref_notify_frequency":
             case "pref_notify_network_unmetered":
-                new ProtocolTracker(this).restart();
+                final Context context = this;
+                Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+                    @Override
+                    public void run() {
+                        new ProtocolTracker(context).restart();
+                    }
+                });
                 break;
             case "pref_dark_theme":
                 Static.reLaunch(this);

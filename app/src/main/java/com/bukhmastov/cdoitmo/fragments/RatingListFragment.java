@@ -115,18 +115,23 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                 if (!Static.OFFLINE_MODE) {
                     DeIfmoClient.get(activity, Client.Protocol.HTTP, "?node=rating&std&depId=" + faculty + "&year=" + course + "&app=" + years, null, new DeIfmoClientResponseHandler() {
                         @Override
-                        public void onSuccess(int statusCode, String response) {
-                            Log.v(TAG, "load | success | statusCode=" + statusCode);
-                            if (statusCode == 200) {
-                                new RatingTopListParse(new RatingTopListParse.response() {
-                                    @Override
-                                    public void finish(JSONObject json) {
-                                        display(json);
+                        public void onSuccess(final int statusCode, final String response) {
+                            Static.T.runThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.v(TAG, "load | success | statusCode=" + statusCode);
+                                    if (statusCode == 200) {
+                                        new RatingTopListParse(response, Storage.file.perm.get(activity, "user#name"), new RatingTopListParse.response() {
+                                            @Override
+                                            public void finish(JSONObject json) {
+                                                display(json);
+                                            }
+                                        }).run();
+                                    } else {
+                                        loadFailed();
                                     }
-                                }).execute(response, Storage.file.perm.get(activity, "user#name"));
-                            } else {
-                                loadFailed();
-                            }
+                                }
+                            });
                         }
                         @Override
                         public void onProgress(final int state) {
@@ -233,10 +238,9 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
             }
         });
     }
-
     private void display(final JSONObject data) {
         final RatingListFragment self = this;
-        Static.T.runOnUiThread(new Runnable() {
+        Static.T.runThread(new Runnable() {
             @Override
             public void run() {
                 Log.v(TAG, "display");
@@ -258,22 +262,34 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                             hashMap.put("delta", jsonObject.getString("delta"));
                             users.add(hashMap);
                         }
-                        // отображаем интерфейс
-                        draw(R.layout.rating_list_layout);
-                        // работаем со списком
-                        ListView rl_list_view = activity.findViewById(R.id.rl_list_view);
-                        if (rl_list_view != null) rl_list_view.setAdapter(new RatingTopListView(activity, users));
-                        // работаем со свайпом
-                        SwipeRefreshLayout swipe_container = activity.findViewById(R.id.swipe_container);
-                        if (swipe_container != null) {
-                            swipe_container.setColorSchemeColors(Static.colorAccent);
-                            swipe_container.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
-                            swipe_container.setOnRefreshListener(self);
-                        }
-                    } else {
-                        draw(R.layout.nothing_to_display);
-                        ((TextView) activity.findViewById(R.id.ntd_text)).setText(R.string.no_rating);
                     }
+                    Static.T.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                if (users.size() > 0) {
+                                    // отображаем интерфейс
+                                    draw(R.layout.rating_list_layout);
+                                    // работаем со списком
+                                    ListView rl_list_view = activity.findViewById(R.id.rl_list_view);
+                                    if (rl_list_view != null) rl_list_view.setAdapter(new RatingTopListView(activity, users));
+                                    // работаем со свайпом
+                                    SwipeRefreshLayout swipe_container = activity.findViewById(R.id.swipe_container);
+                                    if (swipe_container != null) {
+                                        swipe_container.setColorSchemeColors(Static.colorAccent);
+                                        swipe_container.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
+                                        swipe_container.setOnRefreshListener(self);
+                                    }
+                                } else {
+                                    draw(R.layout.nothing_to_display);
+                                    ((TextView) activity.findViewById(R.id.ntd_text)).setText(R.string.no_rating);
+                                }
+                            } catch (Exception e) {
+                                Static.error(e);
+                                loadFailed();
+                            }
+                        }
+                    });
                 } catch (Exception e) {
                     Static.error(e);
                     loadFailed();

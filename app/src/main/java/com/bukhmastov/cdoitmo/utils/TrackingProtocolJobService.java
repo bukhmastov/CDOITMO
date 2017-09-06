@@ -55,24 +55,27 @@ public class TrackingProtocolJobService extends JobService {
                     Log.i(TAG, "Request attempt #" + attempt);
                     DeIfmoRestClient.get(getBaseContext(), "eregisterlog?days=2", null, new DeIfmoRestClientResponseHandler() {
                         @Override
-                        public void onSuccess(int statusCode, JSONObject responseObj, JSONArray responseArr) {
-                            if (statusCode == 200 && responseArr != null) {
-                                JSONArray array = new JSONArray();
-                                array.put(0);
-                                new ProtocolConverter(getBaseContext(), new ProtocolConverter.response() {
-                                    @Override
-                                    public void finish(JSONObject json) {
-                                        try {
-                                            analyse(json.getJSONArray("protocol"));
-                                        } catch (JSONException e) {
-                                            Log.e(TAG, e.getMessage());
-                                            done();
-                                        }
+                        public void onSuccess(final int statusCode, final JSONObject responseObj, final JSONArray responseArr) {
+                            Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (statusCode == 200 && responseArr != null) {
+                                        new ProtocolConverter(getBaseContext(), responseArr, 0, new ProtocolConverter.response() {
+                                            @Override
+                                            public void finish(JSONObject json) {
+                                                try {
+                                                    analyse(json.getJSONArray("protocol"));
+                                                } catch (JSONException e) {
+                                                    Log.e(TAG, e.getMessage());
+                                                    done();
+                                                }
+                                            }
+                                        }).run();
+                                    } else {
+                                        w8andRequest();
                                     }
-                                }).execute(responseArr, array);
-                            } else {
-                                w8andRequest();
-                            }
+                                }
+                            });
                         }
                         @Override
                         public void onProgress(int state) {}
