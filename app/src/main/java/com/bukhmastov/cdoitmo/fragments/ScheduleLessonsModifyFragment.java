@@ -40,7 +40,6 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-// TODO выбор преподавателя сломан
 public class ScheduleLessonsModifyFragment extends ConnectedFragment {
 
     private static final String TAG = "SLModifyFragment";
@@ -313,11 +312,16 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                     public void onTextChanged(CharSequence s, int start, int before, int count) {}
                                     @Override
                                     public void afterTextChanged(Editable s) {
-                                        String query = s.toString().trim();
+                                        final String query = s.toString().trim();
                                         teacherPickerAdapter.clear();
                                         lesson_teacher.dismissDropDown();
                                         if (!query.isEmpty()) {
                                             TeacherSearch.search(activity, query, lesson_teacher_bar, new TeacherSearch.response() {
+                                                @Override
+                                                public void onPermitted() {
+                                                    lessonUnit.teacher = query;
+                                                    lessonUnit.teacher_id = null;
+                                                }
                                                 @Override
                                                 public void onSuccess(final JSONObject json) {
                                                     Static.T.runOnUiThread(new Runnable() {
@@ -344,9 +348,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                                     });
                                                 }
                                                 @Override
-                                                public void onProgress(int state) {
-                                                    lessonUnit.teacher_id = null;
-                                                }
+                                                public void onProgress(int state) {}
                                                 @Override
                                                 public void onFailure(int state) {}
                                             });
@@ -362,7 +364,9 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                             lessonUnit.teacher = item.getString("person");
                                             lessonUnit.teacher_id = String.valueOf(item.getInt("pid"));
                                             TeacherSearch.blocked = true;
+                                            TeacherSearch.lastQuery = lessonUnit.teacher;
                                             lesson_teacher.setText(lessonUnit.teacher);
+                                            lesson_teacher.dismissDropDown();
                                         } catch (Exception e) {
                                             Static.error(e);
                                             Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
@@ -567,23 +571,36 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
 
         private static final String TAG = "SLModifyFragment.TS";
         interface response {
+            void onPermitted();
             void onProgress(int state);
             void onFailure(int state);
             void onSuccess(JSONObject json);
         }
         private static RequestHandle request = null;
         static boolean blocked = false;
+        private static String lastQuery = "";
 
         public static void search(final Context context, final String query, final ProgressBar progressBar, final response delegate) {
             Static.T.runThread(new Runnable() {
                 @Override
                 public void run() {
-                    Log.v(TAG, "search | query=" + query);
                     if (request != null) {
                         request.cancel(true);
                         request = null;
                     }
-                    if (blocked) {
+                    boolean allowed = true;
+                    if (Objects.equals(lastQuery, query)) {
+                        allowed = false;
+                    }
+                    if (allowed) {
+                        try {
+                            new JSONObject(query);
+                            allowed = false;
+                        } catch (Exception ignore) {
+                            // ignore
+                        }
+                    }
+                    if (blocked || !allowed) {
                         blocked = false;
                         Static.T.runOnUiThread(new Runnable() {
                             @Override
@@ -593,6 +610,8 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                         });
                         return;
                     }
+                    Log.v(TAG, "search | query=" + query);
+                    delegate.onPermitted();
                     ScheduleLessons scheduleLessons = new ScheduleLessons(context);
                     scheduleLessons.setHandler(new ScheduleLessons.response() {
                         @Override
@@ -634,6 +653,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                         }
                     });
                     scheduleLessons.search(query);
+                    lastQuery = query;
                 }
             });
         }
