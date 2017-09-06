@@ -76,6 +76,7 @@ public class Log {
         stringBuilder.append("---------Log---------").append("\n");
         for (int i = reverse ? (logList.size() - 1) : 0; reverse ? (i >= 0) : (i < logList.size()); i = reverse ? (i - 1) : (i + 1)) {
             LogItem logItem = logList.get(i);
+            if (logItem == null) continue;
             stringBuilder.append(dateFormat.format(logItem.ts)).append(" | ");
             switch (logItem.type) {
                 case VERBOSE: stringBuilder.append("VERBOSE").append("/"); break;

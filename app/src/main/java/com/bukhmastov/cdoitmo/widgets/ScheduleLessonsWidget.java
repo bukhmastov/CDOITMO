@@ -382,8 +382,9 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                         oIntent.putExtra("action", "schedule_lessons");
                         try {
                             String settings = ScheduleLessonsWidgetConfigureActivity.getPref(context, appWidgetId, "settings");
-                            if (settings == null) throw new NullPointerException("settings is null");
-                            oIntent.putExtra("action_extra", new JSONObject(settings).getString("query"));
+                            if (settings != null) {
+                                oIntent.putExtra("action_extra", new JSONObject(settings).getString("query"));
+                            }
                         } catch (Exception e) {
                             Static.error(e);
                         }
