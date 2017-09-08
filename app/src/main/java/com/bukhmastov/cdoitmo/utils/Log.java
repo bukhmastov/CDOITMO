@@ -11,6 +11,7 @@ import java.util.Locale;
 
 public class Log {
 
+    public static String TAGD = "TAG_DEBUG";
     private static boolean enabled = false;
     public static void setEnabled(boolean enabled) {
         Log.enabled = enabled;

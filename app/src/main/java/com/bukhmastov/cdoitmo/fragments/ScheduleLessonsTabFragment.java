@@ -52,7 +52,14 @@ public class ScheduleLessonsTabFragment extends Fragment {
             Static.error(e);
             activity = null;
         }
-        Log.v(TAG, "Fragment created");
+        Bundle bundle = getArguments();
+        if (bundle != null && bundle.containsKey("type")) {
+            TYPE = bundle.getInt("type");
+        } else {
+            Log.w(TAG, "onCreate | UNDEFINED TYPE, going to use TYPE=" + DEFAULT_TYPE);
+            TYPE = DEFAULT_TYPE;
+        }
+        Log.v(TAG, "Fragment created | TYPE=" + TYPE);
     }
 
     @Override
@@ -64,13 +71,6 @@ public class ScheduleLessonsTabFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        Bundle bundle = getArguments();
-        if (bundle != null && bundle.containsKey("type")) {
-            TYPE = bundle.getInt("type");
-        } else {
-            Log.w(TAG, "onCreateView | UNDEFINED TYPE, going to use TYPE=" + DEFAULT_TYPE);
-            TYPE = DEFAULT_TYPE;
-        }
         Log.v(TAG, "onCreateView | TYPE=" + TYPE);
         this.container = inflater.inflate(R.layout.fragment_tab_schedule_lessons, container, false);
         return this.container;

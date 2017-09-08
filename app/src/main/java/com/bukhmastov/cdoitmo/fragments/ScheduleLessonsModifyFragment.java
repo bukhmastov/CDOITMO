@@ -45,7 +45,6 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
     private static final String TAG = "SLModifyFragment";
     public enum TYPE {create, edit}
     private TYPE type;
-    private LessonUnit lessonUnit;
     private int index = 0;
     private String hash = null;
     private boolean block_time_start = false;
@@ -82,7 +81,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                     Log.wtf(exception);
                     throw exception;
             }
-            display();
+            display(extras);
         } catch (Exception e) {
             Static.error(e);
             activity.back();
@@ -95,19 +94,31 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
         FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
     }
 
-    private void display() {
+    private void display(final Bundle extras) {
         Static.T.runThread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    lessonUnit = retrieveExtras(getArguments());
-                    if (type == TYPE.edit) {
-                        retrieveEditingLesson();
-                    }
+                    final LessonUnit lessonUnit = convert2LessonUnit(extras);
+                    final int week = Static.getWeek(activity);
                     Static.T.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             try {
+                                String header = getStringExtra(extras, "header", true);
+                                TextView slc_title = activity.findViewById(R.id.slc_title);
+                                TextView slc_desc = activity.findViewById(R.id.slc_desc);
+                                if (slc_title != null) {
+                                    slc_title.setText(header);
+                                }
+                                if (slc_desc != null) {
+                                    if (week >= 0) {
+                                        slc_desc.setText(week + " " + activity.getString(R.string.school_week));
+                                    } else {
+                                        slc_desc.setText(new SimpleDateFormat("dd.MM.yyyy", Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis())));
+                                    }
+                                }
+
                                 TextInputEditText lesson_title = activity.findViewById(R.id.lesson_title);
                                 if (lessonUnit.title != null) lesson_title.setText(lessonUnit.title);
                                 lesson_title.requestFocus();
@@ -241,11 +252,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                 ArrayAdapter<?> lesson_week_adapter = ArrayAdapter.createFromResource(activity, R.array.week_types_titles, R.layout.spinner_layout_simple);
                                 lesson_week_adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                                 lesson_week.setAdapter(lesson_week_adapter);
-                                switch (lessonUnit.week) {
-                                    case 2: lesson_week.setSelection(0); break;
-                                    case 0: lesson_week.setSelection(1); break;
-                                    case 1: lesson_week.setSelection(2); break;
-                                }
+                                lesson_week.setSelection((lessonUnit.week + 1) % 3);
                                 lesson_week.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                                     public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
                                         String[] week_types_values = getResources().getStringArray(R.array.week_types_values);
@@ -470,28 +477,12 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
             }
         });
     }
-    private LessonUnit retrieveExtras(Bundle extras) throws Exception {
+    private LessonUnit convert2LessonUnit(Bundle extras) throws Exception {
         if (extras == null) {
             throw new NullPointerException("extras cannot be null");
         }
-        String header = getStringExtra(extras, "header", true);
-        TextView slc_title = activity.findViewById(R.id.slc_title);
-        TextView slc_desc = activity.findViewById(R.id.slc_desc);
-        if (slc_title != null) {
-            slc_title.setText(header);
-        }
-        if (slc_desc != null) {
-            int week = Static.getWeek(activity);
-            if (week >= 0) {
-                slc_desc.setText(week + " " + activity.getString(R.string.school_week));
-            } else {
-                slc_desc.setText(new SimpleDateFormat("dd.MM.yyyy", Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis())));
-            }
-        }
-        if (type == TYPE.edit) {
-            hash = getStringExtra(extras, "hash", true);
-            index = extras.getInt("day");
-        }
+        hash = getStringExtra(extras, "hash", type == TYPE.edit);
+        index = extras.getInt("day");
         LessonUnit lessonUnit = new LessonUnit();
         lessonUnit.day = extras.getInt("day");
         lessonUnit.week = extras.getInt("week");
@@ -510,6 +501,44 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
             case "lecture": lessonUnit.type = activity.getString(R.string.lecture); break;
             case "lab": lessonUnit.type = activity.getString(R.string.lab); break;
         }
+        if (Storage.file.perm.exists(activity, "schedule_lessons#added#" + lessonUnit.cache_token) && hash != null && !hash.isEmpty()) {
+            String addedStr = Storage.file.perm.get(activity, "schedule_lessons#added#" + lessonUnit.cache_token, "");
+            JSONArray added;
+            if (addedStr.isEmpty()) {
+                added = new JSONArray();
+            } else {
+                added = new JSONArray(addedStr);
+            }
+            for (int i = 0; i < added.length(); i++) {
+                JSONObject day = added.getJSONObject(i);
+                if (day.has("index") && day.getInt("index") == lessonUnit.day && day.has("lessons")) {
+                    JSONArray lessons = day.getJSONArray("lessons");
+                    for (int j = 0; j < lessons.length(); j++) {
+                        JSONObject lesson = lessons.getJSONObject(j);
+                        if (Objects.equals(hash, Static.crypt(lesson.toString()))) {
+                            if (lesson.has("subject") && lesson.getString("subject") != null) lessonUnit.title = lesson.getString("subject");
+                            if (lesson.has("timeStart") && lesson.getString("timeStart") != null) lessonUnit.timeStart = lesson.getString("timeStart");
+                            if (lesson.has("timeEnd") && lesson.getString("timeEnd") != null) lessonUnit.timeEnd = lesson.getString("timeEnd");
+                            if (lesson.has("week")) lessonUnit.week = lesson.getInt("week");
+                            if (lesson.has("type") && lesson.getString("type") != null) lessonUnit.type = lesson.getString("type");
+                            if (lesson.has("group") && lesson.getString("group") != null) lessonUnit.group = lesson.getString("group");
+                            if (lesson.has("teacher") && lesson.getString("teacher") != null) lessonUnit.teacher = lesson.getString("teacher");
+                            if (lesson.has("teacher_id") && lesson.getString("teacher_id") != null) lessonUnit.teacher_id = lesson.getString("teacher_id");
+                            if (lesson.has("room") && lesson.getString("room") != null) lessonUnit.room = lesson.getString("room");
+                            if (lesson.has("building") && lesson.getString("building") != null) lessonUnit.building = lesson.getString("building");
+                            if (lessonUnit.type != null) {
+                                switch (lessonUnit.type) {
+                                    case "practice": lessonUnit.type = activity.getString(R.string.practice); break;
+                                    case "lecture": lessonUnit.type = activity.getString(R.string.lecture); break;
+                                    case "lab": lessonUnit.type = activity.getString(R.string.lab); break;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
         return lessonUnit;
     }
     private String getStringExtra(Bundle extras, String key, boolean restrict) throws Exception {
@@ -522,46 +551,6 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
             }
         }
         return value;
-    }
-    private void retrieveEditingLesson() throws Exception {
-        String addedStr = Storage.file.perm.get(activity, "schedule_lessons#added#" + lessonUnit.cache_token, "");
-        JSONArray added;
-        if (addedStr.isEmpty()) {
-            added = new JSONArray();
-        } else {
-            added = new JSONArray(addedStr);
-        }
-        boolean found = false;
-        for (int i = 0; i < added.length(); i++) {
-            JSONObject day = added.getJSONObject(i);
-            if (day.getInt("index") == lessonUnit.day) {
-                JSONArray lessons = day.getJSONArray("lessons");
-                for (int j = 0; j < lessons.length(); j++) {
-                    JSONObject lesson = lessons.getJSONObject(j);
-                    if (Objects.equals(hash, Static.crypt(lesson.toString()))) {
-                        if (lesson.getString("subject") != null) lessonUnit.title = lesson.getString("subject");
-                        if (lesson.getString("timeStart") != null) lessonUnit.timeStart = lesson.getString("timeStart");
-                        if (lesson.getString("timeEnd") != null) lessonUnit.timeEnd = lesson.getString("timeEnd");
-                        if (lesson.getString("type") != null) lessonUnit.type = lesson.getString("type");
-                        if (lesson.getString("group") != null) lessonUnit.group = lesson.getString("group");
-                        if (lesson.getString("teacher") != null) lessonUnit.teacher = lesson.getString("teacher");
-                        if (lesson.getString("teacher_id") != null) lessonUnit.teacher_id = lesson.getString("teacher_id");
-                        if (lesson.getString("room") != null) lessonUnit.room = lesson.getString("room");
-                        if (lesson.getString("building") != null) lessonUnit.building = lesson.getString("building");
-                        if (lessonUnit.type != null) {
-                            switch (lessonUnit.type) {
-                                case "practice": lessonUnit.type = activity.getString(R.string.practice); break;
-                                case "lecture": lessonUnit.type = activity.getString(R.string.lecture); break;
-                                case "lab": lessonUnit.type = activity.getString(R.string.lab); break;
-                            }
-                        }
-                        found = true;
-                        break;
-                    }
-                }
-            }
-        }
-        if (!found) throw new Exception("Custom lesson not found");
     }
     private String ldgZero(int time){
         return time % 10 == time ? "0" + String.valueOf(time) : String.valueOf(time);

@@ -302,25 +302,25 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
                                 @Override
                                 public void run() {
                                     try {
-                                        TabLayout schedule_tabs = activity.findViewById(R.id.fixed_tabs);
-                                        schedule_tabs.setVisibility(View.VISIBLE);
+                                        TabLayout fixed_tabs = activity.findViewById(R.id.fixed_tabs);
+                                        fixed_tabs.setVisibility(View.VISIBLE);
                                         draw(R.layout.layout_schedule_lessons_tabs);
                                         ViewPager schedule_view = activity.findViewById(R.id.schedule_pager);
                                         if (schedule_view != null && fragmentManager != null) {
                                             schedule_view.setAdapter(new PagerLessonsAdapter(fragmentManager, activity));
                                             schedule_view.addOnPageChangeListener(self);
-                                            schedule_tabs.setupWithViewPager(schedule_view);
+                                            fixed_tabs.setupWithViewPager(schedule_view);
                                         }
                                         TabLayout.Tab tab;
                                         if (ScheduleLessonsFragment.tabSelected == -1) {
                                             if (pref == -1) {
-                                                tab = schedule_tabs.getTabAt(week >= 0 ? (week % 2) + 1 : 0);
+                                                tab = fixed_tabs.getTabAt(week >= 0 ? (week % 2) + 1 : 0);
                                             } else {
-                                                tab = schedule_tabs.getTabAt(pref);
+                                                tab = fixed_tabs.getTabAt(pref);
                                             }
                                         } else {
                                             try {
-                                                tab = schedule_tabs.getTabAt(ScheduleLessonsFragment.tabSelected);
+                                                tab = fixed_tabs.getTabAt(ScheduleLessonsFragment.tabSelected);
                                             } catch (Exception e) {
                                                 tab = null;
                                             }

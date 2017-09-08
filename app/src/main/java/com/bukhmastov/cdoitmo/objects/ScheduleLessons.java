@@ -699,15 +699,16 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                     extras.putString("cache_token", schedule.getString("cache_token"));
                     extras.putInt("day", dayIndex);
                     extras.putInt("week", week);
-                    if (lesson.getString("subject") != null) extras.putString("title", lesson.getString("subject"));
-                    if (lesson.getString("timeStart") != null) extras.putString("timeStart", lesson.getString("timeStart"));
-                    if (lesson.getString("timeEnd") != null) extras.putString("timeEnd", lesson.getString("timeEnd"));
-                    if (lesson.getString("type") != null) extras.putString("type", lesson.getString("type"));
-                    if (lesson.getString("group") != null) extras.putString("group", lesson.getString("group"));
-                    if (lesson.getString("teacher") != null) extras.putString("teacher", lesson.getString("teacher"));
-                    if (lesson.getString("teacher_id") != null) extras.putString("teacher_id", lesson.getString("teacher_id"));
-                    if (lesson.getString("room") != null) extras.putString("room", lesson.getString("room"));
-                    if (lesson.getString("building") != null) extras.putString("building", lesson.getString("building"));
+                    extras.putString("hash", Static.crypt(lesson.toString()));
+                    if (lesson.has("subject") && lesson.getString("subject") != null) extras.putString("title", lesson.getString("subject"));
+                    if (lesson.has("timeStart") && lesson.getString("timeStart") != null) extras.putString("timeStart", lesson.getString("timeStart"));
+                    if (lesson.has("timeEnd") && lesson.getString("timeEnd") != null) extras.putString("timeEnd", lesson.getString("timeEnd"));
+                    if (lesson.has("type") && lesson.getString("type") != null) extras.putString("type", lesson.getString("type"));
+                    if (lesson.has("group") && lesson.getString("group") != null) extras.putString("group", lesson.getString("group"));
+                    if (lesson.has("teacher") && lesson.getString("teacher") != null) extras.putString("teacher", lesson.getString("teacher"));
+                    if (lesson.has("teacher_id") && lesson.getString("teacher_id") != null) extras.putString("teacher_id", lesson.getString("teacher_id"));
+                    if (lesson.has("room") && lesson.getString("room") != null) extras.putString("room", lesson.getString("room"));
+                    if (lesson.has("building") && lesson.getString("building") != null) extras.putString("building", lesson.getString("building"));
                     activity.openActivityOrFragment(ScheduleLessonsModifyFragment.class, extras);
                 } catch (Exception e) {
                     Static.error(e);
