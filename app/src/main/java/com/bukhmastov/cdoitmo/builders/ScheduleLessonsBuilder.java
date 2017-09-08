@@ -108,6 +108,7 @@ public class ScheduleLessonsBuilder implements Runnable {
                         lessonLayout.findViewById(R.id.data).setAlpha(alpha);
                         if (Storage.pref.get(activity, "pref_schedule_lessons_compact_view_of_reduced_lesson", true)) {
                             try {
+                                ((TextView) lessonLayout.findViewById(R.id.lesson_title)).setMaxLines(1);
                                 lessonLayout.findViewById(R.id.lesson_time_icon).setVisibility(View.GONE);
                                 lessonLayout.findViewById(R.id.lesson_time_end).setVisibility(View.GONE);
                                 lessonLayout.findViewById(R.id.lesson_desc).setVisibility(View.GONE);

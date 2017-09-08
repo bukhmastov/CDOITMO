@@ -20,6 +20,7 @@
             android:id="@+id/lesson_time_start"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:maxWidth="@dimen/schedule_time_max_width"
             android:gravity="bottom"
             android:text="10:00"
             android:textAlignment="center"
@@ -36,6 +37,7 @@
             android:id="@+id/lesson_time_end"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:maxWidth="@dimen/schedule_time_max_width"
             android:gravity="top"
             android:text="10:00"
             android:textAlignment="center"
@@ -71,7 +73,8 @@
                 android:paddingStart="0dp"
                 android:text="@string/lorem_ipsum"
                 android:textColor="?android:attr/textColorPrimary"
-                android:textSize="@dimen/font_size_14" />
+                android:textSize="@dimen/font_size_14"
+                android:ellipsize="end" />
 
             <ImageView
                 android:id="@+id/lesson_reduced_icon"

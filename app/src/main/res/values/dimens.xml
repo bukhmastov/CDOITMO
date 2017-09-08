@@ -47,6 +47,7 @@
     <dimen name="schedule_day_header">24dp</dimen>
     <dimen name="schedule_time_padding">10dp</dimen>
     <dimen name="schedule_time_min_width">60dp</dimen>
+    <dimen name="schedule_time_max_width">120dp</dimen>
     <dimen name="schedule_data_padding_top">5dp</dimen>
     <dimen name="schedule_data_padding_bottom">7dp</dimen>
     <dimen name="schedule_data_padding_end">3dp</dimen>
