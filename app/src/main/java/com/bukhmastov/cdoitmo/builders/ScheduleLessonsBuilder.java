@@ -68,18 +68,6 @@ public class ScheduleLessonsBuilder implements Runnable {
                 LinearLayout dayLayout = (LinearLayout) inflate(R.layout.layout_schedule_lessons_day);
                 ((TextView) dayLayout.findViewById(R.id.day_title)).setText(day.getString("title").toUpperCase());
                 final int index = day.getInt("index");
-                dayLayout.findViewById(R.id.add_lesson).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Log.v(TAG, "add_lesson clicked");
-                        try {
-                            ScheduleLessons.createLesson(activity, ScheduleLessonsFragment.schedule, index, type);
-                        } catch (Exception e) {
-                            Static.error(e);
-                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                        }
-                    }
-                });
                 switch (index) {
                     case 0: dayLayout.setId(R.id.monday); break;
                     case 1: dayLayout.setId(R.id.tuesday); break;

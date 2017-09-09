@@ -398,15 +398,23 @@ public class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
     public Boolean toggleCache() {
         Log.v(TAG, "toggleCache");
         try {
-            String token = ScheduleExamsFragment.schedule.getString("cache_token");
-            if (Objects.equals(getCache(token), "")) {
-                putCache(token, ScheduleExamsFragment.schedule.toString(), true);
-                ScheduleExamsFragment.schedule_cached = true;
-                return true;
+            if (ScheduleExamsFragment.schedule != null && ScheduleExamsFragment.schedule.has("cache_token")) {
+                String token = ScheduleExamsFragment.schedule.getString("cache_token");
+                if (token != null && !token.isEmpty()) {
+                    if (getCache(token).trim().isEmpty()) {
+                        putCache(token, ScheduleExamsFragment.schedule.toString(), true);
+                        ScheduleExamsFragment.schedule_cached = true;
+                        return true;
+                    } else {
+                        removeCache(token);
+                        ScheduleExamsFragment.schedule_cached = false;
+                        return false;
+                    }
+                } else {
+                    return null;
+                }
             } else {
-                removeCache(token);
-                ScheduleExamsFragment.schedule_cached = false;
-                return false;
+                return null;
             }
         } catch (JSONException e) {
             Static.error(e);

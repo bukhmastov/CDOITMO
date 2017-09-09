@@ -276,7 +276,8 @@
     <string name="lesson_day_of_week">Day of the week</string>
     <string name="pref_reset_application_warning">When you reset an application, the following actions are performed: \n1. All stored data will be erased. \n2. All working widgets will stop working. \n3. You log out of all accounts. \n4. The application will be restarted.</string>
     <string name="proceed">Continue</string>
-    <string name="pref_schedule_lessons_clear_additional_warning">When cleaning user changes, the following actions are performed: \n1. Hidden lessons will be restored. \n2. All added lessons will be deleted.</string>
+    <string name="pref_schedule_lessons_clear_additional_warning">When cleaning user changes, the following actions are performed: \n1. All hidden lessons will be restored. \n2. All added lessons will be deleted.</string>
+    <string name="pref_schedule_lessons_clear_direct_additional_warning">When clearing user changes for this schedule, the following actions are performed: \n1. Hidden lessons will be restored. \n2. Added lessons will be deleted.</string>
     <string name="wrong_login_general">The application does not support users with the login \"general\"</string>
     <string name="send_email_to_dev">Write a letter to the developer</string>
     <string name="send_vk_to_dev">Write a message to the developer</string>
@@ -395,5 +396,14 @@
     <string name="pref_group_force_override_message">Leave the field blank to allow the system to automatically define a group. You must restart the application to accept the changes.</string>
     <string name="pref_group_force_override_hint">Group number</string>
     <string name="no_rating">No rating available</string>
+    <string name="add_to_cache">Add to cache</string>
+    <string name="remove_from_cache">Remove from cache</string>
+    <string name="add_lesson">Add lesson</string>
+    <string name="share_changes">Share changes</string>
+    <string name="remove_changes">Clear changes</string>
+    <string name="share_changes_info">You can share changes to your schedule (added and hidden lessons) with your friends. To do this, select the lessons you want to share and then send to the person you need.</string>
+    <string name="added_lessons">Added lessons</string>
+    <string name="reduced_lessons">Hidden lessons</string>
+    <string name="nothing_to_share">No changes found</string>
 
 </resources>

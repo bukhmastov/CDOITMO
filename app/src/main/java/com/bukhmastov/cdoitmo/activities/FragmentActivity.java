@@ -82,6 +82,7 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
 
     public void invoke(final Class connectedFragmentClass, final Bundle extras) {
         final FragmentActivity self = this;
+        final FragmentManager fragmentManager = getSupportFragmentManager();
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -102,7 +103,6 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
                     if (extras != null) {
                         fragment.setArguments(extras);
                     }
-                    FragmentManager fragmentManager = getSupportFragmentManager();
                     if (fragmentManager != null) {
                         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
                         if (fragmentTransaction != null) {

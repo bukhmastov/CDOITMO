@@ -1,24 +1,27 @@
 package com.bukhmastov.cdoitmo.fragments;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.PopupMenu;
 import android.view.InflateException;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.ConnectedActivity;
 import com.bukhmastov.cdoitmo.builders.ScheduleLessonsBuilder;
+import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
@@ -151,60 +154,38 @@ public class ScheduleLessonsTabFragment extends Fragment {
                                         schedule_lessons_all_week.setText(new SimpleDateFormat("dd.MM.yyyy", Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis())));
                                     }
                                 }
-                                FrameLayout schedule_lessons_cache = container.findViewById(R.id.schedule_lessons_cache);
-                                if (schedule_lessons_cache != null) {
-                                    ImageView cacheImage = new ImageView(activity);
-                                    cacheImage.setImageDrawable(activity.getResources().getDrawable(ScheduleLessonsFragment.schedule_cached ? R.drawable.ic_cached : R.drawable.ic_cache, activity.getTheme()));
-                                    cacheImage.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
-                                    int padding = (int) (activity.getResources().getDisplayMetrics().density * 4);
-                                    cacheImage.setPadding(padding, padding, padding, padding);
-                                    schedule_lessons_cache.addView(cacheImage);
-                                    schedule_lessons_cache.setOnClickListener(new View.OnClickListener() {
+                                // меню расписания
+                                ViewGroup schedule_lessons_menu = container.findViewById(R.id.schedule_lessons_menu);
+                                if (schedule_lessons_menu != null) {
+                                    schedule_lessons_menu.setOnClickListener(new View.OnClickListener() {
                                         @Override
-                                        public void onClick(View v) {
-                                            Static.T.runThread(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    Log.v(TAG, "schedule_lessons_cache clicked");
-                                                    if (ScheduleLessonsFragment.scheduleLessons != null) {
-                                                        final Boolean result = ScheduleLessonsFragment.scheduleLessons.toggleCache();
-                                                        if (result == null) {
-                                                            Log.w(TAG, "failed to toggle cache");
-                                                            Static.snackBar(activity, activity.getString(R.string.cache_failed));
-                                                        } else {
-                                                            Static.snackBar(activity, result ? activity.getString(R.string.cache_true) : activity.getString(R.string.cache_false));
-                                                            Static.T.runOnUiThread(new Runnable() {
-                                                                @Override
-                                                                public void run() {
-                                                                    if (container != null) {
-                                                                        FrameLayout schedule_lessons_cache = container.findViewById(R.id.schedule_lessons_cache);
-                                                                        if (schedule_lessons_cache != null) {
-                                                                            ImageView cacheImage = new ImageView(activity);
-                                                                            cacheImage.setImageDrawable(activity.getResources().getDrawable(result ? R.drawable.ic_cached : R.drawable.ic_cache, activity.getTheme()));
-                                                                            cacheImage.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
-                                                                            int padding = (int) (activity.getResources().getDisplayMetrics().density * 4);
-                                                                            cacheImage.setPadding(padding, padding, padding, padding);
-                                                                            schedule_lessons_cache.removeAllViews();
-                                                                            schedule_lessons_cache.addView(cacheImage);
-                                                                        }
-                                                                    }
-                                                                }
-                                                            });
-                                                        }
-                                                    } else {
-                                                        Log.v(TAG, "schedule_lessons_cache clicked | ScheduleLessonsFragment.scheduleLessons is null");
-                                                    }
+                                        public void onClick(View view) {
+                                            try {
+                                                final PopupMenu popup = new PopupMenu(activity, view);
+                                                final Menu menu = popup.getMenu();
+                                                popup.getMenuInflater().inflate(R.menu.schedule_lessons, menu);
+                                                if (ScheduleLessonsFragment.schedule_cached) {
+                                                    menu.findItem(R.id.add_to_cache).setVisible(false);
+                                                } else {
+                                                    menu.findItem(R.id.remove_from_cache).setVisible(false);
                                                 }
-                                            });
+                                                // TODO remove following line to enable share feature
+                                                menu.findItem(R.id.share_changes).setVisible(false);
+                                                popup.setOnMenuItemClickListener(onScheduleMenuClickListener);
+                                                popup.show();
+                                            } catch (Exception e) {
+                                                Static.error(e);
+                                                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                            }
                                         }
                                     });
                                 }
                                 // работаем со свайпом
-                                SwipeRefreshLayout mSwipeRefreshLayout = container.findViewById(R.id.swipe_schedule_lessons);
-                                if (mSwipeRefreshLayout != null) {
-                                    mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
-                                    mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
-                                    mSwipeRefreshLayout.setOnRefreshListener(ScheduleLessonsFragment.scheduleLessons);
+                                SwipeRefreshLayout swipe = container.findViewById(R.id.swipe_schedule_lessons);
+                                if (swipe != null) {
+                                    swipe.setColorSchemeColors(Static.colorAccent);
+                                    swipe.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
+                                    swipe.setOnRefreshListener(ScheduleLessonsFragment.scheduleLessons);
                                 }
                                 // отображаем расписание
                                 final ViewGroup schedule_lessons_content = container.findViewById(R.id.schedule_lessons_content);
@@ -348,4 +329,127 @@ public class ScheduleLessonsTabFragment extends Fragment {
     private View inflate(int layoutId) throws InflateException {
         return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
+
+    private PopupMenu.OnMenuItemClickListener onScheduleMenuClickListener = new PopupMenu.OnMenuItemClickListener() {
+        @Override
+        public boolean onMenuItemClick(MenuItem item) {
+            Log.v(TAG, "menu | popup item | clicked | " + item.getTitle().toString());
+            switch (item.getItemId()) {
+                case R.id.add_to_cache:
+                case R.id.remove_from_cache: {
+                    Static.T.runThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (ScheduleLessonsFragment.scheduleLessons != null) {
+                                final Boolean result = ScheduleLessonsFragment.scheduleLessons.toggleCache();
+                                if (result == null) {
+                                    Log.w(TAG, "menu | popup item | cache | failed to toggle cache");
+                                    Static.snackBar(activity, activity.getString(R.string.cache_failed));
+                                } else {
+                                    Static.snackBar(activity, result ? activity.getString(R.string.cache_true) : activity.getString(R.string.cache_false));
+                                }
+                            } else {
+                                Log.v(TAG, "menu | popup item | cache | ScheduleLessonsFragment.scheduleLessons is null");
+                            }
+                        }
+                    });
+                    break;
+                }
+                case R.id.add_lesson: {
+                    Static.T.runThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                int day;
+                                switch (Calendar.getInstance().get(Calendar.DAY_OF_WEEK)) {
+                                    case Calendar.MONDAY: day = 0; break;
+                                    case Calendar.TUESDAY: day = 1; break;
+                                    case Calendar.WEDNESDAY: day = 2; break;
+                                    case Calendar.THURSDAY: day = 3; break;
+                                    case Calendar.FRIDAY: day = 4; break;
+                                    case Calendar.SATURDAY: day = 5; break;
+                                    case Calendar.SUNDAY: day = 6; break;
+                                    default: day = 0; break;
+                                }
+                                ScheduleLessons.createLesson(activity, ScheduleLessonsFragment.schedule, day, TYPE);
+                            } catch (Exception e) {
+                                Static.error(e);
+                                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                            }
+                        }
+                    });
+                    break;
+                }
+                case R.id.share_changes: {
+                    Static.T.runThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                if (ScheduleLessonsFragment.schedule != null && ScheduleLessonsFragment.schedule.has("cache_token")) {
+                                    String token = ScheduleLessonsFragment.schedule.getString("cache_token");
+                                    if (token != null && !token.isEmpty()) {
+                                        String title = "";
+                                        String query = "";
+                                        if (ScheduleLessonsFragment.schedule.has("title")) {
+                                            title += " " + ScheduleLessonsFragment.schedule.getString("title");
+                                        }
+                                        if (ScheduleLessonsFragment.schedule.has("label")) {
+                                            title += " " + ScheduleLessonsFragment.schedule.getString("label");
+                                        }
+                                        if (ScheduleLessonsFragment.schedule.has("query")) {
+                                            query = ScheduleLessonsFragment.schedule.getString("query");
+                                        }
+                                        title = title.trim();
+                                        Bundle extras = new Bundle();
+                                        extras.putString("query", query);
+                                        extras.putString("title", title);
+                                        extras.putString("token", token);
+                                        activity.openActivityOrFragment(ScheduleLessonsShareFragment.class, extras);
+                                    }
+                                }
+                            } catch (Exception e) {
+                                Static.error(e);
+                            }
+                        }
+                    });
+                    break;
+                }
+                case R.id.remove_changes: {
+                    Static.T.runThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (activity != null) {
+                                new AlertDialog.Builder(activity)
+                                        .setTitle(R.string.pref_schedule_lessons_clear_additional_title)
+                                        .setMessage(R.string.pref_schedule_lessons_clear_direct_additional_warning)
+                                        .setIcon(R.drawable.ic_warning)
+                                        .setPositiveButton(R.string.proceed, new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                Static.T.runThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        Log.v(TAG, "menu | popup item | remove_changes | dialog accepted");
+                                                        if (ScheduleLessonsFragment.scheduleLessons != null) {
+                                                            if (ScheduleLessonsFragment.scheduleLessons.clearChanges()) {
+                                                                ScheduleLessonsFragment.reSchedule(activity);
+                                                            }
+                                                        } else {
+                                                            Log.v(TAG, "menu | popup item | remove_changes | dialog accepted | ScheduleLessonsFragment.scheduleLessons is null");
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                        })
+                                        .setNegativeButton(R.string.cancel, null)
+                                        .create().show();
+                            }
+                        }
+                    });
+                    break;
+                }
+            }
+            return false;
+        }
+    };
 }

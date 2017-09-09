@@ -1,4 +1,5 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -32,7 +33,8 @@
                         android:id="@+id/schedule_lessons_titles"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:layout_toStartOf="@+id/schedule_lessons_cache"
+                        android:layout_toStartOf="@+id/schedule_lessons_menu"
+                        android:layout_centerVertical="true"
                         android:orientation="vertical">
 
                         <TextView
@@ -58,14 +60,22 @@
                     </LinearLayout>
 
                     <FrameLayout
-                        android:id="@+id/schedule_lessons_cache"
+                        android:id="@+id/schedule_lessons_menu"
                         android:layout_width="@dimen/schedule_cache_button"
                         android:layout_height="@dimen/schedule_cache_button"
                         android:layout_alignParentEnd="true"
                         android:layout_marginStart="0dp"
                         android:layout_marginEnd="@dimen/item_horizontal_padding"
-                        android:background="?attr/selectableItemBackground"
-                        android:clickable="true" />
+                        android:layout_centerVertical="true"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:clickable="true" >
+
+                        <ImageView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            app:srcCompat="@drawable/ic_expand_more" />
+
+                    </FrameLayout>
 
                 </RelativeLayout>
 

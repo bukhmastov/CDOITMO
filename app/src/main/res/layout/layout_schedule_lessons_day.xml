@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -9,32 +8,16 @@
     android:paddingStart="@dimen/item_horizontal_padding"
     android:paddingEnd="@dimen/item_horizontal_padding" >
 
-    <RelativeLayout
+    <TextView
+        android:id="@+id/day_title"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <TextView
-            android:id="@+id/day_title"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/schedule_day_header"
-            android:layout_toStartOf="@+id/add_lesson"
-            android:gravity="center_vertical"
-            android:text="@string/lorem_ipsum"
-            android:textAllCaps="true"
-            android:textColor="?android:attr/textColorPrimary"
-            android:textSize="@dimen/font_size_14"
-            android:textStyle="normal|bold" />
-
-        <ImageView
-            android:id="@+id/add_lesson"
-            android:layout_width="@dimen/schedule_day_header"
-            android:layout_height="@dimen/schedule_day_header"
-            android:layout_alignParentEnd="true"
-            android:padding="2dp"
-            app:srcCompat="@drawable/ic_add"
-            android:background="?attr/selectableItemBackground" />
-
-    </RelativeLayout>
+        android:layout_height="@dimen/schedule_day_header"
+        android:gravity="center_vertical"
+        android:text="@string/lorem_ipsum"
+        android:textAllCaps="true"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="@dimen/font_size_14"
+        android:textStyle="normal|bold" />
 
     <LinearLayout
         android:id="@+id/day_schedule"

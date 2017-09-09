@@ -94,7 +94,8 @@
                 android:id="@+id/lesson_touch_icon"
                 android:layout_width="@dimen/schedule_data_icon"
                 android:layout_height="@dimen/schedule_data_icon"
-                app:srcCompat="@drawable/ic_more_vert" />
+                app:srcCompat="@drawable/ic_more_vert"
+                android:background="?attr/selectableItemBackgroundBorderless" />
 
         </LinearLayout>
 

@@ -279,7 +279,8 @@
     <string name="lesson_day_of_week">День недели</string>
     <string name="pref_reset_application_warning">При очистке приложения выполнятся следующие действия: \n1. Все сохраненные данные будут стерты. \n2. Все работающие виджеты прекратят свою работу. \n3. Вы выйдите из всех аккаунтов. \n4. Приложение будет перезапущено.</string>
     <string name="proceed">Продолжить</string>
-    <string name="pref_schedule_lessons_clear_additional_warning">При очистке пользовательских изменений выполнятся следующие действия: \n1. Вы скрытые занятия будут восстановлены. \n2. Все добавленные в ручную занятия будут удалены.</string>
+    <string name="pref_schedule_lessons_clear_additional_warning">При очистке пользовательских изменений, выполнятся следующие действия: \n1. Вы скрытые занятия будут восстановлены. \n2. Все добавленные в ручную занятия будут удалены.</string>
+    <string name="pref_schedule_lessons_clear_direct_additional_warning">При очистке пользовательских изменений для данного расписания, выполнятся следующие действия: \n1. Скрытые занятия будут восстановлены. \n2. Добавленные в ручную занятия будут удалены.</string>
     <string name="wrong_login_general">Приложение не поддерживает пользователей с логином \"general\"</string>
     <string name="send_email_to_dev">Написать письмо разработчику</string>
     <string name="send_vk_to_dev">Написать сообщение разработчику</string>
@@ -402,5 +403,14 @@
     <string name="pref_group_force_override_message">Оставьте поле пустым, чтобы позволить системе автоматически определять группу. Необходимо перезапустить приложение для принятия изменений.</string>
     <string name="pref_group_force_override_hint">Номер группы</string>
     <string name="no_rating">Рейтинга нет</string>
+    <string name="add_to_cache">Добавить в кэш</string>
+    <string name="remove_from_cache">Удалить из кэша</string>
+    <string name="add_lesson">Добавить занятие</string>
+    <string name="share_changes">Поделиться изменениями</string>
+    <string name="remove_changes">Очистить изменения</string>
+    <string name="share_changes_info">Вы можете поделиться изменениями своего расписания (добавленные и скрытые занятия) со своими друзьями. Для этого выберите занятия, которыми хотите поделиться, и затем отправьте изменения нужному человеку.</string>
+    <string name="added_lessons">Добавленные занятия</string>
+    <string name="reduced_lessons">Скрытые занятия</string>
+    <string name="nothing_to_share">Изменений не найдено</string>
 
 </resources>

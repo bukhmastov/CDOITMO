@@ -541,19 +541,53 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
     public Boolean toggleCache() {
         Log.v(TAG, "toggleCache");
         try {
-            String token = ScheduleLessonsFragment.schedule.getString("cache_token");
-            if (Objects.equals(getCache(token), "")) {
-                putCache(token, ScheduleLessonsFragment.schedule.toString(), true);
-                ScheduleLessonsFragment.schedule_cached = true;
-                return true;
+            if (ScheduleLessonsFragment.schedule != null && ScheduleLessonsFragment.schedule.has("cache_token")) {
+                String token = ScheduleLessonsFragment.schedule.getString("cache_token");
+                if (token != null && !token.isEmpty()) {
+                    if (getCache(token).trim().isEmpty()) {
+                        putCache(token, ScheduleLessonsFragment.schedule.toString(), true);
+                        ScheduleLessonsFragment.schedule_cached = true;
+                        return true;
+                    } else {
+                        removeCache(token);
+                        ScheduleLessonsFragment.schedule_cached = false;
+                        return false;
+                    }
+                } else {
+                    return null;
+                }
             } else {
-                removeCache(token);
-                ScheduleLessonsFragment.schedule_cached = false;
-                return false;
+                return null;
             }
         } catch (JSONException e) {
             Static.error(e);
             return null;
+        }
+    }
+    public boolean clearChanges() {
+        Log.v(TAG, "clearChanges");
+        try {
+            if (ScheduleLessonsFragment.schedule != null && ScheduleLessonsFragment.schedule.has("cache_token")) {
+                String token = ScheduleLessonsFragment.schedule.getString("cache_token");
+                if (token != null && !token.isEmpty()) {
+                    boolean added = false;
+                    boolean reduced = false;
+                    if (Storage.file.perm.exists(context, "schedule_lessons#added#" + token)) {
+                        added = Storage.file.perm.delete(context, "schedule_lessons#added#" + token);
+                    }
+                    if (Storage.file.perm.exists(context, "schedule_lessons#reduced#" + token)) {
+                        reduced = Storage.file.perm.delete(context, "schedule_lessons#reduced#" + token);
+                    }
+                    return added || reduced;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        } catch (JSONException e) {
+            Static.error(e);
+            return false;
         }
     }
 

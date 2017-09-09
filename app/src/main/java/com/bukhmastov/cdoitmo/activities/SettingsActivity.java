@@ -484,7 +484,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                                         Static.snackBar(activity, activity.getString(success ? R.string.changes_cleared : R.string.something_went_wrong));
                                     }
                                 })
-                                .setNegativeButton(android.R.string.cancel, null)
+                                .setNegativeButton(R.string.cancel, null)
                                 .create().show();
                         }
                         return false;

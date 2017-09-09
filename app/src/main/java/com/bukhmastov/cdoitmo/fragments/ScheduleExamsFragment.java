@@ -5,15 +5,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.PopupMenu;
 import android.view.InflateException;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -295,58 +294,36 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
                                                 schedule_exams_week.setText(new SimpleDateFormat("dd.MM.yyyy", Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis())));
                                             }
                                         }
-                                        FrameLayout schedule_exams_cache = activity.findViewById(R.id.schedule_exams_cache);
-                                        if (schedule_exams_cache != null) {
-                                            ImageView cacheImage = new ImageView(activity);
-                                            cacheImage.setImageDrawable(activity.getResources().getDrawable(ScheduleExamsFragment.schedule_cached ? R.drawable.ic_cached : R.drawable.ic_cache, activity.getTheme()));
-                                            cacheImage.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
-                                            int padding = (int) (activity.getResources().getDisplayMetrics().density * 4);
-                                            cacheImage.setPadding(padding, padding, padding, padding);
-                                            schedule_exams_cache.addView(cacheImage);
-                                            schedule_exams_cache.setOnClickListener(new View.OnClickListener() {
+                                        // меню расписания
+                                        ViewGroup schedule_exams_menu = activity.findViewById(R.id.schedule_exams_menu);
+                                        if (schedule_exams_menu != null) {
+                                            schedule_exams_menu.setOnClickListener(new View.OnClickListener() {
                                                 @Override
-                                                public void onClick(View v) {
-                                                    Static.T.runThread(new Runnable() {
-                                                        @Override
-                                                        public void run() {
-                                                            Log.v(TAG, "schedule_exams_cache clicked");
-                                                            if (ScheduleExamsFragment.scheduleExams != null) {
-                                                                final Boolean result = ScheduleExamsFragment.scheduleExams.toggleCache();
-                                                                if (result == null) {
-                                                                    Log.w(TAG, "failed to toggle cache");
-                                                                    Static.snackBar(activity, activity.getString(R.string.cache_failed));
-                                                                } else {
-                                                                    Static.snackBar(activity, result ? activity.getString(R.string.cache_true) : activity.getString(R.string.cache_false));
-                                                                    Static.T.runOnUiThread(new Runnable() {
-                                                                        @Override
-                                                                        public void run() {
-                                                                            FrameLayout schedule_exams_cache = activity.findViewById(R.id.schedule_exams_cache);
-                                                                            if (schedule_exams_cache != null) {
-                                                                                ImageView cacheImage = new ImageView(activity);
-                                                                                cacheImage.setImageDrawable(activity.getResources().getDrawable(result ? R.drawable.ic_cached : R.drawable.ic_cache, activity.getTheme()));
-                                                                                cacheImage.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
-                                                                                int padding = (int) (activity.getResources().getDisplayMetrics().density * 4);
-                                                                                cacheImage.setPadding(padding, padding, padding, padding);
-                                                                                schedule_exams_cache.removeAllViews();
-                                                                                schedule_exams_cache.addView(cacheImage);
-                                                                            }
-                                                                        }
-                                                                    });
-                                                                }
-                                                            } else {
-                                                                Log.v(TAG, "schedule_exams_cache clicked | ScheduleExamsFragment.scheduleExams is null");
-                                                            }
+                                                public void onClick(View view) {
+                                                    try {
+                                                        final PopupMenu popup = new PopupMenu(activity, view);
+                                                        final Menu menu = popup.getMenu();
+                                                        popup.getMenuInflater().inflate(R.menu.schedule_exams, menu);
+                                                        if (ScheduleExamsFragment.schedule_cached) {
+                                                            menu.findItem(R.id.add_to_cache).setVisible(false);
+                                                        } else {
+                                                            menu.findItem(R.id.remove_from_cache).setVisible(false);
                                                         }
-                                                    });
+                                                        popup.setOnMenuItemClickListener(onScheduleMenuClickListener);
+                                                        popup.show();
+                                                    } catch (Exception e) {
+                                                        Static.error(e);
+                                                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                                    }
                                                 }
                                             });
                                         }
                                         // работаем со свайпом
-                                        SwipeRefreshLayout mSwipeRefreshLayout = activity.findViewById(R.id.swipe_schedule_exams);
-                                        if (mSwipeRefreshLayout != null) {
-                                            mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
-                                            mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
-                                            mSwipeRefreshLayout.setOnRefreshListener(scheduleExams);
+                                        SwipeRefreshLayout swipe = activity.findViewById(R.id.swipe_schedule_exams);
+                                        if (swipe != null) {
+                                            swipe.setColorSchemeColors(Static.colorAccent);
+                                            swipe.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
+                                            swipe.setOnRefreshListener(scheduleExams);
                                         }
                                         // отображаем расписание
                                         final ViewGroup linearLayout = activity.findViewById(R.id.schedule_exams_content);
@@ -425,4 +402,34 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
     private View inflate(int layoutId) throws InflateException {
         return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
+
+    private PopupMenu.OnMenuItemClickListener onScheduleMenuClickListener = new PopupMenu.OnMenuItemClickListener() {
+        @Override
+        public boolean onMenuItemClick(MenuItem item) {
+            Log.v(TAG, "menu | popup item | clicked | " + item.getTitle().toString());
+            switch (item.getItemId()) {
+                case R.id.add_to_cache:
+                case R.id.remove_from_cache: {
+                    Static.T.runThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (ScheduleExamsFragment.scheduleExams != null) {
+                                final Boolean result = ScheduleExamsFragment.scheduleExams.toggleCache();
+                                if (result == null) {
+                                    Log.w(TAG, "menu | popup item | cache | failed to toggle cache");
+                                    Static.snackBar(activity, activity.getString(R.string.cache_failed));
+                                } else {
+                                    Static.snackBar(activity, result ? activity.getString(R.string.cache_true) : activity.getString(R.string.cache_false));
+                                }
+                            } else {
+                                Log.v(TAG, "menu | popup item | cache | ScheduleExamsFragment.scheduleExams is null");
+                            }
+                        }
+                    });
+                    break;
+                }
+            }
+            return false;
+        }
+    };
 }
