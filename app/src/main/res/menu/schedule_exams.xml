@@ -9,4 +9,8 @@
         android:id="@+id/remove_from_cache"
         android:title="@string/remove_from_cache" />
 
+    <item
+        android:id="@+id/open_settings"
+        android:title="@string/open_settings" />
+
 </menu>

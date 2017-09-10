@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.preference.PreferenceActivity;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.PopupMenu;
 import android.view.InflateException;
@@ -19,6 +20,7 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.MainActivity;
 import com.bukhmastov.cdoitmo.activities.ScheduleExamsSearchActivity;
+import com.bukhmastov.cdoitmo.activities.SettingsActivity;
 import com.bukhmastov.cdoitmo.adapters.TeacherPickerListView;
 import com.bukhmastov.cdoitmo.builders.ScheduleExamsBuilder;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
@@ -426,6 +428,12 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
                             }
                         }
                     });
+                    break;
+                }
+                case R.id.open_settings: {
+                    Intent intent = new Intent(activity, SettingsActivity.class);
+                    intent.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT, SettingsActivity.AdditionalPreferenceFragment.class.getName());
+                    startActivity(intent);
                     break;
                 }
             }
