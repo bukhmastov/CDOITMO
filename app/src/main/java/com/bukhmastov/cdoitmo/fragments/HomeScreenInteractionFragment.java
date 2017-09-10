@@ -87,6 +87,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.v(TAG, "Fragment created");
         FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
         Data data = getData(activity, this.getClass());
         if (data != null) {
@@ -106,6 +107,12 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
         shortcuts.add(new Shortcut("schedule_lessons", null, activity.getString(R.string.schedule_lessons), activity.getString(R.string.need_to_choose_schedule), R.mipmap.ic_shortcut_schedule_lessons));
         shortcuts.add(new Shortcut("schedule_exams", null, activity.getString(R.string.schedule_exams), activity.getString(R.string.need_to_choose_schedule), R.mipmap.ic_shortcut_schedule_exams));
         shortcuts.add(new Shortcut("university", null, activity.getString(R.string.university), activity.getString(R.string.need_to_choose_type), R.mipmap.ic_shortcut_university));
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.v(TAG, "Fragment destroyed");
     }
 
     @Override
@@ -142,6 +149,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
         Static.T.runThread(new Runnable() {
             @Override
             public void run() {
+                Log.v(TAG, "route | mode=" + mode.toString());
                 switch (mode) {
                     case PICK: initPicker(false); break;
                     case WIDGETS: initWidgets(); break;
@@ -156,6 +164,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                Log.v(TAG, "initPicker | first_launch=" + (first_launch ? "true" : "false"));
                 try {
                     // Переключаем режим отображения
                     toggleMode(false, !first_launch);
@@ -198,6 +207,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
         Static.T.runThread(new Runnable() {
             @Override
             public void run() {
+                Log.v(TAG, "initWidgets");
                 try {
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(activity);
@@ -224,6 +234,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                Log.v(TAG, "initApps");
                 try {
                     // Переключаем режим отображения
                     toggleMode(true);
@@ -317,6 +328,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                Log.v(TAG, "initShortcuts");
                 try {
                     // Переключаем режим отображения
                     toggleMode(true);
@@ -466,6 +478,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                Log.v(TAG, "toggleMode | hide=" + (hide ? "true" : "false") + " | animate=" + (animate ? "true" : "false"));
                 try {
                     final ViewGroup initial_picker = activity.findViewById(R.id.initial_picker);
                     final ViewGroup content_area = activity.findViewById(R.id.content_area);
@@ -554,6 +567,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                Log.v(TAG, "showWidgetsHolder");
                 new AlertDialog.Builder(activity)
                         .setMessage(R.string.pin_app_widget_not_supported)
                         .setPositiveButton(R.string.close, null)

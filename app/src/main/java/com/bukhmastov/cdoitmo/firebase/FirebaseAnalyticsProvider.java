@@ -161,14 +161,13 @@ public class FirebaseAnalyticsProvider {
                 String level = m.group(2).trim();
                 String course = m.group(3).trim();
                 switch (faculty) {
-                    case "A": faculty = "A - Естественнонаучный"; break;
                     case "B": faculty = "B - Лазерной и световой инженерии"; break;
                     case "C": faculty = "C - Дизайна и урбанистики"; break;
                     case "D": faculty = "D - ИМРиП"; break;
                     case "F": faculty = "F - Трансляционной медицины"; break;
                     case "K": faculty = "K - Инфокоммуникационных технологий"; break;
                     case "M": faculty = "M - ИТиП"; break;
-                    case "N": faculty = "N - 'ИКВО'"; break;
+                    case "N": faculty = "N - 'ИБиКТ'"; break;
                     case "O": faculty = "O - 'ИМБиП'"; break;
                     case "P": faculty = "P - КТиУ"; break;
                     case "S": faculty = "S - 'Академия ЛИМТУ'"; break;
@@ -178,6 +177,7 @@ public class FirebaseAnalyticsProvider {
                     case "W": faculty = "W - ФХКТК"; break;
                     case "X": faculty = "X - Заочный"; break;
                     case "Y": faculty = "Y - Среднего проф. образования"; break;
+                    case "Z": faculty = "Z - Физико-технический факультет"; break;
                 }
                 switch (level) {
                     case "0": level = "0 - Подг. отделение для ин. граждан"; break;

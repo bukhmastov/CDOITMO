@@ -78,7 +78,8 @@ public class SubjectShowFragment extends ConnectedFragment {
                 // проверяем целостность данных
                 try {
                     if (ERegisterFragment.data == null) {
-                        throw new NullPointerException("ERegisterFragment.data cannot be null");
+                        activity.back();
+                        return;
                     }
                     boolean groupFound = false;
                     JSONArray groups = ERegisterFragment.data.getJSONArray("groups");
