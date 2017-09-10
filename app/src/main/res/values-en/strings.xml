@@ -225,10 +225,9 @@
     <string name="december_genitive">december</string>
     <string name="pref_reset_application_summary">Reset application</string>
     <string name="pref_schedule_lessons_scroll_to_day">Scroll to the current day</string>
-    <string name="add_shortcut">Home screen shortcuts</string>
+    <string name="manage_homescreen_interaction">Home screen</string>
     <string name="shortcut_created">Shortcut created</string>
     <string name="shortcut_create_info">Add shortcuts to your device\'s home screen to have quick access to various application functions</string>
-    <string name="time_remaining_widget">The remaining time widget</string>
     <string name="shortcut_creator_need_to_choose">You must select a shortcut</string>
     <string name="choose_shortcut">Select a shortcut</string>
     <string name="shortcut_choosed">Shortcut selected</string>
@@ -299,7 +298,6 @@
     <string name="hours">Hours</string>
     <string name="minutes">Minutes</string>
     <string name="seconds">Seconds</string>
-    <string name="days_remaining_widget">Widget days before the session</string>
     <string name="pref_protocol_changes_mode_title">Display mode</string>
     <string name="protocol_changes_mode_simple">Simple list of changes</string>
     <string name="protocol_changes_mode_advanced">Grouped list of changes</string>
@@ -405,5 +403,14 @@
     <string name="added_lessons">Added lessons</string>
     <string name="reduced_lessons">Hidden lessons</string>
     <string name="nothing_to_share">No changes found</string>
+    <string name="homescreen_widgets">Home Screen Widgets</string>
+    <string name="homescreen_apps">Home screen applications</string>
+    <string name="homescreen_shortcuts">Home screen shortcuts</string>
+    <string name="time_remaining_widget">Time till the end of the lessons</string>
+    <string name="time_remaining_widget_desc">This application will tell you how much time is left before the end of the current lesson, the beginning of the next and the end of the education day</string>
+    <string name="days_remaining_widget">Time before the exams</string>
+    <string name="days_remaining_widget_desc">This application will tell you how much time is left before the next exam</string>
+    <string name="need_to_choose_type">You must select a type</string>
+    <string name="pin_app_widget_not_supported">Creating widgets in the application is not supported. Creating widgets is available in your launcher.</string>
 
 </resources>

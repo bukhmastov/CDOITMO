@@ -228,10 +228,9 @@
     <string name="december_genitive">декабря</string>
     <string name="pref_reset_application_summary">Очистить приложение</string>
     <string name="pref_schedule_lessons_scroll_to_day">Прокручивать к текущему дню</string>
-    <string name="add_shortcut">Ярлыки домашнего экрана</string>
+    <string name="manage_homescreen_interaction">Домашний экран</string>
     <string name="shortcut_created">Ярлык создан</string>
     <string name="shortcut_create_info">Добавляйте ярлыки на домашний экран Вашего устройства, чтобы иметь быстрый доступ к различным функциям приложения</string>
-    <string name="time_remaining_widget">Виджет оставшегося времени</string>
     <string name="shortcut_creator_need_to_choose">Необходимо выбрать ярлык</string>
     <string name="choose_shortcut">Выберите ярлык</string>
     <string name="shortcut_choosed">Выбран ярлык</string>
@@ -306,7 +305,6 @@
     <string name="hours">Часы</string>
     <string name="minutes">Минуты</string>
     <string name="seconds">Секунды</string>
-    <string name="days_remaining_widget">Виджет дней до сессии</string>
     <string name="pref_protocol_changes_mode_title">Режим отображения</string>
     <string name="protocol_changes_mode_simple">Простой список изменений</string>
     <string name="protocol_changes_mode_advanced">Группированный список изменений</string>
@@ -412,5 +410,14 @@
     <string name="added_lessons">Добавленные занятия</string>
     <string name="reduced_lessons">Скрытые занятия</string>
     <string name="nothing_to_share">Изменений не найдено</string>
+    <string name="homescreen_widgets">Виджеты домашнего экрана</string>
+    <string name="homescreen_apps">Приложения домашнего экрана</string>
+    <string name="homescreen_shortcuts">Ярлыки домашнего экрана</string>
+    <string name="time_remaining_widget">Время до конца пары</string>
+    <string name="time_remaining_widget_desc">Данное приложение подскажет, сколько осталось времени до конца текущей пары, начала следующей и конца учебного дня</string>
+    <string name="days_remaining_widget">Время до экзаменов</string>
+    <string name="days_remaining_widget_desc">Данное приложение подскажет, сколько времени осталось до ближайшего экзамена</string>
+    <string name="need_to_choose_type">Необходимо выбрать тип</string>
+    <string name="pin_app_widget_not_supported">Создание виджетов в приложении не поддерживается. Создание виджетов доступно в Вашем лаунчере.</string>
 
 </resources>

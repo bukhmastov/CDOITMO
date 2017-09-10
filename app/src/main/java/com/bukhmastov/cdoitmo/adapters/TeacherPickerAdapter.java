@@ -61,7 +61,7 @@ public class TeacherPickerAdapter extends ArrayAdapter<JSONObject> {
             if (teacher != null) {
                 ((TextView) convertView.findViewById(R.id.title)).setText(teacher.getString("person"));
                 String post = teacher.getString("post");
-                if (post == null || Objects.equals(post, "null")) {
+                if (post == null || Objects.equals(post, "null") || post.trim().isEmpty()) {
                     convertView.findViewById(R.id.meta).setLayoutParams(new LinearLayout.LayoutParams(0, 0));
                 } else {
                     ((TextView) convertView.findViewById(R.id.meta)).setText(post);

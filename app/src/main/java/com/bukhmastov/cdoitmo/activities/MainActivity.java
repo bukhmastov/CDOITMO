@@ -17,12 +17,12 @@ import android.view.View;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragments.ERegisterFragment;
+import com.bukhmastov.cdoitmo.fragments.HomeScreenInteractionFragment;
 import com.bukhmastov.cdoitmo.fragments.ProtocolFragment;
 import com.bukhmastov.cdoitmo.fragments.RatingFragment;
 import com.bukhmastov.cdoitmo.fragments.Room101Fragment;
 import com.bukhmastov.cdoitmo.fragments.ScheduleExamsFragment;
 import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsFragment;
-import com.bukhmastov.cdoitmo.fragments.ShortcutCreateFragment;
 import com.bukhmastov.cdoitmo.fragments.UniversityFragment;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.ProtocolTracker;
@@ -262,11 +262,11 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                         });
                         break;
                     }
-                    case R.id.nav_shortcuts:
+                    case R.id.nav_homescreen:
                         Static.T.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                if (openActivityOrFragment(TYPE.stackable, ShortcutCreateFragment.class, null)) {
+                                if (openActivityOrFragment(TYPE.stackable, HomeScreenInteractionFragment.class, null)) {
                                     if (Static.tablet) {
                                         Menu menu = ((NavigationView) findViewById(R.id.nav_view)).getMenu();
                                         for (int i = 0; i < menu.size(); i++) {

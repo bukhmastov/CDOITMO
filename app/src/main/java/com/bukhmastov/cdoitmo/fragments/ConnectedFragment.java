@@ -43,7 +43,7 @@ public abstract class ConnectedFragment extends Fragment {
         if (connectedFragment == RatingListFragment.class) return new Data(connectedFragment, context.getString(R.string.top_rating), R.drawable.ic_rating);
         if (connectedFragment == ScheduleLessonsModifyFragment.class) return new Data(connectedFragment, context.getString(R.string.lesson_creation), R.drawable.ic_schedule_lessons);
         if (connectedFragment == ScheduleLessonsShareFragment.class) return new Data(connectedFragment, context.getString(R.string.share_changes), R.drawable.ic_share);
-        if (connectedFragment == ShortcutCreateFragment.class) return new Data(connectedFragment, context.getString(R.string.add_shortcut), R.drawable.ic_shortcut);
+        if (connectedFragment == HomeScreenInteractionFragment.class) return new Data(connectedFragment, context.getString(R.string.manage_homescreen_interaction), R.drawable.ic_shortcut);
         Log.wtf(TAG, "getData | fragment class (" + connectedFragment.toString() + ") does not supported!");
         return null;
     }
