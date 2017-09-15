@@ -14,15 +14,14 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapters.RatingTopListView;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.network.Client;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.IfmoClient;
-import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoClientResponseHandler;
+import com.bukhmastov.cdoitmo.network.interfaces.ResponseHandler;
+import com.bukhmastov.cdoitmo.network.models.Client;
 import com.bukhmastov.cdoitmo.parse.RatingTopListParse;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
-import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -39,7 +38,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
     private String course = null;
     private String years = null;
     private boolean loaded = false;
-    private RequestHandle fragmentRequestHandle = null;
+    private Client.Request requestHandle = null;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -95,9 +94,8 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
     public void onPause() {
         super.onPause();
         Log.v(TAG, "Fragment paused");
-        if (fragmentRequestHandle != null) {
+        if (requestHandle != null && requestHandle.cancel()) {
             loaded = false;
-            fragmentRequestHandle.cancel(true);
         }
     }
 
@@ -113,9 +111,9 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                 Log.v(TAG, "load");
                 activity.updateToolbar(activity.getString(R.string.top_rating), R.drawable.ic_rating);
                 if (!Static.OFFLINE_MODE) {
-                    DeIfmoClient.get(activity, Client.Protocol.HTTP, "?node=rating&std&depId=" + faculty + "&year=" + course + "&app=" + years, null, new DeIfmoClientResponseHandler() {
+                    DeIfmoClient.get(activity, Client.Protocol.HTTP, "?node=rating&std&depId=" + faculty + "&year=" + course + "&app=" + years, null, new ResponseHandler() {
                         @Override
-                        public void onSuccess(final int statusCode, final String response) {
+                        public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                             Static.T.runThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -134,25 +132,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                             });
                         }
                         @Override
-                        public void onProgress(final int state) {
-                            Static.T.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Log.v(TAG, "load | progress " + state);
-                                    draw(R.layout.state_loading);
-                                    TextView loading_message = activity.findViewById(R.id.loading_message);
-                                    if (loading_message != null) {
-                                        switch (state) {
-                                            case IfmoClient.STATE_HANDLING:
-                                                loading_message.setText(R.string.loading);
-                                                break;
-                                        }
-                                    }
-                                }
-                            });
-                        }
-                        @Override
-                        public void onFailure(final int statusCode, final int state) {
+                        public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                             Static.T.runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -187,8 +167,26 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                             });
                         }
                         @Override
-                        public void onNewHandle(RequestHandle requestHandle) {
-                            fragmentRequestHandle = requestHandle;
+                        public void onProgress(final int state) {
+                            Static.T.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.v(TAG, "load | progress " + state);
+                                    draw(R.layout.state_loading);
+                                    TextView loading_message = activity.findViewById(R.id.loading_message);
+                                    if (loading_message != null) {
+                                        switch (state) {
+                                            case IfmoClient.STATE_HANDLING:
+                                                loading_message.setText(R.string.loading);
+                                                break;
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                        @Override
+                        public void onNewRequest(Client.Request request) {
+                            requestHandle = request;
                         }
                     });
                 } else {

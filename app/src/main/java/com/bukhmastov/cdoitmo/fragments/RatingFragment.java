@@ -21,13 +21,13 @@ import com.bukhmastov.cdoitmo.activities.LoginActivity;
 import com.bukhmastov.cdoitmo.adapters.RatingListView;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
-import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoClientResponseHandler;
+import com.bukhmastov.cdoitmo.network.interfaces.ResponseHandler;
+import com.bukhmastov.cdoitmo.network.models.Client;
 import com.bukhmastov.cdoitmo.parse.RatingListParse;
 import com.bukhmastov.cdoitmo.parse.RatingParse;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
-import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -54,7 +54,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
     }
     private String rating_list_choose_faculty, rating_list_choose_course;
     private boolean loaded = false;
-    private RequestHandle fragmentRequestHandle = null;
+    private Client.Request requestHandle = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -93,9 +93,8 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
     public void onPause() {
         super.onPause();
         Log.v(TAG, "paused");
-        if (fragmentRequestHandle != null) {
+        if (requestHandle != null && requestHandle.cancel()) {
             loaded = false;
-            fragmentRequestHandle.cancel(true);
         }
     }
 
@@ -242,9 +241,9 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                             break;
                         }
                     }
-                    DeIfmoClient.get(activity, url, null, new DeIfmoClientResponseHandler() {
+                    DeIfmoClient.get(activity, url, null, new ResponseHandler() {
                         @Override
-                        public void onSuccess(final int statusCode, final String response) {
+                        public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                             Static.T.runThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -335,11 +334,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                             });
                         }
                         @Override
-                        public void onProgress(int state) {
-                            Log.v(TAG, "load | type=" + type.toString() + " | progress " + state);
-                        }
-                        @Override
-                        public void onFailure(final int statusCode, final int state) {
+                        public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                             Static.T.runThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -370,8 +365,12 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                             });
                         }
                         @Override
-                        public void onNewHandle(RequestHandle requestHandle) {
-                            fragmentRequestHandle = requestHandle;
+                        public void onProgress(final int state) {
+                            Log.v(TAG, "load | type=" + type.toString() + " | progress " + state);
+                        }
+                        @Override
+                        public void onNewRequest(Client.Request request) {
+                            requestHandle = request;
                         }
                     });
                 } else {

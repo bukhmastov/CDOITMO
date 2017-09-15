@@ -26,11 +26,11 @@ import com.bukhmastov.cdoitmo.adapters.RecyclerViewOnScrollListener;
 import com.bukhmastov.cdoitmo.adapters.UniversityRecyclerViewAdapter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
-import com.bukhmastov.cdoitmo.network.interfaces.IfmoRestClientResponseHandler;
+import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
+import com.bukhmastov.cdoitmo.network.models.Client;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
-import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -45,7 +45,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
     private static final String TAG = "UniversityFacultiesFragment";
     private Activity activity;
     private View container;
-    private RequestHandle fragmentRequestHandle = null;
+    private Client.Request requestHandle = null;
     private boolean loaded = false;
     private final ArrayList<String> stack = new ArrayList<>();
     private final ArrayMap<String, String> history = new ArrayMap<>();
@@ -81,9 +81,8 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
     public void onPause() {
         super.onPause();
         Log.v(TAG, "paused");
-        if (fragmentRequestHandle != null) {
+        if (requestHandle != null && requestHandle.cancel()) {
             loaded = false;
-            fragmentRequestHandle.cancel(true);
         }
     }
 
@@ -181,9 +180,9 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                     }
                 }
                 if (!Static.OFFLINE_MODE) {
-                    loadProvider(new IfmoRestClientResponseHandler() {
+                    loadProvider(new RestResponseHandler() {
                         @Override
-                        public void onSuccess(final int statusCode, final JSONObject json, final JSONArray responseArr) {
+                        public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject json, final JSONArray responseArr) {
                             Static.T.runThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -212,25 +211,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                             });
                         }
                         @Override
-                        public void onProgress(final int state) {
-                            Static.T.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Log.v(TAG, "forceLoad | progress " + state);
-                                    draw(R.layout.state_loading);
-                                    if (activity != null) {
-                                        TextView loading_message = container.findViewById(R.id.loading_message);
-                                        if (loading_message != null) {
-                                            switch (state) {
-                                                case IfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
-                                            }
-                                        }
-                                    }
-                                }
-                            });
-                        }
-                        @Override
-                        public void onFailure(final int statusCode, final int state) {
+                        public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                             Static.T.runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -269,8 +250,26 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                             });
                         }
                         @Override
-                        public void onNewHandle(RequestHandle requestHandle) {
-                            fragmentRequestHandle = requestHandle;
+                        public void onProgress(final int state) {
+                            Static.T.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.v(TAG, "forceLoad | progress " + state);
+                                    draw(R.layout.state_loading);
+                                    if (activity != null) {
+                                        TextView loading_message = container.findViewById(R.id.loading_message);
+                                        if (loading_message != null) {
+                                            switch (state) {
+                                                case IfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                        @Override
+                        public void onNewRequest(Client.Request request) {
+                            requestHandle = request;
                         }
                     });
                 } else {
@@ -295,7 +294,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
             }
         });
     }
-    private void loadProvider(IfmoRestClientResponseHandler handler) {
+    private void loadProvider(RestResponseHandler handler) {
         Log.v(TAG, "loadProvider");
         String dep_id = "";
         if (stack.size() > 0) {

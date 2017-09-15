@@ -29,13 +29,13 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapters.TeacherPickerAdapter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
+import com.bukhmastov.cdoitmo.network.models.Client;
 import com.bukhmastov.cdoitmo.objects.ScheduleExams;
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
 import com.bukhmastov.cdoitmo.receivers.ShortcutReceiver;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
-import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -48,7 +48,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
 
     private static final String TAG = "ShortcutCreateFragment";
     private final ShortcutReceiver receiver = new ShortcutReceiver();
-    private RequestHandle fragmentRequestHandle = null;
+    private Client.Request requestHandle = null;
     private interface result {
         void done(String label, String query);
     }
@@ -621,14 +621,14 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                     final String query = search_text_view.getText().toString().trim();
                                     Log.v(TAG, "getScheduleLessons | search action | clicked | query=" + query);
                                     if (!query.isEmpty()) {
-                                        if (fragmentRequestHandle != null) {
-                                            fragmentRequestHandle.cancel(true);
+                                        if (requestHandle != null) {
+                                            requestHandle.cancel();
                                         }
                                         ScheduleLessons scheduleLessons = new ScheduleLessons(activity);
                                         scheduleLessons.setHandler(new ScheduleLessons.response() {
                                             @Override
-                                            public void onNewHandle(RequestHandle requestHandle) {
-                                                fragmentRequestHandle = requestHandle;
+                                            public void onNewRequest(Client.Request request) {
+                                                requestHandle = request;
                                             }
                                             @Override
                                             public void onProgress(final int state) {
@@ -813,14 +813,14 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                     final String query = search_text_view.getText().toString().trim();
                                     Log.v(TAG, "getScheduleExams | search action | clicked | query=" + query);
                                     if (!query.isEmpty()) {
-                                        if (fragmentRequestHandle != null) {
-                                            fragmentRequestHandle.cancel(true);
+                                        if (requestHandle != null) {
+                                            requestHandle.cancel();
                                         }
                                         ScheduleExams scheduleExams = new ScheduleExams(activity);
                                         scheduleExams.setHandler(new ScheduleExams.response() {
                                             @Override
-                                            public void onNewHandle(RequestHandle requestHandle) {
-                                                fragmentRequestHandle = requestHandle;
+                                            public void onNewRequest(Client.Request request) {
+                                                requestHandle = request;
                                             }
                                             @Override
                                             public void onProgress(int state) {

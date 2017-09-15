@@ -5,14 +5,14 @@ import android.support.v4.widget.SwipeRefreshLayout;
 
 import com.bukhmastov.cdoitmo.fragments.ScheduleExamsFragment;
 import com.bukhmastov.cdoitmo.network.IfmoClient;
-import com.bukhmastov.cdoitmo.network.interfaces.IfmoClientResponseHandler;
+import com.bukhmastov.cdoitmo.network.interfaces.ResponseHandler;
+import com.bukhmastov.cdoitmo.network.models.Client;
 import com.bukhmastov.cdoitmo.parse.ScheduleExamsGroupParse;
 import com.bukhmastov.cdoitmo.parse.ScheduleExamsTeacherParse;
 import com.bukhmastov.cdoitmo.parse.ScheduleExamsTeacherPickerParse;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
-import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -29,7 +29,7 @@ public class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
         void onProgress(int state);
         void onFailure(int state);
         void onSuccess(JSONObject json);
-        void onNewHandle(RequestHandle requestHandle);
+        void onNewRequest(Client.Request request);
     }
     private ScheduleExams.response handler = null;
     private final Context context;
@@ -88,7 +88,7 @@ public class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
                     return;
                 }
                 ScheduleExamsFragment.query = q;
-                if (ScheduleExamsFragment.fragmentRequestHandle != null) ScheduleExamsFragment.fragmentRequestHandle.cancel(true);
+                if (ScheduleExamsFragment.requestHandle != null) ScheduleExamsFragment.requestHandle.cancel();
                 if (Pattern.compile("^\\w{1,3}\\d{4}\\w?$").matcher(q).find()) {
                     searchGroup(q.toUpperCase(), refresh_rate, toCache);
                 } else if (Pattern.compile("^teacher\\d+$").matcher(q).find()) {
@@ -108,9 +108,9 @@ public class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
                 final String cache_token = "group_" + group;
                 final String cache = getCache(cache_token);
                 if (getForce(cache, refresh_rate) && !Static.OFFLINE_MODE) {
-                    IfmoClient.get(context, "ru/exam/0/" + group + "/raspisanie_sessii.htm", null, new IfmoClientResponseHandler() {
+                    IfmoClient.get(context, "ru/exam/0/" + group + "/raspisanie_sessii.htm", null, new ResponseHandler() {
                         @Override
-                        public void onSuccess(final int statusCode, final String response) {
+                        public void onSuccess(final int statusCode, Client.Headers headers, final String response) {
                             Static.T.runThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -146,16 +146,16 @@ public class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
                             });
                         }
                         @Override
+                        public void onFailure(int statusCode, Client.Headers headers, int state) {
+                            handler.onFailure(state);
+                        }
+                        @Override
                         public void onProgress(int state) {
                             handler.onProgress(state);
                         }
                         @Override
-                        public void onFailure(int statusCode, int state) {
-                            handler.onFailure(state);
-                        }
-                        @Override
-                        public void onNewHandle(RequestHandle requestHandle) {
-                            handler.onNewHandle(requestHandle);
+                        public void onNewRequest(Client.Request request) {
+                            handler.onNewRequest(request);
                         }
                     });
                 } else if (Static.OFFLINE_MODE && Objects.equals(cache, "")) {
@@ -181,9 +181,9 @@ public class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
                 final String cache_token = "teacher_picker_" + teacher;
                 final String cache = getCache(cache_token);
                 if (getForce(cache, refresh_rate) && !Static.OFFLINE_MODE) {
-                    IfmoClient.get(context, "ru/exam/1/" + teacher + "/raspisanie_sessii.htm", null, new IfmoClientResponseHandler() {
+                    IfmoClient.get(context, "ru/exam/1/" + teacher + "/raspisanie_sessii.htm", null, new ResponseHandler() {
                         @Override
-                        public void onSuccess(final int statusCode, final String response) {
+                        public void onSuccess(final int statusCode, Client.Headers headers, final String response) {
                             Static.T.runThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -228,16 +228,16 @@ public class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
                             });
                         }
                         @Override
+                        public void onFailure(int statusCode, Client.Headers headers, int state) {
+                            handler.onFailure(state);
+                        }
+                        @Override
                         public void onProgress(int state) {
                             handler.onProgress(state);
                         }
                         @Override
-                        public void onFailure(int statusCode, int state) {
-                            handler.onFailure(state);
-                        }
-                        @Override
-                        public void onNewHandle(RequestHandle requestHandle) {
-                            handler.onNewHandle(requestHandle);
+                        public void onNewRequest(Client.Request request) {
+                            handler.onNewRequest(request);
                         }
                     });
                 } else if (Static.OFFLINE_MODE && Objects.equals(cache, "")) {
@@ -271,9 +271,9 @@ public class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
                     final String cache_token = "teacher" + id;
                     final String cache = getCache(cache_token);
                     if (getForce(cache, refresh_rate) && !Static.OFFLINE_MODE) {
-                        IfmoClient.get(context, "ru/exam/3/" + id + "/raspisanie_sessii.htm", null, new IfmoClientResponseHandler() {
+                        IfmoClient.get(context, "ru/exam/3/" + id + "/raspisanie_sessii.htm", null, new ResponseHandler() {
                             @Override
-                            public void onSuccess(final int statusCode, final String response) {
+                            public void onSuccess(final int statusCode, Client.Headers headers, final String response) {
                                 Static.T.runThread(new Runnable() {
                                     @Override
                                     public void run() {
@@ -309,16 +309,16 @@ public class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
                                 });
                             }
                             @Override
+                            public void onFailure(int statusCode, Client.Headers headers, int state) {
+                                handler.onFailure(state);
+                            }
+                            @Override
                             public void onProgress(int state) {
                                 handler.onProgress(state);
                             }
                             @Override
-                            public void onFailure(int statusCode, int state) {
-                                handler.onFailure(state);
-                            }
-                            @Override
-                            public void onNewHandle(RequestHandle requestHandle) {
-                                handler.onNewHandle(requestHandle);
+                            public void onNewRequest(Client.Request request) {
+                                handler.onNewRequest(request);
                             }
                         });
                     } else if (Static.OFFLINE_MODE && Objects.equals(cache, "")) {

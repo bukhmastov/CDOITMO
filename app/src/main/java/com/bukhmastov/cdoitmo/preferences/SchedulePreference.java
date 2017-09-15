@@ -24,8 +24,8 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.network.IfmoClient;
+import com.bukhmastov.cdoitmo.network.models.Client;
 import com.bukhmastov.cdoitmo.utils.Static;
-import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -35,7 +35,7 @@ import java.util.Objects;
 public abstract class SchedulePreference extends DialogPreference {
 
     protected static final String TAG = "SchedulePreference";
-    protected static RequestHandle preferenceRequestHandle = null;
+    protected static Client.Request requestHandle = null;
     protected String DEFAULT_VALUE = null;
     protected String query = null;
     protected String title = null;
@@ -138,7 +138,7 @@ public abstract class SchedulePreference extends DialogPreference {
                                     window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
                                 }
                             }
-                            if (preferenceRequestHandle != null) preferenceRequestHandle.cancel(true);
+                            if (requestHandle != null) requestHandle.cancel();
                             if (ps_content != null) ps_content.removeAllViews();
                             if (checkedId == R.id.ps_auto) {
                                 setValue("auto", "");
@@ -285,13 +285,13 @@ public abstract class SchedulePreference extends DialogPreference {
                 break;
         }
     }
-    public void onNewHandle(RequestHandle requestHandle) {
-        preferenceRequestHandle = requestHandle;
+    public void onNewRequest(Client.Request request) {
+        requestHandle = request;
     }
 
     @Override
     protected void onDialogClosed(boolean positiveResult) {
-        if (preferenceRequestHandle != null) preferenceRequestHandle.cancel(true);
+        if (requestHandle != null) requestHandle.cancel();
         String value = getValue();
         try {
             JSONObject jsonObject = new JSONObject(value);

@@ -21,29 +21,27 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.builders.Room101ReviewBuilder;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.Room101Client;
-import com.bukhmastov.cdoitmo.network.interfaces.Room101ClientResponseHandler;
+import com.bukhmastov.cdoitmo.network.interfaces.ResponseHandler;
+import com.bukhmastov.cdoitmo.network.models.Client;
+import com.bukhmastov.cdoitmo.network.models.Room101;
 import com.bukhmastov.cdoitmo.objects.Room101AddRequest;
 import com.bukhmastov.cdoitmo.parse.Room101ViewRequestParse;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
-import com.loopj.android.http.RequestHandle;
-import com.loopj.android.http.RequestParams;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Calendar;
-import java.util.Objects;
-
-import cz.msebera.android.httpclient.Header;
+import java.util.HashMap;
 
 public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLayout.OnRefreshListener, Room101ReviewBuilder.register {
 
     private static final String TAG = "Room101Fragment";
     public static JSONObject data = null;
     private boolean loaded = false;
-    public static RequestHandle fragmentRequestHandle = null;
+    public static Client.Request requestHandle = null;
     private String action_extra = null;
 
     @Override
@@ -89,9 +87,8 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
     public void onPause() {
         super.onPause();
         Log.v(TAG, "paused");
-        if (fragmentRequestHandle != null) {
+        if (requestHandle != null && requestHandle.cancel()) {
             loaded = false;
-            fragmentRequestHandle.cancel(true);
         }
     }
 
@@ -139,21 +136,51 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
             @Override
             public void run() {
                 Log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status);
-                RequestParams params = new RequestParams();
+                HashMap<String, String> params = new HashMap<>();
                 switch (status) {
                     case 1: params.put("getFunc", "snatRequest"); break;
                     default: params.put("getFunc", "delRequest"); break;
                 }
-                params.put("reid", reid);
+                params.put("reid", String.valueOf(reid));
                 params.put("login", Storage.file.perm.get(activity, "user#login"));
                 params.put("password", Storage.file.perm.get(activity, "user#password"));
-                Room101Client.post(activity, "delRequest.php", params, new Room101ClientResponseHandler() {
+                Room101Client.post(activity, "delRequest.php", params, new ResponseHandler() {
                     @Override
-                    public void onSuccess(final int statusCode, final String response) {
+                    public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                         Static.T.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                Log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status + " | success(not really) | statusCode=" + statusCode);
+                                if (statusCode == 302) {
+                                    Log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status + " | success | statusCode=" + statusCode);
+                                    load(true);
+                                    FirebaseAnalyticsProvider.logEvent(
+                                            activity,
+                                            FirebaseAnalyticsProvider.Event.ROOM101_REQUEST_DENIED
+                                    );
+                                } else {
+                                    Log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status + " | success(not really) | statusCode=" + statusCode);
+                                    draw(R.layout.state_try_again);
+                                    TextView try_again_message = activity.findViewById(R.id.try_again_message);
+                                    if (try_again_message != null) try_again_message.setText(R.string.wrong_response_from_server);
+                                    View try_again_reload = activity.findViewById(R.id.try_again_reload);
+                                    if (try_again_reload != null) {
+                                        try_again_reload.setOnClickListener(new View.OnClickListener() {
+                                            @Override
+                                            public void onClick(View v) {
+                                                denyRequest(reid, status);
+                                            }
+                                        });
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    @Override
+                    public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
+                        Static.T.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status + " | failure | statusCode=" + statusCode);
                                 draw(R.layout.state_try_again);
                                 TextView try_again_message = activity.findViewById(R.id.try_again_message);
                                 if (try_again_message != null) try_again_message.setText(R.string.wrong_response_from_server);
@@ -186,37 +213,8 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                         });
                     }
                     @Override
-                    public void onFailure(final int state, final int statusCode, final Header[] headers) {
-                        Static.T.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status + " | failure(rather success) | statusCode=" + statusCode);
-                                if (statusCode == 302) {
-                                    load(true);
-                                    FirebaseAnalyticsProvider.logEvent(
-                                            activity,
-                                            FirebaseAnalyticsProvider.Event.ROOM101_REQUEST_DENIED
-                                    );
-                                } else {
-                                    draw(R.layout.state_try_again);
-                                    TextView try_again_message = activity.findViewById(R.id.try_again_message);
-                                    if (try_again_message != null) try_again_message.setText(R.string.wrong_response_from_server);
-                                    View try_again_reload = activity.findViewById(R.id.try_again_reload);
-                                    if (try_again_reload != null) {
-                                        try_again_reload.setOnClickListener(new View.OnClickListener() {
-                                            @Override
-                                            public void onClick(View v) {
-                                                denyRequest(reid, status);
-                                            }
-                                        });
-                                    }
-                                }
-                            }
-                        });
-                    }
-                    @Override
-                    public void onNewHandle(RequestHandle requestHandle) {
-                        fragmentRequestHandle = requestHandle;
+                    public void onNewRequest(Client.Request request) {
+                        requestHandle = request;
                     }
                 });
             }
@@ -352,28 +350,64 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
         });
     }
 
-    public static void execute(final Context context, final String scope, final Room101ClientResponseHandler responseHandler) {
-        Static.T.runThread(new Runnable() {
+    public static void execute(final Context context, final String scope, final ResponseHandler responseHandler) {
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
             @Override
             public void run() {
                 Log.v(TAG, "execute | scope=" + scope);
-                RequestParams params = new RequestParams();
+                HashMap<String, String> params = new HashMap<>();
                 params.put("getFunc", "isLoginPassword");
                 params.put("view", scope);
                 params.put("login", Storage.file.perm.get(context, "user#login"));
                 params.put("password", Storage.file.perm.get(context, "user#password"));
-                Room101Client.post(context, "index.php", params, new Room101ClientResponseHandler() {
+                Room101Client.post(context, "index.php", params, new ResponseHandler() {
                     @Override
-                    public void onSuccess(final int statusCode, final String response) {
+                    public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                         Static.T.runThread(new Runnable() {
                             @Override
                             public void run() {
-                                Log.v(TAG, "execute | scope=" + scope + " | success(not really) | statusCode=" + statusCode);
-                                if (response.contains("Доступ запрещен") || (response.contains("Неверный") && response.contains("логин/пароль"))) {
-                                    responseHandler.onFailure(Room101Client.FAILED_AUTH, Room101Client.STATUS_CODE_EMPTY, null);
+                                if (statusCode == 302) {
+                                    Log.v(TAG, "execute | scope=" + scope + " | success | statusCode=" + statusCode);
+                                    String location = headers.getValue("Location");
+                                    if (location != null && !location.trim().isEmpty()) {
+                                        Room101Client.get(context, location, null, new ResponseHandler() {
+                                            @Override
+                                            public void onSuccess(int statusCode, Client.Headers headers, String response) {
+                                                responseHandler.onSuccess(statusCode, headers, response);
+                                            }
+                                            @Override
+                                            public void onFailure(int statusCode, Client.Headers headers, int state) {
+                                                responseHandler.onFailure(statusCode, headers, state);
+                                            }
+                                            @Override
+                                            public void onProgress(int state) {
+                                                responseHandler.onProgress(state);
+                                            }
+                                            @Override
+                                            public void onNewRequest(Client.Request request) {
+                                                responseHandler.onNewRequest(request);
+                                            }
+                                        });
+                                    } else {
+                                        responseHandler.onFailure(statusCode, headers, Room101.FAILED_EXPECTED_REDIRECTION);
+                                    }
                                 } else {
-                                    responseHandler.onFailure(Room101Client.FAILED_EXPECTED_REDIRECTION, Room101Client.STATUS_CODE_EMPTY, null);
+                                    Log.v(TAG, "execute | scope=" + scope + " | success(not really) | statusCode=" + statusCode);
+                                    if (response.contains("Доступ запрещен") || (response.contains("Неверный") && response.contains("логин/пароль"))) {
+                                        responseHandler.onFailure(statusCode, headers, Room101.FAILED_AUTH);
+                                    } else {
+                                        responseHandler.onFailure(statusCode, headers, Room101.FAILED_EXPECTED_REDIRECTION);
+                                    }
                                 }
+                            }
+                        });
+                    }
+                    @Override
+                    public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
+                        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+                            @Override
+                            public void run() {
+                                responseHandler.onFailure(statusCode, headers, state);
                             }
                         });
                     }
@@ -388,52 +422,8 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                         });
                     }
                     @Override
-                    public void onFailure(final int state, final int statusCode, final Header[] headers) {
-                        Static.T.runThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Log.v(TAG, "execute | scope=" + scope + " | failure(rather success) | statusCode=" + statusCode);
-                                if (statusCode == 302) {
-                                    boolean found = false;
-                                    for (Header header : headers) {
-                                        if (Objects.equals(header.getName(), "Location")) {
-                                            String url = header.getValue().trim();
-                                            if (!url.isEmpty()) {
-                                                found = true;
-                                                Room101Client.get(context, url, null, new Room101ClientResponseHandler() {
-                                                    @Override
-                                                    public void onSuccess(int statusCode, String response) {
-                                                        responseHandler.onSuccess(statusCode, response);
-                                                    }
-                                                    @Override
-                                                    public void onProgress(int state) {
-                                                        responseHandler.onProgress(state);
-                                                    }
-                                                    @Override
-                                                    public void onFailure(int state, int statusCode, Header[] headers) {
-                                                        responseHandler.onFailure(state, statusCode, headers);
-                                                    }
-                                                    @Override
-                                                    public void onNewHandle(RequestHandle requestHandle) {
-                                                        responseHandler.onNewHandle(requestHandle);
-                                                    }
-                                                });
-                                            }
-                                            break;
-                                        }
-                                    }
-                                    if (!found) {
-                                        responseHandler.onFailure(Room101Client.FAILED_EXPECTED_REDIRECTION, Room101Client.STATUS_CODE_EMPTY, null);
-                                    }
-                                } else {
-                                    responseHandler.onFailure(Room101Client.FAILED_EXPECTED_REDIRECTION, Room101Client.STATUS_CODE_EMPTY, null);
-                                }
-                            }
-                        });
-                    }
-                    @Override
-                    public void onNewHandle(RequestHandle requestHandle) {
-                        responseHandler.onNewHandle(requestHandle);
+                    public void onNewRequest(Client.Request request) {
+                        responseHandler.onNewRequest(request);
                     }
                 });
             }
@@ -503,9 +493,9 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                     }
                 }
                 if (!Static.OFFLINE_MODE) {
-                    execute(activity, "delRequest", new Room101ClientResponseHandler() {
+                    execute(activity, "delRequest", new ResponseHandler() {
                         @Override
-                        public void onSuccess(final int statusCode, final String response) {
+                        public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                             Static.T.runThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -552,27 +542,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                             });
                         }
                         @Override
-                        public void onProgress(final int state) {
-                            Static.T.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Log.v(TAG, "load | progress " + state);
-                                    draw(R.layout.state_loading);
-                                    if (activity != null) {
-                                        TextView loading_message = activity.findViewById(R.id.loading_message);
-                                        if (loading_message != null) {
-                                            switch (state) {
-                                                case Room101Client.STATE_HANDLING:
-                                                    loading_message.setText(R.string.loading);
-                                                    break;
-                                            }
-                                        }
-                                    }
-                                }
-                            });
-                        }
-                        @Override
-                        public void onFailure(final int state, final int statusCode, final Header[] headers) {
+                        public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                             Static.T.runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -631,8 +601,28 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                             });
                         }
                         @Override
-                        public void onNewHandle(RequestHandle requestHandle) {
-                            fragmentRequestHandle = requestHandle;
+                        public void onProgress(final int state) {
+                            Static.T.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.v(TAG, "load | progress " + state);
+                                    draw(R.layout.state_loading);
+                                    if (activity != null) {
+                                        TextView loading_message = activity.findViewById(R.id.loading_message);
+                                        if (loading_message != null) {
+                                            switch (state) {
+                                                case Room101Client.STATE_HANDLING:
+                                                    loading_message.setText(R.string.loading);
+                                                    break;
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                        @Override
+                        public void onNewRequest(Client.Request request) {
+                            requestHandle = request;
                         }
                     });
                 } else {

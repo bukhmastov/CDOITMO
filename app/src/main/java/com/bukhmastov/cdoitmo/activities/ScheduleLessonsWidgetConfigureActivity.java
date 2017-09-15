@@ -29,13 +29,13 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapters.TeacherPickerAdapter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
+import com.bukhmastov.cdoitmo.network.models.Client;
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
 import com.bukhmastov.cdoitmo.utils.CtxWrapper;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 import com.bukhmastov.cdoitmo.widgets.ScheduleLessonsWidget;
-import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -49,7 +49,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
     private final Activity activity = this;
     private int mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
     private boolean isDarkTheme = false;
-    private RequestHandle widgetRequestHandle = null;
+    private Client.Request requestHandle = null;
     private static class Settings {
         private static class Schedule {
             private static String query = "";
@@ -296,14 +296,14 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                                     final String query = search_text_view.getText().toString().trim();
                                     Log.v(TAG, "activatePartSchedule | search action | clicked | query=" + query);
                                     if (!query.isEmpty()) {
-                                        if (widgetRequestHandle != null) {
-                                            widgetRequestHandle.cancel(true);
+                                        if (requestHandle != null) {
+                                            requestHandle.cancel();
                                         }
                                         ScheduleLessons scheduleLessons = new ScheduleLessons(activity);
                                         scheduleLessons.setHandler(new ScheduleLessons.response() {
                                             @Override
-                                            public void onNewHandle(RequestHandle requestHandle) {
-                                                widgetRequestHandle = requestHandle;
+                                            public void onNewRequest(Client.Request request) {
+                                                requestHandle = request;
                                             }
                                             @Override
                                             public void onProgress(final int state) {
@@ -926,7 +926,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
         } else {
             setResult(result, intent);
         }
-        if (widgetRequestHandle != null) widgetRequestHandle.cancel(true);
+        if (requestHandle != null) requestHandle.cancel();
         finish();
     }
     private View inflate(int layoutId) throws InflateException {

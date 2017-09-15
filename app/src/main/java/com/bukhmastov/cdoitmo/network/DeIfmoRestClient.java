@@ -2,52 +2,46 @@ package com.bukhmastov.cdoitmo.network;
 
 import android.content.Context;
 
-import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoClientResponseHandler;
-import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoRestClientResponseHandler;
+import com.bukhmastov.cdoitmo.network.interfaces.RawJsonHandler;
+import com.bukhmastov.cdoitmo.network.interfaces.ResponseHandler;
+import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
+import com.bukhmastov.cdoitmo.network.models.DeIfmo;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
-import com.loopj.android.http.JsonHttpResponseHandler;
-import com.loopj.android.http.RequestHandle;
-import com.loopj.android.http.RequestParams;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import cz.msebera.android.httpclient.Header;
+import java.util.Map;
 
-public class DeIfmoRestClient extends Client {
+public class DeIfmoRestClient extends DeIfmo {
 
     private static final String TAG = "DeIfmoRestClient";
     private static final String BASE_URL = "de.ifmo.ru/api/private";
     private static final Protocol DEFAULT_PROTOCOL = Protocol.HTTPS;
 
-    public static final int STATE_HANDLING = 0;
-    public static final int FAILED_OFFLINE = 0;
-    public static final int FAILED_TRY_AGAIN = 1;
-
-    public static void get(final Context context, final String url, final RequestParams params, final DeIfmoRestClientResponseHandler responseHandler) {
-        get(context, DEFAULT_PROTOCOL, url, params, responseHandler);
+    public static void get(final Context context, final String url, final Map<String, String> query, final RestResponseHandler responseHandler) {
+        get(context, DEFAULT_PROTOCOL, url, query, responseHandler);
     }
-    public static void get(final Context context, final Protocol protocol, final String url, final RequestParams params, final DeIfmoRestClientResponseHandler responseHandler) {
+    public static void get(final Context context, final Protocol protocol, final String url, final Map<String, String> query, final RestResponseHandler responseHandler) {
         Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
             @Override
             public void run() {
-                Log.v(TAG, "get | url=" + url + " | params=" + Static.getSafetyRequestParams(params));
-                init();
+                Log.v(TAG, "get | url=" + url);
                 if (Static.isOnline(context)) {
                     if (checkJsessionId(context)) {
                         Log.v(TAG, "get | auth required");
-                        DeIfmoClient.authorize(context, new DeIfmoClientResponseHandler() {
+                        DeIfmoClient.authorize(context, new ResponseHandler() {
                             @Override
-                            public void onSuccess(int statusCode, String response) {
-                                get(context, url, params, responseHandler);
+                            public void onSuccess(int statusCode, Headers headers, String response) {
+                                get(context, protocol, url, query, responseHandler);
                             }
                             @Override
                             public void onProgress(int state) {
                                 responseHandler.onProgress(STATE_HANDLING);
                             }
                             @Override
-                            public void onFailure(int statusCode, int state) {
+                            public void onFailure(int statusCode, Headers headers, int state) {
                                 switch (state) {
                                     case DeIfmoClient.FAILED_OFFLINE:
                                         state = FAILED_OFFLINE;
@@ -59,88 +53,45 @@ public class DeIfmoRestClient extends Client {
                                         state = FAILED_TRY_AGAIN;
                                         break;
                                 }
-                                responseHandler.onFailure(statusCode, state);
+                                responseHandler.onFailure(statusCode, headers, state);
                             }
                             @Override
-                            public void onNewHandle(RequestHandle requestHandle) {
-                                responseHandler.onNewHandle(requestHandle);
+                            public void onNewRequest(Request request) {
+                                responseHandler.onNewRequest(request);
                             }
                         });
                         return;
                     }
                     responseHandler.onProgress(STATE_HANDLING);
-                    renewCookie(context);
-                    responseHandler.onNewHandle(checkHandle(getHttpClient().get(getAbsoluteUrl(protocol, url), params, new JsonHttpResponseHandler() {
+                    gJson(context, getAbsoluteUrl(protocol, url), query, new RawJsonHandler() {
                         @Override
-                        public void onSuccess(final int statusCode, final Header[] headers, final JSONObject response) {
+                        public void onDone(final int code, final okhttp3.Headers headers, final String response, final JSONObject responseObj, final JSONArray responseArr) {
                             Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
                                 @Override
                                 public void run() {
-                                    Log.v(TAG, "get | url=" + url + " | success(JSONObject) | statusCode=" + statusCode);
-                                    responseHandler.onNewHandle(null);
-                                    responseHandler.onSuccess(statusCode, response, null);
+                                    Log.v(TAG, "get | url=" + url + " | success | statusCode=" + code);
+                                    responseHandler.onSuccess(code, new Headers(headers), responseObj, responseArr);
                                 }
                             });
                         }
                         @Override
-                        public void onSuccess(final int statusCode, final Header[] headers, final JSONArray response) {
+                        public void onError(final Throwable throwable) {
                             Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
                                 @Override
                                 public void run() {
-                                    Log.v(TAG, "get | url=" + url + " | success(JSONArray) | statusCode=" + statusCode);
-                                    responseHandler.onNewHandle(null);
-                                    responseHandler.onSuccess(statusCode, null, response);
+                                    Log.v(TAG, "get | url=" + url + " | failure" + (throwable != null ? " | throwable=" + throwable.getMessage() : ""));
+                                    responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_TRY_AGAIN);
                                 }
                             });
                         }
                         @Override
-                        public void onSuccess(final int statusCode, final Header[] headers, final String responseString) {
-                            Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
-                                @Override
-                                public void run() {
-                                    Log.v(TAG, "get | url=" + url + " | success(String)(rather failure) | statusCode=" + statusCode + " | responseString=" + responseString);
-                                    responseHandler.onNewHandle(null);
-                                    responseHandler.onFailure(statusCode, FAILED_TRY_AGAIN);
-                                }
-                            });
+                        public void onNewRequest(Request request) {
+                            responseHandler.onNewRequest(request);
                         }
-                        @Override
-                        public void onFailure(final int statusCode, final Header[] headers, final Throwable throwable, final JSONObject errorResponse) {
-                            Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
-                                @Override
-                                public void run() {
-                                    Log.v(TAG, "get | url=" + url + " | failure(JSONObject) | statusCode=" + statusCode + (throwable != null ? " | throwable=" + throwable.getMessage() : "") + (errorResponse != null ? " | response=" + errorResponse.toString() : ""));
-                                    responseHandler.onNewHandle(null);
-                                    responseHandler.onFailure(statusCode, FAILED_TRY_AGAIN);
-                                }
-                            });
-                        }
-                        @Override
-                        public void onFailure(final int statusCode, final Header[] headers, final Throwable throwable, final JSONArray errorResponse) {
-                            Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
-                                @Override
-                                public void run() {
-                                    Log.v(TAG, "get | url=" + url + " | failure(JSONArray) | statusCode=" + statusCode + (throwable != null ? " | throwable=" + throwable.getMessage() : "") + (errorResponse != null ? " | response=" + errorResponse.toString() : ""));
-                                    responseHandler.onNewHandle(null);
-                                    responseHandler.onFailure(statusCode, FAILED_TRY_AGAIN);
-                                }
-                            });
-                        }
-                        @Override
-                        public void onFailure(final int statusCode, final Header[] headers, final String responseString, final Throwable throwable) {
-                            Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
-                                @Override
-                                public void run() {
-                                    Log.v(TAG, "get | url=" + url + " | failure(String) | statusCode=" + statusCode + (throwable != null ? " | throwable=" + throwable.getMessage() : "") + (responseString != null ? " | response=" + responseString : ""));
-                                    responseHandler.onNewHandle(null);
-                                    responseHandler.onFailure(statusCode, FAILED_TRY_AGAIN);
-                                }
-                            });
-                        }
-                    })));
+                    });
                 } else {
                     Log.v(TAG, "get | url=" + url + " | offline");
-                    responseHandler.onFailure(STATUS_CODE_EMPTY, FAILED_OFFLINE);
+                    responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_OFFLINE);
                 }
             }
         });

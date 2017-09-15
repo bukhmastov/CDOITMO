@@ -2,70 +2,59 @@ package com.bukhmastov.cdoitmo.network;
 
 import android.content.Context;
 
-import com.bukhmastov.cdoitmo.network.interfaces.IfmoClientResponseHandler;
+import com.bukhmastov.cdoitmo.network.interfaces.RawHandler;
+import com.bukhmastov.cdoitmo.network.interfaces.ResponseHandler;
+import com.bukhmastov.cdoitmo.network.models.Ifmo;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
-import com.loopj.android.http.AsyncHttpResponseHandler;
-import com.loopj.android.http.RequestParams;
 
-import cz.msebera.android.httpclient.Header;
+import java.util.Map;
 
-public class IfmoClient extends Client {
+public class IfmoClient extends Ifmo {
 
     private static final String TAG = "IfmoClient";
     private static final String BASE_URL = "www.ifmo.ru";
     private static final Protocol DEFAULT_PROTOCOL = Protocol.HTTP;
 
-    public static final int STATE_HANDLING = 0;
-    public static final int FAILED_OFFLINE = 0;
-    public static final int FAILED_TRY_AGAIN = 1;
-
-    public static void get(final Context context, final String url, final RequestParams params, final IfmoClientResponseHandler responseHandler) {
-        get(context, DEFAULT_PROTOCOL, url, params, responseHandler);
+    public static void get(final Context context, final String url, final Map<String, String> query, final ResponseHandler responseHandler) {
+        get(context, DEFAULT_PROTOCOL, url, query, responseHandler);
     }
-    public static void get(final Context context, final Protocol protocol, final String url, final RequestParams params, final IfmoClientResponseHandler responseHandler) {
+    public static void get(final Context context, final Protocol protocol, final String url, final Map<String, String> query, final ResponseHandler responseHandler) {
         Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
             @Override
             public void run() {
-                Log.v(TAG, "get | url=" + url + " | params=" + Static.getSafetyRequestParams(params));
-                init();
+                Log.v(TAG, "get | url=" + url);
                 if (Static.isOnline(context)) {
                     responseHandler.onProgress(STATE_HANDLING);
-                    renewCookie(context);
-                    responseHandler.onNewHandle(checkHandle(getHttpClient().get(getAbsoluteUrl(protocol, url), params, new AsyncHttpResponseHandler() {
+                    g(context, getAbsoluteUrl(protocol, url), query, new RawHandler() {
                         @Override
-                        public void onSuccess(final int statusCode, final Header[] headers, final byte[] responseBody) {
+                        public void onDone(final int code, final okhttp3.Headers headers, final String response) {
                             Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
                                 @Override
                                 public void run() {
-                                    Log.v(TAG, "get | url=" + url + " | success | statusCode=" + statusCode);
-                                    responseHandler.onNewHandle(null);
-                                    try {
-                                        String data = convert2UTF8(headers, responseBody);
-                                        if (data == null) throw new NullPointerException("data cannot be null");
-                                        responseHandler.onSuccess(statusCode, data);
-                                    } catch (Exception e) {
-                                        Static.error(e);
-                                        responseHandler.onFailure(statusCode, FAILED_TRY_AGAIN);
-                                    }
+                                    Log.v(TAG, "get | url=" + url + " | success | statusCode=" + code);
+                                    responseHandler.onSuccess(code, new Headers(headers), response);
                                 }
                             });
                         }
                         @Override
-                        public void onFailure(final int statusCode, final Header[] headers, final byte[] responseBody, final Throwable throwable) {
+                        public void onError(final Throwable throwable) {
                             Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
                                 @Override
                                 public void run() {
-                                    Log.v(TAG, "get | url=" + url + " | failure | statusCode=" + statusCode + (responseBody != null ? convert2UTF8(headers, responseBody) : "") + (throwable != null ? " | throwable=" + throwable.getMessage() : ""));
-                                    responseHandler.onNewHandle(null);
-                                    responseHandler.onFailure(statusCode, FAILED_TRY_AGAIN);
+                                    Log.v(TAG, "get | url=" + url + " | failure" + (throwable != null ? " | throwable=" + throwable.getMessage() : ""));
+                                    responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_TRY_AGAIN);
                                 }
                             });
                         }
-                    })));
+                        @Override
+                        public void onNewRequest(Request request) {
+                            responseHandler.onNewRequest(request);
+                        }
+                    });
                 } else {
                     Log.v(TAG, "get | url=" + url + " | offline");
-                    responseHandler.onFailure(STATUS_CODE_EMPTY, FAILED_OFFLINE);
+                    responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_OFFLINE);
                 }
             }
         });

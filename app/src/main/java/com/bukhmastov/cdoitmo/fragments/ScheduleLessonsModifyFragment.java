@@ -20,12 +20,12 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapters.TeacherPickerAdapter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
+import com.bukhmastov.cdoitmo.network.models.Client;
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
 import com.bukhmastov.cdoitmo.objects.entities.LessonUnit;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
-import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -565,7 +565,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
             void onFailure(int state);
             void onSuccess(JSONObject json);
         }
-        private static RequestHandle request = null;
+        private static Client.Request requestHandle = null;
         static boolean blocked = false;
         private static String lastQuery = "";
 
@@ -573,9 +573,8 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
             Static.T.runThread(new Runnable() {
                 @Override
                 public void run() {
-                    if (request != null) {
-                        request.cancel(true);
-                        request = null;
+                    if (requestHandle != null) {
+                        requestHandle.cancel();
                     }
                     boolean allowed = true;
                     if (Objects.equals(lastQuery, query)) {
@@ -631,8 +630,8 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                             delegate.onSuccess(json);
                         }
                         @Override
-                        public void onNewHandle(RequestHandle requestHandle) {
-                            request = requestHandle;
+                        public void onNewRequest(Client.Request request) {
+                            requestHandle = request;
                         }
                     });
                     Static.T.runOnUiThread(new Runnable() {

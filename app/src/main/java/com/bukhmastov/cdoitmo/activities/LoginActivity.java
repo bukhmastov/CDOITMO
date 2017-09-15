@@ -21,12 +21,12 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
-import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoClientResponseHandler;
+import com.bukhmastov.cdoitmo.network.interfaces.ResponseHandler;
+import com.bukhmastov.cdoitmo.network.models.Client;
 import com.bukhmastov.cdoitmo.utils.CtxWrapper;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
-import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -44,7 +44,7 @@ public class LoginActivity extends AppCompatActivity {
     public static final int SIGNAL_LOGOUT = 4;
     public static final int SIGNAL_CREDENTIALS_REQUIRED = 5;
     public static final int SIGNAL_CREDENTIALS_FAILED = 6;
-    private RequestHandle loginRequestHandle = null;
+    private Client.Request requestHandle = null;
     public static boolean auto_logout = false;
 
     @Override
@@ -306,46 +306,14 @@ public class LoginActivity extends AppCompatActivity {
                     Storage.file.perm.put(activity, "user#login", login);
                     Storage.file.perm.put(activity, "user#password", password);
                     Storage.file.perm.put(activity, "user#role", role);
-                    DeIfmoClient.check(activity, new DeIfmoClientResponseHandler() {
+                    DeIfmoClient.check(activity, new ResponseHandler() {
                         @Override
-                        public void onSuccess(final int statusCode, final String response) {
+                        public void onSuccess(int statusCode, Client.Headers headers, String response) {
                             Log.v(TAG, "auth | check | success");
                             authorized(newUser);
                         }
                         @Override
-                        public void onProgress(final int state) {
-                            Static.T.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Log.v(TAG, "auth | check | progress " + state);
-                                    draw(R.layout.state_auth);
-                                    View interrupt_auth = findViewById(R.id.interrupt_auth);
-                                    if (interrupt_auth != null) {
-                                        interrupt_auth.setOnClickListener(new View.OnClickListener() {
-                                            @Override
-                                            public void onClick(View v) {
-                                                Log.v(TAG, "auth | auth interrupted, going offline");
-                                                if (loginRequestHandle != null) {
-                                                    loginRequestHandle.cancel(true);
-                                                    loginRequestHandle = null;
-                                                }
-                                                route(SIGNAL_GO_OFFLINE);
-                                            }
-                                        });
-                                    }
-                                    TextView loading_message = findViewById(R.id.loading_message);
-                                    if (loading_message != null) {
-                                        switch (state) {
-                                            case DeIfmoClient.STATE_CHECKING: loading_message.setText(R.string.auth_check); break;
-                                            case DeIfmoClient.STATE_AUTHORIZATION: loading_message.setText(R.string.authorization); break;
-                                            case DeIfmoClient.STATE_AUTHORIZED: loading_message.setText(R.string.authorized); break;
-                                        }
-                                    }
-                                }
-                            });
-                        }
-                        @Override
-                        public void onFailure(final int statusCode, final int state) {
+                        public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                             Static.T.runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -374,8 +342,39 @@ public class LoginActivity extends AppCompatActivity {
                             });
                         }
                         @Override
-                        public void onNewHandle(RequestHandle requestHandle) {
-                            loginRequestHandle = requestHandle;
+                        public void onProgress(final int state) {
+                            Static.T.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.v(TAG, "auth | check | progress " + state);
+                                    draw(R.layout.state_auth);
+                                    View interrupt_auth = findViewById(R.id.interrupt_auth);
+                                    if (interrupt_auth != null) {
+                                        interrupt_auth.setOnClickListener(new View.OnClickListener() {
+                                            @Override
+                                            public void onClick(View v) {
+                                                Log.v(TAG, "auth | auth interrupted, going offline");
+                                                if (requestHandle != null) {
+                                                    requestHandle.cancel();
+                                                }
+                                                route(SIGNAL_GO_OFFLINE);
+                                            }
+                                        });
+                                    }
+                                    TextView loading_message = findViewById(R.id.loading_message);
+                                    if (loading_message != null) {
+                                        switch (state) {
+                                            case DeIfmoClient.STATE_CHECKING: loading_message.setText(R.string.auth_check); break;
+                                            case DeIfmoClient.STATE_AUTHORIZATION: loading_message.setText(R.string.authorization); break;
+                                            case DeIfmoClient.STATE_AUTHORIZED: loading_message.setText(R.string.authorized); break;
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                        @Override
+                        public void onNewRequest(Client.Request request) {
+                            requestHandle = request;
                         }
                     });
                 } else {
@@ -413,10 +412,15 @@ public class LoginActivity extends AppCompatActivity {
             public void run() {
                 Log.v(TAG, "logout | login=" + login);
                 Storage.file.general.put(activity, "users#current_login", login);
-                DeIfmoClient.get(activity, "servlet/distributedCDE?Rule=SYSTEM_EXIT", null, new DeIfmoClientResponseHandler() {
+                DeIfmoClient.get(activity, "servlet/distributedCDE?Rule=SYSTEM_EXIT", null, new ResponseHandler() {
                     @Override
-                    public void onSuccess(int statusCode, String response) {
+                    public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                         Log.v(TAG, "logout | success");
+                        logoutDone(login, true);
+                    }
+                    @Override
+                    public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
+                        Log.v(TAG, "logout | failure " + state);
                         logoutDone(login, true);
                     }
                     @Override
@@ -438,13 +442,10 @@ public class LoginActivity extends AppCompatActivity {
                         });
                     }
                     @Override
-                    public void onFailure(int statusCode, int state) {
-                        Log.v(TAG, "logout | failure " + state);
-                        logoutDone(login, true);
+                    public void onNewRequest(Client.Request request) {
+                        requestHandle = request;
                     }
-                    @Override
-                    public void onNewHandle(RequestHandle requestHandle) {}
-                }, false);
+                });
             }
         });
     }

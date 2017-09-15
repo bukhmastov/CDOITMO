@@ -18,11 +18,11 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
-import com.bukhmastov.cdoitmo.network.interfaces.IfmoRestClientResponseHandler;
+import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
+import com.bukhmastov.cdoitmo.network.models.Client;
 import com.bukhmastov.cdoitmo.utils.CircularTransformation;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
-import com.loopj.android.http.RequestHandle;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
@@ -32,7 +32,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
 
     private static final String TAG = "UniversityPersonCard";
     private final Activity activity = this;
-    private RequestHandle fragmentRequestHandle = null;
+    private Client.Request requestHandle = null;
     private boolean loaded = false;
     private boolean first_load = true;
     private JSONObject person = null;
@@ -99,9 +99,8 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
     public void onPause() {
         super.onPause();
         Log.v(TAG, "paused");
-        if (fragmentRequestHandle != null) {
+        if (requestHandle != null && requestHandle.cancel()) {
             loaded = false;
-            fragmentRequestHandle.cancel(true);
         }
     }
 
@@ -120,9 +119,9 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                     display();
                     return;
                 }
-                loadProvider(new IfmoRestClientResponseHandler() {
+                loadProvider(new RestResponseHandler() {
                     @Override
-                    public void onSuccess(final int statusCode, final JSONObject json, final JSONArray responseArr) {
+                    public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject json, final JSONArray responseArr) {
                         Static.T.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -135,7 +134,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                         Static.T.runThread(new Runnable() {
                             @Override
                             public void run() {
-                                if (statusCode == 200) {
+                                if (statusCode == 200 && json != null) {
                                     try {
                                         String post = json.getString("post");
                                         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
@@ -156,27 +155,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                         });
                     }
                     @Override
-                    public void onProgress(final int state) {
-                        Static.T.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Log.v(TAG, "load | progress " + state);
-                                if (first_load) {
-                                    draw(R.layout.state_loading);
-                                    TextView loading_message = findViewById(R.id.loading_message);
-                                    if (loading_message != null) {
-                                        switch (state) {
-                                            case IfmoRestClient.STATE_HANDLING:
-                                                loading_message.setText(R.string.loading);
-                                                break;
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    }
-                    @Override
-                    public void onFailure(final int statusCode, final int state) {
+                    public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                         Static.T.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -219,16 +198,36 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                         });
                     }
                     @Override
-                    public void onNewHandle(RequestHandle requestHandle) {
-                        fragmentRequestHandle = requestHandle;
+                    public void onProgress(final int state) {
+                        Static.T.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Log.v(TAG, "load | progress " + state);
+                                if (first_load) {
+                                    draw(R.layout.state_loading);
+                                    TextView loading_message = findViewById(R.id.loading_message);
+                                    if (loading_message != null) {
+                                        switch (state) {
+                                            case IfmoRestClient.STATE_HANDLING:
+                                                loading_message.setText(R.string.loading);
+                                                break;
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    @Override
+                    public void onNewRequest(Client.Request request) {
+                        requestHandle = request;
                     }
                 });
             }
         });
     }
-    private void loadProvider(IfmoRestClientResponseHandler handler) {
+    private void loadProvider(RestResponseHandler handler) {
         Log.v(TAG, "loadProvider");
-        IfmoRestClient.get(this, "person/" + pid, null, handler);
+        IfmoRestClient.get(activity, "person/" + pid, null, handler);
     }
     private void loadFailed() {
         Static.T.runOnUiThread(new Runnable() {

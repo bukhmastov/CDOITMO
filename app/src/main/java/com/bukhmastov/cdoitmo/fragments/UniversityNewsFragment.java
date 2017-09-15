@@ -25,11 +25,11 @@ import com.bukhmastov.cdoitmo.adapters.RecyclerViewOnScrollListener;
 import com.bukhmastov.cdoitmo.adapters.UniversityRecyclerViewAdapter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
-import com.bukhmastov.cdoitmo.network.interfaces.IfmoRestClientResponseHandler;
+import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
+import com.bukhmastov.cdoitmo.network.models.Client;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
-import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -43,7 +43,7 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
     private static final String TAG = "UniversityNewsFragment";
     private Activity activity;
     private View container;
-    private RequestHandle fragmentRequestHandle = null;
+    private Client.Request requestHandle = null;
     private boolean loaded = false;
     private JSONObject news = null;
     private final int limit = 10;
@@ -81,9 +81,8 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
     public void onPause() {
         super.onPause();
         Log.v(TAG, "paused");
-        if (fragmentRequestHandle != null) {
+        if (requestHandle != null && requestHandle.cancel()) {
             loaded = false;
-            fragmentRequestHandle.cancel(true);
         }
     }
 
@@ -161,9 +160,9 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                 if (!Static.OFFLINE_MODE) {
                     self.offset = 0;
                     self.search = search;
-                    loadProvider(new IfmoRestClientResponseHandler() {
+                    loadProvider(new RestResponseHandler() {
                         @Override
-                        public void onSuccess(final int statusCode, final JSONObject json, final JSONArray responseArr) {
+                        public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject json, final JSONArray responseArr) {
                             Static.T.runThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -190,27 +189,7 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                             });
                         }
                         @Override
-                        public void onProgress(final int state) {
-                            Static.T.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Log.v(TAG, "load | progress " + state);
-                                    draw(R.layout.state_loading);
-                                    if (activity != null) {
-                                        TextView loading_message = container.findViewById(R.id.loading_message);
-                                        if (loading_message != null) {
-                                            switch (state) {
-                                                case IfmoRestClient.STATE_HANDLING:
-                                                    loading_message.setText(R.string.loading);
-                                                    break;
-                                            }
-                                        }
-                                    }
-                                }
-                            });
-                        }
-                        @Override
-                        public void onFailure(final int statusCode, final int state) {
+                        public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                             Static.T.runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -249,8 +228,28 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                             });
                         }
                         @Override
-                        public void onNewHandle(RequestHandle requestHandle) {
-                            fragmentRequestHandle = requestHandle;
+                        public void onProgress(final int state) {
+                            Static.T.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.v(TAG, "load | progress " + state);
+                                    draw(R.layout.state_loading);
+                                    if (activity != null) {
+                                        TextView loading_message = container.findViewById(R.id.loading_message);
+                                        if (loading_message != null) {
+                                            switch (state) {
+                                                case IfmoRestClient.STATE_HANDLING:
+                                                    loading_message.setText(R.string.loading);
+                                                    break;
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                        @Override
+                        public void onNewRequest(Client.Request request) {
+                            requestHandle = request;
                         }
                     });
                 } else {
@@ -275,7 +274,7 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
             }
         });
     }
-    private void loadProvider(IfmoRestClientResponseHandler handler) {
+    private void loadProvider(RestResponseHandler handler) {
         Log.v(TAG, "loadProvider");
         IfmoRestClient.get(activity, "news.ifmo.ru/news?limit=" + limit + "&offset=" + offset + "&search=" + search, null, handler);
     }
@@ -355,9 +354,9 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                                 Static.T.runThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        loadProvider(new IfmoRestClientResponseHandler() {
+                                        loadProvider(new RestResponseHandler() {
                                             @Override
-                                            public void onSuccess(int statusCode, final JSONObject json, JSONArray responseArr) {
+                                            public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject json, final JSONArray responseArr) {
                                                 Static.T.runThread(new Runnable() {
                                                     @Override
                                                     public void run() {
@@ -397,9 +396,7 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                                                 });
                                             }
                                             @Override
-                                            public void onProgress(int state) {}
-                                            @Override
-                                            public void onFailure(int statusCode, int state) {
+                                            public void onFailure(int statusCode, Client.Headers headers, int state) {
                                                 Static.T.runOnUiThread(new Runnable() {
                                                     @Override
                                                     public void run() {
@@ -408,8 +405,10 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                                                 });
                                             }
                                             @Override
-                                            public void onNewHandle(RequestHandle requestHandle) {
-                                                fragmentRequestHandle = requestHandle;
+                                            public void onProgress(int state) {}
+                                            @Override
+                                            public void onNewRequest(Client.Request request) {
+                                                requestHandle = request;
                                             }
                                         });
                                     }

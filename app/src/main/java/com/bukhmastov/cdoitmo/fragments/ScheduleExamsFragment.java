@@ -25,10 +25,10 @@ import com.bukhmastov.cdoitmo.adapters.TeacherPickerListView;
 import com.bukhmastov.cdoitmo.builders.ScheduleExamsBuilder;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoClient;
+import com.bukhmastov.cdoitmo.network.models.Client;
 import com.bukhmastov.cdoitmo.objects.ScheduleExams;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
-import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -46,7 +46,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
     private static final String TAG = "SEFragment";
     public static ScheduleExams scheduleExams;
     private boolean loaded = false;
-    public static RequestHandle fragmentRequestHandle = null;
+    public static Client.Request requestHandle = null;
     public static String query = null;
     public static JSONObject schedule;
     public static boolean schedule_cached = false;
@@ -120,9 +120,8 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
     public void onPause() {
         super.onPause();
         Log.v(TAG, "paused");
-        if (fragmentRequestHandle != null) {
+        if (requestHandle != null && requestHandle.cancel()) {
             loaded = false;
-            fragmentRequestHandle.cancel(true);
         }
     }
 
@@ -166,8 +165,8 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
     }
 
     @Override
-    public void onNewHandle(RequestHandle requestHandle) {
-        fragmentRequestHandle = requestHandle;
+    public void onNewRequest(Client.Request request) {
+        requestHandle = request;
     }
 
     @Override

@@ -14,13 +14,13 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoClient;
+import com.bukhmastov.cdoitmo.network.models.Client;
 import com.bukhmastov.cdoitmo.objects.DaysRemainingWidget;
 import com.bukhmastov.cdoitmo.objects.ScheduleExams;
 import com.bukhmastov.cdoitmo.utils.CtxWrapper;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
-import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONObject;
 
@@ -34,7 +34,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
     private ScheduleExams scheduleExams = null;
     private String query = null;
     private JSONObject schedule = null;
-    private RequestHandle scheduleRequestHandle = null;
+    private Client.Request requestHandle = null;
     private boolean is_message_displaying = false;
     private final LinearLayout.LayoutParams hide = new LinearLayout.LayoutParams(0, 0);
     private final LinearLayout.LayoutParams show = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -172,8 +172,8 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
     }
 
     @Override
-    public void onNewHandle(RequestHandle requestHandle) {
-        scheduleRequestHandle = requestHandle;
+    public void onNewRequest(Client.Request request) {
+        requestHandle = request;
     }
 
     @Override
@@ -222,9 +222,8 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
             @Override
             public void run() {
                 Log.v(TAG, "close");
-                if (scheduleRequestHandle != null) {
-                    scheduleRequestHandle.cancel(true);
-                    scheduleRequestHandle = null;
+                if (requestHandle != null) {
+                    requestHandle.cancel();
                 }
                 finish();
             }

@@ -22,10 +22,10 @@ import com.bukhmastov.cdoitmo.activities.ScheduleLessonsWidgetConfigureActivity;
 import com.bukhmastov.cdoitmo.activities.SplashActivity;
 import com.bukhmastov.cdoitmo.converters.ScheduleLessonsAdditionalConverter;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
+import com.bukhmastov.cdoitmo.network.models.Client;
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
-import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -133,7 +133,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                         });
                     }
                     @Override
-                    public void onNewHandle(RequestHandle requestHandle) {}
+                    public void onNewRequest(Client.Request request) {}
                 });
                 try {
                     scheduleLessons.search(settings.getString("query"), 0, false, false);

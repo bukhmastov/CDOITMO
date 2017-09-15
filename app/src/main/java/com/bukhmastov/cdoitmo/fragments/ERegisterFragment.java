@@ -18,11 +18,11 @@ import com.bukhmastov.cdoitmo.adapters.SubjectListView;
 import com.bukhmastov.cdoitmo.converters.ERegisterConverter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
-import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoRestClientResponseHandler;
+import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
+import com.bukhmastov.cdoitmo.network.models.Client;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
-import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -41,7 +41,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
     private int term;
     private boolean spinner_group_blocker = true, spinner_period_blocker = true;
     private boolean loaded = false;
-    private RequestHandle fragmentRequestHandle = null;
+    private Client.Request requestHandle = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -78,9 +78,8 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
     public void onPause() {
         super.onPause();
         Log.v(TAG, "paused");
-        if (fragmentRequestHandle != null) {
+        if (requestHandle != null && requestHandle.cancel()) {
             loaded = false;
-            fragmentRequestHandle.cancel(true);
         }
     }
 
@@ -154,9 +153,9 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                     }
                 }
                 if (!Static.OFFLINE_MODE) {
-                    DeIfmoRestClient.get(activity, "eregister", null, new DeIfmoRestClientResponseHandler() {
+                    DeIfmoRestClient.get(activity, "eregister", null, new RestResponseHandler() {
                         @Override
-                        public void onSuccess(final int statusCode, final JSONObject responseObj, final JSONArray responseArr) {
+                        public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject responseObj, final JSONArray responseArr) {
                             Static.T.runThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -183,25 +182,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                             });
                         }
                         @Override
-                        public void onProgress(final int state) {
-                            Static.T.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Log.v(TAG, "load | progress " + state);
-                                    draw(R.layout.state_loading);
-                                    if (activity != null) {
-                                        TextView loading_message = activity.findViewById(R.id.loading_message);
-                                        if (loading_message != null) {
-                                            switch (state) {
-                                                case DeIfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
-                                            }
-                                        }
-                                    }
-                                }
-                            });
-                        }
-                        @Override
-                        public void onFailure(final int statusCode, final int state) {
+                        public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                             Static.T.runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -244,8 +225,26 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                             });
                         }
                         @Override
-                        public void onNewHandle(RequestHandle requestHandle) {
-                            fragmentRequestHandle = requestHandle;
+                        public void onProgress(final int state) {
+                            Static.T.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.v(TAG, "load | progress " + state);
+                                    draw(R.layout.state_loading);
+                                    if (activity != null) {
+                                        TextView loading_message = activity.findViewById(R.id.loading_message);
+                                        if (loading_message != null) {
+                                            switch (state) {
+                                                case DeIfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                        @Override
+                        public void onNewRequest(Client.Request request) {
+                            requestHandle = request;
                         }
                     });
                 } else {

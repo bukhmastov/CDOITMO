@@ -13,12 +13,12 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsModifyFragment;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
-import com.bukhmastov.cdoitmo.network.interfaces.IfmoRestClientResponseHandler;
+import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
+import com.bukhmastov.cdoitmo.network.models.Client;
 import com.bukhmastov.cdoitmo.objects.entities.LessonUnit;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
-import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -36,7 +36,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
         void onProgress(int state);
         void onFailure(int state);
         void onSuccess(JSONObject json);
-        void onNewHandle(RequestHandle requestHandle);
+        void onNewRequest(Client.Request request);
     }
     private ScheduleLessons.response handler = null;
     private final Context context;
@@ -102,7 +102,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                     handler.onFailure(FAILED_EMPTY_QUERY);
                     return;
                 }
-                if (ScheduleLessonsFragment.fragmentRequestHandle != null) ScheduleLessonsFragment.fragmentRequestHandle.cancel(true);
+                if (ScheduleLessonsFragment.requestHandle != null) ScheduleLessonsFragment.requestHandle.cancel();
                 Matcher matcherGroup = Pattern.compile("^([a-zA-Z]{1,3})(\\d+[a-zA-Z]?)$").matcher(q);
                 if (matcherGroup.find()) {
                     searchGroup(matcherGroup.group(1).toUpperCase() + matcherGroup.group(2), refresh_rate, toCache, additionalConversion);
@@ -125,9 +125,9 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                 final String cache_token = "group_" + group;
                 final String cache = getCache(cache_token);
                 if (getForce(cache, refresh_rate) && !Static.OFFLINE_MODE) {
-                    IfmoRestClient.get(context, "schedule_lesson_group/" + group, null, new IfmoRestClientResponseHandler() {
+                    IfmoRestClient.get(context, "schedule_lesson_group/" + group, null, new RestResponseHandler() {
                         @Override
-                        public void onSuccess(final int statusCode, final JSONObject responseObj, final JSONArray responseArr) {
+                        public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject responseObj, final JSONArray responseArr) {
                             Static.T.runThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -174,16 +174,16 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                             });
                         }
                         @Override
+                        public void onFailure(int statusCode, Client.Headers headers, int state) {
+                            handler.onFailure(state);
+                        }
+                        @Override
                         public void onProgress(int state) {
                             handler.onProgress(state);
                         }
                         @Override
-                        public void onFailure(int statusCode, int state) {
-                            handler.onFailure(state);
-                        }
-                        @Override
-                        public void onNewHandle(RequestHandle requestHandle) {
-                            handler.onNewHandle(requestHandle);
+                        public void onNewRequest(Client.Request request) {
+                            handler.onNewRequest(request);
                         }
                     });
                 } else if (Static.OFFLINE_MODE && Objects.equals(cache, "")) {
@@ -218,9 +218,9 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                 final String cache_token = "room_" + room;
                 final String cache = getCache(cache_token);
                 if (getForce(cache, refresh_rate) && !Static.OFFLINE_MODE) {
-                    IfmoRestClient.get(context, "schedule_lesson_room/" + room, null, new IfmoRestClientResponseHandler() {
+                    IfmoRestClient.get(context, "schedule_lesson_room/" + room, null, new RestResponseHandler() {
                         @Override
-                        public void onSuccess(final int statusCode, final JSONObject responseObj, final JSONArray responseArr) {
+                        public void onSuccess(final int statusCode, Client.Headers headers, final JSONObject responseObj, JSONArray responseArr) {
                             Static.T.runThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -267,16 +267,16 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                             });
                         }
                         @Override
+                        public void onFailure(int statusCode, Client.Headers headers, int state) {
+                            handler.onFailure(state);
+                        }
+                        @Override
                         public void onProgress(int state) {
                             handler.onProgress(state);
                         }
                         @Override
-                        public void onFailure(int statusCode, int state) {
-                            handler.onFailure(state);
-                        }
-                        @Override
-                        public void onNewHandle(RequestHandle requestHandle) {
-                            handler.onNewHandle(requestHandle);
+                        public void onNewRequest(Client.Request request) {
+                            handler.onNewRequest(request);
                         }
                     });
                 } else if (Static.OFFLINE_MODE && Objects.equals(cache, "")) {
@@ -311,9 +311,9 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                 final String cache_token = teacherId;
                 final String cache = getCache(cache_token);
                 if(getForce(cache, refresh_rate) && !Static.OFFLINE_MODE) {
-                    IfmoRestClient.get(context, "schedule_lesson_person/" + teacherId, null, new IfmoRestClientResponseHandler() {
+                    IfmoRestClient.get(context, "schedule_lesson_person/" + teacherId, null, new RestResponseHandler() {
                         @Override
-                        public void onSuccess(final int statusCode, final JSONObject responseObj, final JSONArray responseArr) {
+                        public void onSuccess(final int statusCode, Client.Headers headers, final JSONObject responseObj, JSONArray responseArr) {
                             Static.T.runThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -360,16 +360,16 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                             });
                         }
                         @Override
+                        public void onFailure(int statusCode, Client.Headers headers, int state) {
+                            handler.onFailure(state);
+                        }
+                        @Override
                         public void onProgress(int state) {
                             handler.onProgress(state);
                         }
                         @Override
-                        public void onFailure(int statusCode, int state) {
-                            handler.onFailure(state);
-                        }
-                        @Override
-                        public void onNewHandle(RequestHandle requestHandle) {
-                            handler.onNewHandle(requestHandle);
+                        public void onNewRequest(Client.Request request) {
+                            handler.onNewRequest(request);
                         }
                     });
                 } else if (Static.OFFLINE_MODE && Objects.equals(cache, "")) {
@@ -404,45 +404,50 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                 final String cache_token = "teacher_picker_" + teacher;
                 final String cache = getCache(cache_token);
                 if (getForce(cache, refresh_rate) && !Static.OFFLINE_MODE) {
-                    IfmoRestClient.get(context, "schedule_person?lastname=" + teacher, null, new IfmoRestClientResponseHandler() {
+                    IfmoRestClient.get(context, "schedule_person?lastname=" + teacher, null, new RestResponseHandler() {
                         @Override
-                        public void onSuccess(int statusCode, JSONObject responseObj, JSONArray responseArr) {
-                            if (statusCode == 200 && responseObj != null) {
-                                try {
-                                    responseObj.put("query", teacher);
-                                    responseObj.put("type", "teacher_picker");
-                                    responseObj.put("timestamp", Calendar.getInstance().getTimeInMillis());
-                                    responseObj.put("cache_token", cache_token);
-                                    if (responseObj.getJSONArray("list").length() > 0) putCache(cache_token, responseObj.toString(), toCache);
-                                    handler.onSuccess(responseObj);
-                                } catch (JSONException e) {
-                                    Static.error(e);
-                                    handler.onFailure(FAILED_LOAD);
-                                }
-                            } else {
-                                if (Objects.equals(cache, "")) {
-                                    handler.onFailure(FAILED_LOAD);
-                                } else {
-                                    try {
-                                        handler.onSuccess(new JSONObject(cache));
-                                    } catch (JSONException e) {
-                                        Static.error(e);
-                                        handler.onFailure(FAILED_LOAD);
+                        public void onSuccess(final int statusCode, Client.Headers headers, final JSONObject responseObj, JSONArray responseArr) {
+                            Static.T.runThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (statusCode == 200 && responseObj != null) {
+                                        try {
+                                            responseObj.put("query", teacher);
+                                            responseObj.put("type", "teacher_picker");
+                                            responseObj.put("timestamp", Calendar.getInstance().getTimeInMillis());
+                                            responseObj.put("cache_token", cache_token);
+                                            if (responseObj.getJSONArray("list").length() > 0) putCache(cache_token, responseObj.toString(), toCache);
+                                            handler.onSuccess(responseObj);
+                                        } catch (JSONException e) {
+                                            Static.error(e);
+                                            handler.onFailure(FAILED_LOAD);
+                                        }
+                                    } else {
+                                        if (Objects.equals(cache, "")) {
+                                            handler.onFailure(FAILED_LOAD);
+                                        } else {
+                                            try {
+                                                handler.onSuccess(new JSONObject(cache));
+                                            } catch (JSONException e) {
+                                                Static.error(e);
+                                                handler.onFailure(FAILED_LOAD);
+                                            }
+                                        }
                                     }
                                 }
-                            }
+                            });
+                        }
+                        @Override
+                        public void onFailure(int statusCode, Client.Headers headers, int state) {
+                            handler.onFailure(state);
                         }
                         @Override
                         public void onProgress(int state) {
                             handler.onProgress(state);
                         }
                         @Override
-                        public void onFailure(int statusCode, int state) {
-                            handler.onFailure(state);
-                        }
-                        @Override
-                        public void onNewHandle(RequestHandle requestHandle) {
-                            handler.onNewHandle(requestHandle);
+                        public void onNewRequest(Client.Request request) {
+                            handler.onNewRequest(request);
                         }
                     });
                 } else if (Static.OFFLINE_MODE && Objects.equals(cache, "")) {

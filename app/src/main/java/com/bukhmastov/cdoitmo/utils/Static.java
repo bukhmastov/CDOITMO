@@ -41,9 +41,8 @@ import com.bukhmastov.cdoitmo.activities.MainActivity;
 import com.bukhmastov.cdoitmo.activities.SplashActivity;
 import com.bukhmastov.cdoitmo.converters.ProtocolConverter;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
-import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoRestClientResponseHandler;
-import com.loopj.android.http.RequestHandle;
-import com.loopj.android.http.RequestParams;
+import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
+import com.bukhmastov.cdoitmo.network.models.Client;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -458,9 +457,9 @@ public class Static {
                     return;
                 }
                 if (attempt < 3) {
-                    DeIfmoRestClient.get(context, "eregisterlog?days=126", null, new DeIfmoRestClientResponseHandler() {
+                    DeIfmoRestClient.get(context, "eregisterlog?days=126", null, new RestResponseHandler() {
                         @Override
-                        public void onSuccess(final int statusCode, final JSONObject responseObj, final JSONArray responseArr) {
+                        public void onSuccess(final int statusCode, Client.Headers headers, JSONObject responseObj, final JSONArray responseArr) {
                             Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
                                 @Override
                                 public void run() {
@@ -478,11 +477,18 @@ public class Static {
                             });
                         }
                         @Override
+                        public void onFailure(int statusCode, Client.Headers headers, int state) {
+                            Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+                                @Override
+                                public void run() {
+                                    protocolChangesTrackSetup(context, attempt + 1);
+                                }
+                            });
+                        }
+                        @Override
                         public void onProgress(int state) {}
                         @Override
-                        public void onFailure(int statusCode, int state) {}
-                        @Override
-                        public void onNewHandle(RequestHandle requestHandle) {}
+                        public void onNewRequest(Client.Request request) {}
                     });
                 }
             }
@@ -504,10 +510,6 @@ public class Static {
                     .replace("{versionCode}", "-")
                     .replace("{sdkInt}", "-");
         }
-    }
-    public static String getSafetyRequestParams(RequestParams params){
-        // TODO getSafetyRequestParams
-        return (params == null ? "null" : (params.has("password") ? "<HIDDEN due to presence of the password>" : params.toString()));
     }
     public static class Translit {
         public static String cyr2lat(char ch) {
@@ -557,7 +559,6 @@ public class Static {
         }
     }
     public static class NavigationMenu {
-        private static RequestHandle navRequestHandle = null;
         public static void displayEnableDisableOfflineButton(final NavigationView navigationView) {
             Static.T.runOnUiThread(new Runnable() {
                 @Override

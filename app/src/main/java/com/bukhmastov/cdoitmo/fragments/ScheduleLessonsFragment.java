@@ -25,11 +25,11 @@ import com.bukhmastov.cdoitmo.adapters.TeacherPickerListView;
 import com.bukhmastov.cdoitmo.converters.ScheduleLessonsAdditionalConverter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
+import com.bukhmastov.cdoitmo.network.models.Client;
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
-import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -43,7 +43,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
     private static final String TAG = "SLFragment";
     public static ScheduleLessons scheduleLessons;
     private boolean loaded = false;
-    public static RequestHandle fragmentRequestHandle = null;
+    public static Client.Request requestHandle = null;
     public static String query = null;
     public static JSONObject schedule;
     public static boolean schedule_cached = false;
@@ -125,9 +125,8 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
         Log.v(TAG, "paused");
         ScheduleLessonsFragment.scroll.clear();
         ScheduleLessonsFragment.tabSelected = -1;
-        if (fragmentRequestHandle != null) {
+        if (requestHandle != null && requestHandle.cancel()) {
             loaded = false;
-            fragmentRequestHandle.cancel(true);
         }
     }
 
@@ -173,8 +172,8 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
     }
 
     @Override
-    public void onNewHandle(RequestHandle requestHandle) {
-        fragmentRequestHandle = requestHandle;
+    public void onNewRequest(Client.Request request) {
+        requestHandle = request;
     }
 
     @Override
@@ -452,7 +451,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
                             @Override
                             public void onProgress(int state) {}
                             @Override
-                            public void onNewHandle(RequestHandle requestHandle) {}
+                            public void onNewRequest(Client.Request request) {}
                         });
                         String scope = query;
                         if (scope == null) {

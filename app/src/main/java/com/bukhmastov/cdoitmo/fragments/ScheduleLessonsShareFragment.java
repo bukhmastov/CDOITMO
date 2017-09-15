@@ -21,11 +21,11 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
+import com.bukhmastov.cdoitmo.network.models.Client;
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
-import com.loopj.android.http.RequestHandle;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -58,7 +58,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
     private String token = "";
     private ArrayList<Change> changes = new ArrayList<>();
     private boolean loaded = false;
-    private RequestHandle fragmentRequestHandle = null;
+    private Client.Request requestHandle = null;
     private int colorScheduleFlagTEXT = -1, colorScheduleFlagCommonBG = -1, colorScheduleFlagPracticeBG = -1, colorScheduleFlagLectureBG = -1, colorScheduleFlagLabBG = -1;
 
     @Override
@@ -95,9 +95,8 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
     @Override
     public void onPause() {
         super.onPause();
-        if (fragmentRequestHandle != null) {
+        if (requestHandle != null && requestHandle.cancel()) {
             loaded = false;
-            fragmentRequestHandle.cancel(true);
         }
     }
 
@@ -271,8 +270,8 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                             });
                         }
                         @Override
-                        public void onNewHandle(RequestHandle requestHandle) {
-                            fragmentRequestHandle = requestHandle;
+                        public void onNewRequest(Client.Request request) {
+                            requestHandle = request;
                         }
                     });
                     scheduleLessons.search(

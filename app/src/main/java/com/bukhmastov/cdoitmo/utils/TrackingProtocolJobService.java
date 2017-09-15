@@ -9,8 +9,8 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.SplashActivity;
 import com.bukhmastov.cdoitmo.converters.ProtocolConverter;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
-import com.bukhmastov.cdoitmo.network.interfaces.DeIfmoRestClientResponseHandler;
-import com.loopj.android.http.RequestHandle;
+import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
+import com.bukhmastov.cdoitmo.network.models.Client;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -23,7 +23,7 @@ public class TrackingProtocolJobService extends JobService {
 
     private static final String TAG = "ProtocolTrackerJS";
     private static int c = 0;
-    private RequestHandle jobRequestHandle = null;
+    private Client.Request requestHandle = null;
     private int attempt = 0;
     private static final int maxAttempts = 3;
     private JobParameters params;
@@ -40,7 +40,7 @@ public class TrackingProtocolJobService extends JobService {
     @Override
     public boolean onStopJob(JobParameters params) {
         Log.i(TAG, "Stopped");
-        if (jobRequestHandle != null) jobRequestHandle.cancel(true);
+        if (requestHandle != null) requestHandle.cancel();
         return true;
     }
 
@@ -53,9 +53,9 @@ public class TrackingProtocolJobService extends JobService {
                     attempt++;
                     if (attempt > maxAttempts) throw new Exception("Number of attempts exceeded the limit");
                     Log.i(TAG, "Request attempt #" + attempt);
-                    DeIfmoRestClient.get(getBaseContext(), "eregisterlog?days=2", null, new DeIfmoRestClientResponseHandler() {
+                    DeIfmoRestClient.get(getBaseContext(), "eregisterlog?days=2", null, new RestResponseHandler() {
                         @Override
-                        public void onSuccess(final int statusCode, final JSONObject responseObj, final JSONArray responseArr) {
+                        public void onSuccess(final int statusCode, Client.Headers headers, JSONObject responseObj, final JSONArray responseArr) {
                             Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
                                 @Override
                                 public void run() {
@@ -78,14 +78,14 @@ public class TrackingProtocolJobService extends JobService {
                             });
                         }
                         @Override
-                        public void onProgress(int state) {}
-                        @Override
-                        public void onFailure(int statusCode, int state) {
+                        public void onFailure(int statusCode, Client.Headers headers, int state) {
                             w8andRequest();
                         }
                         @Override
-                        public void onNewHandle(RequestHandle requestHandle) {
-                            jobRequestHandle = requestHandle;
+                        public void onProgress(int state) {}
+                        @Override
+                        public void onNewRequest(Client.Request request) {
+                            requestHandle = request;
                         }
                     });
                 } catch (Exception e){
@@ -205,7 +205,7 @@ public class TrackingProtocolJobService extends JobService {
             @Override
             public void run() {
                 Log.i(TAG, "Executed");
-                if (jobRequestHandle != null) jobRequestHandle.cancel(true);
+                if (requestHandle != null) requestHandle.cancel();
                 jobFinished(params, false);
             }
         });
