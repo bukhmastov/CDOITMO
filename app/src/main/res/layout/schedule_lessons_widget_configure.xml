@@ -51,145 +51,196 @@
 
                     <LinearLayout
                         android:id="@+id/widget_header"
-                        android:orientation="vertical"
+                        android:orientation="horizontal"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
+                        android:gravity="end"
+                        android:weightSum="1"
+                        android:baselineAligned="false"
                         android:background="#96000000">
 
-                        <TextView
-                            android:id="@+id/widget_title"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:maxLines="1"
-                            android:paddingEnd="@dimen/widget_schedule_lessons_padding_horizontal"
-                            android:paddingStart="@dimen/widget_schedule_lessons_padding_horizontal"
-                            android:layout_marginStart="0dp"
-                            android:layout_marginEnd="@dimen/widget_schedule_lessons_header_icon"
-                            android:text="@string/schedule_lessons"
-                            android:textColor="#FFFFFF"
-                            android:textSize="@dimen/font_size_14" />
-
-                        <TextView
-                            android:id="@+id/widget_day_title"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:paddingStart="@dimen/widget_schedule_lessons_padding_horizontal"
-                            android:paddingEnd="@dimen/widget_schedule_lessons_padding_horizontal"
-                            android:maxLines="1"
-                            android:textAllCaps="true"
-                            android:text="@string/monday"
-                            android:textColor="#FFFFFF"
-                            android:textSize="@dimen/font_size_10"
-                            android:visibility="visible"/>
-
-                    </LinearLayout>
-
-                    <RelativeLayout
-                        android:id="@+id/widget_status_container"
-                        android:layout_width="@dimen/widget_schedule_lessons_header_height"
-                        android:layout_height="@dimen/widget_schedule_lessons_header_height"
-                        android:layout_alignParentEnd="true">
-
-                        <ImageView
-                            android:id="@+id/widget_status"
-                            android:layout_height="@dimen/widget_schedule_lessons_header_icon"
-                            android:layout_width="@dimen/widget_schedule_lessons_header_icon"
-                            android:layout_margin="@dimen/widget_schedule_lessons_header_icon_padding"
-                            android:layout_alignParentTop="true"
-                            android:layout_alignParentEnd="true"
-                            android:src="@drawable/ic_widget_refresh"/>
-
-                    </RelativeLayout>
-
-                    <FrameLayout
-                        android:id="@+id/widget_container"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_below="@+id/widget_header" >
-
                         <LinearLayout
-                            android:orientation="horizontal"
-                            android:layout_width="match_parent"
+                            android:id="@+id/widget_title_container"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:paddingTop="@dimen/widget_schedule_lessons_item_padding_top"
-                            android:paddingBottom="@dimen/widget_schedule_lessons_item_padding_bottom" >
+                            android:layout_gravity="center_vertical"
+                            android:orientation="vertical"
+                            android:layout_weight="1">
 
-                            <LinearLayout
-                                android:orientation="vertical"
-                                android:layout_width="wrap_content"
-                                android:layout_height="match_parent"
-                                android:gravity="center"
-                                android:paddingStart="@dimen/widget_schedule_lessons_item_padding"
-                                android:paddingEnd="@dimen/widget_schedule_lessons_item_padding"
-                                android:minWidth="@dimen/widget_schedule_lessons_item_min_width">
-
-                                <TextView
-                                    android:id="@+id/slw_item_time_start"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:maxLines="1"
-                                    android:text="8:20"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="@dimen/font_size_13" />
-
-                                <ImageView
-                                    android:layout_height="@dimen/widget_schedule_lessons_item_time_icon_width"
-                                    android:layout_width="@dimen/widget_schedule_lessons_item_time_icon_width"
-                                    android:id="@+id/slw_item_time_icon"
-                                    android:src="@drawable/ic_widget_time"/>
-
-                                <TextView
-                                    android:id="@+id/slw_item_time_end"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:maxLines="1"
-                                    android:text="9:50"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="@dimen/font_size_13" />
-
-                            </LinearLayout>
-
-                            <LinearLayout
-                                android:orientation="vertical"
+                            <TextView
+                                android:id="@+id/widget_title"
                                 android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:gravity="center"
-                                android:paddingStart="0dp"
-                                android:paddingEnd="@dimen/widget_schedule_lessons_item_padding" >
+                                android:layout_height="wrap_content"
+                                android:ellipsize="end"
+                                android:maxLines="1"
+                                android:paddingEnd="@dimen/widget_schedule_lessons_padding_horizontal"
+                                android:paddingStart="@dimen/widget_schedule_lessons_padding_horizontal"
+                                android:text="@string/schedule_lessons"
+                                android:textColor="#FFFFFF"
+                                android:textSize="@dimen/font_size_14" />
 
-                                <TextView
-                                    android:id="@+id/slw_item_title"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:maxLines="1"
-                                    android:text="Физика (Лекция)"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="@dimen/font_size_13" />
-
-                                <TextView
-                                    android:id="@+id/slw_item_desc"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:maxLines="1"
-                                    android:text="Зинчик Александр Адольфович"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="@dimen/font_size_12" />
-
-                                <TextView
-                                    android:id="@+id/slw_item_meta"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:maxLines="1"
-                                    android:text="Ауд. 2432 (ул.Ломоносова, д.9, лит.А)"
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="@dimen/font_size_12" />
-
-                            </LinearLayout>
+                            <TextView
+                                android:id="@+id/widget_day_title"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:ellipsize="end"
+                                android:maxLines="1"
+                                android:paddingEnd="@dimen/widget_schedule_lessons_padding_horizontal"
+                                android:paddingStart="@dimen/widget_schedule_lessons_padding_horizontal"
+                                android:text="@string/monday"
+                                android:textAllCaps="true"
+                                android:textColor="#FFFFFF"
+                                android:textSize="@dimen/font_size_10"/>
 
                         </LinearLayout>
 
-                    </FrameLayout>
+                        <FrameLayout
+                            android:id="@+id/widget_refresh_container"
+                            android:layout_width="@dimen/widget_schedule_lessons_button_dimen"
+                            android:layout_height="@dimen/widget_schedule_lessons_button_dimen"
+                            android:visibility="visible">
+
+                            <ImageView
+                                android:id="@+id/widget_refresh_button"
+                                android:layout_width="@dimen/widget_schedule_lessons_header_icon"
+                                android:layout_height="@dimen/widget_schedule_lessons_header_icon"
+                                android:layout_gravity="center"
+                                android:layout_margin="@dimen/widget_schedule_lessons_header_icon_padding"
+                                android:src="@drawable/ic_widget_refresh" />
+
+                        </FrameLayout>
+
+                        <FrameLayout
+                            android:id="@+id/widget_controls_open_container"
+                            android:layout_width="@dimen/widget_schedule_lessons_button_dimen"
+                            android:layout_height="@dimen/widget_schedule_lessons_button_dimen"
+                            android:visibility="visible">
+
+                            <ImageView
+                                android:id="@+id/widget_controls_open_button"
+                                android:layout_height="@dimen/widget_schedule_lessons_header_icon"
+                                android:layout_width="@dimen/widget_schedule_lessons_header_icon"
+                                android:layout_margin="@dimen/widget_schedule_lessons_header_icon_padding"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_widget_expand"/>
+
+                        </FrameLayout>
+
+                        <FrameLayout
+                            android:id="@+id/widget_controls_close_container"
+                            android:layout_width="@dimen/widget_schedule_lessons_button_dimen"
+                            android:layout_height="@dimen/widget_schedule_lessons_button_dimen"
+                            android:visibility="gone" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/widget_header"
+                        android:gravity="end"
+                        android:weightSum="1"
+                        android:baselineAligned="false">
+
+                        <FrameLayout
+                            android:id="@+id/widget_container"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1">
+
+                            <LinearLayout
+                                android:orientation="horizontal"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:paddingTop="@dimen/widget_schedule_lessons_item_padding_top"
+                                android:paddingBottom="@dimen/widget_schedule_lessons_item_padding_bottom" >
+
+                                <LinearLayout
+                                    android:orientation="vertical"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center"
+                                    android:paddingStart="@dimen/widget_schedule_lessons_item_padding"
+                                    android:paddingEnd="@dimen/widget_schedule_lessons_item_padding"
+                                    android:minWidth="@dimen/widget_schedule_lessons_item_min_width">
+
+                                    <TextView
+                                        android:id="@+id/slw_item_time_start"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:maxLines="1"
+                                        android:text="8:20"
+                                        android:textColor="#FFFFFF"
+                                        android:textSize="@dimen/font_size_13" />
+
+                                    <ImageView
+                                        android:layout_height="@dimen/widget_schedule_lessons_item_time_icon_width"
+                                        android:layout_width="@dimen/widget_schedule_lessons_item_time_icon_width"
+                                        android:id="@+id/slw_item_time_icon"
+                                        android:src="@drawable/ic_widget_time"/>
+
+                                    <TextView
+                                        android:id="@+id/slw_item_time_end"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:maxLines="1"
+                                        android:text="9:50"
+                                        android:textColor="#FFFFFF"
+                                        android:textSize="@dimen/font_size_13" />
+
+                                </LinearLayout>
+
+                                <LinearLayout
+                                    android:orientation="vertical"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center"
+                                    android:paddingStart="0dp"
+                                    android:paddingEnd="@dimen/widget_schedule_lessons_item_padding" >
+
+                                    <TextView
+                                        android:id="@+id/slw_item_title"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:maxLines="1"
+                                        android:text="Физика (Лекция)"
+                                        android:textColor="#FFFFFF"
+                                        android:textSize="@dimen/font_size_13" />
+
+                                    <TextView
+                                        android:id="@+id/slw_item_desc"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:maxLines="1"
+                                        android:text="Зинчик Александр Адольфович"
+                                        android:textColor="#FFFFFF"
+                                        android:textSize="@dimen/font_size_12" />
+
+                                    <TextView
+                                        android:id="@+id/slw_item_meta"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:maxLines="1"
+                                        android:text="Ауд. 2432 (ул.Ломоносова, д.9, лит.А)"
+                                        android:textColor="#FFFFFF"
+                                        android:textSize="@dimen/font_size_12" />
+
+                                </LinearLayout>
+
+                            </LinearLayout>
+
+                        </FrameLayout>
+
+                        <LinearLayout
+                            android:id="@+id/widget_controls"
+                            android:orientation="vertical"
+                            android:layout_width="@dimen/widget_schedule_lessons_button_dimen"
+                            android:layout_height="match_parent"
+                            android:background="#96000000"
+                            android:visibility="gone" />
+
+                    </LinearLayout>
 
                 </RelativeLayout>
                 <!-- Widget preview end -->

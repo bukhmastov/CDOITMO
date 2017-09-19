@@ -747,8 +747,9 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                     settings.put("query", Settings.Schedule.query);
                     settings.put("theme", theme);
                     settings.put("updateTime", Settings.updateTime);
+                    settings.put("shift", 0);
                     Log.v(TAG, "activateFinish | settings=" + settings.toString());
-                    savePref(activity, mAppWidgetId, "settings", settings.toString());
+                    ScheduleLessonsWidget.Data.save(activity, mAppWidgetId, "settings", settings.toString());
                     ScheduleLessonsWidget.updateAppWidget(activity, AppWidgetManager.getInstance(activity), mAppWidgetId, false);
                     Intent resultValue = new Intent();
                     resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
@@ -780,7 +781,8 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                         ViewGroup widget_header = widget_content.findViewById(R.id.widget_header);
                         TextView widget_title = widget_content.findViewById(R.id.widget_title);
                         TextView widget_day_title = widget_content.findViewById(R.id.widget_day_title);
-                        ImageView widget_status = widget_content.findViewById(R.id.widget_status);
+                        ImageView widget_refresh_button = widget_content.findViewById(R.id.widget_refresh_button);
+                        ImageView widget_controls_open_button = widget_content.findViewById(R.id.widget_controls_open_button);
                         TextView slw_item_time_start = widget_content.findViewById(R.id.slw_item_time_start);
                         ImageView slw_item_time_icon = widget_content.findViewById(R.id.slw_item_time_icon);
                         TextView slw_item_time_end = widget_content.findViewById(R.id.slw_item_time_end);
@@ -791,7 +793,8 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                         widget_header.setBackgroundColor(background);
                         widget_title.setTextColor(text);
                         widget_day_title.setTextColor(text);
-                        widget_status.setImageTintList(ColorStateList.valueOf(text));
+                        widget_refresh_button.setImageTintList(ColorStateList.valueOf(text));
+                        widget_controls_open_button.setImageTintList(ColorStateList.valueOf(text));
                         slw_item_time_start.setTextColor(text);
                         slw_item_time_icon.setImageTintList(ColorStateList.valueOf(text));
                         slw_item_time_end.setTextColor(text);
@@ -877,46 +880,6 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
         Log.v(TAG, "parseColor | color=" + color + " | opacity=" + opacity);
         int parsed = Color.parseColor(color);
         return Color.argb(opacity, Color.red(parsed), Color.green(parsed), Color.blue(parsed));
-    }
-
-    public static void savePref(Context context, int appWidgetId, String type, String text) {
-        Log.v(TAG, "savePref | appWidgetId=" + appWidgetId + " | type=" + type);
-        if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
-            Log.w(TAG, "savePref | prevented due to invalid appwidget id");
-            return;
-        }
-        Storage.file.general.put(context, "widget_schedule_lessons#" + appWidgetId + "#" + type, text);
-    }
-    public static void deletePref(Context context, int appWidgetId, String type) {
-        Log.v(TAG, "deletePref | appWidgetId=" + appWidgetId + " | type=" + type);
-        if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
-            Log.w(TAG, "deletePref | prevented due to invalid appwidget id");
-            return;
-        }
-        Storage.file.general.delete(context, "widget_schedule_lessons#" + appWidgetId + "#" + type);
-    }
-    public static String getPref(Context context, int appWidgetId, String type) {
-        Log.v(TAG, "getPref | appWidgetId=" + appWidgetId + " | type=" + type);
-        String pref;
-        if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
-            Log.w(TAG, "getPref | prevented due to invalid appwidget id");
-            pref = "";
-        } else {
-            pref = Storage.file.general.get(context, "widget_schedule_lessons#" + appWidgetId + "#" + type).trim();
-        }
-        return pref.isEmpty() ? null : pref;
-    }
-    public static JSONObject getPrefJson(Context context, int appWidgetId, String type) {
-        Log.v(TAG, "getPrefJson | appWidgetId=" + appWidgetId + " | type=" + type);
-        JSONObject pref;
-        try {
-            String tmp = ScheduleLessonsWidgetConfigureActivity.getPref(context, appWidgetId, type);
-            if (tmp == null) throw new NullPointerException(type + " is null");
-            pref = new JSONObject(tmp);
-        } catch (Exception e) {
-            pref = null;
-        }
-        return pref;
     }
 
     private void close(int result, Intent intent) {

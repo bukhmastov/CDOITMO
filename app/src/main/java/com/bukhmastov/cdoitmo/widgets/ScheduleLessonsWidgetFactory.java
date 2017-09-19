@@ -7,13 +7,13 @@ import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activities.ScheduleLessonsWidgetConfigureActivity;
 import com.bukhmastov.cdoitmo.utils.Static;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.Calendar;
+import java.util.Locale;
 import java.util.Objects;
 
 class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFactory {
@@ -21,15 +21,16 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
     private final Context context;
     private final int appWidgetId;
     private ScheduleLessonsWidget.Colors colors;
-    private String type;
-    private JSONArray lessons;
+    private String type = "group";
+    private int week = -1;
+    private JSONArray lessons = new JSONArray();
 
     ScheduleLessonsWidgetFactory(Context context, Intent intent) {
         this.context = context;
         this.appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
         this.lessons = new JSONArray();
         try {
-            JSONObject settings = ScheduleLessonsWidgetConfigureActivity.getPrefJson(context, appWidgetId, "settings");
+            JSONObject settings = ScheduleLessonsWidget.Data.getJson(context, appWidgetId, "settings");
             if (settings == null) throw new NullPointerException("settings cannot be null");
             colors = ScheduleLessonsWidget.getColors(settings);
         } catch (Exception e) {
@@ -43,11 +44,21 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
     @Override
     public void onDataSetChanged() {
         try {
-            JSONObject content = ScheduleLessonsWidgetConfigureActivity.getPrefJson(context, appWidgetId, "cache_converted");
+            JSONObject content = ScheduleLessonsWidget.Data.getJson(context, appWidgetId, "cache_converted");
+            JSONObject settings = ScheduleLessonsWidget.Data.getJson(context, appWidgetId, "settings");
             if (content == null) throw new NullPointerException("content cannot be null");
+            if (settings == null) throw new NullPointerException("settings cannot be null");
             try {
-                int dayNumber = 0;
-                switch (Calendar.getInstance().get(Calendar.DAY_OF_WEEK)){
+                final int shift = settings.getInt("shift");
+                final Calendar calendar = Calendar.getInstance(Locale.GERMANY);
+                if (shift != 0) {
+                    calendar.add(Calendar.HOUR, shift * 24);
+                }
+                this.week = Static.getWeek(context, calendar) % 2;
+                this.type = content.getString("type");
+                this.lessons = new JSONArray();
+                final int dayNumber;
+                switch (calendar.get(Calendar.DAY_OF_WEEK)) {
                     case Calendar.MONDAY: dayNumber = 0; break;
                     case Calendar.TUESDAY: dayNumber = 1; break;
                     case Calendar.WEDNESDAY: dayNumber = 2; break;
@@ -55,39 +66,36 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
                     case Calendar.FRIDAY: dayNumber = 4; break;
                     case Calendar.SATURDAY: dayNumber = 5; break;
                     case Calendar.SUNDAY: dayNumber = 6; break;
+                    default: dayNumber = 0; break;
                 }
-                JSONArray schedule = content.getJSONArray("schedule");
-                type = content.getString("type");
+                final JSONArray schedule = content.getJSONArray("schedule");
                 if (schedule == null) throw new NullPointerException("schedule cannot be null");
-                int week = Static.getWeek(context) % 2;
-                boolean found = false;
                 for (int i = 0; i < schedule.length(); i++) {
-                    JSONObject day = schedule.getJSONObject(i);
+                    final JSONObject day = schedule.getJSONObject(i);
                     if (day.getInt("index") == dayNumber) {
-                        JSONArray lessonsArr = day.getJSONArray("lessons");
-                        if (lessonsArr == null) throw new NullPointerException("lessons cannot be null");
-                        lessons = new JSONArray();
-                        for (int j = 0; j < lessonsArr.length(); j++) {
-                            JSONObject lessonObj = lessonsArr.getJSONObject(j);
-                            if (week == -1 || (lessonObj.getInt("week") == 2 || lessonObj.getInt("week") == week)) {
-                                if (!Objects.equals(lessonObj.getString("cdoitmo_type"), "reduced")) {
-                                    lessons.put(lessonObj);
+                        final JSONArray lessons = day.getJSONArray("lessons");
+                        if (lessons == null) throw new NullPointerException("lessons cannot be null");
+                        for (int j = 0; j < lessons.length(); j++) {
+                            final JSONObject lesson = lessons.getJSONObject(j);
+                            if (lesson != null) {
+                                if (week == -1 || (lesson.getInt("week") == 2 || lesson.getInt("week") == week)) {
+                                    if (!Objects.equals(lesson.getString("cdoitmo_type"), "reduced")) {
+                                        this.lessons.put(lesson);
+                                    }
                                 }
                             }
                         }
-                        found = true;
                         break;
                     }
                 }
-                if (!found) {
-                    lessons = new JSONArray();
-                }
             } catch (Exception e) {
                 Static.error(e);
-                lessons = new JSONArray();
+                this.lessons = new JSONArray();
             }
         } catch (Exception e) {
-            Static.error(e);
+            if (!(Objects.equals(e.getMessage(), "settings cannot be null") || Objects.equals(e.getMessage(), "content cannot be null"))) {
+                Static.error(e);
+            }
             this.lessons = new JSONArray();
         }
     }
@@ -95,17 +103,17 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
     @Override
     public RemoteViews getViewAt(int position) {
         try {
-            if (position >= this.lessons.length()) {
+            if (position >= getCount()) {
                 return null;
             }
-            RemoteViews remoteViews = new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget_item);
-            JSONObject lesson = this.lessons.getJSONObject(position);
+            final JSONObject lesson = this.lessons.getJSONObject(position);
             if (lesson == null) throw new NullPointerException("lesson cannot be null");
-            remoteViews.setTextViewText(R.id.slw_item_time_start, lesson.getString("timeStart"));
-            remoteViews.setInt(R.id.slw_item_time_start, "setTextColor", colors.text);
-            remoteViews.setTextViewText(R.id.slw_item_time_end, lesson.getString("timeEnd"));
-            remoteViews.setInt(R.id.slw_item_time_end, "setTextColor", colors.text);
-            remoteViews.setImageViewBitmap(R.id.slw_item_time_icon, ScheduleLessonsWidget.getBitmap(context, R.drawable.ic_widget_time, colors.text));
+            final RemoteViews layout = new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget_item);
+            layout.setInt(R.id.slw_item_time_start, "setTextColor", colors.text);
+            layout.setInt(R.id.slw_item_time_end, "setTextColor", colors.text);
+            layout.setTextViewText(R.id.slw_item_time_start, lesson.getString("timeStart"));
+            layout.setTextViewText(R.id.slw_item_time_end, lesson.getString("timeEnd"));
+            layout.setImageViewBitmap(R.id.slw_item_time_icon, ScheduleLessonsWidget.getBitmap(context, R.drawable.ic_widget_time, colors.text));
             String title = lesson.getString("subject");
             String type = lesson.getString("type").trim();
             switch (type) {
@@ -116,65 +124,68 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
                     if (!type.isEmpty()) title += " (" + type + ")";
                     break;
             }
-            int week = Static.getWeek(context) % 2;
-            if (week == -1) {
+            if (this.week == -1) {
                 switch (lesson.getInt("week")){
                     case 0: title += " (" + context.getString(R.string.tab_even) + ")"; break;
                     case 1: title += " (" + context.getString(R.string.tab_odd) + ")"; break;
                 }
             }
-            remoteViews.setTextViewText(R.id.slw_item_title, title);
-            remoteViews.setInt(R.id.slw_item_title, "setTextColor", colors.text);
+            layout.setTextViewText(R.id.slw_item_title, title);
+            layout.setInt(R.id.slw_item_title, "setTextColor", colors.text);
             String desc = "";
             switch (this.type) {
-                case "group":
+                case "group": {
                     desc = lesson.getString("teacher");
                     break;
-                case "teacher":
+                }
+                case "teacher": {
                     desc = lesson.getString("group");
                     break;
-                case "room":
+                }
+                case "room": {
                     String group = lesson.getString("group");
                     String teacher = lesson.getString("teacher");
-                    if (Objects.equals(group, "")) {
+                    if (group.isEmpty()) {
                         desc = teacher;
                     } else {
                         desc = group;
-                        if (!Objects.equals(teacher, "")) desc += " (" + teacher + ")";
+                        if (!teacher.isEmpty()) desc += " (" + teacher + ")";
                     }
                     break;
+                }
             }
-            if (!Objects.equals(desc, "")) {
-                remoteViews.setTextViewText(R.id.slw_item_desc, desc);
-                remoteViews.setInt(R.id.slw_item_desc, "setTextColor", colors.text);
+            if (!desc.isEmpty()) {
+                layout.setTextViewText(R.id.slw_item_desc, desc);
+                layout.setInt(R.id.slw_item_desc, "setTextColor", colors.text);
             } else {
-                remoteViews.setInt(R.id.slw_item_desc, "setHeight", 0);
+                layout.setInt(R.id.slw_item_desc, "setHeight", 0);
             }
             String meta = "";
             switch (this.type) {
                 case "group":
-                case "teacher":
+                case "teacher": {
                     String room = lesson.getString("room");
                     String building = lesson.getString("building");
                     if (Objects.equals(room, "")) {
                         meta = building;
                     } else {
                         meta = context.getString(R.string.room_short) + " " + room;
-                        if (!Objects.equals(building, ""))
-                            meta += " (" + building + ")";
+                        if (!Objects.equals(building, "")) meta += " (" + building + ")";
                     }
                     break;
-                case "room":
+                }
+                case "room": {
                     meta += lesson.getString("building");
                     break;
+                }
             }
-            if (!Objects.equals(meta, "")) {
-                remoteViews.setTextViewText(R.id.slw_item_meta, meta);
-                remoteViews.setInt(R.id.slw_item_meta, "setTextColor", colors.text);
+            if (!meta.isEmpty()) {
+                layout.setTextViewText(R.id.slw_item_meta, meta);
+                layout.setInt(R.id.slw_item_meta, "setTextColor", colors.text);
             } else {
-                remoteViews.setInt(R.id.slw_item_meta, "setHeight", 0);
+                layout.setInt(R.id.slw_item_meta, "setHeight", 0);
             }
-            return remoteViews;
+            return layout;
         } catch (Exception e) {
             Static.error(e);
             return null;
@@ -193,7 +204,11 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
 
     @Override
     public RemoteViews getLoadingView() {
-        return null;
+        try {
+            return new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget_item_loading);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @Override

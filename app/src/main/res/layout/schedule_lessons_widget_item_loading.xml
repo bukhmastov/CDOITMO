@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:paddingTop="@dimen/widget_schedule_lessons_item_padding_top"
+        android:paddingBottom="@dimen/widget_schedule_lessons_item_padding_bottom"
+        android:paddingStart="@dimen/widget_schedule_lessons_item_padding"
+        android:paddingEnd="@dimen/widget_schedule_lessons_item_padding"
+        android:visibility="invisible">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/font_size_13" />
+
+        <ImageView
+            android:layout_height="@dimen/widget_schedule_lessons_item_time_icon_width"
+            android:layout_width="@dimen/widget_schedule_lessons_item_time_icon_width" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/font_size_13" />
+
+    </LinearLayout>
+
+    <ProgressBar
+        style="?android:attr/progressBarStyle"
+        android:layout_width="@dimen/dp24"
+        android:layout_height="@dimen/dp24"
+        android:layout_centerInParent="true" />
+
+</RelativeLayout>

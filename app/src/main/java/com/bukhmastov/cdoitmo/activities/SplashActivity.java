@@ -185,6 +185,26 @@ public class SplashActivity extends AppCompatActivity {
                     }
                     break;
                 }
+                case 83: {
+                    ArrayList<String> appWidgetIds = Storage.file.general.list(context, "widget_schedule_lessons");
+                    for (String appWidgetId : appWidgetIds) {
+                        String settings = Storage.file.general.get(context, "widget_schedule_lessons#" + appWidgetId + "#settings", "");
+                        if (settings != null) {
+                            settings = settings.trim();
+                            if (!settings.isEmpty()) {
+                                try {
+                                    JSONObject settingsJson = new JSONObject(settings);
+                                    settingsJson.put("shift", 0);
+                                    Storage.file.general.put(context, "widget_schedule_lessons#" + appWidgetId + "#settings", settingsJson.toString());
+                                } catch (Exception e) {
+                                    Static.error(e);
+                                    Storage.file.general.delete(context, "widget_schedule_lessons#" + appWidgetId + "#settings");
+                                }
+                            }
+                        }
+                    }
+                    break;
+                }
             }
         }
     }

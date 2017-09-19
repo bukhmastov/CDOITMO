@@ -13,13 +13,15 @@
         android:gravity="center"
         android:paddingStart="@dimen/widget_schedule_lessons_item_padding"
         android:paddingEnd="@dimen/widget_schedule_lessons_item_padding"
-        android:minWidth="@dimen/widget_schedule_lessons_item_min_width">
+        android:minWidth="@dimen/widget_schedule_lessons_item_min_width"
+        android:maxWidth="@dimen/schedule_time_max_width">
 
         <TextView
             android:id="@+id/slw_item_time_start"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:maxLines="1"
+            android:ellipsize="end"
             android:text="@string/lorem_ipsum"
             android:textColor="#000000"
             android:textSize="@dimen/font_size_13" />
@@ -34,6 +36,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:maxLines="1"
+            android:ellipsize="end"
             android:text="@string/lorem_ipsum"
             android:textColor="#000000"
             android:textSize="@dimen/font_size_13" />
@@ -53,6 +56,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:maxLines="1"
+            android:ellipsize="end"
             android:text="@string/lorem_ipsum"
             android:textColor="#000000"
             android:textSize="@dimen/font_size_13" />
@@ -62,6 +66,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:maxLines="1"
+            android:ellipsize="end"
             android:text="@string/lorem_ipsum"
             android:textColor="#000000"
             android:textSize="@dimen/font_size_12" />
@@ -71,6 +76,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:maxLines="1"
+            android:ellipsize="end"
             android:text="@string/lorem_ipsum"
             android:textColor="#BB000000"
             android:textSize="@dimen/font_size_12" />

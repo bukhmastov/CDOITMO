@@ -13,11 +13,13 @@
         android:id="@+id/slw_loading_progressBar" />
 
     <TextView
-        android:text="@string/data_loading"
+        android:id="@+id/slw_loading_text"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center_vertical"
+        android:text="@string/data_loading"
         android:textColor="?android:attr/textColorPrimary"
-        android:id="@+id/slw_loading_text" />
+        android:maxLines="3"
+        android:ellipsize="end" />
 
 </LinearLayout>

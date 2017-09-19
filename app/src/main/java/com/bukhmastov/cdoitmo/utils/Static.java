@@ -205,7 +205,7 @@ public class Static {
             Static.error(e);
         }
     }
-    public static void error(Throwable throwable){
+    public static void error(Throwable throwable) {
         Log.exception(throwable);
     }
     public static boolean isOnline(Context context) {
@@ -217,7 +217,7 @@ public class Static {
             return true;
         }
     }
-    public static void reLaunch(Context context){
+    public static void reLaunch(Context context) {
         Log.i(TAG, "reLaunch");
         if (context == null) {
             Log.w(TAG, "reLaunch | context is null");
@@ -227,7 +227,7 @@ public class Static {
         intent.addFlags(Static.intentFlagRestart);
         context.startActivity(intent);
     }
-    public static void hardReset(Context context){
+    public static void hardReset(Context context) {
         Log.i(TAG, "hardReset");
         if (context == null) {
             Log.w(TAG, "hardReset | context is null");
@@ -245,16 +245,19 @@ public class Static {
         context.getTheme().resolveAttribute(reference, typedValue, true);
         return context.obtainStyledAttributes(typedValue.data, new int[]{reference}).getColor(0, -1);
     }
-    public static int getWeek(Context context){
+    public static int getWeek(Context context) {
+        return getWeek(context, Calendar.getInstance(Locale.GERMANY));
+    }
+    public static int getWeek(Context context, Calendar calendar) {
         try {
             String weekStr = Storage.file.general.get(context, "user#week").trim();
             if (!weekStr.isEmpty()) {
                 JSONObject jsonObject = new JSONObject(weekStr);
                 int week = jsonObject.getInt("week");
                 if (week >= 0) {
-                    Calendar past = Calendar.getInstance();
+                    Calendar past = (Calendar) calendar.clone();
                     past.setTimeInMillis(jsonObject.getLong("timestamp"));
-                    return week + (Calendar.getInstance().get(Calendar.WEEK_OF_YEAR) - past.get(Calendar.WEEK_OF_YEAR));
+                    return week + (calendar.get(Calendar.WEEK_OF_YEAR) - past.get(Calendar.WEEK_OF_YEAR));
                 }
             }
         } catch (JSONException e) {
@@ -262,7 +265,7 @@ public class Static {
         }
         return -1;
     }
-    public static void logout(final Context context){
+    public static void logout(final Context context) {
         Log.i(TAG, "logout");
         Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
             @Override
@@ -274,7 +277,7 @@ public class Static {
         Static.logoutCurrent(context);
         Static.authorized = false;
     }
-    public static void logoutCurrent(final Context context){
+    public static void logoutCurrent(final Context context) {
         Log.i(TAG, "logoutCurrent");
         Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
             @Override
@@ -284,16 +287,16 @@ public class Static {
         });
         Storage.file.general.delete(context, "users#current_login");
     }
-    public static void lockOrientation(Activity activity, boolean lock){
+    public static void lockOrientation(Activity activity, boolean lock) {
         Log.v(TAG, "lockOrientation | lock=" + (lock ? "true" : "false"));
         if (activity != null) {
             activity.setRequestedOrientation(lock ? ActivityInfo.SCREEN_ORIENTATION_LOCKED : ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
         }
     }
-    public static void showUpdateTime(Activity activity, long time, boolean show_now){
+    public static void showUpdateTime(Activity activity, long time, boolean show_now) {
         showUpdateTime(activity, android.R.id.content, time, show_now);
     }
-    public static void showUpdateTime(Activity activity, @IdRes int layout, long time, boolean show_now){
+    public static void showUpdateTime(Activity activity, @IdRes int layout, long time, boolean show_now) {
         String message = getUpdateTime(activity, time);
         int shift = (int) ((Calendar.getInstance().getTimeInMillis() - time) / 1000L);
         if (show_now || shift > 4) {
@@ -361,6 +364,19 @@ public class Static {
         }
         return m;
     }
+    public static String getDay(Context context, int day) {
+        String ret = "";
+        switch (day) {
+            case Calendar.MONDAY: ret = context.getString(R.string.monday); break;
+            case Calendar.TUESDAY: ret = context.getString(R.string.tuesday); break;
+            case Calendar.WEDNESDAY: ret = context.getString(R.string.wednesday); break;
+            case Calendar.THURSDAY: ret = context.getString(R.string.thursday); break;
+            case Calendar.FRIDAY: ret = context.getString(R.string.friday); break;
+            case Calendar.SATURDAY: ret = context.getString(R.string.saturday); break;
+            case Calendar.SUNDAY: ret = context.getString(R.string.sunday); break;
+        }
+        return ret;
+    }
     public static String crypt(String value) {
         return crypt(value, "SHA-256");
     }
@@ -391,7 +407,7 @@ public class Static {
         }
         return hash;
     }
-    public static void toast(final Context context, final String text){
+    public static void toast(final Context context, final String text) {
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -403,38 +419,38 @@ public class Static {
             }
         });
     }
-    public static void snackBar(Activity activity, String text){
+    public static void snackBar(Activity activity, String text) {
         if (activity == null) {
             Log.w(TAG, "snackBar | activity is null");
             return;
         }
         Static.snackBar(activity.findViewById(android.R.id.content), text);
     }
-    public static void snackBar(Activity activity, @IdRes int layout, String text){
+    public static void snackBar(Activity activity, @IdRes int layout, String text) {
         if (activity == null) {
             Log.w(TAG, "snackBar | activity is null");
             return;
         }
         Static.snackBar(activity.findViewById(layout), text);
     }
-    public static void snackBar(View layout, String text){
+    public static void snackBar(View layout, String text) {
         snackBar(layout, text, null, null);
     }
-    public static void snackBar(Activity activity, String text, String action, View.OnClickListener onClickListener){
+    public static void snackBar(Activity activity, String text, String action, View.OnClickListener onClickListener) {
         if (activity == null) {
             Log.w(TAG, "snackBar | activity is null");
             return;
         }
         Static.snackBar(activity.findViewById(android.R.id.content), text, action, onClickListener);
     }
-    public static void snackBar(Activity activity, @IdRes int layout, String text, String action, View.OnClickListener onClickListener){
+    public static void snackBar(Activity activity, @IdRes int layout, String text, String action, View.OnClickListener onClickListener) {
         if (activity == null) {
             Log.w(TAG, "snackBar | activity is null");
             return;
         }
         Static.snackBar(activity.findViewById(layout), text, action, onClickListener);
     }
-    public static void snackBar(final View layout, final String text, final String action, final View.OnClickListener onClickListener){
+    public static void snackBar(final View layout, final String text, final String action, final View.OnClickListener onClickListener) {
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -447,7 +463,7 @@ public class Static {
             }
         });
     }
-    public static void protocolChangesTrackSetup(final Context context, final int attempt){
+    public static void protocolChangesTrackSetup(final Context context, final int attempt) {
         Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
             @Override
             public void run() {
@@ -494,7 +510,7 @@ public class Static {
             }
         });
     }
-    public static String getUserAgent(Context context){
+    public static String getUserAgent(Context context) {
         try {
             if (Static.USER_AGENT == null) {
                 PackageInfo pInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
@@ -511,7 +527,7 @@ public class Static {
                     .replace("{sdkInt}", "-");
         }
     }
-    public static class Translit {
+    public static class Translit  {
         public static String cyr2lat(char ch) {
             switch (ch) {
                 case 'А': return "A";   case 'а': return "a";

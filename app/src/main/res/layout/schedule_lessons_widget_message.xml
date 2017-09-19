@@ -12,11 +12,13 @@
         android:id="@+id/slw_message_icon" />
 
     <TextView
-        android:text="@string/need_to_config_widget"
+        android:id="@+id/slw_message_text"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center_vertical"
+        android:text="@string/need_to_config_widget"
         android:textColor="?android:attr/textColorPrimary"
-        android:id="@+id/slw_message_text" />
+        android:maxLines="3"
+        android:ellipsize="end" />
 
 </LinearLayout>

@@ -46,7 +46,7 @@
                 android:text="@string/loading"
                 android:textAllCaps="true"
                 android:textColor="#FFFFFF"
-                android:textSize="@dimen/font_size_10"/>
+                android:textSize="@dimen/font_size_10" />
 
         </LinearLayout>
 
@@ -101,57 +101,26 @@
     </LinearLayout>
 
     <LinearLayout
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/widget_header"
-        android:gravity="end"
-        android:weightSum="1"
-        android:baselineAligned="false">
-
-        <FrameLayout
-            android:id="@+id/widget_container"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1">
-
-            <ProgressBar
-                style="?android:attr/progressBarStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:indeterminate="true" />
-
-        </FrameLayout>
+        android:weightSum="1">
 
         <LinearLayout
             android:id="@+id/widget_controls"
-            android:orientation="vertical"
-            android:layout_width="@dimen/widget_schedule_lessons_button_dimen"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="#96000000"
+            android:layout_weight="1"
+            android:baselineAligned="false"
             android:visibility="gone">
 
             <FrameLayout
-                android:id="@+id/widget_next_container"
-                android:layout_width="@dimen/widget_schedule_lessons_button_dimen"
-                android:layout_height="0dp"
-                android:layout_weight="1">
-
-                <ImageView
-                    android:id="@+id/widget_next_button"
-                    android:layout_height="@dimen/widget_schedule_lessons_header_icon"
-                    android:layout_width="@dimen/widget_schedule_lessons_header_icon"
-                    android:layout_margin="@dimen/widget_schedule_lessons_header_icon_padding"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_widget_next"/>
-
-            </FrameLayout>
-
-            <FrameLayout
                 android:id="@+id/widget_before_container"
-                android:layout_width="@dimen/widget_schedule_lessons_button_dimen"
-                android:layout_height="0dp"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
                 android:layout_weight="1">
 
                 <ImageView
@@ -166,8 +135,8 @@
 
             <FrameLayout
                 android:id="@+id/widget_reset_container"
-                android:layout_width="@dimen/widget_schedule_lessons_button_dimen"
-                android:layout_height="0dp"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
                 android:layout_weight="1">
 
                 <ImageView
@@ -180,7 +149,38 @@
 
             </FrameLayout>
 
+            <FrameLayout
+                android:id="@+id/widget_next_container"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
+
+                <ImageView
+                    android:id="@+id/widget_next_button"
+                    android:layout_height="@dimen/widget_schedule_lessons_header_icon"
+                    android:layout_width="@dimen/widget_schedule_lessons_header_icon"
+                    android:layout_margin="@dimen/widget_schedule_lessons_header_icon_padding"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_widget_next"/>
+
+            </FrameLayout>
+
         </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/widget_container"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" >
+
+            <ProgressBar
+                style="?android:attr/progressBarStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:indeterminate="true" />
+
+        </FrameLayout>
 
     </LinearLayout>
 
