@@ -24,6 +24,7 @@ public class TimeRemainingWidget {
     }
     public class Data {
         public String current = null;
+        public String current_15min = null;
         public String next = null;
         public String day = null;
     }
@@ -87,6 +88,7 @@ public class TimeRemainingWidget {
                     }
                     if (lessons == null) throw new NullPointerException("lessons is null");
                     long current = -1;
+                    long current_15min = -1;
                     long next = -1;
                     long day = -1;
                     for (int i = 0; i < lessons.length(); i++) {
@@ -109,6 +111,7 @@ public class TimeRemainingWidget {
                             long timestampTE = calendarTE.getTimeInMillis();
                             if (ts >= timestampTS && ts <= timestampTE) {
                                 current = timestampTE - ts;
+                                current_15min = 15 * 60000 - (ts - timestampTS);
                             }
                             if (next == -1 && ts < timestampTS) {
                                 next = timestampTS - ts;
@@ -122,6 +125,7 @@ public class TimeRemainingWidget {
                     day = day < 0 ? -1 : day;
                     Data data = new Data();
                     if (current >= 0) data.current = ts2date(current);
+                    if (current_15min >= 0) data.current_15min = ts2date(current_15min);
                     if (next >= 0) data.next = ts2date(next);
                     if (day >= 0) data.day = ts2date(day);
                     delegate.onAction(data);

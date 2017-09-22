@@ -172,7 +172,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
     }
 
     @Override
-    public void onAction(TimeRemainingWidget.Data data) {
+    public void onAction(final TimeRemainingWidget.Data data) {
         if (data.current == null && data.next == null && data.day == null) {
             message(activity.getString(R.string.lessons_gone));
         } else {
@@ -196,6 +196,25 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
             } else {
                 setText(R.id.day_remaining, data.day);
             }
+            Static.T.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    View current_lesson_15min = activity.findViewById(R.id.current_lesson_15min);
+                    View current_lesson_15min_separator = activity.findViewById(R.id.current_lesson_15min_separator);
+                    if (data.current_15min != null) {
+                        if (current_lesson_15min != null && current_lesson_15min_separator != null && current_lesson_15min.getVisibility() == View.GONE) {
+                            current_lesson_15min.setVisibility(View.VISIBLE);
+                            current_lesson_15min_separator.setVisibility(View.VISIBLE);
+                        }
+                        setText(R.id.lesson_15min_remaining, data.current_15min);
+                    } else {
+                        if (current_lesson_15min != null && current_lesson_15min_separator != null && current_lesson_15min.getVisibility() == View.VISIBLE) {
+                            current_lesson_15min.setVisibility(View.GONE);
+                            current_lesson_15min_separator.setVisibility(View.GONE);
+                        }
+                    }
+                }
+            });
         }
     }
 
@@ -237,7 +256,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                TextView textView = findViewById(layout);
+                TextView textView = activity.findViewById(layout);
                 if (textView != null) {
                     textView.setText(text);
                 }
@@ -250,7 +269,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
             public void run() {
                 draw(R.layout.layout_time_remaining_widget_message);
                 is_message_displaying = true;
-                TextView trw_message = findViewById(R.id.trw_message);
+                TextView trw_message = activity.findViewById(R.id.trw_message);
                 if (trw_message != null) {
                     trw_message.setText(text);
                 }
@@ -262,7 +281,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
             @Override
             public void run() {
                 try {
-                    ViewGroup vg = findViewById(R.id.trw_container);
+                    ViewGroup vg = activity.findViewById(R.id.trw_container);
                     if (vg != null) {
                         vg.removeAllViews();
                         vg.addView(((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));

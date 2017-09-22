@@ -47,6 +47,50 @@
         android:background="?attr/colorSeparator" />
 
     <RelativeLayout
+        android:id="@+id/current_lesson_15min"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:padding="@dimen/item_padding"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/lesson_15min_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_toStartOf="@+id/lesson_15min_remaining"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:paddingBottom="2dp"
+            android:paddingTop="2dp"
+            android:text="@string/min_15"
+            android:textAllCaps="true"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="@dimen/font_size_14"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/lesson_15min_remaining"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:text="@string/lorem_ipsum"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="@dimen/font_size_18"
+            android:textStyle="bold"
+            android:textAllCaps="true" />
+
+    </RelativeLayout>
+
+    <View
+        android:id="@+id/current_lesson_15min_separator"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?attr/colorSeparator"
+        android:visibility="gone" />
+
+    <RelativeLayout
         android:id="@+id/end_of_the_day"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

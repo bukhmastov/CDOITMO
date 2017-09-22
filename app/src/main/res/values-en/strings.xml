@@ -413,5 +413,6 @@
     <string name="need_to_choose_type">You must select a type</string>
     <string name="pin_app_widget_not_supported">Creating widgets in the application is not supported. Creating widgets is available in your launcher.</string>
     <string name="open_settings">Open settings</string>
+    <string name="min_15">15-minute rule</string>
 
 </resources>

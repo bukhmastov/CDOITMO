@@ -420,5 +420,6 @@
     <string name="need_to_choose_type">Необходимо выбрать тип</string>
     <string name="pin_app_widget_not_supported">Создание виджетов в приложении не поддерживается. Создание виджетов доступно в Вашем лаунчере.</string>
     <string name="open_settings">Открыть настройки</string>
+    <string name="min_15">Правило 15 минут</string>
 
 </resources>
