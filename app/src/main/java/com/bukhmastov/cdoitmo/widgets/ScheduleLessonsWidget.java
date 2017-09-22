@@ -48,6 +48,8 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     public static final String ACTION_WIDGET_CONTROLS_BEFORE = "com.bukhmastov.cdoitmo.ACTION_WIDGET_CONTROLS_BEFORE";
     public static final String ACTION_WIDGET_CONTROLS_RESET = "com.bukhmastov.cdoitmo.ACTION_WIDGET_CONTROLS_RESET";
 
+    private enum SIZE {NARROW, REGULAR, WIDE}
+
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         for (int appWidgetId : appWidgetIds) {
@@ -166,8 +168,9 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
             @Override
             public void run() {
                 Log.v(TAG, "progress | appWidgetId=" + appWidgetId);
-                Colors colors = getColors(settings);
-                final RemoteViews layout = new RemoteViews(context.getPackageName(), getViewLayout(appWidgetManager.getAppWidgetOptions(appWidgetId)));
+                final SIZE size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
+                final Colors colors = getColors(settings);
+                final RemoteViews layout = new RemoteViews(context.getPackageName(), getViewLayout(size));
                 // цвет
                 layout.setInt(R.id.widget_content, "setBackgroundColor", colors.background);
                 layout.setInt(R.id.widget_header, "setBackgroundColor", colors.background);
@@ -178,9 +181,22 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 layout.setViewVisibility(R.id.widget_day_title, View.GONE);
                 layout.setTextViewText(R.id.widget_title, context.getString(R.string.schedule_lessons));
                 // кнопки управления
-                layout.setViewVisibility(R.id.widget_refresh_container, View.GONE);
-                layout.setViewVisibility(R.id.widget_controls_open_container, View.GONE);
-                layout.setViewVisibility(R.id.widget_controls_close_container, View.GONE);
+                switch (size) {
+                    case REGULAR:
+                    case NARROW: {
+                        layout.setViewVisibility(R.id.widget_refresh_container, View.GONE);
+                        layout.setViewVisibility(R.id.widget_controls_open_container, View.GONE);
+                        layout.setViewVisibility(R.id.widget_controls_close_container, View.GONE);
+                        break;
+                    }
+                    case WIDE: {
+                        layout.setViewVisibility(R.id.widget_refresh_container, View.GONE);
+                        layout.setViewVisibility(R.id.widget_before_container, View.GONE);
+                        layout.setViewVisibility(R.id.widget_reset_container, View.GONE);
+                        layout.setViewVisibility(R.id.widget_next_container, View.GONE);
+                        break;
+                    }
+                }
                 // панель управления
                 layout.setViewVisibility(R.id.widget_controls, View.GONE);
                 // контент
@@ -212,15 +228,16 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                     if (!settings.has("shift")) {
                         settings.put("shift", 0);
                     }
+                    final SIZE size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
                     final Colors colors = getColors(settings);
                     final JSONObject json = cache.getJSONObject("content");
-                    final RemoteViews layout = new RemoteViews(context.getPackageName(), getViewLayout(appWidgetManager.getAppWidgetOptions(appWidgetId)));
                     final int shift = settings.getInt("shift");
                     final Calendar calendar = Calendar.getInstance(Locale.GERMANY);
                     if (shift != 0) {
                         calendar.add(Calendar.HOUR, shift * 24);
                     }
                     final int week = Static.getWeek(context, calendar) % 2;
+                    final RemoteViews layout = new RemoteViews(context.getPackageName(), getViewLayout(size));
                     // цвет
                     layout.setInt(R.id.widget_content, "setBackgroundColor", colors.background);
                     layout.setInt(R.id.widget_header, "setBackgroundColor", colors.background);
@@ -236,34 +253,84 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                             (week == 0 ? " (" + context.getString(R.string.tab_even) + ")" : (week == 1 ? " (" + context.getString(R.string.tab_odd) + ")" : ""))
                     );
                     // кнопки управления
-                    layout.setViewVisibility(R.id.widget_refresh_container, View.VISIBLE);
-                    layout.setImageViewBitmap(R.id.widget_refresh_button, getBitmap(context, R.drawable.ic_widget_refresh, colors.text));
-                    if (controls) {
-                        layout.setViewVisibility(R.id.widget_controls_open_container, View.GONE);
-                        layout.setViewVisibility(R.id.widget_controls_close_container, View.VISIBLE);
-                        layout.setImageViewBitmap(R.id.widget_controls_close_button, getBitmap(context, R.drawable.ic_widget_close, colors.text));
-                    } else {
-                        layout.setViewVisibility(R.id.widget_controls_open_container, View.VISIBLE);
-                        layout.setViewVisibility(R.id.widget_controls_close_container, View.GONE);
-                        layout.setImageViewBitmap(R.id.widget_controls_open_button, getBitmap(context, R.drawable.ic_widget_expand, colors.text));
+                    switch (size) {
+                        case REGULAR: {
+                            layout.setViewVisibility(R.id.widget_refresh_container, View.VISIBLE);
+                            layout.setImageViewBitmap(R.id.widget_refresh_button, getBitmap(context, R.drawable.ic_widget_refresh, colors.text));
+                            if (controls) {
+                                layout.setViewVisibility(R.id.widget_controls_open_container, View.GONE);
+                                layout.setViewVisibility(R.id.widget_controls_close_container, View.VISIBLE);
+                                layout.setImageViewBitmap(R.id.widget_controls_close_button, getBitmap(context, R.drawable.ic_widget_close, colors.text));
+                            } else {
+                                layout.setViewVisibility(R.id.widget_controls_open_container, View.VISIBLE);
+                                layout.setViewVisibility(R.id.widget_controls_close_container, View.GONE);
+                                layout.setImageViewBitmap(R.id.widget_controls_open_button, getBitmap(context, R.drawable.ic_widget_expand, colors.text));
+                            }
+                            break;
+                        }
+                        case NARROW: {
+                            layout.setViewVisibility(R.id.widget_refresh_container, View.GONE);
+                            if (controls) {
+                                layout.setViewVisibility(R.id.widget_controls_open_container, View.GONE);
+                                layout.setViewVisibility(R.id.widget_controls_close_container, View.VISIBLE);
+                                layout.setImageViewBitmap(R.id.widget_controls_close_button, getBitmap(context, R.drawable.ic_widget_close, colors.text));
+                            } else {
+                                layout.setViewVisibility(R.id.widget_controls_open_container, View.VISIBLE);
+                                layout.setViewVisibility(R.id.widget_controls_close_container, View.GONE);
+                                layout.setImageViewBitmap(R.id.widget_controls_open_button, getBitmap(context, R.drawable.ic_widget_expand, colors.text));
+                            }
+                            break;
+                        }
+                        case WIDE: {
+                            layout.setViewVisibility(R.id.widget_refresh_container, View.VISIBLE);
+                            layout.setViewVisibility(R.id.widget_before_container, View.VISIBLE);
+                            layout.setViewVisibility(R.id.widget_reset_container, View.VISIBLE);
+                            layout.setViewVisibility(R.id.widget_next_container, View.VISIBLE);
+                            layout.setImageViewBitmap(R.id.widget_refresh_button, getBitmap(context, R.drawable.ic_widget_refresh, colors.text));
+                            layout.setImageViewBitmap(R.id.widget_before_button, getBitmap(context, R.drawable.ic_widget_before, colors.text));
+                            layout.setImageViewBitmap(R.id.widget_reset_button, getBitmap(context, R.drawable.ic_widget_reset, colors.text));
+                            layout.setImageViewBitmap(R.id.widget_next_button, getBitmap(context, R.drawable.ic_widget_next, colors.text));
+                            break;
+                        }
                     }
-                    bindToggleControls(context, appWidgetId, layout);
+                    bindMenu(context, appWidgetId, layout, size);
                     // панель управления
-                    if (controls) {
-                        layout.setViewVisibility(R.id.widget_controls, View.VISIBLE);
-                        layout.setInt(R.id.widget_controls, "setBackgroundColor", colors.background);
-                        layout.setImageViewBitmap(R.id.widget_next_button, getBitmap(context, R.drawable.ic_widget_next, colors.text));
-                        layout.setImageViewBitmap(R.id.widget_before_button, getBitmap(context, R.drawable.ic_widget_before, colors.text));
-                        layout.setImageViewBitmap(R.id.widget_reset_button, getBitmap(context, R.drawable.ic_widget_reset, colors.text));
-                        bindControls(context, appWidgetId, layout);
-                    } else {
-                        layout.setViewVisibility(R.id.widget_controls, View.GONE);
+                    switch (size) {
+                        case REGULAR: {
+                            if (controls) {
+                                layout.setViewVisibility(R.id.widget_controls, View.VISIBLE);
+                                layout.setInt(R.id.widget_controls, "setBackgroundColor", colors.background);
+                                layout.setImageViewBitmap(R.id.widget_next_button, getBitmap(context, R.drawable.ic_widget_next, colors.text));
+                                layout.setImageViewBitmap(R.id.widget_before_button, getBitmap(context, R.drawable.ic_widget_before, colors.text));
+                                layout.setImageViewBitmap(R.id.widget_reset_button, getBitmap(context, R.drawable.ic_widget_reset, colors.text));
+                                bindControls(context, appWidgetId, layout, size);
+                            } else {
+                                layout.setViewVisibility(R.id.widget_controls, View.GONE);
+                            }
+                            break;
+                        }
+                        case NARROW: {
+                            if (controls) {
+                                layout.setViewVisibility(R.id.widget_controls, View.VISIBLE);
+                                layout.setInt(R.id.widget_controls, "setBackgroundColor", colors.background);
+                                layout.setImageViewBitmap(R.id.widget_before_button, getBitmap(context, R.drawable.ic_widget_before, colors.text));
+                                layout.setImageViewBitmap(R.id.widget_refresh_control_button, getBitmap(context, R.drawable.ic_widget_refresh, colors.text));
+                                layout.setImageViewBitmap(R.id.widget_next_button, getBitmap(context, R.drawable.ic_widget_next, colors.text));
+                                bindControls(context, appWidgetId, layout, size);
+                            } else {
+                                layout.setViewVisibility(R.id.widget_controls, View.GONE);
+                            }
+                            break;
+                        }
+                        case WIDE: {
+                            layout.setViewVisibility(R.id.widget_controls, View.GONE);
+                            break;
+                        }
                     }
                     // контент
                     layout.removeAllViews(R.id.widget_container);
                     layout.addView(R.id.widget_container, new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget_list));
                     // установки
-                    bindRefresh(context, appWidgetId, layout);
                     bindOpen(context, appWidgetId, layout);
                     // список расписания
                     Intent intent = new Intent(context, ScheduleLessonsWidgetService.class);
@@ -286,8 +353,9 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
             @Override
             public void run() {
                 Log.v(TAG, "failed | appWidgetId=" + appWidgetId + " | text=" + text);
-                Colors colors = getColors(settings);
-                final RemoteViews layout = new RemoteViews(context.getPackageName(), getViewLayout(appWidgetManager.getAppWidgetOptions(appWidgetId)));
+                final SIZE size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
+                final Colors colors = getColors(settings);
+                final RemoteViews layout = new RemoteViews(context.getPackageName(), getViewLayout(size));
                 // цвет
                 layout.setInt(R.id.widget_content, "setBackgroundColor", colors.background);
                 layout.setInt(R.id.widget_header, "setBackgroundColor", colors.background);
@@ -298,10 +366,25 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 layout.setViewVisibility(R.id.widget_day_title, View.GONE);
                 layout.setTextViewText(R.id.widget_title, context.getString(R.string.schedule_lessons));
                 // кнопки управления
-                layout.setViewVisibility(R.id.widget_refresh_container, View.VISIBLE);
-                layout.setViewVisibility(R.id.widget_controls_open_container, View.GONE);
-                layout.setViewVisibility(R.id.widget_controls_close_container, View.GONE);
-                layout.setImageViewBitmap(R.id.widget_refresh_button, getBitmap(context, R.drawable.ic_widget_refresh, colors.text));
+                switch (size) {
+                    case REGULAR:
+                    case NARROW: {
+                        layout.setViewVisibility(R.id.widget_refresh_container, View.VISIBLE);
+                        layout.setViewVisibility(R.id.widget_controls_open_container, View.GONE);
+                        layout.setViewVisibility(R.id.widget_controls_close_container, View.GONE);
+                        layout.setImageViewBitmap(R.id.widget_refresh_button, getBitmap(context, R.drawable.ic_widget_refresh, colors.text));
+                        break;
+                    }
+                    case WIDE: {
+                        layout.setViewVisibility(R.id.widget_refresh_container, View.VISIBLE);
+                        layout.setViewVisibility(R.id.widget_before_container, View.GONE);
+                        layout.setViewVisibility(R.id.widget_reset_container, View.GONE);
+                        layout.setViewVisibility(R.id.widget_next_container, View.GONE);
+                        layout.setImageViewBitmap(R.id.widget_refresh_button, getBitmap(context, R.drawable.ic_widget_refresh, colors.text));
+                        break;
+                    }
+                }
+                bindMenu(context, appWidgetId, layout, size);
                 // панель управления
                 layout.setViewVisibility(R.id.widget_controls, View.GONE);
                 // контент
@@ -311,7 +394,6 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 layout.setTextViewText(R.id.slw_message_text, text);
                 layout.setImageViewBitmap(R.id.slw_message_icon, getBitmap(context, R.drawable.ic_widget_error_outline, colors.text));
                 // установки
-                bindRefresh(context, appWidgetId, layout);
                 bindOpen(context, appWidgetId, layout);
                 appWidgetManager.updateAppWidget(appWidgetId, layout);
             }
@@ -322,8 +404,9 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
             @Override
             public void run() {
                 Log.v(TAG, "needPreparations | appWidgetId=" + appWidgetId);
-                Colors colors = getColors();
-                final RemoteViews layout = new RemoteViews(context.getPackageName(), getViewLayout(appWidgetManager.getAppWidgetOptions(appWidgetId)));
+                final SIZE size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
+                final Colors colors = getColors();
+                final RemoteViews layout = new RemoteViews(context.getPackageName(), getViewLayout(size));
                 // цвет
                 layout.setInt(R.id.widget_content, "setBackgroundColor", colors.background);
                 layout.setInt(R.id.widget_header, "setBackgroundColor", colors.background);
@@ -334,10 +417,25 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 layout.setViewVisibility(R.id.widget_day_title, View.GONE);
                 layout.setTextViewText(R.id.widget_title, context.getString(R.string.schedule_lessons));
                 // кнопки управления
-                layout.setViewVisibility(R.id.widget_refresh_container, View.VISIBLE);
-                layout.setViewVisibility(R.id.widget_controls_open_container, View.GONE);
-                layout.setViewVisibility(R.id.widget_controls_close_container, View.GONE);
-                layout.setImageViewBitmap(R.id.widget_refresh_button, getBitmap(context, R.drawable.ic_widget_refresh, colors.text));
+                switch (size) {
+                    case REGULAR:
+                    case NARROW: {
+                        layout.setViewVisibility(R.id.widget_refresh_container, View.VISIBLE);
+                        layout.setViewVisibility(R.id.widget_controls_open_container, View.GONE);
+                        layout.setViewVisibility(R.id.widget_controls_close_container, View.GONE);
+                        layout.setImageViewBitmap(R.id.widget_refresh_button, getBitmap(context, R.drawable.ic_widget_refresh, colors.text));
+                        break;
+                    }
+                    case WIDE: {
+                        layout.setViewVisibility(R.id.widget_refresh_container, View.VISIBLE);
+                        layout.setViewVisibility(R.id.widget_before_container, View.GONE);
+                        layout.setViewVisibility(R.id.widget_reset_container, View.GONE);
+                        layout.setViewVisibility(R.id.widget_next_container, View.GONE);
+                        layout.setImageViewBitmap(R.id.widget_refresh_button, getBitmap(context, R.drawable.ic_widget_refresh, colors.text));
+                        break;
+                    }
+                }
+                bindMenu(context, appWidgetId, layout, size);
                 // панель управления
                 layout.setViewVisibility(R.id.widget_controls, View.GONE);
                 // контент
@@ -346,22 +444,20 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 layout.setInt(R.id.slw_message_text, "setTextColor", colors.text);
                 layout.setImageViewBitmap(R.id.slw_message_icon, getBitmap(context, R.drawable.ic_widget_info_outline, colors.text));
                 // установки
-                bindRefresh(context, appWidgetId, layout);
                 bindOpen(context, appWidgetId, layout);
                 appWidgetManager.updateAppWidget(appWidgetId, layout);
             }
         });
     }
 
-    private static void bindRefresh(final Context context, final int appWidgetId, final RemoteViews remoteViews) {
-        Intent intent = new Intent(context, ScheduleLessonsWidget.class);
+    private static void bindMenu(final Context context, final int appWidgetId, final RemoteViews remoteViews, final SIZE size) {
+        Intent intent;
+        // refresh
+        intent = new Intent(context, ScheduleLessonsWidget.class);
         intent.setAction(ACTION_WIDGET_UPDATE);
         intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
         intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
         remoteViews.setOnClickPendingIntent(R.id.widget_refresh_container, PendingIntent.getBroadcast(context, 0, intent, 0));
-    }
-    private static void bindToggleControls(final Context context, final int appWidgetId, final RemoteViews remoteViews) {
-        Intent intent;
         // open
         intent = new Intent(context, ScheduleLessonsWidget.class);
         intent.setAction(ACTION_WIDGET_OPEN_CONTROLS);
@@ -374,8 +470,28 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
         intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
         remoteViews.setOnClickPendingIntent(R.id.widget_controls_close_container, PendingIntent.getBroadcast(context, 0, intent, 0));
+        if (size == SIZE.WIDE) {
+            // before
+            intent = new Intent(context, ScheduleLessonsWidget.class);
+            intent.setAction(ACTION_WIDGET_CONTROLS_BEFORE);
+            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+            intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
+            remoteViews.setOnClickPendingIntent(R.id.widget_before_container, PendingIntent.getBroadcast(context, 0, intent, 0));
+            // reset
+            intent = new Intent(context, ScheduleLessonsWidget.class);
+            intent.setAction(ACTION_WIDGET_CONTROLS_RESET);
+            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+            intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
+            remoteViews.setOnClickPendingIntent(R.id.widget_reset_container, PendingIntent.getBroadcast(context, 0, intent, 0));
+            // next
+            intent = new Intent(context, ScheduleLessonsWidget.class);
+            intent.setAction(ACTION_WIDGET_CONTROLS_NEXT);
+            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+            intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
+            remoteViews.setOnClickPendingIntent(R.id.widget_next_container, PendingIntent.getBroadcast(context, 0, intent, 0));
+        }
     }
-    private static void bindControls(final Context context, final int appWidgetId, final RemoteViews remoteViews) {
+    private static void bindControls(final Context context, final int appWidgetId, final RemoteViews remoteViews, final SIZE size) {
         Intent intent;
         // next
         intent = new Intent(context, ScheduleLessonsWidget.class);
@@ -389,12 +505,26 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
         intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
         remoteViews.setOnClickPendingIntent(R.id.widget_before_container, PendingIntent.getBroadcast(context, 0, intent, 0));
-        // reset
-        intent = new Intent(context, ScheduleLessonsWidget.class);
-        intent.setAction(ACTION_WIDGET_CONTROLS_RESET);
-        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
-        intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
-        remoteViews.setOnClickPendingIntent(R.id.widget_reset_container, PendingIntent.getBroadcast(context, 0, intent, 0));
+        switch (size) {
+            case REGULAR: {
+                // reset
+                intent = new Intent(context, ScheduleLessonsWidget.class);
+                intent.setAction(ACTION_WIDGET_CONTROLS_RESET);
+                intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+                intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
+                remoteViews.setOnClickPendingIntent(R.id.widget_reset_container, PendingIntent.getBroadcast(context, 0, intent, 0));
+                break;
+            }
+            case NARROW: {
+                // refresh
+                intent = new Intent(context, ScheduleLessonsWidget.class);
+                intent.setAction(ACTION_WIDGET_UPDATE);
+                intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+                intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
+                remoteViews.setOnClickPendingIntent(R.id.widget_refresh_control_container, PendingIntent.getBroadcast(context, 0, intent, 0));
+                break;
+            }
+        }
     }
     private static void bindOpen(final Context context, final int appWidgetId, final RemoteViews remoteViews) {
         Intent intent = new Intent(context, ScheduleLessonsWidget.class);
@@ -539,13 +669,23 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         }
         return n - 1;
     }
-    private static @LayoutRes int getViewLayout(final Bundle options) {
-        //final int width = getCellsForSize(options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH));
+    private static @LayoutRes int getViewLayout(final SIZE size) {
+        switch (size) {
+            case WIDE:      return R.layout.schedule_lessons_widget_wide;
+            case NARROW:    return R.layout.schedule_lessons_widget_small;
+            case REGULAR:
+            default:        return R.layout.schedule_lessons_widget;
+        }
+    }
+    private static SIZE getSize(final Bundle options) {
+        final int width = getCellsForSize(options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH));
         final int height = getCellsForSize(options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT));
-        if (height == 1) {
-            return R.layout.schedule_lessons_widget_small;
+        if (width > 3) {
+           return SIZE.WIDE;
+        } else if (height == 1) {
+            return SIZE.NARROW;
         } else {
-            return R.layout.schedule_lessons_widget;
+            return SIZE.REGULAR;
         }
     }
 

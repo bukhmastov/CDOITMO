@@ -17,6 +17,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center_vertical"
+        android:textSize="@dimen/font_size_14"
         android:text="@string/data_loading"
         android:textColor="?android:attr/textColorPrimary"
         android:maxLines="3"

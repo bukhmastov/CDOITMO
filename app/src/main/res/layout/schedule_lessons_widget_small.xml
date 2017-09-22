@@ -134,18 +134,18 @@
             </FrameLayout>
 
             <FrameLayout
-                android:id="@+id/widget_reset_container"
+                android:id="@+id/widget_refresh_control_container"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1">
 
                 <ImageView
-                    android:id="@+id/widget_reset_button"
-                    android:layout_height="@dimen/widget_schedule_lessons_header_icon"
+                    android:id="@+id/widget_refresh_control_button"
                     android:layout_width="@dimen/widget_schedule_lessons_header_icon"
-                    android:layout_margin="@dimen/widget_schedule_lessons_header_icon_padding"
+                    android:layout_height="@dimen/widget_schedule_lessons_header_icon"
                     android:layout_gravity="center"
-                    android:src="@drawable/ic_widget_reset"/>
+                    android:layout_margin="@dimen/widget_schedule_lessons_header_icon_padding"
+                    android:src="@drawable/ic_widget_refresh" />
 
             </FrameLayout>
 
