@@ -24,6 +24,7 @@ import com.bukhmastov.cdoitmo.activities.PikaActivity;
 import com.bukhmastov.cdoitmo.activities.ScheduleLessonsWidgetConfigureActivity;
 import com.bukhmastov.cdoitmo.activities.SplashActivity;
 import com.bukhmastov.cdoitmo.converters.ScheduleLessonsAdditionalConverter;
+import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.models.Client;
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
 import com.bukhmastov.cdoitmo.utils.Log;
@@ -545,14 +546,17 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 Log.v(TAG, "onReceive | action=" + action);
                 switch (action) {
                     case ACTION_WIDGET_UPDATE: {
+                        logStatistic(context, "force_update");
                         updateAppWidget(context, AppWidgetManager.getInstance(context), appWidgetId, true);
                         break;
                     }
                     case ACTION_WIDGET_OPEN_CONTROLS: {
+                        logStatistic(context, "controls_open");
                         display(context, AppWidgetManager.getInstance(context), appWidgetId, true);
                         break;
                     }
                     case ACTION_WIDGET_CLOSE_CONTROLS: {
+                        logStatistic(context, "controls_close");
                         display(context, AppWidgetManager.getInstance(context), appWidgetId, false);
                         break;
                     }
@@ -562,6 +566,11 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                         Static.T.runThread(new Runnable() {
                             @Override
                             public void run() {
+                                switch (action) {
+                                    case ACTION_WIDGET_CONTROLS_NEXT: logStatistic(context, "shift_next"); break;
+                                    case ACTION_WIDGET_CONTROLS_BEFORE: logStatistic(context, "shift_before"); break;
+                                    case ACTION_WIDGET_CONTROLS_RESET: logStatistic(context, "shift_reset"); break;
+                                }
                                 JSONObject settings = Data.getJson(context, appWidgetId, "settings");
                                 if (settings != null) {
                                     int shift;
@@ -595,6 +604,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                         Static.T.runThread(new Runnable() {
                             @Override
                             public void run() {
+                                logStatistic(context, "schedule_open");
                                 Intent oIntent = new Intent(context, SplashActivity.class);
                                 oIntent.addFlags(Static.intentFlagRestart);
                                 oIntent.putExtra("action", "schedule_lessons");
@@ -729,5 +739,13 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
             }
             Storage.file.general.delete(context, "widget_schedule_lessons#" + appWidgetId + "#" + type);
         }
+    }
+
+    private static void logStatistic(final Context context, final String info) {
+        FirebaseAnalyticsProvider.logEvent(
+                context,
+                FirebaseAnalyticsProvider.Event.WIDGET_USAGE,
+                FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.WIDGET_USAGE_INFO, info)
+        );
     }
 }
