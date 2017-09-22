@@ -510,7 +510,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         });
     }
     private void zoomToMarker(final Marker marker) {
-        Static.T.runThread(new Runnable() {
+        Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 CameraPosition cameraPosition = new CameraPosition.Builder().target(marker.getPosition()).zoom(15).build();
