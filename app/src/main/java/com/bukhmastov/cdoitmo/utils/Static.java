@@ -12,10 +12,12 @@ import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
+import android.os.ParcelFileDescriptor;
 import android.os.Process;
 import android.support.annotation.IdRes;
 import android.support.design.widget.NavigationView;
@@ -48,6 +50,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -998,6 +1002,25 @@ public class Static {
         }
         private static View inflate(Context context, int layoutId) throws InflateException {
             return ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
+        }
+    }
+    public static String readFileFromUri(final Context context, final Uri data) throws Throwable {
+        if (data != null) {
+            ParcelFileDescriptor parcelFileDescriptor = context.getContentResolver().openFileDescriptor(data, "r");
+            if (parcelFileDescriptor != null) {
+                InputStream in = new FileInputStream(parcelFileDescriptor.getFileDescriptor());
+                final byte[] buffer = new byte[1024];
+                final StringBuilder out = new StringBuilder();
+                int length;
+                while ((length = in.read(buffer)) > 0) {
+                    out.append(new String(buffer, 0, length));
+                }
+                return out.toString();
+            } else {
+                throw new NullPointerException("ParcelFileDescriptor is null");
+            }
+        } else {
+            throw new NullPointerException("Passed uri is null");
         }
     }
 }

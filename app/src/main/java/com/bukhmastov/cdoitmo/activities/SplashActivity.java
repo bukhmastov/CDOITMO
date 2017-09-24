@@ -213,9 +213,12 @@ public class SplashActivity extends AppCompatActivity {
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Intent intent = new Intent(activity, MainActivity.class);
-                Bundle extras = getIntent().getExtras();
-                if (extras != null) intent.putExtras(extras);
+                Intent intent = getIntent();
+                intent.setClass(activity, MainActivity.class);
+                if (Intent.ACTION_MAIN.equals(intent.getAction())) {
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                }
+                Log.d(Log.TAGD, "intent: " + intent.toString());
                 startActivity(intent);
                 if (Static.isFirstLaunchEver) {
                     startActivity(new Intent(activity, IntroducingActivity.class));

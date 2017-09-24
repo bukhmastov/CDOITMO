@@ -172,8 +172,6 @@ public class ScheduleLessonsTabFragment extends Fragment {
                                                 } else {
                                                     menu.findItem(R.id.remove_from_cache).setVisible(false);
                                                 }
-                                                // TODO remove following line to enable share feature
-                                                menu.findItem(R.id.share_changes).setVisible(false);
                                                 popup.setOnMenuItemClickListener(onScheduleMenuClickListener);
                                                 popup.show();
                                             } catch (Exception e) {
@@ -404,6 +402,7 @@ public class ScheduleLessonsTabFragment extends Fragment {
                                         }
                                         title = title.trim();
                                         Bundle extras = new Bundle();
+                                        extras.putString("type", "share");
                                         extras.putString("query", query);
                                         extras.putString("title", title);
                                         extras.putString("token", token);

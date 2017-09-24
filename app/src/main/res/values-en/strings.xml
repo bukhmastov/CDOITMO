@@ -414,5 +414,18 @@
     <string name="pin_app_widget_not_supported">Creating widgets in the application is not supported. Creating widgets is available in your launcher.</string>
     <string name="open_settings">Open settings</string>
     <string name="min_15">15-minute rule</string>
+    <string name="handle_file">File processing</string>
+    <string name="accept">Accept</string>
+    <string name="accept_changes">Accept changes</string>
+    <string name="add_lessons">Add lessons</string>
+    <string name="reduce_lessons">Hide lessons</string>
+    <string name="changes_applied">Changes applied</string>
+    <string name="failed_to_handle_file">Failed to process file</string>
+    <string name="error_while_handle_file">Error processing file</string>
+    <string name="file_doesnot_supported">The opened file is not supported by the application</string>
+    <string name="failed_to_decode_file">Failed to parse file</string>
+    <string name="failed_to_display_file">Error displaying file</string>
+    <string name="corrupted_file">File has corrupted content</string>
+    <string name="file_requires_auth">To process the file, you need to authorize in the application</string>
 
 </resources>
