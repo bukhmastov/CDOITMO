@@ -70,6 +70,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
         super.onCreate(savedInstanceState);
         FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
         type = extras.getString("type");
+        Log.v(TAG, "Fragment created | type=" + type);
         if (type == null || !(Objects.equals(type, "share") || Objects.equals(type, "handle"))) {
             keepGoing = false;
             Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
@@ -128,7 +129,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
             @Override
             public void run() {
                 try {
-                    Log.v(TAG, "load");
+                    Log.v(TAG, "load | type=" + type);
                     if ("handle".equals(type)) {
                         final String data = extras.getString("data");
                         if (data == null) {
@@ -379,7 +380,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
             @Override
             public void run() {
                 try {
-                    Log.v(TAG, "display");
+                    Log.v(TAG, "display | type=" + type);
                     ViewGroup share_content = activity.findViewById(R.id.share_content);
                     if (share_content == null) {
                         return;
@@ -490,7 +491,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
             @Override
             public void run() {
                 try {
-                    Log.v(TAG, "execute");
+                    Log.v(TAG, "execute | type=" + type);
                     boolean selected = false;
                     for (Change change : changes) {
                         if (change.enabled) {
@@ -713,6 +714,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
     }
 
     private void close() {
+        Log.v(TAG, "close");
         if ("handle".equals(type)) {
             activity.finish();
         } else {

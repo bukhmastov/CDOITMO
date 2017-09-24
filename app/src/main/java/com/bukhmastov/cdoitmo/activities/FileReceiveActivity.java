@@ -103,6 +103,7 @@ public class FileReceiveActivity extends ConnectedActivity {
             @Override
             public void run() {
                 try {
+                    Log.v(TAG, "share_schedule_of_lessons");
                     if (Storage.file.general.get(activity, "users#current_login", "").trim().isEmpty()) {
                         throw new MessageException(activity.getString(R.string.file_requires_auth));
                     }
@@ -144,6 +145,7 @@ public class FileReceiveActivity extends ConnectedActivity {
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                Log.v(TAG, "failure | message=" + message);
                 View state_failed_without_align = inflate(R.layout.state_failed_without_align);
                 ((TextView) state_failed_without_align.findViewById(R.id.text)).setText(message);
                 ViewGroup container = activity.findViewById(getRootViewId());

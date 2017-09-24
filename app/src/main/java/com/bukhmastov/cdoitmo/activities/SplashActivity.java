@@ -218,7 +218,6 @@ public class SplashActivity extends AppCompatActivity {
                 if (Intent.ACTION_MAIN.equals(intent.getAction())) {
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 }
-                Log.d(Log.TAGD, "intent: " + intent.toString());
                 startActivity(intent);
                 if (Static.isFirstLaunchEver) {
                     startActivity(new Intent(activity, IntroducingActivity.class));

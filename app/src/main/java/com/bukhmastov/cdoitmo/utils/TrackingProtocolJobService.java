@@ -89,7 +89,7 @@ public class TrackingProtocolJobService extends JobService {
                         }
                     });
                 } catch (Exception e){
-                    Log.e(TAG, e.getMessage());
+                    Log.w(TAG, e.getMessage());
                     done();
                 }
             }
