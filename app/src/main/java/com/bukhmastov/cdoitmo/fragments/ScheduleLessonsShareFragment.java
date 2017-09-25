@@ -527,9 +527,13 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                                 Uri uri = FileProvider.getUriForFile(activity, "com.bukhmastov.cdoitmo.fileprovider", file);
                                 Intent intent = new Intent(Intent.ACTION_SEND);
                                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                                intent.setType(activity.getContentResolver().getType(uri));
+                                intent.setType("application/cdoitmo" /*activity.getContentResolver().getType(uri)*/ );
                                 intent.putExtra(Intent.EXTRA_STREAM, uri);
-                                startActivity(Intent.createChooser(intent, activity.getString(R.string.share) + "..."));
+                                try {
+                                    startActivity(Intent.createChooser(intent, activity.getString(R.string.share) + "..."));
+                                } catch (Exception ignore) {
+                                    Static.toast(activity, activity.getString(R.string.failed_to_share_file));
+                                }
                             }
                             break;
                         }

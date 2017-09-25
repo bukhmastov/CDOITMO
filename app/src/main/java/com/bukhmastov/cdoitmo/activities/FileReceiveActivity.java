@@ -3,8 +3,11 @@ package com.bukhmastov.cdoitmo.activities;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.ParcelFileDescriptor;
+import android.provider.OpenableColumns;
 import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
@@ -26,6 +29,18 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.Reader;
+import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
+
 public class FileReceiveActivity extends ConnectedActivity {
 
     private static final String TAG = "FileReceiveActivity";
@@ -45,56 +60,126 @@ public class FileReceiveActivity extends ConnectedActivity {
             actionBar.setHomeButtonEnabled(true);
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
-        // Proceed received file
-        try {
-            final Intent intent = activity.getIntent();
-            final String action = intent.getAction();
-            switch (action) {
-                case Intent.ACTION_VIEW: {
-                    final String type = intent.getType();
-                    switch (type) {
-                        case "application/cdoitmo": {
-                            final Uri data = intent.getData();
-                            if (data == null) {
-                                throw new MessageException(activity.getString(R.string.error_while_handle_file));
-                            }
-                            final String file = Static.readFileFromUri(activity, data);
-                            final JSONObject object = (JSONObject) new JSONTokener(file).nextValue();
-                            switch (object.getString("type")) {
-                                case "share_schedule_of_lessons": {
-                                    share_schedule_of_lessons(file, object);
-                                    break;
-                                }
-                                default: {
-                                    throw new MessageException(activity.getString(R.string.file_doesnot_supported));
-                                }
-                            }
-                            break;
-                        }
-                        default: {
-                            throw new MessageException(activity.getString(R.string.file_doesnot_supported));
-                        }
+        proceed();
+    }
+
+    private void proceed() {
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    final Intent intent = activity.getIntent();
+                    if (intent == null) {
+                        throw new NullPointerException("Intent is null");
                     }
-                    break;
-                }
-                default: {
-                    throw new MessageException(activity.getString(R.string.failed_to_handle_file));
+                    Log.v(TAG, "proceed | intent: " + intent.toString());
+                    final Uri uri = intent.getData();
+                    if (uri == null) {
+                        throw new NullPointerException("Intent's data (uri) is null");
+                    }
+                    final String scheme = uri.getScheme();
+                    if (scheme == null) {
+                        throw new NullPointerException("Uri's scheme is null");
+                    }
+                    final String file;
+                    switch (scheme) {
+                        case "file":    file = fileFromUri(activity, uri); break;
+                        case "http":
+                        case "https":   file = fileFromWeb(activity, uri); break;
+                        case "content": file = fileFromContent(activity, uri); break;
+                        default:        throw new MessageException(activity.getString(R.string.failed_to_handle_file));
+                    }
+                    final JSONObject object = (JSONObject) new JSONTokener(file).nextValue();
+                    switch (object.getString("type")) {
+                        case "share_schedule_of_lessons": share_schedule_of_lessons(file, object); break;
+                        /* Place for future file types (if any) */
+                        default: throw new MessageException(activity.getString(R.string.file_doesnot_supported));
+                    }
+                } catch (MessageException e) {
+                    Log.v(TAG, "proceed | MessageException: " + e.getMessage());
+                    failure(e.getMessage());
+                } catch (Throwable throwable) {
+                    Log.w(TAG, "proceed | Throwable: " + throwable.getMessage());
+                    failure(activity.getString(R.string.failed_to_handle_file));
                 }
             }
-        } catch (MessageException e) {
-            failure(e.getMessage());
-        } catch (Throwable throwable) {
-            failure(activity.getString(R.string.failed_to_handle_file));
+        });
+    }
+    private String fileFromUri(final Context context, final Uri uri) throws Throwable {
+        Log.v(TAG, "fileFromUri | uri: " + uri.toString());
+        Cursor cursor = null;
+        try {
+            cursor = getContentResolver().query(uri, null, null, null, null);
+            if (cursor == null) {
+                throw new NullPointerException("fileFromUri | cursor is null");
+            }
+            final int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+            cursor.moveToFirst();
+            final String filename = cursor.getString(nameIndex);
+            if (!Pattern.compile("^.*\\.cdoitmo$").matcher(filename).find()) {
+                Log.v(TAG, "fileFromUri | filename does not match pattern | filename=" + filename);
+                throw new MessageException(context.getString(R.string.error_while_handle_file));
+            }
         } finally {
-            try {
-                Intent intent = activity.getIntent();
-                intent.setAction(Intent.ACTION_MAIN);
-                intent.setType(null);
-                intent.setData(null);
-                activity.setIntent(intent);
-            } catch (Throwable ignore) {
-                // ignore
+            if (cursor != null) {
+                cursor.close();
             }
+        }
+        ParcelFileDescriptor parcelFileDescriptor = context.getContentResolver().openFileDescriptor(uri, "r");
+        if (parcelFileDescriptor != null) {
+            InputStream in = new FileInputStream(parcelFileDescriptor.getFileDescriptor());
+            final byte[] buffer = new byte[1024];
+            final StringBuilder out = new StringBuilder();
+            int length;
+            while ((length = in.read(buffer)) > 0) {
+                out.append(new String(buffer, 0, length));
+            }
+            return out.toString();
+        } else {
+            throw new NullPointerException("fileFromUri | ParcelFileDescriptor is null");
+        }
+    }
+    private String fileFromWeb(final Context context, final Uri uri) throws Throwable {
+        Log.v(TAG, "fileFromWeb | uri: " + uri.toString());
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("User-Agent", Static.getUserAgent(context));
+        Request request = new Request.Builder()
+                .url(uri.toString())
+                .headers(okhttp3.Headers.of(headers))
+                .build();
+        Response response = new OkHttpClient()
+                .newBuilder()
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .build()
+                .newCall(request).execute();
+        ResponseBody responseBody = response.body();
+        if (responseBody != null) {
+            final char[] buffer = new char[1024];
+            final StringBuilder out = new StringBuilder();
+            final Reader reader = responseBody.charStream();
+            int length;
+            while ((length = reader.read(buffer, 0, buffer.length)) != -1) {
+                out.append(buffer, 0, length);
+            }
+            return out.toString();
+        } else {
+            throw new NullPointerException("fileFromWeb | ResponseBody is null");
+        }
+    }
+    private String fileFromContent(final Context context, final Uri uri) throws Throwable {
+        Log.v(TAG, "fileFromContent | uri: " + uri.toString());
+        InputStream in = context.getContentResolver().openInputStream(uri);
+        if (in != null) {
+            final byte[] buffer = new byte[1024];
+            final StringBuilder out = new StringBuilder();
+            int length;
+            while ((length = in.read(buffer)) > 0) {
+                out.append(new String(buffer, 0, length));
+            }
+            return out.toString();
+        } else {
+            throw new NullPointerException("fileFromContent | InputStream is null");
         }
     }
 
@@ -133,8 +218,10 @@ public class FileReceiveActivity extends ConnectedActivity {
                         }
                     });
                 } catch (MessageException e) {
+                    Log.v(TAG, "share_schedule_of_lessons | MessageException: " + e.getMessage());
                     failure(e.getMessage());
-                } catch (Exception e) {
+                } catch (Throwable throwable) {
+                    Log.w(TAG, "share_schedule_of_lessons | Throwable: " + throwable.getMessage());
                     failure(activity.getString(R.string.failed_to_decode_file));
                 }
             }
