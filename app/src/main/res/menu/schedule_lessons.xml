@@ -18,11 +18,11 @@
         android:title="@string/remove_from_cache" />
 
     <item
-        android:id="@+id/open_settings"
-        android:title="@string/open_settings" />
-
-    <item
         android:id="@+id/remove_changes"
         android:title="@string/remove_changes" />
+
+    <item
+        android:id="@+id/open_settings"
+        android:title="@string/open_settings" />
 
 </menu>
