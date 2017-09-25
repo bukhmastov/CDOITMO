@@ -21,10 +21,10 @@ public class AppFirebaseMessagingService extends FirebaseMessagingService {
             if (notification == null) return;
             String title = notification.getTitle() == null ? "" : notification.getTitle().trim();
             String text = notification.getBody() == null ? "" : notification.getBody().trim();
-            Log.d(TAG, "-- Got FCM message --");
-            Log.d(TAG, "Title: " + title);
-            Log.d(TAG, "Text: " + text);
-            Log.d(TAG, "---------------------");
+            Log.v(TAG, "-- Got FCM message --");
+            Log.v(TAG, "Title: " + title);
+            Log.v(TAG, "Text: " + text);
+            Log.v(TAG, "---------------------");
             sendNotification(title, text, remoteMessage.getSentTime());
         } catch (Throwable e) {
             Static.error(e);

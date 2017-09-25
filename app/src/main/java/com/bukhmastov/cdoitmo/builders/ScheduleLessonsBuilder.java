@@ -55,19 +55,20 @@ public class ScheduleLessonsBuilder implements Runnable {
     public void run() {
         Log.v(TAG, "started");
         try {
-            LinearLayout schedule_layout = (LinearLayout) inflate(R.layout.layout_schedule);
-            LinearLayout container = schedule_layout.findViewById(R.id.lessons_container);
             delegate.state(STATE_LOADING, inflate(R.layout.state_loading_compact));
+            final String reduced_lesson_mode = Storage.pref.get(activity, "pref_schedule_lessons_view_of_reduced_lesson", "compact");
+            final LinearLayout schedule_layout = (LinearLayout) inflate(R.layout.layout_schedule);
+            final LinearLayout container = schedule_layout.findViewById(R.id.lessons_container);
             final JSONArray schedule = ScheduleLessonsFragment.schedule.getJSONArray("schedule");
             final String cache_token = ScheduleLessonsFragment.schedule.getString("cache_token");
             int daysCount = 0;
             for (int i = 0; i < schedule.length(); i++) {
-                JSONObject day = schedule.getJSONObject(i);
-                JSONArray lessons = day.getJSONArray("lessons");
                 int lessonsCount = 0;
-                LinearLayout dayLayout = (LinearLayout) inflate(R.layout.layout_schedule_lessons_day);
-                ((TextView) dayLayout.findViewById(R.id.day_title)).setText(day.getString("title").toUpperCase());
+                final JSONObject day = schedule.getJSONObject(i);
+                final JSONArray lessons = day.getJSONArray("lessons");
                 final int index = day.getInt("index");
+                final LinearLayout dayLayout = (LinearLayout) inflate(R.layout.layout_schedule_lessons_day);
+                ((TextView) dayLayout.findViewById(R.id.day_title)).setText(day.getString("title").toUpperCase());
                 switch (index) {
                     case 0: dayLayout.setId(R.id.monday); break;
                     case 1: dayLayout.setId(R.id.tuesday); break;
@@ -77,10 +78,12 @@ public class ScheduleLessonsBuilder implements Runnable {
                     case 5: dayLayout.setId(R.id.saturday); break;
                     case 6: dayLayout.setId(R.id.sunday); break;
                 }
-                LinearLayout lessonsLayout = dayLayout.findViewById(R.id.day_schedule);
+                final LinearLayout lessonsLayout = dayLayout.findViewById(R.id.day_schedule);
                 for (int j = 0; j < lessons.length(); j++) {
                     final JSONObject lesson = lessons.getJSONObject(j);
+                    final String cdoitmo_type = lesson.getString("cdoitmo_type");
                     if (!(type == 2 || type == lesson.getInt("week") || lesson.getInt("week") == 2)) continue;
+                    if ("reduced".equals(cdoitmo_type) && "hidden".equals(reduced_lesson_mode)) continue;
                     lessonsCount++;
                     if (j != 0) {
                         View separator = new View(activity);
@@ -88,13 +91,12 @@ public class ScheduleLessonsBuilder implements Runnable {
                         separator.setBackgroundColor(Static.colorSeparator);
                         lessonsLayout.addView(separator);
                     }
-                    final String cdoitmo_type = lesson.getString("cdoitmo_type");
                     final LinearLayout lessonLayout = (LinearLayout) inflate(R.layout.layout_schedule_lessons_item);
-                    if (Objects.equals(cdoitmo_type, "reduced")) {
+                    if ("reduced".equals(cdoitmo_type)) {
                         float alpha = 0.3F;
                         lessonLayout.findViewById(R.id.time).setAlpha(alpha);
                         lessonLayout.findViewById(R.id.data).setAlpha(alpha);
-                        if (Storage.pref.get(activity, "pref_schedule_lessons_compact_view_of_reduced_lesson", true)) {
+                        if ("compact".equals(reduced_lesson_mode)) {
                             try {
                                 ((TextView) lessonLayout.findViewById(R.id.lesson_title)).setMaxLines(1);
                                 lessonLayout.findViewById(R.id.lesson_time_icon).setVisibility(View.GONE);
@@ -109,7 +111,7 @@ public class ScheduleLessonsBuilder implements Runnable {
                     } else {
                         lessonLayout.findViewById(R.id.lesson_reduced_icon).setLayoutParams(new LinearLayout.LayoutParams(0, 0));
                     }
-                    if (!Objects.equals(cdoitmo_type, "synthetic")) {
+                    if (!"synthetic".equals(cdoitmo_type)) {
                         lessonLayout.findViewById(R.id.lesson_synthetic_icon).setLayoutParams(new LinearLayout.LayoutParams(0, 0));
                     }
                     ((TextView) lessonLayout.findViewById(R.id.lesson_title)).setText(lesson.getString("subject"));
@@ -128,8 +130,8 @@ public class ScheduleLessonsBuilder implements Runnable {
                                 final String teacher_id = getMenuTitle(lesson, "teacher", "teacher_id");
                                 final String room = getMenuTitle(lesson, "room", "room");
                                 final String building = getMenuTitle(lesson, "building", "building");
-                                PopupMenu popup = new PopupMenu(activity, view);
-                                Menu menu = popup.getMenu();
+                                final PopupMenu popup = new PopupMenu(activity, view);
+                                final Menu menu = popup.getMenu();
                                 popup.getMenuInflater().inflate(R.menu.schedule_lessons_item, menu);
                                 bindMenuItem(menu, R.id.open_group, activity.getString(R.string.group) + " " + group, group == null);
                                 bindMenuItem(menu, R.id.open_teacher, teacher, teacher == null || teacher_id == null);
@@ -192,8 +194,8 @@ public class ScheduleLessonsBuilder implements Runnable {
                     daysCount++;
                 }
             }
-            ViewGroup lessons_update_time_container = schedule_layout.findViewById(R.id.lessons_update_time_container);
-            ViewGroup lessons_warning_container = schedule_layout.findViewById(R.id.lessons_warning_container);
+            final ViewGroup lessons_update_time_container = schedule_layout.findViewById(R.id.lessons_update_time_container);
+            final ViewGroup lessons_warning_container = schedule_layout.findViewById(R.id.lessons_warning_container);
             if (daysCount == 0) {
                 Log.v(TAG, "daysCount == 0");
                 schedule_layout.removeView(lessons_update_time_container);

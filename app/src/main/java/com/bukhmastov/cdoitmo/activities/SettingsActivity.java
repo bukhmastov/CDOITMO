@@ -436,6 +436,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             bindPreferenceSummaryToValue(findPreference("pref_protocol_changes_mode"));
             bindPreferenceSummaryToValue(findPreference("pref_schedule_lessons_default"));
             bindPreferenceSummaryToValue(findPreference("pref_schedule_lessons_week"));
+            bindPreferenceSummaryToValue(findPreference("pref_schedule_lessons_view_of_reduced_lesson"));
             bindPreferenceSummaryToValue(findPreference("pref_schedule_exams_default"));
             Preference pref_schedule_lessons_clear_cache = findPreference("pref_schedule_lessons_clear_cache");
             if (pref_schedule_lessons_clear_cache != null) {

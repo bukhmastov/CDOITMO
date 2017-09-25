@@ -205,6 +205,11 @@ public class SplashActivity extends AppCompatActivity {
                     }
                     break;
                 }
+                case 90: {
+                    boolean compact = Storage.pref.get(context, "pref_schedule_lessons_compact_view_of_reduced_lesson", true);
+                    Storage.pref.delete(context, "pref_schedule_lessons_compact_view_of_reduced_lesson");
+                    Storage.pref.put(context, "pref_schedule_lessons_view_of_reduced_lesson", compact ? "compact" : "full");
+                }
             }
         }
     }

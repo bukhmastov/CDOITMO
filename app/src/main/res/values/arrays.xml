@@ -106,6 +106,17 @@
         <item>2</item>
     </string-array>
 
+    <string-array name="pref_schedule_lessons_view_of_reduced_lesson_titles">
+        <item>@string/show_fully</item>
+        <item>@string/show_compactly</item>
+        <item>@string/hide_fully</item>
+    </string-array>
+    <string-array name="pref_schedule_lessons_view_of_reduced_lesson_values" translatable="false">
+        <item>full</item>
+        <item>compact</item>
+        <item>hidden</item>
+    </string-array>
+
     <string-array name="week_types_titles">
         <item>@string/week_both</item>
         <item>@string/week_even</item>
