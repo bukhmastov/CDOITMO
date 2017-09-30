@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<defaultsMap>
+    <entry>
+        <key>message_login</key>
+        <value>{"type":0,"message":""}</value>
+    </entry>
+    <entry>
+        <key>message_menu</key>
+        <value>{"type":0,"message":""}</value>
+    </entry>
+</defaultsMap>

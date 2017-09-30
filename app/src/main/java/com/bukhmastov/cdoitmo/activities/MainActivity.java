@@ -208,6 +208,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                     });
                     selectSection(selectedSection);
                     Static.NavigationMenu.displayUserData(activity, (NavigationView) findViewById(R.id.nav_view));
+                    Static.NavigationMenu.displayRemoteMessage(activity);
                     Static.NavigationMenu.snackbarOffline(activity);
                     Static.NavigationMenu.drawOffline(menu);
                 } else if (selectedMenuItem != null) {

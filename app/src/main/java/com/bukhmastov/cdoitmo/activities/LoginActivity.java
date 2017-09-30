@@ -20,6 +20,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
+import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.interfaces.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.models.Client;
@@ -30,6 +31,7 @@ import com.bukhmastov.cdoitmo.utils.Storage;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.Objects;
 
@@ -60,6 +62,7 @@ public class LoginActivity extends AppCompatActivity {
             actionBar.setTitle(activity.getString(R.string.title_activity_login));
             actionBar.setLogo(obtainStyledAttributes(new int[] { R.attr.ic_security }).getDrawable(0));
         }
+        displayRemoteMessage();
         if (LoginActivity.auto_logout) {
             LoginActivity.auto_logout = false;
             route(SIGNAL_LOGOUT);
@@ -462,7 +465,6 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
     }
-
     private static class accounts {
         private static final String TAG = "LoginActivity.accounts";
         private static void push(final Context context, final String login) {
@@ -543,6 +545,45 @@ public class LoginActivity extends AppCompatActivity {
             }
             return accounts;
         }
+    }
+
+    private void displayRemoteMessage() {
+        Static.T.runThread(new Runnable() {
+            @Override
+            public void run() {
+                FirebaseConfigProvider.getJson(FirebaseConfigProvider.MESSAGE_LOGIN, new FirebaseConfigProvider.ResultJson() {
+                    @Override
+                    public void onResult(final JSONObject value) {
+                        Static.T.runThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    if (value == null) return;
+                                    final int type = value.getInt("type");
+                                    final String message = value.getString("message");
+                                    if (message == null || message.trim().isEmpty()) return;
+                                    Static.T.runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            View layout = Static.getRemoteMessage(activity, type, message);
+                                            if (layout != null) {
+                                                ViewGroup message_login = activity.findViewById(R.id.message_login);
+                                                if (message_login != null) {
+                                                    message_login.removeAllViews();
+                                                    message_login.addView(layout);
+                                                }
+                                            }
+                                        }
+                                    });
+                                } catch (Exception ignore) {
+                                    // ignore
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+        });
     }
 
     private void draw(final int layoutId) {

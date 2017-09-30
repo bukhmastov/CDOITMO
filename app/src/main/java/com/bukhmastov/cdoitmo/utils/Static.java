@@ -40,6 +40,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.MainActivity;
 import com.bukhmastov.cdoitmo.activities.SplashActivity;
 import com.bukhmastov.cdoitmo.converters.ProtocolConverter;
+import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.models.Client;
@@ -661,6 +662,48 @@ public class Static {
                 }
             });
         }
+        public static void displayRemoteMessage(final Activity activity) {
+            Static.T.runThread(new Runnable() {
+                @Override
+                public void run() {
+                    FirebaseConfigProvider.getJson(FirebaseConfigProvider.MESSAGE_MENU, new FirebaseConfigProvider.ResultJson() {
+                        @Override
+                        public void onResult(final JSONObject value) {
+                            Static.T.runThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        if (value == null) return;
+                                        final int type = value.getInt("type");
+                                        final String message = value.getString("message");
+                                        if (message == null || message.trim().isEmpty()) return;
+                                        Static.T.runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                View layout = Static.getRemoteMessage(activity, type, message);
+                                                if (layout != null) {
+                                                    ViewGroup message_menu = activity.findViewById(R.id.message_menu);
+                                                    if (message_menu != null) {
+                                                        message_menu.removeAllViews();
+                                                        message_menu.addView(layout);
+                                                        View message_menu_separator = activity.findViewById(R.id.message_menu_separator);
+                                                        if (message_menu_separator != null) {
+                                                            message_menu_separator.setVisibility(View.VISIBLE);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        });
+                                    } catch (Exception ignore) {
+                                        // ignore
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        }
     }
     @SuppressWarnings("deprecation")
     public static Locale getLocale(Context context) {
@@ -998,6 +1041,31 @@ public class Static {
         }
         private static View inflate(Context context, int layoutId) throws InflateException {
             return ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
+        }
+    }
+    public static View getRemoteMessage(final Context context, final int type, final String message) {
+        try {
+            if (message == null || message.trim().isEmpty()) {
+                return null;
+            }
+            int layoutId;
+            switch (type) {
+                case 0:
+                default: {
+                    layoutId = R.layout.layout_remote_message_info;
+                    break;
+                }
+                case 1: {
+                    layoutId = R.layout.layout_remote_message_warn;
+                    break;
+                }
+            }
+            View layout = ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
+            ((TextView) layout.findViewById(R.id.text)).setText(message);
+            return layout;
+        } catch (Exception e) {
+            Static.error(e);
+            return null;
         }
     }
 }
