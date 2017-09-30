@@ -13,6 +13,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapters.RatingTopListView;
+import com.bukhmastov.cdoitmo.exceptions.SilentException;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.IfmoClient;
@@ -243,14 +244,15 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
             public void run() {
                 Log.v(TAG, "display");
                 try {
-                    if (data == null) throw new NullPointerException("display(JSONObject data) can't be null");
+                    if (data == null) throw new SilentException();
                     activity.updateToolbar(Static.capitalizeFirstLetter(data.getString("header")), R.drawable.ic_rating);
                     // получаем список для отображения рейтинга
                     final ArrayList<HashMap<String, String>> users = new ArrayList<>();
                     JSONArray list = data.getJSONArray("list");
-                    if (list.length() > 0) {
+                    if (list != null && list.length() > 0) {
                         for (int i = 0; i < list.length(); i++) {
                             JSONObject jsonObject = list.getJSONObject(i);
+                            if (jsonObject == null) continue;
                             HashMap<String, String> hashMap = new HashMap<>();
                             hashMap.put("number", String.valueOf(jsonObject.getInt("number")));
                             hashMap.put("fio", jsonObject.getString("fio"));
@@ -288,6 +290,8 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                             }
                         }
                     });
+                } catch (SilentException ignore) {
+                    loadFailed();
                 } catch (Exception e) {
                     Static.error(e);
                     loadFailed();

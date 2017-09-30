@@ -28,7 +28,6 @@ import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
@@ -164,7 +163,11 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                                 lessonUnit.timeEnd = insert;
                                                 int selection = lesson_time_end.getSelectionStart();
                                                 lesson_time_end.setText(insert);
-                                                lesson_time_end.setSelection(selection);
+                                                try {
+                                                    lesson_time_end.setSelection(selection);
+                                                } catch (Exception ignore) {
+                                                    // ignore
+                                                }
                                             } else {
                                                 String nt = lesson_time_end.getText().toString();
                                                 Matcher next_time = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(nt);
@@ -180,14 +183,22 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                                         lessonUnit.timeEnd = insert;
                                                         int selection = lesson_time_end.getSelectionStart();
                                                         lesson_time_end.setText(insert);
-                                                        lesson_time_end.setSelection(selection);
+                                                        try {
+                                                            lesson_time_end.setSelection(selection);
+                                                        } catch (Exception ignore) {
+                                                            // ignore
+                                                        }
                                                     }
                                                 }
                                             }
                                             block_time_start = true;
                                             int selection = lesson_time_start.getSelectionStart();
                                             lesson_time_start.setText(st);
-                                            lesson_time_start.setSelection(selection);
+                                            try {
+                                                lesson_time_start.setSelection(selection);
+                                            } catch (Exception ignore) {
+                                                // ignore
+                                            }
                                         }
                                         lessonUnit.timeStart = st;
                                     }
@@ -219,7 +230,11 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                                 lessonUnit.timeStart = insert;
                                                 int selection = lesson_time_start.getSelectionStart();
                                                 lesson_time_start.setText(insert);
-                                                lesson_time_start.setSelection(selection);
+                                                try {
+                                                    lesson_time_start.setSelection(selection);
+                                                } catch (Exception ignore) {
+                                                    // ignore
+                                                }
                                             } else {
                                                 String st = lesson_time_start.getText().toString();
                                                 Matcher previous_time = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(st);
@@ -235,14 +250,22 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                                         lessonUnit.timeStart = insert;
                                                         int selection = lesson_time_start.getSelectionStart();
                                                         lesson_time_start.setText(insert);
-                                                        lesson_time_start.setSelection(selection);
+                                                        try {
+                                                            lesson_time_start.setSelection(selection);
+                                                        } catch (Exception ignore) {
+                                                            // ignore
+                                                        }
                                                     }
                                                 }
                                             }
                                             block_time_end = true;
                                             int selection = lesson_time_end.getSelectionStart();
                                             lesson_time_end.setText(et);
-                                            lesson_time_end.setSelection(selection);
+                                            try {
+                                                lesson_time_end.setSelection(selection);
+                                            } catch (Exception ignore) {
+                                                // ignore
+                                            }
                                         }
                                         lessonUnit.timeEnd = et;
                                     }
@@ -334,8 +357,8 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                                     Static.T.runOnUiThread(new Runnable() {
                                                         @Override
                                                         public void run() {
-                                                            teacherPickerAdapter.clear();
                                                             try {
+                                                                teacherPickerAdapter.clear();
                                                                 if (Objects.equals(json.getString("type"), "teacher_picker")) {
                                                                     JSONArray jsonArray = json.getJSONArray("list");
                                                                     ArrayList<JSONObject> arrayList = new ArrayList<>();
@@ -348,8 +371,8 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                                                         lesson_teacher.showDropDown();
                                                                     }
                                                                 }
-                                                            } catch (JSONException e) {
-                                                                e.printStackTrace();
+                                                            } catch (Exception ignore) {
+                                                                // ignore
                                                             }
                                                         }
                                                     });

@@ -20,6 +20,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.MainActivity;
 import com.bukhmastov.cdoitmo.adapters.ProtocolListView;
 import com.bukhmastov.cdoitmo.converters.ProtocolConverter;
+import com.bukhmastov.cdoitmo.exceptions.SilentException;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
@@ -488,7 +489,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                                         draw(R.layout.protocol_layout);
                                         // Отображаем группированный список изменений
                                         ViewGroup protocol_container = activity.findViewById(R.id.protocol_container);
-                                        if (protocol_container == null) throw new NullPointerException("");
+                                        if (protocol_container == null) throw new SilentException();
                                         protocol_container.addView(inflate(R.layout.protocol_layout_mode_advanced));
                                         ViewGroup pl_advanced_container = activity.findViewById(R.id.pl_advanced_container);
                                         if (protocol.length() == 0) {
@@ -534,6 +535,8 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                                             }
                                         }
                                         displayCommonPart();
+                                    } catch (SilentException ignore) {
+                                        loadFailed();
                                     } catch (Exception e) {
                                         Static.error(e);
                                         loadFailed();

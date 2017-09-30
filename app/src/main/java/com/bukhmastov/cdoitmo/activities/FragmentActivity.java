@@ -107,7 +107,7 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
                         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
                         if (fragmentTransaction != null) {
                             fragmentTransaction.replace(getRootViewId(), fragment);
-                            fragmentTransaction.commit();
+                            fragmentTransaction.commitAllowingStateLoss();
                         }
                     }
                 } catch (Exception e) {

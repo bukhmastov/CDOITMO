@@ -78,7 +78,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
                 FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
                 if (fragmentTransaction != null) {
                     fragmentTransaction.replace(getRootViewId(), fragment);
-                    fragmentTransaction.commit();
+                    fragmentTransaction.commitAllowingStateLoss();
                     pushFragment(stackElement);
                     updateToolbar(data.title, data.image);
                     return true;

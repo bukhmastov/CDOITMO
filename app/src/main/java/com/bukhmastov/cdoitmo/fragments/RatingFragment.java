@@ -535,7 +535,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                                         rl_button.setOnClickListener(new View.OnClickListener() {
                                             @Override
                                             public void onClick(View v) {
-                                                Static.T.runThread(new Runnable() {
+                                                Static.T.runOnUiThread(new Runnable() {
                                                     @Override
                                                     public void run() {
                                                         FirebaseAnalyticsProvider.logBasicEvent(activity, "Detailed rating used");

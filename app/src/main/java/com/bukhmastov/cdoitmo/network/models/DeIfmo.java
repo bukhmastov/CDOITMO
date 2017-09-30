@@ -22,7 +22,12 @@ public abstract class DeIfmo extends Client {
     public static final int FAILED_AUTH_CREDENTIALS_FAILED = 12;
 
     protected static boolean checkJsessionId(final Context context) {
-        return Long.parseLong(Storage.file.perm.get(context, "user#jsessionid_ts", "0")) + jsessionid_ts_limit < System.currentTimeMillis();
+        try {
+            return Long.parseLong(Storage.file.perm.get(context, "user#jsessionid_ts", "0")) + jsessionid_ts_limit < System.currentTimeMillis();
+        } catch (NumberFormatException e) {
+            Storage.file.perm.put(context, "user#jsessionid_ts", "0");
+            return true;
+        }
     }
     protected static void g(final Context context, final String url, final Map<String, String> query, final RawHandler rawHandler) {
         Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {

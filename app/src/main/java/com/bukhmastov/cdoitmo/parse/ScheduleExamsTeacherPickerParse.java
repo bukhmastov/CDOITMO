@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.parse;
 
+import com.bukhmastov.cdoitmo.exceptions.SilentException;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 
@@ -32,26 +33,32 @@ public class ScheduleExamsTeacherPickerParse implements Runnable {
     public void run() {
         Log.v(TAG, "parsing");
         try {
-            Matcher m;
-            HtmlCleaner cleaner = new HtmlCleaner();
-            TagNode root = cleaner.clean(data.replace("&nbsp;", " "));
-            TagNode content = root.getElementsByAttValue("class", "content_block", true, false)[0];
+            TagNode root = new HtmlCleaner().clean(data.replace("&nbsp;", " "));
+            if (root == null) {
+                throw new SilentException();
+            }
             JSONArray teachers = new JSONArray();
-            TagNode[] p = content.getElementsByName("p", false);
-            for(TagNode item : p){
-                try {
-                    TagNode[] elements = item.getAllElements(false);
-                    if(elements.length == 0) continue;
-                    m = Pattern.compile("^/ru/exam/3/(.+)/.*$").matcher(elements[0].getAttributeByName("href"));
-                    if(m.find()){
-                        JSONObject teacher = new JSONObject();
-                        teacher.put("name", elements[0].getText().toString().trim());
-                        teacher.put("scope", "teacher" + m.group(1));
-                        teacher.put("id", m.group(1));
-                        teachers.put(teacher);
+            TagNode content = root.getElementsByAttValue("class", "content_block", true, false)[0];
+            if (content != null) {
+                TagNode[] p = content.getElementsByName("p", false);
+                if (p != null) {
+                    for (TagNode item : p) {
+                        try {
+                            if (item == null) continue;
+                            TagNode[] elements = item.getAllElements(false);
+                            if (elements == null || elements.length == 0) continue;
+                            Matcher m = Pattern.compile("^/ru/exam/3/(.+)/.*$").matcher(elements[0].getAttributeByName("href"));
+                            if (m.find()) {
+                                JSONObject teacher = new JSONObject();
+                                teacher.put("name", elements[0].getText().toString().trim());
+                                teacher.put("scope", "teacher" + m.group(1));
+                                teacher.put("id", m.group(1));
+                                teachers.put(teacher);
+                            }
+                        } catch (Exception e) {
+                            Static.error(e);
+                        }
                     }
-                } catch (Exception e){
-                    Static.error(e);
                 }
             }
             JSONObject response = new JSONObject();
@@ -60,6 +67,8 @@ public class ScheduleExamsTeacherPickerParse implements Runnable {
             response.put("teachers", teachers);
             response.put("cache_token", cache_token);
             delegate.finish(response);
+        } catch (SilentException silent) {
+            delegate.finish(null);
         } catch (Exception e) {
             Static.error(e);
             delegate.finish(null);
