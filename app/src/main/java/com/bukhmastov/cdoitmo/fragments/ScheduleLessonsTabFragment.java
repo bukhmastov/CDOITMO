@@ -401,12 +401,17 @@ public class ScheduleLessonsTabFragment extends Fragment {
                                             query = ScheduleLessonsFragment.schedule.getString("query");
                                         }
                                         title = title.trim();
-                                        Bundle extras = new Bundle();
+                                        final Bundle extras = new Bundle();
                                         extras.putString("type", "share");
                                         extras.putString("query", query);
                                         extras.putString("title", title);
                                         extras.putString("token", token);
-                                        activity.openActivityOrFragment(ScheduleLessonsShareFragment.class, extras);
+                                        Static.T.runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                activity.openActivityOrFragment(ScheduleLessonsShareFragment.class, extras);
+                                            }
+                                        });
                                     }
                                 }
                             } catch (Exception e) {

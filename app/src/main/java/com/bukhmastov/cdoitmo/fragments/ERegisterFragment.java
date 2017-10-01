@@ -347,11 +347,16 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                                         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                                             Log.v(TAG, "erl_list_view clicked");
                                             HashMap<String, String> subj = subjects.get(position);
-                                            Bundle extras = new Bundle();
+                                            final Bundle extras = new Bundle();
                                             extras.putString("group", subj.get("group"));
                                             extras.putString("term", subj.get("semester"));
                                             extras.putString("name", subj.get("name"));
-                                            activity.openActivityOrFragment(SubjectShowFragment.class, extras);
+                                            Static.T.runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    activity.openActivityOrFragment(SubjectShowFragment.class, extras);
+                                                }
+                                            });
                                         }
                                     });
                                 }

@@ -700,7 +700,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
             public void run() {
                 try {
                     Log.v(TAG, "createLesson | cache_token=" + schedule.getString("cache_token"));
-                    Bundle extras = new Bundle();
+                    final Bundle extras = new Bundle();
                     extras.putSerializable("action_type", ScheduleLessonsModifyFragment.TYPE.create);
                     extras.putString("header", schedule.getString("title") + " " + schedule.getString("label"));
                     extras.putString("cache_token", schedule.getString("cache_token"));
@@ -718,7 +718,12 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                             extras.putString("room", schedule.getString("label"));
                             break;
                     }
-                    activity.openActivityOrFragment(ScheduleLessonsModifyFragment.class, extras);
+                    Static.T.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            activity.openActivityOrFragment(ScheduleLessonsModifyFragment.class, extras);
+                        }
+                    });
                 } catch (Exception e) {
                     Static.error(e);
                     Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
@@ -732,7 +737,7 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
             public void run() {
                 try {
                     Log.v(TAG, "createLesson(JSONObject) | cache_token=" + schedule.getString("cache_token"));
-                    Bundle extras = new Bundle();
+                    final Bundle extras = new Bundle();
                     extras.putSerializable("action_type", ScheduleLessonsModifyFragment.TYPE.create);
                     extras.putString("header", schedule.getString("title") + " " + schedule.getString("label"));
                     extras.putString("cache_token", schedule.getString("cache_token"));
@@ -748,7 +753,12 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                     if (lesson.has("teacher_id") && lesson.getString("teacher_id") != null) extras.putString("teacher_id", lesson.getString("teacher_id"));
                     if (lesson.has("room") && lesson.getString("room") != null) extras.putString("room", lesson.getString("room"));
                     if (lesson.has("building") && lesson.getString("building") != null) extras.putString("building", lesson.getString("building"));
-                    activity.openActivityOrFragment(ScheduleLessonsModifyFragment.class, extras);
+                    Static.T.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            activity.openActivityOrFragment(ScheduleLessonsModifyFragment.class, extras);
+                        }
+                    });
                 } catch (Exception e) {
                     Static.error(e);
                     Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
@@ -868,14 +878,19 @@ public class ScheduleLessons implements SwipeRefreshLayout.OnRefreshListener {
                 try {
                     Log.v(TAG, "editLesson | cache_token=" + schedule.getString("cache_token"));
                     if (!Objects.equals(lesson.getString("cdoitmo_type"), "synthetic")) throw new Exception("Wrong cdoitmo_type type");
-                    Bundle extras = new Bundle();
+                    final Bundle extras = new Bundle();
                     extras.putSerializable("action_type", ScheduleLessonsModifyFragment.TYPE.edit);
                     extras.putString("header", schedule.getString("title") + " " + schedule.getString("label"));
                     extras.putString("cache_token", schedule.getString("cache_token"));
                     extras.putInt("day", dayIndex);
                     extras.putInt("week", week);
                     extras.putString("hash", Static.crypt(lesson.toString()));
-                    activity.openActivityOrFragment(ScheduleLessonsModifyFragment.class, extras);
+                    Static.T.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            activity.openActivityOrFragment(ScheduleLessonsModifyFragment.class, extras);
+                        }
+                    });
                 } catch (Exception e) {
                     Static.error(e);
                     Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
