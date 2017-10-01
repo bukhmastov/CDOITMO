@@ -68,7 +68,7 @@
             android:layout_height="@dimen/rating_detailed_height"
             android:layout_alignParentEnd="true"
             android:layout_alignParentTop="true"
-            android:background="?attr/selectableItemBackground"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:contentDescription="@string/lorem_ipsum"
             app:srcCompat="@drawable/ic_chevron_right" />

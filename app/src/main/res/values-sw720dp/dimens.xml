@@ -83,7 +83,7 @@
     <dimen name="widget_schedule_lessons_item_min_width">52dp</dimen>
     <dimen name="widget_schedule_lessons_item_padding">10dp</dimen>
     <dimen name="widget_schedule_lessons_item_time_icon_width">16dp</dimen>
-    <dimen name="widget_schedule_lessons_button_dimen">34sp</dimen>
+    <dimen name="widget_schedule_lessons_button_dimen">36sp</dimen>
     <dimen name="widget_schedule_lessons_configure_min_height">36dp</dimen>
     <dimen name="widget_schedule_lessons_configure_min_height2">26dp</dimen>
     <dimen name="widget_schedule_lessons_configure_min_height3">16dp</dimen>
