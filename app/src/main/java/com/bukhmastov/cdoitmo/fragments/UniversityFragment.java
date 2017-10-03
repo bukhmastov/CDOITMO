@@ -57,7 +57,7 @@ public class UniversityFragment extends ConnectedFragment implements ViewPager.O
         super.onViewCreated(view, savedInstanceState);
         TabLayout main_tabs = activity.findViewById(R.id.scrollable_tabs);
         ViewPager university_pager = activity.findViewById(R.id.university_pager);
-        FragmentManager fragmentManager = getFragmentManager();
+        FragmentManager fragmentManager = getChildFragmentManager();
         if (university_pager != null && fragmentManager != null) {
             university_pager.setAdapter(new PagerUniversityAdapter(fragmentManager, activity));
             university_pager.addOnPageChangeListener(this);

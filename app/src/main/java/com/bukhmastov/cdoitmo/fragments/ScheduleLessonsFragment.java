@@ -228,7 +228,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
     @Override
     public void onSuccess(final JSONObject json) {
         final ScheduleLessonsFragment self = this;
-        final FragmentManager fragmentManager = getFragmentManager();
+        final FragmentManager fragmentManager = getChildFragmentManager();
         Static.T.runThread(new Runnable() {
             @Override
             public void run() {
