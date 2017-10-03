@@ -49,6 +49,9 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
             if (content == null) throw new NullPointerException("content cannot be null");
             if (settings == null) throw new NullPointerException("settings cannot be null");
             try {
+                if (!settings.has("shift")) {
+                    settings.put("shift", 0);
+                }
                 final int shift = settings.getInt("shift");
                 final Calendar calendar = Calendar.getInstance(Locale.GERMANY);
                 if (shift != 0) {
