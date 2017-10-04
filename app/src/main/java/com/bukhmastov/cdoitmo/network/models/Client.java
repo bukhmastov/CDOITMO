@@ -87,7 +87,7 @@ public abstract class Client {
             }
         });
     }
-    protected static void _p(final String url, final okhttp3.Headers headers, final Map<String, String> params, final RawHandler rawHandler) {
+    protected static void _p(final String url, final okhttp3.Headers headers, final Map<String, String> query, final Map<String, String> params, final RawHandler rawHandler) {
         Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
             @Override
             public void run() {
@@ -96,14 +96,20 @@ public abstract class Client {
                     if (httpUrl == null) {
                         throw new NullPointerException("httpUrl is null");
                     }
+                    HttpUrl.Builder builder = httpUrl.newBuilder();
+                    if (query != null) {
+                        for (Map.Entry<String, String> entry : query.entrySet()) {
+                            builder.addQueryParameter(entry.getKey(), entry.getValue());
+                        }
+                    }
                     if (params != null) {
                         FormBody.Builder formBody = new FormBody.Builder();
                         for (Map.Entry<String, String> param : params.entrySet()) {
                             formBody.add(param.getKey(), param.getValue());
                         }
-                        execute(httpUrl, headers, formBody.build(), rawHandler);
+                        execute(builder.build(), headers, formBody.build(), rawHandler);
                     } else {
-                        execute(httpUrl, headers, null, rawHandler);
+                        execute(builder.build(), headers, null, rawHandler);
                     }
                 } catch (Throwable throwable) {
                     rawHandler.onError(throwable);

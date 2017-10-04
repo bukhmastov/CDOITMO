@@ -9,7 +9,18 @@ import com.bukhmastov.cdoitmo.utils.Static;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class Ifmo extends Client {
+public abstract class Isu extends Client {
+
+    public static final int STATE_CHECKING = 10;
+    public static final int STATE_AUTHORIZATION = 11;
+    public static final int STATE_AUTHORIZED = 12;
+    public static final int FAILED_AUTH_TRY_AGAIN = 10;
+    public static final int FAILED_AUTH_CREDENTIALS_REQUIRED = 11;
+    public static final int FAILED_AUTH_CREDENTIALS_FAILED = 12;
+
+    protected static final String API_KEY = "<api_key>";
+    protected static final String CLIENT_ID = "<client_id>";
+    protected static final String CLIENT_SECRET = "<client_secret>";
 
     protected static void g(final Context context, final String url, final Map<String, String> query, final RawHandler rawHandler) {
         Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
@@ -23,12 +34,12 @@ public abstract class Ifmo extends Client {
             }
         });
     }
-    protected static void p(final Context context, final String url, final Map<String, String> params, final RawHandler rawHandler) {
+    protected static void p(final Context context, final String url, final Map<String, String> query, final Map<String, String> params, final RawHandler rawHandler) {
         Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
             @Override
             public void run() {
                 try {
-                    _p(url, getHeaders(context), null, params, rawHandler);
+                    _p(url, getHeaders(context), query, params, rawHandler);
                 } catch (Throwable throwable) {
                     rawHandler.onError(throwable);
                 }
@@ -47,7 +58,6 @@ public abstract class Ifmo extends Client {
             }
         });
     }
-
     private static okhttp3.Headers getHeaders(final Context context) throws Throwable {
         HashMap<String, String> headers = new HashMap<>();
         headers.put("User-Agent", Static.getUserAgent(context));
