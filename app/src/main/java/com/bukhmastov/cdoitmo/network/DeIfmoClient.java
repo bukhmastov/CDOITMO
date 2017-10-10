@@ -16,7 +16,6 @@ import org.json.JSONObject;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public class DeIfmoClient extends DeIfmo {
 
@@ -32,7 +31,7 @@ public class DeIfmoClient extends DeIfmo {
                 Log.v(TAG, "check");
                 if (Static.isOnline(context)) {
                     responseHandler.onProgress(STATE_CHECKING);
-                    if (Storage.file.perm.get(context, "user#jsessionid").isEmpty() || checkJsessionId(context)) {
+                    if (!checkJsessionId(context)) {
                         authorize(context, new ResponseHandler() {
                             @Override
                             public void onSuccess(int statusCode, Headers headers, String response) {
@@ -123,8 +122,8 @@ public class DeIfmoClient extends DeIfmo {
             public void run() {
                 Log.v(TAG, "authorize");
                 responseHandler.onProgress(STATE_AUTHORIZATION);
-                String login = Storage.file.perm.get(context, "user#login", "").trim();
-                String password = Storage.file.perm.get(context, "user#password", "").trim();
+                String login = Storage.file.perm.get(context, "user#deifmo#login", "").trim();
+                String password = Storage.file.perm.get(context, "user#deifmo#password", "").trim();
                 if (login.isEmpty() || password.isEmpty()) {
                     Log.v(TAG, "authorize | FAILED_AUTH_CREDENTIALS_REQUIRED");
                     responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_AUTH_CREDENTIALS_REQUIRED);
@@ -140,22 +139,7 @@ public class DeIfmoClient extends DeIfmo {
                                 @Override
                                 public void run() {
                                     Log.v(TAG, "authorize | success | code=" + code);
-                                    String value = headers.get("set-cookie");
-                                    if (value != null) {
-                                        String[] pairs = value.split(";");
-                                        for (String pair : pairs) {
-                                            String[] cookie = pair.split("=");
-                                            if (Objects.equals(cookie[0], "JSESSIONID")) {
-                                                if (!Objects.equals(cookie[1], "") && cookie[1] != null) {
-                                                    Storage.file.perm.put(context, "user#jsessionid", cookie[1]);
-                                                } else {
-                                                    Log.e(TAG, "authorize | success | got 'Set-Cookie' header with empty 'JSESSIONID'");
-                                                    responseHandler.onFailure(code, new Headers(headers), FAILED_AUTH_TRY_AGAIN);
-                                                    return;
-                                                }
-                                            }
-                                        }
-                                    }
+                                    storeCookies(context, headers);
                                     try {
                                         if (response == null) throw new NullPointerException("data cannot be null");
                                         if (response.contains("Access is forbidden") && response.contains("Invalid login/password")) {
@@ -163,7 +147,7 @@ public class DeIfmoClient extends DeIfmo {
                                             responseHandler.onFailure(code, new Headers(headers), FAILED_AUTH_CREDENTIALS_FAILED);
                                         } else if (response.contains("Выбор группы безопасности") && response.contains("OPTION VALUE=8")) {
                                             Log.v(TAG, "authorize | success | going to select security group");
-                                            g(context, getAbsoluteUrl(DEFAULT_PROTOCOL, "servlet/distributedCDE?Rule=APPLYSECURITYGROUP&PERSON=" + Storage.file.perm.get(context, "user#login") + "&SECURITYGROUP=8&COMPNAME="), null, new RawHandler() {
+                                            g(context, getAbsoluteUrl(DEFAULT_PROTOCOL, "servlet/distributedCDE?Rule=APPLYSECURITYGROUP&PERSON=" + Storage.file.perm.get(context, "user#deifmo#login") + "&SECURITYGROUP=8&COMPNAME="), null, new RawHandler() {
                                                 @Override
                                                 public void onDone(final int code, final okhttp3.Headers headers, final String response) {
                                                     Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
@@ -244,7 +228,7 @@ public class DeIfmoClient extends DeIfmo {
             public void run() {
                 Log.v(TAG, "get | url=" + url);
                 if (Static.isOnline(context)) {
-                    if (reAuth && checkJsessionId(context)) {
+                    if (reAuth && !checkJsessionId(context)) {
                         authorize(context, new ResponseHandler() {
                             @Override
                             public void onSuccess(int statusCode, Headers headers, String response) {
@@ -340,7 +324,7 @@ public class DeIfmoClient extends DeIfmo {
             public void run() {
                 Log.v(TAG, "post | url=" + url);
                 if (Static.isOnline(context)) {
-                    if (checkJsessionId(context)) {
+                    if (!checkJsessionId(context)) {
                         authorize(context, new ResponseHandler() {
                             @Override
                             public void onSuccess(int statusCode, Headers headers, String response) {

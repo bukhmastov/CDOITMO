@@ -144,7 +144,7 @@ public class LoginActivity extends AppCompatActivity {
                     }
                     case SIGNAL_CREDENTIALS_REQUIRED: {
                         Static.OFFLINE_MODE = false;
-                        Storage.file.perm.delete(activity, "user#jsessionid");
+                        Storage.file.perm.delete(activity, "user#deifmo#cookies");
                         Static.logoutCurrent(activity);
                         Static.authorized = false;
                         Static.snackBar(activity, activity.getString(R.string.required_login_password));
@@ -153,8 +153,8 @@ public class LoginActivity extends AppCompatActivity {
                     }
                     case SIGNAL_CREDENTIALS_FAILED: {
                         Static.OFFLINE_MODE = false;
-                        Storage.file.perm.delete(activity, "user#jsessionid");
-                        Storage.file.perm.delete(activity, "user#password");
+                        Storage.file.perm.delete(activity, "user#deifmo#cookies");
+                        Storage.file.perm.delete(activity, "user#deifmo#password");
                         Static.logoutCurrent(activity);
                         Static.authorized = false;
                         Static.snackBar(activity, activity.getString(R.string.invalid_login_password));
@@ -181,8 +181,8 @@ public class LoginActivity extends AppCompatActivity {
                     FirebaseAnalyticsProvider.logEvent(activity, FirebaseAnalyticsProvider.Event.LOGIN_REQUIRED);
                     String current_login = Storage.file.general.get(activity, "users#current_login");
                     if (!current_login.isEmpty()) {
-                        String login = Storage.file.perm.get(activity, "user#login");
-                        String password = Storage.file.perm.get(activity, "user#password");
+                        String login = Storage.file.perm.get(activity, "user#deifmo#login");
+                        String password = Storage.file.perm.get(activity, "user#deifmo#password");
                         String role = Storage.file.perm.get(activity, "user#role");
                         auth(login, password, role, false);
                     } else {
@@ -229,8 +229,8 @@ public class LoginActivity extends AppCompatActivity {
                             try {
                                 Log.v(TAG, "account in accounts " + accounts.getString(i));
                                 Storage.file.general.put(activity, "users#current_login", accounts.getString(i));
-                                final String login = Storage.file.perm.get(activity, "user#login");
-                                final String password = Storage.file.perm.get(activity, "user#password");
+                                final String login = Storage.file.perm.get(activity, "user#deifmo#login");
+                                final String password = Storage.file.perm.get(activity, "user#deifmo#password");
                                 final String role = Storage.file.perm.get(activity, "user#role");
                                 final String name = Storage.file.perm.get(activity, "user#name").trim();
                                 Storage.file.general.delete(activity, "users#current_login");
@@ -306,8 +306,8 @@ public class LoginActivity extends AppCompatActivity {
                         return;
                     }
                     Storage.file.general.put(activity, "users#current_login", login);
-                    Storage.file.perm.put(activity, "user#login", login);
-                    Storage.file.perm.put(activity, "user#password", password);
+                    Storage.file.perm.put(activity, "user#deifmo#login", login);
+                    Storage.file.perm.put(activity, "user#deifmo#password", password);
                     Storage.file.perm.put(activity, "user#role", role);
                     DeIfmoClient.check(activity, new ResponseHandler() {
                         @Override

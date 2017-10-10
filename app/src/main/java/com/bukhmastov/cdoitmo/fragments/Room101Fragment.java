@@ -142,8 +142,8 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                     default: params.put("getFunc", "delRequest"); break;
                 }
                 params.put("reid", String.valueOf(reid));
-                params.put("login", Storage.file.perm.get(activity, "user#login"));
-                params.put("password", Storage.file.perm.get(activity, "user#password"));
+                params.put("login", Storage.file.perm.get(activity, "user#deifmo#login"));
+                params.put("password", Storage.file.perm.get(activity, "user#deifmo#password"));
                 Room101Client.post(activity, "delRequest.php", params, new ResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
@@ -358,8 +358,8 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                 HashMap<String, String> params = new HashMap<>();
                 params.put("getFunc", "isLoginPassword");
                 params.put("view", scope);
-                params.put("login", Storage.file.perm.get(context, "user#login"));
-                params.put("password", Storage.file.perm.get(context, "user#password"));
+                params.put("login", Storage.file.perm.get(context, "user#deifmo#login"));
+                params.put("password", Storage.file.perm.get(context, "user#deifmo#password"));
                 Room101Client.post(context, "index.php", params, new ResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {

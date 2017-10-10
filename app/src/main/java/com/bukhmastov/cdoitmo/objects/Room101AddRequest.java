@@ -182,8 +182,8 @@ public class Room101AddRequest {
                 } else if (stage == 1) {
                     HashMap<String, String> params = new HashMap<>();
                     params.put("month", "next");
-                    params.put("login", Storage.file.perm.get(activity, "user#login"));
-                    params.put("password", Storage.file.perm.get(activity, "user#password"));
+                    params.put("login", Storage.file.perm.get(activity, "user#deifmo#login"));
+                    params.put("password", Storage.file.perm.get(activity, "user#deifmo#password"));
                     Room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
                         @Override
                         public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
@@ -249,8 +249,8 @@ public class Room101AddRequest {
                 params.put("dateRequest", pick_date);
                 params.put("timeBegin", "");
                 params.put("timeEnd", "");
-                params.put("login", Storage.file.perm.get(activity, "user#login"));
-                params.put("password", Storage.file.perm.get(activity, "user#password"));
+                params.put("login", Storage.file.perm.get(activity, "user#deifmo#login"));
+                params.put("password", Storage.file.perm.get(activity, "user#deifmo#password"));
                 Room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
@@ -303,8 +303,8 @@ public class Room101AddRequest {
                 params.put("dateRequest", pick_date);
                 params.put("timeBegin", pick_time_start);
                 params.put("timeEnd", "");
-                params.put("login", Storage.file.perm.get(activity, "user#login"));
-                params.put("password", Storage.file.perm.get(activity, "user#password"));
+                params.put("login", Storage.file.perm.get(activity, "user#deifmo#login"));
+                params.put("password", Storage.file.perm.get(activity, "user#deifmo#password"));
                 Room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
@@ -367,14 +367,14 @@ public class Room101AddRequest {
                 params.put("dateRequest", pick_date);
                 params.put("timeBegin", pick_time_start);
                 params.put("timeEnd", pick_time_end);
-                params.put("login", Storage.file.perm.get(activity, "user#login"));
-                params.put("password", Storage.file.perm.get(activity, "user#password"));
+                params.put("login", Storage.file.perm.get(activity, "user#deifmo#login"));
+                params.put("password", Storage.file.perm.get(activity, "user#deifmo#password"));
                 Room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, Client.Headers headers, String response) {
                         try {
                             data = new JSONObject();
-                            data.put("done", false);
+                            data.put("done", statusCode == 302);
                             CURRENT_STAGE++;
                             proceedStage();
                         } catch (JSONException e) {
@@ -384,17 +384,13 @@ public class Room101AddRequest {
                     }
                     @Override
                     public void onFailure(int statusCode, Client.Headers headers, int state) {
-                        if (statusCode == 302) {
-                            try {
-                                data = new JSONObject();
-                                data.put("done", true);
-                                CURRENT_STAGE++;
-                                proceedStage();
-                            } catch (JSONException e) {
-                                Static.error(e);
-                                failed();
-                            }
-                        } else {
+                        try {
+                            data = new JSONObject();
+                            data.put("done", false);
+                            CURRENT_STAGE++;
+                            proceedStage();
+                        } catch (JSONException e) {
+                            Static.error(e);
                             failed();
                         }
                     }

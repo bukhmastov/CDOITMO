@@ -13,7 +13,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.regex.Pattern;
 
 public class Storage {
@@ -131,9 +130,6 @@ public class Storage {
                 fileWriter.write(data);
                 fileWriter.close();
                 Storage.proxy.push(file.getAbsolutePath(), data, 1);
-                if (storage == STORAGE.permanent && Objects.equals(path, "user#jsessionid")) {
-                    Storage.file.perm.put(context, "user#jsessionid_ts", String.valueOf(System.currentTimeMillis()));
-                }
                 return true;
             } catch (Exception e) {
                 return false;

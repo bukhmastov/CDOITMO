@@ -14,6 +14,7 @@ import org.json.JSONTokener;
 import java.io.IOException;
 import java.io.Reader;
 import java.text.ParseException;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -270,9 +271,49 @@ public abstract class Client {
         return response;
     }
 
+    protected static JSONArray parseCookies(final okhttp3.Headers headers) {
+        try {
+            final JSONArray parsed = new JSONArray();
+            Map<String, List<String>> headersMap = headers.toMultimap();
+            if (headersMap.containsKey("set-cookie")) {
+                List<String> set_cookie = headersMap.get("set-cookie");
+                for (String cookieAndAttributes : set_cookie) {
+                    String[] attributes = cookieAndAttributes.split(";");
+                    if (attributes.length == 0) continue;
+                    String[] cookie = attributes[0].split("=");
+                    if (cookie.length != 2) continue;
+                    String cookieName = cookie[0].trim();
+                    String cookieValue = cookie[1].trim();
+                    //Log.v(TAG, "parseCookies | cookie: " + cookieName + "=" + cookieValue);
+                    JSONArray attrs = new JSONArray();
+                    for (int i = 1; i < attributes.length; i++) {
+                        String[] attribute = attributes[i].split("=");
+                        if (attribute.length != 2) continue;
+                        String attrName = attribute[0].trim().toLowerCase();
+                        String attrValue = attribute[1].trim();
+                        //Log.v(TAG, "parseCookies |    attr: " + attrName + "=" + attrValue);
+                        attrs.put(new JSONObject()
+                                .put("name", attrName)
+                                .put("value", attrValue)
+                        );
+                    }
+                    parsed.put(new JSONObject()
+                            .put("name", cookieName)
+                            .put("value", cookieValue)
+                            .put("attrs", attrs)
+                    );
+                }
+            }
+            return parsed;
+        } catch (Exception e) {
+            Static.error(e);
+            return new JSONArray();
+        }
+    }
+
     private static final class Secured {
         private static final String[] request = new String[] {"passwd", "pass", "password"};
-        private static final String[] headers = new String[] {"cookie", "set-cookie"};
+        private static final String[] headers = new String[] {"route", "JSESSIONID", "PHPSESSID"};
     }
     private static String getLogRequestBody(final RequestBody requestBody) {
         try {
@@ -300,7 +341,7 @@ public abstract class Client {
             }
             String log = headers.toString().replaceAll("\n", " ").trim();
             for (String secured : Secured.headers) {
-                Matcher m = Pattern.compile("(" + secured + ":\\s?)([^ ;]*)", Pattern.CASE_INSENSITIVE).matcher(log);
+                Matcher m = Pattern.compile("(" + secured + "=)([^\\s;]*)", Pattern.CASE_INSENSITIVE).matcher(log);
                 if (m.find()) {
                     log = m.replaceAll("$1<hidden>");
                 }
