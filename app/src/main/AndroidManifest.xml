@@ -35,10 +35,9 @@
             android:value="AIzaSyAqtKeuOdQ5Qt1mcx3y0w3f4HkCSAwY5Q4"/>
 
         <activity
-            android:name=".activities.SplashActivity"
+            android:name=".activities.MainActivity"
             android:theme="@style/AppTheme.Splash"
-            android:launchMode="singleTop"
-            android:noHistory="true" >
+            android:launchMode="singleTop" >
             <intent-filter>
                 <action android:name="com.bukhmastov.cdoitmo.SHORTCUT_OPEN" />
                 <action android:name="android.intent.action.MAIN" />
@@ -83,14 +82,6 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="content" android:host="*" android:pathPattern=".*\\.cdoitmo" />
             </intent-filter>
-        </activity>
-        <activity
-            android:name=".activities.MainActivity"
-            android:parentActivityName=".activities.SplashActivity"
-            android:launchMode="singleTop" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.bukhmastov.cdoitmo.activities.SplashActivity" />
         </activity>
         <activity
             android:name=".activities.LoginActivity"

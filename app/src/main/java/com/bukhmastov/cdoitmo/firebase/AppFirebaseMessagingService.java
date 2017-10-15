@@ -3,7 +3,7 @@ package com.bukhmastov.cdoitmo.firebase;
 import android.app.PendingIntent;
 import android.content.Intent;
 
-import com.bukhmastov.cdoitmo.activities.SplashActivity;
+import com.bukhmastov.cdoitmo.activities.MainActivity;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Notifications;
 import com.bukhmastov.cdoitmo.utils.Static;
@@ -42,7 +42,7 @@ public class AppFirebaseMessagingService extends FirebaseMessagingService {
                     }
                     Log.v(TAG, "sendNotification | title=" + title + " | text=" + text);
                     // prepare intent
-                    Intent intent = new Intent(getBaseContext(), SplashActivity.class);
+                    Intent intent = new Intent(getBaseContext(), MainActivity.class);
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     PendingIntent pendingIntent = PendingIntent.getActivity(getBaseContext(), 0, intent, PendingIntent.FLAG_ONE_SHOT);
                     // prepare and send notification

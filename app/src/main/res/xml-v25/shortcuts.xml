@@ -10,7 +10,7 @@
         <intent
             android:action="com.bukhmastov.cdoitmo.SHORTCUT_OPEN"
             android:targetPackage="com.bukhmastov.cdoitmo"
-            android:targetClass="com.bukhmastov.cdoitmo.activities.SplashActivity" >
+            android:targetClass="com.bukhmastov.cdoitmo.activities.MainActivity" >
             <extra android:name="action" android:value="schedule_lessons" />
         </intent>
     </shortcut>
@@ -25,7 +25,7 @@
         <intent
             android:action="com.bukhmastov.cdoitmo.SHORTCUT_OPEN"
             android:targetPackage="com.bukhmastov.cdoitmo"
-            android:targetClass="com.bukhmastov.cdoitmo.activities.SplashActivity" >
+            android:targetClass="com.bukhmastov.cdoitmo.activities.MainActivity" >
             <extra android:name="action" android:value="room101" />
             <extra android:name="action_extra" android:value="create" />
         </intent>
@@ -41,7 +41,7 @@
         <intent
             android:action="com.bukhmastov.cdoitmo.SHORTCUT_OPEN"
             android:targetPackage="com.bukhmastov.cdoitmo"
-            android:targetClass="com.bukhmastov.cdoitmo.activities.SplashActivity" >
+            android:targetClass="com.bukhmastov.cdoitmo.activities.MainActivity" >
             <extra android:name="action" android:value="protocol_changes" />
         </intent>
     </shortcut>
@@ -56,7 +56,7 @@
         <intent
             android:action="com.bukhmastov.cdoitmo.SHORTCUT_OPEN"
             android:targetPackage="com.bukhmastov.cdoitmo"
-            android:targetClass="com.bukhmastov.cdoitmo.activities.SplashActivity" >
+            android:targetClass="com.bukhmastov.cdoitmo.activities.MainActivity" >
             <extra android:name="action" android:value="rating" />
         </intent>
     </shortcut>

@@ -13,8 +13,8 @@ import android.support.annotation.DrawableRes;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.DaysRemainingWidgetActivity;
+import com.bukhmastov.cdoitmo.activities.MainActivity;
 import com.bukhmastov.cdoitmo.activities.ShortcutReceiverActivity;
-import com.bukhmastov.cdoitmo.activities.SplashActivity;
 import com.bukhmastov.cdoitmo.activities.TimeRemainingWidgetActivity;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.utils.Log;
@@ -98,7 +98,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
                     );
                     switch (shortcut_type) {
                         case "tab": {
-                            Intent intent = new Intent(context, SplashActivity.class);
+                            Intent intent = new Intent(context, MainActivity.class);
                             intent.addFlags(Static.intentFlagRestart);
                             intent.putExtra("action", shortcut_data);
                             context.startActivity(intent);
@@ -106,7 +106,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
                         }
                         case "room101":
                         case "university": {
-                            Intent intent = new Intent(context, SplashActivity.class);
+                            Intent intent = new Intent(context, MainActivity.class);
                             intent.addFlags(Static.intentFlagRestart);
                             intent.putExtra("action", shortcut_type);
                             intent.putExtra("action_extra", shortcut_data);
@@ -115,7 +115,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
                         }
                         case "schedule_lessons":
                         case "schedule_exams": {
-                            Intent intent = new Intent(context, SplashActivity.class);
+                            Intent intent = new Intent(context, MainActivity.class);
                             intent.addFlags(Static.intentFlagRestart);
                             intent.putExtra("action", shortcut_type);
                             intent.putExtra("action_extra", (new JSONObject(shortcut_data)).getString("query"));

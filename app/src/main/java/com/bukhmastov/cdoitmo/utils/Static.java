@@ -39,7 +39,6 @@ import android.widget.Toast;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.MainActivity;
-import com.bukhmastov.cdoitmo.activities.SplashActivity;
 import com.bukhmastov.cdoitmo.converters.ProtocolConverter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
@@ -225,7 +224,7 @@ public class Static {
             Log.w(TAG, "reLaunch | context is null");
             return;
         }
-        Intent intent = new Intent(context, SplashActivity.class);
+        Intent intent = new Intent(context, MainActivity.class);
         intent.addFlags(Static.intentFlagRestart);
         context.startActivity(intent);
     }

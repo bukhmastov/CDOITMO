@@ -6,7 +6,7 @@ import android.app.job.JobService;
 import android.content.Intent;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activities.SplashActivity;
+import com.bukhmastov.cdoitmo.activities.MainActivity;
 import com.bukhmastov.cdoitmo.converters.ProtocolConverter;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
@@ -190,7 +190,7 @@ public class TrackingProtocolJobService extends JobService {
                 Log.v(TAG, "addNotification | title=" + title + " | text=" + text + " | timestamp=" + timestamp + " | isSummary=" + (isSummary ? "true" : "false"));
                 if (c > Integer.MAX_VALUE - 10) c = 0;
                 // prepare intent
-                Intent intent = new Intent(getBaseContext(), SplashActivity.class);
+                Intent intent = new Intent(getBaseContext(), MainActivity.class);
                 intent.addFlags(Static.intentFlagRestart);
                 intent.putExtra("action", "protocol_changes");
                 PendingIntent pIntent = PendingIntent.getActivity(getBaseContext(), (int) System.currentTimeMillis(), intent, 0);

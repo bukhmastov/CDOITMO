@@ -62,7 +62,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
                 @Override
                 public void onClick(View v) {
                     Log.v(TAG, "drw_container clicked");
-                    Intent intent = new Intent(getBaseContext(), SplashActivity.class);
+                    Intent intent = new Intent(getBaseContext(), MainActivity.class);
                     intent.addFlags(Static.intentFlagRestart);
                     intent.putExtra("action", "schedule_exams");
                     intent.putExtra("action_extra", query);

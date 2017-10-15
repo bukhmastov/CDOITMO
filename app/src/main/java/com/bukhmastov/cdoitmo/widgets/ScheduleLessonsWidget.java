@@ -20,9 +20,9 @@ import android.view.View;
 import android.widget.RemoteViews;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.activities.MainActivity;
 import com.bukhmastov.cdoitmo.activities.PikaActivity;
 import com.bukhmastov.cdoitmo.activities.ScheduleLessonsWidgetConfigureActivity;
-import com.bukhmastov.cdoitmo.activities.SplashActivity;
 import com.bukhmastov.cdoitmo.converters.ScheduleLessonsAdditionalConverter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.models.Client;
@@ -605,7 +605,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                             @Override
                             public void run() {
                                 logStatistic(context, "schedule_open");
-                                Intent oIntent = new Intent(context, SplashActivity.class);
+                                Intent oIntent = new Intent(context, MainActivity.class);
                                 oIntent.addFlags(Static.intentFlagRestart);
                                 oIntent.putExtra("action", "schedule_lessons");
                                 try {
