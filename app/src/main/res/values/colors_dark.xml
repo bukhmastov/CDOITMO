@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="colorPrimaryLightDark">#282828</color>
+    <color name="colorPrimaryDark">#212121</color>
+    <color name="colorPrimaryDDark">#090909</color>
+    <color name="colorPrimaryOpacityDark">#7e212121</color>
+    <color name="colorAccentDark">#D96629</color>
+
+    <color name="textColorPrimaryDark">@color/text_color_primary_dark</color>
+    <color name="textColorSecondaryDark">@color/text_color_secondary_dark</color>
+    <color name="textColorHeaderDark">#e0e0e0</color>
+
+    <color name="colorSeparatorDark">#424242</color>
+    <color name="colorSeparatorDDark">#8C8C8C</color>
+    <color name="colorPositiveTrendDark">#338937</color>
+    <color name="colorNegativeTrendDark">#a11717</color>
+    <color name="colorIcXmlDark">#9e9e9e</color>
+    <color name="colorIcXmlRedDark">#781212</color>
+
+    <color name="colorScheduleFlagCommonBGDark">#434343</color>
+    <color name="colorScheduleFlagPracticeBGDark">#2d6449</color>
+    <color name="colorScheduleFlagLectureBGDark">#114a66</color>
+    <color name="colorScheduleFlagLabBGDark">#63400f</color>
+    <color name="colorScheduleFlagTEXTDark">#9e9e9e</color>
+
+    <color name="colorBackgroundPopupDark">#AA000000</color>
+    <color name="colorBackgroundPopupFillDark">#212121</color>
+    <color name="colorBackgroundCardsDark">#212121</color>
+    <color name="colorBackgroundSearchToolbarDark">#212121</color>
+    <color name="colorBackgroundSearchDark">#323232</color>
+    <color name="colorBackgroundDark">#303030</color>
+    <color name="colorBackgroundSectionDark">#383838</color>
+    <color name="colorBackgroundSnackBarDark">#212121</color>
+    <color name="colorControlHighlightDark">#a11717</color>
+
+    <color name="colorSearchPrimaryDarkDark">#090909</color>
+    <color name="colorUniversityIconDark">#9e9e9e</color>
+
+</resources>

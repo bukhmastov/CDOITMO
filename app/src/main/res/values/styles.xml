@@ -1,106 +1,5 @@
 <resources>
 
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="colorPrimaryLight">@color/colorPrimaryLight</item>
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorPrimaryOpacity">@color/colorPrimaryOpacity</item>
-        <item name="colorAccent">@color/colorAccent</item>
-        <item name="android:textColorPrimaryInverse">@color/textColorHeader</item>
-        <item name="android:textColorPrimary">@color/textColorPrimary</item>
-        <item name="android:textColorSecondary">@color/textColorSecondary</item>
-        <item name="textColorPassed">@color/textColorSubjectPassed</item>
-        <item name="textColorDegrade">@color/textColorDegrade</item>
-        <item name="colorSeparator">@color/colorSeparator</item>
-        <item name="colorSeparatorDark">@color/colorSeparatorDark</item>
-        <item name="colorBackgroundRefresh">@color/textColorHeader</item>
-        <item name="colorBackgroundSection">@color/colorBackgroundSection</item>
-        <item name="colorBackgroundSnackBar">@color/colorBackgroundSnackBar</item>
-        <item name="colorIcXml">@color/colorIcXml</item>
-        <item name="colorIcXmlRed">@color/colorIcXmlRed</item>
-        <item name="colorScheduleFlagCommonBG">@color/colorScheduleFlagCommonBG</item>
-        <item name="colorScheduleFlagPracticeBG">@color/colorScheduleFlagPracticeBG</item>
-        <item name="colorScheduleFlagLectureBG">@color/colorScheduleFlagLectureBG</item>
-        <item name="colorScheduleFlagLabBG">@color/colorScheduleFlagLabBG</item>
-        <item name="colorScheduleFlagTEXT">@color/colorScheduleFlagTEXT</item>
-        <item name="colorBackgroundCards">@color/colorBackgroundCards</item>
-        <item name="colorBackground">@color/colorBackground</item>
-        <item name="android:textColorHint">@color/textColorSecondary</item>
-        <item name="colorUniversityIcon">@color/colorUniversityIcon</item>
-
-        <item name="ic_cdo_small">@drawable/cdo</item>
-        <item name="ic_security">@drawable/ic_security</item>
-        <item name="windowActionModeOverlay">true</item>
-    </style>
-    <style name="AppTheme.Dark" parent="Theme.AppCompat.NoActionBar">
-        <item name="colorPrimaryLight">@color/colorPrimaryLightInverse</item>
-        <item name="colorPrimary">@color/colorPrimaryInverse</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDarkInverse</item>
-        <item name="colorPrimaryOpacity">@color/colorPrimaryOpacityInverse</item>
-        <item name="colorAccent">@color/colorAccentInverse</item>
-        <item name="android:textColorPrimaryInverse">@color/textColorHeaderInverse</item>
-        <item name="android:textColorPrimary">@color/textColorPrimaryInverse</item>
-        <item name="android:textColorSecondary">@color/textColorSecondaryInverse</item>
-        <item name="textColorPassed">@color/textColorSubjectPassedInverse</item>
-        <item name="textColorDegrade">@color/textColorDegradeInverse</item>
-        <item name="colorSeparator">@color/colorSeparatorInverse</item>
-        <item name="colorSeparatorDark">@color/colorSeparatorDarkInverse</item>
-        <item name="colorBackgroundRefresh">@color/colorPrimaryInverse</item>
-        <item name="colorBackgroundSection">@color/colorBackgroundSectionInverse</item>
-        <item name="colorBackgroundSnackBar">@color/colorBackgroundSnackBarInverse</item>
-        <item name="colorIcXml">@color/colorIcXmlInverse</item>
-        <item name="colorIcXmlRed">@color/colorIcXmlRedInverse</item>
-        <item name="colorScheduleFlagCommonBG">@color/colorScheduleFlagCommonBGInverse</item>
-        <item name="colorScheduleFlagPracticeBG">@color/colorScheduleFlagPracticeBGInverse</item>
-        <item name="colorScheduleFlagLectureBG">@color/colorScheduleFlagLectureBGInverse</item>
-        <item name="colorScheduleFlagLabBG">@color/colorScheduleFlagLabBGInverse</item>
-        <item name="colorScheduleFlagTEXT">@color/colorScheduleFlagTEXTInverse</item>
-        <item name="colorBackgroundCards">@color/colorBackgroundCardsInverse</item>
-        <item name="colorBackground">@color/colorBackgroundInverse</item>
-        <item name="android:textColorHint">@color/textColorSecondaryInverse</item>
-        <item name="colorUniversityIcon">@color/colorUniversityIconInverse</item>
-
-        <item name="ic_cdo_small">@drawable/cdo</item>
-        <item name="ic_security">@drawable/ic_security</item>
-        <item name="windowActionModeOverlay">true</item>
-    </style>
-    <style name="AppTheme.Popup" parent="AppTheme">
-        <item name="android:windowIsTranslucent">true</item>
-        <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="android:windowContentOverlay">@null</item>
-        <item name="android:windowNoTitle">true</item>
-        <item name="colorPopupBackground">@color/colorPopupBackground</item>
-        <item name="colorPopupBackgroundFill">@color/colorPopupBackgroundFill</item>
-        <item name="colorPrimaryDark">?attr/colorPopupBackground</item>
-    </style>
-    <style name="AppTheme.Popup.Dark" parent="AppTheme.Dark">
-        <item name="android:windowIsTranslucent">true</item>
-        <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="android:windowContentOverlay">@null</item>
-        <item name="android:windowNoTitle">true</item>
-        <item name="colorPopupBackground">@color/colorPopupBackgroundInverse</item>
-        <item name="colorPopupBackgroundFill">@color/colorPopupBackgroundFillInverse</item>
-        <item name="colorPrimaryDark">?attr/colorPopupBackground</item>
-    </style>
-    <style name="AppTheme.Search" parent="AppTheme">
-        <item name="colorSearchBackgroundToolbar">@color/colorSearchBackgroundToolbar</item>
-        <item name="colorSearchBackground">@color/colorSearchBackground</item>
-        <item name="colorPrimaryDark">@color/colorSearchPrimaryDark</item>
-    </style>
-    <style name="AppTheme.Search.Dark" parent="AppTheme.Dark" >
-        <item name="colorSearchBackgroundToolbar">@color/colorSearchBackgroundToolbarInverse</item>
-        <item name="colorSearchBackground">@color/colorSearchBackgroundInverse</item>
-        <item name="colorPrimaryDark">@color/colorSearchPrimaryDarkInverse</item>
-    </style>
-    <style name="AppTheme.Settings" parent="AppTheme">
-        <item name="android:activatedBackgroundIndicator">@drawable/list_activated_background</item>
-        <item name="android:colorControlActivated">@color/colorAccent</item>
-    </style>
-    <style name="AppTheme.Settings.Dark" parent="AppTheme.Dark">
-        <item name="android:activatedBackgroundIndicator">@drawable/list_activated_background_inverse</item>
-        <item name="android:colorControlActivated">@color/colorAccentInverse</item>
-    </style>
-
     <style name="AppTheme.Splash" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowBackground">@drawable/splash_background</item>
@@ -110,20 +9,13 @@
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowNoTitle">true</item>
-        <item name="colorPopupBackground">@android:color/transparent</item>
-        <item name="colorPopupBackgroundFill">@android:color/transparent</item>
+        <item name="colorBackgroundPopup">@android:color/transparent</item>
+        <item name="colorBackgroundPopupFill">@android:color/transparent</item>
         <item name="colorPrimaryDark">@android:color/transparent</item>
     </style>
     <style name="AppTheme.NavigationViewTextStyle">
         <item name="android:textSize">@dimen/font_size_14</item>
         <item name="android:fontFamily">@string/font_bold</item>
-    </style>
-
-    <style name="AppTheme.TransparentStatusBar" parent="AppTheme">
-        <item name="android:windowTranslucentStatus">true</item>
-    </style>
-    <style name="AppTheme.Dark.TransparentStatusBar" parent="AppTheme.Dark">
-        <item name="android:windowTranslucentStatus">true</item>
     </style>
 
 </resources>

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="AppTheme.Black" parent="Theme.AppCompat.NoActionBar">
+
+        <item name="colorPrimaryLight">@color/colorPrimaryBlack</item>
+        <item name="colorPrimary">@color/colorPrimaryBlack</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryBlack</item>
+        <item name="colorPrimaryOpacity">@color/colorPrimaryOpacityBlack</item>
+        <item name="colorAccent">@color/colorAccentBlack</item>
+
+        <item name="android:windowBackground">@color/colorPrimaryBlack</item>
+        <item name="colorBackground">@color/colorPrimaryBlack</item>
+        <item name="colorBackgroundCards">@color/colorBackgroundCardsBlack</item>
+        <item name="colorBackgroundNavigation">@color/colorBackgroundNavigationBlack</item>
+        <item name="colorBackgroundRefresh">@color/colorPrimaryBlack</item>
+        <item name="colorBackgroundSection">@color/colorBackgroundSectionBlack</item>
+        <item name="colorBackgroundSnackBar">@color/colorBackgroundSnackBarBlack</item>
+
+        <item name="android:textColor">@color/textColorPrimaryBlack</item>
+        <item name="android:textColorPrimary">@color/textColorPrimaryBlack</item>
+        <item name="android:textColorPrimaryInverse">@color/textColorHeaderBlack</item>
+        <item name="android:textColorSecondary">@color/textColorSecondaryBlack</item>
+        <item name="android:textColorHint">@color/textColorSecondaryBlack</item>
+
+        <item name="colorSeparator">@color/colorSeparatorBlack</item>
+        <item name="colorSeparatorDark">@color/colorSeparatorDBlack</item>
+        <item name="colorPositiveTrend">@color/colorPositiveTrendBlack</item>
+        <item name="colorNegativeTrend">@color/colorNegativeTrendBlack</item>
+        <item name="colorIcXml">@color/colorIcXmlBlack</item>
+        <item name="colorIcXmlRed">@color/colorIcXmlRedBlack</item>
+
+        <item name="colorScheduleFlagCommonBG">@color/colorScheduleFlagCommonBGBlack</item>
+        <item name="colorScheduleFlagPracticeBG">@color/colorScheduleFlagPracticeBGBlack</item>
+        <item name="colorScheduleFlagLectureBG">@color/colorScheduleFlagLectureBGBlack</item>
+        <item name="colorScheduleFlagLabBG">@color/colorScheduleFlagLabBGBlack</item>
+        <item name="colorScheduleFlagTEXT">@color/colorScheduleFlagTEXTBlack</item>
+
+        <item name="android:listDivider">@color/colorSeparatorBlack</item>
+        <item name="colorUniversityIcon">@color/colorUniversityIconBlack</item>
+        <item name="colorToolbarContent">@color/colorToolbarContentBlack</item>
+        <item name="colorToolbarContentInvert">@color/colorToolbarContentBlack</item>
+        <item name="colorImageMultiply">@color/colorImageMultiplyBlack</item>
+        <item name="colorControlHighlight">@color/colorControlHighlightBlack</item>
+
+        <item name="ic_cdo_small">@drawable/cdo</item>
+        <item name="ic_toolbar_security">@drawable/ic_toolbar_security</item>
+        <item name="windowActionModeOverlay">true</item>
+        <item name="android:alertDialogTheme">@style/AppTheme.Alert.Black</item>
+        <item name="android:popupMenuStyle">@style/AppTheme.Alert.Black</item>
+        <item name="alertDialogTheme">@style/AppTheme.Alert.Black</item>
+        <item name="popupMenuStyle">@style/AppTheme.Alert.Black</item>
+        <item name="android:dropDownItemStyle">@style/AppTheme.Alert.Black</item>
+
+    </style>
+    <style name="AppTheme.Toolbar.Black" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
+        <item name="android:textColorPrimary">@color/colorToolbarContentBlack</item>
+        <item name="android:textColorPrimaryInverse">@color/colorToolbarContentBlack</item>
+        <item name="android:textColorSecondary">@color/colorToolbarContentBlack</item>
+        <item name="android:colorControlNormal">@color/colorToolbarContentBlack</item>
+        <item name="android:colorControlActivated">@color/colorToolbarContentOpacityBlack</item>
+        <item name="android:colorControlHighlight">@color/colorToolbarContentOpacityBlack</item>
+    </style>
+    <style name="AppTheme.Popup.Black" parent="AppTheme.Black">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="colorBackgroundPopup">@color/colorBackgroundPopupBlack</item>
+        <item name="colorBackgroundPopupFill">@color/colorBackgroundPopupFillBlack</item>
+        <item name="colorPrimaryDark">?attr/colorBackgroundPopup</item>
+    </style>
+    <style name="AppTheme.Search.Black" parent="AppTheme.Black" >
+        <item name="colorBackgroundSearchToolbar">@color/colorPrimaryBlack</item>
+        <item name="colorBackgroundSearch">@color/colorPrimaryBlack</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryBlack</item>
+    </style>
+    <style name="AppTheme.Settings.Black" parent="AppTheme.Black">
+        <item name="android:activatedBackgroundIndicator">@drawable/list_activated_background_dark</item>
+        <item name="android:colorControlActivated">@color/colorAccentBlack</item>
+    </style>
+    <style name="AppTheme.Black.TransparentStatusBar" parent="AppTheme.Black">
+        <item name="android:windowTranslucentStatus">true</item>
+    </style>
+    <style name="AppTheme.Alert.Black" parent="Theme.AppCompat.Dialog.Alert">
+        <item name="android:textColor">@color/textColorPrimaryBlack</item>
+        <item name="android:textColorPrimary">@color/textColorPrimaryBlack</item>
+        <item name="android:textColorSecondary">@color/textColorSecondaryBlack</item>
+        <item name="android:popupBackground">@color/colorBackgroundAlertBlack</item>
+        <item name="android:background">@color/colorBackgroundAlertBlack</item>
+        <item name="android:tint">#9E9E9E</item>
+        <item name="colorAccent">@color/colorAccentBlack</item>
+    </style>
+
+</resources>

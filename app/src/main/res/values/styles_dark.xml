@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="AppTheme.Dark" parent="Theme.AppCompat.NoActionBar">
+
+        <item name="colorPrimaryLight">@color/colorPrimaryLightDark</item>
+        <item name="colorPrimary">@color/colorPrimaryDark</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDDark</item>
+        <item name="colorPrimaryOpacity">@color/colorPrimaryOpacityDark</item>
+        <item name="colorAccent">@color/colorAccentDark</item>
+
+        <item name="android:windowBackground">@color/colorBackgroundDark</item>
+        <item name="colorBackground">@color/colorBackgroundDark</item>
+        <item name="colorBackgroundCards">@color/colorBackgroundCardsDark</item>
+        <item name="colorBackgroundNavigation">@color/colorBackgroundDark</item>
+        <item name="colorBackgroundRefresh">@color/colorPrimaryDark</item>
+        <item name="colorBackgroundSection">@color/colorBackgroundSectionDark</item>
+        <item name="colorBackgroundSnackBar">@color/colorBackgroundSnackBarDark</item>
+
+        <item name="android:textColorPrimaryInverse">@color/textColorHeaderDark</item>
+        <item name="android:textColorPrimary">@color/textColorPrimaryDark</item>
+        <item name="android:textColorSecondary">@color/textColorSecondaryDark</item>
+        <item name="android:textColorHint">@color/textColorSecondaryDark</item>
+
+        <item name="colorSeparator">@color/colorSeparatorDark</item>
+        <item name="colorSeparatorDark">@color/colorSeparatorDDark</item>
+        <item name="colorPositiveTrend">@color/colorPositiveTrendDark</item>
+        <item name="colorNegativeTrend">@color/colorNegativeTrendDark</item>
+        <item name="colorIcXml">@color/colorIcXmlDark</item>
+        <item name="colorIcXmlRed">@color/colorIcXmlRedDark</item>
+
+        <item name="colorScheduleFlagCommonBG">@color/colorScheduleFlagCommonBGDark</item>
+        <item name="colorScheduleFlagPracticeBG">@color/colorScheduleFlagPracticeBGDark</item>
+        <item name="colorScheduleFlagLectureBG">@color/colorScheduleFlagLectureBGDark</item>
+        <item name="colorScheduleFlagLabBG">@color/colorScheduleFlagLabBGDark</item>
+        <item name="colorScheduleFlagTEXT">@color/colorScheduleFlagTEXTDark</item>
+
+        <item name="android:listDivider">@color/colorSeparatorDark</item>
+        <item name="colorUniversityIcon">@color/colorUniversityIconDark</item>
+        <item name="colorToolbarContent">#FFFFFF</item>
+        <item name="colorToolbarContentInvert">#FFFFFF</item>
+        <item name="colorImageMultiply">#FFFFFF</item>
+        <item name="colorControlHighlight">@color/colorControlHighlightDark</item>
+
+        <item name="ic_cdo_small">@drawable/cdo</item>
+        <item name="ic_toolbar_security">@drawable/ic_toolbar_security</item>
+        <item name="windowActionModeOverlay">true</item>
+
+    </style>
+    <style name="AppTheme.Toolbar.Dark" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
+
+    </style>
+    <style name="AppTheme.Popup.Dark" parent="AppTheme.Dark">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="colorBackgroundPopup">@color/colorBackgroundPopupDark</item>
+        <item name="colorBackgroundPopupFill">@color/colorBackgroundPopupFillDark</item>
+        <item name="colorPrimaryDark">?attr/colorBackgroundPopup</item>
+    </style>
+    <style name="AppTheme.Search.Dark" parent="AppTheme.Dark" >
+        <item name="colorBackgroundSearchToolbar">@color/colorBackgroundSearchToolbarDark</item>
+        <item name="colorBackgroundSearch">@color/colorBackgroundSearchDark</item>
+        <item name="colorPrimaryDark">@color/colorSearchPrimaryDarkDark</item>
+    </style>
+    <style name="AppTheme.Settings.Dark" parent="AppTheme.Dark">
+        <item name="android:activatedBackgroundIndicator">@drawable/list_activated_background_dark</item>
+        <item name="android:colorControlActivated">@color/colorAccentDark</item>
+        <item name="android:windowBackground">@color/colorBackgroundDark</item>
+    </style>
+    <style name="AppTheme.Dark.TransparentStatusBar" parent="AppTheme.Dark">
+        <item name="android:windowTranslucentStatus">true</item>
+    </style>
+
+</resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="AppTheme.Search.Black" parent="AppTheme.Black" >
+        <item name="colorBackgroundSearchToolbar">@color/colorPrimaryBlack</item>
+        <item name="colorBackgroundSearch">@color/colorPrimaryBlack</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryBlack</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+</resources>

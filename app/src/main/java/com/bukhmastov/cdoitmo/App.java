@@ -11,9 +11,6 @@ import com.bukhmastov.cdoitmo.utils.Storage;
 
 import java.util.Locale;
 
-/* TODO
- * дропдауны
- */
 public class App extends Application {
 
     private static final String TAG = "Application";

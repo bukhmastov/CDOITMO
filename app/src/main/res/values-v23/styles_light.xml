@@ -2,12 +2,10 @@
 <resources>
 
     <style name="AppTheme.Search" parent="AppTheme">
-
-        <item name="colorSearchBackgroundToolbar">@color/colorSearchBackgroundToolbar</item>
-        <item name="colorSearchBackground">@color/colorSearchBackground</item>
+        <item name="colorBackgroundSearchToolbar">@color/colorBackgroundSearchToolbar</item>
+        <item name="colorBackgroundSearch">@color/colorBackgroundSearch</item>
         <item name="colorPrimaryDark">@color/colorSearchPrimaryDark</item>
         <item name="android:windowLightStatusBar">true</item>
-
     </style>
 
 </resources>

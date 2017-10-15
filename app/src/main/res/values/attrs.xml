@@ -5,30 +5,40 @@
 
         <attr name="colorPrimaryLight" format="color" />
         <attr name="colorPrimaryOpacity" format="color" />
-        <attr name="textColorPassed" format="color" />
-        <attr name="colorSeparator" format="color" />
-        <attr name="colorSeparatorDark" format="color" />
+
+        <attr name="colorBackground" format="color" />
+        <attr name="colorBackgroundCards" format="color" />
+        <attr name="colorBackgroundNavigation" format="color" />
+        <attr name="colorBackgroundSearch" format="color" />
+        <attr name="colorBackgroundSearchToolbar" format="color" />
         <attr name="colorBackgroundRefresh" format="color" />
         <attr name="colorBackgroundSection" format="color" />
         <attr name="colorBackgroundSnackBar" format="color" />
+        <attr name="colorBackgroundPopup" format="color" />
+        <attr name="colorBackgroundPopupFill" format="color" />
+
+        <attr name="colorPositiveTrend" format="color" />
+        <attr name="colorNegativeTrend" format="color" />
+
+        <attr name="colorSeparator" format="color" />
+        <attr name="colorSeparatorDark" format="color" />
+
         <attr name="colorIcXml" format="color" />
         <attr name="colorIcXmlRed" format="color" />
-        <attr name="textColorDegrade" format="color" />
+
         <attr name="colorScheduleFlagCommonBG" format="color" />
         <attr name="colorScheduleFlagPracticeBG" format="color" />
         <attr name="colorScheduleFlagLectureBG" format="color" />
         <attr name="colorScheduleFlagLabBG" format="color" />
         <attr name="colorScheduleFlagTEXT" format="color" />
-        <attr name="colorPopupBackground" format="color" />
-        <attr name="colorPopupBackgroundFill" format="color" />
-        <attr name="colorBackgroundCards" format="color" />
-        <attr name="colorSearchBackgroundToolbar" format="color" />
-        <attr name="colorSearchBackground" format="color" />
-        <attr name="colorBackground" format="color" />
+
         <attr name="colorUniversityIcon" format="color" />
+        <attr name="colorToolbarContent" format="color" />
+        <attr name="colorToolbarContentInvert" format="color" />
+        <attr name="colorImageMultiply" format="color" />
 
         <attr name="ic_cdo_small" format="reference" />
-        <attr name="ic_security" format="reference" />
+        <attr name="ic_toolbar_security" format="reference" />
 
     </declare-styleable>
 
