@@ -36,7 +36,7 @@
             android:layout_height="match_parent">
 
             <View
-                android:layout_width="1dp"
+                android:layout_width="@dimen/separator"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
                 android:background="?attr/colorSeparator" />

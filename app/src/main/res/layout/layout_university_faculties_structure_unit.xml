@@ -8,7 +8,7 @@
     <View
         android:id="@+id/structure_separator"
         android:layout_width="match_parent"
-        android:layout_height="1dp"
+        android:layout_height="@dimen/separator"
         android:layout_gravity="bottom"
         android:background="?attr/colorSeparator" />
 

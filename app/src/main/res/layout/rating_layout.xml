@@ -18,7 +18,7 @@
 
     <View
         android:layout_width="match_parent"
-        android:layout_height="1dp"
+        android:layout_height="@dimen/separator"
         android:background="?attr/colorSeparator"/>
 
     <RelativeLayout
@@ -42,7 +42,7 @@
 
             <View
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
+                android:layout_height="@dimen/separator"
                 android:layout_marginStart="@dimen/rating_detailed_separator_margin"
                 android:layout_marginEnd="@dimen/rating_detailed_separator_margin"
                 android:background="?attr/colorSeparator" />
@@ -57,7 +57,7 @@
 
         <View
             android:id="@+id/rating_separator"
-            android:layout_width="1dp"
+            android:layout_width="@dimen/separator"
             android:layout_height="match_parent"
             android:layout_marginBottom="@dimen/rating_detailed_separator_margin"
             android:layout_marginTop="@dimen/rating_detailed_separator_margin"
@@ -79,7 +79,7 @@
 
     <View
         android:layout_width="match_parent"
-        android:layout_height="1dp"
+        android:layout_height="@dimen/separator"
         android:background="?attr/colorSeparator"/>
 
     <TextView
@@ -94,7 +94,7 @@
 
     <View
         android:layout_width="match_parent"
-        android:layout_height="1dp"
+        android:layout_height="@dimen/separator"
         android:background="?attr/colorSeparator"/>
 
     <android.support.v4.widget.SwipeRefreshLayout
@@ -105,7 +105,9 @@
         <ListView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:id="@+id/rl_list_view" />
+            android:id="@+id/rl_list_view"
+            android:divider="?attr/colorSeparator"
+            android:dividerHeight="@dimen/separator" />
 
     </android.support.v4.widget.SwipeRefreshLayout>
 

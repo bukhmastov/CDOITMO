@@ -8,6 +8,8 @@
     <ListView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/pl_list_view" />
+        android:id="@+id/pl_list_view"
+        android:divider="?attr/colorSeparator"
+        android:dividerHeight="@dimen/separator" />
 
 </android.support.v4.widget.SwipeRefreshLayout>

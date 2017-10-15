@@ -92,7 +92,7 @@
             </LinearLayout>
 
             <View
-                android:layout_width="1dp"
+                android:layout_width="@dimen/separator"
                 android:layout_height="match_parent"
                 android:background="?attr/colorSeparator"
                 android:layout_alignParentStart="true" />

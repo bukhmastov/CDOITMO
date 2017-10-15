@@ -73,6 +73,8 @@
     <ListView
         android:id="@+id/search_suggestions"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:divider="?attr/colorSeparator"
+        android:dividerHeight="@dimen/separator" />
 
 </LinearLayout>

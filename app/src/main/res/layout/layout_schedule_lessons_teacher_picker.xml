@@ -18,12 +18,14 @@
 
     <View
         android:layout_width="match_parent"
-        android:layout_height="1dp"
+        android:layout_height="@dimen/separator"
         android:background="?attr/colorSeparator"/>
 
     <ListView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/teacher_picker_list_view" />
+        android:id="@+id/teacher_picker_list_view"
+        android:divider="?attr/colorSeparator"
+        android:dividerHeight="@dimen/separator" />
 
 </LinearLayout>

@@ -39,7 +39,7 @@
     <View
         android:id="@+id/room101_separator_header"
         android:layout_width="match_parent"
-        android:layout_height="1dp"
+        android:layout_height="@dimen/separator"
         android:background="?attr/colorSeparator"
         android:layout_below="@+id/room101_header_bar"/>
 
@@ -60,7 +60,7 @@
     <View
         android:id="@+id/room101_separator_nav"
         android:layout_width="match_parent"
-        android:layout_height="1dp"
+        android:layout_height="@dimen/separator"
         android:background="?attr/colorSeparator"
         android:layout_above="@+id/room101_nav_bar"/>
 

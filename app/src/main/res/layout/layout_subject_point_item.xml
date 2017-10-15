@@ -8,7 +8,7 @@
     <View
         android:id="@+id/sp_separator"
         android:layout_width="match_parent"
-        android:layout_height="1dp"
+        android:layout_height="@dimen/separator"
         android:layout_marginStart="@dimen/item_horizontal_padding"
         android:layout_marginEnd="@dimen/item_horizontal_padding"
         android:background="?attr/colorSeparator"/>

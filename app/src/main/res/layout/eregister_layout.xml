@@ -15,7 +15,9 @@
         <ListView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:id="@+id/erl_list_view" />
+            android:id="@+id/erl_list_view"
+            android:divider="?attr/colorSeparator"
+            android:dividerHeight="@dimen/separator" />
 
     </android.support.v4.widget.SwipeRefreshLayout>
 
@@ -23,7 +25,7 @@
         android:id="@+id/erl_separator"
         android:layout_above="@+id/spinners_layout"
         android:layout_width="match_parent"
-        android:layout_height="1dp"
+        android:layout_height="@dimen/separator"
         android:background="?attr/colorSeparator"/>
 
     <LinearLayout
@@ -42,7 +44,7 @@
             android:spinnerMode="dialog" />
 
         <View
-            android:layout_width="1dp"
+            android:layout_width="@dimen/separator"
             android:layout_height="match_parent"
             android:layout_marginTop="5dp"
             android:layout_marginBottom="5dp"
