@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="colorPrimaryWhite">#FFFFFF</color>
+    <color name="colorPrimaryDWhite">#E0E0E0</color>
+    <color name="colorPrimaryOpacityWhite">#7eFFFFFF</color>
+    <color name="colorAccentWhite">#757575</color>
+
+    <color name="textColorPrimaryWhite">@color/text_color_primary_white</color>
+    <color name="textColorSecondaryWhite">@color/text_color_secondary_white</color>
+    <color name="textColorHeaderWhite">#ffffff</color>
+
+    <color name="colorPositiveTrendWhite">#2e7d32</color>
+    <color name="colorNegativeTrendWhite">#c62828</color>
+    <color name="colorSeparatorWhite">#e0e0e0</color>
+    <color name="colorSeparatorDWhite">#424242</color>
+    <color name="colorIcXmlWhite">#212121</color>
+    <color name="colorIcXmlRedWhite">#c62828</color>
+    <color name="colorToolbarContentWhite">#212121</color>
+    <color name="colorToolbarContentOpacityWhite">#7e212121</color>
+    <color name="colorToolbarContentInvertWhite">#212121</color>
+
+    <color name="colorScheduleFlagCommonBGWhite">#d6d6d6</color>
+    <color name="colorScheduleFlagPracticeBGWhite">#7fefb9</color>
+    <color name="colorScheduleFlagLectureBGWhite">#69c7f1</color>
+    <color name="colorScheduleFlagLabBGWhite">#f7c275</color>
+    <color name="colorScheduleFlagTEXTWhite">#424242</color>
+
+    <color name="colorBackgroundPopupWhite">#99000000</color>
+    <color name="colorBackgroundPopupFillWhite">#f0f0f0</color>
+    <color name="colorBackgroundCardsWhite">#FAFAFA</color>
+    <color name="colorBackgroundSearchToolbarWhite">#FFFFFF</color>
+    <color name="colorBackgroundSearchWhite">#FFFFFF</color>
+    <color name="colorBackgroundWhite">#FAFAFA</color>
+    <color name="colorBackgroundSectionWhite">#f7f7f7</color>
+    <color name="colorBackgroundSnackBarWhite">#323232</color>
+    <color name="colorBackgroundAlertWhite">#E0E0E0</color>
+    <color name="colorControlHighlightWhite">#8c757575</color>
+
+    <color name="colorSearchPrimaryDarkWhite">#FFFFFF</color>
+    <color name="colorImageMultiplyWhite">#FFFFFF</color>
+    <color name="colorUniversityIconWhite">#212121</color>
+
+</resources>

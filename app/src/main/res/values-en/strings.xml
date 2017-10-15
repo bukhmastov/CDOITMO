@@ -67,9 +67,14 @@
     <string name="action_1">change</string>
     <string name="action_2">changes</string>
     <string name="action_3">changes</string>
+    <string name="pref_white_theme">White theme</string>
     <string name="pref_light_theme">Light theme</string>
     <string name="pref_dark_theme">Dark theme</string>
     <string name="pref_black_theme">Black theme</string>
+    <string name="pref_light_theme_ext">Light theme</string>
+    <string name="pref_dark_theme_ext">Dark theme</string>
+    <string name="pref_white_theme_ext">White theme</string>
+    <string name="pref_black_theme_ext">Black theme</string>
     <string name="pref_dark_theme_summary">The application will be restarted</string>
     <string name="about">About</string>
     <string name="app_info_disclaimer">This application uses and processes data from the servers of the ITMO University. Personal data is stored only on this device and transmitted only to the servers of the ITMO University. Please note that this application is not official.</string>

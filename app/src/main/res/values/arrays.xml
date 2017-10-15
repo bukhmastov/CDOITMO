@@ -2,13 +2,15 @@
 <resources>
 
     <string-array name="pref_theme_titles">
-        <item>@string/pref_light_theme</item>
-        <item>@string/pref_dark_theme</item>
-        <item>@string/pref_black_theme</item>
+        <item>@string/pref_light_theme_ext</item>
+        <item>@string/pref_dark_theme_ext</item>
+        <item>@string/pref_white_theme_ext</item>
+        <item>@string/pref_black_theme_ext</item>
     </string-array>
     <string-array name="pref_theme_values" translatable="false">
         <item>light</item>
         <item>dark</item>
+        <item>white</item>
         <item>black</item>
     </string-array>
 

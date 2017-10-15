@@ -70,9 +70,14 @@
     <string name="action_1">событие</string>
     <string name="action_2">события</string>
     <string name="action_3">событий</string>
+    <string name="pref_white_theme">Белая тема</string>
     <string name="pref_light_theme">Светлая тема</string>
     <string name="pref_dark_theme">Темная тема</string>
     <string name="pref_black_theme">Черная тема</string>
+    <string name="pref_light_theme_ext">Светлая тема</string>
+    <string name="pref_dark_theme_ext">Темная тема</string>
+    <string name="pref_white_theme_ext">Блистательно белая тема</string>
+    <string name="pref_black_theme_ext">Невероятно черная тема</string>
     <string name="pref_dark_theme_summary">Приложение будет перезапущено</string>
     <string name="about">О приложении</string>
     <string name="app_info_disclaimer">Данное приложение использует и обрабатывает данные с серверов университета ИТМО. Персональные данные хранятся только на данном устройстве и передаются только на сервера университета ИТМО. Обратите внимание, что данное приложение не является официальным.</string>

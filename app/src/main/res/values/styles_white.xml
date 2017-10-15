@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="AppTheme.Base.White" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorPrimaryDark">@color/colorPrimaryWhite</item>
+    </style>
+    <style name="AppTheme.White" parent="AppTheme.Base.White">
+
+        <item name="colorPrimaryLight">@color/colorPrimaryWhite</item>
+        <item name="colorPrimary">@color/colorPrimaryWhite</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryWhite</item>
+        <item name="colorPrimaryOpacity">@color/colorPrimaryOpacityWhite</item>
+        <item name="colorAccent">@color/colorAccentWhite</item>
+
+        <item name="android:windowBackground">@color/colorBackgroundWhite</item>
+        <item name="colorBackground">@color/colorBackgroundWhite</item>
+        <item name="colorBackgroundCards">@color/colorBackgroundCardsWhite</item>
+        <item name="colorBackgroundNavigation">@color/colorBackgroundWhite</item>
+        <item name="colorBackgroundRefresh">@color/textColorHeaderWhite</item>
+        <item name="colorBackgroundSection">@color/colorBackgroundSectionWhite</item>
+        <item name="colorBackgroundSnackBar">@color/colorBackgroundSnackBarWhite</item>
+
+        <item name="android:textColorPrimaryInverse">@color/textColorHeaderWhite</item>
+        <item name="android:textColorPrimary">@color/textColorPrimaryWhite</item>
+        <item name="android:textColorSecondary">@color/textColorSecondaryWhite</item>
+        <item name="android:textColorHint">@color/textColorSecondaryWhite</item>
+
+        <item name="android:divider">@color/colorSeparatorWhite</item>
+        <item name="colorSeparator">@color/colorSeparatorWhite</item>
+        <item name="colorSeparatorDark">@color/colorSeparatorDWhite</item>
+        <item name="colorPositiveTrend">@color/colorPositiveTrendWhite</item>
+        <item name="colorNegativeTrend">@color/colorNegativeTrendWhite</item>
+        <item name="colorIcXml">@color/colorIcXmlWhite</item>
+        <item name="colorIcXmlRed">@color/colorIcXmlRedWhite</item>
+
+        <item name="colorScheduleFlagCommonBG">@color/colorScheduleFlagCommonBGWhite</item>
+        <item name="colorScheduleFlagPracticeBG">@color/colorScheduleFlagPracticeBGWhite</item>
+        <item name="colorScheduleFlagLectureBG">@color/colorScheduleFlagLectureBGWhite</item>
+        <item name="colorScheduleFlagLabBG">@color/colorScheduleFlagLabBGWhite</item>
+        <item name="colorScheduleFlagTEXT">@color/colorScheduleFlagTEXTWhite</item>
+
+        <item name="colorUniversityIcon">@color/colorUniversityIconWhite</item>
+        <item name="colorToolbarContent">@color/colorToolbarContentWhite</item>
+        <item name="colorToolbarContentInvert">@color/colorToolbarContentInvertWhite</item>
+        <item name="colorImageMultiply">@color/colorImageMultiplyWhite</item>
+        <item name="colorControlHighlight">@color/colorControlHighlightWhite</item>
+
+        <item name="ic_cdo_small">@drawable/cdo</item>
+        <item name="ic_toolbar_security">@drawable/ic_toolbar_security</item>
+        <item name="windowActionModeOverlay">true</item>
+        <item name="android:alertDialogTheme">@style/AppTheme.Alert</item>
+        <item name="alertDialogTheme">@style/AppTheme.Alert</item>
+        <item name="android:dropDownItemStyle">@style/AppTheme.Alert</item>
+
+    </style>
+    <style name="AppTheme.Toolbar.White" parent="ThemeOverlay.AppCompat.ActionBar">
+        <item name="android:textColorPrimary">@color/colorToolbarContentWhite</item>
+        <item name="android:textColorPrimaryInverse">@color/colorToolbarContentWhite</item>
+        <item name="android:textColorSecondary">@color/colorToolbarContentWhite</item>
+        <item name="android:colorControlNormal">@color/colorToolbarContentWhite</item>
+        <item name="android:colorControlActivated">@color/colorToolbarContentOpacityWhite</item>
+        <item name="android:colorControlHighlight">@color/colorToolbarContentOpacityWhite</item>
+    </style>
+    <style name="AppTheme.Popup.White" parent="AppTheme.White">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="colorBackgroundPopup">@color/colorBackgroundPopupWhite</item>
+        <item name="colorBackgroundPopupFill">@color/colorBackgroundPopupFillWhite</item>
+        <item name="colorPrimaryDark">?attr/colorBackgroundPopup</item>
+    </style>
+    <style name="AppTheme.Search.White" parent="AppTheme.White">
+        <item name="colorBackgroundSearchToolbar">@color/colorBackgroundSearchToolbarWhite</item>
+        <item name="colorBackgroundSearch">@color/colorBackgroundSearchWhite</item>
+        <item name="colorPrimaryDark">@color/colorSearchPrimaryDarkWhite</item>
+    </style>
+    <style name="AppTheme.Settings.White" parent="AppTheme.White">
+        <item name="android:activatedBackgroundIndicator">@drawable/list_activated_background</item>
+        <item name="android:colorControlActivated">@color/colorAccentWhite</item>
+        <item name="android:windowBackground">@color/colorBackgroundWhite</item>
+    </style>
+    <style name="AppTheme.White.TransparentStatusBar" parent="AppTheme.White">
+        <item name="android:windowTranslucentStatus">true</item>
+    </style>
+    <style name="AppTheme.Alert.White" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:textColor">@color/textColorPrimaryWhite</item>
+        <item name="android:textColorPrimary">@color/textColorPrimaryWhite</item>
+        <item name="android:textColorSecondary">@color/textColorSecondaryWhite</item>
+        <item name="android:popupBackground">@color/colorBackgroundAlertWhite</item>
+        <item name="android:background">@color/colorBackgroundAlertWhite</item>
+        <item name="android:tint">#000000</item>
+        <item name="colorAccent">@color/colorAccentWhite</item>
+    </style>
+
+</resources>

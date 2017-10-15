@@ -45,9 +45,7 @@
         <item name="ic_toolbar_security">@drawable/ic_toolbar_security</item>
         <item name="windowActionModeOverlay">true</item>
         <item name="android:alertDialogTheme">@style/AppTheme.Alert.Dark</item>
-        <item name="android:popupMenuStyle">@style/AppTheme.Alert.Dark</item>
         <item name="alertDialogTheme">@style/AppTheme.Alert.Dark</item>
-        <item name="popupMenuStyle">@style/AppTheme.Alert.Dark</item>
         <item name="android:dropDownItemStyle">@style/AppTheme.Alert.Dark</item>
 
     </style>
