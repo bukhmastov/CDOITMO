@@ -37,7 +37,7 @@
     <string name="last_4_weeks">last 4 weeks</string>
     <string name="no_changes_for_period">No changes for the specified period</string>
     <string name="course">course</string>
-    <string name="detailed_rating">Detailed rating</string>
+    <string name="detailed_rating">Top 50 rating</string>
     <string name="your_rating">Your rating</string>
     <string name="settings">Settings</string>
     <string name="general">General</string>
@@ -69,6 +69,7 @@
     <string name="action_3">changes</string>
     <string name="pref_light_theme">Light theme</string>
     <string name="pref_dark_theme">Dark theme</string>
+    <string name="pref_black_theme">Black theme</string>
     <string name="pref_dark_theme_summary">The application will be restarted</string>
     <string name="about">About</string>
     <string name="app_info_disclaimer">This application uses and processes data from the servers of the ITMO University. Personal data is stored only on this device and transmitted only to the servers of the ITMO University. Please note that this application is not official.</string>
@@ -310,7 +311,7 @@
     <string name="top_rating">Top-rating</string>
     <string name="pref_lang_title">Language of the application</string>
     <string name="pref_lang_title_summary">You must restart the application to accept the changes</string>
-    <string name="pref_lang_default">Default language</string>
+    <string name="pref_lang_default">By default</string>
     <string name="pref_lang_ru">Русский</string>
     <string name="pref_lang_en">English</string>
     <string name="pin_shortcut_not_supported">Your device does not support in-app pinning of shortcuts</string>
@@ -407,7 +408,7 @@
     <string name="reduced_lessons">Hidden lessons</string>
     <string name="nothing_to_share">No changes found</string>
     <string name="homescreen_widgets">Home Screen Widgets</string>
-    <string name="homescreen_apps">Home screen applications</string>
+    <string name="homescreen_apps">Home screen apps</string>
     <string name="homescreen_shortcuts">Home screen shortcuts</string>
     <string name="time_remaining_widget">Time till the end of the lessons</string>
     <string name="time_remaining_widget_desc">This application will tell you how much time is left before the end of the current lesson, the beginning of the next and the end of the education day</string>

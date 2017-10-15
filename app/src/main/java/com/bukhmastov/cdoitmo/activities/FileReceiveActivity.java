@@ -49,12 +49,21 @@ public class FileReceiveActivity extends ConnectedActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         Static.init(activity);
-        if (Static.darkTheme) setTheme(R.style.AppTheme_Dark);
+        switch (Static.getAppTheme(activity)) {
+            case "light":
+            default: setTheme(R.style.AppTheme); break;
+            case "dark": setTheme(R.style.AppTheme_Dark); break;
+            case "black": setTheme(R.style.AppTheme_Black); break;
+        }
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
         FirebaseAnalyticsProvider.logCurrentScreen(this);
         setContentView(R.layout.activity_file_receive);
-        setSupportActionBar((Toolbar) findViewById(R.id.toolbar_file));
+        Toolbar toolbar = findViewById(R.id.toolbar_file);
+        if (toolbar != null) {
+            Static.applyToolbarTheme(activity, toolbar);
+            setSupportActionBar(toolbar);
+        }
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setHomeButtonEnabled(true);

@@ -28,13 +28,22 @@ public class AboutActivity extends ConnectedActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        if (Static.darkTheme) setTheme(R.style.AppTheme_Dark);
+        switch (Static.getAppTheme(activity)) {
+            case "light":
+            default: setTheme(R.style.AppTheme); break;
+            case "dark": setTheme(R.style.AppTheme_Dark); break;
+            case "black": setTheme(R.style.AppTheme_Black); break;
+        }
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
         activity = this;
         FirebaseAnalyticsProvider.logCurrentScreen(this);
         setContentView(R.layout.activity_about);
-        setSupportActionBar((Toolbar) findViewById(R.id.toolbar_about));
+        Toolbar toolbar = findViewById(R.id.toolbar_about);
+        if (toolbar != null) {
+            Static.applyToolbarTheme(activity, toolbar);
+            setSupportActionBar(toolbar);
+        }
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setHomeButtonEnabled(true);

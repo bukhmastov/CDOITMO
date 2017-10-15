@@ -5,7 +5,7 @@
     <item
         android:id="@+id/action_log"
         android:title="@string/log"
-        android:icon="@drawable/ic_bug_report"
+        android:icon="@drawable/ic_toolbar_bug_report"
         app:showAsAction="ifRoom" />
 
 </menu>

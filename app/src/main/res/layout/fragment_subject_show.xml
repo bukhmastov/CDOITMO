@@ -44,7 +44,7 @@
                         android:ellipsize="end"
                         android:maxLines="1"
                         android:text="@string/lorem_ipsum"
-                        android:textColor="?android:attr/textColorPrimaryInverse"
+                        android:textColor="?attr/colorToolbarContent"
                         android:textSize="@dimen/font_size_14"
                         android:textStyle="bold" />
 
@@ -55,7 +55,7 @@
                         android:ellipsize="end"
                         android:maxLines="1"
                         android:text="@string/lorem_ipsum"
-                        android:textColor="?android:attr/textColorPrimaryInverse"
+                        android:textColor="?attr/colorToolbarContent"
                         android:textSize="@dimen/font_size_14"
                         android:textStyle="bold" />
 
@@ -83,7 +83,7 @@
                         android:paddingTop="@dimen/item_vertical_padding_half"
                         android:text="@string/lorem_ipsum"
                         android:textAllCaps="true"
-                        android:textColor="?android:attr/textColorPrimaryInverse"
+                        android:textColor="?attr/colorToolbarContent"
                         android:textSize="@dimen/font_size_12"
                         android:textStyle="bold" />
 
@@ -102,7 +102,7 @@
                         android:layout_height="match_parent"
                         android:gravity="center"
                         android:text="99.99"
-                        android:textColor="?android:attr/textColorPrimaryInverse"
+                        android:textColor="?attr/colorToolbarContent"
                         android:textSize="@dimen/font_size_18"
                         android:textStyle="bold" />
 

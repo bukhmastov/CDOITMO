@@ -147,6 +147,11 @@ public class Wipe {
                 break;
             }
             case 93: {
+                // new theme
+                final boolean dark_theme = Storage.pref.get(context, "pref_dark_theme", false);
+                Storage.pref.delete(context, "pref_dark_theme");
+                Storage.pref.put(context, "pref_theme", dark_theme ? "dark" : "light");
+                // move files
                 Static.logoutCurrent(context);
                 try {
                     String path = context.getFilesDir() + File.separator + "app_data";

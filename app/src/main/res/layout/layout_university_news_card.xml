@@ -38,7 +38,9 @@
                     android:layout_gravity="center_horizontal"
                     android:adjustViewBounds="true"
                     android:scaleType="centerCrop"
-                    card_view:srcCompat="@drawable/background_pattern" />
+                    card_view:srcCompat="@drawable/background_pattern"
+                    android:tint="?attr/colorImageMultiply"
+                    android:tintMode="multiply" />
 
             </FrameLayout>
 

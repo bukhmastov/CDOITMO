@@ -157,7 +157,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:entries="@array/week_types_titles"
-                        android:textColor="?android:attr/textColorPrimary" />
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:spinnerMode="dialog" />
 
                     <View
                         android:layout_width="match_parent"
@@ -185,7 +186,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:entries="@array/days_of_week_titles"
-                        android:textColor="?android:attr/textColorPrimary" />
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:spinnerMode="dialog" />
 
                     <View
                         android:layout_width="match_parent"

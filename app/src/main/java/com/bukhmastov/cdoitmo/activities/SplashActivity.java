@@ -25,14 +25,13 @@ public class SplashActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Static.darkTheme = Storage.pref.get(this, "pref_dark_theme", false);
         super.onCreate(savedInstanceState);
         try {
             Log.i(TAG, "App | launched");
             PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
             Log.i(TAG, "App | version code = " + pInfo.versionCode);
             Log.i(TAG, "App | sdk = " + Build.VERSION.SDK_INT);
-            Log.i(TAG, "App | dark theme = " + (Storage.pref.get(this, "pref_dark_theme", false) ? "true" : "false"));
+            Log.i(TAG, "App | theme = " + Static.getAppTheme(activity));
         } catch (Exception e) {
             Static.error(e);
         }
@@ -65,7 +64,7 @@ public class SplashActivity extends AppCompatActivity {
                 }
                 // firebase events and properties
                 FirebaseAnalyticsProvider.logEvent(activity, FirebaseAnalyticsProvider.Event.APP_OPEN);
-                FirebaseAnalyticsProvider.setUserProperty(activity, FirebaseAnalyticsProvider.Property.THEME, Storage.pref.get(activity, "pref_dark_theme", false) ? "dark" : "light");
+                FirebaseAnalyticsProvider.setUserProperty(activity, FirebaseAnalyticsProvider.Property.THEME, Static.getAppTheme(activity));
                 // all done
                 loaded();
             }

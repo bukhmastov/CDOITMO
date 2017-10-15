@@ -12,7 +12,9 @@
         android:background="@drawable/background_pattern"
         android:backgroundTint="?attr/colorPrimary"
         android:backgroundTintMode="multiply"
-        android:elevation="4dp">
+        android:elevation="4dp"
+        android:tint="?attr/colorImageMultiply"
+        android:tintMode="multiply">
 
         <RelativeLayout
             android:id="@+id/linearLayout"
@@ -32,7 +34,8 @@
                     android:layout_height="match_parent"
                     android:layout_gravity="center"
                     android:padding="16dp"
-                    app:srcCompat="@drawable/ic_arrow_back_white" />
+                    app:srcCompat="@drawable/ic_arrow_back_white"
+                    android:tint="?attr/colorToolbarContent"/>
 
             </FrameLayout>
 
@@ -49,7 +52,7 @@
                     android:layout_gravity="center"
                     android:padding="16dp"
                     app:srcCompat="@drawable/ic_web"
-                    android:tint="#FFFFFF"/>
+                    android:tint="?attr/colorToolbarContent"/>
 
             </FrameLayout>
 
@@ -69,7 +72,9 @@
                 android:layout_height="@dimen/university_person_card_big_avatar"
                 android:layout_gravity="center_vertical"
                 android:layout_margin="@dimen/item_padding_half"
-                app:srcCompat="@drawable/ic_sentiment_very_satisfied_white" />
+                app:srcCompat="@drawable/ic_sentiment_very_satisfied_white"
+                android:tint="?attr/colorImageMultiply"
+                android:tintMode="multiply" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -84,7 +89,7 @@
                     android:layout_height="wrap_content"
                     android:maxLines="2"
                     android:text="@string/lorem_ipsum"
-                    android:textColor="?android:attr/textColorPrimaryInverse"
+                    android:textColor="?attr/colorToolbarContent"
                     android:textSize="@dimen/font_size_18"
                     android:textStyle="bold"
                     android:textIsSelectable="true" />
@@ -95,7 +100,7 @@
                     android:layout_height="wrap_content"
                     android:maxLines="2"
                     android:text="@string/lorem_ipsum"
-                    android:textColor="?android:attr/textColorPrimaryInverse"
+                    android:textColor="?attr/colorToolbarContent"
                     android:textSize="@dimen/font_size_16"
                     android:textStyle="bold"
                     android:textIsSelectable="true" />

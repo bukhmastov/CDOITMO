@@ -522,7 +522,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                                                     if (change.getDouble("cdoitmo_delta_double") != 0.0) {
                                                         lv_protocol_delta.setText(change.getString("cdoitmo_delta"));
                                                         try {
-                                                            lv_protocol_delta.setTextColor(Static.resolveColor(activity, change.getDouble("cdoitmo_delta_double") < 0.0 ? R.attr.textColorDegrade : R.attr.textColorPassed));
+                                                            lv_protocol_delta.setTextColor(Static.resolveColor(activity, change.getDouble("cdoitmo_delta_double") < 0.0 ? R.attr.colorNegativeTrend : R.attr.colorPositiveTrend));
                                                         } catch (Exception e) {
                                                             Static.error(e);
                                                         }

@@ -31,11 +31,10 @@
 
         <android.support.v7.widget.Toolbar
             android:id="@+id/toolbar_main"
+            android:theme="@style/AppTheme.Toolbar"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
             android:background="?attr/colorPrimary"
-            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
             app:elevation="4dp"
             app:contentInsetStart="24dp"
             app:titleMarginStart="48dp" />
@@ -47,8 +46,8 @@
             android:background="?attr/colorPrimary"
             android:visibility="gone"
             app:tabMode="fixed"
-            app:tabSelectedTextColor="?android:attr/textColorPrimaryInverse"
-            app:tabTextColor="?android:attr/textColorPrimaryInverse"
+            app:tabSelectedTextColor="?attr/colorToolbarContent"
+            app:tabTextColor="?attr/colorToolbarContent"
             app:tabMaxWidth="0dp"
             app:tabGravity="fill"
             app:elevation="4dp" />
@@ -60,8 +59,8 @@
             android:background="?attr/colorPrimary"
             android:visibility="gone"
             app:tabMode="scrollable"
-            app:tabSelectedTextColor="?android:attr/textColorPrimaryInverse"
-            app:tabTextColor="?android:attr/textColorPrimaryInverse"
+            app:tabSelectedTextColor="?attr/colorToolbarContent"
+            app:tabTextColor="?attr/colorToolbarContent"
             app:tabMaxWidth="0dp"
             app:tabGravity="fill"
             app:elevation="4dp" />

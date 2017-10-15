@@ -10,12 +10,11 @@
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar_login"
+        android:theme="@style/AppTheme.Toolbar"
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:elevation="4dp"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         android:background="?attr/colorPrimary"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
         app:titleMarginStart="24dp"/>
 
     <FrameLayout
@@ -33,7 +32,9 @@
             android:layout_marginStart="10dp"
             android:layout_marginEnd="10dp"
             android:contentDescription="@string/cdo"
-            android:src="@drawable/itmo_cdo_horizontal" />
+            android:src="@drawable/itmo_cdo_horizontal"
+            android:tint="?attr/colorToolbarContent"
+            android:tintMode="multiply" />
 
     </FrameLayout>
 

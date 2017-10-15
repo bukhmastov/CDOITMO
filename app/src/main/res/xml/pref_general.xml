@@ -16,6 +16,13 @@
         android:entryValues="@array/pref_general_default_fragment_values"
         android:defaultValue="e_journal" />
 
+    <ListPreference
+        android:key="pref_theme"
+        android:title="@string/theme"
+        android:entries="@array/pref_theme_titles"
+        android:entryValues="@array/pref_theme_values"
+        android:defaultValue="light" />
+
     <SwitchPreference
         android:key="pref_auto_logout"
         android:defaultValue="false"
@@ -27,12 +34,6 @@
         android:defaultValue="false"
         android:title="@string/pref_initial_offline"
         android:summary="@string/pref_initial_offline_summary" />
-
-    <SwitchPreference
-        android:key="pref_dark_theme"
-        android:defaultValue="false"
-        android:title="@string/pref_dark_theme"
-        android:summary="@string/pref_dark_theme_summary" />
 
     <EditTextPreference
         android:key="pref_group_force_override"

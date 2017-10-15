@@ -25,12 +25,21 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        if (Static.darkTheme) setTheme(R.style.AppTheme_Dark);
+        switch (Static.getAppTheme(this)) {
+            case "light":
+            default: setTheme(R.style.AppTheme); break;
+            case "dark": setTheme(R.style.AppTheme_Dark); break;
+            case "black": setTheme(R.style.AppTheme_Black); break;
+        }
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
         setContentView(R.layout.activity_fragment);
 
-        setSupportActionBar((Toolbar) findViewById(R.id.toolbar_fragment));
+        Toolbar toolbar = findViewById(R.id.toolbar_fragment);
+        if (toolbar != null) {
+            Static.applyToolbarTheme(this, toolbar);
+            setSupportActionBar(toolbar);
+        }
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setHomeButtonEnabled(true);

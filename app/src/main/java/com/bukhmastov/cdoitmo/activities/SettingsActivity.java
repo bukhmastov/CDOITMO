@@ -57,7 +57,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        if (Static.darkTheme) setTheme(R.style.AppTheme_Settings_Dark);
+        switch (Static.getAppTheme(this)) {
+            case "light":
+            default: setTheme(R.style.AppTheme_Settings); break;
+            case "dark": setTheme(R.style.AppTheme_Settings_Dark); break;
+            case "black": setTheme(R.style.AppTheme_Settings_Black); break;
+        }
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
         FirebaseAnalyticsProvider.logCurrentScreen(this);
@@ -107,7 +112,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             root.addView(content);
             root.addView(bar);
         }
-        setSupportActionBar((Toolbar) findViewById(R.id.toolbar_settings));
+        Toolbar toolbar = findViewById(R.id.toolbar_settings);
+        if (toolbar != null) {
+            Static.applyToolbarTheme(this, toolbar);
+            setSupportActionBar(toolbar);
+        }
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setHomeButtonEnabled(true);
@@ -152,7 +161,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                     }
                 });
                 break;
-            case "pref_dark_theme":
+            case "pref_theme":
+                Static.updateAppTheme(this);
                 Static.reLaunch(this);
                 break;
             case "pref_protocol_changes_track":
@@ -238,6 +248,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
             bindPreferenceSummaryToValue(findPreference("pref_default_fragment"));
+            bindPreferenceSummaryToValue(findPreference("pref_theme"));
             bindPreferenceSummaryToValue(findPreference("pref_group_force_override"));
             Preference pref_reset_application = findPreference("pref_reset_application");
             if (pref_reset_application != null) {

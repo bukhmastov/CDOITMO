@@ -34,7 +34,7 @@ public class SubjectListView extends ArrayAdapter<HashMap<String, String>> {
             this.colorOnGoing = -1;
         }
         try {
-            this.colorPassed = Static.resolveColor(context, R.attr.textColorPassed);
+            this.colorPassed = Static.resolveColor(context, R.attr.colorPositiveTrend);
         } catch (Exception e) {
             this.colorPassed = -1;
         }

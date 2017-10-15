@@ -12,6 +12,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.InflateException;
@@ -84,14 +85,25 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
 
     @Override
     public void onCreate(Bundle icicle) {
-        isDarkTheme = Storage.pref.get(this, "pref_dark_theme", false);
-        if (isDarkTheme) setTheme(R.style.AppTheme_Dark);
+        final String theme = Static.getAppTheme(activity);
+        switch (theme) {
+            case "light":
+            default: setTheme(R.style.AppTheme); break;
+            case "dark": setTheme(R.style.AppTheme_Dark); break;
+            case "black": setTheme(R.style.AppTheme_Black); break;
+        }
+        isDarkTheme = "dark".equals(theme) || "black".equals(theme);
         super.onCreate(icicle);
-        setContentView(R.layout.schedule_lessons_widget_configure);
         Log.i(TAG, "Activity created");
         FirebaseAnalyticsProvider.logCurrentScreen(this);
         Static.init(this);
         setResult(RESULT_CANCELED);
+        setContentView(R.layout.schedule_lessons_widget_configure);
+        Toolbar toolbar = findViewById(R.id.toolbar_widget);
+        if (toolbar != null) {
+            Static.applyToolbarTheme(activity, toolbar);
+            setSupportActionBar(toolbar);
+        }
         Intent intent = getIntent();
         Bundle extras = intent.getExtras();
         if (extras != null) {

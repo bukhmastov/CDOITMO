@@ -9,12 +9,11 @@
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar_about"
+        android:theme="@style/AppTheme.Toolbar"
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:elevation="4dp"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        android:background="?attr/colorPrimary"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
+        android:background="?attr/colorPrimary"/>
 
     <ScrollView
         android:layout_width="match_parent"
@@ -49,7 +48,9 @@
                         android:layout_marginStart="0dp"
                         android:layout_marginEnd="@dimen/item_padding_half"
                         android:contentDescription="@string/app_name"
-                        app:srcCompat="@mipmap/ic_launcher" />
+                        app:srcCompat="@mipmap/ic_launcher"
+                        android:tint="?attr/colorImageMultiply"
+                        android:tintMode="multiply" />
 
                     <LinearLayout
                         android:layout_width="match_parent"

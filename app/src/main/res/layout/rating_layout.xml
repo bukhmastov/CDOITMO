@@ -37,7 +37,8 @@
             <Spinner
                 android:id="@+id/rl_spinner_faculty"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/rating_detailed_height_half" />
+                android:layout_height="@dimen/rating_detailed_height_half"
+                android:spinnerMode="dialog" />
 
             <View
                 android:layout_width="match_parent"
@@ -49,7 +50,8 @@
             <Spinner
                 android:id="@+id/rl_spinner_course"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/rating_detailed_height_half" />
+                android:layout_height="@dimen/rating_detailed_height_half"
+                android:spinnerMode="dialog" />
 
         </LinearLayout>
 

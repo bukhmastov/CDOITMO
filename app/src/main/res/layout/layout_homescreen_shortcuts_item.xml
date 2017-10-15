@@ -20,7 +20,9 @@
             android:layout_width="@dimen/about_icon_width"
             android:layout_height="@dimen/about_icon_width"
             android:layout_gravity="center_vertical"
-            app:srcCompat="@mipmap/ic_shortcut_e_journal" />
+            app:srcCompat="@mipmap/ic_shortcut_e_journal"
+            android:tint="?attr/colorToolbarContent"
+            android:tintMode="multiply" />
 
         <LinearLayout
             android:orientation="vertical"

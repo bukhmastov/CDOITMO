@@ -22,7 +22,9 @@
             android:layout_height="@dimen/university_person_card_big_avatar"
             android:layout_gravity="center_vertical"
             android:layout_margin="@dimen/item_padding_half"
-            app:srcCompat="@drawable/ic_sentiment_very_satisfied" />
+            app:srcCompat="@drawable/ic_sentiment_very_satisfied"
+            android:tint="?attr/colorToolbarContent"
+            android:tintMode="multiply" />
 
         <LinearLayout
             android:layout_width="match_parent"

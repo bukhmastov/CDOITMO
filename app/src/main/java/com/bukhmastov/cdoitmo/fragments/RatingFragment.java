@@ -491,7 +491,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                                     Spinner rl_spinner_faculty = activity.findViewById(R.id.rl_spinner_faculty);
                                     if (rl_spinner_faculty != null) {
                                         ArrayAdapter<String> adapter = new ArrayAdapter<>(activity, R.layout.spinner_rating_layout, rl_spinner_faculty_arr);
-                                        adapter.setDropDownViewResource(R.layout.spinner_rating_dropdown_layout);
+                                        adapter.setDropDownViewResource(R.layout.spinner_layout_normal_case);
                                         rl_spinner_faculty.setAdapter(adapter);
                                         rl_spinner_faculty.setSelection(choose.get(0));
                                         rl_spinner_faculty.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -512,7 +512,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                                     Spinner rl_spinner_course = activity.findViewById(R.id.rl_spinner_course);
                                     if (rl_spinner_course != null) {
                                         ArrayAdapter<String> adapter = new ArrayAdapter<>(activity, R.layout.spinner_rating_layout, rl_spinner_course_arr);
-                                        adapter.setDropDownViewResource(R.layout.spinner_rating_dropdown_layout);
+                                        adapter.setDropDownViewResource(R.layout.spinner_layout_normal_case);
                                         rl_spinner_course.setAdapter(adapter);
                                         rl_spinner_course.setSelection(choose.get(1));
                                         rl_spinner_course.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {

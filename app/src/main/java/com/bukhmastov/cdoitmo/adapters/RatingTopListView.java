@@ -30,7 +30,7 @@ public class RatingTopListView extends ArrayAdapter<HashMap<String, String>> {
 
     @NonNull
     @Override
-    public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) { //?attr/textColorPassed
+    public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
         try {
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = inflater.inflate(R.layout.listview_rating_list, parent, false);
@@ -52,8 +52,8 @@ public class RatingTopListView extends ArrayAdapter<HashMap<String, String>> {
                 if (lvrl_delta != null) {
                     lvrl_delta.setText(user.get("delta"));
                     switch (user.get("change")) {
-                        case "up": lvrl_delta.setTextColor(Static.resolveColor(context, R.attr.textColorPassed)); break;
-                        case "down": lvrl_delta.setTextColor(Static.resolveColor(context, R.attr.textColorDegrade)); break;
+                        case "up": lvrl_delta.setTextColor(Static.resolveColor(context, R.attr.colorPositiveTrend)); break;
+                        case "down": lvrl_delta.setTextColor(Static.resolveColor(context, R.attr.colorNegativeTrend)); break;
                     }
                 }
             }

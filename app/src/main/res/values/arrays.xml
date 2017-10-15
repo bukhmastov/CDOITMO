@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <string-array name="pref_theme_titles">
+        <item>@string/pref_light_theme</item>
+        <item>@string/pref_dark_theme</item>
+        <item>@string/pref_black_theme</item>
+    </string-array>
+    <string-array name="pref_theme_values" translatable="false">
+        <item>light</item>
+        <item>dark</item>
+        <item>black</item>
+    </string-array>
+
     <string-array name="pref_general_default_fragment_titles">
         <item>@string/e_journal</item>
         <item>@string/protocol_changes</item>

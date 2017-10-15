@@ -2,7 +2,6 @@ package com.bukhmastov.cdoitmo.activities;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.IdRes;
@@ -13,6 +12,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.ViewGroup;
 
+import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.fragments.ConnectedFragment;
 import com.bukhmastov.cdoitmo.utils.CtxWrapper;
 import com.bukhmastov.cdoitmo.utils.Log;
@@ -179,7 +179,11 @@ public abstract class ConnectedActivity extends AppCompatActivity {
                         actionBar.setHomeButtonEnabled(false);
                         Drawable drawable = getDrawable(image);
                         if (drawable != null) {
-                            drawable.setTint(Color.parseColor("#FFFFFF"));
+                            try {
+                                drawable.setTint(Static.resolveColor(getBaseContext(), R.attr.colorToolbarContent));
+                            } catch (Exception ignore) {
+                                // ignore
+                            }
                             actionBar.setLogo(drawable);
                         }
                     }

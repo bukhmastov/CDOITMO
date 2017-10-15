@@ -22,14 +22,14 @@
             android:layout_marginStart="0dp"
             android:layout_marginEnd="@dimen/item_padding_quarter"
             app:srcCompat="@drawable/ic_warning"
-            android:tint="?attr/textColorDegrade"/>
+            android:tint="?attr/colorNegativeTrend"/>
 
         <TextView
             android:id="@+id/text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:textColor="?attr/textColorDegrade"/>
+            android:textColor="?attr/colorNegativeTrend"/>
 
     </LinearLayout>
 

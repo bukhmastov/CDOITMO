@@ -51,16 +51,25 @@ public class LoginActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        if (Static.darkTheme) setTheme(R.style.AppTheme_Dark);
+        switch (Static.getAppTheme(activity)) {
+            case "light":
+            default: setTheme(R.style.AppTheme); break;
+            case "dark": setTheme(R.style.AppTheme_Dark); break;
+            case "black": setTheme(R.style.AppTheme_Black); break;
+        }
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
         FirebaseAnalyticsProvider.logCurrentScreen(this);
         setContentView(R.layout.activity_login);
-        setSupportActionBar((Toolbar) findViewById(R.id.toolbar_login));
+        Toolbar toolbar = findViewById(R.id.toolbar_login);
+        if (toolbar != null) {
+            Static.applyToolbarTheme(activity, toolbar);
+            setSupportActionBar(toolbar);
+        }
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setTitle(activity.getString(R.string.title_activity_login));
-            actionBar.setLogo(obtainStyledAttributes(new int[] { R.attr.ic_security }).getDrawable(0));
+            actionBar.setLogo(obtainStyledAttributes(new int[] { R.attr.ic_toolbar_security }).getDrawable(0));
         }
         displayRemoteMessage();
         if (LoginActivity.auto_logout) {

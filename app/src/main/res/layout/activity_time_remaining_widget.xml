@@ -3,7 +3,7 @@
     android:id="@+id/time_remaining_widget"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorPopupBackground"
+    android:background="?attr/colorBackgroundPopup"
     android:elevation="0dp"
     android:keepScreenOn="true" >
 

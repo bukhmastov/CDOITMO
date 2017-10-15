@@ -21,6 +21,7 @@ import android.support.annotation.IdRes;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.Toolbar;
 import android.util.TypedValue;
 import android.view.InflateException;
 import android.view.LayoutInflater;
@@ -70,12 +71,12 @@ public class Static {
     public static boolean OFFLINE_MODE = false;
     public static boolean firstLaunch = true;
     public static boolean authorized = false;
-    public static boolean darkTheme = false;
     public static final int intentFlagRestart = Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK;
     public static boolean tablet = false;
     public static boolean isFirstLaunchEver = false;
     private static final String USER_AGENT_TEMPLATE = "CDOITMO/{versionName}/{versionCode} Java/Android/{sdkInt}";
     private static String USER_AGENT = null;
+    private static String app_theme = null;
 
     public static class T {
         private static final String TAG = "Static.T";
@@ -1068,4 +1069,33 @@ public class Static {
             return null;
         }
     }
+    public static String getAppTheme(final Context context) {
+        if (app_theme == null) {
+            updateAppTheme(context);
+        }
+        return app_theme;
+    }
+    public static void updateAppTheme(final Context context) {
+        app_theme = Storage.pref.get(context, "pref_theme", "light");
+    }
+    public static void applyToolbarTheme(final Context context, final Toolbar toolbar) {
+        if (toolbar != null) {
+            Context toolbar_context = toolbar.getContext();
+            if (toolbar_context != null) {
+                switch (Static.getAppTheme(context)) {
+                    case "light":
+                    default:
+                        toolbar_context.setTheme(R.style.AppTheme_Toolbar);
+                        break;
+                    case "dark":
+                        toolbar_context.setTheme(R.style.AppTheme_Toolbar_Dark);
+                        break;
+                    case "black":
+                        toolbar_context.setTheme(R.style.AppTheme_Toolbar_Black);
+                        break;
+                }
+            }
+        }
+    }
+
 }

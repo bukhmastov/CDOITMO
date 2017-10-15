@@ -21,7 +21,7 @@
             android:layout_gravity="center_vertical"
             android:layout_marginStart="0dp"
             android:layout_marginEnd="@dimen/item_padding_quarter"
-            app:srcCompat="@drawable/ic_info_white"
+            app:srcCompat="@drawable/ic_info_outline"
             android:tint="?android:attr/textColorPrimary"/>
 
         <TextView

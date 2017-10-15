@@ -51,7 +51,12 @@ public class IntroducingActivity extends ConnectedActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        if (Static.darkTheme) setTheme(R.style.AppTheme_Dark_TransparentStatusBar);
+        switch (Static.getAppTheme(activity)) {
+            case "light":
+            default: setTheme(R.style.AppTheme_TransparentStatusBar); break;
+            case "dark": setTheme(R.style.AppTheme_Dark_TransparentStatusBar); break;
+            case "black": setTheme(R.style.AppTheme_Black_TransparentStatusBar); break;
+        }
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
         setContentView(R.layout.activity_introducing);

@@ -16,7 +16,9 @@
         android:layout_width="@dimen/university_person_card_small_avatar"
         android:layout_height="@dimen/university_person_card_small_avatar"
         android:layout_gravity="center_vertical"
-        app:srcCompat="@drawable/ic_sentiment_very_satisfied" />
+        app:srcCompat="@drawable/ic_sentiment_very_satisfied"
+        android:tint="?attr/colorImageMultiply"
+        android:tintMode="multiply" />
 
     <LinearLayout
         android:orientation="vertical"

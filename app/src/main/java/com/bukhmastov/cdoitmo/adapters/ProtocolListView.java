@@ -45,7 +45,7 @@ public class ProtocolListView extends ArrayAdapter<HashMap<String, String>> {
             if (Objects.equals(change.get("delta_here"), "true")) {
                 lv_protocol_delta.setText(change.get("delta"));
                 try {
-                    lv_protocol_delta.setTextColor(Static.resolveColor(context, Objects.equals(change.get("delta_negative"), "true") ? R.attr.textColorDegrade : R.attr.textColorPassed));
+                    lv_protocol_delta.setTextColor(Static.resolveColor(context, Objects.equals(change.get("delta_negative"), "true") ? R.attr.colorNegativeTrend : R.attr.colorPositiveTrend));
                 } catch (Exception e) {
                     Static.error(e);
                 }

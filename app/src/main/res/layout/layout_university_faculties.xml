@@ -65,7 +65,7 @@
                     android:layout_gravity="center"
                     android:padding="@dimen/search_offset_start"
                     app:srcCompat="@drawable/ic_arrow_back_white"
-                    android:tint="?android:attr/textColorPrimaryInverse"/>
+                    android:tint="?attr/colorToolbarContent"/>
 
             </FrameLayout>
 
@@ -83,7 +83,7 @@
                     android:layout_gravity="center"
                     android:padding="@dimen/search_offset_start"
                     app:srcCompat="@drawable/ic_web"
-                    android:tint="?android:attr/textColorPrimaryInverse"/>
+                    android:tint="?attr/colorToolbarContent"/>
 
             </FrameLayout>
 
@@ -101,7 +101,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/lorem_ipsum"
-                    android:textColor="?android:attr/textColorPrimaryInverse"
+                    android:textColor="?attr/colorToolbarContent"
                     android:textSize="@dimen/font_size_16"
                     android:maxLines="6" />
 

@@ -33,7 +33,12 @@ public class WebViewActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        if (Static.darkTheme) setTheme(R.style.AppTheme_Dark);
+        switch (Static.getAppTheme(activity)) {
+            case "light":
+            default: setTheme(R.style.AppTheme); break;
+            case "dark": setTheme(R.style.AppTheme_Dark); break;
+            case "black": setTheme(R.style.AppTheme_Black); break;
+        }
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
         try {
@@ -49,7 +54,11 @@ public class WebViewActivity extends AppCompatActivity {
         }
         FirebaseAnalyticsProvider.logCurrentScreen(this);
         setContentView(R.layout.activity_webview);
-        setSupportActionBar((Toolbar) findViewById(R.id.toolbar_webview));
+        Toolbar toolbar = findViewById(R.id.toolbar_webview);
+        if (toolbar != null) {
+            Static.applyToolbarTheme(activity, toolbar);
+            setSupportActionBar(toolbar);
+        }
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setHomeButtonEnabled(true);

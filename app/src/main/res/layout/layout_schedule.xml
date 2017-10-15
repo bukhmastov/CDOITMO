@@ -36,7 +36,7 @@
             <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:tint="?attr/textColorDegrade"
+                android:tint="?attr/colorNegativeTrend"
                 app:srcCompat="@drawable/ic_warning"/>
 
         </FrameLayout>
@@ -55,7 +55,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/lorem_ipsum"
-                android:textColor="?attr/textColorDegrade"
+                android:textColor="?attr/colorNegativeTrend"
                 android:textSize="@dimen/font_size_14" />
 
         </FrameLayout>

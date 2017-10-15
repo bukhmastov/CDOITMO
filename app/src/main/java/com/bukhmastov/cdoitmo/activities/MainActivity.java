@@ -41,22 +41,33 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        if (Static.darkTheme) setTheme(R.style.AppTheme_Dark);
+        switch (Static.getAppTheme(activity)) {
+            case "light":
+            default: setTheme(R.style.AppTheme); break;
+            case "dark": setTheme(R.style.AppTheme_Dark); break;
+            case "black": setTheme(R.style.AppTheme_Black); break;
+        }
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
         FirebaseAnalyticsProvider.logCurrentScreen(this);
         setContentView(R.layout.activity_main);
 
-        setSupportActionBar((Toolbar) findViewById(R.id.toolbar_main));
-        DrawerLayout mDrawerLayout = findViewById(R.id.drawer_layout);
-        if (mDrawerLayout != null) {
+        Toolbar toolbar = findViewById(R.id.toolbar_main);
+        DrawerLayout drawer_layout = findViewById(R.id.drawer_layout);
+        if (toolbar != null) {
+            Static.applyToolbarTheme(activity, toolbar);
+            setSupportActionBar(toolbar);
+        }
+        if (drawer_layout != null) {
             Static.tablet = false;
-            ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, ((Toolbar) findViewById(R.id.toolbar_main)), R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-            mDrawerLayout.addDrawerListener(mDrawerToggle);
-            mDrawerToggle.syncState();
-            if (Static.isFirstLaunchEver) {
-                Static.isFirstLaunchEver = false;
-                mDrawerLayout.openDrawer(Gravity.START);
+            if (toolbar != null) {
+                ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(this, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+                drawer_layout.addDrawerListener(mDrawerToggle);
+                mDrawerToggle.syncState();
+                if (Static.isFirstLaunchEver) {
+                    Static.isFirstLaunchEver = false;
+                    drawer_layout.openDrawer(Gravity.START);
+                }
             }
         } else {
             Static.tablet = true;

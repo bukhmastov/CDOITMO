@@ -3,8 +3,15 @@ package com.bukhmastov.cdoitmo.fragments;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.DrawableRes;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -30,9 +37,11 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.squareup.picasso.Picasso;
@@ -270,17 +279,31 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     @Override
     public void onMapReady(final GoogleMap gMap) {
         final GoogleMap.OnMarkerClickListener self = this;
-        Static.T.runOnUiThread(new Runnable() {
+        Static.T.runThread(new Runnable() {
             @Override
             public void run() {
-                googleMap = gMap;
-                googleMap.setOnMarkerClickListener(self);
-                googleMap.moveCamera(CameraUpdateFactory.newCameraPosition(new CameraPosition.Builder().target(new LatLng(59.93465, 30.3138391)).zoom(10).build()));
-                if (building_map == null) {
-                    load();
-                } else {
-                    display();
+                final MapStyleOptions mapStyleOptions;
+                switch (Static.getAppTheme(activity)) {
+                    case "light":
+                    default: mapStyleOptions = MapStyleOptions.loadRawResourceStyle(activity, R.raw.google_map_light); break;
+                    case "dark": mapStyleOptions = MapStyleOptions.loadRawResourceStyle(activity, R.raw.google_map_dark); break;
+                    case "black": mapStyleOptions = MapStyleOptions.loadRawResourceStyle(activity, R.raw.google_map_black); break;
+                    case "white": mapStyleOptions = MapStyleOptions.loadRawResourceStyle(activity, R.raw.google_map_white); break;
                 }
+                Static.T.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        googleMap = gMap;
+                        googleMap.setMapStyle(mapStyleOptions);
+                        googleMap.setOnMarkerClickListener(self);
+                        googleMap.moveCamera(CameraUpdateFactory.newCameraPosition(new CameraPosition.Builder().target(new LatLng(59.93465, 30.3138391)).zoom(10).build()));
+                        if (building_map == null) {
+                            load();
+                        } else {
+                            display();
+                        }
+                    }
+                });
             }
         });
     }
@@ -340,7 +363,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                                     markerOptions.snippet(type);
                                 }
                                 if (icon != -1) {
-                                    markerOptions.icon(BitmapDescriptorFactory.fromResource(icon));
+                                    markerOptions.icon(tintMarker(activity, icon));
                                 }
                                 Static.T.runOnUiThread(new Runnable() {
                                     @Override
@@ -517,6 +540,19 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                 googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 1000, null);
             }
         });
+    }
+    private BitmapDescriptor tintMarker(final Context context, @DrawableRes final int icon) {
+        try {
+            Paint markerPaint = new Paint();
+            Bitmap markerBitmap = BitmapFactory.decodeResource(context.getResources(), icon);
+            Bitmap resultBitmap = Bitmap.createBitmap(markerBitmap, 0, 0, markerBitmap.getWidth() - 1, markerBitmap.getHeight() - 1);
+            markerPaint.setColorFilter(new PorterDuffColorFilter(Static.resolveColor(activity, R.attr.colorImageMultiply), PorterDuff.Mode.MULTIPLY));
+            Canvas canvas = new Canvas(resultBitmap);
+            canvas.drawBitmap(resultBitmap, 0, 0, markerPaint);
+            return BitmapDescriptorFactory.fromBitmap(resultBitmap);
+        } catch (Exception ignore) {
+            return BitmapDescriptorFactory.fromResource(icon);
+        }
     }
 
     @SuppressWarnings("deprecation")

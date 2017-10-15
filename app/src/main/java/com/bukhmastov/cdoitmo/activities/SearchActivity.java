@@ -15,7 +15,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -43,7 +42,12 @@ public abstract class SearchActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        setTheme(Static.darkTheme ? R.style.AppTheme_Search_Dark : R.style.AppTheme_Search);
+        switch (Static.getAppTheme(this)) {
+            case "light":
+            default: setTheme(R.style.AppTheme_Search); break;
+            case "dark": setTheme(R.style.AppTheme_Search_Dark); break;
+            case "black": setTheme(R.style.AppTheme_Search_Black); break;
+        }
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
         setContentView(R.layout.activity_search);
@@ -89,15 +93,11 @@ public abstract class SearchActivity extends AppCompatActivity {
             @Override
             public void run() {
                 Log.v(TAG, "setMode | mode=" + mode.toString());
-                ViewGroup search_extra_action = findViewById(R.id.search_extra_action);
-                int padding = (int) (Static.destiny * 14);
+                final ViewGroup search_extra_action = findViewById(R.id.search_extra_action);
+                final ImageView search_extra_action_image = findViewById(R.id.search_extra_action_image);
                 if (search_extra_action != null) {
-                    search_extra_action.removeAllViews();
                     search_extra_action.setOnClickListener(null);
                     if (mode != EXTRA_ACTION_MODE.None) {
-                        ImageView imageView = new ImageView(self);
-                        imageView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-                        imageView.setPaddingRelative(padding, padding, padding, padding);
                         switch (mode) {
                             case Speech_recognition: {
                                 if (!checkVoiceRecognition()) {
@@ -105,7 +105,7 @@ public abstract class SearchActivity extends AppCompatActivity {
                                     setMode(EXTRA_ACTION_MODE.None);
                                     return;
                                 }
-                                imageView.setImageDrawable(getDrawable(R.drawable.ic_keyboard_voice));
+                                search_extra_action_image.setImageDrawable(getDrawable(R.drawable.ic_keyboard_voice));
                                 search_extra_action.setOnClickListener(new View.OnClickListener() {
                                     @Override
                                     public void onClick(View v) {
@@ -116,7 +116,7 @@ public abstract class SearchActivity extends AppCompatActivity {
                                 break;
                             }
                             case Clear: {
-                                imageView.setImageDrawable(getDrawable(R.drawable.ic_close));
+                                search_extra_action_image.setImageDrawable(getDrawable(R.drawable.ic_close));
                                 search_extra_action.setOnClickListener(new View.OnClickListener() {
                                     @Override
                                     public void onClick(View v) {
@@ -127,7 +127,9 @@ public abstract class SearchActivity extends AppCompatActivity {
                                 break;
                             }
                         }
-                        search_extra_action.addView(imageView);
+                        search_extra_action_image.setVisibility(View.VISIBLE);
+                    } else {
+                        search_extra_action_image.setVisibility(View.GONE);
                     }
                 }
             }

@@ -586,7 +586,8 @@ public class Room101AddRequest {
         }
         ((TextView) view.findViewById(R.id.ars_request_content_header)).setText(header);
         if (array != null && array.length() > 0) {
-            RadioGroup radioGroup = view.findViewById(R.id.ars_request_chooser);
+            final RadioGroup radioGroup = view.findViewById(R.id.ars_request_chooser);
+            final int textColor = Static.resolveColor(activity, android.R.attr.textColorPrimary);
             for (int i = 0; i < array.length(); i++) {
                 try {
                     JSONObject session = array.getJSONObject(i);
@@ -597,6 +598,7 @@ public class Room101AddRequest {
                     RadioButton radioButton = new RadioButton(activity);
                     radioButton.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
                     radioButton.setText(text);
+                    radioButton.setTextColor(textColor);
                     radioButton.setOnCheckedChangeListener(onCheckedChangeListener);
                     radioGroup.addView(radioButton);
                 } catch (Exception e) {

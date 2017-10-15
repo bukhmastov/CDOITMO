@@ -12,12 +12,11 @@
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar_fragment"
+        android:theme="@style/AppTheme.Toolbar"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         android:background="?attr/colorPrimary"
-        android:elevation="4dp"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
+        android:elevation="4dp"/>
 
     <android.support.v4.widget.DrawerLayout
         android:id="@+id/drawer_layout"

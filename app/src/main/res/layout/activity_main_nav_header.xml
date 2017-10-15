@@ -28,7 +28,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:contentDescription="@string/cdo"
-                app:srcCompat="?attr/ic_cdo_small" />
+                app:srcCompat="?attr/ic_cdo_small"
+                android:tint="?attr/colorToolbarContent"
+                android:tintMode="multiply"/>
 
         </FrameLayout>
 
@@ -37,7 +39,7 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:text="@string/lorem_ipsum"
-            android:textColor="@color/textColorHeader"
+            android:textColor="?attr/colorToolbarContent"
             android:textSize="@dimen/font_size_14" />
 
         <TextView
@@ -45,7 +47,7 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:text="@string/lorem_ipsum"
-            android:textColor="@color/textColorHeader"
+            android:textColor="?attr/colorToolbarContent"
             android:textSize="@dimen/font_size_12" />
 
     </LinearLayout>
