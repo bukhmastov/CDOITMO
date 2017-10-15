@@ -37,18 +37,28 @@
 
         <item name="android:listDivider">@color/colorSeparatorDark</item>
         <item name="colorUniversityIcon">@color/colorUniversityIconDark</item>
-        <item name="colorToolbarContent">#FFFFFF</item>
-        <item name="colorToolbarContentInvert">#FFFFFF</item>
-        <item name="colorImageMultiply">#FFFFFF</item>
+        <item name="colorToolbarContent">@color/colorToolbarContentDark</item>
+        <item name="colorToolbarContentInvert">@color/colorToolbarContentInvertDark</item>
+        <item name="colorImageMultiply">@color/colorImageMultiplyDark</item>
         <item name="colorControlHighlight">@color/colorControlHighlightDark</item>
 
         <item name="ic_cdo_small">@drawable/cdo</item>
         <item name="ic_toolbar_security">@drawable/ic_toolbar_security</item>
         <item name="windowActionModeOverlay">true</item>
+        <item name="android:alertDialogTheme">@style/AppTheme.Alert.Dark</item>
+        <item name="android:popupMenuStyle">@style/AppTheme.Alert.Dark</item>
+        <item name="alertDialogTheme">@style/AppTheme.Alert.Dark</item>
+        <item name="popupMenuStyle">@style/AppTheme.Alert.Dark</item>
+        <item name="android:dropDownItemStyle">@style/AppTheme.Alert.Dark</item>
 
     </style>
     <style name="AppTheme.Toolbar.Dark" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
-
+        <item name="android:textColorPrimary">@color/colorToolbarContentDark</item>
+        <item name="android:textColorPrimaryInverse">@color/colorToolbarContentDark</item>
+        <item name="android:textColorSecondary">@color/colorToolbarContentDark</item>
+        <item name="android:colorControlNormal">@color/colorToolbarContentDark</item>
+        <item name="android:colorControlActivated">@color/colorToolbarContentOpacityDark</item>
+        <item name="android:colorControlHighlight">@color/colorToolbarContentOpacityDark</item>
     </style>
     <style name="AppTheme.Popup.Dark" parent="AppTheme.Dark">
         <item name="android:windowIsTranslucent">true</item>
@@ -71,6 +81,15 @@
     </style>
     <style name="AppTheme.Dark.TransparentStatusBar" parent="AppTheme.Dark">
         <item name="android:windowTranslucentStatus">true</item>
+    </style>
+    <style name="AppTheme.Alert.Dark" parent="Theme.AppCompat.Dialog.Alert">
+        <item name="android:textColor">@color/textColorPrimaryDark</item>
+        <item name="android:textColorPrimary">@color/textColorPrimaryDark</item>
+        <item name="android:textColorSecondary">@color/textColorSecondaryDark</item>
+        <item name="android:popupBackground">@color/colorBackgroundAlertDark</item>
+        <item name="android:background">@color/colorBackgroundAlertDark</item>
+        <item name="android:tint">#bdbdbd</item>
+        <item name="colorAccent">@color/colorAccentDark</item>
     </style>
 
 </resources>
