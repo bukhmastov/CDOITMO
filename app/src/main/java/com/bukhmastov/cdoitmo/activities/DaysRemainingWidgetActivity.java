@@ -41,12 +41,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        switch (Static.getAppTheme(activity)) {
-            case "light":
-            default: setTheme(R.style.AppTheme_Popup); break;
-            case "dark": setTheme(R.style.AppTheme_Popup_Dark); break;
-            case "black": setTheme(R.style.AppTheme_Popup_Black); break;
-        }
+        Static.applyActivityTheme(this);
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
         FirebaseAnalyticsProvider.logCurrentScreen(this);

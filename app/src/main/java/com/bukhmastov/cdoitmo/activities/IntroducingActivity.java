@@ -55,6 +55,7 @@ public class IntroducingActivity extends ConnectedActivity {
             case "light":
             default: setTheme(R.style.AppTheme_TransparentStatusBar); break;
             case "dark": setTheme(R.style.AppTheme_Dark_TransparentStatusBar); break;
+            case "white": setTheme(R.style.AppTheme_White_TransparentStatusBar); break;
             case "black": setTheme(R.style.AppTheme_Black_TransparentStatusBar); break;
         }
         super.onCreate(savedInstanceState);

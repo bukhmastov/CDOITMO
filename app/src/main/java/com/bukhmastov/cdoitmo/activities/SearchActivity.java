@@ -46,6 +46,7 @@ public abstract class SearchActivity extends AppCompatActivity {
             case "light":
             default: setTheme(R.style.AppTheme_Search); break;
             case "dark": setTheme(R.style.AppTheme_Search_Dark); break;
+            case "white": setTheme(R.style.AppTheme_Search_White); break;
             case "black": setTheme(R.style.AppTheme_Search_Black); break;
         }
         super.onCreate(savedInstanceState);

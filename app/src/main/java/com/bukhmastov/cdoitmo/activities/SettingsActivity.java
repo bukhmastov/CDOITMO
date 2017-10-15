@@ -61,6 +61,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             case "light":
             default: setTheme(R.style.AppTheme_Settings); break;
             case "dark": setTheme(R.style.AppTheme_Settings_Dark); break;
+            case "white": setTheme(R.style.AppTheme_Settings_White); break;
             case "black": setTheme(R.style.AppTheme_Settings_Black); break;
         }
         super.onCreate(savedInstanceState);

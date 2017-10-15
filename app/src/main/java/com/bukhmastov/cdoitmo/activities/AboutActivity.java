@@ -24,19 +24,13 @@ public class AboutActivity extends ConnectedActivity {
     private final Random random = new Random();
     private int counterToPika = 0;
     private final int tapsToPika = 5;
-    private Activity activity;
+    private Activity activity = this;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        switch (Static.getAppTheme(activity)) {
-            case "light":
-            default: setTheme(R.style.AppTheme); break;
-            case "dark": setTheme(R.style.AppTheme_Dark); break;
-            case "black": setTheme(R.style.AppTheme_Black); break;
-        }
+        Static.applyActivityTheme(this);
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
-        activity = this;
         FirebaseAnalyticsProvider.logCurrentScreen(this);
         setContentView(R.layout.activity_about);
         Toolbar toolbar = findViewById(R.id.toolbar_about);

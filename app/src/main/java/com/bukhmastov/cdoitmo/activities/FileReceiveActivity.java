@@ -49,12 +49,7 @@ public class FileReceiveActivity extends ConnectedActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         Static.init(activity);
-        switch (Static.getAppTheme(activity)) {
-            case "light":
-            default: setTheme(R.style.AppTheme); break;
-            case "dark": setTheme(R.style.AppTheme_Dark); break;
-            case "black": setTheme(R.style.AppTheme_Black); break;
-        }
+        Static.applyActivityTheme(this);
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
         FirebaseAnalyticsProvider.logCurrentScreen(this);

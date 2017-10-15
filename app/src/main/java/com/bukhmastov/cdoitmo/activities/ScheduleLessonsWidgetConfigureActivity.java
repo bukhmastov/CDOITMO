@@ -85,13 +85,8 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
 
     @Override
     public void onCreate(Bundle icicle) {
+        Static.applyActivityTheme(this);
         final String theme = Static.getAppTheme(activity);
-        switch (theme) {
-            case "light":
-            default: setTheme(R.style.AppTheme); break;
-            case "dark": setTheme(R.style.AppTheme_Dark); break;
-            case "black": setTheme(R.style.AppTheme_Black); break;
-        }
         isDarkTheme = "dark".equals(theme) || "black".equals(theme);
         super.onCreate(icicle);
         Log.i(TAG, "Activity created");
