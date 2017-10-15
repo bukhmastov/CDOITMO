@@ -9,4 +9,5 @@
     android:paddingStart="@dimen/item_horizontal_padding"
     android:text="@string/lorem_ipsum"
     android:textColor="?android:attr/textColorPrimary"
-    android:textSize="@dimen/font_size_14" />
+    android:textSize="@dimen/font_size_14"
+    android:ellipsize="end" />
