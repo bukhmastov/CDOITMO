@@ -61,8 +61,6 @@
     <string name="pref_allow_send_reports_summary">Does not contain confidential data</string>
     <string name="pref_allow_collect_analytics">Send usage statistics</string>
     <string name="pref_allow_collect_analytics_summary">Does not contain confidential data</string>
-    <string name="pref_allow_owner_notifications">Show system notifications</string>
-    <string name="pref_allow_owner_notifications_summary">Enable/disable these notifications</string>
     <string name="attention">Attention</string>
     <string name="action_1">change</string>
     <string name="action_2">changes</string>

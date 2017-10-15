@@ -35,7 +35,6 @@ import android.widget.ListView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashProvider;
-import com.bukhmastov.cdoitmo.firebase.FirebaseMessagingProvider;
 import com.bukhmastov.cdoitmo.preferences.SchedulePreference;
 import com.bukhmastov.cdoitmo.utils.CtxWrapper;
 import com.bukhmastov.cdoitmo.utils.Log;
@@ -178,9 +177,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                 break;
             case "pref_allow_collect_analytics":
                 FirebaseAnalyticsProvider.setEnabled(this, Storage.pref.get(this, "pref_allow_collect_analytics", true), true);
-                break;
-            case "pref_allow_owner_notifications":
-                FirebaseMessagingProvider.checkOwnerNotification(this);
                 break;
             case "pref_use_cache":
                 if (!Storage.pref.get(this, "pref_use_cache", true)) {

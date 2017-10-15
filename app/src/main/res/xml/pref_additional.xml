@@ -87,11 +87,6 @@
             android:defaultValue="true"
             android:title="@string/pref_allow_collect_analytics"
             android:summary="@string/pref_allow_collect_analytics_summary"/>
-        <SwitchPreference
-            android:key="pref_allow_owner_notifications"
-            android:defaultValue="true"
-            android:title="@string/pref_allow_owner_notifications"
-            android:summary="@string/pref_allow_owner_notifications_summary"/>
     </PreferenceCategory>
 
 </PreferenceScreen>

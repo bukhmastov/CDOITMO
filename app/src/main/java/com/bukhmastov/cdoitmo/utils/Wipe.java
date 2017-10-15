@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 
 import com.bukhmastov.cdoitmo.activities.ScheduleLessonsWidgetConfigureActivity;
-import com.bukhmastov.cdoitmo.firebase.FirebaseMessagingProvider;
 
 import org.json.JSONObject;
 
@@ -52,10 +51,6 @@ public class Wipe {
                 if (Storage.pref.get(context, "pref_protocol_changes_track", true)) {
                     Static.protocolChangesTrackSetup(context, 0);
                 }
-                break;
-            }
-            case 58: {
-                FirebaseMessagingProvider.checkOwnerNotification(context);
                 break;
             }
             case 62: {
@@ -151,6 +146,8 @@ public class Wipe {
                 final boolean dark_theme = Storage.pref.get(context, "pref_dark_theme", false);
                 Storage.pref.delete(context, "pref_dark_theme");
                 Storage.pref.put(context, "pref_theme", dark_theme ? "dark" : "light");
+                // get rid of pref_allow_owner_notifications
+                Storage.pref.delete(context, "pref_allow_owner_notifications");
                 // move files
                 Static.logoutCurrent(context);
                 try {
