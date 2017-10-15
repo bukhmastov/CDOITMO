@@ -22,6 +22,8 @@
         <item name="android:textColorSecondary">@color/textColorSecondary</item>
         <item name="android:textColorHint">@color/textColorSecondary</item>
 
+        <item name="android:divider">@color/colorSeparator</item>
+        <item name="android:listDivider">@color/colorSeparator</item>
         <item name="colorSeparator">@color/colorSeparator</item>
         <item name="colorSeparatorDark">@color/colorSeparatorD</item>
         <item name="colorPositiveTrend">@color/colorPositiveTrend</item>
@@ -35,20 +37,29 @@
         <item name="colorScheduleFlagLabBG">@color/colorScheduleFlagLabBG</item>
         <item name="colorScheduleFlagTEXT">@color/colorScheduleFlagTEXT</item>
 
-        <item name="android:listDivider">@color/colorSeparator</item>
         <item name="colorUniversityIcon">@color/colorUniversityIcon</item>
-        <item name="colorToolbarContent">#FFFFFF</item>
-        <item name="colorToolbarContentInvert">#FFFFFF</item>
-        <item name="colorImageMultiply">#FFFFFF</item>
+        <item name="colorToolbarContent">@color/colorToolbarContent</item>
+        <item name="colorToolbarContentInvert">@color/colorToolbarContentInvert</item>
+        <item name="colorImageMultiply">@color/colorImageMultiply</item>
         <item name="colorControlHighlight">@color/colorControlHighlight</item>
 
         <item name="ic_cdo_small">@drawable/cdo</item>
         <item name="ic_toolbar_security">@drawable/ic_toolbar_security</item>
         <item name="windowActionModeOverlay">true</item>
+        <item name="android:alertDialogTheme">@style/AppTheme.Alert</item>
+        <item name="android:popupMenuStyle">@style/AppTheme.Alert</item>
+        <item name="alertDialogTheme">@style/AppTheme.Alert</item>
+        <item name="popupMenuStyle">@style/AppTheme.Alert</item>
+        <item name="android:dropDownItemStyle">@style/AppTheme.Alert</item>
 
     </style>
-    <style name="AppTheme.Toolbar" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
-
+    <style name="AppTheme.Toolbar" parent="ThemeOverlay.AppCompat.ActionBar">
+        <item name="android:textColorPrimary">@color/colorToolbarContent</item>
+        <item name="android:textColorPrimaryInverse">@color/colorToolbarContent</item>
+        <item name="android:textColorSecondary">@color/colorToolbarContent</item>
+        <item name="android:colorControlNormal">@color/colorToolbarContent</item>
+        <item name="android:colorControlActivated">@color/colorToolbarContentOpacity</item>
+        <item name="android:colorControlHighlight">@color/colorToolbarContentOpacity</item>
     </style>
     <style name="AppTheme.Popup" parent="AppTheme">
         <item name="android:windowIsTranslucent">true</item>
@@ -71,6 +82,15 @@
     </style>
     <style name="AppTheme.TransparentStatusBar" parent="AppTheme">
         <item name="android:windowTranslucentStatus">true</item>
+    </style>
+    <style name="AppTheme.Alert" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:textColor">@color/textColorPrimary</item>
+        <item name="android:textColorPrimary">@color/textColorPrimary</item>
+        <item name="android:textColorSecondary">@color/textColorSecondary</item>
+        <item name="android:popupBackground">@color/colorBackgroundAlert</item>
+        <item name="android:background">@color/colorBackgroundAlert</item>
+        <item name="android:tint">#9E9E9E</item>
+        <item name="colorAccent">@color/colorAccent</item>
     </style>
 
 </resources>

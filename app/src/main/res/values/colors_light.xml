@@ -11,12 +11,15 @@
     <color name="textColorSecondary">@color/text_color_secondary</color>
     <color name="textColorHeader">#ffffff</color>
 
-    <color name="colorSeparator">#e0e0e0</color>
-    <color name="colorSeparatorD">#424242</color>
     <color name="colorPositiveTrend">#2e7d32</color>
     <color name="colorNegativeTrend">#c62828</color>
+    <color name="colorSeparator">#e0e0e0</color>
+    <color name="colorSeparatorD">#424242</color>
     <color name="colorIcXml">#212121</color>
     <color name="colorIcXmlRed">#c62828</color>
+    <color name="colorToolbarContent">#FFFFFF</color>
+    <color name="colorToolbarContentOpacity">#7eFFFFFF</color>
+    <color name="colorToolbarContentInvert">#212121</color>
 
     <color name="colorScheduleFlagCommonBG">#bdbdbd</color>
     <color name="colorScheduleFlagPracticeBG">#69f0ae</color>
@@ -32,9 +35,11 @@
     <color name="colorBackground">#fafafa</color>
     <color name="colorBackgroundSection">#f5f5f5</color>
     <color name="colorBackgroundSnackBar">#323232</color>
-    <color name="colorControlHighlight">#ec0b43</color>
+    <color name="colorBackgroundAlert">#f0f0f0</color>
+    <color name="colorControlHighlight">#7eE0E0E0</color>
 
     <color name="colorSearchPrimaryDark">#eeeeee</color>
+    <color name="colorImageMultiply">#FFFFFF</color>
     <color name="colorUniversityIcon">#1946ba</color>
 
 </resources>
