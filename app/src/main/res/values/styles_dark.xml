@@ -35,7 +35,6 @@
         <item name="colorScheduleFlagLabBG">@color/colorScheduleFlagLabBGDark</item>
         <item name="colorScheduleFlagTEXT">@color/colorScheduleFlagTEXTDark</item>
 
-        <item name="android:listDivider">@color/colorSeparatorDark</item>
         <item name="colorUniversityIcon">@color/colorUniversityIconDark</item>
         <item name="colorToolbarContent">@color/colorToolbarContentDark</item>
         <item name="colorToolbarContentInvert">@color/colorToolbarContentInvertDark</item>

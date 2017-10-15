@@ -23,7 +23,6 @@
         <item name="android:textColorHint">@color/textColorSecondary</item>
 
         <item name="android:divider">@color/colorSeparator</item>
-        <item name="android:listDivider">@color/colorSeparator</item>
         <item name="colorSeparator">@color/colorSeparator</item>
         <item name="colorSeparatorDark">@color/colorSeparatorD</item>
         <item name="colorPositiveTrend">@color/colorPositiveTrend</item>
@@ -89,7 +88,7 @@
         <item name="android:textColorSecondary">@color/textColorSecondary</item>
         <item name="android:popupBackground">@color/colorBackgroundAlert</item>
         <item name="android:background">@color/colorBackgroundAlert</item>
-        <item name="android:tint">#9E9E9E</item>
+        <item name="android:tint">#000000</item>
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
