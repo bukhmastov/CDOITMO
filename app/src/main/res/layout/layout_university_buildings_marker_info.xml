@@ -23,7 +23,7 @@
             android:layout_gravity="center_vertical"
             android:layout_margin="@dimen/item_padding_half"
             app:srcCompat="@drawable/ic_sentiment_very_satisfied"
-            android:tint="?attr/colorToolbarContent"
+            android:tint="?attr/colorImageMultiply"
             android:tintMode="multiply" />
 
         <LinearLayout

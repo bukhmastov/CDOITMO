@@ -2,13 +2,12 @@
 <resources>
 
     <style name="AppTheme.Base.White" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="colorPrimaryDark">@color/colorPrimaryWhite</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDWhite</item>
     </style>
     <style name="AppTheme.White" parent="AppTheme.Base.White">
 
         <item name="colorPrimaryLight">@color/colorPrimaryWhite</item>
         <item name="colorPrimary">@color/colorPrimaryWhite</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryWhite</item>
         <item name="colorPrimaryOpacity">@color/colorPrimaryOpacityWhite</item>
         <item name="colorAccent">@color/colorAccentWhite</item>
 

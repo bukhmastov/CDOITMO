@@ -12,9 +12,7 @@
         android:background="@drawable/background_pattern"
         android:backgroundTint="?attr/colorPrimary"
         android:backgroundTintMode="multiply"
-        android:elevation="4dp"
-        android:tint="?attr/colorImageMultiply"
-        android:tintMode="multiply">
+        android:elevation="4dp">
 
         <RelativeLayout
             android:id="@+id/linearLayout"
