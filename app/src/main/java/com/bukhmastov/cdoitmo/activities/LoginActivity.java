@@ -228,7 +228,7 @@ public class LoginActivity extends AppCompatActivity {
                             }
                         });
                         login_tiles_container.addView(layout_login_new_user_tile);
-                        JSONArray accounts = LoginActivity.accounts.get(activity);
+                        final JSONArray accounts = LoginActivity.accounts.get(activity);
                         for (int i = 0; i < accounts.length(); i++) {
                             try {
                                 Log.v(TAG, "account in accounts " + accounts.getString(i));
@@ -275,6 +275,14 @@ public class LoginActivity extends AppCompatActivity {
                                     public void onClick(View v) {
                                         Log.v(TAG, "user_tile logout clicked");
                                         logout(login);
+                                    }
+                                });
+                                layout_login_user_tile.findViewById(R.id.offline).setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View view) {
+                                        Log.v(TAG, "user_tile offline clicked");
+                                        Storage.file.general.put(activity, "users#current_login", login);
+                                        route(SIGNAL_GO_OFFLINE);
                                     }
                                 });
                                 layout_login_user_tile.findViewById(R.id.auth).setOnClickListener(new View.OnClickListener() {
@@ -368,6 +376,7 @@ public class LoginActivity extends AppCompatActivity {
                                                 if (requestHandle != null) {
                                                     requestHandle.cancel();
                                                 }
+                                                Storage.file.general.put(activity, "users#current_login", login);
                                                 route(SIGNAL_GO_OFFLINE);
                                             }
                                         });
