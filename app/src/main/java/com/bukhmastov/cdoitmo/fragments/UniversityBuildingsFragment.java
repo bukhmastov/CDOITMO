@@ -235,6 +235,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                                         case IfmoRestClient.FAILED_OFFLINE:
                                             loadOffline();
                                             break;
+                                        case IfmoRestClient.FAILED_SERVER_ERROR:
                                         case IfmoRestClient.FAILED_TRY_AGAIN:
                                             loadFailed();
                                             break;

@@ -209,8 +209,15 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                                                 }
                                             }
                                             break;
+                                        case IfmoRestClient.FAILED_SERVER_ERROR:
                                         case IfmoRestClient.FAILED_TRY_AGAIN:
                                             draw(R.layout.state_try_again);
+                                            if (state == IfmoRestClient.FAILED_SERVER_ERROR) {
+                                                TextView try_again_message = activity.findViewById(R.id.try_again_message);
+                                                if (try_again_message != null) {
+                                                    try_again_message.setText(IfmoRestClient.getFailureMessage(activity, statusCode));
+                                                }
+                                            }
                                             if (activity != null) {
                                                 View try_again_reload = container.findViewById(R.id.try_again_reload);
                                                 if (try_again_reload != null) {

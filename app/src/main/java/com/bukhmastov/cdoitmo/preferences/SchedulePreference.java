@@ -23,7 +23,6 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.network.IfmoClient;
 import com.bukhmastov.cdoitmo.network.models.Client;
 import com.bukhmastov.cdoitmo.utils.Static;
 
@@ -272,15 +271,18 @@ public abstract class SchedulePreference extends DialogPreference {
     }
     public void onProgress(int state) {
         switch (state) {
-            case IfmoClient.STATE_HANDLING: loading(getContext().getString(R.string.loading)); break;
+            case Client.STATE_HANDLING: loading(getContext().getString(R.string.loading)); break;
         }
     }
     public void onFailure(int state) {
         switch (state) {
-            case IfmoClient.FAILED_OFFLINE:
+            case Client.FAILED_OFFLINE:
                 failed(getContext().getString(R.string.device_offline_action_refused));
                 break;
-            case IfmoClient.FAILED_TRY_AGAIN: default:
+            case Client.FAILED_SERVER_ERROR:
+                failed(Client.getFailureMessage(getContext(), -1));
+                break;
+            case Client.FAILED_TRY_AGAIN: default:
                 failed(getContext().getString(R.string.load_failed));
                 break;
         }

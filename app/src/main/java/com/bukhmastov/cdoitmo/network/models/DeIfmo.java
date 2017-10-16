@@ -3,6 +3,7 @@ package com.bukhmastov.cdoitmo.network.models;
 import android.content.Context;
 import android.text.TextUtils;
 
+import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.network.interfaces.RawHandler;
 import com.bukhmastov.cdoitmo.network.interfaces.RawJsonHandler;
 import com.bukhmastov.cdoitmo.utils.Static;
@@ -233,5 +234,13 @@ public abstract class DeIfmo extends Client {
             headers.put("Cookie", TextUtils.join("; ", cookies).trim());
         }
         return okhttp3.Headers.of(headers);
+    }
+
+    public static String getFailureMessage(final Context context, final int statusCode) {
+        if (statusCode == 591) {
+            return context.getString(R.string.server_maintenance);
+        } else {
+            return Client.getFailureMessage(context, statusCode);
+        }
     }
 }

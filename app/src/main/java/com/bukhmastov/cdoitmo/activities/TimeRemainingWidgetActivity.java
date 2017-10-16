@@ -139,6 +139,9 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
                 case ScheduleLessons.FAILED_OFFLINE:
                     message(activity.getString(R.string.no_connection));
                     break;
+                case IfmoRestClient.FAILED_SERVER_ERROR:
+                    message(IfmoRestClient.getFailureMessage(activity, -1));
+                    break;
                 case IfmoRestClient.FAILED_TRY_AGAIN:
                 case ScheduleLessons.FAILED_LOAD:
                 case ScheduleLessons.FAILED_EMPTY_QUERY:

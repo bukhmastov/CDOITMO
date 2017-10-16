@@ -1,7 +1,9 @@
 package com.bukhmastov.cdoitmo.network.models;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 
+import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.network.interfaces.RawHandler;
 import com.bukhmastov.cdoitmo.network.interfaces.RawJsonHandler;
 import com.bukhmastov.cdoitmo.utils.Log;
@@ -59,6 +61,7 @@ public abstract class Client {
     public static final int STATE_HANDLING = 0;
     public static final int FAILED_OFFLINE = 0;
     public static final int FAILED_TRY_AGAIN = 1;
+    public static final int FAILED_SERVER_ERROR = 2;
 
     protected static void _g(final String url, final okhttp3.Headers headers, final Map<String, String> query, final RawHandler rawHandler) {
         Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
@@ -350,6 +353,9 @@ public abstract class Client {
         } catch (Exception e) {
             return "<error>";
         }
+    }
+    public static String getFailureMessage(final Context context, final int statusCode) {
+        return context.getString(R.string.server_error) + (statusCode > 0 ? " [status code: " + statusCode + "]" : "");
     }
 
     public static class Request {

@@ -186,9 +186,16 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                                                 });
                                             }
                                             break;
+                                        case IfmoRestClient.FAILED_SERVER_ERROR:
                                         case IfmoRestClient.FAILED_TRY_AGAIN:
                                             draw(R.layout.state_try_again);
                                             View try_again_reload = findViewById(R.id.try_again_reload);
+                                            if (state == IfmoRestClient.FAILED_SERVER_ERROR) {
+                                                TextView try_again_message = activity.findViewById(R.id.try_again_message);
+                                                if (try_again_message != null) {
+                                                    try_again_message.setText(IfmoRestClient.getFailureMessage(activity, statusCode));
+                                                }
+                                            }
                                             if (try_again_reload != null) {
                                                 try_again_reload.setOnClickListener(new View.OnClickListener() {
                                                     @Override

@@ -323,6 +323,11 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                                                     case ScheduleLessons.FAILED_OFFLINE:
                                                         share_content.addView(inflate(R.layout.state_offline_without_align));
                                                         break;
+                                                    case IfmoRestClient.FAILED_SERVER_ERROR:
+                                                        View view = inflate(R.layout.state_failed_without_align);
+                                                        ((TextView) view.findViewById(R.id.text)).setText(IfmoRestClient.getFailureMessage(activity, -1));
+                                                        share_content.addView(view);
+                                                        break;
                                                     case IfmoRestClient.FAILED_TRY_AGAIN:
                                                     case ScheduleLessons.FAILED_LOAD:
                                                     case ScheduleLessons.FAILED_EMPTY_QUERY:

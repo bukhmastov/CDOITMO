@@ -16,7 +16,6 @@ import com.bukhmastov.cdoitmo.adapters.RatingTopListView;
 import com.bukhmastov.cdoitmo.exceptions.SilentException;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
-import com.bukhmastov.cdoitmo.network.IfmoClient;
 import com.bukhmastov.cdoitmo.network.interfaces.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.models.Client;
 import com.bukhmastov.cdoitmo.parse.RatingTopListParse;
@@ -139,7 +138,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                                 public void run() {
                                     Log.v(TAG, "load | failure " + state);
                                     switch (state) {
-                                        case IfmoClient.FAILED_OFFLINE:
+                                        case DeIfmoClient.FAILED_OFFLINE:
                                             draw(R.layout.state_offline);
                                             View offline_reload = activity.findViewById(R.id.offline_reload);
                                             if (offline_reload != null) {
@@ -151,8 +150,15 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                                                 });
                                             }
                                             break;
-                                        case IfmoClient.FAILED_TRY_AGAIN:
+                                        case DeIfmoClient.FAILED_TRY_AGAIN:
+                                        case DeIfmoClient.FAILED_SERVER_ERROR:
                                             draw(R.layout.state_try_again);
+                                            if (state == DeIfmoClient.FAILED_SERVER_ERROR) {
+                                                TextView try_again_message = activity.findViewById(R.id.try_again_message);
+                                                if (try_again_message != null) {
+                                                    try_again_message.setText(DeIfmoClient.getFailureMessage(activity, statusCode));
+                                                }
+                                            }
                                             View try_again_reload = activity.findViewById(R.id.try_again_reload);
                                             if (try_again_reload != null) {
                                                 try_again_reload.setOnClickListener(new View.OnClickListener() {
@@ -177,7 +183,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                                     TextView loading_message = activity.findViewById(R.id.loading_message);
                                     if (loading_message != null) {
                                         switch (state) {
-                                            case IfmoClient.STATE_HANDLING:
+                                            case DeIfmoClient.STATE_HANDLING:
                                                 loading_message.setText(R.string.loading);
                                                 break;
                                         }

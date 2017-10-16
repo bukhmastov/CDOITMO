@@ -278,8 +278,15 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                                                 }
                                                 break;
                                             case DeIfmoRestClient.FAILED_TRY_AGAIN:
+                                            case DeIfmoRestClient.FAILED_SERVER_ERROR:
                                                 draw(R.layout.state_try_again);
                                                 if (activity != null) {
+                                                    if (state == DeIfmoRestClient.FAILED_SERVER_ERROR) {
+                                                        TextView try_again_message = activity.findViewById(R.id.try_again_message);
+                                                        if (try_again_message != null) {
+                                                            try_again_message.setText(DeIfmoRestClient.getFailureMessage(activity, statusCode));
+                                                        }
+                                                    }
                                                     View try_again_reload = activity.findViewById(R.id.try_again_reload);
                                                     if (try_again_reload != null) {
                                                         try_again_reload.setOnClickListener(new View.OnClickListener() {

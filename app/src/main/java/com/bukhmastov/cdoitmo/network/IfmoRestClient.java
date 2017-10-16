@@ -36,6 +36,10 @@ public class IfmoRestClient extends Ifmo {
                                 @Override
                                 public void run() {
                                     Log.v(TAG, "get | url=" + url + " | success | statusCode=" + code);
+                                    if (code >= 500 && code < 600) {
+                                        responseHandler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
+                                        return;
+                                    }
                                     responseHandler.onSuccess(code, new Headers(headers), responseObj, responseArr);
                                 }
                             });

@@ -170,7 +170,11 @@ public class Room101AddRequest {
                         }
                         @Override
                         public void onFailure(int statusCode, Client.Headers headers, int state) {
-                            failed();
+                            if (state == Room101Client.FAILED_SERVER_ERROR) {
+                                failed(Room101Client.getFailureMessage(activity, statusCode));
+                            } else {
+                                failed();
+                            }
                         }
                         @Override
                         public void onProgress(int state) {}
@@ -221,7 +225,11 @@ public class Room101AddRequest {
                         }
                         @Override
                         public void onFailure(int statusCode, Client.Headers headers, int state) {
-                            failed();
+                            if (state == Room101Client.FAILED_SERVER_ERROR) {
+                                failed(Room101Client.getFailureMessage(activity, statusCode));
+                            } else {
+                                failed();
+                            }
                         }
                         @Override
                         public void onProgress(int state) {}
@@ -278,7 +286,11 @@ public class Room101AddRequest {
                     }
                     @Override
                     public void onFailure(int statusCode, Client.Headers headers, int state) {
-                        failed();
+                        if (state == Room101Client.FAILED_SERVER_ERROR) {
+                            failed(Room101Client.getFailureMessage(activity, statusCode));
+                        } else {
+                            failed();
+                        }
                     }
                     @Override
                     public void onProgress(int state) {}
@@ -332,7 +344,11 @@ public class Room101AddRequest {
                     }
                     @Override
                     public void onFailure(int statusCode, Client.Headers headers, int state) {
-                        failed();
+                        if (state == Room101Client.FAILED_SERVER_ERROR) {
+                            failed(Room101Client.getFailureMessage(activity, statusCode));
+                        } else {
+                            failed();
+                        }
                     }
                     @Override
                     public void onProgress(int state) {}
@@ -387,6 +403,7 @@ public class Room101AddRequest {
                         try {
                             data = new JSONObject();
                             data.put("done", false);
+                            data.put("message", state == Room101Client.FAILED_SERVER_ERROR ? Room101Client.getFailureMessage(activity, statusCode) : activity.getString(R.string.request_denied));
                             CURRENT_STAGE++;
                             proceedStage();
                         } catch (JSONException e) {
@@ -542,7 +559,17 @@ public class Room101AddRequest {
                 try {
                     if (data == null) throw new NullPointerException("data cannot be null");
                     if (!data.has("done")) throw new Exception("Empty data.done");
-                    callback.onDraw(getChooserLayout(data.getBoolean("done") ? activity.getString(R.string.request_accepted) : activity.getString(R.string.request_denied), null, null, null));
+                    String message;
+                    if (data.getBoolean("done")) {
+                        message = activity.getString(R.string.request_accepted);
+                    } else {
+                        if (data.has("message")) {
+                            message = data.getString("message");
+                        } else {
+                            message = activity.getString(R.string.request_denied);
+                        }
+                    }
+                    callback.onDraw(getChooserLayout(message, null, null, null));
                     if (data.getBoolean("done")) {
                         FirebaseAnalyticsProvider.logEvent(
                                 activity,
@@ -559,8 +586,11 @@ public class Room101AddRequest {
     }
 
     private void failed() {
-        Log.v(TAG, "failed");
-        Static.snackBar(activity, activity.getString(R.string.error_occurred));
+        failed(activity.getString(R.string.error_occurred));
+    }
+    private void failed(String message) {
+        Log.v(TAG, "failed | " + message);
+        Static.snackBar(activity, message);
         close(false);
     }
 

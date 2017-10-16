@@ -191,9 +191,16 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
                             }
                             break;
                         case IfmoClient.FAILED_TRY_AGAIN:
+                        case IfmoClient.FAILED_SERVER_ERROR:
                         case ScheduleExams.FAILED_LOAD:
                             draw(R.layout.state_try_again);
                             View try_again_reload = activity.findViewById(R.id.try_again_reload);
+                            if (state == IfmoClient.FAILED_SERVER_ERROR) {
+                                TextView try_again_message = activity.findViewById(R.id.try_again_message);
+                                if (try_again_message != null) {
+                                    try_again_message.setText(IfmoClient.getFailureMessage(activity, -1));
+                                }
+                            }
                             if (try_again_reload != null) {
                                 try_again_reload.setOnClickListener(new View.OnClickListener() {
                                     @Override

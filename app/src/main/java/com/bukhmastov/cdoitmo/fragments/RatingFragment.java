@@ -42,7 +42,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
 
     private static final String TAG = "RatingFragment";
     private enum TYPE {common, own}
-    private enum STATUS {empty, loaded, failed, offline}
+    private enum STATUS {empty, loaded, failed, offline, server_error}
     private final ArrayMap<TYPE, Info> data = new ArrayMap<>();
     private class Info {
         public STATUS status = STATUS.empty;
@@ -350,6 +350,11 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                                             gotoLogin(LoginActivity.SIGNAL_CREDENTIALS_FAILED);
                                             break;
                                         }
+                                        case DeIfmoClient.FAILED_SERVER_ERROR: {
+                                            data.put(type, new Info(STATUS.server_error, null));
+                                            loaded(type);
+                                            break;
+                                        }
                                         default: {
                                             if (data.get(type).data != null) {
                                                 data.get(type).status = STATUS.loaded;
@@ -553,7 +558,11 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                                     ViewGroup vg = activity.findViewById(R.id.rl_list_container);
                                     if (vg != null) {
                                         vg.removeAllViews();
-                                        vg.addView(inflate(common.status == STATUS.offline ? R.layout.state_offline_compact : R.layout.state_failed_compact));
+                                        View view = inflate(common.status == STATUS.offline ? R.layout.state_offline_compact : R.layout.state_failed_compact);
+                                        if (common.status == STATUS.server_error) {
+                                            ((TextView) view.findViewById(R.id.state_failed_compact_message)).setText(DeIfmoClient.getFailureMessage(activity, -1));
+                                        }
+                                        vg.addView(view);
                                     }
                                 }
                                 // отображаем личный рейтинг
@@ -610,7 +619,11 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                                 } else {
                                     if (swipe_container != null) {
                                         swipe_container.removeAllViews();
-                                        swipe_container.addView(inflate(own.status == STATUS.offline ? R.layout.state_offline_compact : R.layout.state_failed_compact));
+                                        View view = inflate(own.status == STATUS.offline ? R.layout.state_offline_compact : R.layout.state_failed_compact);
+                                        if (own.status == STATUS.server_error) {
+                                            ((TextView) view.findViewById(R.id.state_failed_compact_message)).setText(DeIfmoClient.getFailureMessage(activity, -1));
+                                        }
+                                        swipe_container.addView(view);
                                     }
                                 }
                             } catch (Exception e) {

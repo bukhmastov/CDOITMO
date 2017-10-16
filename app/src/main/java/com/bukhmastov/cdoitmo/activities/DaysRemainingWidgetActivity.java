@@ -139,6 +139,9 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
                 case ScheduleExams.FAILED_OFFLINE:
                     message(activity.getString(R.string.no_connection));
                     break;
+                case IfmoClient.FAILED_SERVER_ERROR:
+                    message(IfmoClient.getFailureMessage(activity, -1));
+                    break;
                 case IfmoClient.FAILED_TRY_AGAIN:
                 case ScheduleExams.FAILED_LOAD:
                 case ScheduleExams.FAILED_EMPTY_QUERY:

@@ -46,6 +46,9 @@ public class DeIfmoRestClient extends DeIfmo {
                                     case DeIfmoClient.FAILED_OFFLINE:
                                         state = FAILED_OFFLINE;
                                         break;
+                                    case DeIfmoClient.FAILED_SERVER_ERROR:
+                                        state = FAILED_SERVER_ERROR;
+                                        break;
                                     case DeIfmoClient.FAILED_TRY_AGAIN:
                                     case DeIfmoClient.FAILED_AUTH_TRY_AGAIN:
                                     case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
@@ -70,6 +73,10 @@ public class DeIfmoRestClient extends DeIfmo {
                                 @Override
                                 public void run() {
                                     Log.v(TAG, "get | url=" + url + " | success | statusCode=" + code);
+                                    if (code >= 500 && code < 600) {
+                                        responseHandler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
+                                        return;
+                                    }
                                     responseHandler.onSuccess(code, new Headers(headers), responseObj, responseArr);
                                 }
                             });

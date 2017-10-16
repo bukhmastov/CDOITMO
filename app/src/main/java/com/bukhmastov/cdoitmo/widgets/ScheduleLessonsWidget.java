@@ -25,6 +25,7 @@ import com.bukhmastov.cdoitmo.activities.PikaActivity;
 import com.bukhmastov.cdoitmo.activities.ScheduleLessonsWidgetConfigureActivity;
 import com.bukhmastov.cdoitmo.converters.ScheduleLessonsAdditionalConverter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
+import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.models.Client;
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
 import com.bukhmastov.cdoitmo.utils.Log;
@@ -126,7 +127,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                     }
                     @Override
                     public void onFailure(int state) {
-                        failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_load_schedule));
+                        failed(context, appWidgetManager, appWidgetId, settings, state == IfmoRestClient.FAILED_SERVER_ERROR ? IfmoRestClient.getFailureMessage(context, -1) : context.getString(R.string.failed_to_load_schedule));
                     }
                     @Override
                     public void onSuccess(final JSONObject json) {

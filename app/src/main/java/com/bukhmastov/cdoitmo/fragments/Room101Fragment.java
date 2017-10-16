@@ -183,7 +183,13 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                                 Log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status + " | failure | statusCode=" + statusCode);
                                 draw(R.layout.state_try_again);
                                 TextView try_again_message = activity.findViewById(R.id.try_again_message);
-                                if (try_again_message != null) try_again_message.setText(R.string.wrong_response_from_server);
+                                if (try_again_message != null) {
+                                    if (state == Room101Client.FAILED_SERVER_ERROR) {
+                                        try_again_message.setText(Room101Client.getFailureMessage(activity, statusCode));
+                                    } else {
+                                        try_again_message.setText(R.string.wrong_response_from_server);
+                                    }
+                                }
                                 View try_again_reload = activity.findViewById(R.id.try_again_reload);
                                 if (try_again_reload != null) {
                                     try_again_reload.setOnClickListener(new View.OnClickListener() {
@@ -566,6 +572,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                                                 }
                                             }
                                             break;
+                                        case Room101Client.FAILED_SERVER_ERROR:
                                         case Room101Client.FAILED_TRY_AGAIN:
                                         case Room101Client.FAILED_EXPECTED_REDIRECTION:
                                             draw(R.layout.state_try_again);
@@ -573,6 +580,10 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                                                 if (state == Room101Client.FAILED_EXPECTED_REDIRECTION) {
                                                     TextView try_again_message = activity.findViewById(R.id.try_again_message);
                                                     if (try_again_message != null) try_again_message.setText(R.string.wrong_response_from_server);
+                                                }
+                                                if (state == Room101Client.FAILED_SERVER_ERROR) {
+                                                    TextView try_again_message = activity.findViewById(R.id.try_again_message);
+                                                    if (try_again_message != null) try_again_message.setText(Room101Client.getFailureMessage(activity, statusCode));
                                                 }
                                                 View try_again_reload = activity.findViewById(R.id.try_again_reload);
                                                 if (try_again_reload != null) {

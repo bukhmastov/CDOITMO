@@ -442,5 +442,7 @@
     <string name="corrupted_file">Файл имеет поврежденный контент</string>
     <string name="file_requires_auth">Для обработки файла, Вам необходимо произвести авторизацию в приложении</string>
     <string name="failed_to_share_file">Не удалось поделиться файлом</string>
+    <string name="server_error">Серверу не удалось выполнить запрос</string>
+    <string name="server_maintenance">На сервере проводятся технические работы</string>
 
 </resources>

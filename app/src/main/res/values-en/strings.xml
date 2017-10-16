@@ -435,5 +435,7 @@
     <string name="corrupted_file">File has corrupted content</string>
     <string name="file_requires_auth">To process the file, you need to authorize in the application</string>
     <string name="failed_to_share_file">Failed to share the file</string>
+    <string name="server_error">The server failed to fulfill a request</string>
+    <string name="server_maintenance">The server is undergoing maintenance</string>
 
 </resources>

@@ -29,6 +29,8 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapters.TeacherPickerAdapter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
+import com.bukhmastov.cdoitmo.network.IfmoClient;
+import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.models.Client;
 import com.bukhmastov.cdoitmo.objects.ScheduleExams;
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
@@ -649,7 +651,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                     public void run() {
                                                         search_loading.setVisibility(View.GONE);
                                                         search_action.setVisibility(View.VISIBLE);
-                                                        Static.snackBar(activity, activity.getString(R.string.schedule_not_found));
+                                                        Static.snackBar(activity, state == IfmoRestClient.FAILED_SERVER_ERROR ? IfmoRestClient.getFailureMessage(activity, -1) : activity.getString(R.string.schedule_not_found));
                                                     }
                                                 });
                                             }
@@ -834,14 +836,14 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                 });
                                             }
                                             @Override
-                                            public void onFailure(int state) {
+                                            public void onFailure(final int state) {
                                                 Log.v(TAG, "getScheduleExams | search action | onFailure | state=" + state);
                                                 Static.T.runThread(new Runnable() {
                                                     @Override
                                                     public void run() {
                                                         search_loading.setVisibility(View.GONE);
                                                         search_action.setVisibility(View.VISIBLE);
-                                                        Static.snackBar(activity, activity.getString(R.string.schedule_not_found));
+                                                        Static.snackBar(activity, state == IfmoClient.FAILED_SERVER_ERROR ? IfmoClient.getFailureMessage(activity, -1) : activity.getString(R.string.schedule_not_found));
                                                     }
                                                 });
                                             }

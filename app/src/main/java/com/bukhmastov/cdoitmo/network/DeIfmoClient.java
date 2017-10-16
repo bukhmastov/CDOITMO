@@ -140,6 +140,10 @@ public class DeIfmoClient extends DeIfmo {
                                 public void run() {
                                     Log.v(TAG, "authorize | success | code=" + code);
                                     storeCookies(context, headers);
+                                    if (code >= 500 && code < 600) {
+                                        responseHandler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
+                                        return;
+                                    }
                                     try {
                                         if (response == null) throw new NullPointerException("data cannot be null");
                                         if (response.contains("Access is forbidden") && response.contains("Invalid login/password")) {
@@ -258,6 +262,10 @@ public class DeIfmoClient extends DeIfmo {
                                 public void run() {
                                     Log.v(TAG, "get | url=" + url + " | success | statusCode=" + code);
                                     try {
+                                        if (code >= 500 && code < 600) {
+                                            responseHandler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
+                                            return;
+                                        }
                                         if (response == null) throw new NullPointerException("data cannot be null");
                                         if (response.contains("Закончился интервал неактивности") || response.contains("Доступ запрещен")) {
                                             Log.v(TAG, "get | url=" + url + " | success | auth required");
@@ -354,6 +362,10 @@ public class DeIfmoClient extends DeIfmo {
                                 public void run() {
                                     Log.v(TAG, "post | url=" + url + " | success | statusCode=" + code);
                                     try {
+                                        if (code >= 500 && code < 600) {
+                                            responseHandler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
+                                            return;
+                                        }
                                         if (response == null) throw new NullPointerException("data cannot be null");
                                         if (response.contains("Закончился интервал неактивности") || response.contains("Доступ запрещен")) {
                                             Log.v(TAG, "p | success | auth required");

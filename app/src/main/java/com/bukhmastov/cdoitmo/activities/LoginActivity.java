@@ -329,6 +329,10 @@ public class LoginActivity extends AppCompatActivity {
                                         case DeIfmoClient.FAILED_OFFLINE:
                                             route(SIGNAL_GO_OFFLINE);
                                             break;
+                                        case DeIfmoClient.FAILED_SERVER_ERROR:
+                                            Static.snackBar(activity, activity.getString(R.string.auth_failed) + ". " + DeIfmoClient.getFailureMessage(activity, statusCode));
+                                            route(SIGNAL_CHANGE_ACCOUNT);
+                                            break;
                                         case DeIfmoClient.FAILED_TRY_AGAIN:
                                         case DeIfmoClient.FAILED_AUTH_TRY_AGAIN:
                                             Static.snackBar(activity, activity.getString(R.string.auth_failed));
