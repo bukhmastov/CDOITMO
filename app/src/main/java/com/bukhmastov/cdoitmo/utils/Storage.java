@@ -129,7 +129,7 @@ public class Storage {
                 FileWriter fileWriter = new FileWriter(file);
                 fileWriter.write(data);
                 fileWriter.close();
-                Storage.proxy.push(file.getAbsolutePath(), data, 1);
+                Storage.cache.push(file.getAbsolutePath(), data, 1);
                 return true;
             } catch (Exception e) {
                 return false;
@@ -150,15 +150,15 @@ public class Storage {
                 if (!file.exists() || file.isDirectory()) {
                     throw new Exception("File does not exist: " + file.getPath());
                 }
-                Storage.proxy.access(path);
-                String proxy = Storage.proxy.get(path);
+                Storage.cache.access(path);
+                String proxy = Storage.cache.get(path);
                 if (proxy != null) return proxy;
                 FileReader fileReader = new FileReader(file);
                 StringBuilder data = new StringBuilder();
                 int c;
                 while ((c = fileReader.read()) != -1) data.append((char) c);
                 fileReader.close();
-                Storage.proxy.push(path, data.toString(), 1);
+                Storage.cache.push(path, data.toString(), 1);
                 return data.toString();
             } catch (Exception e) {
                 return def;
@@ -173,7 +173,7 @@ public class Storage {
             try {
                 File file = new File(getFileLocation(context, storage, general, path, true));
                 path = file.getAbsolutePath();
-                Storage.proxy.delete(path);
+                Storage.cache.delete(path);
                 return file.exists() && deleteRecursive(file);
             } catch (Exception e) {
                 return false;
@@ -219,7 +219,7 @@ public class Storage {
             }
             try {
                 File file = new File(getFileLocation(context, storage, general, path, true));
-                Storage.proxy.access(file.getAbsolutePath());
+                Storage.cache.access(file.getAbsolutePath());
                 return file.exists();
             } catch (Exception e) {
                 return false;
@@ -273,7 +273,7 @@ public class Storage {
             if (!fileOrDirectory.delete()) {
                 result = false;
             }
-            Storage.proxy.delete(fileOrDirectory.getAbsolutePath());
+            Storage.cache.delete(fileOrDirectory.getAbsolutePath());
             return result;
         }
         private static String getFileLocation(Context context, STORAGE storage, boolean general, String path, boolean isFile) throws Exception {
@@ -371,7 +371,7 @@ public class Storage {
         }
     }
 
-    private static class proxy {
+    public static class cache {
         private static long requests = 0;
         private static final int maxStack = 8;
         private static final HashMap<String, ElementMeta> stackOfMeta = new HashMap<>();
@@ -394,7 +394,7 @@ public class Storage {
                 this.data = data;
             }
         }
-        private static void push(String path, String data, double priority){
+        private static void push(String path, String data, double priority) {
             if (stackOfMeta.containsKey(path)) {
                 stackOfMeta.get(path).priority = priority;
             } else {
@@ -407,24 +407,24 @@ public class Storage {
             }
             check();
         }
-        private static void access(String path){
+        private static void access(String path) {
             if (stackOfMeta.containsKey(path)) {
                 requests++;
                 stackOfMeta.get(path).requests++;
             }
         }
-        private static String get(String path){
+        private static String get(String path) {
             if (stackOfData.containsKey(path)) {
                 return stackOfData.get(path).data;
             } else {
                 return null;
             }
         }
-        private static void delete(String path){
+        private static void delete(String path) {
             if (stackOfMeta.containsKey(path)) stackOfMeta.remove(path);
             if (stackOfData.containsKey(path)) stackOfData.remove(path);
         }
-        private static void check(){
+        private static void check() {
             if (requests + 10 > Long.MAX_VALUE) reset();
             if (stackOfData.size() > maxStack) {
                 for (Map.Entry<String, ElementMeta> entry : stackOfMeta.entrySet()) {
@@ -443,11 +443,10 @@ public class Storage {
                 }
             }
         }
-        static void reset(){
+        public static void reset() {
             requests = 0;
             stackOfMeta.clear();
             stackOfData.clear();
         }
     }
-
 }

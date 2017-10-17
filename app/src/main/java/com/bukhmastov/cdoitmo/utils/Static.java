@@ -286,6 +286,7 @@ public class Static {
                 new ProtocolTracker(context).stop();
             }
         });
+        Storage.cache.reset();
         Storage.file.general.delete(context, "users#current_login");
     }
     public static void lockOrientation(Activity activity, boolean lock) {
