@@ -16,11 +16,9 @@
         android:entryValues="@array/pref_general_default_fragment_values"
         android:defaultValue="e_journal" />
 
-    <ListPreference
+    <Preference
         android:key="pref_theme"
         android:title="@string/theme"
-        android:entries="@array/pref_theme_titles"
-        android:entryValues="@array/pref_theme_values"
         android:defaultValue="light" />
 
     <SwitchPreference

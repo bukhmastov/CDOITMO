@@ -1076,7 +1076,7 @@ public class Static {
         return app_theme;
     }
     public static void updateAppTheme(final Context context) {
-        app_theme = Storage.pref.get(context, "pref_theme", "light");
+        app_theme = ThemeUtil.getTheme(context);
     }
     public static void applyActivityTheme(final Activity activity) {
         if (activity != null) {

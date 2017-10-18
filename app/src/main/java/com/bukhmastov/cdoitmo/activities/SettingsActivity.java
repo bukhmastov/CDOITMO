@@ -41,6 +41,7 @@ import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.ProtocolTracker;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
+import com.bukhmastov.cdoitmo.utils.ThemeUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -161,10 +162,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                     }
                 });
                 break;
-            case "pref_theme":
-                Static.updateAppTheme(this);
-                Static.reLaunch(this);
-                break;
             case "pref_protocol_changes_track":
                 if (Storage.pref.get(this, "pref_protocol_changes_track", true)) {
                     Static.protocolChangesTrackSetup(this, 0);
@@ -245,8 +242,45 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
             bindPreferenceSummaryToValue(findPreference("pref_default_fragment"));
-            bindPreferenceSummaryToValue(findPreference("pref_theme"));
             bindPreferenceSummaryToValue(findPreference("pref_group_force_override"));
+            final Preference pref_theme = findPreference("pref_theme");
+            if (pref_theme != null) {
+                final String theme = Storage.pref.get(activity, "pref_theme", "light");
+                pref_theme.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        Log.v(TAG, "pref_theme clicked");
+                        if (activity != null) {
+                            new ThemeUtil(activity, theme, new ThemeUtil.Callback() {
+                                @Override
+                                public void onDone(final String theme, final String desc) {
+                                    Static.T.runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            pref_theme.setSummary(desc);
+                                        }
+                                    });
+                                    Static.T.runThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            Storage.pref.put(activity, "pref_theme", theme);
+                                            Static.snackBar(activity, activity.getString(R.string.restart_required), activity.getString(R.string.restart), new View.OnClickListener() {
+                                                @Override
+                                                public void onClick(View view) {
+                                                    Static.updateAppTheme(activity);
+                                                    Static.reLaunch(activity);
+                                                }
+                                            });
+                                        }
+                                    });
+                                }
+                            }).show();
+                        }
+                        return false;
+                    }
+                });
+                pref_theme.setSummary(ThemeUtil.getThemeDesc(activity, theme));
+            }
             Preference pref_reset_application = findPreference("pref_reset_application");
             if (pref_reset_application != null) {
                 pref_reset_application.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
@@ -255,7 +289,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                         Log.v(TAG, "pref_reset_application clicked");
                         if (activity != null) {
                             new AlertDialog.Builder(activity)
-                                .setTitle(getString(R.string.pref_reset_application_summary))
+                                .setTitle(R.string.pref_reset_application_summary)
                                 .setMessage(R.string.pref_reset_application_warning)
                                 .setIcon(R.drawable.ic_warning)
                                 .setPositiveButton(R.string.proceed, new DialogInterface.OnClickListener() {

@@ -444,5 +444,9 @@
     <string name="failed_to_share_file">Не удалось поделиться файлом</string>
     <string name="server_error">Серверу не удалось выполнить запрос</string>
     <string name="server_maintenance">На сервере проводятся технические работы</string>
+    <string name="pref_theme_auto">Автоматическое оформление</string>
+    <string name="enable_auto_theme">Автоматическая смена тем</string>
+    <string name="restart_required">Необходимо перезапустить приложение для принятия изменений</string>
+    <string name="restart">Перезапустить</string>
 
 </resources>

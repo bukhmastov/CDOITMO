@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <RadioGroup
+            android:id="@+id/theme_container_static"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/item_padding"
+            android:paddingEnd="@dimen/item_padding"
+            android:paddingTop="@dimen/item_padding"
+            android:paddingBottom="0dp"
+            android:visibility="visible" />
+
+        <RelativeLayout
+            android:id="@+id/switcher_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/item_padding"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_toStartOf="@+id/switcher"
+                android:layout_centerVertical="true"
+                android:gravity="center_vertical"
+                android:paddingStart="@dimen/item_padding_half"
+                android:paddingEnd="0dp"
+                android:minHeight="@dimen/widget_schedule_lessons_configure_min_height"
+                android:text="@string/enable_auto_theme"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="@dimen/font_size_15" />
+
+            <Switch
+                android:id="@+id/switcher"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_alignParentEnd="true"
+                android:minHeight="@dimen/widget_schedule_lessons_configure_min_height" />
+
+        </RelativeLayout>
+
+        <LinearLayout
+            android:id="@+id/theme_container_auto"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="visible">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/item_padding_half">
+
+                <TextView
+                    android:id="@+id/t1_spinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="@dimen/item_padding_half"
+                    android:clickable="true"
+                    android:text="@string/lorem_ipsum"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="@dimen/font_size_15"
+                    android:textAlignment="center"
+                    android:textAllCaps="true"
+                    android:visibility="visible" />
+
+            </FrameLayout>
+
+            <RelativeLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/item_padding_half">
+
+                <TextView
+                    android:id="@+id/t1_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_toStartOf="@+id/theme_changer_icon"
+                    android:padding="@dimen/item_padding_half"
+                    android:clickable="true"
+                    android:text="@string/lorem_number"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="@dimen/font_size_18"
+                    android:textAlignment="center"
+                    android:visibility="visible" />
+
+                <ImageView
+                    android:id="@+id/theme_changer_icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    app:srcCompat="@drawable/ic_rotate_rounded"
+                    android:tint="?android:attr/textColorSecondary" />
+
+                <TextView
+                    android:id="@+id/t2_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_toEndOf="@+id/theme_changer_icon"
+                    android:padding="@dimen/item_padding_half"
+                    android:clickable="true"
+                    android:text="@string/lorem_number"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="@dimen/font_size_18"
+                    android:textAlignment="center"
+                    android:visibility="visible" />
+
+            </RelativeLayout>
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/item_padding_half">
+
+                <TextView
+                    android:id="@+id/t2_spinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="@dimen/item_padding_half"
+                    android:clickable="true"
+                    android:text="@string/lorem_ipsum"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="@dimen/font_size_15"
+                    android:textAlignment="center"
+                    android:textAllCaps="true"
+                    android:visibility="visible" />
+
+            </FrameLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>
