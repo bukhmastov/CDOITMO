@@ -150,11 +150,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
     @Override
     public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, String key) {
         Log.v(TAG, "onSharedPreferenceChanged | key="+key);
+        final Context context = this;
         switch (key) {
             case "pref_use_notifications":
             case "pref_notify_frequency":
             case "pref_notify_network_unmetered":
-                final Context context = this;
                 Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
                     @Override
                     public void run() {
@@ -190,6 +190,14 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
                 if (m.find()) {
                     Storage.pref.put(this, "pref_group_force_override", m.group(1).toUpperCase() + m.group(2).toLowerCase());
                 }
+                break;
+            case "pref_lang":
+                Static.snackBar(this, context.getString(R.string.restart_required), context.getString(R.string.restart), new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Static.reLaunch(context);
+                    }
+                });
                 break;
         }
     }
