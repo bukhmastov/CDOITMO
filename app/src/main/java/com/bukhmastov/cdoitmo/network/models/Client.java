@@ -62,6 +62,7 @@ public abstract class Client {
     public static final int FAILED_OFFLINE = 0;
     public static final int FAILED_TRY_AGAIN = 1;
     public static final int FAILED_SERVER_ERROR = 2;
+    public static final int FAILED_INTERRUPTED = 3;
 
     protected static void _g(final String url, final okhttp3.Headers headers, final Map<String, String> query, final RawHandler rawHandler) {
         Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
@@ -312,6 +313,9 @@ public abstract class Client {
             Static.error(e);
             return new JSONArray();
         }
+    }
+    protected static boolean isInterrupted(final Throwable throwable) {
+        return throwable != null && "socket closed".equals(throwable.getMessage().toLowerCase());
     }
 
     private static final class Secured {

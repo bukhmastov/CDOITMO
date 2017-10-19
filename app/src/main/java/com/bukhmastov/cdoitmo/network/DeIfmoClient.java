@@ -204,7 +204,7 @@ public class DeIfmoClient extends DeIfmo {
                                 @Override
                                 public void run() {
                                     Log.v(TAG, "authorize | failure"  + (throwable != null ? " | throwable=" + throwable.getMessage() : ""));
-                                    responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_AUTH_TRY_AGAIN);
+                                    responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), isInterrupted(throwable) ? FAILED_INTERRUPTED : FAILED_AUTH_TRY_AGAIN);
                                 }
                             });
                         }
@@ -307,7 +307,7 @@ public class DeIfmoClient extends DeIfmo {
                                 @Override
                                 public void run() {
                                     Log.v(TAG, "get | url=" + url + " | failure" + (throwable != null ? " | throwable=" + throwable.getMessage() : ""));
-                                    responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_TRY_AGAIN);
+                                    responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), isInterrupted(throwable) ? FAILED_INTERRUPTED : FAILED_TRY_AGAIN);
                                 }
                             });
                         }
@@ -403,7 +403,7 @@ public class DeIfmoClient extends DeIfmo {
                                 @Override
                                 public void run() {
                                     Log.v(TAG, "post | url=" + url + " | failure" + (throwable != null ? " | throwable=" + throwable.getMessage() : ""));
-                                    responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_TRY_AGAIN);
+                                    responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), isInterrupted(throwable) ? FAILED_INTERRUPTED : FAILED_TRY_AGAIN);
                                 }
                             });
                         }

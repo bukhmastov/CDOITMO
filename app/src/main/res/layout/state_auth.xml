@@ -23,6 +23,7 @@
         android:textSize="@dimen/font_size_14" />
 
     <FrameLayout
+        android:id="@+id/interrupt_auth_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"

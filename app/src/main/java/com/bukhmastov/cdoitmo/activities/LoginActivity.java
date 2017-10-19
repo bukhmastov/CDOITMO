@@ -367,19 +367,26 @@ public class LoginActivity extends AppCompatActivity {
                                 public void run() {
                                     Log.v(TAG, "auth | check | progress " + state);
                                     draw(R.layout.state_auth);
-                                    View interrupt_auth = findViewById(R.id.interrupt_auth);
-                                    if (interrupt_auth != null) {
-                                        interrupt_auth.setOnClickListener(new View.OnClickListener() {
-                                            @Override
-                                            public void onClick(View v) {
-                                                Log.v(TAG, "auth | auth interrupted, going offline");
-                                                if (requestHandle != null) {
-                                                    requestHandle.cancel();
+                                    if (newUser) {
+                                        View interrupt_auth_container = findViewById(R.id.interrupt_auth_container);
+                                        if (interrupt_auth_container != null) {
+                                            interrupt_auth_container.setVisibility(View.GONE);
+                                        }
+                                    } else {
+                                        View interrupt_auth = findViewById(R.id.interrupt_auth);
+                                        if (interrupt_auth != null) {
+                                            interrupt_auth.setOnClickListener(new View.OnClickListener() {
+                                                @Override
+                                                public void onClick(View v) {
+                                                    Log.v(TAG, "auth | auth interrupted, going offline");
+                                                    if (requestHandle != null) {
+                                                        requestHandle.cancel();
+                                                    }
+                                                    Storage.file.general.put(activity, "users#current_login", login);
+                                                    route(SIGNAL_GO_OFFLINE);
                                                 }
-                                                Storage.file.general.put(activity, "users#current_login", login);
-                                                route(SIGNAL_GO_OFFLINE);
-                                            }
-                                        });
+                                            });
+                                        }
                                     }
                                     TextView loading_message = findViewById(R.id.loading_message);
                                     if (loading_message != null) {
@@ -450,9 +457,9 @@ public class LoginActivity extends AppCompatActivity {
                             public void run() {
                                 Log.v(TAG, "logout | progress " + state);
                                 draw(R.layout.state_auth);
-                                View interrupt_auth = findViewById(R.id.interrupt_auth);
-                                if (interrupt_auth != null) {
-                                    Static.removeView(interrupt_auth);
+                                View interrupt_auth_container = findViewById(R.id.interrupt_auth_container);
+                                if (interrupt_auth_container != null) {
+                                    interrupt_auth_container.setVisibility(View.GONE);
                                 }
                                 TextView loading_message = findViewById(R.id.loading_message);
                                 if (loading_message != null) {
