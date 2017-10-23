@@ -129,7 +129,10 @@ public abstract class ConnectedActivity extends AppCompatActivity {
                 }
             }
             if (stack.size() > 0) {
-                openFragment(stack.get(stack.size() - 1));
+                final int index = stack.size() - 1;
+                final StackElement stackElement = stack.get(index);
+                stack.remove(index);
+                openFragment(stackElement);
                 return false;
             } else {
                 return true;
