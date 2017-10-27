@@ -99,21 +99,6 @@
         </activity>
 
         <activity
-            android:name=".activities.SettingsActivity"
-            android:label="@string/settings"
-            android:parentActivityName=".activities.MainActivity"
-            android:theme="@style/AppTheme.Settings" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.bukhmastov.cdoitmo.activities.MainActivity" />
-        </activity>
-        <activity
-            android:name=".activities.AboutActivity"
-            android:label="@string/about" />
-        <activity
-            android:name=".activities.LogActivity"
-            android:label="@string/log" />
-        <activity
             android:name=".activities.PikaActivity"
             android:theme="@style/AppTheme.Transparent" />
         <activity android:name=".activities.ScheduleLessonsSearchActivity" />

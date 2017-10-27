@@ -37,7 +37,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
             this.type = type;
         }
     }
-    protected enum TYPE {root, stackable}
+    public enum TYPE {root, stackable}
 
     public boolean openActivityOrFragment(Class connectedFragmentClass, Bundle extras) {
         return openActivityOrFragment(TYPE.stackable, connectedFragmentClass, extras);

@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -28,6 +27,7 @@ import com.bukhmastov.cdoitmo.fragments.Room101Fragment;
 import com.bukhmastov.cdoitmo.fragments.ScheduleExamsFragment;
 import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.fragments.UniversityFragment;
+import com.bukhmastov.cdoitmo.fragments.settings.SettingsFragment;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.ProtocolTracker;
 import com.bukhmastov.cdoitmo.utils.Static;
@@ -57,16 +57,13 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
             } catch (Exception e) {
                 Static.error(e);
             }
+            // apply compatibility changes
+            Wipe.check(activity);
             // set default preferences
-            PreferenceManager.setDefaultValues(activity, R.xml.pref_general, false);
-            PreferenceManager.setDefaultValues(activity, R.xml.pref_cache, false);
-            PreferenceManager.setDefaultValues(activity, R.xml.pref_notifications, false);
-            PreferenceManager.setDefaultValues(activity, R.xml.pref_additional, false);
+            SettingsFragment.applyDefaultValues(activity);
             // enable/disable firebase
             FirebaseCrashProvider.setEnabled(activity);
             FirebaseAnalyticsProvider.setEnabled(activity);
-            // apply compatibility changes
-            Wipe.check(activity);
             // init static variables
             Static.init(activity);
             // set auto_logout value
@@ -316,21 +313,32 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                         break;
                     }
                     case R.id.nav_homescreen:
+                    case R.id.nav_settings:
+                        final Class connectedFragmentClass;
+                        switch (section) {
+                            default:
+                            case R.id.nav_homescreen: connectedFragmentClass = HomeScreenInteractionFragment.class; break;
+                            case R.id.nav_settings: connectedFragmentClass = SettingsFragment.class; break;
+                        }
                         Static.T.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                if (openActivityOrFragment(TYPE.stackable, HomeScreenInteractionFragment.class, null)) {
+                                if (openActivityOrFragment(TYPE.root, connectedFragmentClass, null)) {
                                     if (Static.tablet) {
-                                        Menu menu = ((NavigationView) findViewById(R.id.nav_view)).getMenu();
-                                        for (int i = 0; i < menu.size(); i++) {
-                                            menu.getItem(i).setChecked(false);
-                                        }
+                                        ((NavigationView) findViewById(R.id.nav_view)).setCheckedItem(section);
+                                        selectedSection = section;
                                     }
+                                } else {
+                                    Static.snackBar(activity, activity.getString(R.string.failed_to_open_fragment), activity.getString(R.string.redo), new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View view) {
+                                            selectSection(section);
+                                        }
+                                    });
                                 }
                             }
                         });
                         break;
-                    case R.id.nav_settings: startActivity(new Intent(activity, SettingsActivity.class)); break;
                     case R.id.nav_enable_offline_mode:
                     case R.id.nav_disable_offline_mode:
                     case R.id.nav_change_account:

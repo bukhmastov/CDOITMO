@@ -214,7 +214,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements Schedu
                             draw(R.layout.schedule_empty_query);
                             TextView seq_text = activity.findViewById(R.id.seq_text);
                             if (seq_text != null) {
-                                seq_text.setText(activity.getString(R.string.settings) + " > " + activity.getString(R.string.additional_prefs) + " > " + activity.getString(R.string.schedule_lessons) + " > " + activity.getString(R.string.default_schedule));
+                                seq_text.setText(activity.getString(R.string.settings) + " > " + activity.getString(R.string.extended_prefs) + " > " + activity.getString(R.string.schedule_lessons) + " > " + activity.getString(R.string.default_schedule));
                             }
                             break;
                     }

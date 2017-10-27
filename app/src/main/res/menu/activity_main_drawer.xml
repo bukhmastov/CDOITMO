@@ -32,7 +32,7 @@
             android:title="@string/university"/>
     </group>
 
-    <group android:id="@+id/activity_main_drawer_group2" android:checkableBehavior="none">
+    <group android:id="@+id/activity_main_drawer_group2" android:checkableBehavior="single">
         <item
             android:id="@+id/nav_homescreen"
             android:icon="@drawable/ic_shortcut"

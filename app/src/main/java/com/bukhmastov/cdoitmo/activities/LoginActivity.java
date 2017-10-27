@@ -1,12 +1,10 @@
 package com.bukhmastov.cdoitmo.activities;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -21,6 +19,7 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
+import com.bukhmastov.cdoitmo.fragments.AboutFragment;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.interfaces.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.models.Client;
@@ -35,10 +34,10 @@ import org.json.JSONObject;
 
 import java.util.Objects;
 
-public class LoginActivity extends AppCompatActivity {
+public class LoginActivity extends ConnectedActivity {
 
     private static final String TAG = "LoginActivity";
-    private final Activity activity = this;
+    private final ConnectedActivity activity = this;
     public static final int SIGNAL_LOGIN = 0;
     public static final int SIGNAL_RECONNECT = 1;
     public static final int SIGNAL_GO_OFFLINE = 2;
@@ -94,7 +93,7 @@ public class LoginActivity extends AppCompatActivity {
             action_about.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
                 @Override
                 public boolean onMenuItemClick(MenuItem item) {
-                    startActivity(new Intent(getBaseContext(), AboutActivity.class));
+                    activity.openActivity(AboutFragment.class, null);
                     return false;
                 }
             });
@@ -105,6 +104,11 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void attachBaseContext(Context context) {
         super.attachBaseContext(CtxWrapper.wrap(context));
+    }
+
+    @Override
+    protected int getRootViewId() {
+        return R.id.login_content;
     }
 
     private void route(final int signal) {

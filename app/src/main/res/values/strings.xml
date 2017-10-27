@@ -44,6 +44,7 @@
     <string name="your_rating">Ваш рейтинг</string>
     <string name="settings">Настройки</string>
     <string name="general">Основные</string>
+    <string name="general_settings">Основные настройки</string>
     <string name="notifications">Уведомления</string>
     <string name="pref_default_fragment">Вкладка по умолчанию</string>
     <string name="pref_use_cache">Кэшировать данные на диске</string>
@@ -195,7 +196,7 @@
     <string name="shortcut_room101_short">Подать заявку</string>
     <string name="shortcut_room101_long">Подать заявку</string>
     <string name="cache_and_refresh">Кэширование и обновление</string>
-    <string name="additional_prefs">Дополнительные настройки</string>
+    <string name="extended_prefs">Расширенные настройки</string>
     <string name="schedule_teacher_set">Установлено расписание преподавателя</string>
     <string name="schedule_group_set">Установлено расписание группы</string>
     <string name="schedule_room_set">Установлено расписание аудитории</string>
@@ -448,5 +449,9 @@
     <string name="enable_auto_theme">Автоматическая смена тем</string>
     <string name="restart_required">Необходимо перезапустить приложение для принятия изменений</string>
     <string name="restart">Перезапустить</string>
+    <string name="linked_accounts">Связанные аккаунты</string>
+    <string name="notification_sound">Звук уведомления</string>
+    <string name="pref_use_cache_message">Вы собираетесь отключить кэширование данных, в результате чего все закэшированные на данный момент данные будут немедленно удалены</string>
+    <string name="personal_schedule">Персональное расписание</string>
 
 </resources>

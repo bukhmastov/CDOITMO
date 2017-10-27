@@ -41,6 +41,7 @@
     <string name="your_rating">Your rating</string>
     <string name="settings">Settings</string>
     <string name="general">General</string>
+    <string name="general_settings">General settings</string>
     <string name="notifications">Notifications</string>
     <string name="pref_default_fragment">Default tab</string>
     <string name="pref_use_cache">Cache data on disk</string>
@@ -192,7 +193,7 @@
     <string name="shortcut_room101_short">Submit request</string>
     <string name="shortcut_room101_long">Submit request</string>
     <string name="cache_and_refresh">Caching and updating</string>
-    <string name="additional_prefs">Additional settings</string>
+    <string name="extended_prefs">Advanced settings</string>
     <string name="schedule_teacher_set">Teacher\'s schedule set</string>
     <string name="schedule_group_set">Group schedule set</string>
     <string name="schedule_room_set">Audience schedule set</string>
@@ -441,6 +442,9 @@
     <string name="enable_auto_theme">Automatic theme change</string>
     <string name="restart_required">You must restart the application to accept the changes</string>
     <string name="restart">Restart</string>
-
+    <string name="linked_accounts">Linked accounts</string>
+    <string name="notification_sound">Notification sound</string>
+    <string name="pref_use_cache_message">You are going to disable caching, causing all cached data at this moment will be immediately deleted</string>
+    <string name="personal_schedule">Personal schedule</string>
 
 </resources>

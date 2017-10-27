@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.preference.PreferenceActivity;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.PopupMenu;
 import android.view.InflateException;
@@ -18,12 +17,13 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.activities.ConnectedActivity;
 import com.bukhmastov.cdoitmo.activities.MainActivity;
 import com.bukhmastov.cdoitmo.activities.ScheduleExamsSearchActivity;
-import com.bukhmastov.cdoitmo.activities.SettingsActivity;
 import com.bukhmastov.cdoitmo.adapters.TeacherPickerListView;
 import com.bukhmastov.cdoitmo.builders.ScheduleExamsBuilder;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
+import com.bukhmastov.cdoitmo.fragments.settings.SettingsScheduleExamsFragment;
 import com.bukhmastov.cdoitmo.network.IfmoClient;
 import com.bukhmastov.cdoitmo.network.models.Client;
 import com.bukhmastov.cdoitmo.objects.ScheduleExams;
@@ -214,7 +214,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
                             draw(R.layout.schedule_empty_query);
                             TextView seq_text = activity.findViewById(R.id.seq_text);
                             if (seq_text != null) {
-                                seq_text.setText(activity.getString(R.string.settings) + " > " + activity.getString(R.string.additional_prefs) + " > " + activity.getString(R.string.schedule_exams) + " > " + activity.getString(R.string.default_schedule));
+                                seq_text.setText(activity.getString(R.string.settings) + " > " + activity.getString(R.string.extended_prefs) + " > " + activity.getString(R.string.schedule_exams) + " > " + activity.getString(R.string.default_schedule));
                             }
                             break;
                     }
@@ -437,9 +437,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
                     break;
                 }
                 case R.id.open_settings: {
-                    Intent intent = new Intent(activity, SettingsActivity.class);
-                    intent.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT, SettingsActivity.AdditionalPreferenceFragment.class.getName());
-                    startActivity(intent);
+                    activity.openActivityOrFragment(ConnectedActivity.TYPE.stackable, SettingsScheduleExamsFragment.class, null);
                     break;
                 }
             }

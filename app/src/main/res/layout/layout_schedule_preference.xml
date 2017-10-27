@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <RadioGroup
+            android:id="@+id/lsp_radio_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/item_padding">
+
+            <RadioButton
+                android:id="@+id/lsp_schedule_personal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/personal_schedule"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="@dimen/font_size_16"
+                android:paddingStart="@dimen/item_padding_quarter"
+                android:paddingEnd="@dimen/item_padding_quarter"
+                android:paddingTop="@dimen/item_padding_eight"
+                android:paddingBottom="@dimen/item_padding_eight"/>
+
+            <RadioButton
+                android:id="@+id/lsp_schedule_group"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/current_group"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="@dimen/font_size_16"
+                android:paddingStart="@dimen/item_padding_quarter"
+                android:paddingEnd="@dimen/item_padding_quarter"
+                android:paddingTop="@dimen/item_padding_eight"
+                android:paddingBottom="@dimen/item_padding_eight"/>
+
+            <RadioButton
+                android:id="@+id/lsp_schedule_defined"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/choose_schedule"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="@dimen/font_size_16"
+                android:paddingStart="@dimen/item_padding_quarter"
+                android:paddingEnd="@dimen/item_padding_quarter"
+                android:paddingTop="@dimen/item_padding_eight"
+                android:paddingBottom="@dimen/item_padding_eight"/>
+
+        </RadioGroup>
+
+        <LinearLayout
+            android:id="@+id/lsp_schedule_chooser"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="0dp"
+            android:paddingBottom="@dimen/item_padding"
+            android:paddingStart="@dimen/item_padding"
+            android:paddingEnd="@dimen/item_padding">
+
+            <AutoCompleteTextView
+                android:id="@+id/lsp_search"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="100"
+                android:hint="@string/schedule_lessons_search_view_hint"
+                android:inputType="text|textCapSentences"
+                android:maxLines="1"
+                android:selectAllOnFocus="true"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="@dimen/font_size_14" />
+
+            <FrameLayout
+                android:id="@+id/lsp_search_action"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|end"
+                android:layout_weight="1"
+                android:padding="@dimen/item_padding_quarter"
+                android:visibility="gone"
+                android:background="?android:attr/selectableItemBackgroundBorderless">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:srcCompat="@drawable/ic_search"
+                    android:tint="?android:attr/textColorPrimary"/>
+
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/lsp_search_loading"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|end"
+                android:layout_weight="1"
+                android:padding="@dimen/item_padding_quarter"
+                android:visibility="gone">
+
+                <ProgressBar
+                    style="?android:attr/progressBarStyleSmall"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:indeterminate="true" />
+
+            </FrameLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

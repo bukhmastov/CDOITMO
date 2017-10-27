@@ -2,10 +2,8 @@ package com.bukhmastov.cdoitmo.fragments;
 
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceActivity;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -22,8 +20,8 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.ConnectedActivity;
-import com.bukhmastov.cdoitmo.activities.SettingsActivity;
 import com.bukhmastov.cdoitmo.builders.ScheduleLessonsBuilder;
+import com.bukhmastov.cdoitmo.fragments.settings.SettingsScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
@@ -456,9 +454,7 @@ public class ScheduleLessonsTabFragment extends Fragment {
                     break;
                 }
                 case R.id.open_settings: {
-                    Intent intent = new Intent(activity, SettingsActivity.class);
-                    intent.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT, SettingsActivity.AdditionalPreferenceFragment.class.getName());
-                    startActivity(intent);
+                    activity.openActivityOrFragment(ConnectedActivity.TYPE.stackable, SettingsScheduleLessonsFragment.class, null);
                     break;
                 }
             }

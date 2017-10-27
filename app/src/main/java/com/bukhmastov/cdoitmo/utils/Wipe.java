@@ -16,11 +16,13 @@ import java.util.ArrayList;
 public class Wipe {
 
     private static final String TAG = "Wipe";
+    private static boolean first_launch = false;
 
     public static void check(Context context) {
         try {
             int versionCode = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode;
             int lastVersionCode = Storage.pref.get(context, "last_version", 0);
+            first_launch = lastVersionCode == 0;
             if (lastVersionCode < versionCode) {
                 for (int i = lastVersionCode + 1; i <= versionCode; i++) {
                     apply(context, i);
@@ -235,6 +237,12 @@ public class Wipe {
                     }
                 } catch (Exception ignore) {
                     // ignore
+                }
+                break;
+            }
+            case 97: {
+                if (!first_launch) {
+                    Storage.pref.put(context, "pref_default_values_applied", true);
                 }
                 break;
             }

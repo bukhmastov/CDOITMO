@@ -1,62 +1,70 @@
-package com.bukhmastov.cdoitmo.activities;
+package com.bukhmastov.cdoitmo.fragments;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v7.app.ActionBar;
-import android.support.v7.widget.Toolbar;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.support.annotation.Nullable;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.activities.ConnectedActivity;
+import com.bukhmastov.cdoitmo.activities.PikaActivity;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 
 import java.util.Random;
 
-public class AboutActivity extends ConnectedActivity {
+public class AboutFragment extends ConnectedFragment {
 
-    private static final String TAG = "AboutActivity";
+    private static final String TAG = "AboutFragment";
     private final Random random = new Random();
     private int counterToPika = 0;
     private final int tapsToPika = 5;
-    private Activity activity = this;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        Static.applyActivityTheme(this);
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.i(TAG, "Activity created");
-        FirebaseAnalyticsProvider.logCurrentScreen(this);
-        setContentView(R.layout.activity_about);
-        Toolbar toolbar = findViewById(R.id.toolbar_about);
-        if (toolbar != null) {
-            Static.applyToolbarTheme(activity, toolbar);
-            setSupportActionBar(toolbar);
-        }
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setHomeButtonEnabled(true);
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
+        Log.v(TAG, "Fragment created");
+        FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
+    }
 
-        TextView app_version = findViewById(R.id.app_version);
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.v(TAG, "Fragment destroyed");
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.v(TAG, "resumed");
+        FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_about, container, false);
+    }
+
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        TextView app_version = view.findViewById(R.id.app_version);
         if (app_version != null) {
             app_version.setText(activity.getString(R.string.version) + " " + Static.versionName + " (" + activity.getString(R.string.build) + " " + Static.versionCode + ")");
         }
 
-        View block_pika = findViewById(R.id.block_pika);
+        View block_pika = view.findViewById(R.id.block_pika);
         if (block_pika != null) {
             block_pika.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     if (counterToPika >= tapsToPika) {
                         if (random.nextInt(200) % 10 == 0) {
-                            startActivity(new Intent(getBaseContext(), PikaActivity.class));
+                            startActivity(new Intent(activity, PikaActivity.class));
                         }
                     } else {
                         counterToPika++;
@@ -65,7 +73,17 @@ public class AboutActivity extends ConnectedActivity {
             });
         }
 
-        View block_send_mail = findViewById(R.id.block_send_mail);
+        View open_log = view.findViewById(R.id.open_log);
+        if (open_log != null) {
+            open_log.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    activity.openFragment(ConnectedActivity.TYPE.stackable, LogFragment.class, null);
+                }
+            });
+        }
+
+        View block_send_mail = view.findViewById(R.id.block_send_mail);
         if (block_send_mail != null) {
             block_send_mail.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -83,7 +101,7 @@ public class AboutActivity extends ConnectedActivity {
             });
         }
 
-        View block_send_vk = findViewById(R.id.block_send_vk);
+        View block_send_vk = view.findViewById(R.id.block_send_vk);
         if (block_send_vk != null) {
             block_send_vk.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -98,7 +116,7 @@ public class AboutActivity extends ConnectedActivity {
             });
         }
 
-        View block_rate = findViewById(R.id.block_rate);
+        View block_rate = view.findViewById(R.id.block_rate);
         if (block_rate != null) {
             block_rate.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -108,13 +126,17 @@ public class AboutActivity extends ConnectedActivity {
                     try {
                         startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.bukhmastov.cdoitmo")));
                     } catch (Exception e) {
-                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        try {
+                            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.bukhmastov.cdoitmo")));
+                        } catch (Exception e2) {
+                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        }
                     }
                 }
             });
         }
 
-        View block_github = findViewById(R.id.block_github);
+        View block_github = view.findViewById(R.id.block_github);
         if (block_github != null) {
             block_github.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -130,7 +152,7 @@ public class AboutActivity extends ConnectedActivity {
             });
         }
 
-        View block_donate = findViewById(R.id.block_donate);
+        View block_donate = view.findViewById(R.id.block_donate);
         if (block_donate != null) {
             block_donate.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -145,33 +167,5 @@ public class AboutActivity extends ConnectedActivity {
                 }
             });
         }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        Log.i(TAG, "Activity destroyed");
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.toolbar_about, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home: finish(); return true;
-            case R.id.action_log:
-                startActivity(new Intent(this, LogActivity.class));
-                return true;
-            default: return super.onOptionsItemSelected(item);
-        }
-    }
-
-    @Override
-    protected int getRootViewId() {
-        return R.id.about_content;
     }
 }
