@@ -38,6 +38,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.activities.LoginActivity;
 import com.bukhmastov.cdoitmo.activities.MainActivity;
 import com.bukhmastov.cdoitmo.converters.ProtocolConverter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
@@ -76,6 +77,9 @@ public class Static {
     private static final String USER_AGENT_TEMPLATE = "CDOITMO/{versionName}/{versionCode} Java/Android/{sdkInt}";
     private static String USER_AGENT = null;
     private static String app_theme = null;
+    public interface SimpleCallback {
+        void onDone();
+    }
 
     public static class T {
         private static final String TAG = "Static.T";
@@ -265,6 +269,19 @@ public class Static {
             Storage.file.general.delete(context, "user#week");
         }
         return -1;
+    }
+    public static void logoutConfirmation(final Context context, final SimpleCallback callback) {
+        new AlertDialog.Builder(context)
+                .setTitle(R.string.logout_confirmation)
+                .setMessage(R.string.logout_confirmation_message)
+                .setPositiveButton(R.string.do_logout, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        callback.onDone();
+                    }
+                })
+                .setNegativeButton(R.string.do_cancel, null)
+                .create().show();
     }
     public static void logout(final Context context) {
         Log.i(TAG, "logout");

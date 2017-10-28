@@ -280,7 +280,12 @@ public class LoginActivity extends ConnectedActivity {
                                     @Override
                                     public void onClick(View v) {
                                         Log.v(TAG, "user_tile logout clicked");
-                                        logout(login);
+                                        Static.logoutConfirmation(activity, new Static.SimpleCallback() {
+                                            @Override
+                                            public void onDone() {
+                                                logout(login);
+                                            }
+                                        });
                                     }
                                 });
                                 layout_login_user_tile.findViewById(R.id.offline).setOnClickListener(new View.OnClickListener() {

@@ -446,5 +446,8 @@
     <string name="notification_sound">Notification sound</string>
     <string name="pref_use_cache_message">You are going to disable caching, causing all cached data at this moment will be immediately deleted</string>
     <string name="personal_schedule">Personal schedule</string>
+    <string name="logout_confirmation">Logout confirmation</string>
+    <string name="logout_confirmation_message">When you log out from the account, all the cached data for your account and any changes you made manually (such as changing schedules) will be permanently deleted. Are you sure you want to log out of the account?</string>
+    <string name="do_logout">Log out</string>
 
 </resources>

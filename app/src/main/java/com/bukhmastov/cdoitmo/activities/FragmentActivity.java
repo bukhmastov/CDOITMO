@@ -43,7 +43,7 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
                         throw new NullPointerException("Intent's extras should contains 'class'");
                     }
                     if (extras.containsKey("extras")) {
-                        fragment_extras = (Bundle) extras.get("class");
+                        fragment_extras = (Bundle) extras.get("extras");
                     } else {
                         throw new NullPointerException("Intent's extras should contains 'extras'");
                     }

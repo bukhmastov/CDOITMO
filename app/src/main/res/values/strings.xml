@@ -453,5 +453,8 @@
     <string name="notification_sound">Звук уведомления</string>
     <string name="pref_use_cache_message">Вы собираетесь отключить кэширование данных, в результате чего все закэшированные на данный момент данные будут немедленно удалены</string>
     <string name="personal_schedule">Персональное расписание</string>
+    <string name="logout_confirmation">Подтверждение выхода</string>
+    <string name="logout_confirmation_message">При выходе из аккаунта безвозвратно удалятся все закэшированные данные для вашего аккаунта и любые изменения, сделанные вами вручную (такие, как изменения расписаний). Вы действительно хотите выйти из аккаунта?</string>
+    <string name="do_logout">Выйти</string>
 
 </resources>
