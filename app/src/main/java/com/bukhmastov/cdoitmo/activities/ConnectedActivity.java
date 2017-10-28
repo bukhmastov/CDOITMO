@@ -24,6 +24,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
 
     private static final String TAG = "ConnectedActivity";
     private final ArrayList<StackElement> stack = new ArrayList<>();
+    public final static String ACTIVITY_WITH_MENU = "connected_activity_with_align";
 
     protected abstract @IdRes int getRootViewId();
 

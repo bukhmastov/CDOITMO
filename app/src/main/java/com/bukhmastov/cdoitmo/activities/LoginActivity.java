@@ -93,7 +93,9 @@ public class LoginActivity extends ConnectedActivity {
             action_about.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
                 @Override
                 public boolean onMenuItemClick(MenuItem item) {
-                    activity.openActivity(AboutFragment.class, null);
+                    final Bundle extras = new Bundle();
+                    extras.putBoolean(ACTIVITY_WITH_MENU, false);
+                    activity.openActivity(AboutFragment.class, extras);
                     return false;
                 }
             });

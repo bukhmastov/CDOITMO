@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -22,29 +23,55 @@ import com.bukhmastov.cdoitmo.utils.Static;
 public class FragmentActivity extends ConnectedActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "FragmentActivity";
+    private boolean layout_with_menu = true;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         Static.applyActivityTheme(this);
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
-        setContentView(R.layout.activity_fragment);
-
-        Toolbar toolbar = findViewById(R.id.toolbar_fragment);
-        if (toolbar != null) {
-            Static.applyToolbarTheme(this, toolbar);
-            setSupportActionBar(toolbar);
-        }
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setHomeButtonEnabled(true);
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
-        ((NavigationView) findViewById(R.id.nav_view)).setNavigationItemSelectedListener(this);
-
         try {
-            Bundle extras = getIntent().getExtras();
-            invoke((Class) extras.get("class"), (Bundle) extras.get("extras"));
+            final Intent intent = getIntent();
+            if (intent != null) {
+                final Bundle extras = intent.getExtras();
+                final Class fragment_class;
+                final Bundle fragment_extras;
+                if (extras != null) {
+                    if (extras.containsKey("class")) {
+                        fragment_class = (Class) extras.get("class");
+                    } else {
+                        throw new NullPointerException("Intent's extras should contains 'class'");
+                    }
+                    if (extras.containsKey("extras")) {
+                        fragment_extras = (Bundle) extras.get("class");
+                    } else {
+                        throw new NullPointerException("Intent's extras should contains 'extras'");
+                    }
+                    if (fragment_extras != null && fragment_extras.containsKey(ConnectedActivity.ACTIVITY_WITH_MENU)) {
+                        layout_with_menu = fragment_extras.getBoolean(ConnectedActivity.ACTIVITY_WITH_MENU);
+                        fragment_extras.remove(ConnectedActivity.ACTIVITY_WITH_MENU);
+                    }
+                } else {
+                    throw new NullPointerException("Intent's extras cannot be null");
+                }
+                setContentView(layout_with_menu ? R.layout.activity_fragment : R.layout.activity_fragment_without_menu);
+                final Toolbar toolbar = findViewById(R.id.toolbar_fragment);
+                if (toolbar != null) {
+                    Static.applyToolbarTheme(this, toolbar);
+                    setSupportActionBar(toolbar);
+                }
+                final ActionBar actionBar = getSupportActionBar();
+                if (actionBar != null) {
+                    actionBar.setHomeButtonEnabled(true);
+                    actionBar.setDisplayHomeAsUpEnabled(true);
+                }
+                if (layout_with_menu) {
+                    ((NavigationView) findViewById(R.id.nav_view)).setNavigationItemSelectedListener(this);
+                }
+                invoke(fragment_class, fragment_extras);
+            } else {
+                throw new NullPointerException("Intent cannot be null");
+            }
         } catch (Exception e) {
             Static.error(e);
             finish();
@@ -54,21 +81,25 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
     @Override
     protected void onResume() {
         super.onResume();
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        Static.NavigationMenu.displayEnableDisableOfflineButton(navigationView);
-        Static.NavigationMenu.displayUserData(this, navigationView);
-        Static.NavigationMenu.displayRemoteMessage(this);
+        if (layout_with_menu) {
+            NavigationView navigationView = findViewById(R.id.nav_view);
+            Static.NavigationMenu.displayEnableDisableOfflineButton(navigationView);
+            Static.NavigationMenu.displayUserData(this, navigationView);
+            Static.NavigationMenu.displayRemoteMessage(this);
+        }
     }
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        Log.v(TAG, "NavigationItemSelected " + item.getTitle());
-        DrawerLayout drawer_layout = findViewById(R.id.drawer_layout);
-        if (drawer_layout != null) {
-            drawer_layout.closeDrawer(GravityCompat.START);
+        if (layout_with_menu) {
+            Log.v(TAG, "NavigationItemSelected " + item.getTitle());
+            DrawerLayout drawer_layout = findViewById(R.id.drawer_layout);
+            if (drawer_layout != null) {
+                drawer_layout.closeDrawer(GravityCompat.START);
+            }
+            MainActivity.selectedMenuItem = item;
+            finish();
         }
-        MainActivity.selectedMenuItem = item;
-        finish();
         return true;
     }
 
