@@ -595,7 +595,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                             spinner_weeks_arr.add(value);
                             spinner_weeks_arr_values.add(i);
                         }
-                        spinner_weeks.setAdapter(new ArrayAdapter<>(activity, R.layout.spinner_layout, spinner_weeks_arr));
+                        spinner_weeks.setAdapter(new ArrayAdapter<>(activity, R.layout.spinner_layout_single_line, spinner_weeks_arr));
                         spinner_weeks.setSelection(data.getInt("number_of_weeks") - 1);
                         spinner_weeks_blocker = true;
                         spinner_weeks.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {

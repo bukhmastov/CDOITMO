@@ -365,6 +365,9 @@ public class ThemeUtil {
         Log.v(TAG, "getThemeDesc | " + value);
         final List<String> pref_theme_titles = Arrays.asList(context.getResources().getStringArray(R.array.pref_theme_titles));
         final List<String> pref_theme_values = Arrays.asList(context.getResources().getStringArray(R.array.pref_theme_values));
+        if (pref_theme_titles.contains(value)) {
+            return value;
+        }
         if (value.contains("#")) {
             try {
                 final String[] values = value.split("#");

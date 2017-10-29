@@ -18,6 +18,8 @@
 
     <dimen name="pref_horizontal_padding">16dp</dimen>
     <dimen name="pref_vertical_padding">16dp</dimen>
+    <dimen name="pref_header_horizontal_padding">18dp</dimen>
+    <dimen name="pref_header_vertical_padding">11dp</dimen>
 
     <dimen name="rounded_corner">4dp</dimen>
     <dimen name="rounded_corner_big">24dp</dimen>

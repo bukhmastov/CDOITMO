@@ -18,6 +18,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.views.OnSwipeTouchListener;
@@ -60,6 +61,7 @@ public class IntroducingActivity extends ConnectedActivity {
         }
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
+        FirebaseAnalyticsProvider.logCurrentScreen(this);
         setContentView(R.layout.activity_introducing);
         findViewById(R.id.content).setPadding(0, getStatusBarHeight(), 0, 0);
         initScreens();

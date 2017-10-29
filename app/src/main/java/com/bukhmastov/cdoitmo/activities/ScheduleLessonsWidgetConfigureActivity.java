@@ -87,7 +87,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle icicle) {
         Static.applyActivityTheme(this);
-        final String theme = Static.getAppTheme(activity);
+        final String theme = Static.getAppTheme(this);
         isDarkTheme = "dark".equals(theme) || "black".equals(theme);
         super.onCreate(icicle);
         Log.i(TAG, "Activity created");
@@ -97,7 +97,8 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
         setContentView(R.layout.schedule_lessons_widget_configure);
         Toolbar toolbar = findViewById(R.id.toolbar_widget);
         if (toolbar != null) {
-            Static.applyToolbarTheme(activity, toolbar);
+            Static.applyToolbarTheme(this, toolbar);
+            toolbar.setTitle(R.string.configure_schedule_widget);
             setSupportActionBar(toolbar);
         }
         Intent intent = getIntent();

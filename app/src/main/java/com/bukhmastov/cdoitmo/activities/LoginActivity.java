@@ -77,6 +77,11 @@ public class LoginActivity extends ConnectedActivity {
                 route(SIGNAL_LOGIN);
             }
         }
+        // IntroducingActivity
+        if (Static.isFirstLaunchEver) {
+            Static.isFirstLaunchEver = false;
+            startActivity(new Intent(activity, IntroducingActivity.class));
+        }
     }
 
     @Override

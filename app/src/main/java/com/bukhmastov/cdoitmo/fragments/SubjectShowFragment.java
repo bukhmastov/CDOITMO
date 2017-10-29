@@ -117,7 +117,7 @@ public class SubjectShowFragment extends ConnectedFragment {
                         public void run() {
                             try {
                                 // отображаем заголовок
-                                activity.updateToolbar(subject.getString("name"), R.drawable.ic_e_journal);
+                                activity.updateToolbar(activity, subject.getString("name"), R.drawable.ic_e_journal);
                                 // отображаем шапку
                                 TextView as_info_term = activity.findViewById(R.id.as_info_term);
                                 TextView as_info_type = activity.findViewById(R.id.as_info_type);

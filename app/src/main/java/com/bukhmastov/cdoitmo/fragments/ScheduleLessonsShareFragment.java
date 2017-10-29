@@ -79,11 +79,11 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
         switch (type) {
             case "share":
             default: {
-                activity.updateToolbar(activity.getString(R.string.share_changes), R.drawable.ic_share);
+                activity.updateToolbar(activity, activity.getString(R.string.share_changes), R.drawable.ic_share);
                 break;
             }
             case "handle": {
-                activity.updateToolbar(activity.getString(R.string.accept_changes), R.drawable.ic_share);
+                activity.updateToolbar(activity, activity.getString(R.string.accept_changes), R.drawable.ic_share);
                 break;
             }
         }

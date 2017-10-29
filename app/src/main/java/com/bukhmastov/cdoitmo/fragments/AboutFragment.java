@@ -54,7 +54,7 @@ public class AboutFragment extends ConnectedFragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         TextView app_version = view.findViewById(R.id.app_version);
         if (app_version != null) {
-            app_version.setText(activity.getString(R.string.version) + " " + Static.versionName + " (" + activity.getString(R.string.build) + " " + Static.versionCode + ")");
+            app_version.setText(activity.getString(R.string.version) + " " + Static.versionName + " (" + Static.versionCode + " " + activity.getString(R.string.build) + ")");
         }
 
         View block_pika = view.findViewById(R.id.block_pika);

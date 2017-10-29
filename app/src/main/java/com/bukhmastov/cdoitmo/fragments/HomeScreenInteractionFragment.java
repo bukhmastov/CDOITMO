@@ -93,7 +93,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
         FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
         Data data = getData(activity, this.getClass());
         if (data != null) {
-            activity.updateToolbar(data.title, data.image);
+            activity.updateToolbar(activity, data.title, data.image);
         }
         // Инициализируем приложения
         apps.clear();

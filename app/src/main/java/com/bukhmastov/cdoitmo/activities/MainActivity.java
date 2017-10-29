@@ -76,10 +76,6 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
             // firebase events and properties
             FirebaseAnalyticsProvider.logEvent(activity, FirebaseAnalyticsProvider.Event.APP_OPEN);
             FirebaseAnalyticsProvider.setUserProperty(activity, FirebaseAnalyticsProvider.Property.THEME, Static.getAppTheme(activity));
-            // IntroducingActivity
-            if (Static.isFirstLaunchEver) {
-                startActivity(new Intent(activity, IntroducingActivity.class));
-            }
         } catch (Exception e) {
             Static.error(e);
         }
@@ -103,7 +99,6 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                 drawer_layout.addDrawerListener(mDrawerToggle);
                 mDrawerToggle.syncState();
                 if (Static.isFirstLaunchEver) {
-                    Static.isFirstLaunchEver = false;
                     drawer_layout.openDrawer(Gravity.START);
                 }
             }

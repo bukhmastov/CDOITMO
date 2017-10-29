@@ -92,6 +92,11 @@
             </LinearLayout>
 
             <View
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/separator"
+                android:background="?attr/colorSeparator" />
+
+            <View
                 android:layout_width="@dimen/separator"
                 android:layout_height="match_parent"
                 android:background="?attr/colorSeparator"

@@ -269,12 +269,13 @@ public class SettingsScheduleExams {
                                 @Override
                                 public void run() {
                                     switch (group.getCheckedRadioButtonId()) {
-                                        case R.id.lsp_schedule_personal: {
+                                        // TODO uncomment, when personal schedule will be ready
+                                        /*case R.id.lsp_schedule_personal: {
                                             self.query = "mine";
                                             self.label = "";
                                             lsp_schedule_chooser.setVisibility(View.GONE);
                                             break;
-                                        }
+                                        }*/
                                         case R.id.lsp_schedule_group: {
                                             self.query = "auto";
                                             self.label = "";
@@ -302,7 +303,8 @@ public class SettingsScheduleExams {
                     try {
                         final JSONObject json = new JSONObject(value);
                         switch (json.getString("query")) {
-                            case "mine": lsp_radio_group.check(R.id.lsp_schedule_personal); break;
+                            // TODO uncomment, when personal schedule will be ready
+                            //case "mine": lsp_radio_group.check(R.id.lsp_schedule_personal); break;
                             case "auto": lsp_radio_group.check(R.id.lsp_schedule_group); break;
                             default: {
                                 self.query = json.getString("query");

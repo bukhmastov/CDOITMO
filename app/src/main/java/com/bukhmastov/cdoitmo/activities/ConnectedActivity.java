@@ -25,10 +25,11 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     private static final String TAG = "ConnectedActivity";
     private final ArrayList<StackElement> stack = new ArrayList<>();
     public final static String ACTIVITY_WITH_MENU = "connected_activity_with_align";
+    protected boolean layout_with_menu = true;
 
     protected abstract @IdRes int getRootViewId();
 
-    private class StackElement {
+    protected class StackElement {
         public final Class connectedFragmentClass;
         public final Bundle extras;
         public final TYPE type;
@@ -81,7 +82,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
                     fragmentTransaction.replace(getRootViewId(), fragment);
                     fragmentTransaction.commitAllowingStateLoss();
                     pushFragment(stackElement);
-                    updateToolbar(data.title, data.image);
+                    updateToolbar(this, data.title, layout_with_menu ? data.image : null);
                     return true;
                 } else {
                     return false;
@@ -119,7 +120,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     }
 
     public boolean back() {
-        if (Static.tablet) {
+        //if (Static.tablet) {
             Log.v(TAG, "back | stack.size=" + stack.size());
             if (stack.size() > 0) {
                 int index = stack.size() - 1;
@@ -138,11 +139,11 @@ public abstract class ConnectedActivity extends AppCompatActivity {
             } else {
                 return true;
             }
-        } else {
-            Log.v(TAG, "back | non tablet -> finish()");
-            finish();
-            return false;
-        }
+        //} else {
+        //    Log.v(TAG, "back | non tablet -> finish()");
+        //    finish();
+        //    return false;
+        //}
     }
 
     public void pushFragment(StackElement stackElement) {
@@ -169,7 +170,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
         Log.v(TAG, "stack.size() = " + stack.size());
     }
 
-    public void updateToolbar(final String title, final Integer image) {
+    public void updateToolbar(final Context context, final String title, final Integer image) {
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -184,7 +185,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
                         Drawable drawable = getDrawable(image);
                         if (drawable != null) {
                             try {
-                                drawable.setTint(Static.resolveColor(getBaseContext(), R.attr.colorToolbarContent));
+                                drawable.setTint(Static.resolveColor(context, R.attr.colorToolbarContent));
                             } catch (Exception ignore) {
                                 // ignore
                             }

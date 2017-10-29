@@ -388,7 +388,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                                         if (Objects.equals(group.getString("name"), self.group)) selection = counter;
                                         counter++;
                                     }
-                                    spinner_group.setAdapter(new ArrayAdapter<>(activity, R.layout.spinner_layout, spinner_group_arr));
+                                    spinner_group.setAdapter(new ArrayAdapter<>(activity, R.layout.spinner_layout_single_line, spinner_group_arr));
                                     spinner_group.setSelection(selection);
                                     spinner_group_blocker = true;
                                     spinner_group.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -432,7 +432,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                                             break;
                                         }
                                     }
-                                    spinner_period.setAdapter(new ArrayAdapter<>(activity, R.layout.spinner_layout, spinner_period_arr));
+                                    spinner_period.setAdapter(new ArrayAdapter<>(activity, R.layout.spinner_layout_single_line, spinner_period_arr));
                                     spinner_period.setSelection(selection);
                                     spinner_period_blocker = true;
                                     spinner_period.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {

@@ -73,8 +73,8 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                 throw new NullPointerException("type cannot be null");
             }
             switch (type) {
-                case create: activity.updateToolbar(activity.getString(R.string.lesson_creation), R.drawable.ic_schedule_lessons); break;
-                case edit: activity.updateToolbar(activity.getString(R.string.lesson_editing), R.drawable.ic_schedule_lessons); break;
+                case create: activity.updateToolbar(activity, activity.getString(R.string.lesson_creation), R.drawable.ic_schedule_lessons); break;
+                case edit: activity.updateToolbar(activity, activity.getString(R.string.lesson_editing), R.drawable.ic_schedule_lessons); break;
                 default:
                     Exception exception = new Exception("got wrong type from arguments bundle: " + type.toString());
                     Log.wtf(exception);

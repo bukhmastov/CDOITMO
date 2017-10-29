@@ -54,7 +54,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        activity.updateToolbar(activity.getString(R.string.top_rating), R.drawable.ic_rating);
+        activity.updateToolbar(activity, activity.getString(R.string.top_rating), R.drawable.ic_rating);
         try {
             Bundle extras = getArguments();
             if (extras == null) {
@@ -109,7 +109,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
             @Override
             public void run() {
                 Log.v(TAG, "load");
-                activity.updateToolbar(activity.getString(R.string.top_rating), R.drawable.ic_rating);
+                activity.updateToolbar(activity, activity.getString(R.string.top_rating), R.drawable.ic_rating);
                 if (!Static.OFFLINE_MODE) {
                     DeIfmoClient.get(activity, Client.Protocol.HTTP, "?node=rating&std&depId=" + faculty + "&year=" + course + "&app=" + years, null, new ResponseHandler() {
                         @Override
@@ -251,7 +251,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                 Log.v(TAG, "display");
                 try {
                     if (data == null) throw new SilentException();
-                    activity.updateToolbar(Static.capitalizeFirstLetter(data.getString("header")), R.drawable.ic_rating);
+                    activity.updateToolbar(activity, Static.capitalizeFirstLetter(data.getString("header")), R.drawable.ic_rating);
                     // получаем список для отображения рейтинга
                     final ArrayList<HashMap<String, String>> users = new ArrayList<>();
                     JSONArray list = data.getJSONArray("list");

@@ -13,6 +13,7 @@
         android:paddingEnd="@dimen/pref_horizontal_padding"
         android:paddingTop="@dimen/pref_vertical_padding"
         android:paddingBottom="@dimen/pref_vertical_padding"
+        android:focusable="true"
         android:clickable="true"
         android:background="?android:attr/selectableItemBackground">
 

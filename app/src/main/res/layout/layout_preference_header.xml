@@ -5,11 +5,12 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:paddingStart="@dimen/item_horizontal_padding"
-    android:paddingEnd="@dimen/item_horizontal_padding"
-    android:paddingTop="@dimen/item_vertical_padding"
-    android:paddingBottom="@dimen/item_vertical_padding"
+    android:paddingStart="@dimen/pref_header_horizontal_padding"
+    android:paddingEnd="@dimen/pref_header_horizontal_padding"
+    android:paddingTop="@dimen/pref_header_vertical_padding"
+    android:paddingBottom="@dimen/pref_header_vertical_padding"
     android:clickable="true"
+    android:focusable="true"
     android:background="?android:attr/selectableItemBackground">
 
     <ImageView

@@ -23,7 +23,6 @@ import com.bukhmastov.cdoitmo.utils.Static;
 public class FragmentActivity extends ConnectedActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "FragmentActivity";
-    private boolean layout_with_menu = true;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -116,6 +115,29 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        try {
+            if (!layout_with_menu) {
+                throw new Exception("");
+            }
+            DrawerLayout drawer = findViewById(R.id.drawer_layout);
+            if (drawer == null) {
+                throw new Exception("");
+            } else {
+                if (drawer.isDrawerOpen(GravityCompat.START)) {
+                    drawer.closeDrawer(GravityCompat.START);
+                } else {
+                    throw new Exception("");
+                }
+            }
+        } catch (Exception e) {
+            if (back()) {
+                super.onBackPressed();
+            }
+        }
+    }
+
     public void invoke(final Class connectedFragmentClass, final Bundle extras) {
         final FragmentActivity self = this;
         final FragmentManager fragmentManager = getSupportFragmentManager();
@@ -128,9 +150,7 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
                     if (data == null) {
                         throw new NullPointerException("data cannot be null");
                     }
-                    if (Static.tablet) {
-                        updateToolbar(data.title, null);
-                    }
+                    updateToolbar(self, data.title, null);
                     ViewGroup root = findViewById(getRootViewId());
                     if (root != null) {
                         root.removeAllViews();
@@ -144,6 +164,7 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
                         if (fragmentTransaction != null) {
                             fragmentTransaction.replace(getRootViewId(), fragment);
                             fragmentTransaction.commitAllowingStateLoss();
+                            pushFragment(new StackElement(TYPE.root, connectedFragmentClass, extras));
                         }
                     }
                 } catch (Exception e) {
