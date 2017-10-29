@@ -18,7 +18,7 @@ public class PreferenceBasic extends Preference {
         String onGetSummary(final ConnectedActivity activity, final String value);
     }
     private boolean changeSummary = true;
-    private Callback callback;
+    private final Callback callback;
     public PreferenceBasic(String key, Object defaultValue, @StringRes int title, @StringRes int summary, boolean changeSummary, Callback callback) {
         super(key, defaultValue, title, summary);
         this.changeSummary = changeSummary;
@@ -49,7 +49,7 @@ public class PreferenceBasic extends Preference {
         preference_basic.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!preference.isEnabled()) return;
+                if (preference.isDisabled()) return;
                 preference.callback.onPreferenceClicked(activity, preference, new OnPreferenceClickedCallback() {
                     @Override
                     public void onSetSummary(final ConnectedActivity activity, final String value) {

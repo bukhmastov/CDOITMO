@@ -18,8 +18,8 @@ public class Room101DatePickParse implements Runnable {
     public interface response {
         void finish(JSONObject json);
     }
-    private response delegate = null;
-    private String data;
+    private final response delegate;
+    private final String data;
 
     public Room101DatePickParse(String data, response delegate) {
         this.data = data;

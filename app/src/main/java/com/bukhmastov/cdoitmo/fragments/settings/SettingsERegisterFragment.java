@@ -12,7 +12,7 @@ import java.util.List;
 public class SettingsERegisterFragment extends SettingsTemplatePreferencesFragment {
 
     private static final String TAG = "SettingsERegisterFragment";
-    public static ArrayList<Preference> preferences;
+    public static final ArrayList<Preference> preferences;
     static {
         preferences = new ArrayList<>();
         preferences.add(new PreferenceList("pref_e_journal_term", "0", R.string.term_picker, R.array.pref_e_journal_term_titles, R.array.pref_e_journal_term_values, true));

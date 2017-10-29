@@ -17,8 +17,8 @@ public class RatingParse implements Runnable {
     public interface response {
         void finish(JSONObject json);
     }
-    private response delegate = null;
-    private String data;
+    private final response delegate;
+    private final String data;
 
     public RatingParse(String data, response delegate) {
         this.data = data;

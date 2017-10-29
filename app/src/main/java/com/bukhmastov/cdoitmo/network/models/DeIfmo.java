@@ -58,7 +58,7 @@ public abstract class DeIfmo extends Client {
         } catch (Exception ignore) {
             // ignore
         }
-        return legit;
+        return !legit;
     }
     protected static void g(final Context context, final String url, final Map<String, String> query, final RawHandler rawHandler) {
         Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {

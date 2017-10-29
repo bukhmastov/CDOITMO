@@ -11,7 +11,7 @@ import java.util.List;
 public class SettingsExtendedFragment extends SettingsTemplateHeadersFragment {
 
     private static final String TAG = "SettingsFragment";
-    public static List<PreferenceHeader> preferenceHeaders;
+    public static final List<PreferenceHeader> preferenceHeaders;
     static {
         preferenceHeaders = new ArrayList<>();
         preferenceHeaders.add(new PreferenceHeader(R.string.e_journal, R.drawable.ic_e_journal, SettingsERegisterFragment.class));

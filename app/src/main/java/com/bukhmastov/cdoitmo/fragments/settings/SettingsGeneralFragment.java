@@ -24,7 +24,7 @@ import java.util.List;
 public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment {
 
     private static final String TAG = "SettingsGeneralFragment";
-    public static ArrayList<Preference> preferences;
+    public static final ArrayList<Preference> preferences;
     static {
         preferences = new ArrayList<>();
         preferences.add(new PreferenceList("pref_lang", "default", R.string.pref_lang_title, R.string.pref_lang_title_summary, R.array.pref_lang_titles, R.array.pref_lang_values, false));

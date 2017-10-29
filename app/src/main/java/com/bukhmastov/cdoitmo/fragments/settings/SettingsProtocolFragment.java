@@ -13,7 +13,7 @@ import java.util.List;
 public class SettingsProtocolFragment extends SettingsTemplatePreferencesFragment {
 
     private static final String TAG = "SettingsGeneralFragment";
-    public static ArrayList<Preference> preferences;
+    public static final ArrayList<Preference> preferences;
     static {
         preferences = new ArrayList<>();
         preferences.add(new PreferenceList("pref_protocol_changes_weeks", "1", R.string.period_picker, R.array.pref_protocol_changes_weeks_titles, R.array.pref_protocol_changes_weeks_values, true));

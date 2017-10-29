@@ -333,9 +333,9 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                     ViewGroup info_connect_container = findViewById(R.id.info_connect_container);
                     if (info_connect_container != null) {
                         boolean exists = false;
-                        final String[] phones = person.getString("phone").trim().split(";|,");
-                        final String[] emails = person.getString("email").trim().split(";|,");
-                        final String[] webs = person.getString("www").trim().split(";|,");
+                        final String[] phones = person.getString("phone").trim().split("[;,]");
+                        final String[] emails = person.getString("email").trim().split("[;,]");
+                        final String[] webs = person.getString("www").trim().split("[;,]");
                         for (final String phone : phones) {
                             if (!phone.isEmpty()) {
                                 info_connect_container.addView(getConnectContainer(R.drawable.ic_phone, phone, exists, new View.OnClickListener() {

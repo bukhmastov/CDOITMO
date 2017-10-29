@@ -3,8 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:activity="com.bukhmastov.cdoitmo.fragments.ScheduleLessonsFragment"
-    android:id="@+id/container_schedule"
-    android:background="?attr/colorBackground" >
+    android:id="@+id/container_schedule">
 
     <FrameLayout
         android:layout_width="match_parent"

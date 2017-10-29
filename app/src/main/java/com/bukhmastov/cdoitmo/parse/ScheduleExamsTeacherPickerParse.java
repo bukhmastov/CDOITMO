@@ -19,9 +19,9 @@ public class ScheduleExamsTeacherPickerParse implements Runnable {
     public interface response {
         void finish(JSONObject json);
     }
-    private response delegate = null;
-    private String data;
-    private String cache_token;
+    private final response delegate;
+    private final String data;
+    private final String cache_token;
 
     public ScheduleExamsTeacherPickerParse(String data, String cache_token, response delegate) {
         this.data = data;

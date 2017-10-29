@@ -22,8 +22,8 @@ public class ERegisterConverter implements Runnable {
     public interface response {
         void finish(JSONObject json);
     }
-    private response delegate = null;
-    private JSONObject eregister;
+    private final response delegate;
+    private final JSONObject eregister;
 
     public ERegisterConverter(JSONObject eregister, response delegate) {
         this.eregister = eregister;

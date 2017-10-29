@@ -36,9 +36,9 @@ public class SettingsScheduleLessons {
         void onDone(String value);
     }
     private static Client.Request requestHandle = null;
-    private ConnectedActivity activity;
-    private Callback callback = null;
-    private Preference preference = null;
+    private final ConnectedActivity activity;
+    private final Callback callback;
+    private final Preference preference;
     private String query = null;
     private String label = null;
 

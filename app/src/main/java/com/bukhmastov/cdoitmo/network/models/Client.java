@@ -39,8 +39,8 @@ public abstract class Client {
     private static class client {
         private static OkHttpClient client = null;
         private static class timeout {
-            private static int connect = 10;
-            private static int read = 30;
+            private static final int connect = 10;
+            private static final int read = 30;
         }
         private static OkHttpClient get() {
             if (client == null) {

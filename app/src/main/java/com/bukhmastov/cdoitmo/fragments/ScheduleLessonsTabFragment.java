@@ -329,7 +329,7 @@ public class ScheduleLessonsTabFragment extends Fragment {
         return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
 
-    private PopupMenu.OnMenuItemClickListener onScheduleMenuClickListener = new PopupMenu.OnMenuItemClickListener() {
+    private final PopupMenu.OnMenuItemClickListener onScheduleMenuClickListener = new PopupMenu.OnMenuItemClickListener() {
         @Override
         public boolean onMenuItemClick(MenuItem item) {
             Log.v(TAG, "menu | popup item | clicked | " + item.getTitle().toString());

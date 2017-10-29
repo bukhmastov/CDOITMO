@@ -15,9 +15,9 @@ public class ScheduleLessonsConverter implements Runnable {
     public interface response {
         void finish(JSONObject json);
     }
-    private response delegate = null;
-    private JSONObject data;
-    private JSONObject template;
+    private final response delegate;
+    private final JSONObject data;
+    private final JSONObject template;
 
     public ScheduleLessonsConverter(JSONObject data, JSONObject template, response delegate) {
         this.data = data;

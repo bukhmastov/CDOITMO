@@ -44,7 +44,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
                 try {
                     String action = intent.getAction();
                     Log.i(TAG, "onReceive | action=" + action);
-                    switch (action) {
+                    switch (action != null ? action : "") {
                         case ACTION_ADD_SHORTCUT: {
                             Bundle extras = intent.getExtras();
                             if (extras != null) {

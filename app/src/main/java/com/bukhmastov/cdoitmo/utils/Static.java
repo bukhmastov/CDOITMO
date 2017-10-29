@@ -38,7 +38,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activities.LoginActivity;
 import com.bukhmastov.cdoitmo.activities.MainActivity;
 import com.bukhmastov.cdoitmo.converters.ProtocolConverter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
@@ -67,7 +66,6 @@ public class Static {
     public static int versionCode;
     public static int textColorPrimary, textColorSecondary, colorSeparator, colorBackgroundSnackBar, colorAccent, colorBackgroundRefresh;
     public static float destiny;
-    public static TypedValue typedValue;
     public static boolean OFFLINE_MODE = false;
     public static boolean firstLaunch = true;
     public static boolean authorized = false;
@@ -198,7 +196,6 @@ public class Static {
             PackageInfo pInfo = activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0);
             Static.versionName = pInfo.versionName;
             Static.versionCode = pInfo.versionCode;
-            typedValue = new TypedValue();
             textColorPrimary = resolveColor(activity, android.R.attr.textColorPrimary);
             textColorSecondary = resolveColor(activity, android.R.attr.textColorSecondary);
             colorSeparator = resolveColor(activity, R.attr.colorSeparator);
@@ -216,8 +213,13 @@ public class Static {
     public static boolean isOnline(Context context) {
         Log.v(TAG, "isOnline");
         if (context != null) {
-            NetworkInfo networkInfo = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
-            return (networkInfo != null && networkInfo.isConnected());
+            ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (connectivityManager != null) {
+                NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+                return (networkInfo != null && networkInfo.isConnected());
+            } else {
+                return true;
+            }
         } else {
             return true;
         }

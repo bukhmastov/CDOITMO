@@ -91,9 +91,7 @@ public abstract class UniversityRecyclerViewAdapter extends RecyclerView.Adapter
     }
     public void addItem(ArrayList<Item> dataset) {
         int itemStart = this.dataset.size() - 1;
-        for (Item item : dataset) {
-            this.dataset.add(item);
-        }
+        this.dataset.addAll(dataset);
         this.notifyItemRangeInserted(itemStart, dataset.size() - 1);
     }
     public void removeItem(int position) {

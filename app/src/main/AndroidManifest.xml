@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.bukhmastov.cdoitmo">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.bukhmastov.cdoitmo">
 
     <permission android:name="com.bukhmastov.cdoitmo.permission.RECEIVE_SHORTCUT_STATE" android:protectionLevel="signature" />
 
@@ -56,13 +58,13 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:mimeType="application/cdoitmo" android:pathPattern=".*\\.cdoitmo" />
+                <data android:mimeType="application/cdoitmo" android:pathPattern=".*\\.cdoitmo" android:scheme="*" android:host="*" />
             </intent-filter>
             <intent-filter android:label="@string/app_name">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:mimeType="application/octet-stream" android:pathPattern=".*\\.cdoitmo" />
+                <data android:mimeType="application/octet-stream" android:pathPattern=".*\\.cdoitmo" android:scheme="*" android:host="*" />
             </intent-filter>
             <intent-filter android:label="@string/app_name">
                 <action android:name="android.intent.action.VIEW" />
@@ -170,7 +172,9 @@
                 android:resource="@xml/filepaths" />
         </provider>
 
-        <service android:name=".firebase.AppFirebaseMessagingService">
+        <service
+            tools:ignore="ExportedService"
+            android:name=".firebase.AppFirebaseMessagingService">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>

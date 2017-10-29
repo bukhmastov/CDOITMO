@@ -3,8 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:activity="com.bukhmastov.cdoitmo.fragments.RatingFragment"
-    android:id="@+id/container_rating"
-    android:background="?attr/colorBackground" >
+    android:id="@+id/container_rating">
 
     <FrameLayout
         android:layout_width="match_parent"

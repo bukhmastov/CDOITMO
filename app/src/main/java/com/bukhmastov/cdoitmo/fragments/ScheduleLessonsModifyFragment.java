@@ -377,10 +377,6 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                                         }
                                                     });
                                                 }
-                                                @Override
-                                                public void onProgress(int state) {}
-                                                @Override
-                                                public void onFailure(int state) {}
                                             });
                                         }
                                     }
@@ -584,8 +580,6 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
         private static final String TAG = "SLModifyFragment.TS";
         interface response {
             void onPermitted();
-            void onProgress(int state);
-            void onFailure(int state);
             void onSuccess(JSONObject json);
         }
         private static Client.Request requestHandle = null;
@@ -628,7 +622,6 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                         @Override
                         public void onProgress(int state) {
                             Log.v(TAG, "search | progress " + state);
-                            delegate.onProgress(state);
                         }
                         @Override
                         public void onFailure(int state) {
@@ -639,7 +632,6 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                     progressBar.setVisibility(View.GONE);
                                 }
                             });
-                            delegate.onFailure(state);
                         }
                         @Override
                         public void onSuccess(JSONObject json) {

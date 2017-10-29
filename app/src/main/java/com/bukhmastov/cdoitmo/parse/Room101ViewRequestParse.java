@@ -21,9 +21,9 @@ public class Room101ViewRequestParse implements Runnable {
     public interface response {
         void finish(JSONObject json);
     }
-    private response delegate = null;
-    private Context context = null;
-    private String data;
+    private final response delegate;
+    private final Context context;
+    private final String data;
 
     public Room101ViewRequestParse(Context context, String data, response delegate) {
         this.context = context;

@@ -20,7 +20,7 @@ import java.util.List;
 public class SettingsScheduleExamsFragment extends SettingsTemplatePreferencesFragment {
 
     private static final String TAG = "SettingsScheduleExamsFragment";
-    public static ArrayList<Preference> preferences;
+    public static final ArrayList<Preference> preferences;
     static {
         preferences = new ArrayList<>();
         preferences.add(new PreferenceBasic("pref_schedule_exams_default", "{\"query\":\"auto\",\"title\":\"\"}", R.string.default_schedule, true, new PreferenceBasic.Callback() {

@@ -15,8 +15,8 @@ public class Room101TimeEndPickParse implements Runnable {
     public interface response {
         void finish(JSONObject json);
     }
-    private response delegate = null;
-    private String data;
+    private final response delegate;
+    private final String data;
 
     public Room101TimeEndPickParse(String data, response delegate) {
         this.data = data;

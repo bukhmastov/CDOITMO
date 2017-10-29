@@ -53,6 +53,7 @@
                     android:layout_marginEnd="@dimen/item_horizontal_padding"
                     android:layout_marginStart="0dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
+                    android:focusable="true"
                     android:clickable="true">
 
                     <ImageView

@@ -21,7 +21,7 @@ import java.util.List;
 public class SettingsCacheFragment extends SettingsTemplatePreferencesFragment {
 
     private static final String TAG = "SettingsCacheFragment";
-    public static ArrayList<Preference> preferences;
+    public static final ArrayList<Preference> preferences;
     static {
         preferences = new ArrayList<>();
         preferences.add(new PreferenceSwitch(

@@ -56,11 +56,12 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
     }
     private enum MODE {PICK, WIDGETS, APPS, SHORTCUTS}
     private class App {
-        private String id;
-        private String title;
-        private String desc;
-        private String desc_extra;
-        private @DrawableRes int image;
+        private final String id;
+        private final String title;
+        private final String desc;
+        private final String desc_extra;
+        private @DrawableRes
+        final int image;
         private App(String id, String title, String desc, String desc_extra, int image) {
             this.id = id;
             this.title = title;
@@ -70,11 +71,12 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
         }
     }
     private class Shortcut {
-        private String id;
-        private String meta;
-        private String title;
-        private String desc;
-        private @DrawableRes int image;
+        private final String id;
+        private final String meta;
+        private final String title;
+        private final String desc;
+        private @DrawableRes
+        final int image;
         private Shortcut(String id, String meta, String title, String desc, int image) {
             this.id = id;
             this.meta = meta;
@@ -83,8 +85,8 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
             this.image = image;
         }
     }
-    private ArrayList<App> apps = new ArrayList<>();
-    private ArrayList<Shortcut> shortcuts = new ArrayList<>();
+    private final ArrayList<App> apps = new ArrayList<>();
+    private final ArrayList<Shortcut> shortcuts = new ArrayList<>();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {

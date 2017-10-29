@@ -256,6 +256,7 @@
                 android:layout_height="wrap_content"
                 android:padding="@dimen/item_padding"
                 android:background="?attr/selectableItemBackground"
+                android:focusable="true"
                 android:clickable="true">
 
                 <TextView
@@ -293,6 +294,7 @@
                 android:layout_height="wrap_content"
                 android:padding="@dimen/item_padding"
                 android:background="?attr/selectableItemBackground"
+                android:focusable="true"
                 android:clickable="true">
 
                 <TextView
@@ -330,6 +332,7 @@
                 android:layout_height="wrap_content"
                 android:padding="@dimen/item_padding"
                 android:background="?attr/selectableItemBackground"
+                android:focusable="true"
                 android:clickable="true">
 
                 <TextView

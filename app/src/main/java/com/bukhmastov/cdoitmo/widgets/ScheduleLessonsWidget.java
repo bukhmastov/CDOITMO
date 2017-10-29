@@ -545,7 +545,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 final String action = intent.getAction();
                 final int appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
                 Log.v(TAG, "onReceive | action=" + action);
-                switch (action) {
+                switch (action != null ? action : "") {
                     case ACTION_WIDGET_UPDATE: {
                         logStatistic(context, "force_update");
                         updateAppWidget(context, AppWidgetManager.getInstance(context), appWidgetId, true);

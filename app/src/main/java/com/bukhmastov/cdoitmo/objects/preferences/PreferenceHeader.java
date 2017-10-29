@@ -13,9 +13,9 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.ConnectedActivity;
 
 public class PreferenceHeader {
-    public @DrawableRes int icon;
-    public @StringRes int title;
-    public Class fragment;
+    public @DrawableRes final int icon;
+    public @StringRes final int title;
+    public final Class fragment;
     public PreferenceHeader(@StringRes int title, @DrawableRes int icon, Class fragment) {
         this.title = title;
         this.icon = icon;

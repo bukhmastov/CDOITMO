@@ -12,7 +12,7 @@ import java.util.List;
 public class SettingsSystemsFragment extends SettingsTemplatePreferencesFragment {
 
     private static final String TAG = "SettingsSystemsFragment";
-    public static ArrayList<Preference> preferences;
+    public static final ArrayList<Preference> preferences;
     static {
         preferences = new ArrayList<>();
         preferences.add(new PreferenceSwitch("pref_allow_send_reports", true, R.string.pref_allow_send_reports, R.string.pref_allow_send_reports_summary, null, null));

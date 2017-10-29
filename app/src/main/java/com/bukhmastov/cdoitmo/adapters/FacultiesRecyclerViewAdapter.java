@@ -93,9 +93,9 @@ public class FacultiesRecyclerViewAdapter extends UniversityRecyclerViewAdapter 
             if (item.type == TYPE_UNIT_STRUCTURE_COMMON) {
                 boolean is_first_container = true;
                 final String address = getString(item.data, "address");
-                final String[] phones = (getString(item.data, "phone") == null ? "" : getString(item.data, "phone")).trim().split(";|,");
-                final String[] emails = (getString(item.data, "email") == null ? "" : getString(item.data, "email")).trim().split(";|,");
-                final String[] sites = (getString(item.data, "site") == null ? "" : getString(item.data, "site")).trim().split(";|,");
+                final String[] phones = (getString(item.data, "phone") == null ? "" : getString(item.data, "phone")).trim().split("[;,]");
+                final String[] emails = (getString(item.data, "email") == null ? "" : getString(item.data, "email")).trim().split("[;,]");
+                final String[] sites = (getString(item.data, "site") == null ? "" : getString(item.data, "site")).trim().split("[;,]");
                 final String working_hours = getString(item.data, "working_hours");
                 if (address != null) {
                     structure_container.addView(getConnectContainer(R.drawable.ic_location, address.trim(), is_first_container, new View.OnClickListener() {
@@ -156,11 +156,11 @@ public class FacultiesRecyclerViewAdapter extends UniversityRecyclerViewAdapter 
                         ArrayList<String> days_new = new ArrayList<>();
                         for (String day : days) {
                             String[] day_split = day.trim().split("/");
-                            String time = "";
+                            StringBuilder timeBuilder = new StringBuilder();
                             for (int i = 1; i < day_split.length; i++) {
-                                time += day_split[i] + "/";
+                                timeBuilder.append(day_split[i]).append("/");
                             }
-                            time = time.trim();
+                            String time = timeBuilder.toString().trim();
                             if (time.endsWith("/")) {
                                 time = time.trim().substring(0, time.length() - 1);
                             }
@@ -179,8 +179,8 @@ public class FacultiesRecyclerViewAdapter extends UniversityRecyclerViewAdapter 
             if (item.type == TYPE_UNIT_STRUCTURE_DEANERY) {
                 boolean is_first_container = true;
                 final String deanery_address = getString(item.data, "deanery_address");
-                final String[] deanery_phones = (getString(item.data, "deanery_phone") == null ? "" : getString(item.data, "deanery_phone")).trim().split(";|,");
-                final String[] deanery_emails = (getString(item.data, "deanery_email") == null ? "" : getString(item.data, "deanery_email")).trim().split(";|,");
+                final String[] deanery_phones = (getString(item.data, "deanery_phone") == null ? "" : getString(item.data, "deanery_phone")).trim().split("[;,]");
+                final String[] deanery_emails = (getString(item.data, "deanery_email") == null ? "" : getString(item.data, "deanery_email")).trim().split("[;,]");
                 if (deanery_address != null && !deanery_address.trim().isEmpty()) {
                     structure_container.addView(getConnectContainer(R.drawable.ic_location, deanery_address.trim(), is_first_container, new View.OnClickListener() {
                         @Override
@@ -229,7 +229,7 @@ public class FacultiesRecyclerViewAdapter extends UniversityRecyclerViewAdapter 
                 final String head_middlename = getString(item.data, "head_middlename");
                 final String head_avatar = getString(item.data, "head_avatar");
                 final String head_degree = getString(item.data, "head_degree");
-                final String[] head_emails = (getString(item.data, "head_email") == null ? "" : getString(item.data, "head_email")).trim().split(";|,");
+                final String[] head_emails = (getString(item.data, "head_email") == null ? "" : getString(item.data, "head_email")).trim().split("[;,]");
                 final int head_pid = getInt(item.data, "head_pid");
                 if (head_lastname != null && head_firstname != null) {
                     final View layout_university_persons_list_item = inflate(R.layout.layout_university_persons_list_item);

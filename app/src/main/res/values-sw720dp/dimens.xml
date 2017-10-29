@@ -68,20 +68,14 @@
     <dimen name="room101_deny_button_padding">5dp</dimen>
     <dimen name="room101_add_nav_bar_padding">16dp</dimen>
 
-    <dimen name="shortcut_create_step_width">40dp</dimen>
-    <dimen name="shortcut_create_step_padding">3dp</dimen>
-    <dimen name="shortcut_create_step_margin">6dp</dimen>
-
     <dimen name="about_icon_width">50dp</dimen>
     <dimen name="about_icon_padding">12dp</dimen>
 
     <dimen name="login_interrupt_icon_width">32dp</dimen>
     <dimen name="login_interrupt_icon_padding">6dp</dimen>
 
-    <dimen name="widget_schedule_lessons_header_height">48dp</dimen>
     <dimen name="widget_schedule_lessons_header_icon">20dp</dimen>
     <dimen name="widget_schedule_lessons_header_icon_padding">2dp</dimen>
-    <dimen name="widget_schedule_lessons_padding_vertical">2dp</dimen>
     <dimen name="widget_schedule_lessons_padding_horizontal">6dp</dimen>
     <dimen name="widget_schedule_lessons_item_padding_top">2dp</dimen>
     <dimen name="widget_schedule_lessons_item_padding_bottom">5dp</dimen>

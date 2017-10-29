@@ -18,8 +18,8 @@ public class UserDataParse implements Runnable {
     public interface response {
         void finish(HashMap<String, String> result);
     }
-    private response delegate = null;
-    private String data;
+    private final response delegate;
+    private final String data;
 
     public UserDataParse(String data, response delegate) {
         this.data = data;

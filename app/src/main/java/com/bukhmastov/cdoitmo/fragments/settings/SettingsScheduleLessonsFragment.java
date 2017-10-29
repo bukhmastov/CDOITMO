@@ -23,7 +23,7 @@ import java.util.List;
 public class SettingsScheduleLessonsFragment extends SettingsTemplatePreferencesFragment {
 
     private static final String TAG = "SettingsScheduleLessonsFragment";
-    public static ArrayList<Preference> preferences;
+    public static final ArrayList<Preference> preferences;
     static {
         preferences = new ArrayList<>();
         preferences.add(new PreferenceBasic("pref_schedule_lessons_default", "{\"query\":\"auto\",\"title\":\"\"}", R.string.default_schedule, true, new PreferenceBasic.Callback() {

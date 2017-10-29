@@ -25,6 +25,7 @@
             android:layout_height="wrap_content"
             android:padding="@dimen/item_padding"
             android:background="?attr/selectableItemBackground"
+            android:focusable="true"
             android:clickable="true">
 
             <TextView
@@ -67,6 +68,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:padding="@dimen/item_padding_half"
+                    android:focusable="true"
                     android:clickable="true"
                     android:text="@string/lorem_ipsum"
                     android:textColor="?android:attr/textColorPrimary"
@@ -90,6 +92,7 @@
                     android:layout_alignParentStart="true"
                     android:layout_toStartOf="@+id/theme_changer_icon"
                     android:padding="@dimen/item_padding_half"
+                    android:focusable="true"
                     android:clickable="true"
                     android:text="@string/lorem_number"
                     android:textColor="?android:attr/textColorPrimary"
@@ -112,6 +115,7 @@
                     android:layout_alignParentEnd="true"
                     android:layout_toEndOf="@+id/theme_changer_icon"
                     android:padding="@dimen/item_padding_half"
+                    android:focusable="true"
                     android:clickable="true"
                     android:text="@string/lorem_number"
                     android:textColor="?android:attr/textColorPrimary"
@@ -131,6 +135,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:padding="@dimen/item_padding_half"
+                    android:focusable="true"
                     android:clickable="true"
                     android:text="@string/lorem_ipsum"
                     android:textColor="?android:attr/textColorPrimary"

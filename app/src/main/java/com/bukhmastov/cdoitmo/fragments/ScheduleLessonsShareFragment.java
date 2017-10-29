@@ -43,10 +43,10 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
     private static final String TAG = "SLShareFragment";
     private enum TYPE {ADDED, REDUCED}
     private static class Change {
-        private TYPE type;
+        private final TYPE type;
+        private final int day;
+        private final JSONObject content;
         private boolean enabled;
-        private int day;
-        private JSONObject content;
         private Change(TYPE type, boolean enabled, int day, JSONObject content) {
             this.type = type;
             this.enabled = enabled;
@@ -60,7 +60,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
     private String title = "";
     private String token = "";
     private JSONObject file = null;
-    private ArrayList<Change> changes = new ArrayList<>();
+    private final ArrayList<Change> changes = new ArrayList<>();
     private boolean loaded = false;
     private Client.Request requestHandle = null;
     private int colorScheduleFlagTEXT = -1, colorScheduleFlagCommonBG = -1, colorScheduleFlagPracticeBG = -1, colorScheduleFlagLectureBG = -1, colorScheduleFlagLabBG = -1;

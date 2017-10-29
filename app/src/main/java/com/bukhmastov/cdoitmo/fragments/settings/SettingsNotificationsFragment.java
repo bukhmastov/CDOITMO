@@ -30,7 +30,7 @@ public class SettingsNotificationsFragment extends SettingsTemplatePreferencesFr
         private static String preference_key = null;
         private static PreferenceBasic.OnPreferenceClickedCallback callback = null;
     }
-    public static ArrayList<Preference> preferences;
+    public static final ArrayList<Preference> preferences;
     static {
         preferences = new ArrayList<>();
         preferences.add(new PreferenceSwitch(

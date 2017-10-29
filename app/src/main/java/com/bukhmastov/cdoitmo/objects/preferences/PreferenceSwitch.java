@@ -67,7 +67,7 @@ public class PreferenceSwitch extends Preference {
         preference_switcher_switch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(final CompoundButton buttonView, final boolean isChecked) {
-                if (!preference.isEnabled()) {
+                if (preference.isDisabled()) {
                     buttonView.setChecked(!isChecked);
                     return;
                 }
@@ -96,7 +96,7 @@ public class PreferenceSwitch extends Preference {
         preference_switcher.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!preference.isEnabled()) return;
+                if (preference.isDisabled()) return;
                 preference_switcher_switch.setChecked(!preference_switcher_switch.isChecked());
             }
         });

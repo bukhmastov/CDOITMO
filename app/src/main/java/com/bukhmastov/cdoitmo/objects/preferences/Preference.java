@@ -24,7 +24,7 @@ public abstract class Preference {
     public Object defaultValue = null;
     public @StringRes int title = 0;
     public @StringRes int summary = 0;
-    protected ArrayList<PreferenceSwitch> preferenceDependencies = new ArrayList<>();
+    protected final ArrayList<PreferenceSwitch> preferenceDependencies = new ArrayList<>();
     public Preference(String key, Object defaultValue, @StringRes int title, @StringRes int summary) {
         this.key = key;
         this.defaultValue = defaultValue;
@@ -41,11 +41,11 @@ public abstract class Preference {
             preferenceDependencies.add(preferenceDependency);
         }
     }
-    protected boolean isEnabled() {
+    protected boolean isDisabled() {
         for (PreferenceSwitch preferenceSwitch : preferenceDependencies) {
-            if (!preferenceSwitch.enabled) return false;
+            if (!preferenceSwitch.enabled) return true;
         }
-        return true;
+        return false;
     }
     public static View getView(final ConnectedActivity activity, final Preference preference) {
         if (preference instanceof PreferenceList) {

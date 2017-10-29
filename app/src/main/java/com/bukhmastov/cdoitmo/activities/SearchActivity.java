@@ -101,7 +101,7 @@ public abstract class SearchActivity extends AppCompatActivity {
                     if (mode != EXTRA_ACTION_MODE.None) {
                         switch (mode) {
                             case Speech_recognition: {
-                                if (!checkVoiceRecognition()) {
+                                if (checkVoiceRecognition()) {
                                     Log.v(TAG, "voice recognition not supported");
                                     setMode(EXTRA_ACTION_MODE.None);
                                     return;
@@ -162,9 +162,9 @@ public abstract class SearchActivity extends AppCompatActivity {
     public boolean checkVoiceRecognition() {
         Log.v(TAG, "checkVoiceRecognition");
         try {
-            return getPackageManager().queryIntentActivities(new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH), 0).size() != 0;
+            return getPackageManager().queryIntentActivities(new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH), 0).size() == 0;
         } catch (Exception e) {
-            return false;
+            return true;
         }
     }
     private void startRecognition() {

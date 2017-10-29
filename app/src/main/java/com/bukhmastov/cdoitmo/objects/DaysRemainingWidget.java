@@ -40,7 +40,7 @@ public class DaysRemainingWidget {
 
     public void start(Context context, JSONObject schedule) {
         Log.v(TAG, "start");
-        executor = new Executor(context, schedule);
+        executor = new Executor(schedule);
     }
 
     public void stop() {
@@ -56,11 +56,9 @@ public class DaysRemainingWidget {
         private boolean running = false;
         private final long delay = 1000;
         private final JSONObject full_schedule;
-        private final Context context;
 
-        Executor(Context context, JSONObject full_schedule){
+        Executor(JSONObject full_schedule){
             Log.i(TAG, "started");
-            this.context = context;
             this.full_schedule = full_schedule;
             this.running = true;
             start();

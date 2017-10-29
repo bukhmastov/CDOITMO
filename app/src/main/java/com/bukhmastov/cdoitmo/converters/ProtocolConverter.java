@@ -21,9 +21,9 @@ public class ProtocolConverter implements Runnable {
         void finish(JSONObject json);
     }
     private final Context context;
-    private response delegate;
-    private JSONArray protocol;
-    private int number_of_weeks;
+    private final response delegate;
+    private final JSONArray protocol;
+    private final int number_of_weeks;
 
     public ProtocolConverter(Context context, JSONArray protocol, int number_of_weeks, response delegate) {
         this.context = context;

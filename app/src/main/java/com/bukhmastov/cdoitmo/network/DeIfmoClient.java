@@ -31,7 +31,7 @@ public class DeIfmoClient extends DeIfmo {
                 Log.v(TAG, "check");
                 if (Static.isOnline(context)) {
                     responseHandler.onProgress(STATE_CHECKING);
-                    if (!checkJsessionId(context)) {
+                    if (checkJsessionId(context)) {
                         authorize(context, new ResponseHandler() {
                             @Override
                             public void onSuccess(int statusCode, Headers headers, String response) {
@@ -232,7 +232,7 @@ public class DeIfmoClient extends DeIfmo {
             public void run() {
                 Log.v(TAG, "get | url=" + url);
                 if (Static.isOnline(context)) {
-                    if (reAuth && !checkJsessionId(context)) {
+                    if (reAuth && checkJsessionId(context)) {
                         authorize(context, new ResponseHandler() {
                             @Override
                             public void onSuccess(int statusCode, Headers headers, String response) {
@@ -332,7 +332,7 @@ public class DeIfmoClient extends DeIfmo {
             public void run() {
                 Log.v(TAG, "post | url=" + url);
                 if (Static.isOnline(context)) {
-                    if (!checkJsessionId(context)) {
+                    if (checkJsessionId(context)) {
                         authorize(context, new ResponseHandler() {
                             @Override
                             public void onSuccess(int statusCode, Headers headers, String response) {

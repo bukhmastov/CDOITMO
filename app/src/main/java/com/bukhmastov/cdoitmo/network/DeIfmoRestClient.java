@@ -29,7 +29,7 @@ public class DeIfmoRestClient extends DeIfmo {
             public void run() {
                 Log.v(TAG, "get | url=" + url);
                 if (Static.isOnline(context)) {
-                    if (!checkJsessionId(context)) {
+                    if (checkJsessionId(context)) {
                         Log.v(TAG, "get | auth required");
                         DeIfmoClient.authorize(context, new ResponseHandler() {
                             @Override

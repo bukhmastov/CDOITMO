@@ -26,8 +26,8 @@ public class ScheduleLessonsAdditionalConverter implements Runnable {
         void finish(JSONObject json);
     }
     private final Context context;
-    private JSONObject data;
-    private response delegate = null;
+    private final JSONObject data;
+    private final response delegate;
 
     public ScheduleLessonsAdditionalConverter(Context context, JSONObject data, response delegate) {
         this.context = context;

@@ -42,7 +42,7 @@ public class PreferenceEditText extends Preference {
         preference_basic.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
-                if (!preference.isEnabled()) return;
+                if (preference.isDisabled()) return;
                 final View view = inflate(activity, R.layout.layout_preference_alert_edittext);
                 final EditText editText = view.findViewById(R.id.edittext);
                 final AlertDialog.Builder builder = new AlertDialog.Builder(activity);

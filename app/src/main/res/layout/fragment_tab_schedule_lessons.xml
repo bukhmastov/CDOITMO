@@ -3,8 +3,7 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/container_schedule_lessons"
-    android:background="?attr/colorBackground">
+    android:id="@+id/container_schedule_lessons">
 
     <android.support.v4.widget.SwipeRefreshLayout
         android:id="@+id/swipe_schedule_lessons"
@@ -68,6 +67,7 @@
                         android:layout_marginEnd="@dimen/item_horizontal_padding"
                         android:layout_centerVertical="true"
                         android:background="?attr/selectableItemBackgroundBorderless"
+                        android:focusable="true"
                         android:clickable="true" >
 
                         <ImageView

@@ -47,7 +47,7 @@ public class PreferenceList extends Preference {
         preference_list.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!preference.isEnabled()) return;
+                if (preference.isDisabled()) return;
                 int checked = 0;
                 if (preference.defaultValue != null) {
                     checked = values.indexOf(Storage.pref.get(activity, preference.key, (String) preference.defaultValue));

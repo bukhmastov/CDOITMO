@@ -33,10 +33,10 @@ public class ThemeUtil {
     private interface TimePickerCallback {
         void onDone(int hours, int minutes);
     }
-    private Context context;
-    private Callback cb;
-    private List<String> pref_theme_titles;
-    private List<String> pref_theme_values;
+    private final Context context;
+    private final Callback cb;
+    private final List<String> pref_theme_titles;
+    private final List<String> pref_theme_values;
 
     private final static String DEFAULT_THEME = "light";
     private final static String DEFAULT_THEME_DARK = "dark";

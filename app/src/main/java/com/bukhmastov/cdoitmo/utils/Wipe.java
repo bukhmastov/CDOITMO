@@ -39,7 +39,10 @@ public class Wipe {
         Log.i(TAG, "Wipe apply for versionCode " + versionCode);
         switch (versionCode) {
             case 26: {
-                ((JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE)).cancelAll();
+                JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
+                if (jobScheduler != null) {
+                    jobScheduler.cancelAll();
+                }
                 Static.logout(context);
                 Storage.pref.clearExceptPref(context);
                 break;

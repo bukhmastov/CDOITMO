@@ -4,8 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:activity="com.bukhmastov.cdoitmo.fragments.ProtocolFragment"
-    android:id="@+id/container_protocol"
-    android:background="?attr/colorBackground" >
+    android:id="@+id/container_protocol">
 
     <FrameLayout
         android:layout_width="match_parent"
