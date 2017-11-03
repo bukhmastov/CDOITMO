@@ -43,6 +43,7 @@
         <item name="colorToolbarContentInvert">@color/colorToolbarContentInvertWhite</item>
         <item name="colorImageMultiply">@color/colorImageMultiplyWhite</item>
         <item name="colorControlHighlight">@color/colorControlHighlightWhite</item>
+        <item name="colorDeIfmo">@color/colorDeIfmoWhite</item>
 
         <item name="ic_cdo_small">@drawable/cdo</item>
         <item name="ic_toolbar_security">@drawable/ic_toolbar_security</item>

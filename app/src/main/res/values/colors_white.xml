@@ -40,5 +40,6 @@
     <color name="colorSearchPrimaryDarkWhite">#FFFFFF</color>
     <color name="colorImageMultiplyWhite">#FFFFFF</color>
     <color name="colorUniversityIconWhite">#212121</color>
+    <color name="colorDeIfmoWhite">#2a4fac</color>
 
 </resources>

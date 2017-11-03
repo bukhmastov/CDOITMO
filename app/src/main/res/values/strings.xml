@@ -442,5 +442,7 @@
     <string name="logout_confirmation">Подтверждение выхода</string>
     <string name="logout_confirmation_message">При выходе из аккаунта безвозвратно удалятся все закэшированные данные для вашего аккаунта и любые изменения, сделанные вами вручную (такие, как изменения расписаний). Вы действительно хотите выйти из аккаунта?</string>
     <string name="do_logout">Выйти</string>
+    <string name="linked_accounts">Связанные аккаунты</string>
+    <string name="de_ifmo">ЦДО ИТМО</string>
 
 </resources>

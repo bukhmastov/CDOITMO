@@ -40,6 +40,7 @@
         <item name="colorToolbarContentInvert">@color/colorToolbarContentInvertDark</item>
         <item name="colorImageMultiply">@color/colorImageMultiplyDark</item>
         <item name="colorControlHighlight">@color/colorControlHighlightDark</item>
+        <item name="colorDeIfmo">@color/colorDeIfmoDark</item>
 
         <item name="ic_cdo_small">@drawable/cdo</item>
         <item name="ic_toolbar_security">@drawable/ic_toolbar_security</item>

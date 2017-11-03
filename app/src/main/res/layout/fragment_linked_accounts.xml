@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:id="@+id/account_cdo_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/colorBackgroundSection"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="@dimen/about_icon_width"
+                android:layout_height="@dimen/about_icon_width"
+                android:layout_gravity="center_vertical"
+                android:layout_margin="@dimen/item_padding"
+                android:contentDescription="@string/cdo"
+                android:tint="?attr/colorDeIfmo"
+                android:tintMode="src_atop"
+                app:srcCompat="@drawable/cdo" />
+
+            <View
+                android:layout_width="@dimen/separator"
+                android:layout_height="match_parent"
+                android:background="?attr/colorSeparator"
+                android:layout_marginTop="@dimen/item_padding"
+                android:layout_marginBottom="@dimen/item_padding"/>
+
+            <LinearLayout
+                android:id="@+id/account_cdo_link"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:paddingStart="@dimen/item_padding"
+                android:paddingEnd="@dimen/item_padding"
+                android:paddingTop="@dimen/item_padding_half"
+                android:paddingBottom="@dimen/item_padding_half"
+                android:background="?android:attr/selectableItemBackground"
+                android:focusable="true"
+                android:clickable="true">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/de_ifmo"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="@dimen/font_size_15"/>
+
+                <TextView
+                    tools:ignore="HardcodedText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="http://de.ifmo.ru/"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="@dimen/font_size_14"/>
+
+                <TextView
+                    android:id="@+id/account_cdo_info"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/loading"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="@dimen/font_size_14"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/separator"
+            android:background="?attr/colorSeparator"/>
+
+        <LinearLayout
+            android:id="@+id/container_linked_accounts"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/item_padding_half">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/item_padding_half"
+                android:text="@string/linked_accounts"
+                android:textAllCaps="true"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="@dimen/font_size_14"
+                android:textStyle="normal|bold"
+                android:paddingTop="@dimen/item_padding_eight"
+                android:paddingBottom="@dimen/item_padding_eight"
+                android:paddingStart="@dimen/item_padding_half"
+                android:paddingEnd="@dimen/item_padding_half"/>
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="@dimen/item_new_vertical_padding"
+                android:paddingBottom="@dimen/item_new_vertical_padding"
+                android:paddingStart="@dimen/item_new_horizontal_padding"
+                android:paddingEnd="@dimen/item_new_horizontal_padding" >
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/dp28"
+                    app:srcCompat="@drawable/ic_visibility_off" />
+
+                <TextView
+                    tools:ignore="HardcodedText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@string/font_bold"
+                    android:gravity="center"
+                    android:paddingBottom="@dimen/item_padding_eight"
+                    android:paddingTop="@dimen/item_padding_eight"
+                    android:text="Раздел в разработке"
+                    android:textAllCaps="true"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="@dimen/font_size_14" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

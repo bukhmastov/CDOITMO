@@ -36,6 +36,7 @@
         <attr name="colorToolbarContent" format="color" />
         <attr name="colorToolbarContentInvert" format="color" />
         <attr name="colorImageMultiply" format="color" />
+        <attr name="colorDeIfmo" format="color" />
 
         <attr name="ic_cdo_small" format="reference" />
         <attr name="ic_toolbar_security" format="reference" />

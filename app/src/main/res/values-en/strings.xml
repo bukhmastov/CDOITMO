@@ -435,5 +435,7 @@
     <string name="logout_confirmation">Logout confirmation</string>
     <string name="logout_confirmation_message">When you log out from the account, all the cached data for your account and any changes you made manually (such as changing schedules) will be permanently deleted. Are you sure you want to log out of the account?</string>
     <string name="do_logout">Log out</string>
+    <string name="linked_accounts">Linked accounts</string>
+    <string name="de_ifmo">CDE ITMO</string>
 
 </resources>

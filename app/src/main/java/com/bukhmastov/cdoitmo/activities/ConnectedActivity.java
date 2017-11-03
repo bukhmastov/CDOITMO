@@ -120,30 +120,24 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     }
 
     public boolean back() {
-        //if (Static.tablet) {
-            Log.v(TAG, "back | stack.size=" + stack.size());
-            if (stack.size() > 0) {
-                int index = stack.size() - 1;
-                if (stack.get(index).type == TYPE.root) {
-                    return true;
-                } else {
-                    stack.remove(index);
-                }
-            }
-            if (stack.size() > 0) {
-                final int index = stack.size() - 1;
-                final StackElement stackElement = stack.get(index);
-                stack.remove(index);
-                openFragment(stackElement);
-                return false;
-            } else {
+        Log.v(TAG, "back | stack.size=" + stack.size());
+        if (stack.size() > 0) {
+            int index = stack.size() - 1;
+            if (stack.get(index).type == TYPE.root) {
                 return true;
+            } else {
+                stack.remove(index);
             }
-        //} else {
-        //    Log.v(TAG, "back | non tablet -> finish()");
-        //    finish();
-        //    return false;
-        //}
+        }
+        if (stack.size() > 0) {
+            final int index = stack.size() - 1;
+            final StackElement stackElement = stack.get(index);
+            stack.remove(index);
+            openFragment(stackElement);
+            return false;
+        } else {
+            return true;
+        }
     }
 
     public void pushFragment(StackElement stackElement) {

@@ -5,6 +5,7 @@ import android.support.v4.app.Fragment;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.fragments.AboutFragment;
+import com.bukhmastov.cdoitmo.fragments.LinkedAccountsFragment;
 import com.bukhmastov.cdoitmo.objects.preferences.Preference;
 import com.bukhmastov.cdoitmo.objects.preferences.PreferenceHeader;
 import com.bukhmastov.cdoitmo.utils.Storage;
@@ -19,7 +20,7 @@ public class SettingsFragment extends SettingsTemplateHeadersFragment {
     static {
         preferenceHeaders = new ArrayList<>();
         preferenceHeaders.add(new PreferenceHeader(R.string.general_settings, R.drawable.ic_settings_applications, SettingsGeneralFragment.class));
-        //preferenceHeaders.add(new PreferenceHeader(R.string.linked_accounts, R.drawable.ic_account_box, SettingsGeneralFragment.class));
+        preferenceHeaders.add(new PreferenceHeader(R.string.linked_accounts, R.drawable.ic_account_box, LinkedAccountsFragment.class));
         preferenceHeaders.add(new PreferenceHeader(R.string.cache_and_refresh, R.drawable.ic_save, SettingsCacheFragment.class));
         preferenceHeaders.add(new PreferenceHeader(R.string.notifications, R.drawable.ic_notifications, SettingsNotificationsFragment.class));
         preferenceHeaders.add(new PreferenceHeader(R.string.extended_prefs, R.drawable.ic_tune, SettingsExtendedFragment.class));
