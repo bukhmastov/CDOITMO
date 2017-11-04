@@ -111,6 +111,23 @@
 
             </FrameLayout>
 
+            <FrameLayout
+                android:id="@+id/lsp_search_selected"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|end"
+                android:layout_weight="1"
+                android:padding="@dimen/item_padding_quarter"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:srcCompat="@drawable/ic_done"
+                    android:tint="?attr/colorPositiveTrend"/>
+
+            </FrameLayout>
+
         </LinearLayout>
 
     </LinearLayout>
