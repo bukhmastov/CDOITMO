@@ -2,7 +2,7 @@
 
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
-    <dimen name="widget_margin">8dp</dimen>
+    <dimen name="widget_margin">0dp</dimen>
     <dimen name="separator">1dp</dimen>
 
     <dimen name="item_padding">16dp</dimen>
