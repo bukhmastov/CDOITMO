@@ -22,6 +22,7 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Deprecated
 public class ScheduleExams implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "ScheduleExams";

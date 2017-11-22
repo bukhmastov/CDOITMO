@@ -38,7 +38,7 @@ public abstract class SettingsSchedule {
     protected final Callback callback;
     protected final Preference preference;
     protected String query = null;
-    protected String label = null;
+    protected String title = null;
     protected AutoCompleteTextView lsp_search = null;
     protected TeacherPickerAdapter teacherPickerAdapter = null;
     protected ViewGroup lsp_search_action = null;
@@ -121,12 +121,12 @@ public abstract class SettingsSchedule {
                                         final JSONObject item = teacherPickerAdapter.getItem(position);
                                         if (item != null) {
                                             query = item.getString("pid");
-                                            label = item.getString("person");
-                                            Log.v(TAG, "show | search list selected | query=" + query + " | label=" + label);
+                                            title = item.getString("person");
+                                            Log.v(TAG, "show | search list selected | query=" + query + " | title=" + title);
                                             Static.T.runOnUiThread(new Runnable() {
                                                 @Override
                                                 public void run() {
-                                                    lsp_search.setText(label);
+                                                    lsp_search.setText(title);
                                                 }
                                             });
                                             toggleSearchState("selected");
@@ -151,24 +151,24 @@ public abstract class SettingsSchedule {
                                         // TODO uncomment, when personal schedule will be ready
                                         /*case R.id.lsp_schedule_personal: {
                                             query = "mine";
-                                            label = "";
+                                            title = "";
                                             lsp_schedule_chooser.setVisibility(View.GONE);
                                             break;
                                         }*/
                                         case R.id.lsp_schedule_group: {
                                             query = "auto";
-                                            label = "";
+                                            title = "";
                                             lsp_schedule_chooser.setVisibility(View.GONE);
                                             break;
                                         }
                                         case R.id.lsp_schedule_defined: {
                                             if ("mine".equals(query) || "auto".equals(query)) {
                                                 query = "";
-                                                label = "";
+                                                title = "";
                                             }
                                             lsp_schedule_chooser.setVisibility(View.VISIBLE);
                                             toggleSearchState("action");
-                                            lsp_search.setText(label == null ? "" : label);
+                                            lsp_search.setText(title == null ? "" : title);
                                             lsp_search.requestFocus();
                                             break;
                                         }
@@ -186,7 +186,7 @@ public abstract class SettingsSchedule {
                             case "auto": lsp_radio_group.check(R.id.lsp_schedule_group); break;
                             default: {
                                 query = json.getString("query");
-                                label = json.getString("title");
+                                title = json.getString("title");
                                 lsp_radio_group.check(R.id.lsp_schedule_defined);
                                 break;
                             }
@@ -204,15 +204,15 @@ public abstract class SettingsSchedule {
                                     Static.T.runThread(new Runnable() {
                                         @Override
                                         public void run() {
-                                            Log.v(TAG, "show | onPositiveButton | query=" + query + " | label=" + label);
+                                            Log.v(TAG, "show | onPositiveButton | query=" + query + " | title=" + title);
                                             try {
-                                                if (callback != null && query != null && label != null) {
+                                                if (callback != null && query != null && title != null) {
                                                     if (query.isEmpty()) {
                                                         Static.snackBar(activity, activity.getString(R.string.need_to_choose_schedule));
                                                     } else {
                                                         callback.onDone(new JSONObject()
                                                                 .put("query", query)
-                                                                .put("title", label)
+                                                                .put("title", title)
                                                                 .toString()
                                                         );
                                                     }

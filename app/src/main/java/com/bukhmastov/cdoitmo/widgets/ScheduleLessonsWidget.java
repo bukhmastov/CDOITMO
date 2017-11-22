@@ -23,11 +23,12 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.MainActivity;
 import com.bukhmastov.cdoitmo.activities.PikaActivity;
 import com.bukhmastov.cdoitmo.activities.ScheduleLessonsWidgetConfigureActivity;
-import com.bukhmastov.cdoitmo.converters.ScheduleLessonsAdditionalConverter;
+import com.bukhmastov.cdoitmo.converters.schedule.ScheduleLessonsAdditionalConverter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.models.Client;
-import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
+import com.bukhmastov.cdoitmo.objects.schedule.Schedule;
+import com.bukhmastov.cdoitmo.objects.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
@@ -51,6 +52,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     public static final String ACTION_WIDGET_CONTROLS_RESET = "com.bukhmastov.cdoitmo.ACTION_WIDGET_CONTROLS_RESET";
 
     private enum SIZE {NARROW, REGULAR, WIDE}
+    private static Client.Request requestHandler = null;
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
@@ -119,46 +121,56 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
             @Override
             public void run() {
                 Log.i(TAG, "refresh | appWidgetId=" + appWidgetId);
-                ScheduleLessons scheduleLessons = new ScheduleLessons(context);
-                scheduleLessons.setHandler(new ScheduleLessons.response(){
-                    @Override
-                    public void onProgress(int state) {
-                        progress(context, appWidgetManager, appWidgetId, settings);
-                    }
-                    @Override
-                    public void onFailure(int state) {
-                        failed(context, appWidgetManager, appWidgetId, settings, state == IfmoRestClient.FAILED_SERVER_ERROR ? IfmoRestClient.getFailureMessage(context, -1) : context.getString(R.string.failed_to_load_schedule));
-                    }
-                    @Override
-                    public void onSuccess(final JSONObject json) {
-                        Static.T.runThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    JSONObject jsonObject = new JSONObject();
-                                    jsonObject.put("timestamp", Calendar.getInstance().getTimeInMillis());
-                                    jsonObject.put("content", json);
-                                    Data.save(context, appWidgetId, "cache", jsonObject.toString());
-                                    new ScheduleLessonsAdditionalConverter(context, json, new ScheduleLessonsAdditionalConverter.response() {
-                                        @Override
-                                        public void finish(final JSONObject content) {
-                                            Data.save(context, appWidgetId, "cache_converted", content.toString());
-                                            display(context, appWidgetManager, appWidgetId, false);
-                                        }
-                                    }).run();
-                                } catch (Exception e) {
-                                    Static.error(e);
-                                    failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_show_schedule));
-                                }
-                            }
-                        });
-                    }
-                    @Override
-                    public void onNewRequest(Client.Request request) {}
-                });
                 try {
-                    scheduleLessons.search(settings.getString("query"), 0, false, false);
-                } catch (JSONException e) {
+                    new ScheduleLessons(new Schedule.Handler() {
+                        @Override
+                        public void onSuccess(final JSONObject json, final boolean fromCache) {
+                            Static.T.runThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        JSONObject jsonObject = new JSONObject();
+                                        jsonObject.put("timestamp", Calendar.getInstance().getTimeInMillis());
+                                        jsonObject.put("content", json);
+                                        Data.save(context, appWidgetId, "cache", jsonObject.toString());
+                                        new ScheduleLessonsAdditionalConverter(context, json, new ScheduleLessonsAdditionalConverter.response() {
+                                            @Override
+                                            public void finish(final JSONObject content) {
+                                                Data.save(context, appWidgetId, "cache_converted", content.toString());
+                                                display(context, appWidgetManager, appWidgetId, false);
+                                            }
+                                        }).run();
+                                    } catch (Exception e) {
+                                        Static.error(e);
+                                        failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_show_schedule));
+                                    }
+                                }
+                            });
+                        }
+                        @Override
+                        public void onFailure(int state) {
+                            this.onFailure(0, null, state);
+                        }
+                        @Override
+                        public void onFailure(int statusCode, Client.Headers headers, int state) {
+                            failed(context, appWidgetManager, appWidgetId, settings, state == IfmoRestClient.FAILED_SERVER_ERROR ? IfmoRestClient.getFailureMessage(context, -1) : context.getString(R.string.failed_to_load_schedule));
+                        }
+                        @Override
+                        public void onProgress(int state) {
+                            progress(context, appWidgetManager, appWidgetId, settings);
+                        }
+                        @Override
+                        public void onNewRequest(Client.Request request) {
+                            requestHandler = request;
+                        }
+                        @Override
+                        public void onCancelRequest() {
+                            if (requestHandler != null) {
+                                requestHandler.cancel();
+                            }
+                        }
+                    }).search(context, settings.getString("query"), 0, false, false);
+                } catch (Exception e) {
                     Static.error(e);
                     failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_load_schedule));
                 }
@@ -248,7 +260,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                     // заголовки
                     layout.setViewVisibility(R.id.widget_title, View.VISIBLE);
                     layout.setViewVisibility(R.id.widget_day_title, View.VISIBLE);
-                    layout.setTextViewText(R.id.widget_title, json.getString("label") + (Objects.equals(json.getString("type"), "room") ? " " + context.getString(R.string.room).toLowerCase() : ""));
+                    layout.setTextViewText(R.id.widget_title, json.getString("title") + (Objects.equals(json.getString("type"), "room") ? " " + context.getString(R.string.room).toLowerCase() : ""));
                     layout.setTextViewText(R.id.widget_day_title,
                             (shift != 0 ? (shift > 0 ? "+" : "") + String.valueOf(shift) + " " : "") +
                             Static.getDay(context, calendar.get(Calendar.DAY_OF_WEEK)) +

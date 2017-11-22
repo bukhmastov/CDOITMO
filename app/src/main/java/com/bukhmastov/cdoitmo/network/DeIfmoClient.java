@@ -420,6 +420,12 @@ public class DeIfmoClient extends DeIfmo {
         });
     }
 
+    public static boolean isAuthorized(final Context context) {
+        final String login = Storage.file.perm.get(context, "user#deifmo#login", "").trim();
+        final String password = Storage.file.perm.get(context, "user#deifmo#password", "").trim();
+        return !login.isEmpty() && !password.isEmpty();
+    }
+
     private static String getAbsoluteUrl(Protocol protocol, String relativeUrl) {
         return getProtocol(protocol) + BASE_URL + "/" + relativeUrl;
     }

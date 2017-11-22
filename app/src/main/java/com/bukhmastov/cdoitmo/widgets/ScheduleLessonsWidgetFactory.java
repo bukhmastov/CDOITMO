@@ -60,22 +60,22 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
                 this.week = Static.getWeek(context, calendar) % 2;
                 this.type = content.getString("type");
                 this.lessons = new JSONArray();
-                final int dayNumber;
+                final int weekday;
                 switch (calendar.get(Calendar.DAY_OF_WEEK)) {
-                    case Calendar.MONDAY: dayNumber = 0; break;
-                    case Calendar.TUESDAY: dayNumber = 1; break;
-                    case Calendar.WEDNESDAY: dayNumber = 2; break;
-                    case Calendar.THURSDAY: dayNumber = 3; break;
-                    case Calendar.FRIDAY: dayNumber = 4; break;
-                    case Calendar.SATURDAY: dayNumber = 5; break;
-                    case Calendar.SUNDAY: dayNumber = 6; break;
-                    default: dayNumber = 0; break;
+                    case Calendar.MONDAY: weekday = 0; break;
+                    case Calendar.TUESDAY: weekday = 1; break;
+                    case Calendar.WEDNESDAY: weekday = 2; break;
+                    case Calendar.THURSDAY: weekday = 3; break;
+                    case Calendar.FRIDAY: weekday = 4; break;
+                    case Calendar.SATURDAY: weekday = 5; break;
+                    case Calendar.SUNDAY: weekday = 6; break;
+                    default: weekday = 0; break;
                 }
                 final JSONArray schedule = content.getJSONArray("schedule");
                 if (schedule == null) throw new NullPointerException("schedule cannot be null");
                 for (int i = 0; i < schedule.length(); i++) {
                     final JSONObject day = schedule.getJSONObject(i);
-                    if (day.getInt("index") == dayNumber) {
+                    if (day.getInt("weekday") == weekday) {
                         final JSONArray lessons = day.getJSONArray("lessons");
                         if (lessons == null) throw new NullPointerException("lessons cannot be null");
                         for (int j = 0; j < lessons.length(); j++) {

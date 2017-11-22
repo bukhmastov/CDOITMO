@@ -212,10 +212,10 @@ public class ScheduleExamsFragment extends ConnectedFragment implements Schedule
                             break;
                         case ScheduleExams.FAILED_EMPTY_QUERY:
                             draw(R.layout.schedule_empty_query);
-                            TextView seq_text = activity.findViewById(R.id.seq_text);
-                            if (seq_text != null) {
-                                seq_text.setText(activity.getString(R.string.settings) + " > " + activity.getString(R.string.extended_prefs) + " > " + activity.getString(R.string.schedule_exams) + " > " + activity.getString(R.string.default_schedule));
-                            }
+                            //TextView seq_text = activity.findViewById(R.id.seq_text);
+                            //if (seq_text != null) {
+                            //    seq_text.setText(activity.getString(R.string.settings) + " > " + activity.getString(R.string.extended_prefs) + " > " + activity.getString(R.string.schedule_exams) + " > " + activity.getString(R.string.default_schedule));
+                            //}
                             break;
                     }
                 } catch (Exception e){

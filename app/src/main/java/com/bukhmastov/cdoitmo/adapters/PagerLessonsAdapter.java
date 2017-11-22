@@ -4,7 +4,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.app.FragmentPagerAdapter;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsTabFragment;
@@ -12,7 +12,7 @@ import com.bukhmastov.cdoitmo.utils.Static;
 
 import java.util.ArrayList;
 
-public class PagerLessonsAdapter extends FragmentStatePagerAdapter {
+public class PagerLessonsAdapter extends FragmentPagerAdapter {
 
     private class Element {
         public final int id;

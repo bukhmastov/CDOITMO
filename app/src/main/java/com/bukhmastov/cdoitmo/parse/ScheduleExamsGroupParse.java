@@ -13,6 +13,7 @@ import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Deprecated
 public class ScheduleExamsGroupParse implements Runnable {
 
     private static final String TAG = "SEGroupParse";

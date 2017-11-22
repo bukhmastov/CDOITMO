@@ -77,11 +77,6 @@ public class LoginActivity extends ConnectedActivity {
                 route(SIGNAL_LOGIN);
             }
         }
-        // IntroducingActivity
-        if (Static.isFirstLaunchEver) {
-            Static.isFirstLaunchEver = false;
-            startActivity(new Intent(activity, IntroducingActivity.class));
-        }
     }
 
     @Override
@@ -287,7 +282,7 @@ public class LoginActivity extends ConnectedActivity {
                                         Log.v(TAG, "user_tile logout clicked");
                                         Static.logoutConfirmation(activity, new Static.SimpleCallback() {
                                             @Override
-                                            public void onDone() {
+                                            public void onCall() {
                                                 logout(login);
                                             }
                                         });

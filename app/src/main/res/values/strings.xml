@@ -444,5 +444,12 @@
     <string name="do_logout">Выйти</string>
     <string name="linked_accounts">Связанные аккаунты</string>
     <string name="de_ifmo">ЦДО ИТМО</string>
+    <string name="schedule_empty_query_message">Выберите необходимое расписание, используя поиск в правом верхнем углу, или установите его в настройках</string>
+    <string name="schedule_personal">Персональное расписание</string>
+    <string name="schedule_group">Расписание группы</string>
+    <string name="schedule_teacher">Расписание преподавателя</string>
+    <string name="schedule_room">Расписание аудитории</string>
+    <string name="corrupted_data">Данные повреждены</string>
+    <string name="no_changes">Нет изменений</string>
 
 </resources>

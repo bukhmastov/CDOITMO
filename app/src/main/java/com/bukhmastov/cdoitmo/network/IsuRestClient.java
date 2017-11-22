@@ -106,7 +106,7 @@ public class IsuRestClient extends Isu {
                     } else {
                         HashMap<String, String> query = new HashMap<>();
                         query.put("grant_type", "password");
-                        query.put("client_id", CLIENT_ID);
+                        query.put("client_id", getClientId());
                         query.put("username", username);
                         query.put("password", password);
                         p(context, getAbsoluteUrl(DEFAULT_PROTOCOL_AUTH, BASE_URL_AUTH, "accessToken"), query, null, new RawHandler() {
@@ -185,8 +185,8 @@ public class IsuRestClient extends Isu {
                     } else {
                         HashMap<String, String> query = new HashMap<>();
                         query.put("grant_type", "refresh_token");
-                        query.put("client_id", CLIENT_ID);
-                        query.put("client_secret", CLIENT_SECRET);
+                        query.put("client_id", getClientId());
+                        query.put("client_secret", getClientSecret());
                         query.put("refresh_token", refresh_token);
                         p(context, getAbsoluteUrl(DEFAULT_PROTOCOL_AUTH, BASE_URL_AUTH, "accessToken"), query, null, new RawHandler() {
                             @Override
@@ -266,7 +266,7 @@ public class IsuRestClient extends Isu {
                                     public void run() {
                                         if ("authorized".equals(response)) {
                                             responseHandler.onProgress(STATE_HANDLING);
-                                            gJson(context, getAbsoluteUrl(protocol, url), query, new RawJsonHandler() {
+                                            gJson(context, getAbsoluteUrl(protocol, getUrl(context, url)), query, new RawJsonHandler() {
                                                 @Override
                                                 public void onDone(final int code, final okhttp3.Headers headers, String response, final JSONObject responseObj, final JSONArray responseArr) {
                                                     Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
@@ -331,7 +331,7 @@ public class IsuRestClient extends Isu {
                     Log.v(TAG, "get | url=" + url);
                     if (Static.isOnline(context)) {
                         responseHandler.onProgress(STATE_HANDLING);
-                        gJson(context, getAbsoluteUrl(protocol, url), query, new RawJsonHandler() {
+                        gJson(context, getAbsoluteUrl(protocol, getUrl(context, url)), query, new RawJsonHandler() {
                             @Override
                             public void onDone(final int code, final okhttp3.Headers headers, String response, final JSONObject responseObj, final JSONArray responseArr) {
                                 Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
@@ -366,6 +366,15 @@ public class IsuRestClient extends Isu {
         }
     }
 
+    public static boolean isAuthorized(final Context context) {
+        final String access_token = Storage.file.perm.get(context, "user#isu#access_token", "").trim();
+        final String refresh_token = Storage.file.perm.get(context, "user#isu#refresh_token", "").trim();
+        return !access_token.isEmpty() && !refresh_token.isEmpty();
+    }
+
+    private static String getUrl(Context context, String url) {
+        return url.replace("%key%", getApiKey()).replace("%token%", Storage.file.perm.get(context, "user#isu#access_token"));
+    }
     private static String getAbsoluteUrl(Protocol protocol, String relativeUrl) {
         return getAbsoluteUrl(protocol, BASE_URL, relativeUrl);
     }

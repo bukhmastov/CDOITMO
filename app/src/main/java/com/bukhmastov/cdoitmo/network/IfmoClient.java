@@ -10,6 +10,7 @@ import com.bukhmastov.cdoitmo.utils.Static;
 
 import java.util.Map;
 
+@Deprecated
 public class IfmoClient extends Ifmo {
 
     private static final String TAG = "IfmoClient";

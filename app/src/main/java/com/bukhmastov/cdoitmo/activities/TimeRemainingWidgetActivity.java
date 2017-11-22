@@ -14,15 +14,16 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.models.Client;
-import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
 import com.bukhmastov.cdoitmo.objects.TimeRemainingWidget;
+import com.bukhmastov.cdoitmo.objects.schedule.Schedule;
+import com.bukhmastov.cdoitmo.objects.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.utils.CtxWrapper;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 
 import org.json.JSONObject;
 
-public class TimeRemainingWidgetActivity extends AppCompatActivity implements ScheduleLessons.response, TimeRemainingWidget.response {
+public class TimeRemainingWidgetActivity extends AppCompatActivity implements ScheduleLessons.Handler, TimeRemainingWidget.response {
 
     private static final String TAG = "TRWidgetActivity";
     private final Activity activity = this;
@@ -95,11 +96,10 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
         Log.v(TAG, "Activity resumed");
         if (scheduleLessons == null) {
             scheduleLessons = new ScheduleLessons(this);
-            scheduleLessons.setHandler(this);
         }
         if (schedule == null) {
             if (query != null) {
-                scheduleLessons.search(query, true);
+                scheduleLessons.search(activity, query, true);
             } else {
                 Log.w(TAG, "onResume | query is null");
                 close();
@@ -132,6 +132,11 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
 
     @Override
     public void onFailure(int state) {
+        this.onFailure(0, null, state);
+    }
+
+    @Override
+    public void onFailure(int statusCode, Client.Headers headers, int state) {
         Log.v(TAG, "failure " + state);
         try {
             switch (state) {
@@ -154,7 +159,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
     }
 
     @Override
-    public void onSuccess(JSONObject json) {
+    public void onSuccess(JSONObject json, boolean fromCache) {
         Log.v(TAG, "success");
         try {
             if (json == null) throw new NullPointerException("json cannot be null");
@@ -176,6 +181,13 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
     @Override
     public void onNewRequest(Client.Request request) {
         requestHandle = request;
+    }
+
+    @Override
+    public void onCancelRequest() {
+        if (requestHandle != null) {
+            requestHandle.cancel();
+        }
     }
 
     @Override

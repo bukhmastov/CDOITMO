@@ -7,6 +7,7 @@ import com.bukhmastov.cdoitmo.network.interfaces.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.models.Room101;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
+import com.bukhmastov.cdoitmo.utils.Storage;
 
 import java.util.Map;
 
@@ -109,6 +110,12 @@ public class Room101Client extends Room101 {
                 }
             }
         });
+    }
+
+    public static boolean isAuthorized(final Context context) {
+        final String login = Storage.file.perm.get(context, "user#deifmo#login", "").trim();
+        final String password = Storage.file.perm.get(context, "user#deifmo#password", "").trim();
+        return !login.isEmpty() && !password.isEmpty();
     }
 
     private static String getAbsoluteUrl(Protocol protocol, String relativeUrl) {

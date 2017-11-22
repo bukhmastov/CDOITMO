@@ -437,5 +437,12 @@
     <string name="do_logout">Log out</string>
     <string name="linked_accounts">Linked accounts</string>
     <string name="de_ifmo">CDE ITMO</string>
+    <string name="schedule_empty_query_message">Select the schedule using the search in the upper right corner, or set it in the settings</string>
+    <string name="schedule_personal">Personal schedule</string>
+    <string name="schedule_group">Group schedule</string>
+    <string name="schedule_teacher">Teacher schedule</string>
+    <string name="schedule_room">Audience schedule</string>
+    <string name="corrupted_data">Corrupted data</string>
+    <string name="no_changes">No changes</string>
 
 </resources>

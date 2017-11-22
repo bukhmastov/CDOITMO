@@ -2,6 +2,7 @@ package com.bukhmastov.cdoitmo.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TextInputEditText;
 import android.text.Editable;
@@ -21,21 +22,18 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapters.TeacherPickerAdapter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.models.Client;
-import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
-import com.bukhmastov.cdoitmo.objects.entities.LessonUnit;
+import com.bukhmastov.cdoitmo.objects.schedule.Schedule;
+import com.bukhmastov.cdoitmo.objects.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
-import com.bukhmastov.cdoitmo.utils.Storage;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Locale;
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,8 +42,6 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
     private static final String TAG = "SLModifyFragment";
     public enum TYPE {create, edit}
     private TYPE type;
-    private int index = 0;
-    private String hash = null;
     private boolean block_time_start = false;
     private boolean block_time_end = false;
 
@@ -56,15 +52,15 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_schedule_lessons_modify, container, false);
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         try {
-            Bundle extras = getArguments();
+            final Bundle extras = getArguments();
             if (extras == null) {
                 throw new NullPointerException("extras cannot be null");
             }
@@ -83,7 +79,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
             display(extras);
         } catch (Exception e) {
             Static.error(e);
-            activity.back();
+            close();
         }
     }
 
@@ -98,28 +94,32 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
             @Override
             public void run() {
                 try {
-                    final LessonUnit lessonUnit = convert2LessonUnit(extras);
                     final int week = Static.getWeek(activity);
+                    final String query = getStringExtra(extras, "query", true);
+                    final String type_lesson = getStringExtra(extras, "type", true);
+                    final String title = getStringExtra(extras, "title", true);
+                    final int weekday = getIntExtra(extras, "weekday", true);
+                    final JSONObject lessonOriginal = Static.string2json(getStringExtra(extras, "lesson", true));
+                    final LessonUnit lesson = convertJson2LessonUnit(lessonOriginal);
                     Static.T.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             try {
-                                String header = getStringExtra(extras, "header", true);
+                                if (lesson == null) {
+                                    throw new NullPointerException("lesson cannot be null");
+                                }
+                                lesson.weekday = weekday;
                                 TextView slc_title = activity.findViewById(R.id.slc_title);
                                 TextView slc_desc = activity.findViewById(R.id.slc_desc);
                                 if (slc_title != null) {
-                                    slc_title.setText(header);
+                                    slc_title.setText(ScheduleLessons.getScheduleHeader(activity, title, type_lesson));
                                 }
                                 if (slc_desc != null) {
-                                    if (week >= 0) {
-                                        slc_desc.setText(week + " " + activity.getString(R.string.school_week));
-                                    } else {
-                                        slc_desc.setText(new SimpleDateFormat("dd.MM.yyyy", Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis())));
-                                    }
+                                    slc_desc.setText(ScheduleLessons.getScheduleWeek(activity, week));
                                 }
 
                                 TextInputEditText lesson_title = activity.findViewById(R.id.lesson_title);
-                                if (lessonUnit.title != null) lesson_title.setText(lessonUnit.title);
+                                if (lesson.subject != null) lesson_title.setText(lesson.subject);
                                 lesson_title.requestFocus();
                                 lesson_title.addTextChangedListener(new TextWatcher() {
                                     @Override
@@ -128,14 +128,14 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                     public void onTextChanged(CharSequence s, int start, int before, int count) {}
                                     @Override
                                     public void afterTextChanged(Editable s) {
-                                        lessonUnit.title = s.toString();
+                                        lesson.subject = s.toString();
                                     }
                                 });
 
                                 final TextInputEditText lesson_time_start = activity.findViewById(R.id.lesson_time_start);
                                 final TextInputEditText lesson_time_end = activity.findViewById(R.id.lesson_time_end);
-                                if (lessonUnit.timeStart != null) lesson_time_start.setText(lessonUnit.timeStart);
-                                if (lessonUnit.timeEnd != null) lesson_time_end.setText(lessonUnit.timeEnd);
+                                if (lesson.timeStart != null) lesson_time_start.setText(lesson.timeStart);
+                                if (lesson.timeEnd != null) lesson_time_end.setText(lesson.timeEnd);
                                 lesson_time_start.addTextChangedListener(new TextWatcher() {
                                     @Override
                                     public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -154,13 +154,13 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                             st_calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(time.group(1)));
                                             st_calendar.set(Calendar.MINUTE, Integer.parseInt(time.group(2)));
                                             st_calendar.set(Calendar.SECOND, 0);
-                                            st = st_calendar.get(Calendar.HOUR_OF_DAY) + ":" + ldgZero(st_calendar.get(Calendar.MINUTE));
+                                            st = st_calendar.get(Calendar.HOUR_OF_DAY) + ":" + Static.ldgZero(st_calendar.get(Calendar.MINUTE));
                                             if (lesson_time_end.getText().toString().isEmpty()) {
                                                 Calendar nt_calendar = Calendar.getInstance();
                                                 nt_calendar.setTime(new Date(st_calendar.getTimeInMillis() + 5400000));
                                                 block_time_end = true;
-                                                String insert = nt_calendar.get(Calendar.HOUR_OF_DAY) + ":" + ldgZero(nt_calendar.get(Calendar.MINUTE));
-                                                lessonUnit.timeEnd = insert;
+                                                String insert = nt_calendar.get(Calendar.HOUR_OF_DAY) + ":" + Static.ldgZero(nt_calendar.get(Calendar.MINUTE));
+                                                lesson.timeEnd = insert;
                                                 int selection = lesson_time_end.getSelectionStart();
                                                 lesson_time_end.setText(insert);
                                                 try {
@@ -179,8 +179,8 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                                     if (nt_calendar.getTimeInMillis() <= st_calendar.getTimeInMillis()) {
                                                         nt_calendar.setTime(new Date(st_calendar.getTimeInMillis() + 5400000));
                                                         block_time_end = true;
-                                                        String insert = nt_calendar.get(Calendar.HOUR_OF_DAY) + ":" + ldgZero(nt_calendar.get(Calendar.MINUTE));
-                                                        lessonUnit.timeEnd = insert;
+                                                        String insert = nt_calendar.get(Calendar.HOUR_OF_DAY) + ":" + Static.ldgZero(nt_calendar.get(Calendar.MINUTE));
+                                                        lesson.timeEnd = insert;
                                                         int selection = lesson_time_end.getSelectionStart();
                                                         lesson_time_end.setText(insert);
                                                         try {
@@ -200,7 +200,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                                 // ignore
                                             }
                                         }
-                                        lessonUnit.timeStart = st;
+                                        lesson.timeStart = st;
                                     }
                                 });
                                 lesson_time_end.addTextChangedListener(new TextWatcher() {
@@ -221,13 +221,13 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                             et_calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(time.group(1)));
                                             et_calendar.set(Calendar.MINUTE, Integer.parseInt(time.group(2)));
                                             et_calendar.set(Calendar.SECOND, 0);
-                                            et = et_calendar.get(Calendar.HOUR_OF_DAY) + ":" + ldgZero(et_calendar.get(Calendar.MINUTE));
+                                            et = et_calendar.get(Calendar.HOUR_OF_DAY) + ":" + Static.ldgZero(et_calendar.get(Calendar.MINUTE));
                                             if (lesson_time_start.getText().toString().isEmpty()) {
                                                 Calendar st_calendar = Calendar.getInstance();
                                                 st_calendar.setTime(new Date(et_calendar.getTimeInMillis() - 5400000));
                                                 block_time_start = true;
-                                                String insert = st_calendar.get(Calendar.HOUR_OF_DAY) + ":" + ldgZero(st_calendar.get(Calendar.MINUTE));
-                                                lessonUnit.timeStart = insert;
+                                                String insert = st_calendar.get(Calendar.HOUR_OF_DAY) + ":" + Static.ldgZero(st_calendar.get(Calendar.MINUTE));
+                                                lesson.timeStart = insert;
                                                 int selection = lesson_time_start.getSelectionStart();
                                                 lesson_time_start.setText(insert);
                                                 try {
@@ -246,8 +246,8 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                                     if (st_calendar.getTimeInMillis() >= et_calendar.getTimeInMillis()) {
                                                         st_calendar.setTime(new Date(et_calendar.getTimeInMillis() - 5400000));
                                                         block_time_start = true;
-                                                        String insert = st_calendar.get(Calendar.HOUR_OF_DAY) + ":" + ldgZero(st_calendar.get(Calendar.MINUTE));
-                                                        lessonUnit.timeStart = insert;
+                                                        String insert = st_calendar.get(Calendar.HOUR_OF_DAY) + ":" + Static.ldgZero(st_calendar.get(Calendar.MINUTE));
+                                                        lesson.timeStart = insert;
                                                         int selection = lesson_time_start.getSelectionStart();
                                                         lesson_time_start.setText(insert);
                                                         try {
@@ -267,7 +267,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                                 // ignore
                                             }
                                         }
-                                        lessonUnit.timeEnd = et;
+                                        lesson.timeEnd = et;
                                     }
                                 });
 
@@ -275,11 +275,11 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                 ArrayAdapter<?> lesson_week_adapter = ArrayAdapter.createFromResource(activity, R.array.week_types_titles, R.layout.spinner_layout_simple);
                                 lesson_week_adapter.setDropDownViewResource(R.layout.spinner_layout);
                                 lesson_week.setAdapter(lesson_week_adapter);
-                                lesson_week.setSelection((lessonUnit.week + 1) % 3);
+                                lesson_week.setSelection((lesson.week + 1) % 3);
                                 lesson_week.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                                     public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
                                         String[] week_types_values = getResources().getStringArray(R.array.week_types_values);
-                                        lessonUnit.week = Integer.parseInt(week_types_values[position]);
+                                        lesson.week = Integer.parseInt(week_types_values[position]);
                                     }
                                     public void onNothingSelected(AdapterView<?> parent) {}
                                 });
@@ -288,17 +288,17 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                 ArrayAdapter<?> lesson_day_of_week_adapter = ArrayAdapter.createFromResource(activity, R.array.days_of_week_titles, R.layout.spinner_layout_simple);
                                 lesson_day_of_week_adapter.setDropDownViewResource(R.layout.spinner_layout);
                                 lesson_day_of_week.setAdapter(lesson_day_of_week_adapter);
-                                lesson_day_of_week.setSelection(lessonUnit.day);
+                                lesson_day_of_week.setSelection(lesson.weekday);
                                 lesson_day_of_week.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                                     public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
                                         String[] week_types_values = getResources().getStringArray(R.array.days_of_week_values);
-                                        lessonUnit.day = Integer.parseInt(week_types_values[position]);
+                                        lesson.weekday = Integer.parseInt(week_types_values[position]);
                                     }
                                     public void onNothingSelected(AdapterView<?> parent) {}
                                 });
 
                                 final AutoCompleteTextView lesson_type = activity.findViewById(R.id.lesson_type);
-                                if (lessonUnit.type != null) lesson_type.setText(lessonUnit.type);
+                                if (lesson.type != null) lesson_type.setText(lesson.type);
                                 lesson_type.setThreshold(1);
                                 lesson_type.setAdapter(ArrayAdapter.createFromResource(activity, R.array.lessons_types, android.R.layout.simple_dropdown_item_1line));
                                 lesson_type.addTextChangedListener(new TextWatcher() {
@@ -308,12 +308,12 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                     public void onTextChanged(CharSequence s, int start, int before, int count) {}
                                     @Override
                                     public void afterTextChanged(Editable s) {
-                                        lessonUnit.type = s.toString();
+                                        lesson.type = s.toString();
                                     }
                                 });
 
                                 TextInputEditText lesson_group = activity.findViewById(R.id.lesson_group);
-                                if (lessonUnit.group != null) lesson_group.setText(lessonUnit.group);
+                                if (lesson.group != null) lesson_group.setText(lesson.group);
                                 lesson_group.addTextChangedListener(new TextWatcher() {
                                     @Override
                                     public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -321,16 +321,16 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                     public void onTextChanged(CharSequence s, int start, int before, int count) {}
                                     @Override
                                     public void afterTextChanged(Editable s) {
-                                        lessonUnit.group = s.toString();
+                                        lesson.group = s.toString();
                                     }
                                 });
 
                                 final AutoCompleteTextView lesson_teacher = activity.findViewById(R.id.lesson_teacher);
                                 final ProgressBar lesson_teacher_bar = activity.findViewById(R.id.lesson_teacher_bar);
                                 final TeacherPickerAdapter teacherPickerAdapter = new TeacherPickerAdapter(activity, new ArrayList<JSONObject>());
-                                if (lessonUnit.teacher != null) {
+                                if (lesson.teacher != null) {
                                     TeacherSearch.blocked = true;
-                                    lesson_teacher.setText(lessonUnit.teacher);
+                                    lesson_teacher.setText(lesson.teacher);
                                 }
                                 teacherPickerAdapter.setNotifyOnChange(true);
                                 lesson_teacher.setThreshold(1);
@@ -349,8 +349,8 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                             TeacherSearch.search(activity, query, lesson_teacher_bar, new TeacherSearch.response() {
                                                 @Override
                                                 public void onPermitted() {
-                                                    lessonUnit.teacher = query;
-                                                    lessonUnit.teacher_id = null;
+                                                    lesson.teacher = query;
+                                                    lesson.teacher_id = "";
                                                 }
                                                 @Override
                                                 public void onSuccess(final JSONObject json) {
@@ -359,11 +359,11 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                                         public void run() {
                                                             try {
                                                                 teacherPickerAdapter.clear();
-                                                                if (Objects.equals(json.getString("type"), "teacher_picker")) {
-                                                                    JSONArray jsonArray = json.getJSONArray("list");
+                                                                if (json.getString("type").equals("teachers")) {
+                                                                    JSONArray schedule = json.getJSONArray("schedule");
                                                                     ArrayList<JSONObject> arrayList = new ArrayList<>();
-                                                                    for (int i = 0; i < jsonArray.length(); i++) {
-                                                                        arrayList.add(jsonArray.getJSONObject(i));
+                                                                    for (int i = 0; i < schedule.length(); i++) {
+                                                                        arrayList.add(schedule.getJSONObject(i));
                                                                     }
                                                                     teacherPickerAdapter.addAll(arrayList);
                                                                     teacherPickerAdapter.addTeachers(arrayList);
@@ -387,11 +387,11 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                         try {
                                             JSONObject item = teacherPickerAdapter.getItem(position);
                                             if (item == null) throw new Exception("Teacher item is null");
-                                            lessonUnit.teacher = item.getString("person");
-                                            lessonUnit.teacher_id = String.valueOf(item.getInt("pid"));
+                                            lesson.teacher = item.getString("person");
+                                            lesson.teacher_id = String.valueOf(item.getInt("pid"));
                                             TeacherSearch.blocked = true;
-                                            TeacherSearch.lastQuery = lessonUnit.teacher;
-                                            lesson_teacher.setText(lessonUnit.teacher);
+                                            TeacherSearch.lastQuery = lesson.teacher;
+                                            lesson_teacher.setText(lesson.teacher);
                                             lesson_teacher.dismissDropDown();
                                         } catch (Exception e) {
                                             Static.error(e);
@@ -401,7 +401,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                 });
 
                                 TextInputEditText lesson_room = activity.findViewById(R.id.lesson_room);
-                                if (lessonUnit.room != null) lesson_room.setText(lessonUnit.room);
+                                if (lesson.room != null) lesson_room.setText(lesson.room);
                                 lesson_room.addTextChangedListener(new TextWatcher() {
                                     @Override
                                     public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -409,12 +409,12 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                     public void onTextChanged(CharSequence s, int start, int before, int count) {}
                                     @Override
                                     public void afterTextChanged(Editable s) {
-                                        lessonUnit.room = s.toString();
+                                        lesson.room = s.toString();
                                     }
                                 });
 
                                 AutoCompleteTextView lesson_building = activity.findViewById(R.id.lesson_building);
-                                if (lessonUnit.building != null) lesson_building.setText(lessonUnit.building);
+                                if (lesson.building != null) lesson_building.setText(lesson.building);
                                 lesson_building.setThreshold(1);
                                 lesson_building.setAdapter(ArrayAdapter.createFromResource(activity, R.array.buildings, android.R.layout.simple_dropdown_item_1line));
                                 lesson_building.addTextChangedListener(new TextWatcher() {
@@ -424,7 +424,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                     public void onTextChanged(CharSequence s, int start, int before, int count) {}
                                     @Override
                                     public void afterTextChanged(Editable s) {
-                                        lessonUnit.building = s.toString();
+                                        lesson.building = s.toString();
                                     }
                                 });
 
@@ -439,43 +439,49 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                         Static.T.runThread(new Runnable() {
                                             @Override
                                             public void run() {
-                                                Log.v(TAG, "create_button clicked");
-                                                if (lessonUnit.title == null || lessonUnit.title.isEmpty()) {
-                                                    Log.v(TAG, "lessonUnit.title required");
-                                                    Static.snackBar(activity, activity.getString(R.string.lesson_title_required));
-                                                    return;
-                                                }
-                                                if (lessonUnit.timeStart == null || lessonUnit.timeStart.isEmpty()) {
-                                                    Log.v(TAG, "lessonUnit.timeStart required");
-                                                    Static.snackBar(activity, activity.getString(R.string.lesson_time_start_required));
-                                                    return;
-                                                }
-                                                if (lessonUnit.type != null) {
-                                                    if (Objects.equals(lessonUnit.type.toLowerCase(), activity.getString(R.string.lecture).toLowerCase())) lessonUnit.type = "lecture";
-                                                    if (Objects.equals(lessonUnit.type.toLowerCase(), activity.getString(R.string.practice).toLowerCase())) lessonUnit.type = "practice";
-                                                    if (Objects.equals(lessonUnit.type.toLowerCase(), activity.getString(R.string.lab).toLowerCase())) lessonUnit.type = "lab";
-                                                }
-                                                switch (type) {
-                                                    case create: {
-                                                        if (ScheduleLessons.createLesson(activity, lessonUnit)) {
-                                                            ScheduleLessonsFragment.reScheduleRequired = true;
-                                                            activity.back();
-                                                        } else {
-                                                            Log.w(TAG, "failed to create lesson");
-                                                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                                        }
-                                                        break;
+                                                try {
+                                                    Log.v(TAG, "create_button clicked");
+                                                    if (lesson.subject == null || lesson.subject.isEmpty()) {
+                                                        Log.v(TAG, "lessonUnit.title required");
+                                                        Static.snackBar(activity, activity.getString(R.string.lesson_title_required));
+                                                        return;
                                                     }
-                                                    case edit: {
-                                                        if (ScheduleLessons.editLesson(activity, lessonUnit.cache_token, index, hash, lessonUnit)) {
-                                                            ScheduleLessonsFragment.reScheduleRequired = true;
-                                                            activity.back();
-                                                        } else {
-                                                            Log.w(TAG, "failed to edit lesson");
-                                                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                                        }
-                                                        break;
+                                                    if (lesson.timeStart == null || lesson.timeStart.isEmpty()) {
+                                                        Log.v(TAG, "lessonUnit.timeStart required");
+                                                        Static.snackBar(activity, activity.getString(R.string.lesson_time_start_required));
+                                                        return;
                                                     }
+                                                    if (lesson.type != null) {
+                                                        if (lesson.type.toLowerCase().equals(activity.getString(R.string.lecture).toLowerCase())) lesson.type = "lecture";
+                                                        if (lesson.type.toLowerCase().equals(activity.getString(R.string.practice).toLowerCase())) lesson.type = "practice";
+                                                        if (lesson.type.toLowerCase().equals(activity.getString(R.string.lab).toLowerCase())) lesson.type = "lab";
+                                                    }
+                                                    switch (type) {
+                                                        case create: {
+                                                            if (ScheduleLessons.createLesson(activity, query, lesson.weekday, convertLessonUnit2Json(lesson), null)) {
+                                                                ScheduleLessonsTabHostFragment.invalidateOnDemand();
+                                                                close();
+                                                            } else {
+                                                                Log.w(TAG, "failed to create lesson");
+                                                                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                                            }
+                                                            break;
+                                                        }
+                                                        case edit: {
+                                                            if (ScheduleLessons.deleteLesson(activity, query, weekday, lessonOriginal, null) && ScheduleLessons.createLesson(activity, query, lesson.weekday, convertLessonUnit2Json(lesson), null)) {
+                                                                ScheduleLessonsTabHostFragment.invalidateOnDemand();
+                                                                close();
+                                                            } else {
+                                                                Log.w(TAG, "failed to create lesson");
+                                                                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                                            }
+                                                            break;
+                                                        }
+                                                    }
+                                                } catch (Exception e) {
+                                                    Static.error(e);
+                                                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                                    close();
                                                 }
                                             }
                                         });
@@ -484,97 +490,138 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                             } catch (Exception e) {
                                 Static.error(e);
                                 Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                activity.back();
+                                close();
                             }
                         }
                     });
                 } catch (Exception e) {
                     Static.error(e);
                     Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                    activity.back();
+                    close();
                 }
             }
         });
     }
-    private LessonUnit convert2LessonUnit(Bundle extras) throws Exception {
-        if (extras == null) {
-            throw new NullPointerException("extras cannot be null");
+    private LessonUnit convertJson2LessonUnit(JSONObject lesson) throws Exception {
+        if (lesson == null) {
+            throw new NullPointerException("lesson cannot be null");
         }
-        hash = getStringExtra(extras, "hash", type == TYPE.edit);
-        index = extras.getInt("day");
         LessonUnit lessonUnit = new LessonUnit();
-        lessonUnit.day = extras.getInt("day");
-        lessonUnit.week = extras.getInt("week");
-        lessonUnit.cache_token = getStringExtra(extras, "cache_token", true);
-        lessonUnit.title = getStringExtra(extras, "title", false);
-        lessonUnit.timeStart = getStringExtra(extras, "timeStart", false);
-        lessonUnit.timeEnd = getStringExtra(extras, "timeEnd", false);
-        lessonUnit.type = getStringExtra(extras, "type", false);
-        lessonUnit.group = getStringExtra(extras, "group", false);
-        lessonUnit.teacher = getStringExtra(extras, "teacher", false);
-        lessonUnit.teacher_id = getStringExtra(extras, "teacher_id", false);
-        lessonUnit.room = getStringExtra(extras, "room", false);
-        lessonUnit.building = getStringExtra(extras, "building", false);
+        lessonUnit.subject = getString(lesson, "subject");
+        lessonUnit.type = getString(lesson, "type");
+        lessonUnit.week = getInt(lesson, "week");
+        lessonUnit.timeStart = getString(lesson, "timeStart");
+        lessonUnit.timeEnd = getString(lesson, "timeEnd");
+        lessonUnit.group = getString(lesson, "group");
+        lessonUnit.teacher = getString(lesson, "teacher");
+        lessonUnit.teacher_id = getString(lesson, "teacher_id");
+        lessonUnit.room = getString(lesson, "room");
+        lessonUnit.building = getString(lesson, "building");
+        lessonUnit.cdoitmo_type = "synthetic";
         switch (lessonUnit.type) {
             case "practice": lessonUnit.type = activity.getString(R.string.practice); break;
             case "lecture": lessonUnit.type = activity.getString(R.string.lecture); break;
             case "lab": lessonUnit.type = activity.getString(R.string.lab); break;
         }
-        if (Storage.file.perm.exists(activity, "schedule_lessons#added#" + lessonUnit.cache_token) && hash != null && !hash.isEmpty()) {
-            String addedStr = Storage.file.perm.get(activity, "schedule_lessons#added#" + lessonUnit.cache_token, "");
-            JSONArray added;
-            if (addedStr.isEmpty()) {
-                added = new JSONArray();
-            } else {
-                added = new JSONArray(addedStr);
-            }
-            for (int i = 0; i < added.length(); i++) {
-                JSONObject day = added.getJSONObject(i);
-                if (day.has("index") && day.getInt("index") == lessonUnit.day && day.has("lessons")) {
-                    JSONArray lessons = day.getJSONArray("lessons");
-                    for (int j = 0; j < lessons.length(); j++) {
-                        JSONObject lesson = lessons.getJSONObject(j);
-                        if (Objects.equals(hash, Static.crypt(lesson.toString()))) {
-                            if (lesson.has("subject") && lesson.getString("subject") != null) lessonUnit.title = lesson.getString("subject");
-                            if (lesson.has("timeStart") && lesson.getString("timeStart") != null) lessonUnit.timeStart = lesson.getString("timeStart");
-                            if (lesson.has("timeEnd") && lesson.getString("timeEnd") != null) lessonUnit.timeEnd = lesson.getString("timeEnd");
-                            if (lesson.has("week")) lessonUnit.week = lesson.getInt("week");
-                            if (lesson.has("type") && lesson.getString("type") != null) lessonUnit.type = lesson.getString("type");
-                            if (lesson.has("group") && lesson.getString("group") != null) lessonUnit.group = lesson.getString("group");
-                            if (lesson.has("teacher") && lesson.getString("teacher") != null) lessonUnit.teacher = lesson.getString("teacher");
-                            if (lesson.has("teacher_id") && lesson.getString("teacher_id") != null) lessonUnit.teacher_id = lesson.getString("teacher_id");
-                            if (lesson.has("room") && lesson.getString("room") != null) lessonUnit.room = lesson.getString("room");
-                            if (lesson.has("building") && lesson.getString("building") != null) lessonUnit.building = lesson.getString("building");
-                            if (lessonUnit.type != null) {
-                                switch (lessonUnit.type) {
-                                    case "practice": lessonUnit.type = activity.getString(R.string.practice); break;
-                                    case "lecture": lessonUnit.type = activity.getString(R.string.lecture); break;
-                                    case "lab": lessonUnit.type = activity.getString(R.string.lab); break;
-                                }
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-        }
         return lessonUnit;
     }
-    private String getStringExtra(Bundle extras, String key, boolean restrict) throws Exception {
-        String value = extras.getString(key);
-        if (value == null) {
-            if (restrict) {
+    private JSONObject convertLessonUnit2Json(LessonUnit lessonUnit) throws Exception {
+        if (lessonUnit == null) {
+            throw new NullPointerException("lessonUnit cannot be null");
+        }
+        if (lessonUnit.type != null) {
+            if (lessonUnit.type.toLowerCase().equals(activity.getString(R.string.lecture).toLowerCase())) lessonUnit.type = "lecture";
+            if (lessonUnit.type.toLowerCase().equals(activity.getString(R.string.practice).toLowerCase())) lessonUnit.type = "practice";
+            if (lessonUnit.type.toLowerCase().equals(activity.getString(R.string.lab).toLowerCase())) lessonUnit.type = "lab";
+        }
+        JSONObject lesson = new JSONObject();
+        lesson.put("subject", lessonUnit.subject);
+        lesson.put("type", lessonUnit.type);
+        lesson.put("week", lessonUnit.week);
+        lesson.put("timeStart", lessonUnit.timeStart);
+        lesson.put("timeEnd", lessonUnit.timeEnd);
+        lesson.put("group", lessonUnit.group);
+        lesson.put("teacher", lessonUnit.teacher);
+        lesson.put("teacher_id", lessonUnit.teacher_id);
+        lesson.put("room", lessonUnit.room);
+        lesson.put("building", lessonUnit.building);
+        lesson.put("cdoitmo_type", lessonUnit.cdoitmo_type);
+        return lesson;
+    }
+    private String getStringExtra(Bundle extras, String key, boolean strict) throws Exception {
+        if (extras.containsKey(key)) {
+            String value = extras.getString(key);
+            if (value != null) {
+                return value;
+            } else {
+                if (strict) {
+                    throw new Exception("Missed extra for key: " + key);
+                } else {
+                    return "";
+                }
+            }
+        } else {
+            if (strict) {
                 throw new Exception("Missed extra for key: " + key);
             } else {
-                value = "";
+                return "";
             }
         }
-        return value;
     }
-    private String ldgZero(int time){
-        return time % 10 == time ? "0" + String.valueOf(time) : String.valueOf(time);
+    private int getIntExtra(Bundle extras, String key, boolean strict) throws Exception {
+        if (extras.containsKey(key)) {
+            return extras.getInt(key);
+        } else {
+            if (strict) {
+                throw new Exception("Missed extra for key: " + key);
+            } else {
+                return 0;
+            }
+        }
+    }
+    protected String getString(JSONObject json, String key) throws JSONException {
+        if (json.has(key)) {
+            Object object = json.get(key);
+            if (json.isNull(key) || object == null) {
+                return "";
+            } else {
+                try {
+                    String value = (String) object;
+                    return value.equals("null") ? "" : value;
+                } catch (Exception e) {
+                    return "";
+                }
+            }
+        } else {
+            return "";
+        }
+    }
+    protected int getInt(JSONObject json, String key) throws JSONException {
+        if (json.has(key)) {
+            try {
+                return json.getInt(key);
+            } catch (Exception e) {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
     }
 
+    private static class LessonUnit {
+        public String subject;
+        public String type;
+        public int week;
+        public int weekday;
+        public String timeStart;
+        public String timeEnd;
+        public String group;
+        public String teacher;
+        public String teacher_id;
+        public String room;
+        public String building;
+        public String cdoitmo_type;
+    }
     private static class TeacherSearch {
 
         private static final String TAG = "SLModifyFragment.TS";
@@ -593,10 +640,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                     if (requestHandle != null) {
                         requestHandle.cancel();
                     }
-                    boolean allowed = true;
-                    if (Objects.equals(lastQuery, query)) {
-                        allowed = false;
-                    }
+                    boolean allowed = !lastQuery.equals(query);
                     if (allowed) {
                         try {
                             new JSONObject(query);
@@ -617,25 +661,16 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                     }
                     Log.v(TAG, "search | query=" + query);
                     delegate.onPermitted();
-                    ScheduleLessons scheduleLessons = new ScheduleLessons(context);
-                    scheduleLessons.setHandler(new ScheduleLessons.response() {
+                    Static.T.runOnUiThread(new Runnable() {
                         @Override
-                        public void onProgress(int state) {
-                            Log.v(TAG, "search | progress " + state);
+                        public void run() {
+                            progressBar.setVisibility(View.VISIBLE);
                         }
+                    });
+                    new ScheduleLessons(new Schedule.Handler() {
                         @Override
-                        public void onFailure(int state) {
-                            Log.v(TAG, "search | failure " + state);
-                            Static.T.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    progressBar.setVisibility(View.GONE);
-                                }
-                            });
-                        }
-                        @Override
-                        public void onSuccess(JSONObject json) {
-                            Log.v(TAG, "search | success");
+                        public void onSuccess(JSONObject json, boolean fromCache) {
+                            Log.v(TAG, "search | onSuccess");
                             Static.T.runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -645,17 +680,34 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                             delegate.onSuccess(json);
                         }
                         @Override
+                        public void onFailure(int state) {
+                            this.onFailure(0, null, state);
+                        }
+                        @Override
+                        public void onFailure(int statusCode, Client.Headers headers, int state) {
+                            Log.v(TAG, "search | onFailure | statusCode=" + statusCode + " | state=" + state);
+                            Static.T.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    progressBar.setVisibility(View.GONE);
+                                }
+                            });
+                        }
+                        @Override
+                        public void onProgress(int state) {
+                            Log.v(TAG, "search | onProgress | state=" + state);
+                        }
+                        @Override
                         public void onNewRequest(Client.Request request) {
                             requestHandle = request;
                         }
-                    });
-                    Static.T.runOnUiThread(new Runnable() {
                         @Override
-                        public void run() {
-                            progressBar.setVisibility(View.VISIBLE);
+                        public void onCancelRequest() {
+                            if (requestHandle != null) {
+                                requestHandle.cancel();
+                            }
                         }
-                    });
-                    scheduleLessons.search(query);
+                    }).search(context, query);
                     lastQuery = query;
                 }
             });

@@ -1,0 +1,50 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/lessons_warning_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="@dimen/item_padding"
+    android:layout_marginBottom="0dp"
+    android:layout_marginStart="@dimen/item_padding"
+    android:layout_marginEnd="@dimen/item_padding"
+    android:background="@drawable/shape_border_round"
+    android:orientation="horizontal"
+    android:padding="@dimen/item_padding_quarter">
+
+    <FrameLayout
+        android:layout_width="@dimen/dp16"
+        android:layout_height="@dimen/dp16"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="@dimen/item_padding_half"
+        android:layout_marginEnd="@dimen/item_padding_quarter"
+        android:layout_marginTop="@dimen/item_padding_half"
+        android:layout_marginBottom="@dimen/item_padding_half" >
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:tint="?attr/colorNegativeTrend"
+            app:srcCompat="@drawable/ic_warning"/>
+
+    </FrameLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:paddingTop="@dimen/item_padding_half"
+        android:paddingBottom="@dimen/item_padding_half"
+        android:paddingStart="@dimen/item_padding_quarter"
+        android:paddingEnd="0dp">
+
+        <TextView
+            android:id="@+id/lessons_warning"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/lorem_ipsum"
+            android:textColor="?attr/colorNegativeTrend"
+            android:textSize="@dimen/font_size_14" />
+
+    </FrameLayout>
+
+</LinearLayout>
