@@ -30,9 +30,9 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapters.TeacherPickerAdapter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.models.Client;
-import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
+import com.bukhmastov.cdoitmo.objects.schedule.Schedule;
+import com.bukhmastov.cdoitmo.objects.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.utils.CtxWrapper;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
@@ -55,7 +55,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
     private static class Settings {
         private static class Schedule {
             private static String query = "";
-            private static String label = "";
+            private static String title = "";
         }
         private static class Theme {
             private static String text = "#FFFFFF";
@@ -67,7 +67,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
     public static final class Default {
         public static final class Schedule {
             public static final String query = "";
-            public static final String label = "";
+            public static final String title = "";
         }
         public static final class Theme {
             public static final class Dark {
@@ -112,7 +112,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
             return;
         }
         Settings.Schedule.query = Default.Schedule.query;
-        Settings.Schedule.label = Default.Schedule.label;
+        Settings.Schedule.title = Default.Schedule.title;
         init();
     }
 
@@ -177,12 +177,13 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                             if (Settings.Schedule.query.isEmpty()) {
                                 String group = Storage.file.perm.get(activity, "user#group");
                                 if (group.isEmpty()) {
-                                    activatePartSchedule();
+                                    // TODO uncomment, when personal schedule will be ready
+                                    activatePartSchedule(/*"mine"*/);
                                 } else {
                                     activatePartSchedule(group);
                                 }
                             } else {
-                                activatePartSchedule(Settings.Schedule.query);
+                                activatePartSchedule(Settings.Schedule.title);
                             }
                         }
                     });
@@ -260,8 +261,8 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
     private void activatePartSchedule() {
         activatePartSchedule(null);
     }
-    private void activatePartSchedule(final String scope) {
-        Log.v(TAG, "activatePartSchedule | scope=" + scope);
+    private void activatePartSchedule(final String title) {
+        Log.v(TAG, "activatePartSchedule | scope=" + title);
         Static.T.runThread(new Runnable() {
             @Override
             public void run() {
@@ -275,8 +276,8 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                     final ViewGroup search_action = layout.findViewById(R.id.search_action);
                     final ViewGroup search_loading = layout.findViewById(R.id.search_loading);
                     final TeacherPickerAdapter teacherPickerAdapter = new TeacherPickerAdapter(activity, new ArrayList<JSONObject>());
-                    if (scope != null) {
-                        search_text_view.setText(scope);
+                    if (title != null) {
+                        search_text_view.setText(title);
                     }
                     teacherPickerAdapter.setNotifyOnChange(true);
                     search_text_view.setAdapter(teacherPickerAdapter);
@@ -305,84 +306,52 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                                     final String query = search_text_view.getText().toString().trim();
                                     Log.v(TAG, "activatePartSchedule | search action | clicked | query=" + query);
                                     if (!query.isEmpty()) {
-                                        if (requestHandle != null) {
-                                            requestHandle.cancel();
-                                        }
-                                        ScheduleLessons scheduleLessons = new ScheduleLessons(activity);
-                                        scheduleLessons.setHandler(new ScheduleLessons.response() {
+                                        new ScheduleLessons(new Schedule.Handler() {
                                             @Override
-                                            public void onNewRequest(Client.Request request) {
-                                                requestHandle = request;
-                                            }
-                                            @Override
-                                            public void onProgress(final int state) {
-                                                Log.v(TAG, "activatePartSchedule | search action | onProgress | state=" + state);
+                                            public void onSuccess(final JSONObject json, final boolean fromCache) {
                                                 Static.T.runThread(new Runnable() {
                                                     @Override
                                                     public void run() {
-                                                        search_loading.setVisibility(View.VISIBLE);
-                                                        search_action.setVisibility(View.GONE);
-                                                    }
-                                                });
-                                            }
-                                            @Override
-                                            public void onFailure(final int state) {
-                                                Log.v(TAG, "activatePartSchedule | search action | onFailure | state=" + state);
-                                                Static.T.runThread(new Runnable() {
-                                                    @Override
-                                                    public void run() {
-                                                        search_loading.setVisibility(View.GONE);
-                                                        search_action.setVisibility(View.VISIBLE);
-                                                        Static.snackBar(activity, state == IfmoRestClient.FAILED_SERVER_ERROR ? IfmoRestClient.getFailureMessage(activity, -1) : activity.getString(R.string.schedule_not_found));
-                                                    }
-                                                });
-                                            }
-                                            @Override
-                                            public void onSuccess(final JSONObject json) {
-                                                Log.v(TAG, "activatePartSchedule | search action | onSuccess | json=" + (json == null ? "null" : "notnull"));
-                                                Static.T.runThread(new Runnable() {
-                                                    @Override
-                                                    public void run() {
+                                                        Log.v(TAG, "activatePartSchedule | search action | onSuccess | json=" + (json == null ? "null" : "notnull"));
                                                         search_loading.setVisibility(View.GONE);
                                                         search_action.setVisibility(View.VISIBLE);
                                                         if (json == null) {
                                                             Static.snackBar(activity, activity.getString(R.string.schedule_not_found));
                                                         } else {
                                                             try {
-                                                                String type = json.getString("type");
-                                                                String query = json.getString("query");
+                                                                final String type = json.getString("type");
+                                                                final String query = json.getString("query");
                                                                 Log.v(TAG, "activatePartSchedule | search action | onSuccess | type=" + type);
                                                                 switch (type) {
                                                                     case "group": case "room": case "teacher": {
-                                                                        String label = json.getString("label");
                                                                         Settings.Schedule.query = query;
                                                                         switch (type) {
                                                                             case "group": case "teacher": {
-                                                                                Settings.Schedule.label = label;
+                                                                                Settings.Schedule.title = json.getString("title");
                                                                                 break;
                                                                             }
                                                                             case "room": {
-                                                                                Settings.Schedule.label = activity.getString(R.string.room) + " " + label;
+                                                                                Settings.Schedule.title = activity.getString(R.string.room) + " " + json.getString("title");
                                                                                 break;
                                                                             }
                                                                         }
-                                                                        Log.v(TAG, "activatePartSchedule | search action | onSuccess | done | query=" + Settings.Schedule.query + " | label=" + Settings.Schedule.label);
+                                                                        Log.v(TAG, "activatePartSchedule | search action | onSuccess | done | query=" + Settings.Schedule.query + " | title=" + Settings.Schedule.title);
                                                                         if (alertDialog != null && alertDialog.isShowing()) {
                                                                             alertDialog.cancel();
                                                                         }
                                                                         updateScheduleSummary();
                                                                         break;
                                                                     }
-                                                                    case "teacher_picker": {
+                                                                    case "teachers": {
                                                                         teacherPickerAdapter.clear();
-                                                                        JSONArray list = json.getJSONArray("list");
-                                                                        Log.v(TAG, "activatePartSchedule | search action | onSuccess | type=" + type + " | length=" + list.length());
-                                                                        if (list.length() == 1) {
-                                                                            JSONObject item = list.getJSONObject(0);
+                                                                        final JSONArray schedule = json.getJSONArray("schedule");
+                                                                        Log.v(TAG, "activatePartSchedule | search action | onSuccess | type=" + type + " | length=" + schedule.length());
+                                                                        if (schedule.length() == 1) {
+                                                                            JSONObject item = schedule.getJSONObject(0);
                                                                             if (item != null) {
                                                                                 Settings.Schedule.query = item.getString("pid");
-                                                                                Settings.Schedule.label = item.getString("person");
-                                                                                Log.v(TAG, "activatePartSchedule | search action | onSuccess | done | query=" + Settings.Schedule.query + " | label=" + Settings.Schedule.label);
+                                                                                Settings.Schedule.title = item.getString("person");
+                                                                                Log.v(TAG, "activatePartSchedule | search action | onSuccess | done | query=" + Settings.Schedule.query + " | title=" + Settings.Schedule.title);
                                                                                 if (alertDialog.isShowing()) {
                                                                                     alertDialog.cancel();
                                                                                 }
@@ -392,8 +361,8 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                                                                             }
                                                                         } else {
                                                                             ArrayList<JSONObject> arrayList = new ArrayList<>();
-                                                                            for (int i = 0; i < list.length(); i++) {
-                                                                                arrayList.add(list.getJSONObject(i));
+                                                                            for (int i = 0; i < schedule.length(); i++) {
+                                                                                arrayList.add(schedule.getJSONObject(i));
                                                                             }
                                                                             teacherPickerAdapter.addAll(arrayList);
                                                                             teacherPickerAdapter.addTeachers(arrayList);
@@ -416,8 +385,50 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                                                     }
                                                 });
                                             }
-                                        });
-                                        scheduleLessons.search(query);
+                                            @Override
+                                            public void onFailure(int state) {
+                                                this.onFailure(0, null, state);
+                                            }
+                                            @Override
+                                            public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
+                                                Log.v(TAG, "activatePartSchedule | search action | onFailure | state=" + state + " | statusCode=" + statusCode);
+                                                Static.T.runThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        search_loading.setVisibility(View.GONE);
+                                                        search_action.setVisibility(View.VISIBLE);
+                                                        String text = activity.getString(R.string.schedule_not_found);
+                                                        switch (state) {
+                                                            case Client.FAILED_OFFLINE: text = activity.getString(R.string.offline_mode_on); break;
+                                                            case Client.FAILED_TRY_AGAIN: text = activity.getString(R.string.load_failed); break;
+                                                            case Client.FAILED_SERVER_ERROR: text = Client.getFailureMessage(activity, -1); break;
+                                                        }
+                                                        Static.snackBar(activity, text);
+                                                    }
+                                                });
+                                            }
+                                            @Override
+                                            public void onProgress(final int state) {
+                                                Log.v(TAG, "activatePartSchedule | search action | onProgress | state=" + state);
+                                                Static.T.runThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        search_loading.setVisibility(View.VISIBLE);
+                                                        search_action.setVisibility(View.GONE);
+                                                    }
+                                                });
+                                            }
+                                            @Override
+                                            public void onNewRequest(Client.Request request) {
+                                                requestHandle = request;
+                                            }
+                                            @Override
+                                            public void onCancelRequest() {
+                                                if (requestHandle != null) {
+                                                    requestHandle.cancel();
+                                                }
+                                            }
+                                        }).search(activity, query);
                                     }
                                 }
                             });
@@ -434,8 +445,8 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                                         JSONObject item = teacherPickerAdapter.getItem(position);
                                         if (item != null) {
                                             Settings.Schedule.query = item.getString("pid");
-                                            Settings.Schedule.label = item.getString("person");
-                                            Log.v(TAG, "activatePartSchedule | search list selected | query=" + Settings.Schedule.query + " | label=" + Settings.Schedule.label);
+                                            Settings.Schedule.title = item.getString("person");
+                                            Log.v(TAG, "activatePartSchedule | search list selected | query=" + Settings.Schedule.query + " | title=" + Settings.Schedule.title);
                                             if (alertDialog.isShowing()) {
                                                 alertDialog.cancel();
                                             }
@@ -824,7 +835,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
             public void run() {
                 try {
                     TextView part_schedule_summary = activity.findViewById(R.id.part_schedule_summary);
-                    part_schedule_summary.setText(!Settings.Schedule.query.isEmpty() ? Settings.Schedule.label : getString(R.string.need_to_choose_schedule));
+                    part_schedule_summary.setText(!Settings.Schedule.query.isEmpty() ? Settings.Schedule.title : getString(R.string.need_to_choose_schedule));
                 } catch (Exception e) {
                     Static.error(e);
                     Static.snackBar(activity, activity.getString(R.string.something_went_wrong));

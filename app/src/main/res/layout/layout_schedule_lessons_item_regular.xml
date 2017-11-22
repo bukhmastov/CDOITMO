@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="@dimen/item_horizontal_padding"
+    android:layout_marginEnd="@dimen/item_horizontal_padding"
+    android:background="@drawable/shape_lesson_regular">
+
+    <include layout="@layout/layout_schedule_lessons_item"/>
+
+</FrameLayout>

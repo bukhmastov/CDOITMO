@@ -48,6 +48,9 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
     protected void onCreate(Bundle savedInstanceState) {
         // initialize app
         try {
+            // TODO remove it
+            Storage.pref.put(activity, "pref_allow_send_reports", false);
+            Storage.pref.put(activity, "pref_allow_collect_analytics", false);
             try {
                 Log.i(TAG, "App | launched");
                 PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
@@ -86,6 +89,11 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
         FirebaseAnalyticsProvider.logCurrentScreen(this);
         setContentView(R.layout.activity_main);
 
+        // IntroducingActivity
+        if (Static.isFirstLaunchEver) {
+            startActivity(new Intent(activity, IntroducingActivity.class));
+        }
+
         Toolbar toolbar = findViewById(R.id.toolbar_main);
         DrawerLayout drawer_layout = findViewById(R.id.drawer_layout);
         if (toolbar != null) {
@@ -113,6 +121,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
         Static.OFFLINE_MODE = !Static.isOnline(this) || (Static.firstLaunch && Storage.pref.get(this, "pref_initial_offline", false));
         Static.init(this);
         Static.firstLaunch = false;
+        Static.isFirstLaunchEver = false;
 
         Log.i(TAG, "mode=" + (Static.OFFLINE_MODE ? "offline" : "online"));
 
@@ -345,7 +354,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                             case R.id.nav_change_account: authorize(LoginActivity.SIGNAL_CHANGE_ACCOUNT); break;
                             case R.id.nav_logout: Static.logoutConfirmation(activity, new Static.SimpleCallback() {
                                 @Override
-                                public void onDone() {
+                                public void onCall() {
                                     authorize(LoginActivity.SIGNAL_LOGOUT);
                                 }
                             }); break;

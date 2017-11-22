@@ -75,8 +75,12 @@ public class Static {
     private static final String USER_AGENT_TEMPLATE = "CDOITMO/{versionName}/{versionCode} Java/Android/{sdkInt}";
     private static String USER_AGENT = null;
     private static String app_theme = null;
+    public static final String GLITCH = "%*<@?!";
     public interface SimpleCallback {
-        void onDone();
+        void onCall();
+    }
+    public interface StringCallback {
+        void onCall(String data);
     }
 
     public static class T {
@@ -279,7 +283,7 @@ public class Static {
                 .setPositiveButton(R.string.do_logout, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        callback.onDone();
+                        callback.onCall();
                     }
                 })
                 .setNegativeButton(R.string.do_cancel, null)
@@ -762,6 +766,7 @@ public class Static {
     }
     @SuppressWarnings("deprecation")
     public static String escapeString(String text) {
+        if (text == null) return null;
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
             return android.text.Html.fromHtml(text, android.text.Html.FROM_HTML_MODE_LEGACY).toString().trim();
         } else {
@@ -1121,5 +1126,26 @@ public class Static {
                 }
             }
         }
+    }
+    public static JSONArray string2jsonArray(String text) throws JSONException {
+        JSONArray json;
+        if (text.isEmpty()) {
+            json = new JSONArray();
+        } else {
+            json = new JSONArray(text);
+        }
+        return json;
+    }
+    public static JSONObject string2json(String text) throws JSONException {
+        JSONObject json;
+        if (text.isEmpty()) {
+            json = new JSONObject();
+        } else {
+            json = new JSONObject(text);
+        }
+        return json;
+    }
+    public static String logBoolean(boolean bool) {
+        return bool ? "true" : "false";
     }
 }

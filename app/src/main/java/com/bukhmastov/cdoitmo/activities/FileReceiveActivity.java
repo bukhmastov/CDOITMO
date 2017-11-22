@@ -214,7 +214,7 @@ public class FileReceiveActivity extends ConnectedActivity {
                         @Override
                         public void run() {
                             Bundle extras = new Bundle();
-                            extras.putString("type", "handle");
+                            extras.putString("action", "handle");
                             extras.putString("data", file);
                             if (!openFragment(TYPE.root, ScheduleLessonsShareFragment.class, extras)) {
                                 failure(activity.getString(R.string.failed_to_display_file));

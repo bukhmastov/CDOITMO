@@ -4,7 +4,7 @@ import android.os.Bundle;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsFragment;
+import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsTabHostFragment;
 import com.bukhmastov.cdoitmo.objects.entities.Suggestion;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
@@ -14,7 +14,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Objects;
 
 public class ScheduleLessonsSearchActivity extends SearchActivity {
 
@@ -60,10 +59,12 @@ public class ScheduleLessonsSearchActivity extends SearchActivity {
                 String cachedFile = Storage.file.cache.get(this, "schedule_lessons#lessons#" + file);
                 if (!cachedFile.isEmpty()) {
                     try {
-                        JSONObject object = new JSONObject(cachedFile);
-                        if (object.has("type") && !Objects.equals(object.getString("type"), "teacher_picker")) {
-                            if (query.isEmpty() || (object.has("label") && contains(object.getString("label"), query))) {
-                                suggestions.add(new Suggestion(object.getString("query"), object.getString("label"), R.drawable.ic_save));
+                        JSONObject cached = new JSONObject(cachedFile);
+                        if (cached.has("query") && cached.has("title")) {
+                            String q = cached.getString("query");
+                            String t = cached.getString("title");
+                            if (query.isEmpty() || contains(t, query) || contains(q, query)) {
+                                suggestions.add(new Suggestion(q, t, R.drawable.ic_save));
                             }
                         }
                     } catch (Exception e) {
@@ -113,7 +114,8 @@ public class ScheduleLessonsSearchActivity extends SearchActivity {
                     Static.error(e);
                     Storage.file.perm.delete(self, "schedule_lessons#recent");
                 }
-                ScheduleLessonsFragment.searchAndClear(query);
+                ScheduleLessonsTabHostFragment.setQuery(query);
+                ScheduleLessonsTabHostFragment.invalidate();
             }
         });
     }

@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:paddingTop="@dimen/item_vertical_padding"
-    android:paddingBottom="0dp"
-    android:paddingStart="@dimen/item_horizontal_padding"
-    android:paddingEnd="@dimen/item_horizontal_padding" >
+    android:layout_height="wrap_content">
 
     <TextView
         android:id="@+id/day_title"
         android:layout_width="match_parent"
         android:layout_height="@dimen/schedule_day_header"
+        android:layout_marginTop="@dimen/item_vertical_padding"
+        android:layout_marginBottom="@dimen/item_vertical_padding"
+        android:layout_marginStart="@dimen/item_horizontal_padding"
+        android:layout_marginEnd="@dimen/item_horizontal_padding"
         android:gravity="center_vertical"
         android:text="@string/lorem_ipsum"
         android:textAllCaps="true"
@@ -19,12 +18,4 @@
         android:textSize="@dimen/font_size_14"
         android:textStyle="normal|bold" />
 
-    <LinearLayout
-        android:id="@+id/day_schedule"
-        android:orientation="vertical"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/item_vertical_padding"
-        android:background="@drawable/shape_border_round" />
-
-</LinearLayout>
+</FrameLayout>

@@ -57,7 +57,7 @@ public class TimeRemainingWidget {
         private final Context context;
         private boolean first_init = true;
         private int week = -1;
-        private int day_of_the_week = -1;
+        private int weekday = -1;
 
         Executor(Context context, JSONObject full_schedule){
             Log.i(TAG, "started");
@@ -75,12 +75,12 @@ public class TimeRemainingWidget {
                         Log.v(TAG, "update data");
                         first_init = false;
                         week = getWeek() % 2;
-                        day_of_the_week = getDayOfTheWeek(Calendar.getInstance().get(Calendar.DAY_OF_WEEK));
+                        weekday = getDayOfTheWeek(Calendar.getInstance().get(Calendar.DAY_OF_WEEK));
                         lessons = null;
                         JSONArray schedule = full_schedule.getJSONArray("schedule");
                         for (int i = 0; i < schedule.length(); i++) {
                             JSONObject dayObj = schedule.getJSONObject(i);
-                            if (dayObj.getInt("index") == day_of_the_week) {
+                            if (dayObj.getInt("weekday") == weekday) {
                                 lessons = dayObj.getJSONArray("lessons");
                                 break;
                             }

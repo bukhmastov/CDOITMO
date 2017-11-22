@@ -81,20 +81,14 @@ public class SettingsScheduleExams extends SettingsSchedule {
                                             case "teacher": {
                                                 if (json.getJSONArray("schedule").length() > 0) {
                                                     String q = json.getString("scope");
-                                                    String l = json.getString("scope");
+                                                    String t = json.getString("scope");
                                                     query = q;
-                                                    switch (type) {
-                                                        case "group":
-                                                        case "teacher": {
-                                                            label = l;
-                                                            break;
-                                                        }
-                                                        case "room": {
-                                                            label = activity.getString(R.string.room) + " " + l;
-                                                            break;
-                                                        }
+                                                    if (type.equals("room")) {
+                                                        title = activity.getString(R.string.room) + " " + t;
+                                                    } else {
+                                                        title = t;
                                                     }
-                                                    Log.v(TAG, "show | search action | onSuccess | done | query=" + query + " | label=" + label);
+                                                    Log.v(TAG, "show | search action | onSuccess | done | query=" + query + " | title=" + title);
                                                     toggleSearchState("selected");
                                                 }
                                                 break;
@@ -107,12 +101,12 @@ public class SettingsScheduleExams extends SettingsSchedule {
                                                     JSONObject item = list.getJSONObject(0);
                                                     if (item != null) {
                                                         query = item.getString("scope");
-                                                        label = item.getString("name");
-                                                        Log.v(TAG, "show | search action | onSuccess | done | query=" + query + " | label=" + label);
+                                                        title = item.getString("name");
+                                                        Log.v(TAG, "show | search action | onSuccess | done | query=" + query + " | title=" + title);
                                                         Static.T.runOnUiThread(new Runnable() {
                                                             @Override
                                                             public void run() {
-                                                                lsp_search.setText(label);
+                                                                lsp_search.setText(title);
                                                             }
                                                         });
                                                         toggleSearchState("selected");

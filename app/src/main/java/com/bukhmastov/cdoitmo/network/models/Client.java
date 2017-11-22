@@ -324,6 +324,10 @@ public abstract class Client {
         return throwable != null && "socket closed".equals(throwable.getMessage().toLowerCase());
     }
 
+    public static boolean isAuthorized(final Context context) {
+        return true;
+    }
+
     private static final class Secured {
         private static final String[] request = new String[] {"passwd", "pass", "password"};
         private static final String[] headers = new String[] {"route", "JSESSIONID", "PHPSESSID"};

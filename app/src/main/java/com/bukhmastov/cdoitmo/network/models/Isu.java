@@ -18,9 +18,19 @@ public abstract class Isu extends Client {
     public static final int FAILED_AUTH_CREDENTIALS_REQUIRED = 11;
     public static final int FAILED_AUTH_CREDENTIALS_FAILED = 12;
 
-    protected static final String API_KEY = "<api_key>";
-    protected static final String CLIENT_ID = "<client_id>";
-    protected static final String CLIENT_SECRET = "<client_secret>";
+    // TODO add isu api keys, when isu will be ready
+    private static final String API_KEY = "<api_key>";
+    private static final String CLIENT_ID = "<client_id>";
+    private static final String CLIENT_SECRET = "<client_secret>";
+    protected static String getApiKey() {
+        return API_KEY;
+    }
+    protected static String getClientId() {
+        return CLIENT_ID;
+    }
+    protected static String getClientSecret() {
+        return CLIENT_SECRET;
+    }
 
     protected static void g(final Context context, final String url, final Map<String, String> query, final RawHandler rawHandler) {
         Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {

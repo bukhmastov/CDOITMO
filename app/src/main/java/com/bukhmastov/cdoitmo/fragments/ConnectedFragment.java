@@ -71,6 +71,12 @@ public abstract class ConnectedFragment extends Fragment {
         return null;
     }
 
+    protected void close() {
+        if (activity != null && activity.back()) {
+            activity.finish();
+        }
+    }
+
     public static class Data {
         public final Class connectedFragmentClass;
         public final String title;

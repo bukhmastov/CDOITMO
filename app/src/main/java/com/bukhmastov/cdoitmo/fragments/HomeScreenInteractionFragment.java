@@ -12,6 +12,7 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.LayoutRes;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
@@ -33,7 +34,8 @@ import com.bukhmastov.cdoitmo.network.IfmoClient;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.models.Client;
 import com.bukhmastov.cdoitmo.objects.ScheduleExams;
-import com.bukhmastov.cdoitmo.objects.ScheduleLessons;
+import com.bukhmastov.cdoitmo.objects.schedule.Schedule;
+import com.bukhmastov.cdoitmo.objects.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.receivers.ShortcutReceiver;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
@@ -44,7 +46,6 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Objects;
 
 public class HomeScreenInteractionFragment extends ConnectedFragment {
 
@@ -52,7 +53,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
     private final ShortcutReceiver receiver = new ShortcutReceiver();
     private Client.Request requestHandle = null;
     private interface result {
-        void done(String label, String query);
+        void done(String title, String query);
     }
     private enum MODE {PICK, WIDGETS, APPS, SHORTCUTS}
     private class App {
@@ -120,12 +121,12 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_homescreen_interaction, container, false);
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         initPicker(true);
     }
@@ -281,11 +282,11 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                 case "time_remaining_widget": {
                                                     getScheduleLessons(group.isEmpty() ? null : group, new result() {
                                                         @Override
-                                                        public void done(String label, String query) {
+                                                        public void done(String title, String query) {
                                                             try {
                                                                 addShortcut(
                                                                         app.id,
-                                                                        new JSONObject().put("label", label).put("query", query).toString()
+                                                                        new JSONObject().put("label", title).put("query", query).toString()
                                                                 );
                                                             } catch (Exception e) {
                                                                 Static.error(e);
@@ -298,11 +299,11 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                 case "days_remaining_widget": {
                                                     getScheduleExams(group.isEmpty() ? null : group, new result() {
                                                         @Override
-                                                        public void done(String label, String query) {
+                                                        public void done(String title, String query) {
                                                             try {
                                                                 addShortcut(
                                                                         app.id,
-                                                                        new JSONObject().put("label", label).put("query", query).toString()
+                                                                        new JSONObject().put("label", title).put("query", query).toString()
                                                                 );
                                                             } catch (Exception e) {
                                                                 Static.error(e);
@@ -387,11 +388,11 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                     String group = Storage.file.perm.get(activity, "user#group", "");
                                                     getScheduleLessons(group.isEmpty() ? null : group, new result() {
                                                         @Override
-                                                        public void done(String label, String query) {
+                                                        public void done(String title, String query) {
                                                             try {
                                                                 addShortcut(
                                                                         shortcut.id,
-                                                                        new JSONObject().put("label", label).put("query", query).toString()
+                                                                        new JSONObject().put("label", title).put("query", query).toString()
                                                                 );
                                                             } catch (Exception e) {
                                                                 Static.error(e);
@@ -405,11 +406,11 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                     String group = Storage.file.perm.get(activity, "user#group", "");
                                                     getScheduleExams(group.isEmpty() ? null : group, new result() {
                                                         @Override
-                                                        public void done(String label, String query) {
+                                                        public void done(String title, String query) {
                                                             try {
                                                                 addShortcut(
                                                                         shortcut.id,
-                                                                        new JSONObject().put("label", label).put("query", query).toString()
+                                                                        new JSONObject().put("label", title).put("query", query).toString()
                                                                 );
                                                             } catch (Exception e) {
                                                                 Static.error(e);
@@ -628,37 +629,9 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                         if (requestHandle != null) {
                                             requestHandle.cancel();
                                         }
-                                        ScheduleLessons scheduleLessons = new ScheduleLessons(activity);
-                                        scheduleLessons.setHandler(new ScheduleLessons.response() {
+                                        new ScheduleLessons(new Schedule.Handler() {
                                             @Override
-                                            public void onNewRequest(Client.Request request) {
-                                                requestHandle = request;
-                                            }
-                                            @Override
-                                            public void onProgress(final int state) {
-                                                Log.v(TAG, "getScheduleLessons | search action | onProgress | state=" + state);
-                                                Static.T.runThread(new Runnable() {
-                                                    @Override
-                                                    public void run() {
-                                                        search_loading.setVisibility(View.VISIBLE);
-                                                        search_action.setVisibility(View.GONE);
-                                                    }
-                                                });
-                                            }
-                                            @Override
-                                            public void onFailure(final int state) {
-                                                Log.v(TAG, "getScheduleLessons | search action | onFailure | state=" + state);
-                                                Static.T.runThread(new Runnable() {
-                                                    @Override
-                                                    public void run() {
-                                                        search_loading.setVisibility(View.GONE);
-                                                        search_action.setVisibility(View.VISIBLE);
-                                                        Static.snackBar(activity, state == IfmoRestClient.FAILED_SERVER_ERROR ? IfmoRestClient.getFailureMessage(activity, -1) : activity.getString(R.string.schedule_not_found));
-                                                    }
-                                                });
-                                            }
-                                            @Override
-                                            public void onSuccess(final JSONObject json) {
+                                            public void onSuccess(final JSONObject json, final boolean fromCache) {
                                                 Log.v(TAG, "getScheduleLessons | search action | onSuccess | json=" + (json == null ? "null" : "notnull"));
                                                 Static.T.runThread(new Runnable() {
                                                     @Override
@@ -669,43 +642,43 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                             Static.snackBar(activity, activity.getString(R.string.schedule_not_found));
                                                         } else {
                                                             try {
-                                                                String type = json.getString("type");
-                                                                String query = json.getString("query");
+                                                                final String type = json.getString("type");
+                                                                final String query = json.getString("query");
                                                                 Log.v(TAG, "getScheduleLessons | search action | onSuccess | type=" + type);
                                                                 switch (type) {
                                                                     case "group": case "room": case "teacher": {
-                                                                        String label = json.getString("label");
-                                                                        if (Objects.equals(type, "room")) {
-                                                                            label = activity.getString(R.string.room) + " " + label;
+                                                                        String title = json.getString("title");
+                                                                        if (type.equals("room")) {
+                                                                            title = activity.getString(R.string.room) + " " + title;
                                                                         }
-                                                                        Log.v(TAG, "getScheduleLessons | search action | onSuccess | done | query=" + query + " | label=" + label);
+                                                                        Log.v(TAG, "getScheduleLessons | search action | onSuccess | done | query=" + query + " | title=" + title);
                                                                         if (alertDialog != null && alertDialog.isShowing()) {
                                                                             alertDialog.cancel();
                                                                         }
-                                                                        callback.done(label, query);
+                                                                        callback.done(title, query);
                                                                         break;
                                                                     }
-                                                                    case "teacher_picker": {
+                                                                    case "teachers": {
                                                                         teacherPickerAdapter.clear();
-                                                                        JSONArray list = json.getJSONArray("list");
-                                                                        Log.v(TAG, "getScheduleLessons | search action | onSuccess | type=" + type + " | length=" + list.length());
-                                                                        if (list.length() == 1) {
-                                                                            JSONObject item = list.getJSONObject(0);
+                                                                        final JSONArray schedule = json.getJSONArray("schedule");
+                                                                        Log.v(TAG, "getScheduleLessons | search action | onSuccess | type=" + type + " | length=" + schedule.length());
+                                                                        if (schedule.length() == 1) {
+                                                                            JSONObject item = schedule.getJSONObject(0);
                                                                             if (item != null) {
                                                                                 String pid = item.getString("pid");
-                                                                                String label = item.getString("person");
-                                                                                Log.v(TAG, "getScheduleLessons | search action | onSuccess | done | query=" + pid + " | label=" + label);
+                                                                                String title = item.getString("person");
+                                                                                Log.v(TAG, "getScheduleLessons | search action | onSuccess | done | query=" + pid + " | title=" + title);
                                                                                 if (alertDialog.isShowing()) {
                                                                                     alertDialog.cancel();
                                                                                 }
-                                                                                callback.done(label, pid);
+                                                                                callback.done(title, pid);
                                                                             } else {
                                                                                 Static.snackBar(activity, getString(R.string.something_went_wrong));
                                                                             }
                                                                         } else {
                                                                             ArrayList<JSONObject> arrayList = new ArrayList<>();
-                                                                            for (int i = 0; i < list.length(); i++) {
-                                                                                arrayList.add(list.getJSONObject(i));
+                                                                            for (int i = 0; i < schedule.length(); i++) {
+                                                                                arrayList.add(schedule.getJSONObject(i));
                                                                             }
                                                                             teacherPickerAdapter.addAll(arrayList);
                                                                             teacherPickerAdapter.addTeachers(arrayList);
@@ -728,8 +701,44 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                     }
                                                 });
                                             }
-                                        });
-                                        scheduleLessons.search(query);
+                                            @Override
+                                            public void onFailure(int state) {
+                                                this.onFailure(0, null, state);
+                                            }
+                                            @Override
+                                            public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
+                                                Log.v(TAG, "getScheduleLessons | search action | onFailure | state=" + state);
+                                                Static.T.runThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        search_loading.setVisibility(View.GONE);
+                                                        search_action.setVisibility(View.VISIBLE);
+                                                        Static.snackBar(activity, state == IfmoRestClient.FAILED_SERVER_ERROR ? IfmoRestClient.getFailureMessage(activity, -1) : activity.getString(R.string.schedule_not_found));
+                                                    }
+                                                });
+                                            }
+                                            @Override
+                                            public void onProgress(int state) {
+                                                Log.v(TAG, "getScheduleLessons | search action | onProgress | state=" + state);
+                                                Static.T.runThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        search_loading.setVisibility(View.VISIBLE);
+                                                        search_action.setVisibility(View.GONE);
+                                                    }
+                                                });
+                                            }
+                                            @Override
+                                            public void onNewRequest(Client.Request request) {
+                                                requestHandle = request;
+                                            }
+                                            @Override
+                                            public void onCancelRequest() {
+                                                if (requestHandle != null) {
+                                                    requestHandle.cancel();
+                                                }
+                                            }
+                                        }).search(activity, query);
                                     }
                                 }
                             });
@@ -746,12 +755,12 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                         JSONObject item = teacherPickerAdapter.getItem(position);
                                         if (item != null) {
                                             String query = item.getString("pid");
-                                            String label = item.getString("person");
-                                            Log.v(TAG, "getScheduleLessons | search list selected | query=" + query + " | label=" + label);
+                                            String title = item.getString("person");
+                                            Log.v(TAG, "getScheduleLessons | search list selected | query=" + query + " | title=" + title);
                                             if (alertDialog.isShowing()) {
                                                 alertDialog.cancel();
                                             }
-                                            callback.done(label, query);
+                                            callback.done(title, query);
                                         } else {
                                             Static.snackBar(activity, getString(R.string.something_went_wrong));
                                         }
