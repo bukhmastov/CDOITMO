@@ -84,7 +84,7 @@
     <string name="search">Поиск</string>
     <string name="schedule_lessons_search_view_hint">Группа, аудитория, преподаватель…</string>
     <string name="schedule_exams_search_view_hint">Группа, преподаватель…</string>
-    <string name="choose_teacher">Выберите преподавателя:</string>
+    <string name="choose_teacher">Выберите преподавателя</string>
     <string name="tab_all">Все</string>
     <string name="tab_even">Четная</string>
     <string name="tab_odd">Нечетная</string>
@@ -451,5 +451,8 @@
     <string name="schedule_room">Расписание аудитории</string>
     <string name="corrupted_data">Данные повреждены</string>
     <string name="no_changes">Нет изменений</string>
+    <string name="no_teachers">Преподавателей не найдено</string>
+    <string name="on_search_for">По запросу</string>
+    <string name="teachers_found">найдены преподаватели</string>
 
 </resources>

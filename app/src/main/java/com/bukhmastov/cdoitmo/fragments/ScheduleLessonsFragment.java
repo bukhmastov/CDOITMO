@@ -83,6 +83,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
             if (MainActivity.menu != null && !Static.OFFLINE_MODE) {
                 MenuItem action_schedule_lessons_search = MainActivity.menu.findItem(R.id.action_schedule_lessons_search);
                 if (action_schedule_lessons_search != null && !action_schedule_lessons_search.isVisible()) {
+                    Log.v(TAG, "Revealing action_schedule_lessons_search");
                     action_schedule_lessons_search.setVisible(true);
                     action_schedule_lessons_search.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
                         @Override

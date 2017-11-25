@@ -158,9 +158,9 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
                                 @Override
                                 public void run() {
                                     try {
-                                        draw(R.layout.layout_schedule_lessons_list);
+                                        draw(R.layout.layout_schedule_recycle_list);
                                         // swipe
-                                        final SwipeRefreshLayout swipe_container = container.findViewById(R.id.schedule_lessons_swipe);
+                                        final SwipeRefreshLayout swipe_container = container.findViewById(R.id.schedule_swipe);
                                         if (swipe_container != null) {
                                             swipe_container.setColorSchemeColors(Static.colorAccent);
                                             swipe_container.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
@@ -173,17 +173,17 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
                                             });
                                         }
                                         // recycle view (list)
-                                        final RecyclerView schedule_lessons_list = container.findViewById(R.id.schedule_lessons_list);
+                                        final RecyclerView schedule_list = container.findViewById(R.id.schedule_list);
                                         final LinearLayoutManager layoutManager = new LinearLayoutManager(activity);
-                                        schedule_lessons_list.setLayoutManager(layoutManager);
-                                        schedule_lessons_list.setAdapter(adapter);
+                                        schedule_list.setLayoutManager(layoutManager);
+                                        schedule_list.setAdapter(adapter);
                                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                            schedule_lessons_list.setOnScrollChangeListener(new View.OnScrollChangeListener() {
+                                            schedule_list.setOnScrollChangeListener(new View.OnScrollChangeListener() {
                                                 @Override
                                                 public void onScrollChange(View view, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
                                                     final int position = layoutManager.findFirstVisibleItemPosition();
-                                                    final View v = schedule_lessons_list.getChildAt(0);
-                                                    final int offset = (v == null) ? 0 : (v.getTop() - schedule_lessons_list.getPaddingTop());
+                                                    final View v = schedule_list.getChildAt(0);
+                                                    final int offset = (v == null) ? 0 : (v.getTop() - schedule_list.getPaddingTop());
                                                     Scroll s = scroll.get(TYPE, null);
                                                     if (s == null) {
                                                         s = new Scroll();

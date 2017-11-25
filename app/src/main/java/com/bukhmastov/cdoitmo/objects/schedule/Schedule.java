@@ -236,6 +236,7 @@ public abstract class Schedule {
                         invokePending(teacherName, true, new Pending() {
                             @Override
                             public void invoke(Handler handler) {
+                                putLocalCache(query, data.toString());
                                 handler.onSuccess(data, false);
                             }
                         });
@@ -384,9 +385,20 @@ public abstract class Schedule {
         return cache;
     }
     public void putCache(Context context, String token, String value, boolean forceToCache) {
-        token = token.toLowerCase();
-        Log.v(TAG, "putCache | token=" + token + " | forceToCache=" + (forceToCache ? "true" : "false"));
         if (value != null && !value.isEmpty()) {
+            Log.v(TAG, "putCache | token=" + token + " | forceToCache=" + (forceToCache ? "true" : "false"));
+            token = token.toLowerCase();
+            putLocalCache(token, value);
+            if (forceToCache || token.equals(getDefaultScope(context).toLowerCase()) || Storage.file.cache.exists(context, "schedule_" + getType() + "#lessons#" + token)) {
+                Log.v(TAG, "putCache | token=" + token + " | proceed");
+                Storage.file.cache.put(context, "schedule_" + getType() + "#lessons#" + token, value);
+            }
+        }
+    }
+    public void putLocalCache(String token, String value) {
+        if (value != null && !value.isEmpty()) {
+            Log.v(TAG, "putLocalCache | token=" + token);
+            token = token.toLowerCase();
             synchronized (cache) {
                 if (cache.size() > 2) {
                     Set<String> keySet = cache.keySet();
@@ -398,10 +410,6 @@ public abstract class Schedule {
                 }
                 cache.put(getType() + "_" + token, value);
             }
-        }
-        if (forceToCache || token.equals(getDefaultScope(context).toLowerCase()) || Storage.file.cache.exists(context, "schedule_" + getType() + "#lessons#" + token)) {
-            Log.v(TAG, "putCache | token=" + token + " | proceed");
-            Storage.file.cache.put(context, "schedule_" + getType() + "#lessons#" + token, value);
         }
     }
     public void removeCache(Context context, String token) {
