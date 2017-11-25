@@ -81,7 +81,7 @@
     <string name="search">Search</string>
     <string name="schedule_lessons_search_view_hint">Group, audience, teacher…</string>
     <string name="schedule_exams_search_view_hint">Group, teacher…</string>
-    <string name="choose_teacher">Choose a teacher:</string>
+    <string name="choose_teacher">Choose a teacher</string>
     <string name="tab_all">All</string>
     <string name="tab_even">Even</string>
     <string name="tab_odd">Odd</string>
@@ -444,5 +444,8 @@
     <string name="schedule_room">Audience schedule</string>
     <string name="corrupted_data">Corrupted data</string>
     <string name="no_changes">No changes</string>
+    <string name="no_teachers">No teachers found</string>
+    <string name="on_search_for">The search for</string>
+    <string name="teachers_found">found the teachers</string>
 
 </resources>

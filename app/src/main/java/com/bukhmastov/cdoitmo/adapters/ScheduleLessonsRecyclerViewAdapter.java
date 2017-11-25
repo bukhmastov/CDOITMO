@@ -50,6 +50,9 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
     private static final int TYPE_NOTIFICATION = 6;
     private static final int TYPE_UPDATE_TIME = 7;
     private static final int TYPE_NO_LESSONS = 8;
+    private static final int TYPE_PICKER_HEADER = 9;
+    private static final int TYPE_PICKER_ITEM = 10;
+    private static final int TYPE_PICKER_NO_TEACHERS = 11;
     public static class Item {
         public int type;
         public JSONObject data;
@@ -123,6 +126,9 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
             case TYPE_NOTIFICATION: layout = R.layout.layout_schedule_lessons_notification; break;
             case TYPE_UPDATE_TIME: layout = R.layout.layout_schedule_lessons_update_time; break;
             case TYPE_NO_LESSONS: layout = R.layout.nothing_to_display; break;
+            case TYPE_PICKER_HEADER: layout = R.layout.layout_schedule_teacher_picker_header; break;
+            case TYPE_PICKER_ITEM: layout = R.layout.layout_schedule_teacher_picker_item; break;
+            case TYPE_PICKER_NO_TEACHERS: layout = R.layout.nothing_to_display; break;
             default: return null;
         }
         return new ViewHolder((ViewGroup) LayoutInflater.from(parent.getContext()).inflate(layout, parent, false));
@@ -157,6 +163,18 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
             }
             case TYPE_NO_LESSONS: {
                 bindNoLessons(holder, item);
+                break;
+            }
+            case TYPE_PICKER_HEADER: {
+                bindPickerHeader(holder, item);
+                break;
+            }
+            case TYPE_PICKER_ITEM: {
+                bindPickerItem(holder, item);
+                break;
+            }
+            case TYPE_PICKER_NO_TEACHERS: {
+                bindPickerNoTeachers(holder, item);
                 break;
             }
         }
@@ -601,7 +619,59 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
     private void bindNoLessons(RecyclerView.ViewHolder holder, Item item) {
         try {
             ViewHolder viewHolder = (ViewHolder) holder;
-            ((TextView) viewHolder.container.findViewById(R.id.ntd_text)).setText(activity.getString(R.string.no_lessons));
+            ((TextView) viewHolder.container.findViewById(R.id.ntd_text)).setText(R.string.no_lessons);
+        } catch (Exception e) {
+            Static.error(e);
+        }
+    }
+    private void bindPickerHeader(RecyclerView.ViewHolder holder, Item item) {
+        try {
+            ViewHolder viewHolder = (ViewHolder) holder;
+            String query = item.data.getString("query");
+            String text;
+            if (query == null || query.isEmpty()) {
+                text = activity.getString(R.string.choose_teacher) + ":";
+            } else {
+                text = activity.getString(R.string.on_search_for) + " \"" + query + "\" " + activity.getString(R.string.teachers_found) + ":";
+            }
+            ((TextView) viewHolder.container.findViewById(R.id.teacher_picker_header)).setText(text);
+        } catch (Exception e) {
+            Static.error(e);
+        }
+    }
+    private void bindPickerItem(RecyclerView.ViewHolder holder, Item item) {
+        try {
+            ViewHolder viewHolder = (ViewHolder) holder;
+            final String pid = item.data.getString("pid");
+            String teacher = item.data.getString("person");
+            String post = item.data.getString("post");
+            if (post != null && !post.isEmpty()) {
+                teacher += " (" + post + ")";
+            }
+            ((TextView) viewHolder.container.findViewById(R.id.teacher_picker_title)).setText(teacher);
+            viewHolder.container.findViewById(R.id.teacher_picker_item).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (pid != null && !pid.isEmpty()) {
+                        callback.onCall(pid);
+                    }
+                }
+            });
+        } catch (Exception e) {
+            Static.error(e);
+        }
+    }
+    private void bindPickerNoTeachers(RecyclerView.ViewHolder holder, Item item) {
+        try {
+            ViewHolder viewHolder = (ViewHolder) holder;
+            String query = item.data.getString("query");
+            String text;
+            if (query == null || query.isEmpty()) {
+                text = activity.getString(R.string.no_teachers);
+            } else {
+                text = activity.getString(R.string.on_search_for) + " \"" + query + "\" " + activity.getString(R.string.no_teachers).toLowerCase();
+            }
+            ((TextView) viewHolder.container.findViewById(R.id.ntd_text)).setText(text);
         } catch (Exception e) {
             Static.error(e);
         }
@@ -609,75 +679,90 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
 
     public ArrayList<Item> json2dataset(ConnectedActivity activity, JSONObject json, int weekday) throws JSONException {
         final ArrayList<Item> dataset = new ArrayList<>();
-        int position = 0;
         // check
         if (!"lessons".equals(json.getString("schedule_type"))) {
             return dataset;
         }
-        // header
-        dataset.add(new Item(TYPE_HEADER, new JSONObject()
-                .put("title", ScheduleLessons.getScheduleHeader(activity, json.getString("title"), json.getString("type")))
-                .put("week", ScheduleLessons.getScheduleWeek(activity, weekday))
-        ));
-        position++;
-        // schedule
-        final JSONArray schedule = json.getJSONArray("schedule");
-        int lessons_count = 0;
-        for (int i = 0; i < schedule.length(); i++) {
-            final JSONObject day = schedule.getJSONObject(i);
-            final int day_weekday = day.getInt("weekday");
-            JSONArray lessons = day.getJSONArray("lessons");
-            if (lessons.length() == 0) continue;
-            final JSONArray lessonsFiltered = new JSONArray();
-            for (int j = 0; j < lessons.length(); j++) {
-                final JSONObject lesson = lessons.getJSONObject(j);
-                if (!(TYPE == 2 || TYPE == lesson.getInt("week") || lesson.getInt("week") == 2)) continue;
-                if ("hidden".equals(reduced_lesson_mode) && "reduced".equals(lesson.getString("cdoitmo_type"))) continue;
-                lessonsFiltered.put(lesson);
-            }
-            lessons = lessonsFiltered;
-            if (lessons.length() == 0) continue;
-            // day title
-            String day_title = "";
-            switch (day_weekday) {
-                case 0: day_title = activity.getString(R.string.monday); break;
-                case 1: day_title = activity.getString(R.string.tuesday); break;
-                case 2: day_title = activity.getString(R.string.wednesday); break;
-                case 3: day_title = activity.getString(R.string.thursday); break;
-                case 4: day_title = activity.getString(R.string.friday); break;
-                case 5: day_title = activity.getString(R.string.saturday); break;
-                case 6: day_title = activity.getString(R.string.sunday); break;
-            }
-            dataset.add(new Item(TYPE_DAY, new JSONObject().put("text", day_title)));
-            days_positions.append(day_weekday, position++);
-            int day_lessons_count_total = lessons.length();
-            for (int j = 0; j < day_lessons_count_total; j++) {
-                int type = TYPE_LESSON_REGULAR;
-                if (j == 0) {
-                    if (day_lessons_count_total - 1 == 0) {
-                        type = TYPE_LESSON_SINGLE;
-                    } else {
-                        type = TYPE_LESSON_TOP;
-                    }
-                } else if (j == day_lessons_count_total - 1) {
-                    type = TYPE_LESSON_BOTTOM;
+        if (schedule_type.equals("teachers")) {
+            // teacher picker mode
+            final JSONArray schedule = json.getJSONArray("schedule");
+            if (schedule.length() > 0) {
+                dataset.add(new Item(TYPE_PICKER_HEADER, new JSONObject().put("query", query)));
+                for (int i = 0; i < schedule.length(); i++) {
+                    final JSONObject teacher = schedule.getJSONObject(i);
+                    dataset.add(new Item(TYPE_PICKER_ITEM, teacher));
                 }
-                dataset.add(new ItemLesson(type, day_weekday, lessons.getJSONObject(j)));
-                position++;
-                lessons_count++;
+            } else {
+                dataset.add(new Item(TYPE_PICKER_NO_TEACHERS, new JSONObject().put("query", query)));
             }
-        }
-        if (lessons_count == 0) {
-            dataset.add(new Item(TYPE_NO_LESSONS, null));
         } else {
-            // notification
-            int month = Calendar.getInstance().get(Calendar.MONTH);
-            int day = Calendar.getInstance().get(Calendar.DAY_OF_MONTH);
-            if (month == Calendar.AUGUST && day > 21 || month == Calendar.SEPTEMBER && day < 21 || month == Calendar.JANUARY && day > 14 || month == Calendar.FEBRUARY && day < 14) {
-                dataset.add(new Item(TYPE_NOTIFICATION, new JSONObject().put("text", activity.getString(R.string.schedule_lessons_unstable_warning))));
+            // regular schedule mode
+            int position = 0;
+            // header
+            dataset.add(new Item(TYPE_HEADER, new JSONObject()
+                    .put("title", ScheduleLessons.getScheduleHeader(activity, json.getString("title"), json.getString("type")))
+                    .put("week", ScheduleLessons.getScheduleWeek(activity, weekday))
+            ));
+            position++;
+            // schedule
+            final JSONArray schedule = json.getJSONArray("schedule");
+            int lessons_count = 0;
+            for (int i = 0; i < schedule.length(); i++) {
+                final JSONObject day = schedule.getJSONObject(i);
+                final int day_weekday = day.getInt("weekday");
+                JSONArray lessons = day.getJSONArray("lessons");
+                if (lessons.length() == 0) continue;
+                final JSONArray lessonsFiltered = new JSONArray();
+                for (int j = 0; j < lessons.length(); j++) {
+                    final JSONObject lesson = lessons.getJSONObject(j);
+                    if (!(TYPE == 2 || TYPE == lesson.getInt("week") || lesson.getInt("week") == 2)) continue;
+                    if ("hidden".equals(reduced_lesson_mode) && "reduced".equals(lesson.getString("cdoitmo_type"))) continue;
+                    lessonsFiltered.put(lesson);
+                }
+                lessons = lessonsFiltered;
+                if (lessons.length() == 0) continue;
+                // day title
+                String day_title = "";
+                switch (day_weekday) {
+                    case 0: day_title = activity.getString(R.string.monday); break;
+                    case 1: day_title = activity.getString(R.string.tuesday); break;
+                    case 2: day_title = activity.getString(R.string.wednesday); break;
+                    case 3: day_title = activity.getString(R.string.thursday); break;
+                    case 4: day_title = activity.getString(R.string.friday); break;
+                    case 5: day_title = activity.getString(R.string.saturday); break;
+                    case 6: day_title = activity.getString(R.string.sunday); break;
+                }
+                dataset.add(new Item(TYPE_DAY, new JSONObject().put("text", day_title)));
+                days_positions.append(day_weekday, position++);
+                int day_lessons_count_total = lessons.length();
+                for (int j = 0; j < day_lessons_count_total; j++) {
+                    int type = TYPE_LESSON_REGULAR;
+                    if (j == 0) {
+                        if (day_lessons_count_total - 1 == 0) {
+                            type = TYPE_LESSON_SINGLE;
+                        } else {
+                            type = TYPE_LESSON_TOP;
+                        }
+                    } else if (j == day_lessons_count_total - 1) {
+                        type = TYPE_LESSON_BOTTOM;
+                    }
+                    dataset.add(new ItemLesson(type, day_weekday, lessons.getJSONObject(j)));
+                    position++;
+                    lessons_count++;
+                }
             }
-            // update time
-            dataset.add(new Item(TYPE_UPDATE_TIME, new JSONObject().put("text", activity.getString(R.string.update_date) + " " + Static.getUpdateTime(activity, json.getLong("timestamp")))));
+            if (lessons_count == 0) {
+                dataset.add(new Item(TYPE_NO_LESSONS, null));
+            } else {
+                // notification
+                int month = Calendar.getInstance().get(Calendar.MONTH);
+                int day = Calendar.getInstance().get(Calendar.DAY_OF_MONTH);
+                if (month == Calendar.AUGUST && day > 21 || month == Calendar.SEPTEMBER && day < 21 || month == Calendar.JANUARY && day > 14 || month == Calendar.FEBRUARY && day < 14) {
+                    dataset.add(new Item(TYPE_NOTIFICATION, new JSONObject().put("text", activity.getString(R.string.schedule_lessons_unstable_warning))));
+                }
+                // update time
+                dataset.add(new Item(TYPE_UPDATE_TIME, new JSONObject().put("text", activity.getString(R.string.update_date) + " " + Static.getUpdateTime(activity, json.getLong("timestamp")))));
+            }
         }
         // that's all
         return dataset;

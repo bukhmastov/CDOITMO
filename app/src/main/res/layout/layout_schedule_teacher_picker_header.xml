@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
 
     <TextView
         android:id="@+id/teacher_picker_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?attr/colorBackgroundSection"
+        android:paddingTop="@dimen/item_vertical_padding"
         android:paddingBottom="@dimen/item_vertical_padding"
         android:paddingEnd="@dimen/item_horizontal_padding"
         android:paddingStart="@dimen/item_horizontal_padding"
-        android:paddingTop="@dimen/item_vertical_padding"
         android:text="@string/lorem_ipsum"
         android:textColor="?android:attr/textColorPrimary"
         android:textSize="@dimen/font_size_16" />
@@ -20,12 +21,5 @@
         android:layout_width="match_parent"
         android:layout_height="@dimen/separator"
         android:background="?attr/colorSeparator"/>
-
-    <ListView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/teacher_picker_list_view"
-        android:divider="?attr/colorSeparator"
-        android:dividerHeight="@dimen/separator" />
 
 </LinearLayout>
