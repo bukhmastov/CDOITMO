@@ -507,8 +507,17 @@ public abstract class Schedule {
 
     // Returns the signature of the lesson
     public static String getLessonSignature(JSONObject lesson) throws JSONException {
-        JSONObject replica = new JSONObject(lesson.toString());
-        replica.remove("cdoitmo_type");
+        JSONObject replica = new JSONObject();
+        replica.put("subject", lesson.getString("subject"));
+        replica.put("type", lesson.getString("type"));
+        replica.put("week", lesson.getInt("week"));
+        replica.put("timeStart", lesson.getString("timeStart"));
+        replica.put("timeEnd", lesson.getString("timeEnd"));
+        replica.put("group", lesson.getString("group"));
+        replica.put("teacher", lesson.getString("teacher"));
+        replica.put("teacher_id", lesson.getString("teacher_id"));
+        replica.put("room", lesson.getString("room"));
+        replica.put("building", lesson.getString("building"));
         return replica.toString();
     }
 

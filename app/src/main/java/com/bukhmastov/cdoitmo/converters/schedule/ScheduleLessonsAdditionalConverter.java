@@ -52,7 +52,7 @@ public class ScheduleLessonsAdditionalConverter extends ScheduleConverter {
                     if (scheduleReduced.length() > 0 && lessons.length() > 0) {
                         for (int j = 0; j < lessons.length(); j++) {
                             final JSONObject lesson = lessons.getJSONObject(j);
-                            final String signature = Static.crypt(ScheduleLessons.getLessonSignature(lesson));
+                            final String signature = ScheduleLessons.getLessonHash(lesson);
                             for (int k = 0; k < scheduleReduced.length(); k++) {
                                 final JSONObject dayReduced = scheduleReduced.getJSONObject(k);
                                 if (dayReduced.getInt("weekday") != weekday) continue;
