@@ -30,11 +30,9 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapters.TeacherPickerAdapter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.network.IfmoClient;
-import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.models.Client;
-import com.bukhmastov.cdoitmo.objects.ScheduleExams;
 import com.bukhmastov.cdoitmo.objects.schedule.Schedule;
+import com.bukhmastov.cdoitmo.objects.schedule.ScheduleExams;
 import com.bukhmastov.cdoitmo.objects.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.receivers.ShortcutReceiver;
 import com.bukhmastov.cdoitmo.utils.Log;
@@ -582,11 +580,27 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
     }
 
     private void getScheduleLessons(final String scope, final result callback) {
-        Log.v(TAG, "getScheduleLessons | scope=" + scope);
+        getSchedule(scope, callback, new Schedule.ScheduleSearchProvider() {
+            @Override
+            public void onSearch(Context context, String query, Schedule.Handler handler) {
+                new ScheduleLessons(handler).search(context, query);
+            }
+        });
+    }
+    private void getScheduleExams(final String scope, final result callback) {
+        getSchedule(scope, callback, new Schedule.ScheduleSearchProvider() {
+            @Override
+            public void onSearch(Context context, String query, Schedule.Handler handler) {
+                new ScheduleExams(handler).search(context, query);
+            }
+        });
+    }
+    private void getSchedule(final String scope, final result callback, final Schedule.ScheduleSearchProvider scheduleSearchProvider) {
         Static.T.runThread(new Runnable() {
             @Override
             public void run() {
                 try {
+                    Log.v(TAG, "getSchedule | scope=" + scope);
                     final ViewGroup layout = (ViewGroup) inflate(R.layout.layout_widget_schedule_lessons_create_search);
                     final AlertDialog alertDialog = new AlertDialog.Builder(activity)
                             .setView(layout)
@@ -624,15 +638,12 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                 @Override
                                 public void run() {
                                     final String query = search_text_view.getText().toString().trim();
-                                    Log.v(TAG, "getScheduleLessons | search action | clicked | query=" + query);
+                                    Log.v(TAG, "getSchedule | search action | clicked | query=" + query);
                                     if (!query.isEmpty()) {
-                                        if (requestHandle != null) {
-                                            requestHandle.cancel();
-                                        }
-                                        new ScheduleLessons(new Schedule.Handler() {
+                                        scheduleSearchProvider.onSearch(activity, query, new Schedule.Handler() {
                                             @Override
                                             public void onSuccess(final JSONObject json, final boolean fromCache) {
-                                                Log.v(TAG, "getScheduleLessons | search action | onSuccess | json=" + (json == null ? "null" : "notnull"));
+                                                Log.v(TAG, "getSchedule | search action | onSuccess | json=" + (json == null ? "null" : "notnull"));
                                                 Static.T.runThread(new Runnable() {
                                                     @Override
                                                     public void run() {
@@ -644,30 +655,37 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                             try {
                                                                 final String type = json.getString("type");
                                                                 final String query = json.getString("query");
-                                                                Log.v(TAG, "getScheduleLessons | search action | onSuccess | type=" + type);
+                                                                Log.v(TAG, "getSchedule | search action | onSuccess | type=" + type);
                                                                 switch (type) {
                                                                     case "group": case "room": case "teacher": {
+                                                                        JSONArray schedule = json.getJSONArray("schedule");
                                                                         String title = json.getString("title");
                                                                         if (type.equals("room")) {
                                                                             title = activity.getString(R.string.room) + " " + title;
                                                                         }
-                                                                        Log.v(TAG, "getScheduleLessons | search action | onSuccess | done | query=" + query + " | title=" + title);
-                                                                        if (alertDialog != null && alertDialog.isShowing()) {
-                                                                            alertDialog.cancel();
+                                                                        Log.v(TAG, "getSchedule | search action | onSuccess | done | query=" + query + " | title=" + title);
+                                                                        if (schedule.length() > 0) {
+                                                                            if (alertDialog.isShowing()) {
+                                                                                alertDialog.cancel();
+                                                                            }
+                                                                            callback.done(title, query);
+                                                                        } else {
+                                                                            Static.snackBar(activity, activity.getString(R.string.schedule_not_found));
                                                                         }
-                                                                        callback.done(title, query);
                                                                         break;
                                                                     }
                                                                     case "teachers": {
                                                                         teacherPickerAdapter.clear();
-                                                                        final JSONArray schedule = json.getJSONArray("schedule");
-                                                                        Log.v(TAG, "getScheduleLessons | search action | onSuccess | type=" + type + " | length=" + schedule.length());
-                                                                        if (schedule.length() == 1) {
-                                                                            JSONObject item = schedule.getJSONObject(0);
-                                                                            if (item != null) {
-                                                                                String pid = item.getString("pid");
-                                                                                String title = item.getString("person");
-                                                                                Log.v(TAG, "getScheduleLessons | search action | onSuccess | done | query=" + pid + " | title=" + title);
+                                                                        final JSONArray teachers = json.getJSONArray("schedule");
+                                                                        Log.v(TAG, "getSchedule | search action | onSuccess | type=" + type + " | length=" + teachers.length());
+                                                                        if (teachers.length() == 0) {
+                                                                            Static.snackBar(activity, activity.getString(R.string.no_teachers));
+                                                                        } else if (teachers.length() == 1) {
+                                                                            JSONObject teacher = teachers.getJSONObject(0);
+                                                                            if (teacher != null) {
+                                                                                String pid = teacher.getString("pid");
+                                                                                String title = teacher.getString("person");
+                                                                                Log.v(TAG, "getSchedule | search action | onSuccess | done | query=" + pid + " | title=" + title);
                                                                                 if (alertDialog.isShowing()) {
                                                                                     alertDialog.cancel();
                                                                                 }
@@ -677,8 +695,8 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                                             }
                                                                         } else {
                                                                             ArrayList<JSONObject> arrayList = new ArrayList<>();
-                                                                            for (int i = 0; i < schedule.length(); i++) {
-                                                                                arrayList.add(schedule.getJSONObject(i));
+                                                                            for (int i = 0; i < teachers.length(); i++) {
+                                                                                arrayList.add(teachers.getJSONObject(i));
                                                                             }
                                                                             teacherPickerAdapter.addAll(arrayList);
                                                                             teacherPickerAdapter.addTeachers(arrayList);
@@ -707,22 +725,22 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                             }
                                             @Override
                                             public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                                                Log.v(TAG, "getScheduleLessons | search action | onFailure | state=" + state);
                                                 Static.T.runThread(new Runnable() {
                                                     @Override
                                                     public void run() {
+                                                        Log.v(TAG, "getSchedule | search action | onFailure | state=" + state);
                                                         search_loading.setVisibility(View.GONE);
                                                         search_action.setVisibility(View.VISIBLE);
-                                                        Static.snackBar(activity, state == IfmoRestClient.FAILED_SERVER_ERROR ? IfmoRestClient.getFailureMessage(activity, -1) : activity.getString(R.string.schedule_not_found));
+                                                        Static.snackBar(activity, state == Client.FAILED_SERVER_ERROR ? Client.getFailureMessage(activity, statusCode) : activity.getString(R.string.schedule_not_found));
                                                     }
                                                 });
                                             }
                                             @Override
-                                            public void onProgress(int state) {
-                                                Log.v(TAG, "getScheduleLessons | search action | onProgress | state=" + state);
+                                            public void onProgress(final int state) {
                                                 Static.T.runThread(new Runnable() {
                                                     @Override
                                                     public void run() {
+                                                        Log.v(TAG, "getSchedule | search action | onProgress | state=" + state);
                                                         search_loading.setVisibility(View.VISIBLE);
                                                         search_action.setVisibility(View.GONE);
                                                     }
@@ -738,7 +756,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                     requestHandle.cancel();
                                                 }
                                             }
-                                        }).search(activity, query);
+                                        });
                                     }
                                 }
                             });
@@ -751,210 +769,16 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                 @Override
                                 public void run() {
                                     try {
-                                        Log.v(TAG, "getScheduleLessons | search list selected");
-                                        JSONObject item = teacherPickerAdapter.getItem(position);
-                                        if (item != null) {
-                                            String query = item.getString("pid");
-                                            String title = item.getString("person");
-                                            Log.v(TAG, "getScheduleLessons | search list selected | query=" + query + " | title=" + title);
+                                        Log.v(TAG, "getSchedule | search list selected");
+                                        final JSONObject teacher = teacherPickerAdapter.getItem(position);
+                                        if (teacher != null) {
+                                            final String query = teacher.getString("pid");
+                                            final String title = teacher.getString("person");
+                                            Log.v(TAG, "getSchedule | search list selected | query=" + query + " | title=" + title);
                                             if (alertDialog.isShowing()) {
                                                 alertDialog.cancel();
                                             }
                                             callback.done(title, query);
-                                        } else {
-                                            Static.snackBar(activity, getString(R.string.something_went_wrong));
-                                        }
-                                    } catch (Exception e) {
-                                        Static.error(e);
-                                        Static.snackBar(activity, getString(R.string.something_went_wrong));
-                                    }
-                                }
-                            });
-                        }
-                    });
-                    alertDialog.show();
-                    search_action.setVisibility(View.VISIBLE);
-                } catch (Exception e) {
-                    Static.error(e);
-                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                }
-            }
-        });
-    }
-    private void getScheduleExams(final String scope, final result callback) {
-        Log.v(TAG, "getScheduleExams | scope=" + scope);
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    final ViewGroup layout = (ViewGroup) inflate(R.layout.layout_widget_schedule_lessons_create_search);
-                    final AlertDialog alertDialog = new AlertDialog.Builder(activity)
-                            .setView(layout)
-                            .setNegativeButton(R.string.do_cancel, null)
-                            .create();
-                    final AutoCompleteTextView search_text_view = layout.findViewById(R.id.search_text_view);
-                    final ViewGroup search_action = layout.findViewById(R.id.search_action);
-                    final ViewGroup search_loading = layout.findViewById(R.id.search_loading);
-                    final TeacherPickerAdapter teacherPickerAdapter = new TeacherPickerAdapter(activity, new ArrayList<JSONObject>());
-                    if (scope != null) {
-                        search_text_view.setText(scope);
-                    }
-                    teacherPickerAdapter.setNotifyOnChange(true);
-                    search_text_view.setAdapter(teacherPickerAdapter);
-                    search_text_view.addTextChangedListener(new TextWatcher() {
-                        @Override
-                        public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
-                        @Override
-                        public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
-                        @Override
-                        public void afterTextChanged(Editable editable) {
-                            Static.T.runThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    teacherPickerAdapter.clear();
-                                    search_text_view.dismissDropDown();
-                                }
-                            });
-                        }
-                    });
-                    search_action.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            Static.T.runThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    final String query = search_text_view.getText().toString().trim();
-                                    Log.v(TAG, "getScheduleExams | search action | clicked | query=" + query);
-                                    if (!query.isEmpty()) {
-                                        if (requestHandle != null) {
-                                            requestHandle.cancel();
-                                        }
-                                        ScheduleExams scheduleExams = new ScheduleExams(activity);
-                                        scheduleExams.setHandler(new ScheduleExams.response() {
-                                            @Override
-                                            public void onNewRequest(Client.Request request) {
-                                                requestHandle = request;
-                                            }
-                                            @Override
-                                            public void onProgress(int state) {
-                                                Log.v(TAG, "getScheduleExams | search action | onProgress | state=" + state);
-                                                Static.T.runThread(new Runnable() {
-                                                    @Override
-                                                    public void run() {
-                                                        search_loading.setVisibility(View.VISIBLE);
-                                                        search_action.setVisibility(View.GONE);
-                                                    }
-                                                });
-                                            }
-                                            @Override
-                                            public void onFailure(final int state) {
-                                                Log.v(TAG, "getScheduleExams | search action | onFailure | state=" + state);
-                                                Static.T.runThread(new Runnable() {
-                                                    @Override
-                                                    public void run() {
-                                                        search_loading.setVisibility(View.GONE);
-                                                        search_action.setVisibility(View.VISIBLE);
-                                                        Static.snackBar(activity, state == IfmoClient.FAILED_SERVER_ERROR ? IfmoClient.getFailureMessage(activity, -1) : activity.getString(R.string.schedule_not_found));
-                                                    }
-                                                });
-                                            }
-                                            @Override
-                                            public void onSuccess(final JSONObject json) {
-                                                Log.v(TAG, "getScheduleExams | search action | onSuccess | json=" + (json == null ? "null" : "notnull"));
-                                                Static.T.runThread(new Runnable() {
-                                                    @Override
-                                                    public void run() {
-                                                        search_loading.setVisibility(View.GONE);
-                                                        search_action.setVisibility(View.VISIBLE);
-                                                        if (json == null) {
-                                                            Static.snackBar(activity, activity.getString(R.string.schedule_not_found));
-                                                        } else {
-                                                            try {
-                                                                String type = json.getString("type");
-                                                                Log.v(TAG, "getScheduleExams | search action | onSuccess | type=" + type);
-                                                                switch (type) {
-                                                                    case "group": case "teacher": {
-                                                                        JSONArray schedule = json.getJSONArray("schedule");
-                                                                        String query = json.getString("scope");
-                                                                        String label = json.getString("scope");
-                                                                        Log.v(TAG, "getScheduleExams | search action | onSuccess | done | query=" + query + " | label=" + label);
-                                                                        if (schedule.length() > 0) {
-                                                                            if (alertDialog.isShowing()) {
-                                                                                alertDialog.cancel();
-                                                                            }
-                                                                            callback.done(label, query);
-                                                                        } else {
-                                                                            Static.snackBar(activity, activity.getString(R.string.schedule_not_found));
-                                                                        }
-                                                                        break;
-                                                                    }
-                                                                    case "teacher_picker": {
-                                                                        teacherPickerAdapter.clear();
-                                                                        JSONArray teachers = json.getJSONArray("teachers");
-                                                                        if (teachers.length() > 0) {
-                                                                            if (teachers.length() == 1) {
-                                                                                JSONObject teacher = teachers.getJSONObject(0);
-                                                                                String query = teacher.getString("scope");
-                                                                                String label = teacher.getString("name");
-                                                                                Log.v(TAG, "getScheduleExams | search action | onSuccess | done | query=" + query + " | label=" + label);
-                                                                                if (alertDialog.isShowing()) {
-                                                                                    alertDialog.cancel();
-                                                                                }
-                                                                                callback.done(label, query);
-                                                                            } else {
-                                                                                ArrayList<JSONObject> arrayList = new ArrayList<>();
-                                                                                for (int i = 0; i < teachers.length(); i++) {
-                                                                                    JSONObject teacher = teachers.getJSONObject(i);
-                                                                                    JSONObject teacherAdapted = new JSONObject();
-                                                                                    teacherAdapted.put("person", teacher.getString("name"));
-                                                                                    teacherAdapted.put("pid", teacher.getString("scope"));
-                                                                                    teacherAdapted.put("post", "");
-                                                                                    arrayList.add(teacherAdapted);
-                                                                                }
-                                                                                teacherPickerAdapter.addAll(arrayList);
-                                                                                teacherPickerAdapter.addTeachers(arrayList);
-                                                                                if (arrayList.size() > 0) {
-                                                                                    search_text_view.showDropDown();
-                                                                                }
-                                                                            }
-                                                                        } else {
-                                                                            Static.snackBar(activity, activity.getString(R.string.schedule_not_found));
-                                                                        }
-                                                                        break;
-                                                                    }
-                                                                }
-                                                            } catch (Exception e) {
-                                                                Static.error(e);
-                                                                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                                            }
-                                                        }
-                                                    }
-                                                });
-                                            }
-                                        });
-                                        scheduleExams.search(query);
-                                    }
-                                }
-                            });
-                        }
-                    });
-                    search_text_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                        @Override
-                        public void onItemClick(final AdapterView<?> parent, final View view, final int position, final long id) {
-                            Static.T.runThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    try {
-                                        Log.v(TAG, "getScheduleExams | search list selected");
-                                        JSONObject item = teacherPickerAdapter.getItem(position);
-                                        if (item != null) {
-                                            String query = item.getString("pid");
-                                            String label = item.getString("person");
-                                            Log.v(TAG, "getScheduleExams | search list selected | query=" + query + " | label=" + label);
-                                            if (alertDialog.isShowing()) {
-                                                alertDialog.cancel();
-                                            }
-                                            callback.done(label, query);
                                         } else {
                                             Static.snackBar(activity, getString(R.string.something_went_wrong));
                                         }

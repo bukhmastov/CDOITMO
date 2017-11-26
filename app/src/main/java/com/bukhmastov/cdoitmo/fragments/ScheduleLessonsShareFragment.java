@@ -353,7 +353,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                                         break;
                                     case Client.FAILED_SERVER_ERROR:
                                         View view = inflate(R.layout.state_failed_without_align);
-                                        ((TextView) view.findViewById(R.id.text)).setText(Client.getFailureMessage(activity, -1));
+                                        ((TextView) view.findViewById(R.id.text)).setText(Client.getFailureMessage(activity, statusCode));
                                         share_content.addView(view);
                                         break;
                                     case Client.FAILED_TRY_AGAIN:

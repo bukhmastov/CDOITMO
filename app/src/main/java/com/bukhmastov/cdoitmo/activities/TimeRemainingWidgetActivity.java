@@ -15,7 +15,6 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.models.Client;
 import com.bukhmastov.cdoitmo.objects.TimeRemainingWidget;
-import com.bukhmastov.cdoitmo.objects.schedule.Schedule;
 import com.bukhmastov.cdoitmo.objects.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.utils.CtxWrapper;
 import com.bukhmastov.cdoitmo.utils.Log;
@@ -145,7 +144,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
                     message(activity.getString(R.string.no_connection));
                     break;
                 case IfmoRestClient.FAILED_SERVER_ERROR:
-                    message(IfmoRestClient.getFailureMessage(activity, -1));
+                    message(IfmoRestClient.getFailureMessage(activity, statusCode));
                     break;
                 case IfmoRestClient.FAILED_TRY_AGAIN:
                 case ScheduleLessons.FAILED_LOAD:

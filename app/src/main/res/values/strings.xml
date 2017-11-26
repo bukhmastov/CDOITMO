@@ -388,7 +388,7 @@
     <string name="tracked_logs">Записанные логи</string>
     <string name="send_logs">Выслать логи</string>
     <string name="download_logs">Скачать логи</string>
-    <string name="schedule_lessons_unstable_warning">Расписание может меняться в ближайшее время</string>
+    <string name="schedule_lessons_unstable_warning">Расписание может активно меняться в ближайшее время</string>
     <string name="schedule_empty_query_title">Система не смогла определить Вашу группу или был задан пустой запрос</string>
     <string name="schedule_empty_query_use_seqrch">Выберите необходимое расписание, используя поиск в правом верхнем углу</string>
     <string name="schedule_empty_query_settings">Настроить отображение расписания по умолчанию Вы можете проследовав:</string>

@@ -2,6 +2,7 @@ package com.bukhmastov.cdoitmo.objects.schedule;
 
 import android.content.Context;
 
+import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.converters.schedule.ScheduleTeachersConverter;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
@@ -14,9 +15,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -30,6 +34,9 @@ public abstract class Schedule {
         void onProgress(int state);
         void onNewRequest(Client.Request request);
         void onCancelRequest();
+    }
+    public interface ScheduleSearchProvider {
+        void onSearch(Context context, String query, Handler handler);
     }
     protected interface SearchByQuery {
         boolean isWebAvailable();
@@ -508,5 +515,26 @@ public abstract class Schedule {
     // Returns the hash of the lesson
     public static String getLessonHash(JSONObject lesson) throws JSONException {
         return Static.crypt(getLessonSignature(lesson));
+    }
+
+    // Returns main title for schedules
+    public static String getScheduleHeader(Context context, String title, String type) {
+        switch (type) {
+            case "mine": title = context.getString(R.string.schedule_personal); break;
+            case "group": title = (context.getString(R.string.schedule_group) + " " + title).trim(); break;
+            case "teacher": title = (context.getString(R.string.schedule_teacher) + " " + title).trim(); break;
+            case "room": title = (context.getString(R.string.schedule_room) + " " + title).trim(); break;
+            case "teachers": break;
+        }
+        return title;
+    }
+
+    // Returns second title for schedules
+    public static String getScheduleWeek(Context context, int week) {
+        if (week >= 0) {
+            return week + " " + context.getString(R.string.school_week);
+        } else {
+            return new SimpleDateFormat("dd.MM.yyyy", Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis()));
+        }
     }
 }
