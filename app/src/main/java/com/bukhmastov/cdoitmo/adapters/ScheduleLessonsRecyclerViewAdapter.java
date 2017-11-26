@@ -83,7 +83,7 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
     private final SparseIntArray days_positions = new SparseIntArray();
     private final Static.StringCallback callback;
     private String reduced_lesson_mode = "compact";
-    private String schedule_type = "";
+    private String type = "";
     private String query = null;
     private int colorScheduleFlagTEXT = -1, colorScheduleFlagCommonBG = -1, colorScheduleFlagPracticeBG = -1, colorScheduleFlagLectureBG = -1, colorScheduleFlagLabBG = -1;
 
@@ -95,7 +95,7 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
         this.dataset = new ArrayList<>();
         try {
             reduced_lesson_mode = Storage.pref.get(activity, "pref_schedule_lessons_view_of_reduced_lesson", "compact");
-            schedule_type = data.getString("type");
+            type = data.getString("type");
             query = data.getString("query");
             addItems(json2dataset(activity, data, weekday));
         } catch (Exception e) {
@@ -117,14 +117,14 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         @LayoutRes int layout;
         switch (viewType) {
-            case TYPE_HEADER: layout = R.layout.layout_schedule_lessons_header; break;
+            case TYPE_HEADER: layout = R.layout.layout_schedule_both_header; break;
             case TYPE_DAY: layout = R.layout.layout_schedule_lessons_day; break;
             case TYPE_LESSON_TOP: layout = R.layout.layout_schedule_lessons_item_top; break;
             case TYPE_LESSON_REGULAR: layout = R.layout.layout_schedule_lessons_item_regular; break;
             case TYPE_LESSON_BOTTOM: layout = R.layout.layout_schedule_lessons_item_bottom; break;
             case TYPE_LESSON_SINGLE: layout = R.layout.layout_schedule_lessons_item_single; break;
             case TYPE_NOTIFICATION: layout = R.layout.layout_schedule_lessons_notification; break;
-            case TYPE_UPDATE_TIME: layout = R.layout.layout_schedule_lessons_update_time; break;
+            case TYPE_UPDATE_TIME: layout = R.layout.layout_schedule_both_update_time; break;
             case TYPE_NO_LESSONS: layout = R.layout.nothing_to_display; break;
             case TYPE_PICKER_HEADER: layout = R.layout.layout_schedule_teacher_picker_header; break;
             case TYPE_PICKER_ITEM: layout = R.layout.layout_schedule_teacher_picker_item; break;
@@ -264,7 +264,7 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
                                                                         case Calendar.SUNDAY: weekday = 6; break;
                                                                         default: weekday = 0; break;
                                                                     }
-                                                                    if (!ScheduleLessons.createLesson(activity, query, data.getString("title"), schedule_type, weekday, new JSONObject(), null)) {
+                                                                    if (!ScheduleLessons.createLesson(activity, query, data.getString("title"), type, weekday, new JSONObject(), null)) {
                                                                         Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                                                     }
                                                                 } catch (Exception e) {
@@ -283,7 +283,7 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
                                                                     final Bundle extras = new Bundle();
                                                                     extras.putString("action", "share");
                                                                     extras.putString("query", query);
-                                                                    extras.putString("type", schedule_type);
+                                                                    extras.putString("type", type);
                                                                     extras.putString("title", data.getString("title"));
                                                                     Static.T.runOnUiThread(new Runnable() {
                                                                         @Override
@@ -473,7 +473,7 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
                                             @Override
                                             public void run() {
                                                 try {
-                                                    if (!ScheduleLessons.createLesson(activity, query, data.getString("title"), schedule_type, weekday, lesson, null)) {
+                                                    if (!ScheduleLessons.createLesson(activity, query, data.getString("title"), ScheduleLessonsRecyclerViewAdapter.this.type, weekday, lesson, null)) {
                                                         Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                                     }
                                                 } catch (Exception e) {
@@ -488,7 +488,7 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
                                             @Override
                                             public void run() {
                                                 try {
-                                                    if (!ScheduleLessons.editLesson(activity, query, data.getString("title"), schedule_type, weekday, lesson, null)) {
+                                                    if (!ScheduleLessons.editLesson(activity, query, data.getString("title"), ScheduleLessonsRecyclerViewAdapter.this.type, weekday, lesson, null)) {
                                                         Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                                     }
                                                 } catch (Exception e) {
@@ -515,7 +515,7 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
             // desc
             TextView lesson_desc = viewHolder.container.findViewById(R.id.lesson_desc);
             String desc = null;
-            switch (schedule_type) {
+            switch (this.type) {
                 case "group": desc = getString(lesson, "teacher"); break;
                 case "teacher": desc = getString(lesson, "group"); break;
                 case "mine":
@@ -567,7 +567,7 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
             // meta
             TextView lesson_meta = viewHolder.container.findViewById(R.id.lesson_meta);
             String meta = null;
-            switch (schedule_type) {
+            switch (this.type) {
                 case "mine":
                 case "group":
                 case "teacher": {
@@ -611,7 +611,7 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
         try {
             final String text = getString(item.data, "text");
             ViewHolder viewHolder = (ViewHolder) holder;
-            ((TextView) viewHolder.container.findViewById(R.id.lessons_update_time)).setText(text != null && !text.isEmpty() ? text : Static.GLITCH);
+            ((TextView) viewHolder.container.findViewById(R.id.update_time)).setText(text != null && !text.isEmpty() ? text : Static.GLITCH);
         } catch (Exception e) {
             Static.error(e);
         }
@@ -680,10 +680,10 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
     public ArrayList<Item> json2dataset(ConnectedActivity activity, JSONObject json, int weekday) throws JSONException {
         final ArrayList<Item> dataset = new ArrayList<>();
         // check
-        if (!"lessons".equals(json.getString("schedule_type"))) {
+        if (!ScheduleLessons.TYPE.equals(json.getString("schedule_type"))) {
             return dataset;
         }
-        if (schedule_type.equals("teachers")) {
+        if (type.equals("teachers")) {
             // teacher picker mode
             final JSONArray schedule = json.getJSONArray("schedule");
             if (schedule.length() > 0) {
@@ -858,7 +858,7 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
         return getMenuTitle(lesson, type, type);
     }
     private String getMenuTitle(JSONObject lesson, String type1, String type2) throws JSONException {
-        return !schedule_type.equals(type1) ? (lesson.has(type2) ? (lesson.getString(type2).isEmpty() ? null : lesson.getString(type2)) : null) : null;
+        return !type.equals(type1) ? (lesson.has(type2) ? (lesson.getString(type2).isEmpty() ? null : lesson.getString(type2)) : null) : null;
     }
     private void bindMenuItem(Menu menu, int id, String text){
         if (text == null || text.isEmpty()) {

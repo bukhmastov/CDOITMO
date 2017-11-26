@@ -3,7 +3,6 @@ package com.bukhmastov.cdoitmo.objects.schedule;
 import android.content.Context;
 import android.os.Bundle;
 
-import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.ConnectedActivity;
 import com.bukhmastov.cdoitmo.converters.schedule.ScheduleLessonsAdditionalConverter;
 import com.bukhmastov.cdoitmo.converters.schedule.ScheduleLessonsConverterIfmo;
@@ -20,11 +19,6 @@ import com.bukhmastov.cdoitmo.utils.Storage;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
 
 public class ScheduleLessons extends Schedule {
 
@@ -339,24 +333,6 @@ public class ScheduleLessons extends Schedule {
                 }
             }
         });
-    }
-
-    public static String getScheduleHeader(Context context, String title, String type) {
-        switch (type) {
-            case "mine": title = context.getString(R.string.schedule_personal); break;
-            case "group": title = (context.getString(R.string.schedule_group) + " " + title).trim(); break;
-            case "teacher": title = (context.getString(R.string.schedule_teacher) + " " + title).trim(); break;
-            case "room": title = (context.getString(R.string.schedule_room) + " " + title).trim(); break;
-            case "teachers": break;
-        }
-        return title;
-    }
-    public static String getScheduleWeek(Context context, int week) {
-        if (week >= 0) {
-            return week + " " + context.getString(R.string.school_week);
-        } else {
-            return new SimpleDateFormat("dd.MM.yyyy", Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis()));
-        }
     }
 
     public static boolean clearChanges(final Context context, final String query, final Static.SimpleCallback callback) {

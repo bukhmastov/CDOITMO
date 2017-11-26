@@ -13,10 +13,9 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.network.IfmoClient;
 import com.bukhmastov.cdoitmo.network.models.Client;
 import com.bukhmastov.cdoitmo.objects.DaysRemainingWidget;
-import com.bukhmastov.cdoitmo.objects.ScheduleExams;
+import com.bukhmastov.cdoitmo.objects.schedule.ScheduleExams;
 import com.bukhmastov.cdoitmo.utils.CtxWrapper;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
@@ -25,7 +24,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-public class DaysRemainingWidgetActivity extends AppCompatActivity implements ScheduleExams.response, DaysRemainingWidget.response {
+public class DaysRemainingWidgetActivity extends AppCompatActivity implements ScheduleExams.Handler, DaysRemainingWidget.response {
 
     private static final String TAG = "DRWidgetActivity";
     private final Activity activity = this;
@@ -101,11 +100,10 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
         Log.v(TAG, "Activity resumed");
         if (scheduleExams == null) {
             scheduleExams = new ScheduleExams(this);
-            scheduleExams.setHandler(this);
         }
         if (schedule == null) {
             if (query != null) {
-                scheduleExams.search(query, true);
+                scheduleExams.search(activity, query, true);
             } else {
                 Log.w(TAG, "onResume | query is null");
                 close();
@@ -138,17 +136,22 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
 
     @Override
     public void onFailure(int state) {
+        this.onFailure(0, null, state);
+    }
+
+    @Override
+    public void onFailure(int statusCode, Client.Headers headers, int state) {
         Log.v(TAG, "failure " + state);
         try {
             switch (state) {
-                case IfmoClient.FAILED_OFFLINE:
+                case Client.FAILED_OFFLINE:
                 case ScheduleExams.FAILED_OFFLINE:
                     message(activity.getString(R.string.no_connection));
                     break;
-                case IfmoClient.FAILED_SERVER_ERROR:
-                    message(IfmoClient.getFailureMessage(activity, -1));
+                case Client.FAILED_SERVER_ERROR:
+                    message(Client.getFailureMessage(activity, statusCode));
                     break;
-                case IfmoClient.FAILED_TRY_AGAIN:
+                case Client.FAILED_TRY_AGAIN:
                 case ScheduleExams.FAILED_LOAD:
                 case ScheduleExams.FAILED_EMPTY_QUERY:
                     message(activity.getString(R.string.load_failed));
@@ -160,7 +163,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
     }
 
     @Override
-    public void onSuccess(JSONObject json) {
+    public void onSuccess(JSONObject json, boolean fromCache) {
         Log.v(TAG, "success");
         try {
             if (json == null) throw new NullPointerException("json cannot be null");
@@ -181,6 +184,13 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
     @Override
     public void onNewRequest(Client.Request request) {
         requestHandle = request;
+    }
+
+    @Override
+    public void onCancelRequest() {
+        if (requestHandle != null) {
+            requestHandle.cancel();
+        }
     }
 
     @Override

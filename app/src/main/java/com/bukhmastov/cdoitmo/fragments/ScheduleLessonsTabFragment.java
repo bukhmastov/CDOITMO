@@ -158,7 +158,7 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
                                 @Override
                                 public void run() {
                                     try {
-                                        draw(R.layout.layout_schedule_recycle_list);
+                                        draw(R.layout.layout_schedule_both_recycle_list);
                                         // swipe
                                         final SwipeRefreshLayout swipe_container = container.findViewById(R.id.schedule_swipe);
                                         if (swipe_container != null) {
@@ -255,8 +255,15 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
                                     break;
                                 }
                                 case Client.FAILED_TRY_AGAIN:
+                                case Client.FAILED_SERVER_ERROR:
                                 case ScheduleLessons.FAILED_LOAD: {
                                     draw(R.layout.state_try_again);
+                                    if (state == Client.FAILED_TRY_AGAIN) {
+                                        TextView try_again_message = activity.findViewById(R.id.try_again_message);
+                                        if (try_again_message != null) {
+                                            try_again_message.setText(Client.getFailureMessage(activity, statusCode));
+                                        }
+                                    }
                                     View try_again_reload = container.findViewById(R.id.try_again_reload);
                                     if (try_again_reload != null) {
                                         try_again_reload.setOnClickListener(new View.OnClickListener() {

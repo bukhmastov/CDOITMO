@@ -112,11 +112,11 @@ public class ScheduleExamsSearchActivity extends SearchActivity {
                     Static.error(e);
                     Storage.file.perm.delete(self, "schedule_exams#recent");
                 }
-                if (ScheduleExamsFragment.scheduleExams != null) {
-                    ScheduleExamsFragment.scheduleExams.search(query);
-                } else {
-                    Log.w(TAG, "ScheduleExamsFragment.scheduleExams is null");
-                }
+                //if (ScheduleExamsFragment.scheduleExams != null) {
+                //    ScheduleExamsFragment.scheduleExams.search(query);
+                //} else {
+               //     Log.w(TAG, "ScheduleExamsFragment.scheduleExams is null");
+                //}
             }
         });
     }

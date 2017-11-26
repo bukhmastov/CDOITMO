@@ -401,7 +401,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                                                         switch (state) {
                                                             case Client.FAILED_OFFLINE: text = activity.getString(R.string.offline_mode_on); break;
                                                             case Client.FAILED_TRY_AGAIN: text = activity.getString(R.string.load_failed); break;
-                                                            case Client.FAILED_SERVER_ERROR: text = Client.getFailureMessage(activity, -1); break;
+                                                            case Client.FAILED_SERVER_ERROR: text = Client.getFailureMessage(activity, statusCode); break;
                                                         }
                                                         Static.snackBar(activity, text);
                                                     }

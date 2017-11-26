@@ -153,7 +153,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                         }
                         @Override
                         public void onFailure(int statusCode, Client.Headers headers, int state) {
-                            failed(context, appWidgetManager, appWidgetId, settings, state == IfmoRestClient.FAILED_SERVER_ERROR ? IfmoRestClient.getFailureMessage(context, -1) : context.getString(R.string.failed_to_load_schedule));
+                            failed(context, appWidgetManager, appWidgetId, settings, state == IfmoRestClient.FAILED_SERVER_ERROR ? IfmoRestClient.getFailureMessage(context, statusCode) : context.getString(R.string.failed_to_load_schedule));
                         }
                         @Override
                         public void onProgress(int state) {

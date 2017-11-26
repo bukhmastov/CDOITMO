@@ -79,7 +79,7 @@ public class DaysRemainingWidget {
                             data.desc = fullExam.getString(fullExam.has("teacher") ? "teacher" : "group");
                             String timeString = exam.getString("time");
                             String dateString = exam.getString("date");
-                            Matcher originDateMatcher = Pattern.compile("^(\\d{1,2})(.*)$").matcher(dateString);
+                            Matcher originDateMatcher = Pattern.compile("^(\\d{1,2})(\\D*)$").matcher(dateString);
                             if (originDateMatcher.find()) {
                                 String day = originDateMatcher.group(1);
                                 String month = originDateMatcher.group(2).trim();
@@ -96,17 +96,19 @@ public class DaysRemainingWidget {
                                 if (month.startsWith("ноя")) month = "11";
                                 if (month.startsWith("дек")) month = "12";
                                 dateString = day + "." + month;
-                            } else {
-                                throw new Exception("Invalid date: " + dateString);
                             }
                             Matcher timeMatcher = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(timeString);
-                            Matcher dateMatcher = Pattern.compile("^(\\d{1,2}).(\\d{2})$").matcher(dateString);
+                            Matcher dateMatcher = Pattern.compile("^(\\d{1,2})\\.(\\d{2})(\\.(\\d{4}))?$").matcher(dateString);
                             if (timeMatcher.find() && dateMatcher.find()) {
                                 Calendar calendar = Calendar.getInstance();
                                 int year = calendar.get(Calendar.YEAR);
-                                int month = calendar.get(Calendar.MONTH);
-                                if (month > Calendar.AUGUST && month <= Calendar.DECEMBER && !(Integer.parseInt(dateMatcher.group(2)) > 9)) {
-                                    year = year + 1;
+                                if (dateMatcher.groupCount() == 4) {
+                                    year = Integer.parseInt(dateMatcher.group(4));
+                                } else {
+                                    int month = calendar.get(Calendar.MONTH);
+                                    if (month > Calendar.AUGUST && month <= Calendar.DECEMBER && !(Integer.parseInt(dateMatcher.group(2)) > 9)) {
+                                        year = year + 1;
+                                    }
                                 }
                                 calendar.set(Calendar.YEAR, year);
                                 calendar.set(Calendar.MONTH, Integer.parseInt(dateMatcher.group(2)) - 1);
