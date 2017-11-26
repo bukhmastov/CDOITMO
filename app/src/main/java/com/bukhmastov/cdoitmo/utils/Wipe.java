@@ -38,8 +38,6 @@ public class Wipe {
                 }
                 Storage.pref.put(context, "last_version", versionCode);
             }
-            // TODO remove it
-            apply97(context);
         } catch (PackageManager.NameNotFoundException e) {
             Static.error(e);
         }
@@ -285,6 +283,7 @@ public class Wipe {
                                 File[] lessons = schedule_lessons.listFiles();
                                 for (File lesson : lessons) {
                                     try {
+                                        lesson.delete();
                                         String token = lesson.getName();
                                         if (token.startsWith("group_")) {
                                             apply97convertLesson(lesson, lessonsPath, token, "group_");
@@ -294,7 +293,6 @@ public class Wipe {
                                             apply97convertLesson(lesson, lessonsPath, token, "");
                                         }
                                         // "teacher_picker_" needs to be removed without converting
-                                        lesson.delete();
                                     } catch (Exception e) {
                                         try {
                                             lesson.delete();
@@ -311,6 +309,7 @@ public class Wipe {
                                 File[] exams = schedule_exams.listFiles();
                                 for (File exam : exams) {
                                     try {
+                                        exam.delete();
                                         String token = exam.getName();
                                         if (token.startsWith("group_")) {
                                             apply97convertExam(exam, examsPath, token, "group_");
@@ -320,7 +319,6 @@ public class Wipe {
                                             apply97convertExam(exam, examsPath, token, "teacher");
                                         }
                                         // "teacher_picker_" needs to be removed without converting
-                                        exam.delete();
                                     } catch (Exception e) {
                                         try {
                                             exam.delete();
@@ -352,6 +350,7 @@ public class Wipe {
                                 File[] addedList = schedule_added.listFiles();
                                 for (File added : addedList) {
                                     try {
+                                        added.delete();
                                         String token = added.getName();
                                         if (token.startsWith("group_")) {
                                             apply97convertAdded(added, addedPath, token, "group_");
@@ -360,7 +359,6 @@ public class Wipe {
                                         } else if (token.matches("^\\d{6}\\.txt$")) {
                                             apply97convertLesson(added, addedPath, token, "");
                                         }
-                                        added.delete();
                                     } catch (Exception e) {
                                         try {
                                             added.delete();
@@ -369,28 +367,14 @@ public class Wipe {
                                 }
                             }
                         } catch (Exception ignore) {/* ignore */}
-                        // convert reduced lessons
+                        // delete reduced lessons
                         try {
                             String reducedPath = filesRootPath + File.separator + userLogin + File.separator + "schedule_lessons" + File.separator + "reduced";
                             File schedule_reduced = new File(reducedPath);
                             if (schedule_reduced.exists()) {
                                 File[] reducedList = schedule_reduced.listFiles();
                                 for (File reduced : reducedList) {
-                                    try {
-                                        String token = reduced.getName();
-                                        if (token.startsWith("group_")) {
-                                            apply97convertReduced(reduced, reducedPath, token, "group_");
-                                        } else if (token.startsWith("room_")) {
-                                            apply97convertReduced(reduced, reducedPath, token, "room_");
-                                        } else if (token.matches("^\\d{6}\\.txt$")) {
-                                            apply97convertReduced(reduced, reducedPath, token, "");
-                                        }
-                                        reduced.delete();
-                                    } catch (Exception e) {
-                                        try {
-                                            reduced.delete();
-                                        } catch (Exception ignore) {/* ignore */}
-                                    }
+                                    reduced.delete();
                                 }
                             }
                         } catch (Exception ignore) {/* ignore */}
@@ -570,41 +554,6 @@ public class Wipe {
                 }
             }
             FileWriter fileWriter = new FileWriter(newAdded);
-            fileWriter.write(data);
-            fileWriter.close();
-        }
-    }
-    private static void apply97convertReduced(final File reduced, final String reducedPath, final String token, final String type) throws Exception {
-        final Matcher m = Pattern.compile("^" + type + "(.*)\\.txt$").matcher(token);
-        if (m.find()) {
-            // read added data
-            FileReader fileReader = new FileReader(reduced);
-            StringBuilder sb = new StringBuilder();
-            int c;
-            while ((c = fileReader.read()) != -1) sb.append((char) c);
-            fileReader.close();
-            String data = sb.toString();
-            // write converted lesson data
-            // DAY: index -> weekday
-            JSONArray reducedJson = new JSONArray(data);
-            for (int i = 0; i < reducedJson.length(); i++) {
-                JSONObject day = reducedJson.getJSONObject(i);
-                int dWeekday = day.getInt("index");
-                day.remove("index");
-                day.put("weekday", dWeekday);
-                reducedJson.put(i, day);
-            }
-            data = reducedJson.toString();
-            // write converted lesson data
-            // token: query.toLowerCase() instead [type + "_" + query]
-            File newReduced = new File(reducedPath + File.separator + m.group(1).toLowerCase() + ".txt");
-            if (!newReduced.exists()) {
-                newReduced.getParentFile().mkdirs();
-                if (!newReduced.createNewFile()) {
-                    throw new Exception("Failed to create file: " + newReduced.getPath());
-                }
-            }
-            FileWriter fileWriter = new FileWriter(newReduced);
             fileWriter.write(data);
             fileWriter.close();
         }

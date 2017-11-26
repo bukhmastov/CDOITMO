@@ -375,7 +375,7 @@ public class ScheduleLessons extends Schedule {
             final String cdoitmo_type = lesson.getString("cdoitmo_type");
             if (!cdoitmo_type.equals("normal")) throw new Exception("wrong cdoitmo_type type: " + cdoitmo_type);
             final String token = query.toLowerCase();
-            final String hash = Static.crypt(ScheduleLessons.getLessonSignature(lesson));
+            final String hash = ScheduleLessons.getLessonHash(lesson);
             final JSONArray reduced = Static.string2jsonArray(Storage.file.perm.get(context, "schedule_lessons#reduced#" + token, ""));
             boolean found = false;
             for (int i = 0; i < reduced.length(); i++) {
@@ -425,7 +425,7 @@ public class ScheduleLessons extends Schedule {
             final String cdoitmo_type = lesson.getString("cdoitmo_type");
             if (!cdoitmo_type.equals("reduced")) throw new Exception("wrong cdoitmo_type type: " + cdoitmo_type);
             final String token = query.toLowerCase();
-            final String hash = Static.crypt(ScheduleLessons.getLessonSignature(lesson));
+            final String hash = ScheduleLessons.getLessonHash(lesson);
             final JSONArray reduced = Static.string2jsonArray(Storage.file.perm.get(context, "schedule_lessons#reduced#" + token, ""));
             for (int i = 0; i < reduced.length(); i++) {
                 final JSONObject day = reduced.getJSONObject(i);

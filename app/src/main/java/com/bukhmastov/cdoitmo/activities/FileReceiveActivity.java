@@ -201,7 +201,6 @@ public class FileReceiveActivity extends ConnectedActivity {
                         if (
                                 !(content.has("query") && content.get("query") instanceof String) ||
                                 !(content.has("title") && content.get("title") instanceof String) ||
-                                !(content.has("token") && content.get("token") instanceof String) ||
                                 !(content.has("added") && content.get("added") instanceof JSONArray) ||
                                 !(content.has("reduced") && content.get("reduced") instanceof JSONArray)
                         ) {

@@ -131,7 +131,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                     switch (action) {
                         case "handle": loadHandle(extras); break;
                         case "share": loadShare(extras); break;
-                        default: throw new Exception("Corrupted file");
+                        default: throw new Exception();
                     }
                 } catch (Exception e) {
                     if (e.getMessage().equals("Corrupted file")) {
@@ -167,7 +167,6 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
             if (
                     !(content.has("query") && content.get("query") instanceof String) ||
                     !(content.has("title") && content.get("title") instanceof String) ||
-                    !(version == 1 && content.has("token") && content.get("token") instanceof String) ||
                     !(content.has("added") && content.get("added") instanceof JSONArray) ||
                     !(content.has("reduced") && content.get("reduced") instanceof JSONArray)
             ) {
@@ -203,17 +202,24 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                 // ignore
             }
         }
-        for (int i = 0; i < scheduleReduced.length(); i++) {
-            try {
-                JSONObject day = scheduleReduced.getJSONObject(i);
-                JSONObject lesson = day.getJSONObject("lesson");
-                int dayIndex = day.getInt("day");
-                changes.add(new Change(TYPE.REDUCED, true, dayIndex, lesson));
-            } catch (Exception ignore) {
-                // ignore
+        if (version != 1) {
+            for (int i = 0; i < scheduleReduced.length(); i++) {
+                try {
+                    JSONObject day = scheduleReduced.getJSONObject(i);
+                    JSONObject lesson = day.getJSONObject("lesson");
+                    int dayIndex = day.getInt("day");
+                    changes.add(new Change(TYPE.REDUCED, true, dayIndex, lesson));
+                } catch (Exception ignore) {
+                    // ignore
+                }
             }
         }
-        display();
+        String notification = null;
+        if (version == 1 && scheduleReduced.length() > 0) {
+            int count = scheduleReduced.length();
+            notification = count + " " + (count % 10 == 1 ? activity.getString(R.string.share_schedule_notification1_1_single) : (count % 100 == count % 10 && count % 10 != 0 && count % 10 < 5 ? activity.getString(R.string.share_schedule_notification1_1_plural2) : activity.getString(R.string.share_schedule_notification1_1_plural))) + ", " + activity.getString(R.string.share_schedule_notification1_2) + ".";
+        }
+        display(notification);
     }
     private void loadShare(final Bundle extras) throws Exception {
         query = extras.getString("query");
@@ -307,7 +313,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                                                     JSONArray lessonsOriginal = dayOriginal.getJSONArray("lessons");
                                                     for (int a = 0; a < lessonsOriginal.length(); a++) {
                                                         JSONObject lessonOriginal = lessonsOriginal.getJSONObject(a);
-                                                        String hashOriginal = Static.crypt(ScheduleLessons.getLessonSignature(lessonOriginal));
+                                                        String hashOriginal = ScheduleLessons.getLessonHash(lessonOriginal);
                                                         if (hashOriginal.equals(hash)) {
                                                             lessonOriginal.put("hash", hash);
                                                             changes.add(new Change(TYPE.REDUCED, true, weekday, lessonOriginal));
@@ -323,7 +329,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                                     // ignore
                                 }
                             }
-                            display();
+                            display(null);
                         } catch (Exception e) {
                             Static.error(e);
                             Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
@@ -405,7 +411,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                 false
         );
     }
-    private void display() {
+    private void display(final String notification) {
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -416,6 +422,11 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                         return;
                     }
                     share_content.removeAllViews();
+                    if (notification != null) {
+                        View layout_notification_warning = inflate(R.layout.layout_notification_warning);
+                        ((TextView) layout_notification_warning.findViewById(R.id.notification_warning_text)).setText(notification);
+                        share_content.addView(layout_notification_warning);
+                    }
                     if (changes.size() == 0) {
                         ViewGroup nothing_to_display = (ViewGroup) inflate(R.layout.nothing_to_display);
                         ((TextView) nothing_to_display.findViewById(R.id.ntd_text)).setText(R.string.nothing_to_share);

@@ -447,5 +447,9 @@
     <string name="no_teachers">No teachers found</string>
     <string name="on_search_for">The search for</string>
     <string name="teachers_found">found the teachers</string>
+    <string name="share_schedule_notification1_1_single">reduced lesson was skipped</string>
+    <string name="share_schedule_notification1_1_plural">reduced lessons were skipped</string>
+    <string name="share_schedule_notification1_1_plural2">reduced lessons were skipped</string>
+    <string name="share_schedule_notification1_2">because the file was created in older versions of the app</string>
 
 </resources>
