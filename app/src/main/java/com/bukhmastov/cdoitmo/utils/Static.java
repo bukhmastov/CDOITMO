@@ -65,7 +65,6 @@ public class Static {
     public static String versionName;
     public static int versionCode;
     public static int textColorPrimary, textColorSecondary, colorSeparator, colorBackgroundSnackBar, colorAccent, colorBackgroundRefresh;
-    public static float destiny;
     public static boolean OFFLINE_MODE = false;
     public static boolean firstLaunch = true;
     public static boolean authorized = false;
@@ -206,7 +205,6 @@ public class Static {
             colorBackgroundSnackBar = resolveColor(activity, R.attr.colorBackgroundSnackBar);
             colorAccent = resolveColor(activity, R.attr.colorAccent);
             colorBackgroundRefresh = resolveColor(activity, R.attr.colorBackgroundRefresh);
-            destiny = activity.getResources().getDisplayMetrics().density;
         } catch (Exception e) {
             Static.error(e);
         }

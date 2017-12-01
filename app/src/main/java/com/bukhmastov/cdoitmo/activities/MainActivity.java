@@ -39,127 +39,146 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
     private static final String TAG = "MainActivity";
     private final Activity activity = this;
     private static final String STATE_SELECTED_SELECTION = "selectedSection";
-    public static int selectedSection = R.id.nav_e_register;
-    public static Menu menu;
+    private static boolean initialized = false;
     public static boolean loaded = false;
+    public static int selectedSection = -1;
+    public static Menu menu;
     public static MenuItem selectedMenuItem = null;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        // initialize app
-        try {
-            // TODO remove it
-            Storage.pref.put(activity, "pref_allow_send_reports", false);
-            Storage.pref.put(activity, "pref_allow_collect_analytics", false);
-            try {
-                Log.i(TAG, "App | launched");
-                PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
-                Log.i(TAG, "App | version code = " + pInfo.versionCode);
-                Log.i(TAG, "App | sdk = " + Build.VERSION.SDK_INT);
-                Log.i(TAG, "App | theme = " + Static.getAppTheme(activity));
-            } catch (Exception e) {
-                Static.error(e);
-            }
-            // apply compatibility changes
-            Wipe.check(activity);
-            // set default preferences
-            SettingsFragment.applyDefaultValues(activity);
-            // enable/disable firebase
-            FirebaseCrashProvider.setEnabled(activity);
-            FirebaseAnalyticsProvider.setEnabled(activity);
-            // init static variables
-            Static.init(activity);
-            // set auto_logout value
-            LoginActivity.auto_logout = Storage.pref.get(activity, "pref_auto_logout", false);
-            // set first_launch value
-            Static.isFirstLaunchEver = Storage.pref.get(activity, "pref_first_launch", false);
-            if (Static.isFirstLaunchEver) {
-                Storage.pref.put(activity, "pref_first_launch", false);
-            }
-            // firebase events and properties
-            FirebaseAnalyticsProvider.logEvent(activity, FirebaseAnalyticsProvider.Event.APP_OPEN);
-            FirebaseAnalyticsProvider.setUserProperty(activity, FirebaseAnalyticsProvider.Property.THEME, Static.getAppTheme(activity));
-        } catch (Exception e) {
-            Static.error(e);
-        }
-        // app ready
-        Static.applyActivityTheme(this);
-        super.onCreate(savedInstanceState);
+    protected void onCreate(final Bundle savedInstanceState) {
         Log.i(TAG, "Activity created");
-        FirebaseAnalyticsProvider.logCurrentScreen(this);
-        setContentView(R.layout.activity_main);
-
-        // IntroducingActivity
-        if (Static.isFirstLaunchEver) {
-            startActivity(new Intent(activity, IntroducingActivity.class));
-        }
-
-        Toolbar toolbar = findViewById(R.id.toolbar_main);
-        DrawerLayout drawer_layout = findViewById(R.id.drawer_layout);
-        if (toolbar != null) {
-            Static.applyToolbarTheme(activity, toolbar);
-            setSupportActionBar(toolbar);
-        }
-        if (drawer_layout != null) {
-            Static.tablet = false;
-            if (toolbar != null) {
-                ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(this, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-                drawer_layout.addDrawerListener(mDrawerToggle);
-                mDrawerToggle.syncState();
-                if (Static.isFirstLaunchEver) {
-                    drawer_layout.openDrawer(Gravity.START);
+        if (!initialized) {
+            // initialize app
+            super.onCreate(savedInstanceState);
+            Static.T.runThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Static.applyActivityTheme(activity);
+                        // TODO remove it
+                        Storage.pref.put(activity, "pref_allow_send_reports", false);
+                        Storage.pref.put(activity, "pref_allow_collect_analytics", false);
+                        Storage.pref.put(activity, "pref_allow_collect_logs", true);
+                        try {
+                            Log.i(TAG, "App | launched");
+                            PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+                            Log.i(TAG, "App | version code = " + pInfo.versionCode);
+                            Log.i(TAG, "App | sdk = " + Build.VERSION.SDK_INT);
+                            Log.i(TAG, "App | theme = " + Static.getAppTheme(activity));
+                        } catch (Exception e) {
+                            Static.error(e);
+                        }
+                        // apply compatibility changes
+                        Wipe.check(activity);
+                        // set default preferences
+                        SettingsFragment.applyDefaultValues(activity);
+                        // enable/disable firebase
+                        FirebaseCrashProvider.setEnabled(activity);
+                        FirebaseAnalyticsProvider.setEnabled(activity);
+                        // init static variables
+                        Static.init(activity);
+                        // set auto_logout value
+                        LoginActivity.auto_logout = Storage.pref.get(activity, "pref_auto_logout", false);
+                        // set first_launch value
+                        Static.isFirstLaunchEver = Storage.pref.get(activity, "pref_first_launch", false);
+                        if (Static.isFirstLaunchEver) {
+                            Storage.pref.put(activity, "pref_first_launch", false);
+                        }
+                        // firebase events and properties
+                        FirebaseAnalyticsProvider.logEvent(activity, FirebaseAnalyticsProvider.Event.APP_OPEN);
+                        FirebaseAnalyticsProvider.setUserProperty(activity, FirebaseAnalyticsProvider.Property.THEME, Static.getAppTheme(activity));
+                    } catch (Exception e) {
+                        Static.error(e);
+                    } finally {
+                        Log.i(TAG, "App | initialized");
+                        Static.T.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                // app initialization completed, going to recreate activity
+                                initialized = true;
+                                recreate();
+                            }
+                        });
+                    }
                 }
-            }
+            });
         } else {
-            Static.tablet = true;
-        }
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
-
-        FirebaseAnalyticsProvider.setUserProperty(this, FirebaseAnalyticsProvider.Property.DEVICE, Static.tablet ? "tablet" : "mobile");
-
-        Static.OFFLINE_MODE = !Static.isOnline(this) || (Static.firstLaunch && Storage.pref.get(this, "pref_initial_offline", false));
-        Static.init(this);
-        Static.firstLaunch = false;
-        Static.isFirstLaunchEver = false;
-
-        Log.i(TAG, "mode=" + (Static.OFFLINE_MODE ? "offline" : "online"));
-
-        String action = getIntent().getStringExtra("action");
-        if (action != null || !(savedInstanceState != null && savedInstanceState.containsKey(STATE_SELECTED_SELECTION))) {
-            String act = action == null ? Storage.pref.get(this, "pref_default_fragment", "e_journal") : action;
-            Log.v(TAG, "Section = " + act + " from " + (action == null ? "preference" : "intent's extras"));
-            switch (act) {
-                case "e_journal": selectedSection = R.id.nav_e_register; break;
-                case "protocol_changes": selectedSection = R.id.nav_protocol_changes; break;
-                case "rating": selectedSection = R.id.nav_rating; break;
-                case "schedule_lessons": selectedSection = R.id.nav_schedule; break;
-                case "schedule_exams": selectedSection = R.id.nav_schedule_exams; break;
-                case "room101": selectedSection = R.id.nav_room101; break;
-                case "university": selectedSection = R.id.nav_university; break;
-                default:
-                    Log.wtf(TAG, "unsupported act: '" + act + "'. Going to select 'e_journal' instead");
-                    selectedSection = R.id.nav_e_register;
-                    break;
+            // regular app's runtime
+            Static.applyActivityTheme(activity);
+            super.onCreate(savedInstanceState);
+            setContentView(R.layout.activity_main);
+            // setup toolbar and drawer layout
+            final Toolbar toolbar = findViewById(R.id.toolbar_main);
+            final DrawerLayout drawer_layout = findViewById(R.id.drawer_layout);
+            if (toolbar != null) {
+                Static.applyToolbarTheme(activity, toolbar);
+                setSupportActionBar(toolbar);
             }
-            if (action != null) getIntent().removeExtra("action");
-        } else {
-            selectedSection = savedInstanceState.getInt(STATE_SELECTED_SELECTION);
+            if (drawer_layout != null) {
+                Static.tablet = false;
+                if (toolbar != null) {
+                    ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(this, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+                    drawer_layout.addDrawerListener(mDrawerToggle);
+                    mDrawerToggle.syncState();
+                    if (Static.isFirstLaunchEver) {
+                        drawer_layout.openDrawer(Gravity.START);
+                    }
+                }
+            } else {
+                Static.tablet = true;
+            }
+            NavigationView navigationView = findViewById(R.id.nav_view);
+            navigationView.setNavigationItemSelectedListener(this);
+            // track to firebase
+            FirebaseAnalyticsProvider.logCurrentScreen(this);
+            FirebaseAnalyticsProvider.setUserProperty(this, FirebaseAnalyticsProvider.Property.DEVICE, Static.tablet ? "tablet" : "mobile");
+            // Show introducing activity
+            if (Static.isFirstLaunchEver) {
+                startActivity(new Intent(activity, IntroducingActivity.class));
+            }
+            // setup static variables
+            Static.OFFLINE_MODE = !Static.isOnline(this) || (Static.firstLaunch && Storage.pref.get(this, "pref_initial_offline", false));
+            Static.firstLaunch = false;
+            Static.isFirstLaunchEver = false;
+            // do some logging
+            Log.i(TAG, "Device = " + (Static.tablet ? "tablet" : "mobile"));
+            Log.i(TAG, "Mode = " + (Static.OFFLINE_MODE ? "offline" : "online"));
+            // define section to be opened
+            final String action = getIntent().getStringExtra("action");
+            if (action == null && savedInstanceState != null && savedInstanceState.containsKey(STATE_SELECTED_SELECTION)) {
+                selectedSection = savedInstanceState.getInt(STATE_SELECTED_SELECTION);
+                Log.v(TAG, "Section selected from savedInstanceState");
+            } else {
+                String act = action == null ? Storage.pref.get(this, "pref_default_fragment", "e_journal") : action;
+                Log.v(TAG, "Section = " + act + " from " + (action == null ? "preference" : "intent's extras"));
+                switch (act) {
+                    case "e_journal": selectedSection = R.id.nav_e_register; break;
+                    case "protocol_changes": selectedSection = R.id.nav_protocol_changes; break;
+                    case "rating": selectedSection = R.id.nav_rating; break;
+                    case "schedule_lessons": selectedSection = R.id.nav_schedule; break;
+                    case "schedule_exams": selectedSection = R.id.nav_schedule_exams; break;
+                    case "room101": selectedSection = R.id.nav_room101; break;
+                    case "university": selectedSection = R.id.nav_university; break;
+                    default:
+                        Log.wtf(TAG, "unsupported act: '" + act + "'. Going to select 'e_journal' instead");
+                        selectedSection = R.id.nav_e_register;
+                        break;
+                }
+                if (action != null) getIntent().removeExtra("action");
+            }
+            // activity ready to be loaded
+            loaded = false;
         }
-
-        loaded = false;
-
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         Log.v(TAG, "Activity resumed");
-        Static.NavigationMenu.displayEnableDisableOfflineButton((NavigationView) findViewById(R.id.nav_view));
-        if (Static.OFFLINE_MODE) {
-            authorized();
-        } else {
-            if (Static.authorized) {
+        if (initialized) {
+            Static.NavigationMenu.displayEnableDisableOfflineButton((NavigationView) findViewById(R.id.nav_view));
+            if (Static.OFFLINE_MODE || Static.authorized) {
                 authorized();
             } else {
                 authorize(LoginActivity.SIGNAL_LOGIN);
@@ -221,16 +240,16 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.offline_mode:
-                authorize(LoginActivity.SIGNAL_RECONNECT);
-                return true;
+            case R.id.offline_mode: authorize(LoginActivity.SIGNAL_RECONNECT); return true;
             default: return false;
         }
     }
 
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
-        savedInstanceState.putInt(STATE_SELECTED_SELECTION, selectedSection);
+        if (initialized && selectedSection != -1) {
+            savedInstanceState.putInt(STATE_SELECTED_SELECTION, selectedSection);
+        }
         super.onSaveInstanceState(savedInstanceState);
     }
 
@@ -274,11 +293,11 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
             }
         });
     }
-
     private void selectSection(final int section) {
         Static.T.runThread(new Runnable() {
             @Override
             public void run() {
+                Log.v(TAG, "selectSection | section=" + section);
                 switch (section) {
                     case R.id.nav_e_register:
                     case R.id.nav_protocol_changes:
