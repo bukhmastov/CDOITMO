@@ -8,7 +8,6 @@
 
         <item name="colorPrimaryLight">@color/colorPrimaryWhite</item>
         <item name="colorPrimary">@color/colorPrimaryWhite</item>
-        <item name="colorPrimaryOpacity">@color/colorPrimaryOpacityWhite</item>
         <item name="colorAccent">@color/colorAccentWhite</item>
 
         <item name="android:windowBackground">@color/colorBackgroundWhite</item>
@@ -44,6 +43,13 @@
         <item name="colorImageMultiply">@color/colorImageMultiplyWhite</item>
         <item name="colorControlHighlight">@color/colorControlHighlightWhite</item>
         <item name="colorDeIfmo">@color/colorDeIfmoWhite</item>
+
+        <item name="colorGold">@color/colorGoldWhite</item>
+        <item name="colorSilver">@color/colorSilverWhite</item>
+        <item name="colorBronze">@color/colorBronzeWhite</item>
+
+        <item name="colorRatingHighlightBackground">@color/colorRatingHighlightBackgroundWhite</item>
+        <item name="colorRatingHighlightText">@color/colorRatingHighlightTextWhite</item>
 
         <item name="ic_cdo_small">@drawable/cdo</item>
         <item name="ic_toolbar_security">@drawable/ic_toolbar_security</item>

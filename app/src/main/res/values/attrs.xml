@@ -4,7 +4,6 @@
     <declare-styleable name="dynamic_style_attrs">
 
         <attr name="colorPrimaryLight" format="color" />
-        <attr name="colorPrimaryOpacity" format="color" />
 
         <attr name="colorBackground" format="color" />
         <attr name="colorBackgroundCards" format="color" />
@@ -37,6 +36,13 @@
         <attr name="colorToolbarContentInvert" format="color" />
         <attr name="colorImageMultiply" format="color" />
         <attr name="colorDeIfmo" format="color" />
+
+        <attr name="colorGold" format="color" />
+        <attr name="colorSilver" format="color" />
+        <attr name="colorBronze" format="color" />
+
+        <attr name="colorRatingHighlightBackground" format="color" />
+        <attr name="colorRatingHighlightText" format="color" />
 
         <attr name="ic_cdo_small" format="reference" />
         <attr name="ic_toolbar_security" format="reference" />

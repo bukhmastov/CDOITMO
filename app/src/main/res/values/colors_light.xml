@@ -4,7 +4,6 @@
     <color name="colorPrimaryLight">#1d50d4</color>
     <color name="colorPrimary">#1946ba</color>
     <color name="colorPrimaryD">#153996</color>
-    <color name="colorPrimaryOpacity">#3c1946ba</color>
     <color name="colorAccent">#ec0b43</color>
 
     <color name="textColorPrimary">@color/text_color_primary</color>
@@ -42,5 +41,12 @@
     <color name="colorImageMultiply">#FFFFFF</color>
     <color name="colorUniversityIcon">#1946ba</color>
     <color name="colorDeIfmo">#2a4fac</color>
+
+    <color name="colorGold">#ffd700</color>
+    <color name="colorSilver">#C0C0C0</color>
+    <color name="colorBronze">#8c7853</color>
+
+    <color name="colorRatingHighlightBackground">#1946ba</color>
+    <color name="colorRatingHighlightText">#FFFFFF</color>
 
 </resources>

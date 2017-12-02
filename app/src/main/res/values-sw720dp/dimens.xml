@@ -97,4 +97,6 @@
     <dimen name="search_padding">8dp</dimen>
     <dimen name="search_offset_start">12dp</dimen>
 
+    <dimen name="rating_crown_margin">10dp</dimen>
+
 </resources>

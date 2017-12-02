@@ -6,7 +6,6 @@
         <item name="colorPrimaryLight">@color/colorPrimaryBlack</item>
         <item name="colorPrimary">@color/colorPrimaryBlack</item>
         <item name="colorPrimaryDark">@color/colorPrimaryBlack</item>
-        <item name="colorPrimaryOpacity">@color/colorPrimaryOpacityBlack</item>
         <item name="colorAccent">@color/colorAccentBlack</item>
 
         <item name="android:windowBackground">@color/colorPrimaryBlack</item>
@@ -42,6 +41,13 @@
         <item name="colorImageMultiply">@color/colorImageMultiplyBlack</item>
         <item name="colorControlHighlight">@color/colorControlHighlightBlack</item>
         <item name="colorDeIfmo">@color/colorDeIfmoBlack</item>
+
+        <item name="colorGold">@color/colorGoldBlack</item>
+        <item name="colorSilver">@color/colorSilverBlack</item>
+        <item name="colorBronze">@color/colorBronzeBlack</item>
+
+        <item name="colorRatingHighlightBackground">@color/colorRatingHighlightBackgroundBlack</item>
+        <item name="colorRatingHighlightText">@color/colorRatingHighlightTextBlack</item>
 
         <item name="ic_cdo_small">@drawable/cdo</item>
         <item name="ic_toolbar_security">@drawable/ic_toolbar_security</item>
