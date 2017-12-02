@@ -12,6 +12,7 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
 
@@ -105,6 +106,13 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
     @Override
     protected int getRootViewId() {
         return R.id.activity_fragment;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.toolbar, menu);
+        toolbar = menu;
+        return true;
     }
 
     @Override

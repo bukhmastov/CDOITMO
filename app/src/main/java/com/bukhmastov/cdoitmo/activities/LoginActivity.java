@@ -87,9 +87,11 @@ public class LoginActivity extends ConnectedActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.toolbar_login, menu);
-        MenuItem action_about = menu.findItem(R.id.action_about);
+        getMenuInflater().inflate(R.menu.toolbar, menu);
+        toolbar = menu;
+        final MenuItem action_about = menu.findItem(R.id.action_about);
         if (action_about != null) {
+            action_about.setVisible(true);
             action_about.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
                 @Override
                 public boolean onMenuItemClick(MenuItem item) {

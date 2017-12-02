@@ -61,9 +61,9 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
         super.onDestroy();
         Log.v(TAG, "Fragment destroyed");
         try {
-            if (MainActivity.menu != null) {
-                MenuItem simple = MainActivity.menu.findItem(R.id.action_protocol_changes_switch_to_simple);
-                MenuItem advanced = MainActivity.menu.findItem(R.id.action_protocol_changes_switch_to_advanced);
+            if (activity.toolbar != null) {
+                MenuItem simple = activity.toolbar.findItem(R.id.action_protocol_changes_switch_to_simple);
+                MenuItem advanced = activity.toolbar.findItem(R.id.action_protocol_changes_switch_to_advanced);
                 if (simple != null) simple.setVisible(false);
                 if (advanced != null) advanced.setVisible(false);
             }
@@ -83,9 +83,9 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
         Log.v(TAG, "resumed");
         FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
         try {
-            if (MainActivity.menu != null) {
-                final MenuItem simple = MainActivity.menu.findItem(R.id.action_protocol_changes_switch_to_simple);
-                final MenuItem advanced = MainActivity.menu.findItem(R.id.action_protocol_changes_switch_to_advanced);
+            if (activity.toolbar != null) {
+                final MenuItem simple = activity.toolbar.findItem(R.id.action_protocol_changes_switch_to_simple);
+                final MenuItem advanced = activity.toolbar.findItem(R.id.action_protocol_changes_switch_to_advanced);
                 if (simple != null && advanced != null) {
                     switch (Storage.pref.get(activity, "pref_protocol_changes_mode", "advanced")) {
                         case "simple": advanced.setVisible(true); break;

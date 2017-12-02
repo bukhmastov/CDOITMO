@@ -1,10 +1,15 @@
 package com.bukhmastov.cdoitmo.fragments;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v7.widget.PopupMenu;
 import android.view.InflateException;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -31,8 +36,22 @@ public class SubjectShowFragment extends ConnectedFragment {
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        setHasOptionsMenu(true);
         super.onCreate(savedInstanceState);
         FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        try {
+            if (activity != null && activity.toolbar != null) {
+                MenuItem action_share = activity.toolbar.findItem(R.id.action_eregister_share);
+                if (action_share != null) action_share.setVisible(false);
+            }
+        } catch (Exception e){
+            Static.error(e);
+        }
     }
 
     @Override
@@ -50,6 +69,68 @@ public class SubjectShowFragment extends ConnectedFragment {
     public void onResume() {
         super.onResume();
         FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
+    }
+
+    @Override
+    public void onPrepareOptionsMenu(Menu menu) {
+        super.onPrepareOptionsMenu(menu);
+        try {
+            if (activity.toolbar != null) {
+                final MenuItem action_share = activity.toolbar.findItem(R.id.action_eregister_share);
+                if (action_share != null && subject != null) {
+                    final String sbj = subject.getString("name");
+                    final String mark = subject.getString("mark");
+                    final Double dPoints = subject.getDouble("currentPoints");
+                    if (sbj != null && !sbj.isEmpty() && ((mark != null && !mark.isEmpty()) || dPoints != -1.0)) {
+                        action_share.setVisible(true);
+                        action_share.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                            @Override
+                            public boolean onMenuItemClick(MenuItem menuItem) {
+                                try {
+                                    View view = activity.findViewById(R.id.action_eregister_share);
+                                    String points = "";
+                                    int iPoints = dPoints.intValue();
+                                    if (dPoints != -1.0) {
+                                        if (dPoints == Double.parseDouble(iPoints + ".0")) {
+                                            points = iPoints + "";
+                                        }
+                                    }
+                                    if (!points.isEmpty()) {
+                                        String title = "У меня %points% балл%suffix% по предмету %subject%!";
+                                        String description = "Узнай, сколько у тебя!";
+                                        String suffix = "ов";
+                                        if (!(iPoints % 100 >= 10 && iPoints % 100 < 20)) {
+                                            switch (iPoints % 10) {
+                                                case 1: suffix = ""; break;
+                                                case 2: case 3: case 4: suffix = "а"; break;
+                                            }
+                                        }
+                                        title = title.replace("%points%", points).replace("%suffix%", suffix).replace("%subject%", sbj);
+                                        share(view, title, description);
+                                    } else {
+                                        if (mark != null && !mark.isEmpty()) {
+                                            String title = "У меня \"%mark%\" по предмету %subject%!";
+                                            String description = "Узнай свои оценки!";
+                                            title = title.replace("%mark%", mark).replace("%subject%", sbj);
+                                            share(view, title, description);
+                                        } else {
+                                            Log.w(TAG, "Failed to share mine subject progress | subject=" + sbj + " | dPoints=" + dPoints.toString() + " | mark=" + mark);
+                                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                    Static.error(e);
+                                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                }
+                                return false;
+                            }
+                        });
+                    }
+                }
+            }
+        } catch (Exception e){
+            Static.error(e);
+        }
     }
 
     private void display() {
@@ -210,6 +291,44 @@ public class SubjectShowFragment extends ConnectedFragment {
                 }
             }
         });
+    }
+    private void share(final View anchor, final String title, final String description) throws Exception {
+        final PopupMenu popup = new PopupMenu(activity, anchor);
+        final Menu menu = popup.getMenu();
+        popup.getMenuInflater().inflate(R.menu.social_share, menu);
+        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                try {
+                    String url = "https://goo.gl/cCp2SP";
+                    String social = "";
+                    String link = "";
+                    switch (item.getItemId()) {
+                        case R.id.share_vk: social = "vk"; link = "https://vk.com/share.php?url=%url%&noparse=true&title=%title%&description=%description%"; break;
+                        case R.id.share_tg: social = "tg"; link = "https://t.me/share/url?url=%url%&text=%title%"; break;
+                        case R.id.share_tw: social = "tw"; link = "https://twitter.com/intent/tweet?url=%url%&text=%title%"; break;
+                        case R.id.share_fb: social = "fb"; link = "https://www.facebook.com/sharer.php?u=%url%&t=%title%"; break;
+                    }
+                    if (!link.isEmpty()) {
+                        link = link.replace("%url%", url).replace("%title%", title).replace("%description%", description);
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(link)));
+                        // track statistics
+                        Bundle bundle;
+                        bundle = FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TITLE, title.substring(0, title.length() > 100 ? 100 : title.length()));
+                        bundle = FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.SOCIAL, social, bundle);
+                        FirebaseAnalyticsProvider.logEvent(
+                                activity,
+                                FirebaseAnalyticsProvider.Event.EREGISTER_SHARE,
+                                bundle
+                        );
+                    }
+                } catch (Exception e) {
+                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                }
+                return false;
+            }
+        });
+        popup.show();
     }
 
     private String markConverter(String value) {

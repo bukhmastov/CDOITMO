@@ -77,8 +77,8 @@ public class ScheduleExamsFragment extends ConnectedFragment {
         super.onDestroy();
         Log.v(TAG, "Fragment destroyed");
         try {
-            if (MainActivity.menu != null) {
-                MenuItem action_schedule_exams_search = MainActivity.menu.findItem(R.id.action_schedule_exams_search);
+            if (activity.toolbar != null) {
+                MenuItem action_schedule_exams_search = activity.toolbar.findItem(R.id.action_schedule_exams_search);
                 if (action_schedule_exams_search != null && action_schedule_exams_search.isVisible()) {
                     Log.v(TAG, "Hiding action_schedule_exams_search");
                     action_schedule_exams_search.setVisible(false);
@@ -101,8 +101,8 @@ public class ScheduleExamsFragment extends ConnectedFragment {
         Log.v(TAG, "resumed");
         FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
         try {
-            if (MainActivity.menu != null && !Static.OFFLINE_MODE) {
-                MenuItem action_schedule_exams_search = MainActivity.menu.findItem(R.id.action_schedule_exams_search);
+            if (activity.toolbar != null && !Static.OFFLINE_MODE) {
+                MenuItem action_schedule_exams_search = activity.toolbar.findItem(R.id.action_schedule_exams_search);
                 if (action_schedule_exams_search != null && !action_schedule_exams_search.isVisible()) {
                     Log.v(TAG, "Revealing action_schedule_exams_search");
                     action_schedule_exams_search.setVisible(true);

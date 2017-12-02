@@ -56,8 +56,8 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
             if (fixed_tabs != null) {
                 fixed_tabs.setVisibility(View.GONE);
             }
-            if (MainActivity.menu != null) {
-                MenuItem action_schedule_lessons_search = MainActivity.menu.findItem(R.id.action_schedule_lessons_search);
+            if (activity.toolbar != null) {
+                MenuItem action_schedule_lessons_search = activity.toolbar.findItem(R.id.action_schedule_lessons_search);
                 if (action_schedule_lessons_search != null && action_schedule_lessons_search.isVisible()) {
                     Log.v(TAG, "Hiding action_schedule_lessons_search");
                     action_schedule_lessons_search.setVisible(false);
@@ -80,8 +80,8 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
         Log.v(TAG, "resumed");
         FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
         try {
-            if (MainActivity.menu != null && !Static.OFFLINE_MODE) {
-                MenuItem action_schedule_lessons_search = MainActivity.menu.findItem(R.id.action_schedule_lessons_search);
+            if (activity.toolbar != null && !Static.OFFLINE_MODE) {
+                MenuItem action_schedule_lessons_search = activity.toolbar.findItem(R.id.action_schedule_lessons_search);
                 if (action_schedule_lessons_search != null && !action_schedule_lessons_search.isVisible()) {
                     Log.v(TAG, "Revealing action_schedule_lessons_search");
                     action_schedule_lessons_search.setVisible(true);

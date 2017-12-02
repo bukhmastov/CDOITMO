@@ -10,6 +10,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
 import android.view.ViewGroup;
 
 import com.bukhmastov.cdoitmo.R;
@@ -26,6 +27,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     private final ArrayList<StackElement> stack = new ArrayList<>();
     public final static String ACTIVITY_WITH_MENU = "connected_activity_with_align";
     protected boolean layout_with_menu = true;
+    public Menu toolbar = null;
 
     protected abstract @IdRes int getRootViewId();
 
