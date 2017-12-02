@@ -4,7 +4,6 @@
     <color name="colorPrimaryLightDark">#262626</color>
     <color name="colorPrimaryDark">#181818</color>
     <color name="colorPrimaryDDark">#090909</color>
-    <color name="colorPrimaryOpacityDark">#7e181818</color>
     <color name="colorAccentDark">#D96629</color>
 
     <color name="textColorPrimaryDark">@color/text_color_primary_dark</color>
@@ -42,5 +41,12 @@
     <color name="colorSearchPrimaryDarkDark">#090909</color>
     <color name="colorUniversityIconDark">#9e9e9e</color>
     <color name="colorDeIfmoDark">#9e9e9e</color>
+
+    <color name="colorGoldDark">#81711d</color>
+    <color name="colorSilverDark">#686868</color>
+    <color name="colorBronzeDark">#56482d</color>
+
+    <color name="colorRatingHighlightBackgroundDark">#525252</color>
+    <color name="colorRatingHighlightTextDark">#bdbdbd</color>
 
 </resources>

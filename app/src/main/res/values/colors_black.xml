@@ -2,7 +2,6 @@
 <resources>
 
     <color name="colorPrimaryBlack">#000000</color>
-    <color name="colorPrimaryOpacityBlack">#7e000000</color>
     <color name="colorAccentBlack">#BDBDBD</color>
 
     <color name="textColorPrimaryBlack">@color/text_color_primary_black</color>
@@ -37,5 +36,12 @@
     <color name="colorImageMultiplyBlack">#BDBDBD</color>
     <color name="colorUniversityIconBlack">#9e9e9e</color>
     <color name="colorDeIfmoBlack">#9E9E9E</color>
+
+    <color name="colorGoldBlack">#81711d</color>
+    <color name="colorSilverBlack">#686868</color>
+    <color name="colorBronzeBlack">#56482d</color>
+
+    <color name="colorRatingHighlightBackgroundBlack">#525252</color>
+    <color name="colorRatingHighlightTextBlack">#9E9E9E</color>
 
 </resources>

@@ -3,7 +3,6 @@
 
     <color name="colorPrimaryWhite">#FFFFFF</color>
     <color name="colorPrimaryDWhite">#E0E0E0</color>
-    <color name="colorPrimaryOpacityWhite">#7eFFFFFF</color>
     <color name="colorAccentWhite">#757575</color>
 
     <color name="textColorPrimaryWhite">@color/text_color_primary_white</color>
@@ -41,5 +40,12 @@
     <color name="colorImageMultiplyWhite">#FFFFFF</color>
     <color name="colorUniversityIconWhite">#212121</color>
     <color name="colorDeIfmoWhite">#2a4fac</color>
+
+    <color name="colorGoldWhite">#ffd700</color>
+    <color name="colorSilverWhite">#C0C0C0</color>
+    <color name="colorBronzeWhite">#8c7853</color>
+
+    <color name="colorRatingHighlightBackgroundWhite">#757575</color>
+    <color name="colorRatingHighlightTextWhite">#FFFFFF</color>
 
 </resources>
