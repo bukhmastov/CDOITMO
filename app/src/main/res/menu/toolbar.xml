@@ -37,4 +37,18 @@
         app:showAsAction="ifRoom"
         android:visible="false" />
 
+    <item
+        android:id="@+id/action_eregister_share"
+        android:title="@string/share"
+        android:icon="@drawable/ic_toolbar_share"
+        app:showAsAction="ifRoom"
+        android:visible="false" />
+
+    <item
+        android:id="@+id/action_about"
+        android:title="@string/about"
+        android:icon="@drawable/ic_toolbar_info"
+        app:showAsAction="ifRoom"
+        android:visible="false" />
+
 </menu>

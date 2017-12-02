@@ -42,7 +42,6 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
     private static boolean initialized = false;
     public static boolean loaded = false;
     public static int selectedSection = -1;
-    public static Menu menu;
     public static MenuItem selectedMenuItem = null;
 
     @Override
@@ -230,10 +229,10 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.toolbar_main, menu);
-        MainActivity.menu = menu;
+        getMenuInflater().inflate(R.menu.toolbar, menu);
+        toolbar = menu;
         Static.NavigationMenu.snackbarOffline(this);
-        Static.NavigationMenu.drawOffline(menu);
+        Static.NavigationMenu.drawOffline(toolbar);
         return true;
     }
 
@@ -282,7 +281,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                     Static.NavigationMenu.displayUserData(activity, (NavigationView) findViewById(R.id.nav_view));
                     Static.NavigationMenu.displayRemoteMessage(activity);
                     Static.NavigationMenu.snackbarOffline(activity);
-                    Static.NavigationMenu.drawOffline(menu);
+                    Static.NavigationMenu.drawOffline(toolbar);
                 } else if (selectedMenuItem != null) {
                     try {
                         selectSection(selectedMenuItem.getItemId());

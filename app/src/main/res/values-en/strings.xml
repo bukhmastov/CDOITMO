@@ -451,5 +451,9 @@
     <string name="share_schedule_notification1_1_plural">reduced lessons were skipped</string>
     <string name="share_schedule_notification1_1_plural2">reduced lessons were skipped</string>
     <string name="share_schedule_notification1_2">because the file was created in older versions of the app</string>
+    <string name="social_vk">VK</string>
+    <string name="social_tg">Telegram</string>
+    <string name="social_tw">Twitter</string>
+    <string name="social_fb">Facebook</string>
 
 </resources>

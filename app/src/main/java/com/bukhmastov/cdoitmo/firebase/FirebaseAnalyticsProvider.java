@@ -35,6 +35,7 @@ public class FirebaseAnalyticsProvider {
         public static final String ROOM101_REQUEST_ADDED = "cdo_room101_request_added";   // оставлен запрос на тестирование в 101 кабинете
         public static final String ROOM101_REQUEST_DENIED = "cdo_room101_request_denied"; // отозван запрос на тестирование в 101 кабинете
         public static final String WIDGET_USAGE = "cdo_widget_usage";                     // использование виджета
+        public static final String EREGISTER_SHARE = "cdo_eregister_share";               // поделился своими оценками в соцсетях
         public static final String EVENT = "cdo_event";                                   // обычное событие, не подходящее под остальные типы событий
     }
     public static class Param {
@@ -48,6 +49,8 @@ public class FirebaseAnalyticsProvider {
         public static final String LESSON_TITLE = "cdo_lesson_title";
         public static final String ROOM101_REQUEST_DETAILS = "cdo_room101_request_details";
         public static final String WIDGET_USAGE_INFO = "cdo_widget_usage_info";
+        public static final String TITLE = "cdo_title";
+        public static final String SOCIAL = "cdo_social";
         public static final String EVENT_EXTRA = "cdo_event_extra";
     }
     public static class Property {
