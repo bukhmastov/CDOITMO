@@ -18,7 +18,7 @@ import android.view.View;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.firebase.FirebaseCrashProvider;
+import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
 import com.bukhmastov.cdoitmo.fragments.ERegisterFragment;
 import com.bukhmastov.cdoitmo.fragments.HomeScreenInteractionFragment;
 import com.bukhmastov.cdoitmo.fragments.ProtocolFragment;
@@ -75,7 +75,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                         // set default preferences
                         SettingsFragment.applyDefaultValues(activity);
                         // enable/disable firebase
-                        FirebaseCrashProvider.setEnabled(activity);
+                        FirebaseCrashlyticsProvider.setEnabled(activity);
                         FirebaseAnalyticsProvider.setEnabled(activity);
                         // init static variables
                         Static.init(activity);

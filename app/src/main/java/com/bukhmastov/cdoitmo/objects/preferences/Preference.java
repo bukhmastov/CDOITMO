@@ -9,7 +9,7 @@ import android.view.View;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.ConnectedActivity;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.firebase.FirebaseCrashProvider;
+import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
 import com.bukhmastov.cdoitmo.utils.ProtocolTracker;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
@@ -84,7 +84,7 @@ public abstract class Preference {
                 }
                 break;
             case "pref_allow_send_reports":
-                FirebaseCrashProvider.setEnabled(activity, Storage.pref.get(activity, "pref_allow_send_reports", true), true);
+                FirebaseCrashlyticsProvider.setEnabled(activity, Storage.pref.get(activity, "pref_allow_send_reports", true));
                 break;
             case "pref_allow_collect_analytics":
                 FirebaseAnalyticsProvider.setEnabled(activity, Storage.pref.get(activity, "pref_allow_collect_analytics", true), true);

@@ -14,7 +14,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.firebase.FirebaseCrashProvider;
+import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
@@ -142,7 +142,7 @@ public class LogFragment extends ConnectedFragment {
         Static.T.runThread(new Runnable() {
             @Override
             public void run() {
-                FirebaseCrashProvider.setEnabled(activity, allowed, true);
+                FirebaseCrashlyticsProvider.setEnabled(activity, allowed);
             }
         });
     }

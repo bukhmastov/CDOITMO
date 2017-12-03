@@ -455,5 +455,6 @@
     <string name="social_tg">Telegram</string>
     <string name="social_tw">Twitter</string>
     <string name="social_fb">Facebook</string>
+    <string name="changes_will_take_effect_next_startup">The changes will take effect the next time the application starts</string>
 
 </resources>
