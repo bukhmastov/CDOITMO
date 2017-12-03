@@ -56,19 +56,13 @@ public class SettingsFragment extends SettingsTemplateHeadersFragment {
         }
     }
     private static void applyDefaultValues(final Context context, final Preference preference) {
-        if (preference.defaultValue != null) {
+        if (preference.defaultValue != null && !Storage.pref.exists(context, preference.key)) {
             if (preference.defaultValue instanceof String) {
-                if ("pref_undefined".equals(Storage.pref.get(context, preference.key, "pref_undefined"))) {
-                    Storage.pref.put(context, preference.key, (String) preference.defaultValue);
-                }
+                Storage.pref.put(context, preference.key, (String) preference.defaultValue);
             } else if (preference.defaultValue instanceof Integer) {
-                if (Storage.pref.get(context, preference.key, Integer.MIN_VALUE) == Integer.MIN_VALUE) {
-                    Storage.pref.put(context, preference.key, (Integer) preference.defaultValue);
-                }
+                Storage.pref.put(context, preference.key, (Integer) preference.defaultValue);
             } else if (preference.defaultValue instanceof Boolean) {
-                if (Storage.pref.get(context, preference.key, null) == null) {
-                    Storage.pref.put(context, preference.key, (Boolean) preference.defaultValue);
-                }
+                Storage.pref.put(context, preference.key, (Boolean) preference.defaultValue);
             }
         }
     }

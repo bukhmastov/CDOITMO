@@ -54,11 +54,12 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                 @Override
                 public void run() {
                     try {
-                        Static.applyActivityTheme(activity);
-                        // TODO remove it
+                        // TODO remove it >
                         Storage.pref.put(activity, "pref_allow_send_reports", false);
                         Storage.pref.put(activity, "pref_allow_collect_analytics", false);
                         Storage.pref.put(activity, "pref_allow_collect_logs", true);
+                        Log.setEnabled(true);
+                        // TODO < remove it
                         try {
                             Log.i(TAG, "App | launched");
                             PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
@@ -68,6 +69,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                         } catch (Exception e) {
                             Static.error(e);
                         }
+                        Static.applyActivityTheme(activity);
                         // apply compatibility changes
                         Wipe.check(activity);
                         // set default preferences
@@ -79,8 +81,9 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                         Static.init(activity);
                         // set auto_logout value
                         LoginActivity.auto_logout = Storage.pref.get(activity, "pref_auto_logout", false);
-                        // set first_launch value
-                        Static.isFirstLaunchEver = Storage.pref.get(activity, "pref_first_launch", false);
+                        // set first_launch and intro values
+                        Static.isFirstLaunchEver = Storage.pref.get(activity, "pref_first_launch", true);
+                        Static.showIntroducingActivity = Static.isFirstLaunchEver;
                         if (Static.isFirstLaunchEver) {
                             Storage.pref.put(activity, "pref_first_launch", false);
                         }
@@ -132,10 +135,6 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
             // track to firebase
             FirebaseAnalyticsProvider.logCurrentScreen(this);
             FirebaseAnalyticsProvider.setUserProperty(this, FirebaseAnalyticsProvider.Property.DEVICE, Static.tablet ? "tablet" : "mobile");
-            // Show introducing activity
-            if (Static.isFirstLaunchEver) {
-                startActivity(new Intent(activity, IntroducingActivity.class));
-            }
             // setup static variables
             Static.OFFLINE_MODE = !Static.isOnline(this) || (Static.firstLaunch && Storage.pref.get(this, "pref_initial_offline", false));
             Static.firstLaunch = false;

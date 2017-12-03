@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.PopupMenu;
 import android.view.InflateException;
@@ -55,12 +56,12 @@ public class SubjectShowFragment extends ConnectedFragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_subject_show, container, false);
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         display();
     }
@@ -92,10 +93,24 @@ public class SubjectShowFragment extends ConnectedFragment {
                                     int iPoints = dPoints.intValue();
                                     if (dPoints != -1.0) {
                                         if (dPoints == Double.parseDouble(iPoints + ".0")) {
-                                            points = iPoints + "";
+                                            points = String.valueOf(iPoints);
+                                        } else {
+                                            points = String.valueOf(dPoints);
                                         }
                                     }
-                                    if (!points.isEmpty()) {
+                                    if (!points.isEmpty() && mark != null && !mark.isEmpty()) {
+                                        String title = "У меня %points% балл%suffix% и оценка \"%mark%\" по предмету %subject%!";
+                                        String description = "Узнай, сколько у тебя!";
+                                        String suffix = "ов";
+                                        if (!(iPoints % 100 >= 10 && iPoints % 100 < 20)) {
+                                            switch (iPoints % 10) {
+                                                case 1: suffix = ""; break;
+                                                case 2: case 3: case 4: suffix = "а"; break;
+                                            }
+                                        }
+                                        title = title.replace("%points%", points).replace("%suffix%", suffix).replace("%mark%", mark).replace("%subject%", sbj);
+                                        share(view, title, description);
+                                    } else if (!points.isEmpty()) {
                                         String title = "У меня %points% балл%suffix% по предмету %subject%!";
                                         String description = "Узнай, сколько у тебя!";
                                         String suffix = "ов";
@@ -107,16 +122,14 @@ public class SubjectShowFragment extends ConnectedFragment {
                                         }
                                         title = title.replace("%points%", points).replace("%suffix%", suffix).replace("%subject%", sbj);
                                         share(view, title, description);
+                                    } else if (mark != null && !mark.isEmpty()) {
+                                        String title = "У меня \"%mark%\" по предмету %subject%!";
+                                        String description = "Узнай свои оценки!";
+                                        title = title.replace("%mark%", mark).replace("%subject%", sbj);
+                                        share(view, title, description);
                                     } else {
-                                        if (mark != null && !mark.isEmpty()) {
-                                            String title = "У меня \"%mark%\" по предмету %subject%!";
-                                            String description = "Узнай свои оценки!";
-                                            title = title.replace("%mark%", mark).replace("%subject%", sbj);
-                                            share(view, title, description);
-                                        } else {
-                                            Log.w(TAG, "Failed to share mine subject progress | subject=" + sbj + " | dPoints=" + dPoints.toString() + " | mark=" + mark);
-                                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                        }
+                                        Log.w(TAG, "Failed to share mine subject progress | subject=" + sbj + " | dPoints=" + dPoints.toString() + " | mark=" + mark);
+                                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                     }
                                 } catch (Exception e) {
                                     Static.error(e);

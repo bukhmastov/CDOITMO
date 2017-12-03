@@ -606,6 +606,11 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                 Storage.file.perm.put(activity, "schedule_lessons#reduced#" + token, reduced.toString());
             }
         }
+        FirebaseAnalyticsProvider.logEvent(
+                activity,
+                FirebaseAnalyticsProvider.Event.SCHEDULE_LESSONS_RECEIVE,
+                FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.QUERY, query)
+        );
         Static.toast(activity, getString(R.string.changes_applied));
         finish();
     }
@@ -635,6 +640,11 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
             intent.putExtra(Intent.EXTRA_STREAM, uri);
             try {
                 startActivity(Intent.createChooser(intent, activity.getString(R.string.share) + "..."));
+                FirebaseAnalyticsProvider.logEvent(
+                        activity,
+                        FirebaseAnalyticsProvider.Event.SCHEDULE_LESSONS_SHARE,
+                        FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.QUERY, query)
+                );
             } catch (Exception ignore) {
                 Static.toast(activity, activity.getString(R.string.failed_to_share_file));
             }

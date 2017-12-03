@@ -55,6 +55,14 @@ public class LoginActivity extends ConnectedActivity {
         Log.i(TAG, "Activity created");
         FirebaseAnalyticsProvider.logCurrentScreen(this);
         setContentView(R.layout.activity_login);
+        // Show introducing activity
+        Log.v(TAG, "showIntroducingActivity " + Static.logBoolean(Static.showIntroducingActivity));
+        Log.d(Log.TAGD, "showIntroducingActivity " + Static.logBoolean(Static.showIntroducingActivity));
+        if (Static.showIntroducingActivity) {
+            Static.showIntroducingActivity = false;
+            startActivity(new Intent(activity, IntroducingActivity.class));
+        }
+        // setup toolbar
         Toolbar toolbar = findViewById(R.id.toolbar_login);
         if (toolbar != null) {
             Static.applyToolbarTheme(activity, toolbar);
@@ -183,7 +191,6 @@ public class LoginActivity extends ConnectedActivity {
             }
         });
     }
-
     private void show() {
         Static.T.runThread(new Runnable() {
             @Override

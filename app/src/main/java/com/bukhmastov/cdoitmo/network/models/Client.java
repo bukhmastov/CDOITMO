@@ -321,7 +321,7 @@ public abstract class Client {
         }
     }
     protected static boolean isInterrupted(final Throwable throwable) {
-        return throwable != null && "socket closed".equals(throwable.getMessage().toLowerCase());
+        return throwable != null && throwable.getMessage() != null && "socket closed".equals(throwable.getMessage().toLowerCase());
     }
 
     public static boolean isAuthorized(final Context context) {

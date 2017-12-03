@@ -2,6 +2,7 @@ package com.bukhmastov.cdoitmo.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.SparseArray;
 import android.view.InflateException;
@@ -17,7 +18,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activities.MainActivity;
 import com.bukhmastov.cdoitmo.adapters.ProtocolListView;
 import com.bukhmastov.cdoitmo.converters.ProtocolConverter;
 import com.bukhmastov.cdoitmo.exceptions.SilentException;
@@ -73,7 +73,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_protocol, container, false);
     }
 

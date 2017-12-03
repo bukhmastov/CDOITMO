@@ -294,52 +294,59 @@ public class Storage {
         }
     }
     public static class pref {
-        public static synchronized void put(Context context, String key, String value){
+        public static synchronized void put(Context context, String key, String value) {
             if (context == null) {
                 Log.w(TAG, "pref | put | context is null");
                 return;
             }
             PreferenceManager.getDefaultSharedPreferences(context).edit().putString(key, value).apply();
         }
-        public static synchronized void put(Context context, String key, int value){
+        public static synchronized void put(Context context, String key, int value) {
             if (context == null) {
                 Log.w(TAG, "pref | put | context is null");
                 return;
             }
             PreferenceManager.getDefaultSharedPreferences(context).edit().putInt(key, value).apply();
         }
-        public static synchronized void put(Context context, String key, boolean value){
+        public static synchronized void put(Context context, String key, boolean value) {
             if (context == null) {
                 Log.w(TAG, "pref | put | context is null");
                 return;
             }
             PreferenceManager.getDefaultSharedPreferences(context).edit().putBoolean(key, value).apply();
         }
-        public static String get(Context context, String key){
+        public static String get(Context context, String key) {
             return pref.get(context, key, "");
         }
-        public static String get(Context context, String key, String def){
+        public static String get(Context context, String key, String def) {
             if (context == null) {
                 Log.w(TAG, "pref | get | context is null");
                 return def;
             }
             return PreferenceManager.getDefaultSharedPreferences(context).getString(key, def);
         }
-        public static int get(Context context, String key, int def){
+        public static int get(Context context, String key, int def) {
             if (context == null) {
                 Log.w(TAG, "pref | get | context is null");
                 return def;
             }
             return PreferenceManager.getDefaultSharedPreferences(context).getInt(key, def);
         }
-        public static boolean get(Context context, String key, boolean def){
+        public static boolean get(Context context, String key, boolean def) {
             if (context == null) {
                 Log.w(TAG, "pref | get | context is null");
                 return def;
             }
             return PreferenceManager.getDefaultSharedPreferences(context).getBoolean(key, def);
         }
-        public static void delete(Context context, String key){
+        public static boolean exists(Context context, String key) {
+            if (context == null) {
+                Log.w(TAG, "pref | get | context is null");
+                return false;
+            }
+            return PreferenceManager.getDefaultSharedPreferences(context).contains(key);
+        }
+        public static void delete(Context context, String key) {
             if (context == null) {
                 Log.w(TAG, "pref | delete | context is null");
                 return;
@@ -347,13 +354,13 @@ public class Storage {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
             if (sharedPreferences.contains(key)) sharedPreferences.edit().remove(key).apply();
         }
-        public static void clear(Context context){
+        public static void clear(Context context) {
             pref.clear(context, Pattern.compile(".*"));
         }
-        public static void clearExceptPref(Context context){
+        public static void clearExceptPref(Context context) {
             pref.clear(context, Pattern.compile("^(?!pref_).*$"));
         }
-        public static void clear(Context context, Pattern pattern){
+        public static void clear(Context context, Pattern pattern) {
             if (context == null) {
                 Log.w(TAG, "pref | clear | context is null");
                 return;
