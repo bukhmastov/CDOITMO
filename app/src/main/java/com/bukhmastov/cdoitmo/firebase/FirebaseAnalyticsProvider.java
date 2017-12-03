@@ -21,22 +21,24 @@ public class FirebaseAnalyticsProvider {
 
     public static class Event {
         // 500 different types of Events | 40 characters long
-        public static final String JOIN_GROUP = "cdo_join_group";                         // присоединен к определеннйо группе
-        public static final String APP_OPEN = "cdo_app_open";                             // приложение запущено
-        public static final String LOGIN_REQUIRED = "cdo_login_required";                 // нужна авторизация
-        public static final String LOGIN = "cdo_login";                                   // авторизован
-        public static final String LOGOUT = "cdo_logout";                                 // разлогинен
-        public static final String APP_VIEW = "cdo_app_view";                             // переход на новый экран
-        public static final String SHORTCUT_INSTALL = "cdo_shortcut_install";             // установка ярлыка
-        public static final String SHORTCUT_USE = "cdo_shortcut_use";                     // использование ярлыка
-        public static final String WIDGET_INSTALL = "cdo_widget_install";                 // установка виджета расписания
-        public static final String SCHEDULE_LESSON_ADD = "cdo_schedule_lesson_add";       // ручное добавление занятия в расписание
-        public static final String SCHEDULE_LESSON_REDUCE = "cdo_schedule_lesson_reduce"; // скрытие занятия в расписании
-        public static final String ROOM101_REQUEST_ADDED = "cdo_room101_request_added";   // оставлен запрос на тестирование в 101 кабинете
-        public static final String ROOM101_REQUEST_DENIED = "cdo_room101_request_denied"; // отозван запрос на тестирование в 101 кабинете
-        public static final String WIDGET_USAGE = "cdo_widget_usage";                     // использование виджета
-        public static final String EREGISTER_SHARE = "cdo_eregister_share";               // поделился своими оценками в соцсетях
-        public static final String EVENT = "cdo_event";                                   // обычное событие, не подходящее под остальные типы событий
+        public static final String JOIN_GROUP = "cdo_join_group";                               // присоединен к определеннйо группе
+        public static final String APP_OPEN = "cdo_app_open";                                   // приложение запущено
+        public static final String LOGIN_REQUIRED = "cdo_login_required";                       // нужна авторизация
+        public static final String LOGIN = "cdo_login";                                         // авторизован
+        public static final String LOGOUT = "cdo_logout";                                       // разлогинен
+        public static final String APP_VIEW = "cdo_app_view";                                   // переход на новый экран
+        public static final String SHORTCUT_INSTALL = "cdo_shortcut_install";                   // установка ярлыка
+        public static final String SHORTCUT_USE = "cdo_shortcut_use";                           // использование ярлыка
+        public static final String WIDGET_INSTALL = "cdo_widget_install";                       // установка виджета расписания
+        public static final String SCHEDULE_LESSON_ADD = "cdo_schedule_lesson_add";             // ручное добавление занятия в расписание
+        public static final String SCHEDULE_LESSON_REDUCE = "cdo_schedule_lesson_reduce";       // скрытие занятия в расписании
+        public static final String ROOM101_REQUEST_ADDED = "cdo_room101_request_added";         // оставлен запрос на тестирование в 101 кабинете
+        public static final String ROOM101_REQUEST_DENIED = "cdo_room101_request_denied";       // отозван запрос на тестирование в 101 кабинете
+        public static final String WIDGET_USAGE = "cdo_widget_usage";                           // использование виджета
+        public static final String EREGISTER_SHARE = "cdo_eregister_share";                     // поделился своими оценками в соцсетях
+        public static final String SCHEDULE_LESSONS_SHARE = "cdo_schedule_lessons_share";       // поделился своим расписанием
+        public static final String SCHEDULE_LESSONS_RECEIVE = "cdo_schedule_lessons_receive";   // принято чужое изменение расписания
+        public static final String EVENT = "cdo_event";                                         // обычное событие, не подходящее под остальные типы событий
     }
     public static class Param {
         // 25 unique Params with each Event type | 40 characters long | values 100 characters long
@@ -51,6 +53,7 @@ public class FirebaseAnalyticsProvider {
         public static final String WIDGET_USAGE_INFO = "cdo_widget_usage_info";
         public static final String TITLE = "cdo_title";
         public static final String SOCIAL = "cdo_social";
+        public static final String QUERY = "cdo_query";
         public static final String EVENT_EXTRA = "cdo_event_extra";
     }
     public static class Property {

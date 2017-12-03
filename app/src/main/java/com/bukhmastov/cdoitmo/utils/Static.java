@@ -71,6 +71,7 @@ public class Static {
     public static final int intentFlagRestart = Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK;
     public static boolean tablet = false;
     public static boolean isFirstLaunchEver = false;
+    public static boolean showIntroducingActivity = false;
     private static final String USER_AGENT_TEMPLATE = "CDOITMO/{versionName}/{versionCode} Java/Android/{sdkInt}";
     private static String USER_AGENT = null;
     private static String app_theme = null;
