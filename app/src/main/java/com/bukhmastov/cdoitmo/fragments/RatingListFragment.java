@@ -1,11 +1,17 @@
 package com.bukhmastov.cdoitmo.fragments;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.PopupMenu;
 import android.view.InflateException;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
@@ -30,6 +36,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class RatingListFragment extends ConnectedFragment implements SwipeRefreshLayout.OnRefreshListener {
 
@@ -39,20 +47,29 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
     private String years = null;
     private boolean loaded = false;
     private Client.Request requestHandle = null;
+    private int minePosition = -1;
+    private String mineFaculty = "";
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        setHasOptionsMenu(true);
         super.onCreate(savedInstanceState);
         FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public void onDestroy() {
+        super.onDestroy();
+        hideShareButton();
+    }
+
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_rating_list, container, false);
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         activity.updateToolbar(activity, activity.getString(R.string.top_rating), R.drawable.ic_rating);
         try {
@@ -110,6 +127,9 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
             public void run() {
                 Log.v(TAG, "load");
                 activity.updateToolbar(activity, activity.getString(R.string.top_rating), R.drawable.ic_rating);
+                minePosition = -1;
+                mineFaculty = "";
+                hideShareButton();
                 if (!Static.OFFLINE_MODE) {
                     DeIfmoClient.get(activity, Client.Protocol.HTTP, "?node=rating&std&depId=" + faculty + "&year=" + course + "&app=" + years, null, new ResponseHandler() {
                         @Override
@@ -251,7 +271,11 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                 Log.v(TAG, "display");
                 try {
                     if (data == null) throw new SilentException();
-                    activity.updateToolbar(activity, Static.capitalizeFirstLetter(data.getString("header")), R.drawable.ic_rating);
+                    final String title = Static.capitalizeFirstLetter(data.getString("header"));
+                    activity.updateToolbar(activity, title, R.drawable.ic_rating);
+                    minePosition = -1;
+                    mineFaculty = "";
+                    hideShareButton();
                     // получаем список для отображения рейтинга
                     final ArrayList<HashMap<String, String>> users = new ArrayList<>();
                     JSONArray list = data.getJSONArray("list");
@@ -259,15 +283,29 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                         for (int i = 0; i < list.length(); i++) {
                             JSONObject jsonObject = list.getJSONObject(i);
                             if (jsonObject == null) continue;
+                            int position = jsonObject.getInt("number");
+                            boolean is_me = jsonObject.getBoolean("is_me");
+                            if (minePosition == -1 && is_me) {
+                                minePosition = position;
+                                Matcher m = Pattern.compile("^(.*)\\(.*\\)$").matcher(title);
+                                if (m.find()) {
+                                    mineFaculty = m.group(1).trim();
+                                } else {
+                                    mineFaculty = title;
+                                }
+                            }
                             HashMap<String, String> hashMap = new HashMap<>();
-                            hashMap.put("number", String.valueOf(jsonObject.getInt("number")));
+                            hashMap.put("number", String.valueOf(position));
                             hashMap.put("fio", jsonObject.getString("fio"));
                             hashMap.put("meta", jsonObject.getString("group") + " — " + jsonObject.getString("department"));
-                            hashMap.put("is_me", jsonObject.getBoolean("is_me") ? "1" : "0");
+                            hashMap.put("is_me", is_me ? "1" : "0");
                             hashMap.put("change", jsonObject.getString("change"));
                             hashMap.put("delta", jsonObject.getString("delta"));
                             users.add(hashMap);
                         }
+                    }
+                    if (minePosition != -1) {
+                        showShareButton();
                     }
                     Static.T.runOnUiThread(new Runnable() {
                         @Override
@@ -304,6 +342,93 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                 }
             }
         });
+    }
+    private void showShareButton() {
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (activity.toolbar != null) {
+                        final MenuItem action_share = activity.toolbar.findItem(R.id.action_share);
+                        if (action_share != null && minePosition != -1) {
+                            action_share.setVisible(true);
+                            action_share.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                                @Override
+                                public boolean onMenuItemClick(MenuItem menuItem) {
+                                    try {
+                                        View view = activity.findViewById(R.id.action_share);
+                                        String title = "Я на %position% позиции в рейтинге %faculty%!"
+                                                .replace("%position%", String.valueOf(minePosition))
+                                                .replace("%faculty%", mineFaculty.isEmpty() ? "факультета" : mineFaculty);
+                                        String description = "Узнай свои успехи!";
+                                        share(view, title, description);
+                                    } catch (Exception e) {
+                                        Static.error(e);
+                                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                    }
+                                    return false;
+                                }
+                            });
+                        }
+                    }
+                } catch (Exception e){
+                    Static.error(e);
+                }
+            }
+        });
+    }
+    private void hideShareButton() {
+        Static.T.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (activity != null && activity.toolbar != null) {
+                        MenuItem action_share = activity.toolbar.findItem(R.id.action_share);
+                        if (action_share != null) action_share.setVisible(false);
+                    }
+                } catch (Exception e){
+                    Static.error(e);
+                }
+            }
+        });
+    }
+    private void share(final View anchor, final String title, final String description) throws Exception {
+        final PopupMenu popup = new PopupMenu(activity, anchor);
+        final Menu menu = popup.getMenu();
+        popup.getMenuInflater().inflate(R.menu.social_share, menu);
+        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                try {
+                    String url = "https://goo.gl/NpAhMF";
+                    String social = "";
+                    String link = "";
+                    switch (item.getItemId()) {
+                        case R.id.share_vk: social = "vk"; link = "https://vk.com/share.php?url=%url%&noparse=true&title=%title%&description=%description%"; break;
+                        case R.id.share_tg: social = "tg"; link = "https://t.me/share/url?url=%url%&text=%title%"; break;
+                        case R.id.share_tw: social = "tw"; link = "https://twitter.com/intent/tweet?url=%url%&text=%title%"; break;
+                        case R.id.share_fb: social = "fb"; link = "https://www.facebook.com/sharer.php?u=%url%&t=%title%"; break;
+                    }
+                    if (!link.isEmpty()) {
+                        link = link.replace("%url%", url).replace("%title%", title).replace("%description%", description);
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(link)));
+                        // track statistics
+                        Bundle bundle;
+                        bundle = FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TITLE, title.substring(0, title.length() > 100 ? 100 : title.length()));
+                        bundle = FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.SOCIAL, social, bundle);
+                        FirebaseAnalyticsProvider.logEvent(
+                                activity,
+                                FirebaseAnalyticsProvider.Event.RATING_SHARE,
+                                bundle
+                        );
+                    }
+                } catch (Exception e) {
+                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                }
+                return false;
+            }
+        });
+        popup.show();
     }
 
     private void draw(final int layoutId) {

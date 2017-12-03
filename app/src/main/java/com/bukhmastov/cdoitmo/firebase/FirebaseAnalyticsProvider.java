@@ -36,6 +36,7 @@ public class FirebaseAnalyticsProvider {
         public static final String ROOM101_REQUEST_DENIED = "cdo_room101_request_denied";       // отозван запрос на тестирование в 101 кабинете
         public static final String WIDGET_USAGE = "cdo_widget_usage";                           // использование виджета
         public static final String EREGISTER_SHARE = "cdo_eregister_share";                     // поделился своими оценками в соцсетях
+        public static final String RATING_SHARE = "cdo_rating_share";                           // поделился своим рейтингом в соцсетях
         public static final String SCHEDULE_LESSONS_SHARE = "cdo_schedule_lessons_share";       // поделился своим расписанием
         public static final String SCHEDULE_LESSONS_RECEIVE = "cdo_schedule_lessons_receive";   // принято чужое изменение расписания
         public static final String EVENT = "cdo_event";                                         // обычное событие, не подходящее под остальные типы событий
