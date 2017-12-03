@@ -89,7 +89,9 @@ public class FirebaseAnalyticsProvider {
                 );
             }
             FirebaseAnalyticsProvider.enabled = enabled;
-            getFirebaseAnalytics(context).setAnalyticsCollectionEnabled(FirebaseAnalyticsProvider.enabled);
+            FirebaseAnalytics firebaseAnalytics = getFirebaseAnalytics(context);
+            firebaseAnalytics.setAnalyticsCollectionEnabled(FirebaseAnalyticsProvider.enabled);
+            firebaseAnalytics.setUserId(Static.getUUID(context));
             Log.i(TAG, "Firebase Analytics " + (FirebaseAnalyticsProvider.enabled ? "enabled" : "disabled"));
         } catch (Exception e) {
             Static.error(e);

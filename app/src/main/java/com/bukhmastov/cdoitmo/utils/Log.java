@@ -3,7 +3,7 @@ package com.bukhmastov.cdoitmo.utils;
 import android.os.Build;
 import android.support.annotation.NonNull;
 
-import com.bukhmastov.cdoitmo.firebase.FirebaseCrashProvider;
+import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -105,7 +105,7 @@ public class Log {
 
     public static int v(String TAG, String log) {
         log = wrapLog(log);
-        FirebaseCrashProvider.v(TAG, log);
+        FirebaseCrashlyticsProvider.v(TAG, log);
         if (enabled) {
             addLog(new LogItem(VERBOSE, TAG, log));
             return android.util.Log.v(TAG, log);
@@ -115,7 +115,7 @@ public class Log {
     }
     public static int d(String TAG, String log) {
         log = wrapLog(log);
-        FirebaseCrashProvider.d(TAG, log);
+        FirebaseCrashlyticsProvider.d(TAG, log);
         if (enabled) {
             addLog(new LogItem(DEBUG, TAG, log));
             return android.util.Log.d(TAG, log);
@@ -125,7 +125,7 @@ public class Log {
     }
     public static int i(String TAG, String log) {
         log = wrapLog(log);
-        FirebaseCrashProvider.i(TAG, log);
+        FirebaseCrashlyticsProvider.i(TAG, log);
         if (enabled) {
             addLog(new LogItem(INFO, TAG, log));
             return android.util.Log.i(TAG, log);
@@ -136,7 +136,7 @@ public class Log {
     public static int w(String TAG, String log) {
         Metrics.warn++;
         log = wrapLog(log);
-        FirebaseCrashProvider.w(TAG, log);
+        FirebaseCrashlyticsProvider.w(TAG, log);
         if (enabled) {
             addLog(new LogItem(WARN, TAG, log));
             return android.util.Log.w(TAG, log);
@@ -147,7 +147,7 @@ public class Log {
     public static int e(String TAG, String log) {
         Metrics.error++;
         log = wrapLog(log);
-        FirebaseCrashProvider.e(TAG, log);
+        FirebaseCrashlyticsProvider.e(TAG, log);
         if (enabled) {
             addLog(new LogItem(ERROR, TAG, log));
             return android.util.Log.e(TAG, log);
@@ -158,7 +158,7 @@ public class Log {
     public static int wtf(String TAG, String log) {
         Metrics.wtf++;
         log = wrapLog(log);
-        FirebaseCrashProvider.wtf(TAG, log);
+        FirebaseCrashlyticsProvider.wtf(TAG, log);
         if (enabled) {
             addLog(new LogItem(WTF, TAG, log));
             return android.util.Log.wtf(TAG, log);
@@ -168,7 +168,7 @@ public class Log {
     }
     public static int wtf(Throwable throwable) {
         Metrics.wtf++;
-        FirebaseCrashProvider.wtf(throwable);
+        FirebaseCrashlyticsProvider.wtf(throwable);
         if (enabled) {
             addLog(new LogItem(WTF_EXCEPTION, throwable));
             return android.util.Log.wtf("Assert", wrapLog(null), throwable);
@@ -182,7 +182,7 @@ public class Log {
     public static int exception(String msg, Throwable throwable) {
         Metrics.exception++;
         msg = wrapLog(msg);
-        FirebaseCrashProvider.exception(throwable);
+        FirebaseCrashlyticsProvider.exception(throwable);
         if (enabled) {
             addLog(new LogItem(EXCEPTION, throwable));
             return android.util.Log.e("Exception", msg, throwable);

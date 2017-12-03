@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'io.fabric'
 
 android {
     compileSdkVersion 27
@@ -29,10 +30,13 @@ dependencies {
     compile 'com.android.support:design:27.0.1'
     compile 'com.android.support:cardview-v7:27.0.1'
     compile 'com.android.support:recyclerview-v7:27.0.1'
-    compile 'com.google.firebase:firebase-messaging:11.6.0'
-    compile 'com.google.firebase:firebase-crash:11.6.0'
-    compile 'com.google.firebase:firebase-config:11.6.0'
-    compile 'com.google.android.gms:play-services-maps:11.6.0'
+    compile('com.crashlytics.sdk.android:crashlytics:2.7.1@aar') {
+        transitive = true
+    }
+    compile 'com.google.firebase:firebase-core:11.6.2'
+    compile 'com.google.firebase:firebase-messaging:11.6.2'
+    compile 'com.google.firebase:firebase-config:11.6.2'
+    compile 'com.google.android.gms:play-services-maps:11.6.2'
     compile 'com.squareup.okhttp3:okhttp:3.9.0'
     compile 'net.sourceforge.htmlcleaner:htmlcleaner:2.18'
     compile 'com.squareup.picasso:picasso:2.5.2'

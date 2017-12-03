@@ -2,14 +2,18 @@ package com.bukhmastov.cdoitmo.firebase;
 
 import android.content.Context;
 
+import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.activities.ConnectedActivity;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
-import com.google.firebase.crash.FirebaseCrash;
+import com.crashlytics.android.Crashlytics;
 
-public class FirebaseCrashProvider {
+import io.fabric.sdk.android.Fabric;
 
-    private static final String TAG = "FirebaseCrashProvider";
+public class FirebaseCrashlyticsProvider {
+
+    private static final String TAG = "FirebaseCrashlyticsProvider";
     private static boolean enabled = true;
     private enum LEVEL {VERBOSE, DEBUG, INFO, WARN, ERROR}
 
@@ -27,59 +31,72 @@ public class FirebaseCrashProvider {
         return setEnabled(context, Storage.pref.get(context, "pref_allow_send_reports", true));
     }
     public static boolean setEnabled(Context context, boolean enabled) {
-        return setEnabled(context, enabled, false);
-    }
-    public static boolean setEnabled(Context context, boolean enabled, boolean notify) {
         try {
-            if (!enabled && notify) {
+            FirebaseCrashlyticsProvider.enabled = enabled;
+            if (FirebaseCrashlyticsProvider.enabled) {
+                Fabric.with(context, new Crashlytics());
+                Crashlytics.setUserIdentifier(Static.getUUID(context));
+            }
+            Log.i(TAG, "Firebase Crashlytics " + (FirebaseCrashlyticsProvider.enabled ? "enabled" : "disabled"));
+        } catch (Exception e) {
+            Static.error(e);
+        }
+        return FirebaseCrashlyticsProvider.enabled;
+    }
+    public static boolean setEnabled(ConnectedActivity activity, boolean enabled) {
+        try {
+            if (enabled) {
+                FirebaseCrashlyticsProvider.enabled = true;
+                Fabric.with(activity, new Crashlytics());
+                Log.i(TAG, "Firebase Crashlytics enabled");
+            } else {
+                Static.snackBar(activity, activity.getString(R.string.changes_will_take_effect_next_startup));
+                Log.i(TAG, "Firebase Crashlytics will be disabled at the next start up");
                 FirebaseAnalyticsProvider.logEvent(
-                        context,
+                        activity,
                         FirebaseAnalyticsProvider.Event.JOIN_GROUP,
                         FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.GROUP_ID, "crash_disabled")
                 );
             }
-            FirebaseCrashProvider.enabled = enabled;
-            FirebaseCrash.setCrashCollectionEnabled(FirebaseCrashProvider.enabled);
-            Log.i(TAG, "Firebase Crash " + (FirebaseCrashProvider.enabled ? "enabled" : "disabled"));
         } catch (Exception e) {
             Static.error(e);
         }
-        return FirebaseCrashProvider.enabled;
+        return FirebaseCrashlyticsProvider.enabled;
     }
 
     public static void v(String TAG, String log) {
         if (!enabled) return;
-        FirebaseCrashProvider.log(LEVEL.VERBOSE, TAG, log);
+        FirebaseCrashlyticsProvider.log(LEVEL.VERBOSE, TAG, log);
     }
 
     public static void d(String TAG, String log) {
         if (!enabled) return;
-        FirebaseCrashProvider.log(LEVEL.DEBUG, TAG, log);
+        FirebaseCrashlyticsProvider.log(LEVEL.DEBUG, TAG, log);
     }
 
     public static void i(String TAG, String log) {
         if (!enabled) return;
-        FirebaseCrashProvider.log(LEVEL.INFO, TAG, log);
+        FirebaseCrashlyticsProvider.log(LEVEL.INFO, TAG, log);
     }
 
     public static void w(String TAG, String log) {
         if (!enabled) return;
-        FirebaseCrashProvider.log(LEVEL.WARN, TAG, log);
+        FirebaseCrashlyticsProvider.log(LEVEL.WARN, TAG, log);
     }
 
     public static void e(String TAG, String log) {
         if (!enabled) return;
-        FirebaseCrashProvider.log(LEVEL.ERROR, TAG, log);
+        FirebaseCrashlyticsProvider.log(LEVEL.ERROR, TAG, log);
     }
 
     public static void wtf(String TAG, String log) {
         if (!enabled) return;
-        FirebaseCrashProvider.exception(new Exception("WTF" + "/" + TAG + " " + log));
+        FirebaseCrashlyticsProvider.exception(new Exception("WTF" + "/" + TAG + " " + log));
     }
 
     public static void wtf(Throwable throwable) {
         if (!enabled) return;
-        FirebaseCrashProvider.exception(throwable);
+        FirebaseCrashlyticsProvider.exception(throwable);
     }
 
     public static void exception(final Throwable throwable) {
@@ -88,7 +105,7 @@ public class FirebaseCrashProvider {
             public void run() {
                 try {
                     if (!enabled) return;
-                    FirebaseCrash.report(throwable);
+                    Crashlytics.logException(throwable);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -102,7 +119,7 @@ public class FirebaseCrashProvider {
             public void run() {
                 try {
                     if (!enabled) return;
-                    FirebaseCrash.log(level2string(level) + "/" + TAG + " " + log);
+                    Crashlytics.log(level2string(level) + "/" + TAG + " " + log);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

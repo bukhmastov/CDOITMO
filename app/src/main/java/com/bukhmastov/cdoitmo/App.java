@@ -4,12 +4,13 @@ import android.app.Application;
 import android.content.res.Configuration;
 
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.firebase.FirebaseCrashProvider;
+import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 
 import java.util.Locale;
+import java.util.UUID;
 
 public class App extends Application {
 
@@ -23,6 +24,7 @@ public class App extends Application {
             Log.setEnabled(Storage.pref.get(this, "pref_allow_collect_logs", false));
             locale = Static.getLocale(this);
             Log.i(TAG, "Language | locale=" + locale.toString());
+            setUUID();
             setLocale();
             setFirebase();
         } catch (Throwable e) {
@@ -40,6 +42,12 @@ public class App extends Application {
         }
     }
 
+    private void setUUID() {
+        if (!Storage.pref.exists(this, "pref_uuid")) {
+            Storage.pref.put(this, "pref_uuid", UUID.randomUUID().toString());
+        }
+    }
+
     private void setLocale() throws Throwable {
         Locale.setDefault(locale);
         Configuration config = getBaseContext().getResources().getConfiguration();
@@ -48,7 +56,7 @@ public class App extends Application {
     }
 
     private void setFirebase() {
-        FirebaseCrashProvider.setEnabled(this);
+        FirebaseCrashlyticsProvider.setEnabled(this);
         FirebaseAnalyticsProvider.setEnabled(this);
     }
 }

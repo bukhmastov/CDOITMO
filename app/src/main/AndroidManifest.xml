@@ -34,7 +34,10 @@
             android:value="2.1" />
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyAqtKeuOdQ5Qt1mcx3y0w3f4HkCSAwY5Q4"/>
+            android:value="AIzaSyAqtKeuOdQ5Qt1mcx3y0w3f4HkCSAwY5Q4" />
+        <meta-data
+            android:name="firebase_crashlytics_collection_enabled"
+            android:value="false" />
 
         <activity
             android:name=".activities.MainActivity"

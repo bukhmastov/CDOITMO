@@ -58,6 +58,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.UUID;
 
 public class Static {
 
@@ -212,6 +213,14 @@ public class Static {
     }
     public static void error(Throwable throwable) {
         Log.exception(throwable);
+    }
+    public static String getUUID(Context context) {
+        String uuid = Storage.pref.get(context, "pref_uuid", "");
+        if (uuid.isEmpty()) {
+            uuid = UUID.randomUUID().toString();
+            Storage.pref.put(context, "pref_uuid", uuid);
+        }
+        return uuid;
     }
     public static boolean isOnline(Context context) {
         Log.v(TAG, "isOnline");
