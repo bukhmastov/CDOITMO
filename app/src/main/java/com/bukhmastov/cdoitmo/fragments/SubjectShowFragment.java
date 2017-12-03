@@ -47,7 +47,7 @@ public class SubjectShowFragment extends ConnectedFragment {
         super.onDestroy();
         try {
             if (activity != null && activity.toolbar != null) {
-                MenuItem action_share = activity.toolbar.findItem(R.id.action_eregister_share);
+                MenuItem action_share = activity.toolbar.findItem(R.id.action_share);
                 if (action_share != null) action_share.setVisible(false);
             }
         } catch (Exception e){
@@ -77,7 +77,7 @@ public class SubjectShowFragment extends ConnectedFragment {
         super.onPrepareOptionsMenu(menu);
         try {
             if (activity.toolbar != null) {
-                final MenuItem action_share = activity.toolbar.findItem(R.id.action_eregister_share);
+                final MenuItem action_share = activity.toolbar.findItem(R.id.action_share);
                 if (action_share != null && subject != null) {
                     final String sbj = subject.getString("name");
                     final String mark = subject.getString("mark");
@@ -88,7 +88,7 @@ public class SubjectShowFragment extends ConnectedFragment {
                             @Override
                             public boolean onMenuItemClick(MenuItem menuItem) {
                                 try {
-                                    View view = activity.findViewById(R.id.action_eregister_share);
+                                    View view = activity.findViewById(R.id.action_share);
                                     String points = "";
                                     int iPoints = dPoints.intValue();
                                     if (dPoints != -1.0) {

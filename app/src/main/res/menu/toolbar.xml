@@ -38,7 +38,7 @@
         android:visible="false" />
 
     <item
-        android:id="@+id/action_eregister_share"
+        android:id="@+id/action_share"
         android:title="@string/share"
         android:icon="@drawable/ic_toolbar_share"
         app:showAsAction="ifRoom"
