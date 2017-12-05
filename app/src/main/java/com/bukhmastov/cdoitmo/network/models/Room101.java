@@ -29,8 +29,8 @@ public abstract class Room101 extends DeIfmo {
                             });
                         }
                         @Override
-                        public void onError(final Throwable throwable) {
-                            rawHandler.onError(throwable);
+                        public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
+                            rawHandler.onError(code, headers, throwable);
                         }
                         @Override
                         public void onNewRequest(final Request request) {
@@ -38,7 +38,7 @@ public abstract class Room101 extends DeIfmo {
                         }
                     });
                 } catch (Throwable throwable) {
-                    rawHandler.onError(throwable);
+                    rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
                 }
             }
         });
@@ -60,8 +60,8 @@ public abstract class Room101 extends DeIfmo {
                             });
                         }
                         @Override
-                        public void onError(final Throwable throwable) {
-                            rawHandler.onError(throwable);
+                        public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
+                            rawHandler.onError(code, headers, throwable);
                         }
                         @Override
                         public void onNewRequest(final Request request) {
@@ -69,7 +69,7 @@ public abstract class Room101 extends DeIfmo {
                         }
                     });
                 } catch (Throwable throwable) {
-                    rawHandler.onError(throwable);
+                    rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
                 }
             }
         });

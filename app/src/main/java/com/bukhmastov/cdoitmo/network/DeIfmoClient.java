@@ -169,12 +169,12 @@ public class DeIfmoClient extends DeIfmo {
                                                     });
                                                 }
                                                 @Override
-                                                public void onError(final Throwable throwable) {
+                                                public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
                                                     Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
                                                         @Override
                                                         public void run() {
                                                             Log.v(TAG, "authorize | success | security group | FAILED_AUTH_TRY_AGAIN" + (throwable != null ? " | throwable=" + throwable.getMessage() : ""));
-                                                            responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_AUTH_TRY_AGAIN);
+                                                            responseHandler.onFailure(code, new Headers(headers), FAILED_AUTH_TRY_AGAIN);
                                                         }
                                                     });
                                                 }
@@ -199,12 +199,12 @@ public class DeIfmoClient extends DeIfmo {
                             });
                         }
                         @Override
-                        public void onError(final Throwable throwable) {
+                        public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
                             Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
                                 @Override
                                 public void run() {
                                     Log.v(TAG, "authorize | failure"  + (throwable != null ? " | throwable=" + throwable.getMessage() : ""));
-                                    responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), isInterrupted(throwable) ? FAILED_INTERRUPTED : FAILED_AUTH_TRY_AGAIN);
+                                    responseHandler.onFailure(code, new Headers(headers), isInterrupted(throwable) ? FAILED_INTERRUPTED : FAILED_AUTH_TRY_AGAIN);
                                 }
                             });
                         }
@@ -302,12 +302,12 @@ public class DeIfmoClient extends DeIfmo {
                             });
                         }
                         @Override
-                        public void onError(final Throwable throwable) {
+                        public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
                             Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
                                 @Override
                                 public void run() {
                                     Log.v(TAG, "get | url=" + url + " | failure" + (throwable != null ? " | throwable=" + throwable.getMessage() : ""));
-                                    responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), isInterrupted(throwable) ? FAILED_INTERRUPTED : FAILED_TRY_AGAIN);
+                                    responseHandler.onFailure(code, new Headers(headers), isInterrupted(throwable) ? FAILED_INTERRUPTED : FAILED_TRY_AGAIN);
                                 }
                             });
                         }
@@ -398,12 +398,12 @@ public class DeIfmoClient extends DeIfmo {
                             });
                         }
                         @Override
-                        public void onError(final Throwable throwable) {
+                        public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
                             Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
                                 @Override
                                 public void run() {
                                     Log.v(TAG, "post | url=" + url + " | failure" + (throwable != null ? " | throwable=" + throwable.getMessage() : ""));
-                                    responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), isInterrupted(throwable) ? FAILED_INTERRUPTED : FAILED_TRY_AGAIN);
+                                    responseHandler.onFailure(code, new Headers(headers), isInterrupted(throwable) ? FAILED_INTERRUPTED : FAILED_TRY_AGAIN);
                                 }
                             });
                         }
