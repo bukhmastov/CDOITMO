@@ -82,7 +82,7 @@ public abstract class Client {
                     }
                     execute(httpUrl, headers, null, rawHandler);
                 } catch (Throwable throwable) {
-                    rawHandler.onError(throwable);
+                    rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
                 }
             }
         });
@@ -112,7 +112,7 @@ public abstract class Client {
                         execute(builder.build(), headers, null, rawHandler);
                     }
                 } catch (Throwable throwable) {
-                    rawHandler.onError(throwable);
+                    rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
                 }
             }
         });
@@ -156,7 +156,7 @@ public abstract class Client {
                                                         }
                                                         rawJsonHandler.onDone(code, headers, response, jsonObject, null);
                                                     } catch (Throwable throwable) {
-                                                        rawJsonHandler.onError(new ParseException("Failed to parse JSONObject", 0));
+                                                        rawJsonHandler.onError(code, headers, new ParseException("Failed to parse JSONObject", 0));
                                                     }
                                                 } else if (response.startsWith("[") && response.endsWith("]")) {
                                                     try {
@@ -168,15 +168,15 @@ public abstract class Client {
                                                         }
                                                         rawJsonHandler.onDone(code, headers, response, null, jsonArray);
                                                     } catch (Throwable throwable) {
-                                                        rawJsonHandler.onError(new ParseException("Failed to parse JSONArray", 0));
+                                                        rawJsonHandler.onError(code, headers, new ParseException("Failed to parse JSONArray", 0));
                                                     }
                                                 } else {
-                                                    rawJsonHandler.onError(new Exception("Response is not recognized as JSONObject or JSONArray"));
+                                                    rawJsonHandler.onError(code, headers, new Exception("Response is not recognized as JSONObject or JSONArray"));
                                                 }
                                             }
                                         }
                                     } catch (Throwable throwable) {
-                                        rawJsonHandler.onError(throwable);
+                                        rawJsonHandler.onError(code, headers, throwable);
                                     }
                                 }
                             });
@@ -186,8 +186,8 @@ public abstract class Client {
                             rawJsonHandler.onNewRequest(request);
                         }
                         @Override
-                        public void onError(Throwable throwable) {
-                            rawJsonHandler.onError(throwable);
+                        public void onError(int code, okhttp3.Headers headers, Throwable throwable) {
+                            rawJsonHandler.onError(code, headers, throwable);
                         }
                     };
                     if (query != null) {
@@ -199,7 +199,7 @@ public abstract class Client {
                     }
                     execute(httpUrl, headers, null, rawHandler);
                 } catch (Throwable throwable) {
-                    rawJsonHandler.onError(throwable);
+                    rawJsonHandler.onError(STATUS_CODE_EMPTY, null, throwable);
                 }
             }
         });
@@ -257,7 +257,7 @@ public abstract class Client {
                     );
                     rawHandler.onDone(code, headers, responseString);
                 } catch (Throwable throwable) {
-                    rawHandler.onError(throwable);
+                    rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
                 }
             }
         });

@@ -45,12 +45,12 @@ public class IfmoRestClient extends Ifmo {
                             });
                         }
                         @Override
-                        public void onError(final Throwable throwable) {
+                        public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
                             Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
                                 @Override
                                 public void run() {
                                     Log.v(TAG, "get | url=" + url + " | failure" + (throwable != null ? " | throwable=" + throwable.getMessage() : ""));
-                                    responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_TRY_AGAIN);
+                                    responseHandler.onFailure(code, new Headers(headers), FAILED_TRY_AGAIN);
                                 }
                             });
                         }

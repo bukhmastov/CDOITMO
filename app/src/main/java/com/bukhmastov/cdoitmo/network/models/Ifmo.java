@@ -18,7 +18,7 @@ public abstract class Ifmo extends Client {
                 try {
                     _g(url, getHeaders(context), query, rawHandler);
                 } catch (Throwable throwable) {
-                    rawHandler.onError(throwable);
+                    rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
                 }
             }
         });
@@ -30,7 +30,7 @@ public abstract class Ifmo extends Client {
                 try {
                     _p(url, getHeaders(context), null, params, rawHandler);
                 } catch (Throwable throwable) {
-                    rawHandler.onError(throwable);
+                    rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
                 }
             }
         });
@@ -42,7 +42,7 @@ public abstract class Ifmo extends Client {
                 try {
                     _gJson(url, getHeaders(context), query, rawJsonHandler);
                 } catch (Throwable throwable) {
-                    rawJsonHandler.onError(throwable);
+                    rawJsonHandler.onError(STATUS_CODE_EMPTY, null, throwable);
                 }
             }
         });
