@@ -240,7 +240,7 @@ public class ScheduleExamsRecyclerViewAdapter extends RecyclerView.Adapter<Recyc
             switch (type) {
                 case "group": {
                     desc = teacher;
-                    touch_icon_enabled = teacher_id != null && !teacher_id.isEmpty();
+                    touch_icon_enabled = (teacher_id != null && !teacher_id.isEmpty()) || (teacher != null && !teacher.isEmpty());
                     break;
                 }
                 case "teacher": {
@@ -298,8 +298,15 @@ public class ScheduleExamsRecyclerViewAdapter extends RecyclerView.Adapter<Recyc
                                 public boolean onMenuItemClick(MenuItem item) {
                                     Log.v(TAG, "popup.MenuItem clicked | " + item.getTitle().toString());
                                     switch (item.getItemId()) {
-                                        case R.id.open_group: if (group != null && !group.isEmpty()) callback.onCall(group);break;
-                                        case R.id.open_teacher: if (teacher_id != null && !teacher_id.isEmpty()) callback.onCall(teacher_id);break;
+                                        case R.id.open_group: if (group != null && !group.isEmpty()) callback.onCall(group); break;
+                                        case R.id.open_teacher: {
+                                            if (teacher_id != null && !teacher_id.isEmpty()) {
+                                                callback.onCall(teacher_id);
+                                            } else if (teacher != null && !teacher.isEmpty()) {
+                                                callback.onCall(teacher);
+                                            }
+                                            break;
+                                        }
                                     }
                                     return false;
                                 }

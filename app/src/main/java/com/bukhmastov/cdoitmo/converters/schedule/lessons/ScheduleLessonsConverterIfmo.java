@@ -1,4 +1,4 @@
-package com.bukhmastov.cdoitmo.converters.schedule;
+package com.bukhmastov.cdoitmo.converters.schedule.lessons;
 
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;

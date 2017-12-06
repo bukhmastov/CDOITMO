@@ -1,10 +1,8 @@
-package com.bukhmastov.cdoitmo.converters.schedule;
+package com.bukhmastov.cdoitmo.converters.schedule.lessons;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.Objects;
 
 public abstract class ScheduleLessonsConverter extends ScheduleConverter {
 
