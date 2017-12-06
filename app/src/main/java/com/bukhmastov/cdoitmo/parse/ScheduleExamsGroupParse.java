@@ -9,11 +9,9 @@ import org.htmlcleaner.TagNode;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Deprecated
 public class ScheduleExamsGroupParse implements Runnable {
 
     private static final String TAG = "SEGroupParse";
@@ -21,12 +19,12 @@ public class ScheduleExamsGroupParse implements Runnable {
         void finish(JSONObject json);
     }
     private final response delegate;
+    private final String query;
     private final String data;
-    private final String cache_token;
 
-    public ScheduleExamsGroupParse(String data, String cache_token, response delegate) {
+    public ScheduleExamsGroupParse(String data, String query, response delegate) {
         this.data = data;
-        this.cache_token = cache_token;
+        this.query = query;
         this.delegate = delegate;
     }
 
@@ -34,47 +32,45 @@ public class ScheduleExamsGroupParse implements Runnable {
     public void run() {
         Log.v(TAG, "parsing");
         try {
-            TagNode root = new HtmlCleaner().clean(data.replace("&nbsp;", " "));
+            final TagNode root = new HtmlCleaner().clean(data.replace("&nbsp;", " "));
             if (root == null) {
                 throw new SilentException();
             }
-            JSONArray schedule = new JSONArray();
-            TagNode[] exams = root.getElementsByAttValue("class", "rasp_tabl_day", true, false);
-            if (exams != null) {
-                for (TagNode exam : exams) {
-                    if (exam == null) continue;
-                    TagNode[] fields = exam.getAllElements(false)[0].getAllElements(false)[0].getAllElements(false)[0].getAllElements(false);
+            final TagNode[] titles = root.getElementsByAttValue("class", "page-header", true, false);
+            final TagNode[] containers = root.getElementsByAttValue("class", "rasp_tabl_day", true, false);
+            final JSONArray exams = new JSONArray();
+            if (containers != null) {
+                for (TagNode container : containers) {
+                    if (container == null) continue;
+                    final TagNode[] fields = container.getAllElements(false)[0].getAllElements(false)[0].getAllElements(false)[0].getAllElements(false);
                     if (fields == null) continue;
-                    JSONObject examContainerObj = new JSONObject();
-                    JSONObject examObj = new JSONObject();
-                    JSONObject consultObj = new JSONObject();
-                    examObj.put("date", fields[0].getText().toString().trim());
-                    examObj.put("time", fields[1].getAllElements(false)[0].getText().toString().trim());
-                    examObj.put("room", fields[2].getAllElements(false)[0].getAllElements(false)[0].getText().toString().trim().replace(".", "").trim());
+                    JSONObject examInfo = new JSONObject();
+                    JSONObject exam = new JSONObject();
+                    JSONObject advice = new JSONObject();
+                    exam.put("date", fields[0].getText().toString().trim());
+                    exam.put("time", fields[1].getAllElements(false)[0].getText().toString().trim());
+                    exam.put("room", fields[2].getAllElements(false)[0].getAllElements(false)[0].getText().toString().trim().replace(".", "").trim());
                     TagNode meta = fields[3].getAllElements(false)[0];
                     if (meta != null) {
-                        examContainerObj.put("subject", meta.getAllElements(false)[0].getText().toString().trim());
-                        examContainerObj.put("teacher", meta.getAllElements(false)[1].getText().toString().trim());
+                        examInfo.put("subject", meta.getAllElements(false)[0].getText().toString().trim());
+                        examInfo.put("teacher", meta.getAllElements(false)[1].getText().toString().trim());
                         Matcher m = Pattern.compile("^Консультация (.{1,10}) в (\\d{1,2}:\\d{1,2}) Место:(.*)$").matcher(meta.getAllElements(false)[2].getText().toString().trim());
                         if (m.find()) {
-                            consultObj.put("date", m.group(1));
-                            consultObj.put("time", m.group(2));
-                            consultObj.put("room", m.group(3).replace(".", "").trim());
+                            advice.put("date", m.group(1));
+                            advice.put("time", m.group(2));
+                            advice.put("room", m.group(3).replace(".", "").trim());
                         }
                     }
-                    examContainerObj.put("exam", examObj);
-                    examContainerObj.put("consult", consultObj);
-                    schedule.put(examContainerObj);
+                    examInfo.put("exam", exam);
+                    examInfo.put("advice", advice);
+                    exams.put(examInfo);
                 }
             }
-            JSONObject response = new JSONObject();
-            response.put("type", "group");
-            response.put("timestamp", Calendar.getInstance().getTimeInMillis());
-            TagNode[] title = root.getElementsByAttValue("class", "page-header", true, false);
-            response.put("scope", title != null && title.length > 0 ? title[0].getText().toString().replace("Расписание группы", "").trim() : "");
-            response.put("cache_token", cache_token);
-            response.put("schedule", schedule);
-            delegate.finish(response);
+            delegate.finish(new JSONObject()
+                    .put("label", titles != null && titles.length > 0 ? titles[0].getText().toString().replace("Расписание группы", "").trim() : query)
+                    .put("query", query)
+                    .put("exams", exams)
+            );
         } catch (SilentException silent) {
             delegate.finish(null);
         } catch (Exception e) {

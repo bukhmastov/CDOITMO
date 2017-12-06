@@ -15,6 +15,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -57,6 +58,7 @@ public abstract class Schedule {
     public static final int FAILED_EMPTY_QUERY = 102;
     public static final int FAILED_MINE_NEED_ISU = 103;
     public static final int FAILED_INVALID_QUERY = 104;
+    protected enum SOURCE {ISU, IFMO}
 
     public Schedule(final Handler handler) {
         this.handler = handler;
@@ -65,6 +67,9 @@ public abstract class Schedule {
     // Defines the type of the current schedule.
     // Actual values: "lessons", "exams".
     protected abstract String getType();
+
+    // Defines default source of the schedule
+    protected abstract SOURCE getDefaultSource();
 
     // -->- Search schedule ->--
     // Search functions to be invoked.
@@ -112,13 +117,16 @@ public abstract class Schedule {
         Static.T.runThread(new Runnable() {
             @Override
             public void run() {
-                final String q = query.trim();
+                String q = query.trim();
                 Log.v(TAG, "search | query=" + q + " | refreshRate=" + refreshRate + " | forceToCache=" + (forceToCache ? "true" : "false") + " | withUserChanges=" + (withUserChanges ? "true" : "false"));
                 if (q.isEmpty()) {
                     handler.onFailure(FAILED_EMPTY_QUERY);
                     return;
                 }
                 handler.onCancelRequest();
+                if (q.contains(" ")) {
+                    q = q.split(" ")[0].trim();
+                }
                 if (addPending(q, handler)) {
                     Log.v(TAG, "search | query=" + q + " | initialized the pending stack | starting the search procedure");
                     if (q.equals("mine")) {
@@ -128,11 +136,15 @@ public abstract class Schedule {
                     } else if (q.matches("^[0-9](.)*$")) {
                         searchRoom(context, q, refreshRate, forceToCache, withUserChanges);
                     } else if (q.matches("^[a-zA-Z](.)*$")) {
+                        if (q.matches("^[a-zA-Z][0-9]{4}[a-zA-Z]?$")) {
+                            q = q.substring(0, 1).toUpperCase() + q.substring(1).toLowerCase();
+                        }
                         searchGroup(context, q, refreshRate, forceToCache, withUserChanges);
                     } else if (q.matches("^[а-яА-Я\\s]+$")) {
+                        q = q.toLowerCase();
                         searchTeachers(context, q, refreshRate, forceToCache, withUserChanges);
                     } else {
-                        Log.wtf(TAG, "search | got invalid query: " + q);
+                        Log.v(TAG, "search | got invalid query: " + q);
                         invokePending(q, true, new Pending() {
                             @Override
                             public void invoke(Handler handler) {
@@ -185,12 +197,11 @@ public abstract class Schedule {
     protected abstract void searchGroup(final Context context, final String group, final int refreshRate, final boolean forceToCache, final boolean withUserChanges);
     protected abstract void searchRoom(final Context context, final String room, final int refreshRate, final boolean forceToCache, final boolean withUserChanges);
     protected abstract void searchTeacher(final Context context, final String teacherId, final int refreshRate, final boolean forceToCache, final boolean withUserChanges);
-    protected void searchTeachers(final Context context, final String teacherFio, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
+    protected void searchTeachers(final Context context, final String teacherName, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
         // Teachers search is the same for lessons and exams
         Static.T.runThread(new Runnable() {
             @Override
             public void run() {
-                final String teacherName = teacherFio.contains(" ") ? teacherFio.split(" ")[0].trim() : teacherFio;
                 Log.v(TAG, "searchTeachers | teacherName=" + teacherName + " | refreshRate=" + refreshRate + " | forceToCache=" + (forceToCache ? "true" : "false") + " | withUserChanges=" + (withUserChanges ? "true" : "false"));
                 searchByQuery(context, "teachers", teacherName, refreshRate, new SearchByQuery() {
                     @Override
@@ -432,6 +443,39 @@ public abstract class Schedule {
     }
     // --<- Cache schedule -<--
 
+    // Defines the source of the schedule
+    // Actual values: "ifmo", "isu"
+    protected SOURCE getSource(Context context) {
+        String token = "pref_schedule_" + getType() + "_source";
+        String source = Storage.pref.get(context, token, source2string(getDefaultSource()));
+        switch (source) {
+            case "ifmo": case "isu": break;
+            default: {
+                source = source2string(getDefaultSource());
+                Storage.pref.put(context, token, source);
+            }
+        }
+        return string2source(source);
+    }
+
+    // Converts source to related string
+    protected String source2string(SOURCE source) {
+        switch (source) {
+            case ISU:  return "isu";
+            case IFMO: return "ifmo";
+            default: throw new IllegalArgumentException("Wrong argument source: " + source.toString());
+        }
+    }
+
+    // Converts string to related source
+    protected SOURCE string2source(String source) {
+        switch (source) {
+            case "isu":  return SOURCE.ISU;
+            case "ifmo": return SOURCE.IFMO;
+            default: throw new IllegalArgumentException("Wrong argument source: " + source);
+        }
+    }
+
     // Returns template for all schedules
     protected JSONObject getTemplate(final String query, final String type) {
         try {
@@ -543,7 +587,13 @@ public abstract class Schedule {
         if (week >= 0) {
             return week + " " + context.getString(R.string.school_week);
         } else {
-            return new SimpleDateFormat("dd.MM.yyyy", Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis()));
+            String pattern = "dd.MM.yyyy";
+            String date = new SimpleDateFormat(pattern, Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis()));
+            try {
+                return Static.cuteDateWithoutTime(context, pattern, date);
+            } catch (ParseException e) {
+                return date;
+            }
         }
     }
 }

@@ -17,7 +17,6 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.ConnectedActivity;
-import com.bukhmastov.cdoitmo.activities.MainActivity;
 import com.bukhmastov.cdoitmo.activities.ScheduleExamsSearchActivity;
 import com.bukhmastov.cdoitmo.adapters.ScheduleExamsRecyclerViewAdapter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
@@ -28,11 +27,15 @@ import com.bukhmastov.cdoitmo.objects.schedule.ScheduleExams;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class ScheduleExamsFragment extends ConnectedFragment {
 
     private static final String TAG = "SEFragment";
+    public interface TabProvider {
+        void onInvalidate(boolean refresh);
+    }
     public class Scroll {
         public int position = 0;
         public int offset = 0;
@@ -43,6 +46,10 @@ public class ScheduleExamsFragment extends ConnectedFragment {
     private static String lastQuery = null;
     private static String query = null;
     public static Scroll scroll = null;
+    public static TabProvider tab = null;
+
+    private boolean invalidate = false;
+    private boolean invalidate_refresh = false;
 
     public static void setQuery(String query) {
         ScheduleExamsFragment.lastQuery = ScheduleExamsFragment.query;
@@ -53,6 +60,14 @@ public class ScheduleExamsFragment extends ConnectedFragment {
     }
     public static boolean isSameQueryRequested() {
         return lastQuery != null && query != null && lastQuery.equals(query);
+    }
+    public static void invalidate() {
+        invalidate(false);
+    }
+    public static void invalidate(boolean refresh) {
+        if (tab != null) {
+            tab.onInvalidate(refresh);
+        }
     }
 
     @Override
@@ -70,11 +85,24 @@ public class ScheduleExamsFragment extends ConnectedFragment {
                 ScheduleExamsFragment.setQuery(action_extra);
             }
         }
+        tab = new TabProvider() {
+            @Override
+            public void onInvalidate(boolean refresh) {
+                Log.v(TAG, "onInvalidate | refresh=" + Static.logBoolean(refresh));
+                if (isResumed()) {
+                    invalidate = false;
+                    invalidate_refresh = false;
+                    load(refresh);
+                } else {
+                    invalidate = true;
+                    invalidate_refresh = refresh;
+                }
+            }
+        };
     }
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
         Log.v(TAG, "Fragment destroyed");
         try {
             if (activity.toolbar != null) {
@@ -88,6 +116,9 @@ public class ScheduleExamsFragment extends ConnectedFragment {
         } catch (Exception e){
             Static.error(e);
         }
+        tab = null;
+        scroll = null;
+        super.onDestroy();
     }
 
     @Override
@@ -119,7 +150,12 @@ public class ScheduleExamsFragment extends ConnectedFragment {
         } catch (Exception e){
             Static.error(e);
         }
-        if (!loaded) {
+        if (invalidate) {
+            invalidate = false;
+            loaded = true;
+            load(invalidate_refresh);
+            invalidate_refresh = false;
+        } else if (!loaded) {
             loaded = true;
             load(false);
         }
@@ -146,7 +182,7 @@ public class ScheduleExamsFragment extends ConnectedFragment {
                             if (getQuery() == null) {
                                 throw new NullPointerException("ScheduleExamsFragment.query is null");
                             }
-                            if (!isSameQueryRequested()) {
+                            if (scroll != null && !isSameQueryRequested()) {
                                 scroll.position = 0;
                                 scroll.offset = 0;
                             }
@@ -172,6 +208,18 @@ public class ScheduleExamsFragment extends ConnectedFragment {
                     @Override
                     public void run() {
                         try {
+                            try {
+                                if (json.getString("type").equals("teachers")) {
+                                    JSONArray schedule = json.getJSONArray("schedule");
+                                    if (schedule.length() == 1) {
+                                        setQuery(schedule.getJSONObject(0).getString("pid"));
+                                        load(false);
+                                        return;
+                                    }
+                                }
+                            } catch (Exception ignore) {
+                                // ignore
+                            }
                             final ScheduleExamsRecyclerViewAdapter adapter = new ScheduleExamsRecyclerViewAdapter(activity, json, new Static.StringCallback() {
                                 @Override
                                 public void onCall(String data) {

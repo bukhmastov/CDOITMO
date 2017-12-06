@@ -1,4 +1,4 @@
-package com.bukhmastov.cdoitmo.converters.schedule;
+package com.bukhmastov.cdoitmo.converters.schedule.lessons;
 
 import android.content.Context;
 

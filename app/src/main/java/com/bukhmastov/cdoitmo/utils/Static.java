@@ -822,6 +822,18 @@ public class Static {
         sb.append(calendar_end.get(Calendar.DATE)).append(" ").append(getGenitiveMonth(context, calendar_end.get(Calendar.MONTH))).append(" ").append(calendar_end.get(Calendar.YEAR));
         return sb.toString();
     }
+    public static String cuteDateWithoutTime(Context context, String date_format, String date_string) throws ParseException {
+        SimpleDateFormat format_input = new SimpleDateFormat(date_format, getLocale(context));
+        Calendar date = Calendar.getInstance();
+        date.setTime(format_input.parse(date_string));
+        return (new StringBuilder())
+                .append(date.get(Calendar.DATE))
+                .append(" ")
+                .append(getGenitiveMonth(context, date.get(Calendar.MONTH)))
+                .append(" ")
+                .append(date.get(Calendar.YEAR))
+                .toString();
+    }
     @SuppressLint("DefaultLocale")
     public static String ldgZero(int number) {
         return String.format("%02d", number);

@@ -25,6 +25,7 @@ import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.Calendar;
@@ -146,6 +147,18 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
                     @Override
                     public void run() {
                         try {
+                            try {
+                                if (json.getString("type").equals("teachers")) {
+                                    JSONArray schedule = json.getJSONArray("schedule");
+                                    if (schedule.length() == 1) {
+                                        setQuery(schedule.getJSONObject(0).getString("pid"));
+                                        invalidate(false);
+                                        return;
+                                    }
+                                }
+                            } catch (Exception ignore) {
+                                // ignore
+                            }
                             final int week = Static.getWeek(activity);
                             final ScheduleLessonsRecyclerViewAdapter adapter = new ScheduleLessonsRecyclerViewAdapter(activity, TYPE, json, week, new Static.StringCallback() {
                                 @Override

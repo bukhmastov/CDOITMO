@@ -14,7 +14,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Objects;
 
 public class ScheduleExamsSearchActivity extends SearchActivity {
 
@@ -60,10 +59,13 @@ public class ScheduleExamsSearchActivity extends SearchActivity {
                 String cachedFile = Storage.file.cache.get(this, "schedule_exams#lessons#" + file);
                 if (!cachedFile.isEmpty()) {
                     try {
-                        JSONObject object = new JSONObject(cachedFile);
-                        if (Objects.equals(object.getString("type"), "teacher_picker")) continue;
-                        if (query.isEmpty() || contains(object.getString("scope"), query)) {
-                            suggestions.add(new Suggestion(object.getString("scope"), object.getString("scope"), R.drawable.ic_save));
+                        JSONObject cached = new JSONObject(cachedFile);
+                        if (cached.has("query") && cached.has("title")) {
+                            String q = cached.getString("query");
+                            String t = cached.getString("title");
+                            if (query.isEmpty() || contains(t, query) || contains(q, query)) {
+                                suggestions.add(new Suggestion(q, t, R.drawable.ic_save));
+                            }
                         }
                     } catch (Exception e) {
                         Static.error(e);
@@ -112,11 +114,8 @@ public class ScheduleExamsSearchActivity extends SearchActivity {
                     Static.error(e);
                     Storage.file.perm.delete(self, "schedule_exams#recent");
                 }
-                //if (ScheduleExamsFragment.scheduleExams != null) {
-                //    ScheduleExamsFragment.scheduleExams.search(query);
-                //} else {
-               //     Log.w(TAG, "ScheduleExamsFragment.scheduleExams is null");
-                //}
+                ScheduleExamsFragment.setQuery(query);
+                ScheduleExamsFragment.invalidate();
             }
         });
     }

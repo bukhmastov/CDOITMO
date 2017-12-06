@@ -4,9 +4,9 @@ import android.content.Context;
 import android.os.Bundle;
 
 import com.bukhmastov.cdoitmo.activities.ConnectedActivity;
-import com.bukhmastov.cdoitmo.converters.schedule.ScheduleLessonsAdditionalConverter;
-import com.bukhmastov.cdoitmo.converters.schedule.ScheduleLessonsConverterIfmo;
-import com.bukhmastov.cdoitmo.converters.schedule.ScheduleLessonsConverterIsu;
+import com.bukhmastov.cdoitmo.converters.schedule.lessons.ScheduleLessonsAdditionalConverter;
+import com.bukhmastov.cdoitmo.converters.schedule.lessons.ScheduleLessonsConverterIfmo;
+import com.bukhmastov.cdoitmo.converters.schedule.lessons.ScheduleLessonsConverterIsu;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsModifyFragment;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
@@ -34,7 +34,7 @@ public class ScheduleLessons extends Schedule {
         Static.T.runThread(new Runnable() {
             @Override
             public void run() {
-                Log.v(TAG, "searchMine | refreshRate=" + refreshRate + " | forceToCache=" + (forceToCache ? "true" : "false") + " | withUserChanges=" + (withUserChanges ? "true" : "false"));
+                Log.v(TAG, "searchMine | refreshRate=" + refreshRate + " | forceToCache=" + Static.logBoolean(forceToCache) + " | withUserChanges=" + Static.logBoolean(withUserChanges));
                 searchByQuery(context, "mine", "mine", refreshRate, new SearchByQuery() {
                     @Override
                     public boolean isWebAvailable() {
@@ -99,7 +99,8 @@ public class ScheduleLessons extends Schedule {
         Static.T.runThread(new Runnable() {
             @Override
             public void run() {
-                Log.v(TAG, "searchGroup | group=" + group + " | refreshRate=" + refreshRate + " | forceToCache=" + (forceToCache ? "true" : "false") + " | withUserChanges=" + (withUserChanges ? "true" : "false"));
+                final SOURCE source = getSource(context);
+                Log.v(TAG, "searchGroup | group=" + group + " | refreshRate=" + refreshRate + " | forceToCache=" + Static.logBoolean(forceToCache) + " | withUserChanges=" + Static.logBoolean(withUserChanges) + " | source=" + source2string(source));
                 searchByQuery(context, "group", group, refreshRate, new SearchByQuery() {
                     @Override
                     public boolean isWebAvailable() {
@@ -107,15 +108,17 @@ public class ScheduleLessons extends Schedule {
                     }
                     @Override
                     public void onWebRequest(final String query, final String cache, final RestResponseHandler restResponseHandler) {
-                        // TODO uncomment, when isu will be ready
-                        //IsuRestClient.Public.get(context, "schedule/common/group/%key%/" + query, null, restResponseHandler);
-                        IfmoRestClient.get(context, "schedule_lesson_group/" + query, null, restResponseHandler);
+                        switch (source) {
+                            case ISU:  IsuRestClient.Public.get(context, "schedule/common/group/%key%/" + query, null, restResponseHandler); break;
+                            case IFMO: IfmoRestClient.get(context, "schedule_lesson_group/" + query, null, restResponseHandler); break;
+                        }
                     }
                     @Override
                     public void onWebRequestSuccess(final String query, final JSONObject data, final JSONObject template) {
-                        // TODO uncomment, when isu will be ready
-                        //ScheduleLessons.this.onWebRequestSuccessIsu(this, query, data, template);
-                        ScheduleLessons.this.onWebRequestSuccessIfmo(this, query, data, template);
+                        switch (source) {
+                            case ISU:  ScheduleLessons.this.onWebRequestSuccessIsu(this, query, data, template); break;
+                            case IFMO: ScheduleLessons.this.onWebRequestSuccessIfmo(this, query, data, template); break;
+                        }
                     }
                     @Override
                     public void onWebRequestFailed(final int statusCode, final Client.Headers headers, final int state) {
@@ -157,7 +160,7 @@ public class ScheduleLessons extends Schedule {
         Static.T.runThread(new Runnable() {
             @Override
             public void run() {
-                Log.v(TAG, "searchRoom | room=" + room + " | refreshRate=" + refreshRate + " | forceToCache=" + (forceToCache ? "true" : "false") + " | withUserChanges=" + (withUserChanges ? "true" : "false"));
+                Log.v(TAG, "searchRoom | room=" + room + " | refreshRate=" + refreshRate + " | forceToCache=" + Static.logBoolean(forceToCache) + " | withUserChanges=" + Static.logBoolean(withUserChanges));
                 searchByQuery(context, "room", room, refreshRate, new SearchByQuery() {
                     @Override
                     public boolean isWebAvailable() {
@@ -211,7 +214,8 @@ public class ScheduleLessons extends Schedule {
         Static.T.runThread(new Runnable() {
             @Override
             public void run() {
-                Log.v(TAG, "searchTeacher | teacherId=" + teacherId + " | refreshRate=" + refreshRate + " | forceToCache=" + (forceToCache ? "true" : "false") + " | withUserChanges=" + (withUserChanges ? "true" : "false"));
+                final SOURCE source = getSource(context);
+                Log.v(TAG, "searchTeacher | teacherId=" + teacherId + " | refreshRate=" + refreshRate + " | forceToCache=" + Static.logBoolean(forceToCache) + " | withUserChanges=" + Static.logBoolean(withUserChanges) + " | source=" + source2string(source));
                 searchByQuery(context, "teacher", teacherId, refreshRate, new SearchByQuery() {
                     @Override
                     public boolean isWebAvailable() {
@@ -219,15 +223,17 @@ public class ScheduleLessons extends Schedule {
                     }
                     @Override
                     public void onWebRequest(final String query, final String cache, final RestResponseHandler restResponseHandler) {
-                        // TODO uncomment, when isu will be ready
-                        //IsuRestClient.Public.get(context, "schedule/common/teacher/%key%/" + query, null, restResponseHandler);
-                        IfmoRestClient.get(context, "schedule_lesson_person/" + query, null, restResponseHandler);
+                        switch (source) {
+                            case ISU:  IsuRestClient.Public.get(context, "schedule/common/teacher/%key%/" + query, null, restResponseHandler); break;
+                            case IFMO: IfmoRestClient.get(context, "schedule_lesson_person/" + query, null, restResponseHandler); break;
+                        }
                     }
                     @Override
                     public void onWebRequestSuccess(final String query, final JSONObject data, final JSONObject template) {
-                        // TODO uncomment, when isu will be ready
-                        //ScheduleLessons.this.onWebRequestSuccessIsu(this, query, data, template);
-                        ScheduleLessons.this.onWebRequestSuccessIfmo(this, query, data, template);
+                        switch (source) {
+                            case ISU:  ScheduleLessons.this.onWebRequestSuccessIsu(this, query, data, template); break;
+                            case IFMO: ScheduleLessons.this.onWebRequestSuccessIfmo(this, query, data, template); break;
+                        }
                     }
                     @Override
                     public void onWebRequestFailed(final int statusCode, final Client.Headers headers, final int state) {
@@ -267,6 +273,10 @@ public class ScheduleLessons extends Schedule {
     @Override
     protected String getType() {
         return TYPE;
+    }
+    @Override
+    protected SOURCE getDefaultSource() {
+        return SOURCE.IFMO;
     }
 
     private void onWebRequestSuccessIsu(final SearchByQuery searchByQuery, final String query, final JSONObject data, final JSONObject template) {
