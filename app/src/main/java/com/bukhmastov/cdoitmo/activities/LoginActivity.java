@@ -56,8 +56,6 @@ public class LoginActivity extends ConnectedActivity {
         FirebaseAnalyticsProvider.logCurrentScreen(this);
         setContentView(R.layout.activity_login);
         // Show introducing activity
-        Log.v(TAG, "showIntroducingActivity " + Static.logBoolean(Static.showIntroducingActivity));
-        Log.d(Log.TAGD, "showIntroducingActivity " + Static.logBoolean(Static.showIntroducingActivity));
         if (Static.showIntroducingActivity) {
             Static.showIntroducingActivity = false;
             startActivity(new Intent(activity, IntroducingActivity.class));

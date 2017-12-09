@@ -3,6 +3,7 @@ package com.bukhmastov.cdoitmo.fragments;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.FragmentManager;
@@ -44,21 +45,24 @@ public class UniversityFragment extends ConnectedFragment implements ViewPager.O
     public void onDestroy() {
         super.onDestroy();
         Log.v(TAG, "Fragment destroyed");
-        activity.findViewById(R.id.scrollable_tabs).setVisibility(View.GONE);
+        TabLayout scrollable_tabs = activity.findViewById(R.id.scrollable_tabs);
+        if (scrollable_tabs != null) {
+            scrollable_tabs.setVisibility(View.GONE);
+        }
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_university, container, false);
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         TabLayout main_tabs = activity.findViewById(R.id.scrollable_tabs);
         ViewPager university_pager = activity.findViewById(R.id.university_pager);
         FragmentManager fragmentManager = getChildFragmentManager();
-        if (university_pager != null && fragmentManager != null) {
+        if (university_pager != null) {
             university_pager.setAdapter(new PagerUniversityAdapter(fragmentManager, activity));
             university_pager.addOnPageChangeListener(this);
             main_tabs.setupWithViewPager(university_pager);
@@ -97,7 +101,10 @@ public class UniversityFragment extends ConnectedFragment implements ViewPager.O
         super.onResume();
         Log.v(TAG, "resumed");
         FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
-        activity.findViewById(R.id.scrollable_tabs).setVisibility(View.VISIBLE);
+        TabLayout scrollable_tabs = activity.findViewById(R.id.scrollable_tabs);
+        if (scrollable_tabs != null) {
+            scrollable_tabs.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override

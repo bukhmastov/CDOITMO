@@ -53,7 +53,6 @@ public class FirebaseAnalyticsProvider {
         public static final String ROOM101_REQUEST_DETAILS = "cdo_room101_request_details";
         public static final String WIDGET_USAGE_INFO = "cdo_widget_usage_info";
         public static final String TITLE = "cdo_title";
-        public static final String SOCIAL = "cdo_social";
         public static final String QUERY = "cdo_query";
         public static final String EVENT_EXTRA = "cdo_event_extra";
     }
