@@ -2,11 +2,9 @@ package com.bukhmastov.cdoitmo.fragments;
 
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v7.widget.PopupMenu;
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -88,7 +86,6 @@ public class SubjectShowFragment extends ConnectedFragment {
                             @Override
                             public boolean onMenuItemClick(MenuItem menuItem) {
                                 try {
-                                    View view = activity.findViewById(R.id.action_share);
                                     String points = "";
                                     int iPoints = dPoints.intValue();
                                     if (dPoints != -1.0) {
@@ -100,7 +97,6 @@ public class SubjectShowFragment extends ConnectedFragment {
                                     }
                                     if (!points.isEmpty() && mark != null && !mark.isEmpty()) {
                                         String title = "У меня %points% балл%suffix% и оценка \"%mark%\" по предмету %subject%!";
-                                        String description = "Узнай, сколько у тебя!";
                                         String suffix = "ов";
                                         if (!(iPoints % 100 >= 10 && iPoints % 100 < 20)) {
                                             switch (iPoints % 10) {
@@ -109,10 +105,9 @@ public class SubjectShowFragment extends ConnectedFragment {
                                             }
                                         }
                                         title = title.replace("%points%", points).replace("%suffix%", suffix).replace("%mark%", mark).replace("%subject%", sbj);
-                                        share(view, title, description);
+                                        share(title);
                                     } else if (!points.isEmpty()) {
                                         String title = "У меня %points% балл%suffix% по предмету %subject%!";
-                                        String description = "Узнай, сколько у тебя!";
                                         String suffix = "ов";
                                         if (!(iPoints % 100 >= 10 && iPoints % 100 < 20)) {
                                             switch (iPoints % 10) {
@@ -121,12 +116,11 @@ public class SubjectShowFragment extends ConnectedFragment {
                                             }
                                         }
                                         title = title.replace("%points%", points).replace("%suffix%", suffix).replace("%subject%", sbj);
-                                        share(view, title, description);
+                                        share(title);
                                     } else if (mark != null && !mark.isEmpty()) {
                                         String title = "У меня \"%mark%\" по предмету %subject%!";
-                                        String description = "Узнай свои оценки!";
                                         title = title.replace("%mark%", mark).replace("%subject%", sbj);
-                                        share(view, title, description);
+                                        share(title);
                                     } else {
                                         Log.w(TAG, "Failed to share mine subject progress | subject=" + sbj + " | dPoints=" + dPoints.toString() + " | mark=" + mark);
                                         Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
@@ -305,43 +299,22 @@ public class SubjectShowFragment extends ConnectedFragment {
             }
         });
     }
-    private void share(final View anchor, final String title, final String description) throws Exception {
-        final PopupMenu popup = new PopupMenu(activity, anchor);
-        final Menu menu = popup.getMenu();
-        popup.getMenuInflater().inflate(R.menu.social_share, menu);
-        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+    private void share(final String title) {
+        Static.T.runOnUiThread(new Runnable() {
             @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                try {
-                    String url = "https://goo.gl/cCp2SP";
-                    String social = "";
-                    String link = "";
-                    switch (item.getItemId()) {
-                        case R.id.share_vk: social = "vk"; link = "https://vk.com/share.php?url=%url%&noparse=true&title=%title%&description=%description%"; break;
-                        case R.id.share_tg: social = "tg"; link = "https://t.me/share/url?url=%url%&text=%title%"; break;
-                        case R.id.share_tw: social = "tw"; link = "https://twitter.com/intent/tweet?url=%url%&text=%title%"; break;
-                        case R.id.share_fb: social = "fb"; link = "https://www.facebook.com/sharer.php?u=%url%&t=%title%"; break;
-                    }
-                    if (!link.isEmpty()) {
-                        link = link.replace("%url%", url).replace("%title%", title).replace("%description%", description);
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(link)));
-                        // track statistics
-                        Bundle bundle;
-                        bundle = FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TITLE, title.substring(0, title.length() > 100 ? 100 : title.length()));
-                        bundle = FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.SOCIAL, social, bundle);
-                        FirebaseAnalyticsProvider.logEvent(
-                                activity,
-                                FirebaseAnalyticsProvider.Event.EREGISTER_SHARE,
-                                bundle
-                        );
-                    }
-                } catch (Exception e) {
-                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                }
-                return false;
+            public void run() {
+                Intent intent = new Intent(Intent.ACTION_SEND);
+                intent.setType("text/plain");
+                intent.putExtra(android.content.Intent.EXTRA_TEXT, title + " " + "https://goo.gl/cCp2SP");
+                activity.startActivity(Intent.createChooser(intent, activity.getString(R.string.share)));
+                // track statistics
+                FirebaseAnalyticsProvider.logEvent(
+                        activity,
+                        FirebaseAnalyticsProvider.Event.EREGISTER_SHARE,
+                        FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TITLE, title.substring(0, title.length() > 100 ? 100 : title.length()))
+                );
             }
         });
-        popup.show();
     }
 
     private String markConverter(String value) {

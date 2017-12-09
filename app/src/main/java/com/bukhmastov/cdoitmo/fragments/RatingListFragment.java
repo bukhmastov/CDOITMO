@@ -356,12 +356,10 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                                 @Override
                                 public boolean onMenuItemClick(MenuItem menuItem) {
                                     try {
-                                        View view = activity.findViewById(R.id.action_share);
-                                        String title = "Я на %position% позиции в рейтинге %faculty%!"
+                                        share("Я на %position% позиции в рейтинге %faculty%!"
                                                 .replace("%position%", String.valueOf(minePosition))
-                                                .replace("%faculty%", mineFaculty.isEmpty() ? "факультета" : mineFaculty);
-                                        String description = "Узнай свои успехи!";
-                                        share(view, title, description);
+                                                .replace("%faculty%", mineFaculty.isEmpty() ? "факультета" : mineFaculty)
+                                        );
                                     } catch (Exception e) {
                                         Static.error(e);
                                         Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
@@ -392,43 +390,22 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
             }
         });
     }
-    private void share(final View anchor, final String title, final String description) throws Exception {
-        final PopupMenu popup = new PopupMenu(activity, anchor);
-        final Menu menu = popup.getMenu();
-        popup.getMenuInflater().inflate(R.menu.social_share, menu);
-        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+    private void share(final String title) throws Exception {
+        Static.T.runOnUiThread(new Runnable() {
             @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                try {
-                    String url = "https://goo.gl/NpAhMF";
-                    String social = "";
-                    String link = "";
-                    switch (item.getItemId()) {
-                        case R.id.share_vk: social = "vk"; link = "https://vk.com/share.php?url=%url%&noparse=true&title=%title%&description=%description%"; break;
-                        case R.id.share_tg: social = "tg"; link = "https://t.me/share/url?url=%url%&text=%title%"; break;
-                        case R.id.share_tw: social = "tw"; link = "https://twitter.com/intent/tweet?url=%url%&text=%title%"; break;
-                        case R.id.share_fb: social = "fb"; link = "https://www.facebook.com/sharer.php?u=%url%&t=%title%"; break;
-                    }
-                    if (!link.isEmpty()) {
-                        link = link.replace("%url%", url).replace("%title%", title).replace("%description%", description);
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(link)));
-                        // track statistics
-                        Bundle bundle;
-                        bundle = FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TITLE, title.substring(0, title.length() > 100 ? 100 : title.length()));
-                        bundle = FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.SOCIAL, social, bundle);
-                        FirebaseAnalyticsProvider.logEvent(
-                                activity,
-                                FirebaseAnalyticsProvider.Event.RATING_SHARE,
-                                bundle
-                        );
-                    }
-                } catch (Exception e) {
-                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                }
-                return false;
+            public void run() {
+                Intent intent = new Intent(Intent.ACTION_SEND);
+                intent.setType("text/plain");
+                intent.putExtra(android.content.Intent.EXTRA_TEXT, title + " " + "https://goo.gl/NpAhMF");
+                activity.startActivity(Intent.createChooser(intent, activity.getString(R.string.share)));
             }
         });
-        popup.show();
+        // track statistics
+        FirebaseAnalyticsProvider.logEvent(
+                activity,
+                FirebaseAnalyticsProvider.Event.RATING_SHARE,
+                FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TITLE, title.substring(0, title.length() > 100 ? 100 : title.length()))
+        );
     }
 
     private void draw(final int layoutId) {
