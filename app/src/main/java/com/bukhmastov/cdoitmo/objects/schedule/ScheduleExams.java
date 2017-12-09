@@ -31,12 +31,12 @@ public class ScheduleExams extends Schedule {
             @Override
             public void run() {
                 Log.v(TAG, "searchMine | refreshRate=" + refreshRate + " | forceToCache=" + Static.logBoolean(forceToCache) + " | withUserChanges=" + Static.logBoolean(withUserChanges));
-                searchByQuery(context, "mine", "mine", refreshRate, new SearchByQuery() {
+                searchByQuery(context, "mine", "mine", refreshRate, withUserChanges, new SearchByQuery() {
                     @Override
                     public boolean isWebAvailable() {
                         if (!IsuRestClient.isAuthorized(context)) {
                             Log.v(TAG, "searchMine | isu auth required");
-                            invokePending("mine", true, new Pending() {
+                            invokePending("mine", withUserChanges, true, new Pending() {
                                 @Override
                                 public void invoke(Handler handler) {
                                     handler.onFailure(FAILED_MINE_NEED_ISU);
@@ -57,7 +57,7 @@ public class ScheduleExams extends Schedule {
                     }
                     @Override
                     public void onWebRequestFailed(final int statusCode, final Client.Headers headers, final int state) {
-                        invokePending("mine", true, new Pending() {
+                        invokePending("mine", withUserChanges, true, new Pending() {
                             @Override
                             public void invoke(Handler handler) {
                                 handler.onFailure(statusCode, headers, state);
@@ -66,7 +66,7 @@ public class ScheduleExams extends Schedule {
                     }
                     @Override
                     public void onWebRequestProgress(final int state) {
-                        invokePending("mine", false, new Pending() {
+                        invokePending("mine", withUserChanges, false, new Pending() {
                             @Override
                             public void invoke(Handler handler) {
                                 handler.onProgress(state);
@@ -75,7 +75,7 @@ public class ScheduleExams extends Schedule {
                     }
                     @Override
                     public void onWebNewRequest(final Client.Request request) {
-                        invokePending("mine", false, new Pending() {
+                        invokePending("mine", withUserChanges, false, new Pending() {
                             @Override
                             public void invoke(Handler handler) {
                                 handler.onNewRequest(request);
@@ -97,7 +97,7 @@ public class ScheduleExams extends Schedule {
             public void run() {
                 final SOURCE source = getSource(context);
                 Log.v(TAG, "searchGroup | group=" + group + " | refreshRate=" + refreshRate + " | forceToCache=" + Static.logBoolean(forceToCache) + " | withUserChanges=" + Static.logBoolean(withUserChanges) + " | source=" + source2string(source));
-                searchByQuery(context, "group", group, refreshRate, new SearchByQuery() {
+                searchByQuery(context, "group", group, refreshRate, withUserChanges, new SearchByQuery() {
                     @Override
                     public boolean isWebAvailable() {
                         return true;
@@ -140,7 +140,7 @@ public class ScheduleExams extends Schedule {
                     }
                     @Override
                     public void onWebRequestFailed(final int statusCode, final Client.Headers headers, final int state) {
-                        invokePending(group, true, new Pending() {
+                        invokePending(group, withUserChanges, true, new Pending() {
                             @Override
                             public void invoke(Handler handler) {
                                 handler.onFailure(statusCode, headers, state);
@@ -149,7 +149,7 @@ public class ScheduleExams extends Schedule {
                     }
                     @Override
                     public void onWebRequestProgress(final int state) {
-                        invokePending(group, false, new Pending() {
+                        invokePending(group, withUserChanges, false, new Pending() {
                             @Override
                             public void invoke(Handler handler) {
                                 handler.onProgress(state);
@@ -158,7 +158,7 @@ public class ScheduleExams extends Schedule {
                     }
                     @Override
                     public void onWebNewRequest(final Client.Request request) {
-                        invokePending(group, false, new Pending() {
+                        invokePending(group, withUserChanges, false, new Pending() {
                             @Override
                             public void invoke(Handler handler) {
                                 handler.onNewRequest(request);
@@ -176,7 +176,7 @@ public class ScheduleExams extends Schedule {
     @Override
     protected void searchRoom(final Context context, final String room, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
         Log.v(TAG, "searchRoom | actually, rooms unavailable at schedule of exams");
-        invokePending(room, true, new Pending() {
+        invokePending(room, withUserChanges, true, new Pending() {
             @Override
             public void invoke(Handler handler) {
                 handler.onFailure(FAILED_INVALID_QUERY);
@@ -190,7 +190,7 @@ public class ScheduleExams extends Schedule {
             public void run() {
                 final SOURCE source = getSource(context);
                 Log.v(TAG, "searchTeacher | teacherId=" + teacherId + " | refreshRate=" + refreshRate + " | forceToCache=" + Static.logBoolean(forceToCache) + " | withUserChanges=" + Static.logBoolean(withUserChanges) + " | source=" + source2string(source));
-                searchByQuery(context, "teacher", teacherId, refreshRate, new SearchByQuery() {
+                searchByQuery(context, "teacher", teacherId, refreshRate, withUserChanges, new SearchByQuery() {
                     @Override
                     public boolean isWebAvailable() {
                         return true;
@@ -233,7 +233,7 @@ public class ScheduleExams extends Schedule {
                     }
                     @Override
                     public void onWebRequestFailed(final int statusCode, final Client.Headers headers, final int state) {
-                        invokePending(teacherId, true, new Pending() {
+                        invokePending(teacherId, withUserChanges, true, new Pending() {
                             @Override
                             public void invoke(Handler handler) {
                                 handler.onFailure(statusCode, headers, state);
@@ -242,7 +242,7 @@ public class ScheduleExams extends Schedule {
                     }
                     @Override
                     public void onWebRequestProgress(final int state) {
-                        invokePending(teacherId, false, new Pending() {
+                        invokePending(teacherId, withUserChanges, false, new Pending() {
                             @Override
                             public void invoke(Handler handler) {
                                 handler.onProgress(state);
@@ -251,7 +251,7 @@ public class ScheduleExams extends Schedule {
                     }
                     @Override
                     public void onWebNewRequest(final Client.Request request) {
-                        invokePending(teacherId, false, new Pending() {
+                        invokePending(teacherId, withUserChanges, false, new Pending() {
                             @Override
                             public void invoke(Handler handler) {
                                 handler.onNewRequest(request);
@@ -297,7 +297,7 @@ public class ScheduleExams extends Schedule {
             public void run() {
                 try {
                     if (data.getJSONArray("schedule").length() == 0) {
-                        invokePending(query, true, new Pending() {
+                        invokePending(query, withUserChanges, true, new Pending() {
                             @Override
                             public void invoke(Handler handler) {
                                 handler.onFailure(FAILED_LOAD);
@@ -307,7 +307,7 @@ public class ScheduleExams extends Schedule {
                         if (putToCache) {
                             putCache(context, query, data.toString(), forceToCache);
                         }
-                        invokePending(query, true, new Pending() {
+                        invokePending(query, withUserChanges, true, new Pending() {
                             @Override
                             public void invoke(Handler handler) {
                                 handler.onSuccess(data, fromCache);
@@ -316,7 +316,7 @@ public class ScheduleExams extends Schedule {
                     }
                 } catch (Exception e) {
                     Static.error(e);
-                    invokePending(query, true, new Pending() {
+                    invokePending(query, withUserChanges, true, new Pending() {
                         @Override
                         public void invoke(Handler handler) {
                             handler.onFailure(FAILED_LOAD);
