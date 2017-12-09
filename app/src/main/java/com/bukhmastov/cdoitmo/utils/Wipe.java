@@ -357,7 +357,7 @@ public class Wipe {
                                         } else if (token.startsWith("room_")) {
                                             apply97convertAdded(added, addedPath, token, "room_");
                                         } else if (token.matches("^\\d{6}\\.txt$")) {
-                                            apply97convertLesson(added, addedPath, token, "");
+                                            apply97convertAdded(added, addedPath, token, "");
                                         }
                                     } catch (Exception e) {
                                         try {

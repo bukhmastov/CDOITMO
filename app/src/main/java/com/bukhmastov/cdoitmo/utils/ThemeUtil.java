@@ -372,7 +372,15 @@ public class ThemeUtil {
             try {
                 final String[] values = value.split("#");
                 if (values.length == 4) {
-                    return pref_theme_titles.get(pref_theme_values.indexOf(values[1])) + ", " + pref_theme_titles.get(pref_theme_values.indexOf(values[3]));
+                    int index1 = pref_theme_values.indexOf(values[1]);
+                    int index2 = pref_theme_values.indexOf(values[3]);
+                    if (index1 != -1 && index2 != -1) {
+                        return pref_theme_titles.get(index1) + ", " + pref_theme_titles.get(index2);
+                    } else if (index1 != -1) {
+                        return pref_theme_titles.get(index1) + ", " + Static.GLITCH;
+                    } else {
+                        return Static.GLITCH + ", " + pref_theme_titles.get(index2);
+                    }
                 } else {
                     return value;
                 }
@@ -380,7 +388,8 @@ public class ThemeUtil {
                 return value;
             }
         } else {
-            return pref_theme_titles.get(pref_theme_values.indexOf(value));
+            int index = pref_theme_values.indexOf(value);
+            return index != -1 ? pref_theme_titles.get(index) : null;
         }
     }
 

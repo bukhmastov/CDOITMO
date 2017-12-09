@@ -75,8 +75,8 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
                 if (schedule == null) throw new NullPointerException("schedule cannot be null");
                 for (int i = 0; i < schedule.length(); i++) {
                     final JSONObject day = schedule.getJSONObject(i);
-                    if (day.getInt("weekday") == weekday) {
-                        final JSONArray lessons = day.getJSONArray("lessons");
+                    if (day.has("weekday") && day.getInt("weekday") == weekday) {
+                        final JSONArray lessons = day.has("lessons") ? day.getJSONArray("lessons") : null;
                         if (lessons == null) throw new NullPointerException("lessons cannot be null");
                         for (int j = 0; j < lessons.length(); j++) {
                             final JSONObject lesson = lessons.getJSONObject(j);
@@ -137,14 +137,9 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
             layout.setInt(R.id.slw_item_title, "setTextColor", colors.text);
             String desc = "";
             switch (this.type) {
-                case "group": {
-                    desc = lesson.getString("teacher");
-                    break;
-                }
-                case "teacher": {
-                    desc = lesson.getString("group");
-                    break;
-                }
+                case "group": desc = lesson.getString("teacher"); break;
+                case "teacher": desc = lesson.getString("group"); break;
+                case "mine":
                 case "room": {
                     String group = lesson.getString("group");
                     String teacher = lesson.getString("teacher");
@@ -157,7 +152,7 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
                     break;
                 }
             }
-            if (!desc.isEmpty()) {
+            if (desc != null && !desc.isEmpty()) {
                 layout.setTextViewText(R.id.slw_item_desc, desc);
                 layout.setInt(R.id.slw_item_desc, "setTextColor", colors.text);
             } else {
@@ -165,15 +160,18 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
             }
             String meta = "";
             switch (this.type) {
+                case "mine":
                 case "group":
                 case "teacher": {
                     String room = lesson.getString("room");
                     String building = lesson.getString("building");
-                    if (Objects.equals(room, "")) {
+                    if (room.isEmpty()) {
                         meta = building;
                     } else {
                         meta = context.getString(R.string.room_short) + " " + room;
-                        if (!Objects.equals(building, "")) meta += " (" + building + ")";
+                        if (!building.isEmpty()) {
+                            meta += " (" + building + ")";
+                        }
                     }
                     break;
                 }
@@ -182,7 +180,7 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
                     break;
                 }
             }
-            if (!meta.isEmpty()) {
+            if (meta != null && !meta.isEmpty()) {
                 layout.setTextViewText(R.id.slw_item_meta, meta);
                 layout.setInt(R.id.slw_item_meta, "setTextColor", colors.text);
             } else {

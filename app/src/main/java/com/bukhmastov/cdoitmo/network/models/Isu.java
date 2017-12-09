@@ -36,6 +36,11 @@ public abstract class Isu extends Client {
         Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
             @Override
             public void run() {
+                // TODO remove it, when isu will be ready
+                if (true) {
+                    rawHandler.onError(STATUS_CODE_EMPTY, null, new Exception("Isu web client unavailable"));
+                    return;
+                }
                 try {
                     _g(url, getHeaders(context), query, rawHandler);
                 } catch (Throwable throwable) {
@@ -48,6 +53,11 @@ public abstract class Isu extends Client {
         Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
             @Override
             public void run() {
+                // TODO remove it, when isu will be ready
+                if (true) {
+                    rawHandler.onError(STATUS_CODE_EMPTY, null, new Exception("Isu web client unavailable"));
+                    return;
+                }
                 try {
                     _p(url, getHeaders(context), query, params, rawHandler);
                 } catch (Throwable throwable) {
@@ -60,6 +70,11 @@ public abstract class Isu extends Client {
         Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
             @Override
             public void run() {
+                // TODO remove it, when isu will be ready
+                if (true) {
+                    rawJsonHandler.onError(STATUS_CODE_EMPTY, null, new Exception("Isu web client unavailable"));
+                    return;
+                }
                 try {
                     _gJson(url, getHeaders(context), query, rawJsonHandler);
                 } catch (Throwable throwable) {

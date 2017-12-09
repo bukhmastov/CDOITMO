@@ -98,7 +98,9 @@
                 android:text="@string/skip"
                 android:textAllCaps="true"
                 android:textColor="#FFFFFF"
-                android:textSize="@dimen/font_size_14" />
+                android:textSize="@dimen/font_size_14"
+                android:maxLines="1"
+                android:ellipsize="end"/>
 
         </FrameLayout>
 
