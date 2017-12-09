@@ -127,7 +127,7 @@ public abstract class Schedule {
                 if (q.contains(" ")) {
                     q = q.split(" ")[0].trim();
                 }
-                if (addPending(q, handler)) {
+                if (addPending(q, withUserChanges, handler)) {
                     Log.v(TAG, "search | query=" + q + " | initialized the pending stack | starting the search procedure");
                     if (q.equals("mine")) {
                         searchMine(context, refreshRate, forceToCache, withUserChanges);
@@ -145,7 +145,7 @@ public abstract class Schedule {
                         searchTeachers(context, q, refreshRate, forceToCache, withUserChanges);
                     } else {
                         Log.v(TAG, "search | got invalid query: " + q);
-                        invokePending(q, true, new Pending() {
+                        invokePending(q, withUserChanges, true, new Pending() {
                             @Override
                             public void invoke(Handler handler) {
                                 handler.onFailure(FAILED_INVALID_QUERY);
@@ -164,8 +164,9 @@ public abstract class Schedule {
     protected interface Pending {
         void invoke(Handler handler);
     }
-    protected boolean addPending(String query, Handler handler) {
-        final String token = getType() + "_" + query.toLowerCase();
+    protected boolean addPending(String query, boolean withUserChanges, Handler handler) {
+        Log.v(TAG, "invokePending | query=" + query + " | withUserChanges=" + Static.logBoolean(withUserChanges));
+        final String token = getType() + "_" + query.toLowerCase() + "_" + (withUserChanges ? "t" : "f");
         if (Schedule.pending.containsKey(token)) {
             Schedule.pending.get(token).add(handler);
             return false;
@@ -176,9 +177,9 @@ public abstract class Schedule {
             return true;
         }
     }
-    protected void invokePending(String query, boolean remove, Pending pending) {
-        Log.v(TAG, "invokePending | query=" + query);
-        final String token = getType() + "_" + query.toLowerCase();
+    protected void invokePending(String query, boolean withUserChanges, boolean remove, Pending pending) {
+        Log.v(TAG, "invokePending | query=" + query + " | withUserChanges=" + Static.logBoolean(withUserChanges) + " | remove=" + Static.logBoolean(remove));
+        final String token = getType() + "_" + query.toLowerCase() + "_" + (withUserChanges ? "t" : "f");
         final ArrayList<Handler> handlers = Schedule.pending.get(token);
         if (handlers != null) {
             for (Handler handler : handlers) {
@@ -203,7 +204,7 @@ public abstract class Schedule {
             @Override
             public void run() {
                 Log.v(TAG, "searchTeachers | teacherName=" + teacherName + " | refreshRate=" + refreshRate + " | forceToCache=" + (forceToCache ? "true" : "false") + " | withUserChanges=" + (withUserChanges ? "true" : "false"));
-                searchByQuery(context, "teachers", teacherName, refreshRate, new SearchByQuery() {
+                searchByQuery(context, "teachers", teacherName, refreshRate, withUserChanges, new SearchByQuery() {
                     @Override
                     public boolean isWebAvailable() {
                         return true;
@@ -224,7 +225,7 @@ public abstract class Schedule {
                     }
                     @Override
                     public void onWebRequestFailed(final int statusCode, final Client.Headers headers, final int state) {
-                        invokePending(teacherName, true, new Pending() {
+                        invokePending(teacherName, withUserChanges, true, new Pending() {
                             @Override
                             public void invoke(Handler handler) {
                                 handler.onFailure(statusCode, headers, state);
@@ -233,7 +234,7 @@ public abstract class Schedule {
                     }
                     @Override
                     public void onWebRequestProgress(final int state) {
-                        invokePending(teacherName, false, new Pending() {
+                        invokePending(teacherName, withUserChanges, false, new Pending() {
                             @Override
                             public void invoke(Handler handler) {
                                 handler.onProgress(state);
@@ -242,7 +243,7 @@ public abstract class Schedule {
                     }
                     @Override
                     public void onWebNewRequest(final Client.Request request) {
-                        invokePending(teacherName, false, new Pending() {
+                        invokePending(teacherName, withUserChanges, false, new Pending() {
                             @Override
                             public void invoke(Handler handler) {
                                 handler.onNewRequest(request);
@@ -251,7 +252,7 @@ public abstract class Schedule {
                     }
                     @Override
                     public void onFound(final String query, final JSONObject data, final boolean putToCache, boolean fromCache) {
-                        invokePending(teacherName, true, new Pending() {
+                        invokePending(teacherName, withUserChanges, true, new Pending() {
                             @Override
                             public void invoke(Handler handler) {
                                 putLocalCache(query, data.toString());
@@ -264,7 +265,7 @@ public abstract class Schedule {
         });
     }
     // Private functions to proceed search and get schedule from cache
-    protected void searchByQuery(final Context context, final String type, final String query, final int refreshRate, final SearchByQuery search) {
+    protected void searchByQuery(final Context context, final String type, final String query, final int refreshRate, final boolean withUserChanges, final SearchByQuery search) {
         Static.T.runThread(new Runnable() {
             @Override
             public void run() {
@@ -349,7 +350,7 @@ public abstract class Schedule {
                         }
                         @Override
                         public void onEmpty(String query) {
-                            invokePending(query, true, new Pending() {
+                            invokePending(query, withUserChanges,true, new Pending() {
                                 @Override
                                 public void invoke(Handler handler) {
                                     handler.onFailure(FAILED_OFFLINE);
