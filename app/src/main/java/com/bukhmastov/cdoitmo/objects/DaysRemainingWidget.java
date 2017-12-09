@@ -67,19 +67,20 @@ public class DaysRemainingWidget {
         public void run() {
             while (!Thread.currentThread().isInterrupted() && running) {
                 try {
-                    long ts = System.currentTimeMillis();
-                    ArrayList<DaysRemainingWidget.Data> dataArray = new ArrayList<>();
-                    JSONArray schedule = full_schedule.getJSONArray("schedule");
+                    final long ts = System.currentTimeMillis();
+                    final ArrayList<DaysRemainingWidget.Data> dataArray = new ArrayList<>();
+                    final JSONArray schedule = full_schedule.getJSONArray("schedule");
                     for (int i = 0; i < schedule.length(); i++) {
                         try {
-                            JSONObject fullExam = schedule.getJSONObject(i);
-                            JSONObject exam = fullExam.getJSONObject("exam");
-                            Data data = new Data();
-                            data.subject = fullExam.getString("subject");
-                            data.desc = fullExam.getString(fullExam.has("teacher") ? "teacher" : "group");
-                            String timeString = exam.getString("time");
-                            String dateString = exam.getString("date");
-                            Matcher originDateMatcher = Pattern.compile("^(\\d{1,2})(\\D*)$").matcher(dateString);
+                            final JSONObject fullExam = schedule.getJSONObject(i);
+                            final JSONObject exam = fullExam.getJSONObject("exam");
+                            final String subject = fullExam.has("subject") ? fullExam.getString("subject") : "";
+                            final String group = fullExam.has("group") ? fullExam.getString("group") : "";
+                            final String teacher = fullExam.has("teacher") ? fullExam.getString("teacher") : "";
+                            String time = exam.getString("time");
+                            String date = exam.getString("date");
+                            // convert "10 янв" date to "10.01"
+                            Matcher originDateMatcher = Pattern.compile("^(\\d{1,2})(\\D*)$").matcher(date);
                             if (originDateMatcher.find()) {
                                 String day = originDateMatcher.group(1);
                                 String month = originDateMatcher.group(2).trim();
@@ -95,38 +96,43 @@ public class DaysRemainingWidget {
                                 if (month.startsWith("окт")) month = "10";
                                 if (month.startsWith("ноя")) month = "11";
                                 if (month.startsWith("дек")) month = "12";
-                                dateString = day + "." + month;
+                                date = day + "." + month;
                             }
-                            Matcher timeMatcher = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(timeString);
-                            Matcher dateMatcher = Pattern.compile("^(\\d{1,2})\\.(\\d{2})(\\.(\\d{4}))?$").matcher(dateString);
+                            // verify time and date
+                            Matcher timeMatcher = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(time);
+                            Matcher dateMatcher = Pattern.compile("^(\\d{1,2})\\.(\\d{2})(\\.(\\d{4}))?$").matcher(date);
                             if (timeMatcher.find() && dateMatcher.find()) {
-                                Calendar calendar = Calendar.getInstance();
+                                // build calendar instance
+                                final Calendar calendar = Calendar.getInstance();
                                 int year = calendar.get(Calendar.YEAR);
-                                if (dateMatcher.groupCount() == 4) {
-                                    year = Integer.parseInt(dateMatcher.group(4));
+                                int month = Integer.parseInt(dateMatcher.group(2));
+                                String yearStr = dateMatcher.groupCount() == 4 ? dateMatcher.group(4) : null;
+                                if (yearStr != null) {
+                                    year = Integer.parseInt(yearStr);
                                 } else {
-                                    int month = calendar.get(Calendar.MONTH);
-                                    if (month > Calendar.AUGUST && month <= Calendar.DECEMBER && !(Integer.parseInt(dateMatcher.group(2)) > 9)) {
-                                        year = year + 1;
+                                    int m = calendar.get(Calendar.MONTH);
+                                    if (m > Calendar.AUGUST && m <= Calendar.DECEMBER && !(month > 9)) {
+                                        year += 1;
                                     }
                                 }
                                 calendar.set(Calendar.YEAR, year);
-                                calendar.set(Calendar.MONTH, Integer.parseInt(dateMatcher.group(2)) - 1);
+                                calendar.set(Calendar.MONTH, month - 1);
                                 calendar.set(Calendar.DAY_OF_MONTH, Integer.parseInt(dateMatcher.group(1)));
                                 calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeMatcher.group(1)));
                                 calendar.set(Calendar.MINUTE, Integer.parseInt(timeMatcher.group(2)));
                                 calendar.set(Calendar.SECOND, 0);
                                 long examTS = calendar.getTimeInMillis();
                                 if (ts < examTS) {
+                                    // add exam that not yet passed
+                                    Data data = new Data();
+                                    data.subject = subject;
+                                    data.desc = teacher.isEmpty() ? group : teacher;
                                     data.time = ts2time(examTS - ts);
-                                } else {
-                                    // exam gone
-                                    continue;
+                                    dataArray.add(data);
                                 }
                             } else {
-                                throw new Exception("Invalid date/time: " + exam.getString("date") + " / " + exam.getString("time"));
+                                throw new Exception("Invalid date/time: " + date + "/" + time);
                             }
-                            dataArray.add(data);
                         } catch (Exception e) {
                             Log.e(TAG, e.getMessage());
                         }
