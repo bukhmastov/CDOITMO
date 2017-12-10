@@ -49,6 +49,7 @@ public class RatingTopListView extends ArrayAdapter<HashMap<String, String>> {
             final TextView lvrl_number = convertView.findViewById(R.id.lvrl_number);
             final TextView lvrl_fio = convertView.findViewById(R.id.lvrl_fio);
             final TextView lvrl_meta = convertView.findViewById(R.id.lvrl_meta);
+            final ViewGroup lvrl_delta_container = convertView.findViewById(R.id.lvrl_delta_container);
             final TextView lvrl_delta = convertView.findViewById(R.id.lvrl_delta);
             if (is_me) {
                 final View lvrl_its_me_1 = convertView.findViewById(R.id.lvrl_its_me_1);
@@ -95,11 +96,16 @@ public class RatingTopListView extends ArrayAdapter<HashMap<String, String>> {
             }
             lvrl_fio.setText(user.get("fio"));
             lvrl_meta.setText(user.get("meta"));
-            if (!user.get("change").equals("none") && lvrl_delta != null) {
-                lvrl_delta.setText(user.get("delta"));
-                switch (user.get("change")) {
-                    case "up": lvrl_delta.setTextColor(resolveColor(R.attr.colorPositiveTrend)); break;
-                    case "down": lvrl_delta.setTextColor(resolveColor(R.attr.colorNegativeTrend)); break;
+            if (lvrl_delta != null) {
+                if (!user.get("change").equals("none")) {
+                    lvrl_delta_container.setVisibility(View.VISIBLE);
+                    lvrl_delta.setText(user.get("delta"));
+                    switch (user.get("change")) {
+                        case "up": lvrl_delta.setTextColor(resolveColor(R.attr.colorPositiveTrend)); break;
+                        case "down": lvrl_delta.setTextColor(resolveColor(R.attr.colorNegativeTrend)); break;
+                    }
+                } else {
+                    lvrl_delta_container.setVisibility(View.GONE);
                 }
             }
             return convertView;

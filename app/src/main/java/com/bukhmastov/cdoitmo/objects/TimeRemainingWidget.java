@@ -4,10 +4,8 @@ import android.content.Context;
 
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
-import com.bukhmastov.cdoitmo.utils.Storage;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Calendar;
@@ -74,8 +72,8 @@ public class TimeRemainingWidget {
                     if (ts % 3600000L <= 1000 || first_init) {
                         Log.v(TAG, "update data");
                         first_init = false;
-                        week = getWeek() % 2;
-                        weekday = getDayOfTheWeek(Calendar.getInstance().get(Calendar.DAY_OF_WEEK));
+                        week = Static.getWeek(context) % 2;
+                        weekday = Static.getWeekDay();
                         lessons = null;
                         JSONArray schedule = full_schedule.getJSONArray("schedule");
                         for (int i = 0; i < schedule.length(); i++) {
@@ -99,11 +97,11 @@ public class TimeRemainingWidget {
                         Matcher timeStart = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(lesson.getString("timeStart"));
                         Matcher timeEnd = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(lesson.getString("timeEnd"));
                         if (timeStart.find() && timeEnd.find()) {
-                            Calendar calendarTS = Calendar.getInstance();
+                            Calendar calendarTS = Static.getCalendar();
                             calendarTS.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeStart.group(1)));
                             calendarTS.set(Calendar.MINUTE, Integer.parseInt(timeStart.group(2)));
                             calendarTS.set(Calendar.SECOND, 0);
-                            Calendar calendarTE = Calendar.getInstance();
+                            Calendar calendarTE = Static.getCalendar();
                             calendarTE.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeEnd.group(1)));
                             calendarTE.set(Calendar.MINUTE, Integer.parseInt(timeEnd.group(2)));
                             calendarTE.set(Calendar.SECOND, 0);
@@ -148,53 +146,6 @@ public class TimeRemainingWidget {
             delegate.onCancelled();
             Log.i(TAG, "interrupted");
         }
-        private int getWeek() {
-            try {
-                String weekStr = Storage.file.general.get(context, "user#week");
-                if (!Objects.equals(weekStr, "")) {
-                    JSONObject jsonObject = new JSONObject(weekStr);
-                    int week = jsonObject.getInt("week");
-                    if (week >= 0){
-                        Calendar past = Calendar.getInstance();
-                        past.setTimeInMillis(jsonObject.getLong("timestamp"));
-                        return week + (Calendar.getInstance().get(Calendar.WEEK_OF_YEAR) - past.get(Calendar.WEEK_OF_YEAR));
-                    }
-                }
-            } catch (JSONException e) {
-                Storage.file.general.delete(context, "user#week");
-                return -1;
-            }
-            return -1;
-        }
-        private int getDayOfTheWeek(int day_of_the_week) {
-            switch (day_of_the_week) {
-                case Calendar.MONDAY:
-                    day_of_the_week = 0;
-                    break;
-                case Calendar.TUESDAY:
-                    day_of_the_week = 1;
-                    break;
-                case Calendar.WEDNESDAY:
-                    day_of_the_week = 2;
-                    break;
-                case Calendar.THURSDAY:
-                    day_of_the_week = 3;
-                    break;
-                case Calendar.FRIDAY:
-                    day_of_the_week = 4;
-                    break;
-                case Calendar.SATURDAY:
-                    day_of_the_week = 5;
-                    break;
-                case Calendar.SUNDAY:
-                    day_of_the_week = 6;
-                    break;
-                default:
-                    day_of_the_week = -1;
-                    break;
-            }
-            return day_of_the_week;
-        }
         private String ts2date(long ts) {
             int time = (int) (ts / 1000L);
             int hours = time / 3600;
@@ -202,12 +153,12 @@ public class TimeRemainingWidget {
             int seconds = (time - hours * 3600 - minutes * 60) % 60;
             String response;
             if (minutes > 0 || hours > 0) {
-                response = ldgZero(seconds);
+                response = Static.ldgZero(seconds);
             } else {
                 response = String.valueOf(seconds);
             }
             if (hours > 0) {
-                response = ldgZero(minutes) + ":" + response;
+                response = Static.ldgZero(minutes) + ":" + response;
             } else {
                 if (minutes > 0) {
                     response = String.valueOf(minutes) + ":" + response;
@@ -217,9 +168,6 @@ public class TimeRemainingWidget {
                 response = String.valueOf(hours) + ":" + response;
             }
             return response;
-        }
-        private String ldgZero(int time) {
-            return time % 10 == time ? "0" + String.valueOf(time) : String.valueOf(time);
         }
     }
 }

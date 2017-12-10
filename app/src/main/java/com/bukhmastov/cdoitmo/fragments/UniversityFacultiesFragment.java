@@ -37,7 +37,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Objects;
 
 public class UniversityFacultiesFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
@@ -121,7 +120,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                         try {
                             JSONObject cacheJson = new JSONObject(cache);
                             timestamp = cacheJson.getLong("timestamp");
-                            if (timestamp + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+                            if (timestamp + refresh_rate * 3600000L < Static.getCalendar().getTimeInMillis()) {
                                 load(true, cache);
                             } else {
                                 load(false, cache);
@@ -158,7 +157,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                         Log.v(TAG, "load | from local cache");
                         String local = history.get(fid);
                         JSONObject localObj = new JSONObject(local);
-                        timestamp = Calendar.getInstance().getTimeInMillis();
+                        timestamp = Static.getCalendar().getTimeInMillis();
                         display(localObj);
                         return;
                     } catch (Exception e) {
@@ -187,7 +186,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                                 @Override
                                 public void run() {
                                     if (statusCode == 200) {
-                                        long now = Calendar.getInstance().getTimeInMillis();
+                                        long now = Static.getCalendar().getTimeInMillis();
                                         if (json != null && Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
                                             try {
                                                 Storage.file.cache.put(activity, "university#faculties#" + fid, new JSONObject()
@@ -393,7 +392,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                     list.setAdapter(facultiesRecyclerViewAdapter);
                     list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
                     displayContent(structure, divisions);
-                    if (timestamp > 0 && timestamp + 5000 < Calendar.getInstance().getTimeInMillis()) {
+                    if (timestamp > 0 && timestamp + 5000 < Static.getCalendar().getTimeInMillis()) {
                         UniversityRecyclerViewAdapter.Item item = new UniversityRecyclerViewAdapter.Item();
                         item.type = UniversityRecyclerViewAdapter.TYPE_INFO_ABOUT_UPDATE_TIME;
                         item.data = new JSONObject().put("title", activity.getString(R.string.update_date) + " " + Static.getUpdateTime(activity, timestamp));

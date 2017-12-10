@@ -18,7 +18,6 @@ import org.json.JSONObject;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
@@ -490,7 +489,7 @@ public abstract class Schedule {
             // Заголовок расписания: "K3320", "336", "Зинчик Александр Адольфович"
             template.put("title", "");
             // Текущее время
-            template.put("timestamp", Calendar.getInstance().getTimeInMillis());
+            template.put("timestamp", Static.getCalendar().getTimeInMillis());
             // Расписание собственной персоной
             template.put("schedule", new JSONArray());
             return template;
@@ -517,7 +516,7 @@ public abstract class Schedule {
             return true;
         } else if (refreshRate > 0) {
             try {
-                return new JSONObject(cache).getLong("timestamp") + refreshRate * 3600000L < Calendar.getInstance().getTimeInMillis();
+                return new JSONObject(cache).getLong("timestamp") + refreshRate * 3600000L < Static.getCalendar().getTimeInMillis();
             } catch (JSONException e) {
                 return true;
             }
@@ -589,7 +588,7 @@ public abstract class Schedule {
             return week + " " + context.getString(R.string.school_week);
         } else {
             String pattern = "dd.MM.yyyy";
-            String date = new SimpleDateFormat(pattern, Locale.ROOT).format(new Date(Calendar.getInstance().getTimeInMillis()));
+            String date = new SimpleDateFormat(pattern, Locale.ROOT).format(new Date(Static.getCalendar().getTimeInMillis()));
             try {
                 return Static.cuteDateWithoutTime(context, pattern, date);
             } catch (ParseException e) {

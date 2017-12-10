@@ -22,8 +22,6 @@ import com.bukhmastov.cdoitmo.utils.Static;
 
 import org.json.JSONObject;
 
-import java.util.Calendar;
-
 public class ShortcutReceiver extends BroadcastReceiver {
 
     private static final String TAG = "ShortcutReceiver";
@@ -219,7 +217,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                         ShortcutManager shortcutManager = context.getSystemService(ShortcutManager.class);
                         if (shortcutManager != null && shortcutManager.isRequestPinShortcutSupported()) {
-                            ShortcutInfo pinShortcutInfo = new ShortcutInfo.Builder(context, "synthetic-" + Calendar.getInstance().getTimeInMillis())
+                            ShortcutInfo pinShortcutInfo = new ShortcutInfo.Builder(context, "synthetic-" + Static.getCalendar().getTimeInMillis())
                                 .setIcon(Icon.createWithResource(context, icon))
                                 .setShortLabel(label)
                                 .setIntent(shortcutIntent)

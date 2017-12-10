@@ -87,7 +87,8 @@
         android:id="@+id/lvrl_delta_container"
         android:layout_width="wrap_content"
         android:layout_height="@dimen/rating_list_height"
-        android:layout_alignParentEnd="true" >
+        android:layout_alignParentEnd="true"
+        android:visibility="gone" >
 
         <TextView
             android:id="@+id/lvrl_delta"

@@ -107,7 +107,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                     if (!cache.isEmpty()) {
                         try {
                             data = new JSONObject(cache);
-                            if (data.getLong("timestamp") + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+                            if (data.getLong("timestamp") + refresh_rate * 3600000L < Static.getCalendar().getTimeInMillis()) {
                                 load(true, cache);
                             } else {
                                 load(false, cache);
@@ -469,7 +469,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
     }
     private void checkData(JSONObject data) throws Exception {
         Log.v(TAG, "checkData");
-        Calendar now = Calendar.getInstance();
+        Calendar now = Static.getCalendar();
         int year = now.get(Calendar.YEAR);
         int month = now.get(Calendar.MONTH);
         String currentGroup = "";

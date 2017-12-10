@@ -13,7 +13,6 @@ import com.bukhmastov.cdoitmo.utils.Storage;
 
 import org.json.JSONObject;
 
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -74,7 +73,7 @@ public class DeIfmoClient extends DeIfmo {
                                                     Storage.file.perm.put(context, "user#avatar", result.get("avatar"));
                                                     try {
                                                         JSONObject jsonObject = new JSONObject();
-                                                        jsonObject.put("timestamp", Calendar.getInstance().getTimeInMillis());
+                                                        jsonObject.put("timestamp", Static.getCalendar().getTimeInMillis());
                                                         jsonObject.put("week", Integer.parseInt(result.get("week")));
                                                         Storage.file.general.put(context, "user#week", jsonObject.toString());
                                                     } catch (Exception e) {

@@ -56,6 +56,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
     private boolean keepGoing = true;
     private String action = "";
     private String query = "";
+    private String type = "";
     private String title = "";
     private JSONObject file = null;
     private final ArrayList<Change> changes = new ArrayList<>();
@@ -71,7 +72,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
         Log.v(TAG, "Fragment created | action=" + action);
         if (action == null || !(action.equals("share") || action.equals("handle"))) {
             keepGoing = false;
-            Static.snackBar(activity, activity.getString(R.string.corrupted_data));
+            Static.toast(activity, activity.getString(R.string.corrupted_data));
             finish();
         }
         switch (action) {
@@ -135,10 +136,10 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                     }
                 } catch (Exception e) {
                     if (e.getMessage().equals("Corrupted file")) {
-                        Static.snackBar(activity, activity.getString(R.string.corrupted_file));
+                        Static.toast(activity, activity.getString(R.string.corrupted_file));
                     } else {
                         Static.error(e);
-                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        Static.toast(activity, activity.getString(R.string.something_went_wrong));
                     }
                     finish();
                 }
@@ -162,18 +163,24 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                 // ignore
             }
         }
-        if (file.has("content")) {
-            final JSONObject content = file.getJSONObject("content");
-            if (
-                    !(content.has("query") && content.get("query") instanceof String) ||
-                    !(content.has("title") && content.get("title") instanceof String) ||
-                    !(content.has("added") && content.get("added") instanceof JSONArray) ||
-                    !(content.has("reduced") && content.get("reduced") instanceof JSONArray)
-            ) {
+        if (!file.has("content")) {
+            throw new Exception("Corrupted file");
+        }
+        final JSONObject content = file.getJSONObject("content");
+        if (
+                !(content.has("query") && content.get("query") instanceof String) ||
+                !(content.has("title") && content.get("title") instanceof String) ||
+                !(content.has("added") && content.get("added") instanceof JSONArray) ||
+                !(content.has("reduced") && content.get("reduced") instanceof JSONArray)
+        ) {
+            throw new Exception("Corrupted file");
+        }
+        if (version == 1) {
+            content.put("type", "");
+        } else if (version > 1) {
+            if (!(content.has("type") && content.get("type") instanceof String)) {
                 throw new Exception("Corrupted file");
             }
-        } else {
-            throw new Exception("Corrupted file");
         }
         Static.T.runOnUiThread(new Runnable() {
             @Override
@@ -181,17 +188,17 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                 try {
                     TextView share_title = activity.findViewById(R.id.share_title);
                     if (share_title != null) {
-                        share_title.setText(file.getJSONObject("content").getString("title"));
+                        share_title.setText(ScheduleLessons.getScheduleHeader(activity, content.getString("title"), content.getString("type")));
                     }
                 } catch (Exception e) {
                     Static.error(e);
-                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                    Static.toast(activity, activity.getString(R.string.something_went_wrong));
                     finish();
                 }
             }
         });
-        final JSONArray scheduleAdded = file.getJSONObject("content").getJSONArray("added");
-        final JSONArray scheduleReduced = file.getJSONObject("content").getJSONArray("reduced");
+        final JSONArray scheduleAdded = content.getJSONArray("added");
+        final JSONArray scheduleReduced = content.getJSONArray("reduced");
         for (int i = 0; i < scheduleAdded.length(); i++) {
             try {
                 JSONObject day = scheduleAdded.getJSONObject(i);
@@ -224,7 +231,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
     private void loadShare(final Bundle extras) throws Exception {
         query = extras.getString("query");
         title = extras.getString("title");
-        final String type = extras.getString("type");
+        type = extras.getString("type");
         if (query == null || title == null || type == null) {
             throw new NullPointerException("Some extras are null: " + query + " | " + title + " | " + type);
         }
@@ -258,7 +265,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                     }
                 } catch (Exception e) {
                     Static.error(e);
-                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                    Static.toast(activity, activity.getString(R.string.something_went_wrong));
                     finish();
                 }
             }
@@ -272,7 +279,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                         try {
                             Log.v(TAG, "loadShare | success | json=" + (json == null ? "null" : "notnull"));
                             if (json == null || json.getString("type").equals("teachers")) {
-                                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                Static.toast(activity, activity.getString(R.string.something_went_wrong));
                                 finish();
                                 return;
                             }
@@ -332,7 +339,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                             display(null);
                         } catch (Exception e) {
                             Static.error(e);
-                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                            Static.toast(activity, activity.getString(R.string.something_went_wrong));
                             finish();
                         }
                     }
@@ -521,7 +528,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                     }
                 } catch (Exception e) {
                     Static.error(e);
-                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                    Static.toast(activity, activity.getString(R.string.something_went_wrong));
                     finish();
                 }
             }
@@ -626,6 +633,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
         share.put("version", 2);
         share.put("content", new JSONObject()
                 .put("query", query)
+                .put("type", type)
                 .put("title", title)
                 .put("added", added)
                 .put("reduced", reduced)

@@ -253,18 +253,7 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
                                                             @Override
                                                             public void run() {
                                                                 try {
-                                                                    int weekday;
-                                                                    switch (Calendar.getInstance().get(Calendar.DAY_OF_WEEK)) {
-                                                                        case Calendar.MONDAY: weekday = 0; break;
-                                                                        case Calendar.TUESDAY: weekday = 1; break;
-                                                                        case Calendar.WEDNESDAY: weekday = 2; break;
-                                                                        case Calendar.THURSDAY: weekday = 3; break;
-                                                                        case Calendar.FRIDAY: weekday = 4; break;
-                                                                        case Calendar.SATURDAY: weekday = 5; break;
-                                                                        case Calendar.SUNDAY: weekday = 6; break;
-                                                                        default: weekday = 0; break;
-                                                                    }
-                                                                    if (!ScheduleLessons.createLesson(activity, query, data.getString("title"), type, weekday, new JSONObject(), null)) {
+                                                                    if (!ScheduleLessons.createLesson(activity, query, data.getString("title"), type, Static.getWeekDay(), new JSONObject(), null)) {
                                                                         Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                                                     }
                                                                 } catch (Exception e) {
@@ -755,8 +744,9 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
                 dataset.add(new Item(TYPE_NO_LESSONS, null));
             } else {
                 // notification
-                int month = Calendar.getInstance().get(Calendar.MONTH);
-                int day = Calendar.getInstance().get(Calendar.DAY_OF_MONTH);
+                Calendar calendar = Static.getCalendar();
+                int month = calendar.get(Calendar.MONTH);
+                int day = calendar.get(Calendar.DAY_OF_MONTH);
                 if (month == Calendar.AUGUST && day > 21 || month == Calendar.SEPTEMBER && day < 21 || month == Calendar.JANUARY && day > 14 || month == Calendar.FEBRUARY && day < 14) {
                     dataset.add(new Item(TYPE_NOTIFICATION, new JSONObject().put("text", activity.getString(R.string.schedule_lessons_unstable_warning))));
                 }

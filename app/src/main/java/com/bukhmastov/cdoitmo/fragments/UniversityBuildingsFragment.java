@@ -51,7 +51,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Objects;
 
 public class UniversityBuildingsFragment extends Fragment implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
@@ -169,7 +168,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                             JSONObject cacheJson = new JSONObject(cache);
                             building_map = cacheJson.getJSONObject("data");
                             timestamp = cacheJson.getLong("timestamp");
-                            if (timestamp + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+                            if (timestamp + refresh_rate * 3600000L < Static.getCalendar().getTimeInMillis()) {
                                 load(true);
                             } else {
                                 load(false);
@@ -204,7 +203,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                                 @Override
                                 public void run() {
                                     if (statusCode == 200) {
-                                        long now = Calendar.getInstance().getTimeInMillis();
+                                        long now = Static.getCalendar().getTimeInMillis();
                                         if (json != null && Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
                                             try {
                                                 Storage.file.cache.put(activity, "university#buildings", new JSONObject()

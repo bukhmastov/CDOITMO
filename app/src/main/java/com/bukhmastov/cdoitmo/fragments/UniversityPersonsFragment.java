@@ -36,7 +36,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 
 public class UniversityPersonsFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
@@ -129,7 +128,7 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
                             JSONObject cacheJson = new JSONObject(cache);
                             persons = cacheJson.getJSONObject("data");
                             timestamp = cacheJson.getLong("timestamp");
-                            if (timestamp + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+                            if (timestamp + refresh_rate * 3600000L < Static.getCalendar().getTimeInMillis()) {
                                 load(search, true);
                             } else {
                                 load(search, false);
@@ -167,7 +166,7 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
                                 @Override
                                 public void run() {
                                     if (statusCode == 200) {
-                                        long now = Calendar.getInstance().getTimeInMillis();
+                                        long now = Static.getCalendar().getTimeInMillis();
                                         if (json != null && Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
                                             try {
                                                 Storage.file.cache.put(activity, "university#persons", new JSONObject()
@@ -376,7 +375,7 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
                                                             for (int i = 0; i < list.length(); i++) {
                                                                 list_original.put(list.getJSONObject(i));
                                                             }
-                                                            long now = Calendar.getInstance().getTimeInMillis();
+                                                            long now = Static.getCalendar().getTimeInMillis();
                                                             timestamp = now;
                                                             if (Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
                                                                 try {
@@ -422,7 +421,7 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
                                 });
                             }
                         });
-                        if (timestamp > 0 && timestamp + 5000 < Calendar.getInstance().getTimeInMillis()) {
+                        if (timestamp > 0 && timestamp + 5000 < Static.getCalendar().getTimeInMillis()) {
                             UniversityRecyclerViewAdapter.Item item = new UniversityRecyclerViewAdapter.Item();
                             item.type = UniversityRecyclerViewAdapter.TYPE_INFO_ABOUT_UPDATE_TIME;
                             item.data = new JSONObject().put("title", activity.getString(R.string.update_date) + " " + Static.getUpdateTime(activity, timestamp));
