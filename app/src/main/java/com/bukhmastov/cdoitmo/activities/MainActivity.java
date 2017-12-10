@@ -54,12 +54,14 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                 @Override
                 public void run() {
                     try {
+                        /*
                         // TODO remove it >
                         Storage.pref.put(activity, "pref_allow_send_reports", false);
                         Storage.pref.put(activity, "pref_allow_collect_analytics", false);
                         Storage.pref.put(activity, "pref_allow_collect_logs", true);
                         Log.setEnabled(true);
                         // TODO < remove it
+                        */
                         try {
                             Log.i(TAG, "App | launched");
                             PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);

@@ -34,7 +34,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Objects;
 
@@ -155,7 +154,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                     if (!cache.isEmpty()) {
                         try {
                             data = new JSONObject(cache);
-                            if (data.getLong("timestamp") + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+                            if (data.getLong("timestamp") + refresh_rate * 3600000L < Static.getCalendar().getTimeInMillis()) {
                                 load(true, cache);
                             } else {
                                 load(false, cache);

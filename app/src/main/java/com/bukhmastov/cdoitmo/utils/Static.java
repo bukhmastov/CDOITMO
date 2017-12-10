@@ -264,8 +264,11 @@ public class Static {
         context.getTheme().resolveAttribute(reference, typedValue, true);
         return context.obtainStyledAttributes(typedValue.data, new int[]{reference}).getColor(0, -1);
     }
+    public static Calendar getCalendar() {
+        return Calendar.getInstance(Locale.GERMANY);
+    }
     public static int getWeek(Context context) {
-        return getWeek(context, Calendar.getInstance(Locale.GERMANY));
+        return getWeek(context, getCalendar());
     }
     public static int getWeek(Context context, Calendar calendar) {
         try {
@@ -283,6 +286,22 @@ public class Static {
             Storage.file.general.delete(context, "user#week");
         }
         return -1;
+    }
+    public static int getWeekDay() {
+        return getWeekDay(getCalendar());
+    }
+    public static int getWeekDay(Calendar calendar) {
+        int weekday = 0;
+        switch (calendar.get(Calendar.DAY_OF_WEEK)) {
+            case Calendar.MONDAY: weekday = 0; break;
+            case Calendar.TUESDAY: weekday = 1; break;
+            case Calendar.WEDNESDAY: weekday = 2; break;
+            case Calendar.THURSDAY: weekday = 3; break;
+            case Calendar.FRIDAY: weekday = 4; break;
+            case Calendar.SATURDAY: weekday = 5; break;
+            case Calendar.SUNDAY: weekday = 6; break;
+        }
+        return weekday;
     }
     public static void logoutConfirmation(final Context context, final SimpleCallback callback) {
         new AlertDialog.Builder(context)
@@ -331,13 +350,13 @@ public class Static {
     }
     public static void showUpdateTime(Activity activity, @IdRes int layout, long time, boolean show_now) {
         String message = getUpdateTime(activity, time);
-        int shift = (int) ((Calendar.getInstance().getTimeInMillis() - time) / 1000L);
+        int shift = (int) ((getCalendar().getTimeInMillis() - time) / 1000L);
         if (show_now || shift > 4) {
             Static.snackBar(activity, layout, activity.getString(R.string.update_date) + " " + message);
         }
     }
     public static String getUpdateTime(Activity activity, long time) {
-        int shift = (int) ((Calendar.getInstance().getTimeInMillis() - time) / 1000L);
+        int shift = (int) ((getCalendar().getTimeInMillis() - time) / 1000L);
         String message;
         if (shift < 21600 && activity != null) {
             if (shift < 5) {
@@ -783,7 +802,7 @@ public class Static {
     }
     public static String cuteDate(Context context, String date_format, String date_string) throws ParseException {
         SimpleDateFormat format_input = new SimpleDateFormat(date_format, getLocale(context));
-        Calendar date = Calendar.getInstance();
+        Calendar date = getCalendar();
         date.setTime(format_input.parse(date_string));
         return (new StringBuilder())
                 .append(date.get(Calendar.DATE))
@@ -799,8 +818,8 @@ public class Static {
     }
     public static String cuteDate(Context context, String date_format, String date_start, String date_end) throws ParseException {
         SimpleDateFormat format_input = new SimpleDateFormat(date_format, getLocale(context));
-        Calendar calendar_start = Calendar.getInstance();
-        Calendar calendar_end = Calendar.getInstance();
+        Calendar calendar_start = getCalendar();
+        Calendar calendar_end = getCalendar();
         calendar_start.setTime(format_input.parse(date_start));
         calendar_end.setTime(format_input.parse(date_end));
         boolean diff_days = calendar_start.get(Calendar.DATE) != calendar_end.get(Calendar.DATE);
@@ -824,7 +843,7 @@ public class Static {
     }
     public static String cuteDateWithoutTime(Context context, String date_format, String date_string) throws ParseException {
         SimpleDateFormat format_input = new SimpleDateFormat(date_format, getLocale(context));
-        Calendar date = Calendar.getInstance();
+        Calendar date = getCalendar();
         date.setTime(format_input.parse(date_string));
         return (new StringBuilder())
                 .append(date.get(Calendar.DATE))

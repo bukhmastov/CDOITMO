@@ -11,7 +11,6 @@ import org.htmlcleaner.TagNode;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -54,7 +53,7 @@ public class Room101ViewRequestParse implements Runnable {
             if (tds == null || trs == null) {
                 throw new SilentException();
             }
-            response.put("timestamp", Calendar.getInstance().getTimeInMillis());
+            response.put("timestamp", Static.getCalendar().getTimeInMillis());
             response.put("date", tds[0].getText().toString().trim());
             response.put("limit", tds[1].getText().toString().trim());
             response.put("left", tds[2].getText().toString().trim());

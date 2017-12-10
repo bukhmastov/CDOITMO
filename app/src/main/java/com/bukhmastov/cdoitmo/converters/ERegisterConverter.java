@@ -8,7 +8,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -130,7 +129,7 @@ public class ERegisterConverter implements Runnable {
                 yearsOut.put(yearOut);
             }
             response.put("groups", yearsOut);
-            response.put("timestamp", Calendar.getInstance().getTimeInMillis());
+            response.put("timestamp", Static.getCalendar().getTimeInMillis());
         } catch (Exception e) {
             Static.error(e);
         }

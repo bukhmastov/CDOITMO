@@ -214,7 +214,7 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
                                         } else {
                                             if (Storage.pref.get(activity, "pref_schedule_lessons_scroll_to_day", true)) {
                                                 int position = -1;
-                                                switch (Calendar.getInstance().get(Calendar.DAY_OF_WEEK)) {
+                                                switch (Static.getCalendar().get(Calendar.DAY_OF_WEEK)) {
                                                     case Calendar.MONDAY: position = adapter.getDayPosition(0); if (position >= 0) break;
                                                     case Calendar.TUESDAY: position = adapter.getDayPosition(1); if (position >= 0) break;
                                                     case Calendar.WEDNESDAY: position = adapter.getDayPosition(2); if (position >= 0) break;

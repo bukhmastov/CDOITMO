@@ -103,7 +103,7 @@ public class DaysRemainingWidget {
                             Matcher dateMatcher = Pattern.compile("^(\\d{1,2})\\.(\\d{2})(\\.(\\d{4}))?$").matcher(date);
                             if (timeMatcher.find() && dateMatcher.find()) {
                                 // build calendar instance
-                                final Calendar calendar = Calendar.getInstance();
+                                final Calendar calendar = Static.getCalendar();
                                 int year = calendar.get(Calendar.YEAR);
                                 int month = Integer.parseInt(dateMatcher.group(2));
                                 String yearStr = dateMatcher.groupCount() == 4 ? dateMatcher.group(4) : null;

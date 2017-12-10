@@ -33,7 +33,6 @@ import com.bukhmastov.cdoitmo.utils.Storage;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Calendar;
 import java.util.HashMap;
 
 public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLayout.OnRefreshListener, Room101ReviewBuilder.register {
@@ -453,7 +452,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                     if (!cache.isEmpty()) {
                         try {
                             data = new JSONObject(cache);
-                            if (data.getLong("timestamp") + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+                            if (data.getLong("timestamp") + refresh_rate * 3600000L < Static.getCalendar().getTimeInMillis()) {
                                 load(true, cache);
                             } else {
                                 load(false, cache);
@@ -513,7 +512,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                                                 if (json != null) {
                                                     try {
                                                         json = new JSONObject()
-                                                                .put("timestamp", Calendar.getInstance().getTimeInMillis())
+                                                                .put("timestamp", Static.getCalendar().getTimeInMillis())
                                                                 .put("data", json);
                                                         if (Storage.pref.get(activity, "pref_use_cache", true)) {
                                                             Storage.file.cache.put(activity, "room101#core", json.toString());

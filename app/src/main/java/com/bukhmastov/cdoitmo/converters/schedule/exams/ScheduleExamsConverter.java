@@ -1,5 +1,7 @@
 package com.bukhmastov.cdoitmo.converters.schedule.exams;
 
+import com.bukhmastov.cdoitmo.utils.Static;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -43,14 +45,14 @@ public abstract class ScheduleExamsConverter implements Runnable {
                     final String[] timeStartA = examA.getString("time").split(":");
                     final String[] dateB = examB.getString("date").split(".");
                     final String[] timeStartB = examB.getString("time").split(":");
-                    final Calendar calendarA = Calendar.getInstance();
+                    final Calendar calendarA = Static.getCalendar();
                     calendarA.set(Calendar.DAY_OF_MONTH, Integer.parseInt(dateA[0]));
                     calendarA.set(Calendar.MONTH, Integer.parseInt(dateA[1]));
                     calendarA.set(Calendar.YEAR, Integer.parseInt(dateA[2]));
                     calendarA.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeStartA[0]));
                     calendarA.set(Calendar.MINUTE, Integer.parseInt(timeStartA[1]));
                     calendarA.set(Calendar.SECOND, 0);
-                    final Calendar calendarB = Calendar.getInstance();
+                    final Calendar calendarB = Static.getCalendar();
                     calendarB.set(Calendar.DAY_OF_MONTH, Integer.parseInt(dateB[0]));
                     calendarB.set(Calendar.MONTH, Integer.parseInt(dateB[1]));
                     calendarB.set(Calendar.YEAR, Integer.parseInt(dateB[2]));

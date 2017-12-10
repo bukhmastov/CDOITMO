@@ -13,7 +13,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.Calendar;
-import java.util.Locale;
 import java.util.Objects;
 
 class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFactory {
@@ -53,24 +52,14 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
                     settings.put("shift", 0);
                 }
                 final int shift = settings.getInt("shift");
-                final Calendar calendar = Calendar.getInstance(Locale.GERMANY);
+                final Calendar calendar = Static.getCalendar();
                 if (shift != 0) {
                     calendar.add(Calendar.HOUR, shift * 24);
                 }
                 this.week = Static.getWeek(context, calendar) % 2;
                 this.type = content.getString("type");
                 this.lessons = new JSONArray();
-                final int weekday;
-                switch (calendar.get(Calendar.DAY_OF_WEEK)) {
-                    case Calendar.MONDAY: weekday = 0; break;
-                    case Calendar.TUESDAY: weekday = 1; break;
-                    case Calendar.WEDNESDAY: weekday = 2; break;
-                    case Calendar.THURSDAY: weekday = 3; break;
-                    case Calendar.FRIDAY: weekday = 4; break;
-                    case Calendar.SATURDAY: weekday = 5; break;
-                    case Calendar.SUNDAY: weekday = 6; break;
-                    default: weekday = 0; break;
-                }
+                final int weekday = Static.getWeekDay(calendar);
                 final JSONArray schedule = content.getJSONArray("schedule");
                 if (schedule == null) throw new NullPointerException("schedule cannot be null");
                 for (int i = 0; i < schedule.length(); i++) {

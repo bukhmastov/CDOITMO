@@ -324,7 +324,7 @@ public class ThemeUtil {
                 final int t2_hour = Integer.parseInt(t2_values[0]);
                 final int t2_minutes = Integer.parseInt(t2_values[1]);
                 if (t1_hour < 0 || t1_hour > 23 || t1_minutes < 0 || t1_minutes > 59 || t2_hour < 0 || t2_hour > 23 || t2_minutes < 0 || t2_minutes > 59) throw new Exception("Invalid value");
-                final Calendar calendar = Calendar.getInstance();
+                final Calendar calendar = Static.getCalendar();
                 final int now_hours = calendar.get(Calendar.HOUR_OF_DAY);
                 final int now_minutes = calendar.get(Calendar.MINUTE);
                 if (t1_hour == t2_hour) {

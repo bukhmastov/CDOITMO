@@ -150,13 +150,13 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                         String st = s.toString().trim();
                                         Matcher time = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(st);
                                         if (time.find()) {
-                                            Calendar st_calendar = Calendar.getInstance();
+                                            Calendar st_calendar = Static.getCalendar();
                                             st_calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(time.group(1)));
                                             st_calendar.set(Calendar.MINUTE, Integer.parseInt(time.group(2)));
                                             st_calendar.set(Calendar.SECOND, 0);
                                             st = st_calendar.get(Calendar.HOUR_OF_DAY) + ":" + Static.ldgZero(st_calendar.get(Calendar.MINUTE));
                                             if (lesson_time_end.getText().toString().isEmpty()) {
-                                                Calendar nt_calendar = Calendar.getInstance();
+                                                Calendar nt_calendar = Static.getCalendar();
                                                 nt_calendar.setTime(new Date(st_calendar.getTimeInMillis() + 5400000));
                                                 block_time_end = true;
                                                 String insert = nt_calendar.get(Calendar.HOUR_OF_DAY) + ":" + Static.ldgZero(nt_calendar.get(Calendar.MINUTE));
@@ -172,7 +172,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                                 String nt = lesson_time_end.getText().toString();
                                                 Matcher next_time = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(nt);
                                                 if (next_time.find()) {
-                                                    Calendar nt_calendar = Calendar.getInstance();
+                                                    Calendar nt_calendar = Static.getCalendar();
                                                     nt_calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(next_time.group(1)));
                                                     nt_calendar.set(Calendar.MINUTE, Integer.parseInt(next_time.group(2)));
                                                     nt_calendar.set(Calendar.SECOND, 0);
@@ -217,13 +217,13 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                         String et = s.toString().trim();
                                         Matcher time = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(et);
                                         if (time.find()) {
-                                            Calendar et_calendar = Calendar.getInstance();
+                                            Calendar et_calendar = Static.getCalendar();
                                             et_calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(time.group(1)));
                                             et_calendar.set(Calendar.MINUTE, Integer.parseInt(time.group(2)));
                                             et_calendar.set(Calendar.SECOND, 0);
                                             et = et_calendar.get(Calendar.HOUR_OF_DAY) + ":" + Static.ldgZero(et_calendar.get(Calendar.MINUTE));
                                             if (lesson_time_start.getText().toString().isEmpty()) {
-                                                Calendar st_calendar = Calendar.getInstance();
+                                                Calendar st_calendar = Static.getCalendar();
                                                 st_calendar.setTime(new Date(et_calendar.getTimeInMillis() - 5400000));
                                                 block_time_start = true;
                                                 String insert = st_calendar.get(Calendar.HOUR_OF_DAY) + ":" + Static.ldgZero(st_calendar.get(Calendar.MINUTE));
@@ -239,7 +239,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                                 String st = lesson_time_start.getText().toString();
                                                 Matcher previous_time = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(st);
                                                 if (previous_time.find()) {
-                                                    Calendar st_calendar = Calendar.getInstance();
+                                                    Calendar st_calendar = Static.getCalendar();
                                                     st_calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(previous_time.group(1)));
                                                     st_calendar.set(Calendar.MINUTE, Integer.parseInt(previous_time.group(2)));
                                                     st_calendar.set(Calendar.SECOND, 0);

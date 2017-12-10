@@ -10,7 +10,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -73,7 +72,7 @@ public class ProtocolConverter implements Runnable {
                 item.put("cdoitmo_delta_double", delta);
                 protocol.put(i, item);
             }
-            response.put("timestamp", Calendar.getInstance().getTimeInMillis());
+            response.put("timestamp", Static.getCalendar().getTimeInMillis());
             response.put("number_of_weeks", number_of_weeks);
             response.put("protocol", protocol);
         } catch (Exception e) {

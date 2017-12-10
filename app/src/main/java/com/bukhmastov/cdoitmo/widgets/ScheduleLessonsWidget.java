@@ -37,7 +37,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Calendar;
-import java.util.Locale;
 import java.util.Objects;
 
 public class ScheduleLessonsWidget extends AppWidgetProvider {
@@ -92,7 +91,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                     } else {
                         long timestamp = cache.getLong("timestamp");
                         long shift = settings.getInt("updateTime") * 3600000L;
-                        if (shift != 0 && timestamp + shift < Calendar.getInstance().getTimeInMillis()) {
+                        if (shift != 0 && timestamp + shift < Static.getCalendar().getTimeInMillis()) {
                             refresh(context, appWidgetManager, appWidgetId, settings);
                         } else {
                             display(context, appWidgetManager, appWidgetId, controls);
@@ -130,7 +129,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                                 public void run() {
                                     try {
                                         JSONObject jsonObject = new JSONObject();
-                                        jsonObject.put("timestamp", Calendar.getInstance().getTimeInMillis());
+                                        jsonObject.put("timestamp", Static.getCalendar().getTimeInMillis());
                                         jsonObject.put("content", json);
                                         Data.save(context, appWidgetId, "cache", jsonObject.toString());
                                         new ScheduleLessonsAdditionalConverter(context, json, new ScheduleLessonsAdditionalConverter.response() {
@@ -246,7 +245,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                     final Colors colors = getColors(settings);
                     final JSONObject json = cache.getJSONObject("content");
                     final int shift = settings.getInt("shift");
-                    final Calendar calendar = Calendar.getInstance(Locale.GERMANY);
+                    final Calendar calendar = Static.getCalendar();
                     if (shift != 0) {
                         calendar.add(Calendar.HOUR, shift * 24);
                     }

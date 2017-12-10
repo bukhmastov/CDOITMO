@@ -149,7 +149,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                     if (!cache.isEmpty()) {
                         try {
                             data.get(type).data = new JSONObject(cache);
-                            if (data.get(type).data.getLong("timestamp") + refresh_rate * 3600000L < Calendar.getInstance().getTimeInMillis()) {
+                            if (data.get(type).data.getLong("timestamp") + refresh_rate * 3600000L < Static.getCalendar().getTimeInMillis()) {
                                 load(type, true, cache);
                             } else {
                                 load(type, false, cache);
@@ -257,7 +257,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                                                         if (json != null) {
                                                             try {
                                                                 json = new JSONObject()
-                                                                        .put("timestamp", Calendar.getInstance().getTimeInMillis())
+                                                                        .put("timestamp", Static.getCalendar().getTimeInMillis())
                                                                         .put("rating", json);
                                                                 if (Storage.pref.get(activity, "pref_use_cache", true)) {
                                                                     Storage.file.cache.put(activity, "rating#list", json.toString());
@@ -292,7 +292,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                                                         if (json != null) {
                                                             try {
                                                                 json = new JSONObject()
-                                                                        .put("timestamp", Calendar.getInstance().getTimeInMillis())
+                                                                        .put("timestamp", Static.getCalendar().getTimeInMillis())
                                                                         .put("rating", json);
                                                                 if (Storage.pref.get(activity, "pref_use_cache", true)) {
                                                                     Storage.file.cache.put(activity, "rating#core", json.toString());
@@ -587,7 +587,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                                                                     JSONObject obj = array.getJSONObject(i);
                                                                     if (obj.getString("name").contains(hashMap.get("faculty"))) {
                                                                         int course_delta = (max_course - Integer.parseInt(hashMap.get("course")));
-                                                                        Calendar now = Calendar.getInstance();
+                                                                        Calendar now = Static.getCalendar();
                                                                         int year = now.get(Calendar.YEAR) - course_delta;
                                                                         int month = now.get(Calendar.MONTH);
                                                                         String years = month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year;
