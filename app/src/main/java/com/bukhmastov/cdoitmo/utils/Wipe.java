@@ -283,7 +283,6 @@ public class Wipe {
                                 File[] lessons = schedule_lessons.listFiles();
                                 for (File lesson : lessons) {
                                     try {
-                                        lesson.delete();
                                         String token = lesson.getName();
                                         if (token.startsWith("group_")) {
                                             apply97convertLesson(lesson, lessonsPath, token, "group_");
@@ -291,8 +290,10 @@ public class Wipe {
                                             apply97convertLesson(lesson, lessonsPath, token, "room_");
                                         } else if (token.matches("^\\d{6}\\.txt$")) {
                                             apply97convertLesson(lesson, lessonsPath, token, "");
+                                        } else {
+                                            // "teacher_picker_" and any broken schedules needs to be removed without converting
+                                            lesson.delete();
                                         }
-                                        // "teacher_picker_" needs to be removed without converting
                                     } catch (Exception e) {
                                         try {
                                             lesson.delete();
@@ -309,7 +310,6 @@ public class Wipe {
                                 File[] exams = schedule_exams.listFiles();
                                 for (File exam : exams) {
                                     try {
-                                        exam.delete();
                                         String token = exam.getName();
                                         if (token.startsWith("group_")) {
                                             apply97convertExam(exam, examsPath, token, "group_");
@@ -317,8 +317,10 @@ public class Wipe {
                                             apply97convertExam(exam, examsPath, token, "room_");
                                         } else if (token.startsWith("teacher")) {
                                             apply97convertExam(exam, examsPath, token, "teacher");
+                                        } else {
+                                            // "teacher_picker_" and any broken schedules needs to be removed without converting
+                                            exam.delete();
                                         }
-                                        // "teacher_picker_" needs to be removed without converting
                                     } catch (Exception e) {
                                         try {
                                             exam.delete();
@@ -350,7 +352,6 @@ public class Wipe {
                                 File[] addedList = schedule_added.listFiles();
                                 for (File added : addedList) {
                                     try {
-                                        added.delete();
                                         String token = added.getName();
                                         if (token.startsWith("group_")) {
                                             apply97convertAdded(added, addedPath, token, "group_");
@@ -358,6 +359,8 @@ public class Wipe {
                                             apply97convertAdded(added, addedPath, token, "room_");
                                         } else if (token.matches("^\\d{6}\\.txt$")) {
                                             apply97convertAdded(added, addedPath, token, "");
+                                        } else {
+                                            added.delete();
                                         }
                                     } catch (Exception e) {
                                         try {
@@ -436,7 +439,9 @@ public class Wipe {
             lessonJson.put("title", lLabel);
             lessonJson.put("schedule", lSchedule);
             data = lessonJson.toString();
-            // write converted lesson data
+            // delete old file
+            lesson.delete();
+            // create new file and write converted lesson data
             // token: query.toLowerCase() instead [type + "_" + query]
             File newLesson = new File(lessonsPath + File.separator + m.group(1).toLowerCase() + ".txt");
             if (!newLesson.exists()) {
@@ -509,7 +514,9 @@ public class Wipe {
             examJson.put("title", eScope);
             examJson.put("schedule", eSchedule);
             data = examJson.toString();
-            // write converted lesson data
+            // delete old file
+            exam.delete();
+            // create new file and write converted exam data
             // token: query.toLowerCase() instead [type + "_" + query]
             File newExam = new File(examsPath + File.separator + m.group(1).toLowerCase() + ".txt");
             if (!newExam.exists()) {
@@ -544,7 +551,9 @@ public class Wipe {
                 addedJson.put(i, day);
             }
             data = addedJson.toString();
-            // write converted lesson data
+            // delete old file
+            added.delete();
+            // create new file and write converted added lesson data
             // token: query.toLowerCase() instead [type + "_" + query]
             File newAdded = new File(addedPath + File.separator + m.group(1).toLowerCase() + ".txt");
             if (!newAdded.exists()) {

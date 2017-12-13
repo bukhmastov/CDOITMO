@@ -423,19 +423,19 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                             activity.getString(R.string.persons),
                                                             activity.getString(R.string.faculties),
                                                             activity.getString(R.string.units),
-                                                            activity.getString(R.string.ubuildings),
                                                             activity.getString(R.string.news),
-                                                            activity.getString(R.string.events)
+                                                            activity.getString(R.string.events),
+                                                            activity.getString(R.string.ubuildings)
                                                     }));
                                                     final ArrayList<String> values = new ArrayList<>(Arrays.asList(new String[] {
                                                             "persons",
                                                             "faculties",
                                                             "units",
-                                                            "ubuildings",
                                                             "news",
-                                                            "events"
+                                                            "events",
+                                                            "ubuildings"
                                                     }));
-                                                    final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(activity, android.R.layout.simple_list_item_1);
+                                                    final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(activity, R.layout.spinner_layout);
                                                     arrayAdapter.addAll(labels);
                                                     new AlertDialog.Builder(activity)
                                                             .setAdapter(arrayAdapter, new DialogInterface.OnClickListener() {

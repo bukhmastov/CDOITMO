@@ -70,6 +70,7 @@ public class DaysRemainingWidget {
                     final long ts = System.currentTimeMillis();
                     final ArrayList<DaysRemainingWidget.Data> dataArray = new ArrayList<>();
                     final JSONArray schedule = full_schedule.getJSONArray("schedule");
+                    final String schedule_type = full_schedule.getString("type");
                     for (int i = 0; i < schedule.length(); i++) {
                         try {
                             final JSONObject fullExam = schedule.getJSONObject(i);
@@ -126,7 +127,7 @@ public class DaysRemainingWidget {
                                     // add exam that not yet passed
                                     Data data = new Data();
                                     data.subject = subject;
-                                    data.desc = teacher.isEmpty() ? group : teacher;
+                                    data.desc = schedule_type.equals("teacher") ? group : teacher;
                                     data.time = ts2time(examTS - ts);
                                     dataArray.add(data);
                                 }

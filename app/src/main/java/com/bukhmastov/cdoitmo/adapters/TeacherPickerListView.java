@@ -15,7 +15,6 @@ import com.bukhmastov.cdoitmo.utils.Static;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Objects;
 
 public class TeacherPickerListView extends ArrayAdapter<HashMap<String, String>> {
 
@@ -36,14 +35,15 @@ public class TeacherPickerListView extends ArrayAdapter<HashMap<String, String>>
                 LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 convertView = inflater.inflate(R.layout.listview_teacher_picker, parent, false);
             }
-            HashMap<String, String> teacherMap = teachersMap.get(position);
+            final HashMap<String, String> teacherMap = teachersMap.get(position);
             TextView lv_teacher_picker_name = convertView.findViewById(R.id.lv_teacher_picker_name);
             if (lv_teacher_picker_name != null) {
-                String text = teacherMap.get("person");
-                if (teacherMap.get("post") != null && !Objects.equals(teacherMap.get("post"), "") && !Objects.equals(teacherMap.get("post"), "null")) {
-                    text += " (" + teacherMap.get("post") + ")";
+                String person = teacherMap.get("person");
+                String post = teacherMap.get("post");
+                if (post != null && !post.isEmpty() && !post.equals("null")) {
+                    person += " (" + post + ")";
                 }
-                lv_teacher_picker_name.setText(text);
+                lv_teacher_picker_name.setText(person);
             }
             return convertView;
         } catch (Exception e) {
