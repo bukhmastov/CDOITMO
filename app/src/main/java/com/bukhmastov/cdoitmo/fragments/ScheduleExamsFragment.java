@@ -85,20 +85,6 @@ public class ScheduleExamsFragment extends ConnectedFragment {
                 ScheduleExamsFragment.setQuery(action_extra);
             }
         }
-        tab = new TabProvider() {
-            @Override
-            public void onInvalidate(boolean refresh) {
-                Log.v(TAG, "onInvalidate | refresh=" + Static.logBoolean(refresh));
-                if (isResumed()) {
-                    invalidate = false;
-                    invalidate_refresh = false;
-                    load(refresh);
-                } else {
-                    invalidate = true;
-                    invalidate_refresh = refresh;
-                }
-            }
-        };
     }
 
     @Override
@@ -149,6 +135,22 @@ public class ScheduleExamsFragment extends ConnectedFragment {
             }
         } catch (Exception e){
             Static.error(e);
+        }
+        if (tab == null) {
+            tab = new TabProvider() {
+                @Override
+                public void onInvalidate(boolean refresh) {
+                    Log.v(TAG, "onInvalidate | refresh=" + Static.logBoolean(refresh));
+                    if (isResumed()) {
+                        invalidate = false;
+                        invalidate_refresh = false;
+                        load(refresh);
+                    } else {
+                        invalidate = true;
+                        invalidate_refresh = refresh;
+                    }
+                }
+            };
         }
         if (invalidate) {
             invalidate = false;

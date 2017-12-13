@@ -15,7 +15,6 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activities.MainActivity;
 import com.bukhmastov.cdoitmo.activities.ScheduleLessonsSearchActivity;
 import com.bukhmastov.cdoitmo.adapters.PagerLessonsAdapter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
@@ -130,13 +129,16 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
                 if (ScheduleLessonsTabHostFragment.getQuery() == null) {
                     ScheduleLessonsTabHostFragment.setQuery(ScheduleLessons.getDefaultScope(activity, ScheduleLessons.TYPE));
                 }
-                // preload schedule here
                 Static.T.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         try {
                             // setup pager adapter
                             final TabLayout fixed_tabs = activity.findViewById(R.id.fixed_tabs);
+                            if (fixed_tabs == null) {
+                                loaded = false;
+                                return;
+                            }
                             fixed_tabs.setVisibility(View.VISIBLE);
                             draw(R.layout.layout_schedule_lessons_tabs);
                             final ViewPager schedule_view = activity.findViewById(R.id.schedule_pager);
@@ -177,6 +179,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
                                     });
                                 }
                             } catch (Exception e1) {
+                                loaded = false;
                                 Static.error(e1);
                             }
                         }

@@ -191,13 +191,15 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                                     }
                                                 }
                                             }
-                                            block_time_start = true;
-                                            int selection = lesson_time_start.getSelectionStart();
-                                            lesson_time_start.setText(st);
-                                            try {
-                                                lesson_time_start.setSelection(selection);
-                                            } catch (Exception ignore) {
-                                                // ignore
+                                            if (!s.toString().trim().equals(st)) {
+                                                block_time_start = true;
+                                                int selection = lesson_time_start.getSelectionStart();
+                                                lesson_time_start.setText(st);
+                                                try {
+                                                    lesson_time_start.setSelection(selection);
+                                                } catch (Exception ignore) {
+                                                    // ignore
+                                                }
                                             }
                                         }
                                         lesson.timeStart = st;
@@ -258,13 +260,15 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                                     }
                                                 }
                                             }
-                                            block_time_end = true;
-                                            int selection = lesson_time_end.getSelectionStart();
-                                            lesson_time_end.setText(et);
-                                            try {
-                                                lesson_time_end.setSelection(selection);
-                                            } catch (Exception ignore) {
-                                                // ignore
+                                            if (!s.toString().trim().equals(et)) {
+                                                block_time_end = true;
+                                                int selection = lesson_time_end.getSelectionStart();
+                                                lesson_time_end.setText(et);
+                                                try {
+                                                    lesson_time_end.setSelection(selection);
+                                                } catch (Exception ignore) {
+                                                    // ignore
+                                                }
                                             }
                                         }
                                         lesson.timeEnd = et;
@@ -300,7 +304,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                 final AutoCompleteTextView lesson_type = activity.findViewById(R.id.lesson_type);
                                 if (lesson.type != null) lesson_type.setText(lesson.type);
                                 lesson_type.setThreshold(1);
-                                lesson_type.setAdapter(ArrayAdapter.createFromResource(activity, R.array.lessons_types, android.R.layout.simple_dropdown_item_1line));
+                                lesson_type.setAdapter(ArrayAdapter.createFromResource(activity, R.array.lessons_types, R.layout.spinner_layout_simple_expanded));
                                 lesson_type.addTextChangedListener(new TextWatcher() {
                                     @Override
                                     public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -416,7 +420,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                 AutoCompleteTextView lesson_building = activity.findViewById(R.id.lesson_building);
                                 if (lesson.building != null) lesson_building.setText(lesson.building);
                                 lesson_building.setThreshold(1);
-                                lesson_building.setAdapter(ArrayAdapter.createFromResource(activity, R.array.buildings, android.R.layout.simple_dropdown_item_1line));
+                                lesson_building.setAdapter(ArrayAdapter.createFromResource(activity, R.array.buildings, R.layout.spinner_layout_simple_expanded));
                                 lesson_building.addTextChangedListener(new TextWatcher() {
                                     @Override
                                     public void beforeTextChanged(CharSequence s, int start, int count, int after) {}

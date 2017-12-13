@@ -7,7 +7,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
@@ -17,7 +16,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Objects;
 
 public class TeacherPickerAdapter extends ArrayAdapter<JSONObject> {
 
@@ -53,18 +51,25 @@ public class TeacherPickerAdapter extends ArrayAdapter<JSONObject> {
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
         try {
-            JSONObject teacher = getItem(position);
             if (convertView == null) {
                 LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 convertView = inflater.inflate(R.layout.layout_teachers_auto_complete_list, parent, false);
             }
+            final JSONObject teacher = getItem(position);
             if (teacher != null) {
-                ((TextView) convertView.findViewById(R.id.title)).setText(teacher.getString("person"));
-                String post = teacher.getString("post");
-                if (post == null || Objects.equals(post, "null") || post.trim().isEmpty()) {
-                    convertView.findViewById(R.id.meta).setLayoutParams(new LinearLayout.LayoutParams(0, 0));
-                } else {
-                    ((TextView) convertView.findViewById(R.id.meta)).setText(post);
+                final String post = teacher.getString("post");
+                TextView title = convertView.findViewById(R.id.title);
+                TextView meta = convertView.findViewById(R.id.meta);
+                if (title != null) {
+                    title.setText(teacher.getString("person"));
+                }
+                if (meta != null) {
+                    if (post == null || post.equals("null") || post.trim().isEmpty()) {
+                        meta.setVisibility(View.GONE);
+                    } else {
+                        meta.setVisibility(View.VISIBLE);
+                        meta.setText(post);
+                    }
                 }
             }
             return convertView;

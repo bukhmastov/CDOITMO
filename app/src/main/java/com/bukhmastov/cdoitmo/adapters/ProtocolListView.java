@@ -15,7 +15,6 @@ import com.bukhmastov.cdoitmo.utils.Static;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Objects;
 
 public class ProtocolListView extends ArrayAdapter<HashMap<String, String>> {
 
@@ -42,16 +41,16 @@ public class ProtocolListView extends ArrayAdapter<HashMap<String, String>> {
             ((TextView) convertView.findViewById(R.id.lv_protocol_meta)).setText(change.get("meta"));
             ((TextView) convertView.findViewById(R.id.lv_protocol_value)).setText(change.get("value"));
             TextView lv_protocol_delta = convertView.findViewById(R.id.lv_protocol_delta);
-            if (Objects.equals(change.get("delta_here"), "true")) {
+            if (change.get("delta_here").equals("true")) {
+                lv_protocol_delta.setVisibility(View.VISIBLE);
                 lv_protocol_delta.setText(change.get("delta"));
                 try {
-                    lv_protocol_delta.setTextColor(Static.resolveColor(context, Objects.equals(change.get("delta_negative"), "true") ? R.attr.colorNegativeTrend : R.attr.colorPositiveTrend));
+                    lv_protocol_delta.setTextColor(Static.resolveColor(context, change.get("delta_negative").equals("true") ? R.attr.colorNegativeTrend : R.attr.colorPositiveTrend));
                 } catch (Exception e) {
                     Static.error(e);
                 }
             } else {
-                lv_protocol_delta.setWidth(0);
-                lv_protocol_delta.setHeight(0);
+                lv_protocol_delta.setVisibility(View.GONE);
             }
             return convertView;
         } catch (Exception e) {
