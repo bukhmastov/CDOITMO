@@ -372,6 +372,9 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                                     case Client.FAILED_TRY_AGAIN:
                                     case ScheduleLessons.FAILED_LOAD:
                                     case ScheduleLessons.FAILED_EMPTY_QUERY:
+                                    case ScheduleLessons.FAILED_NOT_FOUND:
+                                    case ScheduleLessons.FAILED_INVALID_QUERY:
+                                    case ScheduleLessons.FAILED_MINE_NEED_ISU:
                                     default:
                                         share_content.addView(inflate(R.layout.state_failed_without_align));
                                         break;

@@ -300,14 +300,19 @@ public class ScheduleLessons extends Schedule {
             @Override
             public void run() {
                 try {
-                    if (data.getJSONArray("schedule").length() == 0) {
-                        invokePending(query, withUserChanges, true, new Pending() {
-                            @Override
-                            public void invoke(Handler handler) {
-                                handler.onFailure(FAILED_LOAD);
+                    boolean valid = false;
+                    final JSONArray schedule = data.getJSONArray("schedule");
+                    for (int i = 0; i < schedule.length(); i++) {
+                        final JSONObject day = schedule.getJSONObject(i);
+                        if (day != null) {
+                            final JSONArray lessons = day.getJSONArray("lessons");
+                            if (lessons != null && lessons.length() > 0) {
+                                valid = true;
+                                break;
                             }
-                        });
-                    } else {
+                        }
+                    }
+                    if (valid) {
                         if (putToCache) {
                             putCache(context, query, data.toString(), forceToCache);
                         }
@@ -331,6 +336,16 @@ public class ScheduleLessons extends Schedule {
                                 }
                             });
                         }
+                    } else {
+                        if (putToCache) {
+                            putLocalCache(query, data.toString());
+                        }
+                        invokePending(query, withUserChanges, true, new Pending() {
+                            @Override
+                            public void invoke(Handler handler) {
+                                handler.onFailure(FAILED_NOT_FOUND);
+                            }
+                        });
                     }
                 } catch (Exception e) {
                     Static.error(e);

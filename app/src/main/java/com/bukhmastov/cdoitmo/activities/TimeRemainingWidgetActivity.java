@@ -151,6 +151,16 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
                 case ScheduleLessons.FAILED_EMPTY_QUERY:
                     message(activity.getString(R.string.load_failed));
                     break;
+                case ScheduleLessons.FAILED_NOT_FOUND:
+                    message(activity.getString(R.string.no_schedule));
+                    break;
+                case ScheduleLessons.FAILED_INVALID_QUERY:
+                    message(activity.getString(R.string.incorrect_query));
+                    break;
+                case ScheduleLessons.FAILED_MINE_NEED_ISU:
+                    // TODO replace with isu auth, when isu will be ready
+                    message(activity.getString(R.string.load_failed));
+                    break;
             }
         } catch (Exception e){
             Static.error(e);

@@ -300,7 +300,7 @@ public class ScheduleExams extends Schedule {
                         invokePending(query, withUserChanges, true, new Pending() {
                             @Override
                             public void invoke(Handler handler) {
-                                handler.onFailure(FAILED_LOAD);
+                                handler.onFailure(FAILED_NOT_FOUND);
                             }
                         });
                     } else {

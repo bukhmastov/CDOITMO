@@ -57,6 +57,7 @@ public abstract class Schedule {
     public static final int FAILED_EMPTY_QUERY = 102;
     public static final int FAILED_MINE_NEED_ISU = 103;
     public static final int FAILED_INVALID_QUERY = 104;
+    public static final int FAILED_NOT_FOUND = 105;
     protected enum SOURCE {ISU, IFMO}
 
     public Schedule(final Handler handler) {

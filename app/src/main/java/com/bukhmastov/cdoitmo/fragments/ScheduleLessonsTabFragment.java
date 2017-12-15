@@ -254,65 +254,66 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
                             Log.v(TAG, "onFailure | statusCode=" + statusCode + " | state=" + state);
                             switch (state) {
                                 case Client.FAILED_OFFLINE:
-                                case ScheduleLessons.FAILED_OFFLINE: {
-                                    draw(R.layout.state_offline);
-                                    View offline_reload = container.findViewById(R.id.offline_reload);
-                                    if (offline_reload != null) {
-                                        offline_reload.setOnClickListener(new View.OnClickListener() {
-                                            @Override
-                                            public void onClick(View v) {
-                                                load(false);
-                                            }
-                                        });
-                                    }
+                                case Schedule.FAILED_OFFLINE: {
+                                    final ViewGroup view = (ViewGroup) inflate(R.layout.state_offline);
+                                    view.findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            load(false);
+                                        }
+                                    });
+                                    draw(view);
                                     break;
                                 }
                                 case Client.FAILED_TRY_AGAIN:
                                 case Client.FAILED_SERVER_ERROR:
-                                case ScheduleLessons.FAILED_LOAD: {
-                                    draw(R.layout.state_try_again);
+                                case Schedule.FAILED_LOAD: {
+                                    final ViewGroup view = (ViewGroup) inflate(R.layout.state_try_again);
                                     if (state == Client.FAILED_TRY_AGAIN) {
-                                        TextView try_again_message = activity.findViewById(R.id.try_again_message);
-                                        if (try_again_message != null) {
-                                            try_again_message.setText(Client.getFailureMessage(activity, statusCode));
+                                        ((TextView) view.findViewById(R.id.try_again_message)).setText(Client.getFailureMessage(activity, statusCode));
+                                    }
+                                    view.findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            load(false);
                                         }
-                                    }
-                                    View try_again_reload = container.findViewById(R.id.try_again_reload);
-                                    if (try_again_reload != null) {
-                                        try_again_reload.setOnClickListener(new View.OnClickListener() {
-                                            @Override
-                                            public void onClick(View v) {
-                                                load(false);
-                                            }
-                                        });
-                                    }
+                                    });
+                                    draw(view);
                                     break;
                                 }
-                                case ScheduleLessons.FAILED_EMPTY_QUERY: {
-                                    draw(R.layout.schedule_empty_query);
-                                    View open_settings = container.findViewById(R.id.open_settings);
-                                    if (open_settings != null) {
-                                        open_settings.setOnClickListener(new View.OnClickListener() {
-                                            @Override
-                                            public void onClick(View view) {
-                                                activity.openActivity(ConnectedActivity.TYPE.stackable, SettingsScheduleLessonsFragment.class, null);
-                                            }
-                                        });
-                                    }
+                                case Schedule.FAILED_EMPTY_QUERY: {
+                                    final ViewGroup view = (ViewGroup) inflate(R.layout.schedule_empty_query);
+                                    view.findViewById(R.id.open_settings).setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            activity.openActivity(ConnectedActivity.TYPE.stackable, SettingsScheduleLessonsFragment.class, null);
+                                        }
+                                    });
+                                    draw(view);
                                     break;
                                 }
-                                case ScheduleLessons.FAILED_MINE_NEED_ISU: {
+                                case Schedule.FAILED_NOT_FOUND: {
+                                    final ViewGroup view = (ViewGroup) inflate(R.layout.nothing_to_display);
+                                    ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_schedule);
+                                    draw(view);
+                                    break;
+                                }
+                                case Schedule.FAILED_INVALID_QUERY: {
+                                    final ViewGroup view = (ViewGroup) inflate(R.layout.state_failed);
+                                    ((TextView) view.findViewById(R.id.text)).setText(R.string.incorrect_query);
+                                    draw(view);
+                                    break;
+                                }
+                                case Schedule.FAILED_MINE_NEED_ISU: {
                                     // TODO replace with isu auth, when isu will be ready
-                                    draw(R.layout.state_try_again);
-                                    View try_again_reload = container.findViewById(R.id.try_again_reload);
-                                    if (try_again_reload != null) {
-                                        try_again_reload.setOnClickListener(new View.OnClickListener() {
-                                            @Override
-                                            public void onClick(View v) {
-                                                load(false);
-                                            }
-                                        });
-                                    }
+                                    final ViewGroup view = (ViewGroup) inflate(R.layout.state_try_again);
+                                    view.findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            load(false);
+                                        }
+                                    });
+                                    draw(view);
                                     break;
                                 }
                             }
@@ -329,11 +330,9 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
                     public void run() {
                         try {
                             Log.v(TAG, "onProgress | state=" + state);
-                            draw(R.layout.state_loading);
-                            TextView loading_message = container.findViewById(R.id.loading_message);
-                            if (loading_message != null) {
-                                loading_message.setText(R.string.loading);
-                            }
+                            final ViewGroup view = (ViewGroup) inflate(R.layout.state_loading);
+                            ((TextView) view.findViewById(R.id.loading_message)).setText(R.string.loading);
+                            draw(view);
                         } catch (Exception e) {
                             Static.error(e);
                         }
@@ -370,13 +369,20 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
         }
     }
 
-    private void draw(final int layoutId) {
+    private void draw(final View view) {
         try {
             ViewGroup vg = container.findViewById(R.id.container_schedule_lessons);
             if (vg != null) {
                 vg.removeAllViews();
-                vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                vg.addView(view, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             }
+        } catch (Exception e){
+            Static.error(e);
+        }
+    }
+    private void draw(final int layoutId) {
+        try {
+            draw(inflate(layoutId));
         } catch (Exception e){
             Static.error(e);
         }

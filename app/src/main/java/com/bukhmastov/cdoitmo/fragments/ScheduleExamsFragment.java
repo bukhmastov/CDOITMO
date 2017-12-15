@@ -297,65 +297,66 @@ public class ScheduleExamsFragment extends ConnectedFragment {
                             Log.v(TAG, "onFailure | statusCode=" + statusCode + " | state=" + state);
                             switch (state) {
                                 case Client.FAILED_OFFLINE:
-                                case ScheduleExams.FAILED_OFFLINE: {
-                                    draw(R.layout.state_offline);
-                                    View offline_reload = activity.findViewById(R.id.offline_reload);
-                                    if (offline_reload != null) {
-                                        offline_reload.setOnClickListener(new View.OnClickListener() {
-                                            @Override
-                                            public void onClick(View v) {
-                                                load(false);
-                                            }
-                                        });
-                                    }
+                                case Schedule.FAILED_OFFLINE: {
+                                    final ViewGroup view = (ViewGroup) inflate(R.layout.state_offline);
+                                    view.findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            load(false);
+                                        }
+                                    });
+                                    draw(view);
                                     break;
                                 }
                                 case Client.FAILED_TRY_AGAIN:
                                 case Client.FAILED_SERVER_ERROR:
-                                case ScheduleExams.FAILED_LOAD: {
-                                    draw(R.layout.state_try_again);
+                                case Schedule.FAILED_LOAD: {
+                                    final ViewGroup view = (ViewGroup) inflate(R.layout.state_try_again);
                                     if (state == Client.FAILED_TRY_AGAIN) {
-                                        TextView try_again_message = activity.findViewById(R.id.try_again_message);
-                                        if (try_again_message != null) {
-                                            try_again_message.setText(Client.getFailureMessage(activity, statusCode));
+                                        ((TextView) view.findViewById(R.id.try_again_message)).setText(Client.getFailureMessage(activity, statusCode));
+                                    }
+                                    view.findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            load(false);
                                         }
-                                    }
-                                    View try_again_reload = activity.findViewById(R.id.try_again_reload);
-                                    if (try_again_reload != null) {
-                                        try_again_reload.setOnClickListener(new View.OnClickListener() {
-                                            @Override
-                                            public void onClick(View v) {
-                                                load(false);
-                                            }
-                                        });
-                                    }
+                                    });
+                                    draw(view);
                                     break;
                                 }
-                                case ScheduleExams.FAILED_EMPTY_QUERY: {
-                                    draw(R.layout.schedule_empty_query);
-                                    View open_settings = activity.findViewById(R.id.open_settings);
-                                    if (open_settings != null) {
-                                        open_settings.setOnClickListener(new View.OnClickListener() {
-                                            @Override
-                                            public void onClick(View view) {
-                                                activity.openActivity(ConnectedActivity.TYPE.stackable, SettingsScheduleExamsFragment.class, null);
-                                            }
-                                        });
-                                    }
+                                case Schedule.FAILED_EMPTY_QUERY: {
+                                    final ViewGroup view = (ViewGroup) inflate(R.layout.schedule_empty_query);
+                                    view.findViewById(R.id.open_settings).setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            activity.openActivity(ConnectedActivity.TYPE.stackable, SettingsScheduleExamsFragment.class, null);
+                                        }
+                                    });
+                                    draw(view);
                                     break;
                                 }
-                                case ScheduleExams.FAILED_MINE_NEED_ISU: {
+                                case Schedule.FAILED_NOT_FOUND: {
+                                    final ViewGroup view = (ViewGroup) inflate(R.layout.nothing_to_display);
+                                    ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_schedule);
+                                    draw(view);
+                                    break;
+                                }
+                                case Schedule.FAILED_INVALID_QUERY: {
+                                    final ViewGroup view = (ViewGroup) inflate(R.layout.state_failed);
+                                    ((TextView) view.findViewById(R.id.text)).setText(R.string.incorrect_query);
+                                    draw(view);
+                                    break;
+                                }
+                                case Schedule.FAILED_MINE_NEED_ISU: {
                                     // TODO replace with isu auth, when isu will be ready
-                                    draw(R.layout.state_try_again);
-                                    View try_again_reload = activity.findViewById(R.id.try_again_reload);
-                                    if (try_again_reload != null) {
-                                        try_again_reload.setOnClickListener(new View.OnClickListener() {
-                                            @Override
-                                            public void onClick(View v) {
-                                                load(false);
-                                            }
-                                        });
-                                    }
+                                    final ViewGroup view = (ViewGroup) inflate(R.layout.state_try_again);
+                                    view.findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                            load(false);
+                                        }
+                                    });
+                                    draw(view);
                                     break;
                                 }
                             }
@@ -370,13 +371,11 @@ public class ScheduleExamsFragment extends ConnectedFragment {
                 Static.T.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Log.v(TAG, "progress " + state);
                         try {
-                            draw(R.layout.state_loading);
-                            TextView loading_message = activity.findViewById(R.id.loading_message);
-                            if (loading_message != null) {
-                                loading_message.setText(R.string.loading);
-                            }
+                            Log.v(TAG, "onProgress | state=" + state);
+                            final ViewGroup view = (ViewGroup) inflate(R.layout.state_loading);
+                            ((TextView) view.findViewById(R.id.loading_message)).setText(R.string.loading);
+                            draw(view);
                         } catch (Exception e) {
                             Static.error(e);
                         }
@@ -413,13 +412,20 @@ public class ScheduleExamsFragment extends ConnectedFragment {
         }
     }
 
-    private void draw(final int layoutId) {
+    private void draw(final View view) {
         try {
             ViewGroup vg = activity.findViewById(R.id.container_schedule_exams);
             if (vg != null) {
                 vg.removeAllViews();
-                vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                vg.addView(view, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             }
+        } catch (Exception e){
+            Static.error(e);
+        }
+    }
+    private void draw(final int layoutId) {
+        try {
+            draw(inflate(layoutId));
         } catch (Exception e){
             Static.error(e);
         }

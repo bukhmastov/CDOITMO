@@ -650,7 +650,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                         search_loading.setVisibility(View.GONE);
                                                         search_action.setVisibility(View.VISIBLE);
                                                         if (json == null) {
-                                                            Static.snackBar(activity, activity.getString(R.string.schedule_not_found));
+                                                            Static.toast(activity, activity.getString(R.string.schedule_not_found));
                                                         } else {
                                                             try {
                                                                 final String type = json.getString("type");
@@ -670,7 +670,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                                             }
                                                                             callback.done(title, query);
                                                                         } else {
-                                                                            Static.snackBar(activity, activity.getString(R.string.schedule_not_found));
+                                                                            Static.toast(activity, activity.getString(R.string.schedule_not_found));
                                                                         }
                                                                         break;
                                                                     }
@@ -679,7 +679,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                                         final JSONArray teachers = json.getJSONArray("schedule");
                                                                         Log.v(TAG, "getSchedule | search action | onSuccess | type=" + type + " | length=" + teachers.length());
                                                                         if (teachers.length() == 0) {
-                                                                            Static.snackBar(activity, activity.getString(R.string.no_teachers));
+                                                                            Static.toast(activity, activity.getString(R.string.no_teachers));
                                                                         } else if (teachers.length() == 1) {
                                                                             JSONObject teacher = teachers.getJSONObject(0);
                                                                             if (teacher != null) {
@@ -691,7 +691,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                                                 }
                                                                                 callback.done(title, pid);
                                                                             } else {
-                                                                                Static.snackBar(activity, getString(R.string.something_went_wrong));
+                                                                                Static.toast(activity, getString(R.string.something_went_wrong));
                                                                             }
                                                                         } else {
                                                                             ArrayList<JSONObject> arrayList = new ArrayList<>();
@@ -707,13 +707,13 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                                         break;
                                                                     }
                                                                     default: {
-                                                                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                                                        Static.toast(activity, activity.getString(R.string.something_went_wrong));
                                                                         break;
                                                                     }
                                                                 }
                                                             } catch (Exception e) {
                                                                 Static.error(e);
-                                                                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                                                Static.toast(activity, activity.getString(R.string.something_went_wrong));
                                                             }
                                                         }
                                                     }
@@ -731,7 +731,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                         Log.v(TAG, "getSchedule | search action | onFailure | state=" + state);
                                                         search_loading.setVisibility(View.GONE);
                                                         search_action.setVisibility(View.VISIBLE);
-                                                        Static.snackBar(activity, state == Client.FAILED_SERVER_ERROR ? Client.getFailureMessage(activity, statusCode) : activity.getString(R.string.schedule_not_found));
+                                                        Static.toast(activity, state == Client.FAILED_SERVER_ERROR ? Client.getFailureMessage(activity, statusCode) : activity.getString(R.string.schedule_not_found));
                                                     }
                                                 });
                                             }
@@ -780,11 +780,11 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                             }
                                             callback.done(title, query);
                                         } else {
-                                            Static.snackBar(activity, getString(R.string.something_went_wrong));
+                                            Static.toast(activity, getString(R.string.something_went_wrong));
                                         }
                                     } catch (Exception e) {
                                         Static.error(e);
-                                        Static.snackBar(activity, getString(R.string.something_went_wrong));
+                                        Static.toast(activity, getString(R.string.something_went_wrong));
                                     }
                                 }
                             });
@@ -794,7 +794,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                     search_action.setVisibility(View.VISIBLE);
                 } catch (Exception e) {
                     Static.error(e);
-                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                    Static.toast(activity, activity.getString(R.string.something_went_wrong));
                 }
             }
         });
