@@ -614,7 +614,10 @@ public class Room101AddRequest {
         } else {
             removeView(view, R.id.ars_request_info);
         }
-        ((TextView) view.findViewById(R.id.ars_request_content_header)).setText(header);
+        TextView ars_request_content_header = view.findViewById(R.id.ars_request_content_header);
+        if (ars_request_content_header != null) {
+            ars_request_content_header.setText(header);
+        }
         if (array != null && array.length() > 0) {
             final RadioGroup radioGroup = view.findViewById(R.id.ars_request_chooser);
             final int textColor = Static.resolveColor(activity, android.R.attr.textColorPrimary);
@@ -622,8 +625,8 @@ public class Room101AddRequest {
                 try {
                     JSONObject session = array.getJSONObject(i);
                     String text = session.getString("time");
-                    if (!Objects.equals(session.getString("available"), "")) {
-                        text += " (" + "Свободных мест" + ": " + session.getString("available") + ")";
+                    if (!session.getString("available").isEmpty()) {
+                        text += " (" + activity.getString(R.string.room101_available) + ": " + session.getString("available") + ")";
                     }
                     RadioButton radioButton = new RadioButton(activity);
                     radioButton.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));

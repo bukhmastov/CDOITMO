@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.fragments;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -125,6 +126,10 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
         Static.T.runThread(new Runnable() {
             @Override
             public void run() {
+                if (activity == null) {
+                    Log.w(TAG, "load | activity is null");
+                    return;
+                }
                 final int week = Static.getWeek(activity);
                 if (ScheduleLessonsTabHostFragment.getQuery() == null) {
                     ScheduleLessonsTabHostFragment.setQuery(ScheduleLessons.getDefaultScope(activity, ScheduleLessons.TYPE));
@@ -133,6 +138,10 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
                     @Override
                     public void run() {
                         try {
+                            if (activity == null) {
+                                Log.w(TAG, "load | activity is null");
+                                return;
+                            }
                             // setup pager adapter
                             final TabLayout fixed_tabs = activity.findViewById(R.id.fixed_tabs);
                             if (fixed_tabs == null) {
@@ -140,7 +149,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
                                 return;
                             }
                             fixed_tabs.setVisibility(View.VISIBLE);
-                            draw(R.layout.layout_schedule_lessons_tabs);
+                            draw(activity, R.layout.layout_schedule_lessons_tabs);
                             final ViewPager schedule_view = activity.findViewById(R.id.schedule_pager);
                             if (schedule_view != null) {
                                 schedule_view.setAdapter(new PagerLessonsAdapter(fragmentManager, activity));
@@ -168,16 +177,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
                         } catch (Exception e) {
                             Static.error(e);
                             try {
-                                draw(R.layout.state_try_again);
-                                View try_again_reload = activity.findViewById(R.id.try_again_reload);
-                                if (try_again_reload != null) {
-                                    try_again_reload.setOnClickListener(new View.OnClickListener() {
-                                        @Override
-                                        public void onClick(View view) {
-                                            load();
-                                        }
-                                    });
-                                }
+                                failed(activity);
                             } catch (Exception e1) {
                                 loaded = false;
                                 Static.error(e1);
@@ -188,18 +188,44 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
             }
         });
     }
-    private void draw(final int layoutId) {
+    private void failed(Activity activity) {
+        try {
+            if (activity == null) {
+                Log.w(TAG, "failed | activity is null");
+                return;
+            }
+            View state_try_again = inflate(activity, R.layout.state_try_again);
+            state_try_again.findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    load();
+                }
+            });
+            draw(activity, state_try_again);
+        } catch (Exception e) {
+            Static.error(e);
+        }
+    }
+
+    private void draw(Activity activity, View view) {
         try {
             ViewGroup vg = activity.findViewById(R.id.container_schedule);
             if (vg != null) {
                 vg.removeAllViews();
-                vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                vg.addView(view, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             }
         } catch (Exception e){
             Static.error(e);
         }
     }
-    private View inflate(int layoutId) throws InflateException {
-        return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
+    private void draw(Activity activity, int layoutId) {
+        try {
+            draw(activity, inflate(activity, layoutId));
+        } catch (Exception e){
+            Static.error(e);
+        }
+    }
+    private View inflate(Context context, int layoutId) throws InflateException {
+        return ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
 }

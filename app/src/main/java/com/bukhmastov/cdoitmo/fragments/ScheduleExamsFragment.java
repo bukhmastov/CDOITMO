@@ -176,33 +176,40 @@ public class ScheduleExamsFragment extends ConnectedFragment {
         Static.T.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                draw(R.layout.state_loading);
+                if (activity == null) {
+                    Log.w(TAG, "load | activity is null");
+                    failed(getContext());
+                    return;
+                }
+                draw(activity, R.layout.state_loading);
                 Static.T.runThread(new Runnable() {
                     @Override
                     public void run() {
                         try {
-                            if (getQuery() == null) {
-                                throw new NullPointerException("ScheduleExamsFragment.query is null");
+                            if (activity == null || getQuery() == null) {
+                                Log.w(TAG, "load | some values are null | activity=" + Static.logNull(activity) + " | getQuery()=" + Static.logNull(getQuery()));
+                                failed(getContext());
+                                return;
                             }
                             if (scroll != null && !isSameQueryRequested()) {
                                 scroll.position = 0;
                                 scroll.offset = 0;
                             }
                             if (refresh) {
-                                getScheduleExams().search(activity, getQuery(), 0);
+                                getScheduleExams(activity).search(activity, getQuery(), 0);
                             } else {
-                                getScheduleExams().search(activity, getQuery());
+                                getScheduleExams(activity).search(activity, getQuery());
                             }
                         } catch (Exception e) {
                             Static.error(e);
-                            failed();
+                            failed(activity);
                         }
                     }
                 });
             }
         });
     }
-    private @NonNull ScheduleExams getScheduleExams() {
+    private @NonNull ScheduleExams getScheduleExams(final ConnectedActivity activity) {
         if (scheduleExams == null) scheduleExams = new ScheduleExams(new Schedule.Handler() {
             @Override
             public void onSuccess(final JSONObject json, final boolean fromCache) {
@@ -233,7 +240,7 @@ public class ScheduleExamsFragment extends ConnectedFragment {
                                 @Override
                                 public void run() {
                                     try {
-                                        draw(R.layout.layout_schedule_both_recycle_list);
+                                        draw(activity, R.layout.layout_schedule_both_recycle_list);
                                         // swipe
                                         final SwipeRefreshLayout swipe_container = activity.findViewById(R.id.schedule_swipe);
                                         if (swipe_container != null) {
@@ -273,13 +280,13 @@ public class ScheduleExamsFragment extends ConnectedFragment {
                                         }
                                     } catch (Exception e) {
                                         Static.error(e);
-                                        failed();
+                                        failed(activity);
                                     }
                                 }
                             });
                         } catch (Exception e) {
                             Static.error(e);
-                            failed();
+                            failed(activity);
                         }
                     }
                 });
@@ -298,7 +305,7 @@ public class ScheduleExamsFragment extends ConnectedFragment {
                             switch (state) {
                                 case Client.FAILED_OFFLINE:
                                 case Schedule.FAILED_OFFLINE: {
-                                    final ViewGroup view = (ViewGroup) inflate(R.layout.state_offline);
+                                    final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_offline);
                                     view.findViewById(R.id.offline_reload).setOnClickListener(new View.OnClickListener() {
                                         @Override
                                         public void onClick(View v) {
@@ -311,7 +318,7 @@ public class ScheduleExamsFragment extends ConnectedFragment {
                                 case Client.FAILED_TRY_AGAIN:
                                 case Client.FAILED_SERVER_ERROR:
                                 case Schedule.FAILED_LOAD: {
-                                    final ViewGroup view = (ViewGroup) inflate(R.layout.state_try_again);
+                                    final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_try_again);
                                     if (state == Client.FAILED_TRY_AGAIN) {
                                         ((TextView) view.findViewById(R.id.try_again_message)).setText(Client.getFailureMessage(activity, statusCode));
                                     }
@@ -325,7 +332,7 @@ public class ScheduleExamsFragment extends ConnectedFragment {
                                     break;
                                 }
                                 case Schedule.FAILED_EMPTY_QUERY: {
-                                    final ViewGroup view = (ViewGroup) inflate(R.layout.schedule_empty_query);
+                                    final ViewGroup view = (ViewGroup) inflate(activity, R.layout.schedule_empty_query);
                                     view.findViewById(R.id.open_settings).setOnClickListener(new View.OnClickListener() {
                                         @Override
                                         public void onClick(View v) {
@@ -336,20 +343,20 @@ public class ScheduleExamsFragment extends ConnectedFragment {
                                     break;
                                 }
                                 case Schedule.FAILED_NOT_FOUND: {
-                                    final ViewGroup view = (ViewGroup) inflate(R.layout.nothing_to_display);
+                                    final ViewGroup view = (ViewGroup) inflate(activity, R.layout.nothing_to_display);
                                     ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_schedule);
                                     draw(view);
                                     break;
                                 }
                                 case Schedule.FAILED_INVALID_QUERY: {
-                                    final ViewGroup view = (ViewGroup) inflate(R.layout.state_failed);
+                                    final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_failed);
                                     ((TextView) view.findViewById(R.id.text)).setText(R.string.incorrect_query);
                                     draw(view);
                                     break;
                                 }
                                 case Schedule.FAILED_MINE_NEED_ISU: {
                                     // TODO replace with isu auth, when isu will be ready
-                                    final ViewGroup view = (ViewGroup) inflate(R.layout.state_try_again);
+                                    final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_try_again);
                                     view.findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
                                         @Override
                                         public void onClick(View v) {
@@ -373,7 +380,7 @@ public class ScheduleExamsFragment extends ConnectedFragment {
                     public void run() {
                         try {
                             Log.v(TAG, "onProgress | state=" + state);
-                            final ViewGroup view = (ViewGroup) inflate(R.layout.state_loading);
+                            final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_loading);
                             ((TextView) view.findViewById(R.id.loading_message)).setText(R.string.loading);
                             draw(view);
                         } catch (Exception e) {
@@ -395,24 +402,26 @@ public class ScheduleExamsFragment extends ConnectedFragment {
         });
         return scheduleExams;
     }
-    private void failed() {
+    private void failed(Context context) {
         try {
-            draw(R.layout.state_try_again);
-            View try_again_reload = activity.findViewById(R.id.try_again_reload);
-            if (try_again_reload != null) {
-                try_again_reload.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        load(false);
-                    }
-                });
+            if (context == null) {
+                Log.w(TAG, "failed | context is null");
+                return;
             }
+            View state_try_again = inflate(context, R.layout.state_try_again);
+            state_try_again.findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    load(false);
+                }
+            });
+            draw(state_try_again);
         } catch (Exception e) {
             Static.error(e);
         }
     }
 
-    private void draw(final View view) {
+    private void draw(View view) {
         try {
             ViewGroup vg = activity.findViewById(R.id.container_schedule_exams);
             if (vg != null) {
@@ -423,14 +432,14 @@ public class ScheduleExamsFragment extends ConnectedFragment {
             Static.error(e);
         }
     }
-    private void draw(final int layoutId) {
+    private void draw(Context context, int layoutId) {
         try {
-            draw(inflate(layoutId));
+            draw(inflate(context, layoutId));
         } catch (Exception e){
             Static.error(e);
         }
     }
-    private View inflate(int layoutId) throws InflateException {
-        return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
+    private View inflate(Context context, int layoutId) throws InflateException {
+        return ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
 }

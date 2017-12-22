@@ -1187,4 +1187,7 @@ public class Static {
     public static String logBoolean(boolean bool) {
         return bool ? "true" : "false";
     }
+    public static String logNull(Object o) {
+        return o == null ? "null" : "notnull";
+    }
 }

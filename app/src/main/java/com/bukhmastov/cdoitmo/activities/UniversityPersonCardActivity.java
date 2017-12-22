@@ -429,20 +429,15 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
     }
 
     private void draw(@LayoutRes final int layoutId) {
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    ViewGroup vg = findViewById(R.id.person_common_container);
-                    if (vg != null) {
-                        vg.removeAllViews();
-                        vg.addView(inflate(layoutId));
-                    }
-                } catch (Exception e){
-                    Static.error(e);
-                }
+        try {
+            ViewGroup vg = findViewById(R.id.person_common_container);
+            if (vg != null) {
+                vg.removeAllViews();
+                vg.addView(inflate(layoutId));
             }
-        });
+        } catch (Exception e){
+            Static.error(e);
+        }
     }
     private View inflate(@LayoutRes int layoutId) throws InflateException {
         return ((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);

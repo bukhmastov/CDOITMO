@@ -465,5 +465,6 @@
     <string name="changes_will_take_effect_next_startup">Изменения вступят в силу при следующем запуске приложения</string>
     <string name="incorrect_query">Задан неверный запрос</string>
     <string name="no_schedule">Расписание не найдено</string>
+    <string name="room101_available">Свободных мест</string>
 
 </resources>

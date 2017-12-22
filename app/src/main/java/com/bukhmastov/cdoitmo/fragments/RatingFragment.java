@@ -657,21 +657,16 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
         });
     }
 
-    private void draw(final int layoutId) {
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    ViewGroup vg = activity.findViewById(R.id.container_rating);
-                    if (vg != null) {
-                        vg.removeAllViews();
-                        vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-                    }
-                } catch (Exception e){
-                    Static.error(e);
-                }
+    private void draw(int layoutId) {
+        try {
+            ViewGroup vg = activity.findViewById(R.id.container_rating);
+            if (vg != null) {
+                vg.removeAllViews();
+                vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             }
-        });
+        } catch (Exception e){
+            Static.error(e);
+        }
     }
     private View inflate(int layoutId) throws InflateException {
         return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);

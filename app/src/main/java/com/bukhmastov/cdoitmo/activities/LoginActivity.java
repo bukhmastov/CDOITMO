@@ -203,7 +203,7 @@ public class LoginActivity extends ConnectedActivity {
                         String role = Storage.file.perm.get(activity, "user#role");
                         auth(login, password, role, false);
                     } else {
-                        LinearLayout login_tiles_container = new LinearLayout(activity);
+                        final LinearLayout login_tiles_container = new LinearLayout(activity);
                         login_tiles_container.setOrientation(LinearLayout.VERTICAL);
                         login_tiles_container.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                         FrameLayout layout_login_new_user_tile = (FrameLayout) inflate(R.layout.layout_login_new_user_tile);
@@ -315,7 +315,17 @@ public class LoginActivity extends ConnectedActivity {
                                 Static.error(e);
                             }
                         }
-                        draw(login_tiles_container);
+                        Static.T.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    draw(login_tiles_container);
+                                } catch (Exception e) {
+                                    Static.error(e);
+                                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                }
+                            }
+                        });
                     }
                 } catch (Exception e) {
                     Static.error(e);
@@ -628,37 +638,23 @@ public class LoginActivity extends ConnectedActivity {
         });
     }
 
-    private void draw(final int layoutId) {
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    ViewGroup vg = findViewById(R.id.login_content);
-                    if (vg != null) {
-                        vg.removeAllViews();
-                        vg.addView(((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-                    }
-                } catch (Exception e){
-                    Static.error(e);
-                }
-            }
-        });
+    private void draw(int layoutId) {
+        try {
+            draw(inflate(layoutId));
+        } catch (Exception e){
+            Static.error(e);
+        }
     }
-    private void draw(final View view) {
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    ViewGroup vg = findViewById(R.id.login_content);
-                    if (vg != null) {
-                        vg.removeAllViews();
-                        vg.addView(view);
-                    }
-                } catch (Exception e){
-                    Static.error(e);
-                }
+    private void draw(View view) {
+        try {
+            ViewGroup vg = findViewById(R.id.login_content);
+            if (vg != null) {
+                vg.removeAllViews();
+                vg.addView(view);
             }
-        });
+        } catch (Exception e){
+            Static.error(e);
+        }
     }
     private View inflate(int layout) throws Exception {
         return ((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layout, null);

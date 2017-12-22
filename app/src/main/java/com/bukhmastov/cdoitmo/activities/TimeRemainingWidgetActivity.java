@@ -204,29 +204,29 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
         if (data.current == null && data.next == null && data.day == null) {
             message(activity.getString(R.string.lessons_gone));
         } else {
-            if (is_message_displaying) {
-                draw(R.layout.layout_time_remaining_widget);
-                is_message_displaying = false;
-            }
-            if (data.current != null) {
-                setText(R.id.lesson_title, activity.getString(R.string.current_lesson));
-                setText(R.id.lesson_remaining, data.current);
-            } else {
-                setText(R.id.lesson_title, activity.getString(R.string.next_lesson));
-                if (data.next == null) {
-                    setText(R.id.day_remaining, activity.getString(R.string.unknown));
-                } else {
-                    setText(R.id.lesson_remaining, data.next);
-                }
-            }
-            if (data.day == null) {
-                setText(R.id.day_remaining, activity.getString(R.string.unknown));
-            } else {
-                setText(R.id.day_remaining, data.day);
-            }
             Static.T.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    if (is_message_displaying) {
+                        draw(R.layout.layout_time_remaining_widget);
+                        is_message_displaying = false;
+                    }
+                    if (data.current != null) {
+                        setText(R.id.lesson_title, activity.getString(R.string.current_lesson));
+                        setText(R.id.lesson_remaining, data.current);
+                    } else {
+                        setText(R.id.lesson_title, activity.getString(R.string.next_lesson));
+                        if (data.next == null) {
+                            setText(R.id.day_remaining, activity.getString(R.string.unknown));
+                        } else {
+                            setText(R.id.lesson_remaining, data.next);
+                        }
+                    }
+                    if (data.day == null) {
+                        setText(R.id.day_remaining, activity.getString(R.string.unknown));
+                    } else {
+                        setText(R.id.day_remaining, data.day);
+                    }
                     View current_lesson_15min = activity.findViewById(R.id.current_lesson_15min);
                     View current_lesson_15min_separator = activity.findViewById(R.id.current_lesson_15min_separator);
                     if (data.current_15min != null) {
@@ -305,19 +305,14 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
         });
     }
     private void draw(final int layoutId) {
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    ViewGroup vg = activity.findViewById(R.id.trw_container);
-                    if (vg != null) {
-                        vg.removeAllViews();
-                        vg.addView(((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-                    }
-                } catch (Exception e){
-                    Static.error(e);
-                }
+        try {
+            ViewGroup vg = activity.findViewById(R.id.trw_container);
+            if (vg != null) {
+                vg.removeAllViews();
+                vg.addView(((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             }
-        });
+        } catch (Exception e){
+            Static.error(e);
+        }
     }
 }

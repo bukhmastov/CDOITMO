@@ -46,9 +46,14 @@ public class ProtocolConverter implements Runnable {
                         oldValue = null;
                         oldDelta = null;
                     } else {
-                        JSONObject changeLogItem = new JSONObject(changeLogItemString);
-                        oldValue = changeLogItem.getDouble("value");
-                        oldDelta = changeLogItem.getDouble("delta");
+                        try {
+                            JSONObject changeLogItem = new JSONObject(changeLogItemString);
+                            oldValue = changeLogItem.getDouble("value");
+                            oldDelta = changeLogItem.getDouble("delta");
+                        } catch (Exception e) {
+                            oldValue = null;
+                            oldDelta = null;
+                        }
                     }
                     value = string2double(item.getString("value"));
                     if (oldValue == null) {

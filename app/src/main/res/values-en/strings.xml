@@ -458,5 +458,6 @@
     <string name="changes_will_take_effect_next_startup">The changes will take effect the next time the application starts</string>
     <string name="incorrect_query">Incorrect query</string>
     <string name="no_schedule">Schedule not found</string>
+    <string name="room101_available">Available</string>
 
 </resources>

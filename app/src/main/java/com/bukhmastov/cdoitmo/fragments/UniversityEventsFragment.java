@@ -508,21 +508,16 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
         });
     }
 
-    private void draw(final int layoutId){
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    ViewGroup vg = ((ViewGroup) container);
-                    if (vg != null) {
-                        vg.removeAllViews();
-                        vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-                    }
-                } catch (Exception e){
-                    Static.error(e);
-                }
+    private void draw(int layoutId) {
+        try {
+            ViewGroup vg = ((ViewGroup) container);
+            if (vg != null) {
+                vg.removeAllViews();
+                vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             }
-        });
+        } catch (Exception e){
+            Static.error(e);
+        }
     }
     private View inflate(@LayoutRes int layoutId) throws InflateException {
         return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);

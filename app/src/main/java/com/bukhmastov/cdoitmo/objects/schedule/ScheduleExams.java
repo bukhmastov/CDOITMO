@@ -296,6 +296,19 @@ public class ScheduleExams extends Schedule {
             @Override
             public void run() {
                 try {
+                    if (context == null || query == null || data == null) {
+                        Log.w(TAG, "onFound | some values are null | context=" + Static.logNull(context) + " | query=" + Static.logNull(query) + " | data=" + Static.logNull(data));
+                        if (query == null) {
+                            return;
+                        }
+                        invokePending(query, withUserChanges, true, new Pending() {
+                            @Override
+                            public void invoke(Handler handler) {
+                                handler.onFailure(FAILED_LOAD);
+                            }
+                        });
+                        return;
+                    }
                     if (data.getJSONArray("schedule").length() == 0) {
                         invokePending(query, withUserChanges, true, new Pending() {
                             @Override
