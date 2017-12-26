@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -42,9 +43,10 @@ public class LoginActivity extends ConnectedActivity {
     public static final int SIGNAL_RECONNECT = 1;
     public static final int SIGNAL_GO_OFFLINE = 2;
     public static final int SIGNAL_CHANGE_ACCOUNT = 3;
-    public static final int SIGNAL_LOGOUT = 4;
-    public static final int SIGNAL_CREDENTIALS_REQUIRED = 5;
-    public static final int SIGNAL_CREDENTIALS_FAILED = 6;
+    public static final int SIGNAL_DO_CLEAN_AUTH = 4;
+    public static final int SIGNAL_LOGOUT = 5;
+    public static final int SIGNAL_CREDENTIALS_REQUIRED = 6;
+    public static final int SIGNAL_CREDENTIALS_FAILED = 7;
     private Client.Request requestHandle = null;
     public static boolean auto_logout = false;
 
@@ -147,6 +149,12 @@ public class LoginActivity extends ConnectedActivity {
                         Static.OFFLINE_MODE = false;
                         Static.logoutCurrent(activity);
                         Static.authorized = false;
+                        show();
+                        break;
+                    }
+                    case SIGNAL_DO_CLEAN_AUTH: {
+                        Static.OFFLINE_MODE = false;
+                        Storage.file.perm.delete(activity, "user#deifmo#cookies");
                         show();
                         break;
                     }
@@ -283,24 +291,42 @@ public class LoginActivity extends ConnectedActivity {
                                         Static.removeView(descView);
                                     }
                                 }
-                                layout_login_user_tile.findViewById(R.id.logout).setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        Log.v(TAG, "user_tile logout clicked");
-                                        Static.logoutConfirmation(activity, new Static.SimpleCallback() {
-                                            @Override
-                                            public void onCall() {
-                                                logout(login);
-                                            }
-                                        });
-                                    }
-                                });
-                                layout_login_user_tile.findViewById(R.id.offline).setOnClickListener(new View.OnClickListener() {
+                                layout_login_user_tile.findViewById(R.id.expand_auth_menu).setOnClickListener(new View.OnClickListener() {
                                     @Override
                                     public void onClick(View view) {
-                                        Log.v(TAG, "user_tile offline clicked");
-                                        Storage.file.general.put(activity, "users#current_login", login);
-                                        route(SIGNAL_GO_OFFLINE);
+                                        Log.v(TAG, "user_tile expand_auth_menu clicked");
+                                        final PopupMenu popup = new PopupMenu(activity, view);
+                                        final Menu menu = popup.getMenu();
+                                        popup.getMenuInflater().inflate(R.menu.auth_expanded_menu, menu);
+                                        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                                            @Override
+                                            public boolean onMenuItemClick(MenuItem item) {
+                                                Log.v(TAG, "auth_expanded_menu | popup.MenuItem clicked | " + item.getTitle().toString());
+                                                switch (item.getItemId()) {
+                                                    case R.id.offline: {
+                                                        Storage.file.general.put(activity, "users#current_login", login);
+                                                        route(SIGNAL_GO_OFFLINE);
+                                                        break;
+                                                    }
+                                                    case R.id.clean_auth: {
+                                                        Storage.file.general.put(activity, "users#current_login", login);
+                                                        route(SIGNAL_DO_CLEAN_AUTH);
+                                                        break;
+                                                    }
+                                                    case R.id.logout: {
+                                                        Static.logoutConfirmation(activity, new Static.SimpleCallback() {
+                                                            @Override
+                                                            public void onCall() {
+                                                                logout(login);
+                                                            }
+                                                        });
+                                                        break;
+                                                    }
+                                                }
+                                                return false;
+                                            }
+                                        });
+                                        popup.show();
                                     }
                                 });
                                 layout_login_user_tile.findViewById(R.id.auth).setOnClickListener(new View.OnClickListener() {

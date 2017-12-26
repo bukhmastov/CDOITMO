@@ -56,23 +56,18 @@
                 android:gravity="end"
                 android:padding="@dimen/item_padding_quarter">
 
-                <Button
-                    android:id="@+id/logout"
-                    style="@style/Widget.AppCompat.Button.Borderless"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/logout"
-                    android:textSize="@dimen/font_size_14" />
-
                 <ImageButton
-                    android:id="@+id/offline"
+                    android:id="@+id/expand_auth_menu"
                     style="@style/Widget.AppCompat.ImageButton"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_gravity="center_vertical"
                     android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/ic_disconnect"
-                    android:padding="@dimen/item_padding_half"/>
+                    android:src="@drawable/ic_expand_more_32dp"
+                    android:paddingTop="@dimen/item_padding_half"
+                    android:paddingBottom="@dimen/item_padding_half"
+                    android:paddingStart="0dp"
+                    android:paddingEnd="0dp"/>
 
                 <Button
                     android:id="@+id/auth"

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/offline"
+        android:title="@string/enable_offline_mode" />
+
+    <item
+        android:id="@+id/clean_auth"
+        android:title="@string/update_connection" />
+
+    <item
+        android:id="@+id/logout"
+        android:title="@string/logout" />
+
+</menu>

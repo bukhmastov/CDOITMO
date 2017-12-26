@@ -59,6 +59,10 @@
             android:icon="@drawable/ic_multi_account"
             android:title="@string/change_account"/>
         <item
+            android:id="@+id/nav_do_clean_auth"
+            android:icon="@drawable/ic_refresh"
+            android:title="@string/update_connection"/>
+        <item
             android:id="@+id/nav_logout"
             android:icon="@drawable/ic_logout"
             android:title="@string/logout"/>

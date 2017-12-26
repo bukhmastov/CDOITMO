@@ -357,12 +357,14 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                     case R.id.nav_enable_offline_mode:
                     case R.id.nav_disable_offline_mode:
                     case R.id.nav_change_account:
+                    case R.id.nav_do_clean_auth:
                     case R.id.nav_logout: {
                         loaded = false;
                         switch (section) {
                             case R.id.nav_enable_offline_mode: authorize(LoginActivity.SIGNAL_GO_OFFLINE); break;
                             case R.id.nav_disable_offline_mode: authorize(LoginActivity.SIGNAL_RECONNECT); break;
                             case R.id.nav_change_account: authorize(LoginActivity.SIGNAL_CHANGE_ACCOUNT); break;
+                            case R.id.nav_do_clean_auth: authorize(LoginActivity.SIGNAL_DO_CLEAN_AUTH); break;
                             case R.id.nav_logout: Static.logoutConfirmation(activity, new Static.SimpleCallback() {
                                 @Override
                                 public void onCall() {
