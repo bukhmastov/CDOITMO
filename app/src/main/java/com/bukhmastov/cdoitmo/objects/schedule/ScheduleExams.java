@@ -3,9 +3,7 @@ package com.bukhmastov.cdoitmo.objects.schedule;
 import android.content.Context;
 
 import com.bukhmastov.cdoitmo.converters.schedule.exams.ScheduleExamsConverterIfmo;
-import com.bukhmastov.cdoitmo.converters.schedule.exams.ScheduleExamsConverterIsu;
 import com.bukhmastov.cdoitmo.network.IfmoClient;
-import com.bukhmastov.cdoitmo.network.IsuRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.models.Client;
@@ -27,66 +25,11 @@ public class ScheduleExams extends Schedule {
 
     @Override
     protected void searchMine(final Context context, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
-        Static.T.runThread(new Runnable() {
+        Log.v(TAG, "searchMine | personal schedule is unavailable");
+        invokePending("mine", withUserChanges, true, new Pending() {
             @Override
-            public void run() {
-                Log.v(TAG, "searchMine | refreshRate=" + refreshRate + " | forceToCache=" + Static.logBoolean(forceToCache) + " | withUserChanges=" + Static.logBoolean(withUserChanges));
-                searchByQuery(context, "mine", "mine", refreshRate, withUserChanges, new SearchByQuery() {
-                    @Override
-                    public boolean isWebAvailable() {
-                        if (!IsuRestClient.isAuthorized(context)) {
-                            Log.v(TAG, "searchMine | isu auth required");
-                            invokePending("mine", withUserChanges, true, new Pending() {
-                                @Override
-                                public void invoke(Handler handler) {
-                                    handler.onFailure(FAILED_MINE_NEED_ISU);
-                                }
-                            });
-                            return false;
-                        } else {
-                            return true;
-                        }
-                    }
-                    @Override
-                    public void onWebRequest(final String query, final String cache, final RestResponseHandler restResponseHandler) {
-                        IsuRestClient.Private.get(context, "exams/personal/student/%key%/%token%", null, restResponseHandler);
-                    }
-                    @Override
-                    public void onWebRequestSuccess(final String query, final JSONObject data, final JSONObject template) {
-                        ScheduleExams.this.onWebRequestSuccessIsu(this, query, data, template);
-                    }
-                    @Override
-                    public void onWebRequestFailed(final int statusCode, final Client.Headers headers, final int state) {
-                        invokePending("mine", withUserChanges, true, new Pending() {
-                            @Override
-                            public void invoke(Handler handler) {
-                                handler.onFailure(statusCode, headers, state);
-                            }
-                        });
-                    }
-                    @Override
-                    public void onWebRequestProgress(final int state) {
-                        invokePending("mine", withUserChanges, false, new Pending() {
-                            @Override
-                            public void invoke(Handler handler) {
-                                handler.onProgress(state);
-                            }
-                        });
-                    }
-                    @Override
-                    public void onWebNewRequest(final Client.Request request) {
-                        invokePending("mine", withUserChanges, false, new Pending() {
-                            @Override
-                            public void invoke(Handler handler) {
-                                handler.onNewRequest(request);
-                            }
-                        });
-                    }
-                    @Override
-                    public void onFound(final String query, final JSONObject data, final boolean putToCache, boolean fromCache) {
-                        ScheduleExams.this.onFound(context, query, data, putToCache, forceToCache, fromCache, withUserChanges);
-                    }
-                });
+            public void invoke(Handler handler) {
+                handler.onFailure(FAILED_INVALID_QUERY);
             }
         });
     }
@@ -105,7 +48,14 @@ public class ScheduleExams extends Schedule {
                     @Override
                     public void onWebRequest(final String query, final String cache, final RestResponseHandler restResponseHandler) {
                         switch (source) {
-                            case ISU:  IsuRestClient.Public.get(context, "exams/common/group/%key%/" + query, null, restResponseHandler); break;
+                            case ISU:
+                                invokePending(query, withUserChanges, true, new Pending() {
+                                @Override
+                                public void invoke(Handler handler) {
+                                    handler.onFailure(FAILED_INVALID_QUERY);
+                                    }
+                                });
+                                break;
                             case IFMO: IfmoClient.get(context, "ru/exam/0/" + group + "/raspisanie_sessii.htm", null, new ResponseHandler() {
                                 @Override
                                 public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
@@ -134,7 +84,7 @@ public class ScheduleExams extends Schedule {
                     @Override
                     public void onWebRequestSuccess(final String query, final JSONObject data, final JSONObject template) {
                         switch (source) {
-                            case ISU:  ScheduleExams.this.onWebRequestSuccessIsu(this, query, data, template); break;
+                            case ISU:  break;
                             case IFMO: ScheduleExams.this.onWebRequestSuccessIfmo(this, query, data, template); break;
                         }
                     }
@@ -198,7 +148,14 @@ public class ScheduleExams extends Schedule {
                     @Override
                     public void onWebRequest(final String query, final String cache, final RestResponseHandler restResponseHandler) {
                         switch (source) {
-                            case ISU:  IsuRestClient.Public.get(context, "exams/common/teacher/%key%/" + query, null, restResponseHandler); break;
+                            case ISU:
+                                invokePending(query, withUserChanges, true, new Pending() {
+                                    @Override
+                                    public void invoke(Handler handler) {
+                                        handler.onFailure(FAILED_INVALID_QUERY);
+                                    }
+                                });
+                                break;
                             case IFMO: IfmoClient.get(context, "ru/exam/3/" + query + "/raspisanie_sessii.htm", null, new ResponseHandler() {
                                 @Override
                                 public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
@@ -227,7 +184,7 @@ public class ScheduleExams extends Schedule {
                     @Override
                     public void onWebRequestSuccess(final String query, final JSONObject data, final JSONObject template) {
                         switch (source) {
-                            case ISU:  ScheduleExams.this.onWebRequestSuccessIsu(this, query, data, template); break;
+                            case ISU:  break;
                             case IFMO: ScheduleExams.this.onWebRequestSuccessIfmo(this, query, data, template); break;
                         }
                     }
@@ -275,14 +232,6 @@ public class ScheduleExams extends Schedule {
         return SOURCE.IFMO;
     }
 
-    private void onWebRequestSuccessIsu(final SearchByQuery searchByQuery, final String query, final JSONObject data, final JSONObject template) {
-        Static.T.runThread(new ScheduleExamsConverterIsu(data, template, new ScheduleExamsConverterIsu.response() {
-            @Override
-            public void finish(final JSONObject json) {
-                searchByQuery.onFound(query, json, true, false);
-            }
-        }));
-    }
     private void onWebRequestSuccessIfmo(final SearchByQuery searchByQuery, final String query, final JSONObject data, final JSONObject template) {
         Static.T.runThread(new ScheduleExamsConverterIfmo(data, template, new ScheduleExamsConverterIfmo.response() {
             @Override
