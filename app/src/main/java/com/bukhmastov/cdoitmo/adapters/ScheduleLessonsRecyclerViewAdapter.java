@@ -711,7 +711,7 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
                 lessons = lessonsFiltered;
                 if (lessons.length() == 0) continue;
                 // day title
-                String day_title = "";
+                String day_title;
                 switch (day_weekday) {
                     case 0: day_title = activity.getString(R.string.monday); break;
                     case 1: day_title = activity.getString(R.string.tuesday); break;
@@ -720,6 +720,32 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
                     case 4: day_title = activity.getString(R.string.friday); break;
                     case 5: day_title = activity.getString(R.string.saturday); break;
                     case 6: day_title = activity.getString(R.string.sunday); break;
+                    default:
+                        try {
+                            if (day.has("type") && !day.isNull("type")) {
+                                switch (day.getString("type")) {
+                                    /*TODO implement when isu will be ready
+                                    расписание из ису, когда есть расписания на определенный день
+                                    case "date":
+                                        if (day.has("title") && !day.isNull("title")) {
+                                            day_title = day.getString("title");
+                                        } else {
+                                            day_title = activity.getString(R.string.unknown_day);
+                                        }
+                                        break;
+                                    */
+                                    default:
+                                    case "unknown":
+                                        day_title = activity.getString(R.string.unknown_day);
+                                        break;
+                                }
+                            } else {
+                                day_title = activity.getString(R.string.unknown_day);
+                            }
+                        } catch (Exception e) {
+                            day_title = Static.GLITCH;
+                        }
+                        break;
                 }
                 dataset.add(new Item(TYPE_DAY, new JSONObject().put("text", day_title)));
                 days_positions.append(day_weekday, position++);

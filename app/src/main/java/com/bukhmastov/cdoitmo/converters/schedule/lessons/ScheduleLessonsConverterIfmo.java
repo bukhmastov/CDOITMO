@@ -24,8 +24,16 @@ public class ScheduleLessonsConverterIfmo extends ScheduleLessonsConverter {
             final JSONArray schedule = data.getJSONArray("schedule");
             for (int i = 0; i < schedule.length(); i++) {
                 final JSONObject lesson = schedule.getJSONObject(i);
-                final int weekday = lesson.has("data_day") ? lesson.getInt("data_day") : -1;
-                if (weekday < 0 || weekday > 6) continue;
+                final int weekday = lesson.has("data_day") ? (lesson.isNull("data_day") ? 7 : lesson.getInt("data_day")) : -1;
+                if (weekday == -1) continue;
+                if (weekday > 6 && scheduleConverted.length() < weekday + 1) {
+                    scheduleConverted.put(weekday, new JSONObject()
+                            .put("weekday", weekday)
+                            .put("type", "unknown")
+                            .put("title", "")
+                            .put("lessons", new JSONArray())
+                    );
+                }
                 final String group_name = getString(lesson, "gr");
                 if (templateTitle == null && templateType.equals("group")) templateTitle = group_name;
                 JSONObject dayConverted = scheduleConverted.getJSONObject(weekday);

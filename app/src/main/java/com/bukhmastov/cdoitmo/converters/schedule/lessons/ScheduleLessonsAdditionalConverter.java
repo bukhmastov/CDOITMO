@@ -44,7 +44,7 @@ public class ScheduleLessonsAdditionalConverter extends ScheduleConverter {
             final JSONArray scheduleAdded = string2jsonArray(Storage.file.perm.get(context, "schedule_lessons#added#" + token, ""));
             final JSONArray scheduleReduced = string2jsonArray(Storage.file.perm.get(context, "schedule_lessons#reduced#" + token, ""));
             if (scheduleAdded.length() > 0 || scheduleReduced.length() > 0) {
-                for (int i = 0; i < 7; i++) {
+                for (int i = 0; i < schedule.length(); i++) {
                     final JSONObject day = schedule.getJSONObject(i);
                     if (day == null) continue;
                     final int weekday = day.getInt("weekday");

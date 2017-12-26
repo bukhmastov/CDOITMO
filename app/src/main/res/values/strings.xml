@@ -466,5 +466,6 @@
     <string name="incorrect_query">Задан неверный запрос</string>
     <string name="no_schedule">Расписание не найдено</string>
     <string name="room101_available">Свободных мест</string>
+    <string name="unknown_day">Неизвестный день</string>
 
 </resources>

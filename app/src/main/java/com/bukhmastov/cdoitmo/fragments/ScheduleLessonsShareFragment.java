@@ -315,7 +315,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                                         for (int j = 0; j < lessons.length(); j++) {
                                             try {
                                                 String hash = lessons.getString(j);
-                                                for (int k = 0; k < schedule.length(); k++) {
+                                                for (int k = 0; k < 7; k++) {
                                                     JSONObject dayOriginal = schedule.getJSONObject(k);
                                                     JSONArray lessonsOriginal = dayOriginal.getJSONArray("lessons");
                                                     for (int a = 0; a < lessonsOriginal.length(); a++) {

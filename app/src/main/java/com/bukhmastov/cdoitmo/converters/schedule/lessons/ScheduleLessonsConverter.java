@@ -27,7 +27,7 @@ public abstract class ScheduleLessonsConverter extends ScheduleConverter {
         for (int i = 0; i < 7; i++) {
             schedule.put(i, new JSONObject()
                     .put("weekday", i)
-                    .put("lessons",  new JSONArray())
+                    .put("lessons", new JSONArray())
             );
         }
         return schedule;

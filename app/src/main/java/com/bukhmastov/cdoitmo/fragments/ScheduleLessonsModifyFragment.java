@@ -288,14 +288,14 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                     public void onNothingSelected(AdapterView<?> parent) {}
                                 });
 
+                                final String[] week_types_values = getResources().getStringArray(R.array.days_of_week_values);
                                 Spinner lesson_day_of_week = activity.findViewById(R.id.lesson_day_of_week);
                                 ArrayAdapter<?> lesson_day_of_week_adapter = ArrayAdapter.createFromResource(activity, R.array.days_of_week_titles, R.layout.spinner_layout_simple);
                                 lesson_day_of_week_adapter.setDropDownViewResource(R.layout.spinner_layout);
                                 lesson_day_of_week.setAdapter(lesson_day_of_week_adapter);
-                                lesson_day_of_week.setSelection(lesson.weekday);
+                                lesson_day_of_week.setSelection(lesson.weekday < week_types_values.length ? lesson.weekday : 0);
                                 lesson_day_of_week.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                                     public void onItemSelected(AdapterView<?> parent, View item, int position, long selectedId) {
-                                        String[] week_types_values = getResources().getStringArray(R.array.days_of_week_values);
                                         lesson.weekday = Integer.parseInt(week_types_values[position]);
                                     }
                                     public void onNothingSelected(AdapterView<?> parent) {}
