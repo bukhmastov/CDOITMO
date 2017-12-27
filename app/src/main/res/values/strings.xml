@@ -62,9 +62,9 @@
     <string name="pref_notify_vibrate">Вибрация</string>
     <string name="pref_category_system">Системные настройки</string>
     <string name="pref_allow_send_reports">Отправлять отчеты об ошибках</string>
-    <string name="pref_allow_send_reports_summary">Не содержит конфиденциальных данных</string>
+    <string name="pref_allow_send_reports_summary">Поможет разработчику оперативно исправлять ошибки. Отчеты не содержат конфиденциальных данных.</string>
     <string name="pref_allow_collect_analytics">Отправлять статистику использования</string>
-    <string name="pref_allow_collect_analytics_summary">Не содержит конфиденциальных данных</string>
+    <string name="pref_allow_collect_analytics_summary">Сбор анонимной статистики поможет разработчику совершенствовать приложение.</string>
     <string name="attention">Внимание</string>
     <string name="action_1">событие</string>
     <string name="action_2">события</string>
@@ -78,7 +78,7 @@
     <string name="about">О приложении</string>
     <string name="app_info_disclaimer">Данное приложение использует и обрабатывает данные с серверов университета ИТМО. Персональные данные хранятся только на данном устройстве и передаются только на сервера университета ИТМО. Обратите внимание, что данное приложение не является официальным.</string>
     <string name="app_info_dev">Бухмастов Алексей</string>
-    <string name="app_info_mail_dev">bukhmastov-alex@ya.ru</string>
+    <string name="app_info_mail_dev" translatable="false">bukhmastov-alex@ya.ru</string>
     <string name="offline_mode">Оффлайн режим</string>
     <string name="schedule_lessons">Расписание занятий</string>
     <string name="search">Поиск</string>

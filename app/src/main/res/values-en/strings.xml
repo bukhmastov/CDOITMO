@@ -9,7 +9,7 @@
     <string name="fill_fields">Fill in the fields</string>
     <string name="cdo">CDE</string>
     <string name="invalid_login_password">Invalid login or password</string>
-    <string name="required_login_password">Login or password is required</string>
+    <string name="required_login_password">Login and password are required</string>
     <string name="no_connection">No network connection</string>
     <string name="redo">Retry</string>
     <string name="e_journal">Electronic register</string>
@@ -45,13 +45,13 @@
     <string name="notifications">Notifications</string>
     <string name="pref_default_fragment">Default tab</string>
     <string name="pref_use_cache">Cache data on disk</string>
-    <string name="pref_initial_offline">Run in offline mode</string>
+    <string name="pref_initial_offline">Launch in offline mode</string>
     <string name="pref_initial_offline_summary">When the application starts</string>
     <string name="pref_auto_logout">Auto log out</string>
     <string name="pref_auto_logout_summary">Automatically log out of your account</string>
-    <string name="pref_use_notifications">Notifications of new points</string>
-    <string name="pref_use_notifications_summary">Monitor changes of the protocol of changes</string>
-    <string name="pref_notify_network_unmetered">Monitor only over Wi-Fi</string>
+    <string name="pref_use_notifications">Notifications with new points</string>
+    <string name="pref_use_notifications_summary">Track changes of the protocol of changes</string>
+    <string name="pref_notify_network_unmetered">Track only over Wi-Fi</string>
     <string name="pref_notify_network_unmetered_summary">Do not use mobile data</string>
     <string name="pref_notify_frequency">Frequency of checking for changes</string>
     <string name="pref_notify_sound">Notification sound</string>
@@ -59,9 +59,9 @@
     <string name="pref_notify_vibrate">Vibration</string>
     <string name="pref_category_system">System settings</string>
     <string name="pref_allow_send_reports">Send bug reports</string>
-    <string name="pref_allow_send_reports_summary">Does not contain confidential data</string>
+    <string name="pref_allow_send_reports_summary">Will help the developer to quickly correct bugs. Reports do not contain confidential data.</string>
     <string name="pref_allow_collect_analytics">Send usage statistics</string>
-    <string name="pref_allow_collect_analytics_summary">Does not contain confidential data</string>
+    <string name="pref_allow_collect_analytics_summary">Collecting anonymous statistics will help the developer improve the application.</string>
     <string name="attention">Attention</string>
     <string name="action_1">change</string>
     <string name="action_2">changes</string>
@@ -75,7 +75,6 @@
     <string name="about">About</string>
     <string name="app_info_disclaimer">This application uses and processes data from the servers of the ITMO University. Personal data is stored only on this device and transmitted only to the servers of the ITMO University. Please note that this application is not official.</string>
     <string name="app_info_dev">Bukhmastov Alex</string>
-    <string name="app_info_mail_dev">bukhmastov-alex@ya.ru</string>
     <string name="offline_mode">Offline mode</string>
     <string name="schedule_lessons">Schedule of lessons</string>
     <string name="search">Search</string>
@@ -88,7 +87,7 @@
     <string name="practice">Practice</string>
     <string name="lecture">Lecture</string>
     <string name="lab">Laboratory</string>
-    <string name="srs">IWS</string>
+    <string name="srs">Self-study</string>
     <string name="group">Group</string>
     <string name="room">Audience</string>
     <string name="school_week">study week</string>
@@ -115,7 +114,7 @@
     <string name="back">Back</string>
     <string name="forward">Forward</string>
     <string name="device_offline_action_refused">Action is not available in offline mode</string>
-    <string name="error_occurred">An error has occurred</string>
+    <string name="error_occurred">An error occurred</string>
     <string name="request_deny">Remove request</string>
     <string name="request_deny_1">Are you sure you want to remove the request?</string>
     <string name="request_deny_2">Undo this action will be impossible</string>
@@ -125,7 +124,7 @@
     <string name="next">Next</string>
     <string name="create">Submit</string>
     <string name="save">Save</string>
-    <string name="error_occurred_while_room101_request">An error occurred while submitting</string>
+    <string name="error_occurred_while_room101_request">An error occurred while submitting request</string>
     <string name="right_now">just now</string>
     <string name="sec_past">sec. ago</string>
     <string name="min_past">min. ago</string>
@@ -141,8 +140,8 @@
     <string name="no_time_to_peek">No available time for visit 101 audience</string>
     <string name="peek_time_end">Select the end time of the session</string>
     <string name="peek_time_end_desc">Options given the balance of Your time, maximum duration of one session and free places in the audience.</string>
-    <string name="room101_warning">When submitting an request for certification in 101 audiences, please note that from the time you stated, up to 10 minutes is spent on registration, and 5 minutes is spent on completing the session. Failure to attend a session in 101 audience stated by you is punishable by a fine, which is calculated by the formula: S = k * T, where the coefficient k = 2, T - the duration of the session.</string>
-    <string name="request_accepted">The application is accepted for consideration</string>
+    <string name="room101_warning">When submitting an request for attestation in 101 audiences, please note that from the time you stated, up to 10 minutes is spent on registration, and 5 minutes is spent on completing attestation. Failure to attend an attestation in 101 audience is punishable by a fine, which is calculated by the formula: S = k * T, where k = 2, T - the duration of the session.</string>
+    <string name="request_accepted">Your request is accepted for consideration</string>
     <string name="request">Request</string>
     <string name="session_date">Session date</string>
     <string name="time_start">Start time</string>
@@ -154,7 +153,7 @@
     <string name="schedule_not_found_2">schedule not found</string>
     <string name="failed_to_create_widget">Failed to create widget</string>
     <string name="failed_to_load_schedule">Failed to load the schedule</string>
-    <string name="need_to_config_widget">It is necessary to adjust the widget</string>
+    <string name="need_to_config_widget">Widget configuration is required</string>
     <string name="failed_to_show_schedule">Failed to display the schedule</string>
     <string name="monday">Monday</string>
     <string name="tuesday">Tuesday</string>
@@ -175,9 +174,9 @@
     <string name="once_per_1_day">Once a day</string>
     <string name="once_per_1_week">Once a week</string>
     <string name="once_per_4_weeks">Once every 4 weeks</string>
-    <string name="manually">Manually only</string>
-    <string name="pref_dynamic_refresh">Update dynamic data</string>
-    <string name="pref_static_refresh">Update static data</string>
+    <string name="manually">Manually</string>
+    <string name="pref_dynamic_refresh">Dynamic data refresh rate</string>
+    <string name="pref_static_refresh">Static data refresh rate</string>
     <string name="update_interval">Update interval</string>
     <string name="unknown">Unknown</string>
     <string name="shortcut_disabled">Shortcut unavailable</string>
@@ -203,10 +202,10 @@
     <string name="clear_schedule_cache">Clear schedule\'s cache</string>
     <string name="clear_schedule_lessons_cache">Clear schedule of lessons cache</string>
     <string name="clear_schedule_exams_cache">Clear schedule of exams cache</string>
-    <string name="term_picker">Term selection</string>
+    <string name="term_picker">Selection of the term</string>
     <string name="period_picker">Period of changes for</string>
     <string name="default_schedule">Default schedule</string>
-    <string name="week_picker">Display term</string>
+    <string name="week_picker">Display week</string>
     <string name="cache_schedule">Cache all schedules</string>
     <string name="cache_failed">Failed to change cache</string>
     <string name="cache_true">Schedule added to cache</string>
@@ -253,7 +252,7 @@
     <string name="pref_schedule_lessons_clear_additional_title">Clear custom changes</string>
     <string name="changes_cleared">Changes cleared</string>
     <string name="pref_protocol_changes_track_title">Display changes in the number of points</string>
-    <string name="lesson_creation">Creation a lesson</string>
+    <string name="lesson_creation">Creation of the lesson</string>
     <string name="lesson_editing">Edit the lesson</string>
     <string name="week_both">Both weeks</string>
     <string name="week_even">Even week</string>
@@ -272,14 +271,14 @@
     <string name="proceed">Continue</string>
     <string name="pref_schedule_lessons_clear_additional_warning">When cleaning user changes, the following actions are performed: \n1. All hidden lessons will be restored. \n2. All added lessons will be deleted.</string>
     <string name="pref_schedule_lessons_clear_direct_additional_warning">When clearing user changes for this schedule, the following actions are performed: \n1. Hidden lessons will be restored. \n2. Added lessons will be deleted.</string>
-    <string name="wrong_login_general">The application does not support users with the login \"general\"</string>
-    <string name="send_email_to_dev">Write a letter to the developer</string>
+    <string name="wrong_login_general">The application does not support users with the login matches \"general\"</string>
+    <string name="send_email_to_dev">Write email to the developer</string>
     <string name="send_vk_to_dev">Write a message to the developer</string>
     <string name="send_mail">Send email</string>
     <string name="support_dev">Support development</string>
-    <string name="build">assembly</string>
+    <string name="build">build</string>
     <string name="version">Version</string>
-    <string name="support_dev_desc">Well, suddenly</string>
+    <string name="support_dev_desc">If you want to</string>
     <string name="pref_schedule_lessons_view_of_reduced_lesson">View of hidden lessons</string>
     <string name="show_fully">Show fully</string>
     <string name="show_compactly">Show compactly</string>
@@ -317,7 +316,7 @@
     <string name="person_rank">Academic rank</string>
     <string name="person_post">Post</string>
     <string name="person_bio">Biography</string>
-    <string name="faculty_section_general">Basic information</string>
+    <string name="faculty_section_general">General information</string>
     <string name="faculty_section_deanery">Deanery</string>
     <string name="faculty_section_head">Head</string>
     <string name="faculty_section_divisions">Subsidiaries</string>
@@ -349,7 +348,7 @@
     <string name="intro_title_2">Come on time</string>
     <string name="intro_title_3">Register for testing</string>
     <string name="intro_title_4">Search for information about the university</string>
-    <string name="intro_title_5">Stay Informed</string>
+    <string name="intro_title_5">Stay informed</string>
     <string name="intro_desc_1">Convenient electronic journal, protocol of changes and detailed rating of students</string>
     <string name="intro_desc_2">Schedule of lessons and exams for groups, teachers and classrooms</string>
     <string name="intro_desc_3">Convenient management of requests for 101 audiences</string>
