@@ -19,6 +19,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.ConnectedActivity;
 import com.bukhmastov.cdoitmo.activities.ScheduleExamsSearchActivity;
 import com.bukhmastov.cdoitmo.adapters.ScheduleExamsRecyclerViewAdapter;
+import com.bukhmastov.cdoitmo.exceptions.SilentException;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragments.settings.SettingsScheduleExamsFragment;
 import com.bukhmastov.cdoitmo.network.models.Client;
@@ -241,22 +242,22 @@ public class ScheduleExamsFragment extends ConnectedFragment {
                                 public void run() {
                                     try {
                                         draw(activity, R.layout.layout_schedule_both_recycle_list);
-                                        // swipe
+                                        // prepare
                                         final SwipeRefreshLayout swipe_container = activity.findViewById(R.id.schedule_swipe);
-                                        if (swipe_container != null) {
-                                            swipe_container.setColorSchemeColors(Static.colorAccent);
-                                            swipe_container.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
-                                            swipe_container.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-                                                @Override
-                                                public void onRefresh() {
-                                                    swipe_container.setRefreshing(false);
-                                                    load(true);
-                                                }
-                                            });
-                                        }
-                                        // recycle view (list)
                                         final RecyclerView schedule_list = activity.findViewById(R.id.schedule_list);
+                                        if (swipe_container == null || schedule_list == null) throw new SilentException();
                                         final LinearLayoutManager layoutManager = new LinearLayoutManager(activity);
+                                        // swipe
+                                        swipe_container.setColorSchemeColors(Static.colorAccent);
+                                        swipe_container.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
+                                        swipe_container.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+                                            @Override
+                                            public void onRefresh() {
+                                                swipe_container.setRefreshing(false);
+                                                load(true);
+                                            }
+                                        });
+                                        // recycle view (list)
                                         schedule_list.setLayoutManager(layoutManager);
                                         schedule_list.setAdapter(adapter);
                                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -278,6 +279,8 @@ public class ScheduleExamsFragment extends ConnectedFragment {
                                         if (scroll != null) {
                                             layoutManager.scrollToPositionWithOffset(scroll.position, scroll.offset);
                                         }
+                                    } catch (SilentException ignore) {
+                                        failed(activity);
                                     } catch (Exception e) {
                                         Static.error(e);
                                         failed(activity);

@@ -413,7 +413,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                                         draw(R.layout.protocol_layout);
                                         // отображаем интерфейс простого режима
                                         ViewGroup protocol_container = activity.findViewById(R.id.protocol_container);
-                                        if (protocol_container == null) throw new NullPointerException("protocol_container is null");
+                                        if (protocol_container == null) throw new SilentException();
                                         protocol_container.addView(inflate(R.layout.protocol_layout_mode_simple));
                                         // работаем со списком
                                         ListView pl_list_view = activity.findViewById(R.id.pl_list_view);
@@ -431,6 +431,8 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                                             }
                                         }
                                         displayCommonPart();
+                                    } catch (SilentException ignore) {
+                                        loadFailed();
                                     } catch (Exception e) {
                                         Static.error(e);
                                         loadFailed();
