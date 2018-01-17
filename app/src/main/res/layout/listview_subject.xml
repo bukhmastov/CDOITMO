@@ -12,11 +12,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:minHeight="55dp"
-        android:layout_toStartOf="@+id/sp_value_container"
+        android:layout_toStartOf="@+id/value_container"
         android:gravity="center" >
 
         <TextView
-            android:id="@+id/lv_subject_name"
+            android:id="@+id/name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/lorem_ipsum"
@@ -24,7 +24,7 @@
             android:textSize="@dimen/font_size_16" />
 
         <TextView
-            android:id="@+id/lv_subject_sem"
+            android:id="@+id/about"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/lorem_ipsum"
@@ -35,14 +35,14 @@
     </LinearLayout>
 
     <FrameLayout
-        android:id="@+id/sp_value_container"
+        android:id="@+id/value_container"
         android:layout_width="60dp"
         android:layout_height="55dp"
         android:layout_alignParentEnd="true"
         android:layout_alignParentTop="true">
 
         <TextView
-            android:id="@+id/lv_point_value"
+            android:id="@+id/value"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"

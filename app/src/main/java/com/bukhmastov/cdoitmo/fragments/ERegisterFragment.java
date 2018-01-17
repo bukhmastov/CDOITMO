@@ -2,6 +2,7 @@ package com.bukhmastov.cdoitmo.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.InflateException;
 import android.view.LayoutInflater;
@@ -30,8 +31,6 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Objects;
 
 public class ERegisterFragment extends ConnectedFragment implements SwipeRefreshLayout.OnRefreshListener {
 
@@ -59,7 +58,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_eregister, container, false);
     }
 
@@ -314,26 +313,23 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                     if (data == null) throw new NullPointerException("data cannot be null");
                     checkData(data);
                     // получаем список предметов для отображения
-                    final ArrayList<HashMap<String, String>> subjects = new ArrayList<>();
+                    final ArrayList<JSONObject> subjectsArrayList = new ArrayList<>();
                     final JSONArray groups = data.getJSONArray("groups");
                     for (int i = 0; i < groups.length(); i++) {
-                        JSONObject group = groups.getJSONObject(i);
-                        if (Objects.equals(group.getString("name"), self.group)) {
-                            JSONArray terms = group.getJSONArray("terms");
+                        final JSONObject group = groups.getJSONObject(i);
+                        if (group.getString("name").equals(self.group)) {
+                            final JSONArray terms = group.getJSONArray("terms");
                             for (int j = 0; j < terms.length(); j++) {
-                                JSONObject term = terms.getJSONObject(j);
+                                final JSONObject term = terms.getJSONObject(j);
                                 if (self.term == -1 || self.term == term.getInt("number")) {
-                                    JSONArray subjArr = term.getJSONArray("subjects");
-                                    for (int k = 0; k < subjArr.length(); k++) {
-                                        JSONObject subj = subjArr.getJSONObject(k);
-                                        HashMap<String, String> subjObj = new HashMap<>();
-                                        subjObj.put("group", group.getString("name"));
-                                        subjObj.put("semester", String.valueOf(term.getInt("number")));
-                                        subjObj.put("name", subj.getString("name"));
-                                        subjObj.put("type", subj.getString("type"));
-                                        subjObj.put("value", String.valueOf(subj.getDouble("currentPoints")));
-                                        subjObj.put("mark", subj.getString("mark"));
-                                        subjects.add(subjObj);
+                                    final JSONArray subjects = term.getJSONArray("subjects");
+                                    for (int k = 0; k < subjects.length(); k++) {
+                                        final JSONObject subject = subjects.getJSONObject(k);
+                                        subjectsArrayList.add(new JSONObject()
+                                                .put("group", group.getString("name"))
+                                                .put("term", term.getInt("number"))
+                                                .put("subject", subject)
+                                        );
                                     }
                                 }
                             }
@@ -349,19 +345,27 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                                 // работаем со списком
                                 ListView erl_list_view = activity.findViewById(R.id.erl_list_view);
                                 if (erl_list_view != null) {
-                                    erl_list_view.setAdapter(new SubjectListView(activity, subjects));
+                                    erl_list_view.setAdapter(new SubjectListView(activity, subjectsArrayList));
                                     erl_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                                        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                                            Log.v(TAG, "erl_list_view clicked");
-                                            HashMap<String, String> subj = subjects.get(position);
-                                            final Bundle extras = new Bundle();
-                                            extras.putString("group", subj.get("group"));
-                                            extras.putString("term", subj.get("semester"));
-                                            extras.putString("name", subj.get("name"));
-                                            Static.T.runOnUiThread(new Runnable() {
+                                        public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
+                                            Static.T.runThread(new Runnable() {
                                                 @Override
                                                 public void run() {
-                                                    activity.openActivityOrFragment(SubjectShowFragment.class, extras);
+                                                    try {
+                                                        Log.v(TAG, "erl_list_view clicked");
+                                                        final JSONObject subject = subjectsArrayList.get(position);
+                                                        final Bundle extras = new Bundle();
+                                                        extras.putString("data", subject.toString());
+                                                        Static.T.runOnUiThread(new Runnable() {
+                                                            @Override
+                                                            public void run() {
+                                                                activity.openActivityOrFragment(SubjectShowFragment.class, extras);
+                                                            }
+                                                        });
+                                                    } catch (Exception e) {
+                                                        Static.error(e);
+                                                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                                    }
                                                 }
                                             });
                                         }
@@ -385,7 +389,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                                         JSONObject group = groups.getJSONObject(i);
                                         spinner_group_arr.add(group.getString("name") + " (" + group.getJSONArray("years").getInt(0) + "/" + group.getJSONArray("years").getInt(1) + ")");
                                         spinner_group_arr_names.add(group.getString("name"));
-                                        if (Objects.equals(group.getString("name"), self.group)) selection = counter;
+                                        if (group.getString("name").equals(self.group)) selection = counter;
                                         counter++;
                                     }
                                     spinner_group.setAdapter(new ArrayAdapter<>(activity, R.layout.spinner_layout_single_line, spinner_group_arr));
@@ -418,7 +422,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                                     selection = 2;
                                     for (int i = 0; i < groups.length(); i++) {
                                         JSONObject group = groups.getJSONObject(i);
-                                        if (Objects.equals(group.getString("name"), self.group)) {
+                                        if (group.getString("name").equals(self.group)) {
                                             int first = group.getJSONArray("terms").getJSONObject(0).getInt("number");
                                             int second = group.getJSONArray("terms").getJSONObject(1).getInt("number");
                                             spinner_period_arr.add(first + " " + activity.getString(R.string.semester));
@@ -469,21 +473,21 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
     }
     private void checkData(JSONObject data) throws Exception {
         Log.v(TAG, "checkData");
-        Calendar now = Static.getCalendar();
-        int year = now.get(Calendar.YEAR);
-        int month = now.get(Calendar.MONTH);
+        final Calendar now = Static.getCalendar();
+        final int year = now.get(Calendar.YEAR);
+        final int month = now.get(Calendar.MONTH);
         String currentGroup = "";
         int currentTerm = -1, maxYear = 0;
-        JSONArray groups = data.getJSONArray("groups");
+        final JSONArray groups = data.getJSONArray("groups");
         for (int i = 0; i < groups.length(); i++) {
-            JSONObject group = groups.getJSONObject(i);
-            if (!this.group.isEmpty() && Objects.equals(this.group, group.getString("name"))) { // мы нашли назначенную группу
+            final JSONObject group = groups.getJSONObject(i);
+            if (!this.group.isEmpty() && group.getString("name").equals(this.group)) { // мы нашли назначенную группу
                 this.group = group.getString("name");
                 // теперь проверяем семестр
-                JSONArray terms = group.getJSONArray("terms");
+                final JSONArray terms = group.getJSONArray("terms");
                 boolean isTermOk = false;
                 if (this.term == -2) {
-                    JSONArray years = group.getJSONArray("years");
+                    final JSONArray years = group.getJSONArray("years");
                     if (year == years.getInt(month > Calendar.AUGUST ? 0 : 1)) {
                         if (Integer.parseInt(Storage.pref.get(activity, "pref_e_journal_term", "0")) == 1) {
                             this.term = -1;
@@ -496,7 +500,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                     isTermOk = true;
                 }
                 for (int j = 0; j < terms.length(); j++) {
-                    JSONObject term = terms.getJSONObject(j);
+                    final JSONObject term = terms.getJSONObject(j);
                     if (this.term != -1 && this.term == term.getInt("number")) { // мы нашли семестр в найденной группе
                         this.term = term.getInt("number");
                         isTermOk = true;
@@ -508,7 +512,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                 }
                 break;
             } else { // группа до сих пор не найдена
-                JSONArray years = group.getJSONArray("years");
+                final JSONArray years = group.getJSONArray("years");
                 if (currentGroup.isEmpty()) {
                     if (year == years.getInt(month > Calendar.AUGUST ? 0 : 1)) {
                         currentGroup = group.getString("name");
@@ -530,7 +534,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                 this.term = currentTerm;
             } else {
                 for (int i = 0; i < groups.length(); i++) {
-                    JSONObject group = groups.getJSONObject(i);
+                    final JSONObject group = groups.getJSONObject(i);
                     if (group.getJSONArray("years").getInt(0) == maxYear) {
                         this.group = group.getString("name");
                         break;

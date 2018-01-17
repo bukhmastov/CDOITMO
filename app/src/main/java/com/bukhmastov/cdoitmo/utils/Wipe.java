@@ -258,12 +258,16 @@ public class Wipe {
                 apply97(context);
                 break;
             }
+            case 103: {
+                apply103(context);
+                break;
+            }
         }
     }
 
     // version 97
     private static void apply97(final Context context) {
-        // Backwards compatibility | upgrade to version 2.0
+        // Backwards compatibility
         // convert cache
         try {
             String cacheRootPath = context.getCacheDir() + File.separator + "app_data";
@@ -566,5 +570,70 @@ public class Wipe {
             fileWriter.write(data);
             fileWriter.close();
         }
+    }
+
+    // version 103
+    private static void apply103(final Context context) {
+        try {
+            String cacheRootPath = context.getCacheDir() + File.separator + "app_data";
+            File cacheRoot = new File(cacheRootPath);
+            if (cacheRoot.exists()) {
+                File[] users = cacheRoot.listFiles();
+                for (File user : users) {
+                    try {
+                        if (!user.isDirectory()) continue;
+                        String userLogin = user.getName();
+                        if (userLogin.equals("general")) continue;
+                        String eregisterCorePath = cacheRootPath + File.separator + userLogin + File.separator + "eregister" + File.separator + "core.txt";
+                        File eregisterCore = new File(eregisterCorePath);
+                        if (eregisterCore.exists()) {
+                            // get old data from file
+                            FileReader fileReader = new FileReader(eregisterCore);
+                            StringBuilder sb = new StringBuilder();
+                            int c;
+                            while ((c = fileReader.read()) != -1) sb.append((char) c);
+                            fileReader.close();
+                            String data = sb.toString();
+                            // delete old file
+                            eregisterCore.delete();
+                            // modify old data
+                            JSONObject json = new JSONObject(data);
+                            JSONArray groups = json.getJSONArray("groups");
+                            for (int i = 0; i < groups.length(); i++) {
+                                JSONArray terms = groups.getJSONObject(i).getJSONArray("terms");
+                                for (int j = 0; j < terms.length(); j++) {
+                                    JSONArray subjects = terms.getJSONObject(j).getJSONArray("subjects");
+                                    for (int k = 0; k < subjects.length(); k++) {
+                                        JSONObject subject = subjects.getJSONObject(k);
+                                        subjects.put(k, new JSONObject()
+                                                .put("name", subject.getString("name"))
+                                                .put("attestations", new JSONArray().put(new JSONObject()
+                                                        .put("name", subject.getString("type"))
+                                                        .put("mark", subject.getString("mark"))
+                                                        .put("markdate", subject.getString("markDate"))
+                                                        .put("value", subject.getDouble("currentPoints"))
+                                                        .put("points", subject.getJSONArray("points"))
+                                                ))
+                                        );
+                                    }
+                                }
+                            }
+                            data = json.toString();
+                            // create new file and write updated eregister data
+                            File newEregisterCore = new File(eregisterCorePath);
+                            if (!newEregisterCore.exists()) {
+                                newEregisterCore.getParentFile().mkdirs();
+                                if (!newEregisterCore.createNewFile()) {
+                                    throw new Exception("Failed to create file: " + newEregisterCore.getPath());
+                                }
+                            }
+                            FileWriter fileWriter = new FileWriter(newEregisterCore);
+                            fileWriter.write(data);
+                            fileWriter.close();
+                        }
+                    } catch (Exception ignore) {/* ignore */}
+                }
+            }
+        } catch (Exception ignore) {/* ignore */}
     }
 }
