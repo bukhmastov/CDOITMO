@@ -53,7 +53,7 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
         tabs.put(TYPE, new TabProvider() {
             @Override
             public void onInvalidate(boolean refresh) {
-                Log.v(TAG, "onInvalidate | TYPE=" + TYPE + " | refresh=" + Static.logBoolean(refresh));
+                Log.v(TAG, "onInvalidate | TYPE=" + TYPE + " | refresh=" + Log.lBool(refresh));
                 if (isResumed()) {
                     invalidate = false;
                     invalidate_refresh = false;
@@ -89,7 +89,7 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
     @Override
     public void onResume() {
         super.onResume();
-        Log.v(TAG, "resumed | TYPE=" + TYPE + " | loaded=" + Static.logBoolean(loaded) + " | invalidate=" + Static.logBoolean(invalidate) + " | invalidate_refresh=" + Static.logBoolean(invalidate_refresh));
+        Log.v(TAG, "resumed | TYPE=" + TYPE + " | loaded=" + Log.lBool(loaded) + " | invalidate=" + Log.lBool(invalidate) + " | invalidate_refresh=" + Log.lBool(invalidate_refresh));
         if (invalidate) {
             invalidate = false;
             loaded = true;
@@ -126,7 +126,7 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
                     public void run() {
                         try {
                             if (activity == null || getQuery() == null) {
-                                Log.w(TAG, "load | some values are null | activity=" + Static.logNull(activity) + " | getQuery()=" + Static.logNull(getQuery()));
+                                Log.w(TAG, "load | some values are null | activity=" + Log.lNull(activity) + " | getQuery()=" + Log.lNull(getQuery()));
                                 failed(getContext());
                                 return;
                             }

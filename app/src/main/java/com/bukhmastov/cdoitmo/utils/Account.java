@@ -41,7 +41,7 @@ public class Account {
             @Override
             public void run() {
                 final boolean IS_USER_UNAUTHORIZED = USER_UNAUTHORIZED.equals(login);
-                Log.v(TAG, "login | login=" + login + " | password.length()=" + password.length() + " | role=" + role + " | isNewUser=" + Static.logBoolean(isNewUser) + " | IS_USER_UNAUTHORIZED=" + Static.logBoolean(IS_USER_UNAUTHORIZED) + " | OFFLINE_MODE=" + Static.logBoolean(Static.OFFLINE_MODE));
+                Log.v(TAG, "login | login=" + login + " | password.length()=" + password.length() + " | role=" + role + " | isNewUser=" + Log.lBool(isNewUser) + " | IS_USER_UNAUTHORIZED=" + Log.lBool(IS_USER_UNAUTHORIZED) + " | OFFLINE_MODE=" + Log.lBool(Static.OFFLINE_MODE));
                 if (login.isEmpty() || password.isEmpty()) {
                     Static.T.runOnUiThread(new Runnable() {
                         @Override
@@ -203,7 +203,7 @@ public class Account {
             public void run() {
                 @NonNull final String cLogin = login != null ? login : Storage.file.general.get(context, "users#current_login");
                 final boolean IS_USER_UNAUTHORIZED = USER_UNAUTHORIZED.equals(cLogin);
-                Log.i(TAG, "logout | login=" + cLogin + " | IS_USER_UNAUTHORIZED=" + Static.logBoolean(IS_USER_UNAUTHORIZED) + " | OFFLINE_MODE=" + Static.logBoolean(Static.OFFLINE_MODE));
+                Log.i(TAG, "logout | login=" + cLogin + " | IS_USER_UNAUTHORIZED=" + Log.lBool(IS_USER_UNAUTHORIZED) + " | OFFLINE_MODE=" + Log.lBool(Static.OFFLINE_MODE));
                 if ("general".equals(login)) {
                     Log.w(TAG, "logout | got \"general\" login that does not supported");
                     Static.T.runOnUiThread(new Runnable() {
@@ -273,7 +273,7 @@ public class Account {
                 @NonNull final String cLogin = login != null ? login : Storage.file.general.get(context, "users#current_login");
                 final boolean IS_USER_UNAUTHORIZED = USER_UNAUTHORIZED.equals(cLogin);
                 final boolean IS_LOGIN_EMPTY = cLogin.isEmpty();
-                Log.v(TAG, "logoutPermanently | login=" + cLogin + " | IS_USER_UNAUTHORIZED=" + Static.logBoolean(IS_USER_UNAUTHORIZED));
+                Log.v(TAG, "logoutPermanently | login=" + cLogin + " | IS_USER_UNAUTHORIZED=" + Log.lBool(IS_USER_UNAUTHORIZED));
                 if (!IS_LOGIN_EMPTY) {
                     Storage.file.general.put(context, "users#current_login", cLogin);
                 }
@@ -315,7 +315,7 @@ public class Account {
             public void run() {
                 @NonNull final String cLogin = login != null ? login : Storage.file.general.get(context, "users#current_login");
                 final boolean IS_USER_UNAUTHORIZED = USER_UNAUTHORIZED.equals(cLogin);
-                Log.i(TAG, "logoutTemporarily | login=" + cLogin + " | IS_USER_UNAUTHORIZED=" + Static.logBoolean(IS_USER_UNAUTHORIZED));
+                Log.i(TAG, "logoutTemporarily | login=" + cLogin + " | IS_USER_UNAUTHORIZED=" + Log.lBool(IS_USER_UNAUTHORIZED));
                 final Static.SimpleCallback cb = new Static.SimpleCallback() {
                     @Override
                     public void onCall() {

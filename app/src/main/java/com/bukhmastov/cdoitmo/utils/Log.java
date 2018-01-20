@@ -113,6 +113,9 @@ public class Log {
             return 0;
         }
     }
+    public static int d(String log) {
+        return d(TAGD, log);
+    }
     public static int d(String TAG, String log) {
         log = wrapLog(log);
         FirebaseCrashlyticsProvider.d(TAG, log);
@@ -205,5 +208,15 @@ public class Log {
 
     private static String wrapLog(String log) {
         return "[" + Thread.currentThread().getName() + ":" + Thread.currentThread().getId() + "] " + (log == null ? "" : log);
+    }
+
+    public static String lBool(boolean bool) {
+        return bool ? "true" : "false";
+    }
+    public static String lNull(Object o) {
+        return o == null ? "<null>" : "<notnull>";
+    }
+    public static String lThrow(Throwable throwable) {
+        return throwable != null ? throwable.getMessage() : "<empty>";
     }
 }

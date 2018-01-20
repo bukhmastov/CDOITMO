@@ -39,7 +39,7 @@ public class ScheduleExams extends Schedule {
             @Override
             public void run() {
                 final SOURCE source = getSource(context);
-                Log.v(TAG, "searchGroup | group=" + group + " | refreshRate=" + refreshRate + " | forceToCache=" + Static.logBoolean(forceToCache) + " | withUserChanges=" + Static.logBoolean(withUserChanges) + " | source=" + source2string(source));
+                Log.v(TAG, "searchGroup | group=" + group + " | refreshRate=" + refreshRate + " | forceToCache=" + Log.lBool(forceToCache) + " | withUserChanges=" + Log.lBool(withUserChanges) + " | source=" + source2string(source));
                 searchByQuery(context, "group", group, refreshRate, withUserChanges, new SearchByQuery() {
                     @Override
                     public boolean isWebAvailable() {
@@ -139,7 +139,7 @@ public class ScheduleExams extends Schedule {
             @Override
             public void run() {
                 final SOURCE source = getSource(context);
-                Log.v(TAG, "searchTeacher | teacherId=" + teacherId + " | refreshRate=" + refreshRate + " | forceToCache=" + Static.logBoolean(forceToCache) + " | withUserChanges=" + Static.logBoolean(withUserChanges) + " | source=" + source2string(source));
+                Log.v(TAG, "searchTeacher | teacherId=" + teacherId + " | refreshRate=" + refreshRate + " | forceToCache=" + Log.lBool(forceToCache) + " | withUserChanges=" + Log.lBool(withUserChanges) + " | source=" + source2string(source));
                 searchByQuery(context, "teacher", teacherId, refreshRate, withUserChanges, new SearchByQuery() {
                     @Override
                     public boolean isWebAvailable() {
@@ -246,7 +246,7 @@ public class ScheduleExams extends Schedule {
             public void run() {
                 try {
                     if (context == null || query == null || data == null) {
-                        Log.w(TAG, "onFound | some values are null | context=" + Static.logNull(context) + " | query=" + Static.logNull(query) + " | data=" + Static.logNull(data));
+                        Log.w(TAG, "onFound | some values are null | context=" + Log.lNull(context) + " | query=" + Log.lNull(query) + " | data=" + Log.lNull(data));
                         if (query == null) {
                             return;
                         }

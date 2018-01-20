@@ -141,7 +141,7 @@ public class ScheduleExamsFragment extends ConnectedFragment {
             tab = new TabProvider() {
                 @Override
                 public void onInvalidate(boolean refresh) {
-                    Log.v(TAG, "onInvalidate | refresh=" + Static.logBoolean(refresh));
+                    Log.v(TAG, "onInvalidate | refresh=" + Log.lBool(refresh));
                     if (isResumed()) {
                         invalidate = false;
                         invalidate_refresh = false;
@@ -188,7 +188,7 @@ public class ScheduleExamsFragment extends ConnectedFragment {
                     public void run() {
                         try {
                             if (activity == null || getQuery() == null) {
-                                Log.w(TAG, "load | some values are null | activity=" + Static.logNull(activity) + " | getQuery()=" + Static.logNull(getQuery()));
+                                Log.w(TAG, "load | some values are null | activity=" + Log.lNull(activity) + " | getQuery()=" + Log.lNull(getQuery()));
                                 failed(getContext());
                                 return;
                             }

@@ -444,7 +444,7 @@ public class LoginActivity extends ConnectedActivity {
         });
     }
     private void login(final String login, final String password, final String role, final boolean isNewUser) {
-        Log.v(TAG, "login | login=" + login + " | role=" + role + " | isNewUser=" + Static.logBoolean(isNewUser));
+        Log.v(TAG, "login | login=" + login + " | role=" + role + " | isNewUser=" + Log.lBool(isNewUser));
         Account.login(activity, login, password, role, isNewUser, new Account.LoginHandler() {
             @Override
             public void onSuccess() {

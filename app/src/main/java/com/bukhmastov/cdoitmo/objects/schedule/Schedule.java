@@ -165,7 +165,7 @@ public abstract class Schedule {
         void invoke(Handler handler);
     }
     protected boolean addPending(String query, boolean withUserChanges, Handler handler) {
-        Log.v(TAG, "addPending | query=" + query + " | withUserChanges=" + Static.logBoolean(withUserChanges));
+        Log.v(TAG, "addPending | query=" + query + " | withUserChanges=" + Log.lBool(withUserChanges));
         final String token = getType() + "_" + query.toLowerCase() + "_" + (withUserChanges ? "t" : "f");
         if (Schedule.pending.containsKey(token)) {
             Schedule.pending.get(token).add(handler);
@@ -178,7 +178,7 @@ public abstract class Schedule {
         }
     }
     protected void invokePending(String query, boolean withUserChanges, boolean remove, Pending pending) {
-        Log.v(TAG, "invokePending | query=" + query + " | withUserChanges=" + Static.logBoolean(withUserChanges) + " | remove=" + Static.logBoolean(remove));
+        Log.v(TAG, "invokePending | query=" + query + " | withUserChanges=" + Log.lBool(withUserChanges) + " | remove=" + Log.lBool(remove));
         final String token = getType() + "_" + query.toLowerCase() + "_" + (withUserChanges ? "t" : "f");
         final ArrayList<Handler> handlers = Schedule.pending.get(token);
         if (handlers != null) {
