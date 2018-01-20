@@ -700,46 +700,55 @@ public class Static {
             });
         }
         public static void displayRemoteMessage(final Activity activity) {
-            Static.T.runThread(new Runnable() {
-                @Override
-                public void run() {
-                    FirebaseConfigProvider.getJson(FirebaseConfigProvider.MESSAGE_MENU, new FirebaseConfigProvider.ResultJson() {
-                        @Override
-                        public void onResult(final JSONObject value) {
-                            Static.T.runThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    try {
-                                        if (value == null) return;
-                                        final int type = value.getInt("type");
-                                        final String message = value.getString("message");
-                                        if (message == null || message.trim().isEmpty()) return;
-                                        Static.T.runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                View layout = Static.getRemoteMessage(activity, type, message);
-                                                if (layout != null) {
-                                                    ViewGroup message_menu = activity.findViewById(R.id.message_menu);
-                                                    if (message_menu != null) {
-                                                        message_menu.removeAllViews();
-                                                        message_menu.addView(layout);
-                                                        View message_menu_separator = activity.findViewById(R.id.message_menu_separator);
-                                                        if (message_menu_separator != null) {
-                                                            message_menu_separator.setVisibility(View.VISIBLE);
-                                                        }
+            Static.T.runThread(() -> FirebaseConfigProvider.getJson(FirebaseConfigProvider.MESSAGE_MENU, value -> T.runThread(() -> {
+                try {
+                    if (value == null) return;
+                    final int type = value.getInt("type");
+                    final String message = value.getString("message");
+                    if (message == null || message.trim().isEmpty()) return;
+                    final String hash = Static.crypt(message);
+                    if (hash != null && hash.equals(Storage.file.general.get(activity, "firebase#remote_message#menu", ""))) {
+                        return;
+                    }
+                    T.runOnUiThread(() -> {
+                        final ViewGroup message_menu = activity.findViewById(R.id.message_menu);
+                        final View message_menu_separator = activity.findViewById(R.id.message_menu_separator);
+                        final View layout = Static.getRemoteMessage(activity, type, message, (context, view) -> {
+                            if (hash != null) {
+                                if (Storage.file.general.put(activity, "firebase#remote_message#menu", hash)) {
+                                    if (message_menu != null && view != null) {
+                                        message_menu.removeView(view);
+                                        if (message_menu_separator != null) {
+                                            message_menu_separator.setVisibility(View.GONE);
+                                        }
+                                    }
+                                    Static.snackBar(activity, activity.getString(R.string.notification_dismissed), activity.getString(R.string.undo), v -> T.runThread(() -> {
+                                        if (Storage.file.general.delete(activity, "firebase#remote_message#menu")) {
+                                            T.runOnUiThread(() -> {
+                                                if (message_menu != null && view != null) {
+                                                    message_menu.addView(view);
+                                                    if (message_menu_separator != null) {
+                                                        message_menu_separator.setVisibility(View.VISIBLE);
                                                     }
                                                 }
-                                            }
-                                        });
-                                    } catch (Exception ignore) {
-                                        // ignore
-                                    }
+                                            });
+                                        }
+                                    }));
                                 }
-                            });
+                            }
+                        });
+                        if (layout != null && message_menu != null) {
+                            message_menu.removeAllViews();
+                            message_menu.addView(layout);
+                            if (message_menu_separator != null) {
+                                message_menu_separator.setVisibility(View.VISIBLE);
+                            }
                         }
                     });
+                } catch (Exception ignore) {
+                    // ignore
                 }
-            });
+            })));
         }
     }
     @SuppressWarnings("deprecation")
@@ -1093,7 +1102,10 @@ public class Static {
             return ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
         }
     }
-    public static View getRemoteMessage(final Context context, final int type, final String message) {
+    public interface RemoteMessageCallback {
+        void onDismiss(Context context, View view);
+    }
+    public static View getRemoteMessage(final Context context, final int type, final String message, final RemoteMessageCallback callback) {
         try {
             if (message == null || message.trim().isEmpty()) {
                 return null;
@@ -1110,8 +1122,14 @@ public class Static {
                     break;
                 }
             }
-            View layout = ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
+            final View layout = ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
             ((TextView) layout.findViewById(R.id.text)).setText(message);
+            layout.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    callback.onDismiss(context, layout);
+                }
+            });
             return layout;
         } catch (Exception e) {
             Static.error(e);

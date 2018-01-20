@@ -478,5 +478,7 @@
     <string name="change_password_message">You are about to change the password for the account with the login \"%login%\"</string>
     <string name="password_changed">Password changed</string>
     <string name="new_password">New password</string>
+    <string name="notification_dismissed">Notification dismissed</string>
+    <string name="undo">Undo</string>
 
 </resources>

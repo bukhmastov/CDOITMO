@@ -578,42 +578,49 @@ public class LoginActivity extends ConnectedActivity {
     }
 
     private void displayRemoteMessage() {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                FirebaseConfigProvider.getJson(FirebaseConfigProvider.MESSAGE_LOGIN, new FirebaseConfigProvider.ResultJson() {
-                    @Override
-                    public void onResult(final JSONObject value) {
-                        Static.T.runThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    if (value == null) return;
-                                    final int type = value.getInt("type");
-                                    final String message = value.getString("message");
-                                    if (message == null || message.trim().isEmpty()) return;
-                                    Static.T.runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            View layout = Static.getRemoteMessage(activity, type, message);
-                                            if (layout != null) {
-                                                ViewGroup message_login = activity.findViewById(R.id.message_login);
-                                                if (message_login != null) {
-                                                    message_login.removeAllViews();
-                                                    message_login.addView(layout);
-                                                }
-                                            }
+        Static.T.runThread(() -> FirebaseConfigProvider.getJson(FirebaseConfigProvider.MESSAGE_LOGIN, value -> Static.T.runThread(() -> {
+            try {
+                if (value == null) return;
+                final int type = value.getInt("type");
+                final String message = value.getString("message");
+                if (message == null || message.trim().isEmpty()) return;
+                final String hash = Static.crypt(message);
+                if (hash != null && hash.equals(Storage.file.general.get(activity, "firebase#remote_message#login", ""))) {
+                    return;
+                }
+                Static.T.runOnUiThread(() -> {
+                    final ViewGroup message_login = activity.findViewById(R.id.message_login);
+                    final View layout = Static.getRemoteMessage(activity, type, message, (context, view) -> {
+                        if (hash != null) {
+                            Static.T.runThread(() -> {
+                                if (Storage.file.general.put(activity, "firebase#remote_message#login", hash)) {
+                                    Static.T.runOnUiThread(() -> {
+                                        if (message_login != null && view != null) {
+                                            message_login.removeView(view);
                                         }
                                     });
-                                } catch (Exception ignore) {
-                                    // ignore
+                                    Static.snackBar(activity, activity.getString(R.string.notification_dismissed), activity.getString(R.string.undo), v -> Static.T.runThread(() -> {
+                                        if (Storage.file.general.delete(activity, "firebase#remote_message#login")) {
+                                            Static.T.runOnUiThread(() -> {
+                                                if (message_login != null && view != null) {
+                                                    message_login.addView(view);
+                                                }
+                                            });
+                                        }
+                                    }));
                                 }
-                            }
-                        });
+                            });
+                        }
+                    });
+                    if (layout != null && message_login != null) {
+                        message_login.removeAllViews();
+                        message_login.addView(layout);
                     }
                 });
+            } catch (Exception ignore) {
+                // ignore
             }
-        });
+        })));
     }
 
     private void draw(int layoutId) {

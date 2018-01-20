@@ -62,14 +62,18 @@ public class FirebaseConfigProvider {
         fetch(new Callback() {
             @Override
             public void onComplete(boolean successful) {
-                String value = getFirebaseRemoteConfig().getString(key);
-                Log.v(TAG, "getJson | onComplete | key=" + key + " | value=" + value);
                 try {
+                    String value = getFirebaseRemoteConfig().getString(key);
+                    Log.v(TAG, "getJson | onComplete | key=" + key + " | value=" + value);
+                    if (value == null || value.isEmpty()) {
+                        result.onResult(null);
+                        return;
+                    }
                     Object object = new JSONTokener(value).nextValue();
                     if (object instanceof JSONObject) {
                         result.onResult((JSONObject) object);
                     } else {
-                        throw new Exception();
+                        result.onResult(null);
                     }
                 } catch (Exception ignore) {
                     result.onResult(null);
@@ -91,7 +95,7 @@ public class FirebaseConfigProvider {
                                     @Override
                                     public void run() {
                                         boolean successful = task.isSuccessful();
-                                        Log.v(TAG, "fetch | onComplete | successful=" + (successful ? "true" : "false"));
+                                        Log.v(TAG, "fetch | onComplete | successful=" + Log.lBool(successful));
                                         if (successful) {
                                             getFirebaseRemoteConfig().activateFetched();
                                         }
