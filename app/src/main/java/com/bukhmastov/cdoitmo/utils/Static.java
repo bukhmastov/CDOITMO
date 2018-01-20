@@ -67,8 +67,8 @@ public class Static {
     public static int versionCode;
     public static int textColorPrimary, textColorSecondary, colorSeparator, colorBackgroundSnackBar, colorAccent, colorBackgroundRefresh;
     public static boolean OFFLINE_MODE = false;
+    public static boolean UNAUTHORIZED_MODE = false;
     public static boolean firstLaunch = true;
-    public static boolean authorized = false;
     public static final int intentFlagRestart = Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK;
     public static boolean tablet = false;
     public static boolean isFirstLaunchEver = false;
@@ -77,6 +77,7 @@ public class Static {
     private static String USER_AGENT = null;
     private static String app_theme = null;
     public static final String GLITCH = "%*<@?!";
+
     public interface SimpleCallback {
         void onCall();
     }
@@ -246,18 +247,22 @@ public class Static {
         intent.addFlags(Static.intentFlagRestart);
         context.startActivity(intent);
     }
-    public static void hardReset(Context context) {
+    public static void hardReset(final Context context) {
         Log.i(TAG, "hardReset");
         if (context == null) {
             Log.w(TAG, "hardReset | context is null");
             return;
         }
-        Static.logout(context);
-        Storage.file.all.reset(context);
-        Static.firstLaunch = true;
-        Static.OFFLINE_MODE = false;
-        MainActivity.loaded = false;
-        Static.reLaunch(context);
+        Account.logoutPermanently(context, new SimpleCallback() {
+            @Override
+            public void onCall() {
+                Storage.file.all.reset(context);
+                Static.firstLaunch = true;
+                Static.OFFLINE_MODE = false;
+                MainActivity.loaded = false;
+                Static.reLaunch(context);
+            }
+        });
     }
     public static int resolveColor(Context context, int reference) throws Exception {
         TypedValue typedValue = new TypedValue();
@@ -302,42 +307,6 @@ public class Static {
             case Calendar.SUNDAY: weekday = 6; break;
         }
         return weekday;
-    }
-    public static void logoutConfirmation(final Context context, final SimpleCallback callback) {
-        new AlertDialog.Builder(context)
-                .setTitle(R.string.logout_confirmation)
-                .setMessage(R.string.logout_confirmation_message)
-                .setPositiveButton(R.string.do_logout, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        callback.onCall();
-                    }
-                })
-                .setNegativeButton(R.string.do_cancel, null)
-                .create().show();
-    }
-    public static void logout(final Context context) {
-        Log.i(TAG, "logout");
-        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
-            @Override
-            public void run() {
-                new ProtocolTracker(context).stop();
-            }
-        });
-        Storage.file.all.clear(context);
-        Static.logoutCurrent(context);
-        Static.authorized = false;
-    }
-    public static void logoutCurrent(final Context context) {
-        Log.i(TAG, "logoutCurrent");
-        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
-            @Override
-            public void run() {
-                new ProtocolTracker(context).stop();
-            }
-        });
-        Storage.cache.reset();
-        Storage.file.general.delete(context, "users#current_login");
     }
     public static void lockOrientation(Activity activity, boolean lock) {
         Log.v(TAG, "lockOrientation | lock=" + (lock ? "true" : "false"));

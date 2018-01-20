@@ -51,7 +51,7 @@ public class Wipe {
                 if (jobScheduler != null) {
                     jobScheduler.cancelAll();
                 }
-                Static.logout(context);
+                Account.logoutPermanently(context, null);
                 Storage.pref.clearExceptPref(context);
                 break;
             }
@@ -162,7 +162,7 @@ public class Wipe {
                 // get rid of pref_allow_owner_notifications
                 Storage.pref.delete(context, "pref_allow_owner_notifications");
                 // move files
-                Static.logoutCurrent(context);
+                Account.logoutTemporarily(context, null);
                 try {
                     String path = context.getFilesDir() + File.separator + "app_data";
                     File file = new File(path);

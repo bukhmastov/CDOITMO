@@ -28,6 +28,7 @@ import com.bukhmastov.cdoitmo.fragments.ScheduleExamsFragment;
 import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.fragments.UniversityFragment;
 import com.bukhmastov.cdoitmo.fragments.settings.SettingsFragment;
+import com.bukhmastov.cdoitmo.utils.Account;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.ProtocolTracker;
 import com.bukhmastov.cdoitmo.utils.Static;
@@ -170,7 +171,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
         Log.v(TAG, "Activity resumed");
         if (initialized) {
             Static.NavigationMenu.displayEnableDisableOfflineButton((NavigationView) findViewById(R.id.nav_view));
-            if (Static.OFFLINE_MODE || Static.authorized) {
+            if (Static.OFFLINE_MODE || Account.authorized) {
                 authorized();
             } else {
                 authorize(LoginActivity.SIGNAL_LOGIN);
@@ -365,7 +366,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                             case R.id.nav_disable_offline_mode: authorize(LoginActivity.SIGNAL_RECONNECT); break;
                             case R.id.nav_change_account: authorize(LoginActivity.SIGNAL_CHANGE_ACCOUNT); break;
                             case R.id.nav_do_clean_auth: authorize(LoginActivity.SIGNAL_DO_CLEAN_AUTH); break;
-                            case R.id.nav_logout: Static.logoutConfirmation(activity, new Static.SimpleCallback() {
+                            case R.id.nav_logout: Account.logoutConfirmation(activity, new Static.SimpleCallback() {
                                 @Override
                                 public void onCall() {
                                     authorize(LoginActivity.SIGNAL_LOGOUT);

@@ -9,6 +9,8 @@
         android:id="@+id/clean_auth"
         android:title="@string/update_connection" />
 
+    <!-- TODO change password -->
+
     <item
         android:id="@+id/logout"
         android:title="@string/logout" />

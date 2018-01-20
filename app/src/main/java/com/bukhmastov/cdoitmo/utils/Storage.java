@@ -19,107 +19,108 @@ public class Storage {
 
     private static final String TAG = "Storage";
     private static final String APP_FOLDER = "app_data";
-    private enum STORAGE {cache, permanent}
+    private enum STORAGE {CACHE, PERMANENT}
+    private enum TYPE {USER, GENERAL}
 
     public static class file {
         public static class cache {
             public static boolean put(Context context, String path, String data) {
-                return Storage.file.put(context, STORAGE.cache, false, path, data);
+                return Storage.file.put(context, STORAGE.CACHE, TYPE.USER, path, data);
             }
             public static String get(Context context, String path) {
-                return Storage.file.get(context, STORAGE.cache, false, path);
+                return Storage.file.get(context, STORAGE.CACHE, TYPE.USER, path);
             }
             public static String get(Context context, String path, String def) {
-                return Storage.file.get(context, STORAGE.cache, false, path, def);
+                return Storage.file.get(context, STORAGE.CACHE, TYPE.USER, path, def);
             }
             public static boolean delete(Context context, String path) {
-                return Storage.file.delete(context, STORAGE.cache, false, path);
+                return Storage.file.delete(context, STORAGE.CACHE, TYPE.USER, path);
             }
             public static boolean clear(Context context) {
-                return Storage.file.clear(context, STORAGE.cache, false);
+                return Storage.file.clear(context, STORAGE.CACHE, TYPE.USER);
             }
             public static boolean clear(Context context, String path) {
-                return Storage.file.clear(context, STORAGE.cache, path, false);
+                return Storage.file.clear(context, STORAGE.CACHE, path, TYPE.USER);
             }
             public static boolean exists(Context context, String path) {
-                return Storage.file.exists(context, STORAGE.cache, false, path);
+                return Storage.file.exists(context, STORAGE.CACHE, TYPE.USER, path);
             }
             public static ArrayList<String> list(Context context, String path){
-                return Storage.file.list(context, STORAGE.cache, false, path);
+                return Storage.file.list(context, STORAGE.CACHE, TYPE.USER, path);
             }
         }
         public static class perm {
             public static boolean put(Context context, String path, String data) {
-                return Storage.file.put(context, STORAGE.permanent, false, path, data);
+                return Storage.file.put(context, STORAGE.PERMANENT, TYPE.USER, path, data);
             }
             public static String get(Context context, String path) {
-                return Storage.file.get(context, STORAGE.permanent, false, path);
+                return Storage.file.get(context, STORAGE.PERMANENT, TYPE.USER, path);
             }
             public static String get(Context context, String path, String def) {
-                return Storage.file.get(context, STORAGE.permanent, false, path, def);
+                return Storage.file.get(context, STORAGE.PERMANENT, TYPE.USER, path, def);
             }
             public static boolean delete(Context context, String path) {
-                return Storage.file.delete(context, STORAGE.permanent, false, path);
+                return Storage.file.delete(context, STORAGE.PERMANENT, TYPE.USER, path);
             }
             public static boolean clear(Context context) {
-                return Storage.file.clear(context, STORAGE.permanent, false);
+                return Storage.file.clear(context, STORAGE.PERMANENT, TYPE.USER);
             }
             public static boolean clear(Context context, String path) {
-                return Storage.file.clear(context, STORAGE.permanent, path, false);
+                return Storage.file.clear(context, STORAGE.PERMANENT, path, TYPE.USER);
             }
             public static boolean exists(Context context, String path) {
-                return Storage.file.exists(context, STORAGE.permanent, false, path);
+                return Storage.file.exists(context, STORAGE.PERMANENT, TYPE.USER, path);
             }
             public static ArrayList<String> list(Context context, String path){
-                return Storage.file.list(context, STORAGE.permanent, false, path);
+                return Storage.file.list(context, STORAGE.PERMANENT, TYPE.USER, path);
             }
         }
         public static class all {
             public static boolean clear(Context context) {
-                return Storage.file.clear(context, null, false);
+                return Storage.file.clear(context, null, TYPE.USER);
             }
             public static boolean clear(Context context, String path) {
-                return Storage.file.clear(context, null, path, false);
+                return Storage.file.clear(context, null, path, TYPE.USER);
             }
-            public static boolean reset(Context context){
+            public static boolean reset(Context context) {
                 return Storage.file.reset(context, null);
             }
         }
         public static class general {
             public static boolean put(Context context, String path, String data) {
-                return Storage.file.put(context, STORAGE.permanent, true, path, data);
+                return Storage.file.put(context, STORAGE.PERMANENT, TYPE.GENERAL, path, data);
             }
             public static String get(Context context, String path) {
-                return Storage.file.get(context, STORAGE.permanent, true, path);
+                return Storage.file.get(context, STORAGE.PERMANENT, TYPE.GENERAL, path);
             }
             public static String get(Context context, String path, String def) {
-                return Storage.file.get(context, STORAGE.permanent, true, path, def);
+                return Storage.file.get(context, STORAGE.PERMANENT, TYPE.GENERAL, path, def);
             }
             public static boolean delete(Context context, String path) {
-                return Storage.file.delete(context, STORAGE.permanent, true, path);
+                return Storage.file.delete(context, STORAGE.PERMANENT, TYPE.GENERAL, path);
             }
             public static boolean clear(Context context) {
-                return Storage.file.clear(context, STORAGE.permanent, true);
+                return Storage.file.clear(context, STORAGE.PERMANENT, TYPE.GENERAL);
             }
             public static boolean exists(Context context, String path) {
-                return Storage.file.exists(context, STORAGE.permanent, true, path);
+                return Storage.file.exists(context, STORAGE.PERMANENT, TYPE.GENERAL, path);
             }
-            public static ArrayList<String> list(Context context, String path){
-                return Storage.file.list(context, STORAGE.permanent, true, path);
+            public static ArrayList<String> list(Context context, String path) {
+                return Storage.file.list(context, STORAGE.PERMANENT, TYPE.GENERAL, path);
             }
         }
 
-        private static synchronized boolean put(Context context, STORAGE storage, boolean general, String path, String data){
-            Log.v(TAG, "file | put | storage=" + (storage == null ? "both" : storage.toString()) + " | general=" + (general ? "true" : "false") + " | path=" + path);
+        private static synchronized boolean put(Context context, STORAGE storage, TYPE type, String path, String data) {
+            Log.v(TAG, "file | put | storage=" + (storage == null ? "both" : storage.toString()) + " | type=" + type2string(type) + " | path=" + path);
             if (context == null) {
                 Log.w(TAG, "file | put | context is null");
                 return false;
             }
             try {
-                if (storage == STORAGE.cache && !pref.get(context, "pref_use_cache", true)) {
+                if (storage == STORAGE.CACHE && !pref.get(context, "pref_use_cache", true)) {
                     return false;
                 }
-                File file = new File(getFileLocation(context, storage, general, path, true));
+                File file = new File(getFileLocation(context, storage, type, path, true));
                 if (!file.exists()) {
                     file.getParentFile().mkdirs();
                     if (!file.createNewFile()) {
@@ -135,17 +136,17 @@ public class Storage {
                 return false;
             }
         }
-        private static String get(Context context, STORAGE storage, boolean general, String path){
-            return get(context, storage, general, path, "");
+        private static String get(Context context, STORAGE storage, TYPE type, String path) {
+            return get(context, storage, type, path, "");
         }
-        private static String get(Context context, STORAGE storage, boolean general, String path, String def){
-            Log.v(TAG, "file | get | storage=" + (storage == null ? "both" : storage.toString()) + " | general=" + (general ? "true" : "false") + " | path=" + path);
+        private static String get(Context context, STORAGE storage, TYPE type, String path, String def) {
+            Log.v(TAG, "file | get | storage=" + (storage == null ? "both" : storage.toString()) + " | type=" + type2string(type) + " | path=" + path);
             if (context == null) {
                 Log.w(TAG, "file | get | context is null");
                 return def;
             }
             try {
-                File file = new File(getFileLocation(context, storage, general, path, true));
+                File file = new File(getFileLocation(context, storage, type, path, true));
                 path = file.getAbsolutePath();
                 if (!file.exists() || file.isDirectory()) {
                     throw new Exception("File does not exist: " + file.getPath());
@@ -164,14 +165,14 @@ public class Storage {
                 return def;
             }
         }
-        private static boolean delete(Context context, STORAGE storage, boolean general, String path){
-            Log.v(TAG, "file | delete | storage=" + (storage == null ? "both" : storage.toString()) + " | general=" + (general ? "true" : "false") + " | path=" + path);
+        private static boolean delete(Context context, STORAGE storage, TYPE type, String path) {
+            Log.v(TAG, "file | delete | storage=" + (storage == null ? "both" : storage.toString()) + " | type=" + type2string(type) + " | path=" + path);
             if (context == null) {
                 Log.w(TAG, "file | delete | context is null");
                 return false;
             }
             try {
-                File file = new File(getFileLocation(context, storage, general, path, true));
+                File file = new File(getFileLocation(context, storage, type, path, true));
                 path = file.getAbsolutePath();
                 Storage.cache.delete(path);
                 return file.exists() && deleteRecursive(file);
@@ -179,53 +180,53 @@ public class Storage {
                 return false;
             }
         }
-        private static boolean clear(Context context, STORAGE storage, boolean general){
-            Log.v(TAG, "file | clear | storage=" + (storage == null ? "both" : storage.toString()) + " | general=" + (general ? "true" : "false"));
+        private static boolean clear(Context context, STORAGE storage, TYPE type) {
+            Log.v(TAG, "file | clear | storage=" + (storage == null ? "both" : storage.toString()) + " | type=" + type2string(type));
             if (context == null) {
                 Log.w(TAG, "file | clear | context is null");
                 return false;
             }
             try {
                 if (storage == null) {
-                    return clear(context, STORAGE.cache, general) && clear(context, STORAGE.permanent, general);
+                    return clear(context, STORAGE.CACHE, type) && clear(context, STORAGE.PERMANENT, type);
                 }
-                File file = new File(getLocation(context, storage, general));
+                File file = new File(getLocation(context, storage, type));
                 return file.exists() && deleteRecursive(file);
             } catch (Exception e) {
                 return false;
             }
         }
-        private static boolean clear(Context context, STORAGE storage, String path, boolean general){
-            Log.v(TAG, "file | clear | storage=" + (storage == null ? "both" : storage.toString()) + " | general=" + (general ? "true" : "false") + " | path=" + path);
+        private static boolean clear(Context context, STORAGE storage, String path, TYPE type) {
+            Log.v(TAG, "file | clear | storage=" + (storage == null ? "both" : storage.toString()) + " | type=" + type2string(type) + " | path=" + path);
             if (context == null) {
                 Log.w(TAG, "file | clear | context is null");
                 return false;
             }
             try {
                 if (storage == null) {
-                    return clear(context, STORAGE.cache, path, general) && clear(context, STORAGE.permanent, path, general);
+                    return clear(context, STORAGE.CACHE, path, type) && clear(context, STORAGE.PERMANENT, path, type);
                 }
-                File file = new File(getFileLocation(context, storage, general, path, false));
+                File file = new File(getFileLocation(context, storage, type, path, false));
                 return file.exists() && deleteRecursive(file);
             } catch (Exception e) {
                 return false;
             }
         }
-        private static boolean exists(Context context, STORAGE storage, boolean general, String path){
-            Log.v(TAG, "file | exists | storage=" + (storage == null ? "both" : storage.toString()) + " | general=" + (general ? "true" : "false") + " | path=" + path);
+        private static boolean exists(Context context, STORAGE storage, TYPE type, String path) {
+            Log.v(TAG, "file | exists | storage=" + (storage == null ? "both" : storage.toString()) + " | type=" + type2string(type) + " | path=" + path);
             if (context == null) {
                 Log.w(TAG, "file | exists | context is null");
                 return false;
             }
             try {
-                File file = new File(getFileLocation(context, storage, general, path, true));
+                File file = new File(getFileLocation(context, storage, type, path, true));
                 Storage.cache.access(file.getAbsolutePath());
                 return file.exists();
             } catch (Exception e) {
                 return false;
             }
         }
-        private static boolean reset(Context context, STORAGE storage){
+        private static boolean reset(Context context, STORAGE storage) {
             Log.v(TAG, "file | reset | storage=" + (storage == null ? "both" : storage.toString()));
             if (context == null) {
                 Log.w(TAG, "file | reset | context is null");
@@ -233,7 +234,7 @@ public class Storage {
             }
             try {
                 if (storage == null) {
-                    return reset(context, STORAGE.cache) && reset(context, STORAGE.permanent);
+                    return reset(context, STORAGE.CACHE) && reset(context, STORAGE.PERMANENT);
                 }
                 File file = new File(getCoreLocation(context, storage));
                 return file.exists() && deleteRecursive(file);
@@ -241,15 +242,15 @@ public class Storage {
                 return false;
             }
         }
-        private static ArrayList<String> list(Context context, STORAGE storage, boolean general, String path){
-            Log.v(TAG, "file | list | storage=" + (storage == null ? "both" : storage.toString()) + " | general=" + (general ? "true" : "false") + " | path=" + path);
+        private static ArrayList<String> list(Context context, STORAGE storage, TYPE type, String path) {
+            Log.v(TAG, "file | list | storage=" + (storage == null ? "both" : storage.toString()) + " | type=" + type2string(type) + " | path=" + path);
             ArrayList<String> response = new ArrayList<>();
             if (context == null) {
                 Log.w(TAG, "file | list | context is null");
                 return response;
             }
             try {
-                File file = new File(getFileLocation(context, storage, general, path, false));
+                File file = new File(getFileLocation(context, storage, type, path, false));
                 if (file.exists()) {
                     File[] files = file.listFiles();
                     for (File f : files) {
@@ -276,21 +277,29 @@ public class Storage {
             Storage.cache.delete(fileOrDirectory.getAbsolutePath());
             return result;
         }
-        private static String getFileLocation(Context context, STORAGE storage, boolean general, String path, boolean isFile) throws Exception {
+        private static String getFileLocation(Context context, STORAGE storage, TYPE type, String path, boolean isFile) throws Exception {
             if (!path.isEmpty()) path = ("#" + path + (isFile ? ".txt" : "")).replace("#", File.separator);
-            return getLocation(context, storage, general) + path;
+            return getLocation(context, storage, type) + path;
         }
-        private static String getLocation(Context context, STORAGE storage, boolean general) throws Exception {
-            String current_login = general ? "general" : file.general.get(context, "users#current_login");
-            if (current_login.isEmpty()) throw new Exception("current_login is empty");
-            return getCoreLocation(context, storage) + File.separator + current_login;
+        private static String getLocation(Context context, STORAGE storage, TYPE type) throws Exception {
+            String login = type2string(type);
+            if (login.equals(type2string(TYPE.USER))) {
+                login = file.general.get(context, "users#current_login");
+                if (login == null) {
+                    login = "";
+                }
+            }
+            if (login.isEmpty()) {
+                throw new Exception("getLocation | login is empty");
+            }
+            return getCoreLocation(context, storage) + File.separator + login;
         }
         private static String getCoreLocation(Context context, STORAGE storage) throws Exception {
             if (context == null) {
                 Log.w(TAG, "file | getCoreLocation | context is null");
                 return "";
             }
-            return (storage == STORAGE.cache ? context.getCacheDir() : context.getFilesDir()) + File.separator + APP_FOLDER;
+            return (storage == STORAGE.CACHE ? context.getCacheDir() : context.getFilesDir()) + File.separator + APP_FOLDER;
         }
     }
     public static class pref {
@@ -454,6 +463,13 @@ public class Storage {
             requests = 0;
             stackOfMeta.clear();
             stackOfData.clear();
+        }
+    }
+
+    private static String type2string(TYPE type) {
+        switch (type) {
+            case GENERAL: return "general";
+            case USER: default: return "user";
         }
     }
 }

@@ -29,6 +29,7 @@ public abstract class DeIfmo extends Client {
     public static final int FAILED_AUTH_TRY_AGAIN = 10;
     public static final int FAILED_AUTH_CREDENTIALS_REQUIRED = 11;
     public static final int FAILED_AUTH_CREDENTIALS_FAILED = 12;
+    public static final int FAILED_UNAUTHORIZED_MODE = 13;
 
     protected static boolean checkJsessionId(final Context context) {
         boolean legit = false;

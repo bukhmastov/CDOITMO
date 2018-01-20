@@ -29,6 +29,11 @@ public class DeIfmoRestClient extends DeIfmo {
             public void run() {
                 Log.v(TAG, "get | url=" + url);
                 if (Static.isOnline(context)) {
+                    if (Static.UNAUTHORIZED_MODE) {
+                        Log.v(TAG, "get | UNAUTHORIZED_MODE | failed");
+                        responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_UNAUTHORIZED_MODE);
+                        return;
+                    }
                     if (checkJsessionId(context)) {
                         Log.v(TAG, "get | auth required");
                         DeIfmoClient.authorize(context, new ResponseHandler() {

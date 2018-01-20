@@ -13,7 +13,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -21,9 +20,8 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
 import com.bukhmastov.cdoitmo.fragments.AboutFragment;
-import com.bukhmastov.cdoitmo.network.DeIfmoClient;
-import com.bukhmastov.cdoitmo.network.interfaces.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.models.Client;
+import com.bukhmastov.cdoitmo.utils.Account;
 import com.bukhmastov.cdoitmo.utils.CtxWrapper;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
@@ -33,12 +31,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Objects;
-
 public class LoginActivity extends ConnectedActivity {
 
     private static final String TAG = "LoginActivity";
-    private final ConnectedActivity activity = this;
+
     public static final int SIGNAL_LOGIN = 0;
     public static final int SIGNAL_RECONNECT = 1;
     public static final int SIGNAL_GO_OFFLINE = 2;
@@ -47,6 +43,8 @@ public class LoginActivity extends ConnectedActivity {
     public static final int SIGNAL_LOGOUT = 5;
     public static final int SIGNAL_CREDENTIALS_REQUIRED = 6;
     public static final int SIGNAL_CREDENTIALS_FAILED = 7;
+
+    private final ConnectedActivity activity = this;
     private Client.Request requestHandle = null;
     public static boolean auto_logout = false;
 
@@ -127,39 +125,47 @@ public class LoginActivity extends ConnectedActivity {
         Static.T.runThread(new Runnable() {
             @Override
             public void run() {
-                Log.i(TAG, "signal = " + signal);
+                Log.i(TAG, "route | signal=" + signal);
+                Static.OFFLINE_MODE = false;
+                Static.UNAUTHORIZED_MODE = false;
                 switch (signal) {
                     case SIGNAL_LOGIN: {
-                        Static.OFFLINE_MODE = false;
                         show();
                         break;
                     }
                     case SIGNAL_RECONNECT: {
-                        Static.OFFLINE_MODE = false;
-                        Static.authorized = false;
+                        Account.authorized = false;
                         show();
                         break;
                     }
                     case SIGNAL_GO_OFFLINE: {
                         Static.OFFLINE_MODE = true;
-                        authorized(false);
-                        break;
-                    }
-                    case SIGNAL_CHANGE_ACCOUNT: {
-                        Static.OFFLINE_MODE = false;
-                        Static.logoutCurrent(activity);
-                        Static.authorized = false;
                         show();
                         break;
                     }
+                    case SIGNAL_CHANGE_ACCOUNT: {
+                        String current_login = Storage.file.general.get(activity, "users#current_login");
+                        if (!current_login.isEmpty()) {
+                            Account.logoutTemporarily(activity, new Static.SimpleCallback() {
+                                @Override
+                                public void onCall() {
+                                    show();
+                                }
+                            });
+                        } else {
+                            show();
+                        }
+                        break;
+                    }
                     case SIGNAL_DO_CLEAN_AUTH: {
-                        Static.OFFLINE_MODE = false;
-                        Storage.file.perm.delete(activity, "user#deifmo#cookies");
+                        String current_login = Storage.file.general.get(activity, "users#current_login");
+                        if (!current_login.isEmpty()) {
+                            Storage.file.perm.delete(activity, "user#deifmo#cookies");
+                        }
                         show();
                         break;
                     }
                     case SIGNAL_LOGOUT: {
-                        Static.OFFLINE_MODE = false;
                         String current_login = Storage.file.general.get(activity, "users#current_login");
                         if (!current_login.isEmpty()) {
                             logout(current_login);
@@ -169,28 +175,39 @@ public class LoginActivity extends ConnectedActivity {
                         break;
                     }
                     case SIGNAL_CREDENTIALS_REQUIRED: {
-                        Static.OFFLINE_MODE = false;
-                        Storage.file.perm.delete(activity, "user#deifmo#cookies");
-                        Static.logoutCurrent(activity);
-                        Static.authorized = false;
-                        Static.snackBar(activity, activity.getString(R.string.required_login_password));
+                        String current_login = Storage.file.general.get(activity, "users#current_login");
+                        if (!current_login.isEmpty()) {
+                            Storage.file.perm.delete(activity, "user#deifmo#cookies");
+                            Account.logoutTemporarily(activity, new Static.SimpleCallback() {
+                                @Override
+                                public void onCall() {
+                                    Static.snackBar(activity, activity.getString(R.string.required_login_password));
+                                    show();
+                                }
+                            });
+                        }
                         show();
                         break;
                     }
                     case SIGNAL_CREDENTIALS_FAILED: {
-                        Static.OFFLINE_MODE = false;
-                        Storage.file.perm.delete(activity, "user#deifmo#cookies");
-                        Storage.file.perm.delete(activity, "user#deifmo#password");
-                        Static.logoutCurrent(activity);
-                        Static.authorized = false;
-                        Static.snackBar(activity, activity.getString(R.string.invalid_login_password));
+                        String current_login = Storage.file.general.get(activity, "users#current_login");
+                        if (!current_login.isEmpty()) {
+                            Storage.file.perm.delete(activity, "user#deifmo#cookies");
+                            Storage.file.perm.delete(activity, "user#deifmo#password");
+                            Account.logoutTemporarily(activity, new Static.SimpleCallback() {
+                                @Override
+                                public void onCall() {
+                                    Static.snackBar(activity, activity.getString(R.string.invalid_login_password));
+                                    show();
+                                }
+                            });
+                        }
                         show();
                         break;
                     }
                     default: {
-                        Static.OFFLINE_MODE = false;
-                        Log.wtf(TAG, "unsupported signal: signal=" + signal);
-                        show();
+                        Log.wtf(TAG, "route | unsupported signal: signal=" + signal + " | going to use signal=SIGNAL_LOGIN");
+                        route(SIGNAL_LOGIN);
                         break;
                     }
                 }
@@ -201,23 +218,29 @@ public class LoginActivity extends ConnectedActivity {
         Static.T.runThread(new Runnable() {
             @Override
             public void run() {
-                Log.v(TAG, "show");
                 try {
+                    Log.v(TAG, "show");
                     FirebaseAnalyticsProvider.logEvent(activity, FirebaseAnalyticsProvider.Event.LOGIN_REQUIRED);
                     String current_login = Storage.file.general.get(activity, "users#current_login");
+                    String cLogin = "", cPassword = "", cRole = "";
                     if (!current_login.isEmpty()) {
-                        String login = Storage.file.perm.get(activity, "user#deifmo#login");
-                        String password = Storage.file.perm.get(activity, "user#deifmo#password");
-                        String role = Storage.file.perm.get(activity, "user#role");
-                        auth(login, password, role, false);
+                        cLogin = Storage.file.perm.get(activity, "user#deifmo#login");
+                        cPassword = Storage.file.perm.get(activity, "user#deifmo#password");
+                        cRole = Storage.file.perm.get(activity, "user#role");
+                    }
+                    if (!cLogin.isEmpty() && !cPassword.isEmpty()) {
+                        // already logged in
+                        login(cLogin, cPassword, cRole, false);
                     } else {
+                        // show login UI
                         final LinearLayout login_tiles_container = new LinearLayout(activity);
                         login_tiles_container.setOrientation(LinearLayout.VERTICAL);
                         login_tiles_container.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                        FrameLayout layout_login_new_user_tile = (FrameLayout) inflate(R.layout.layout_login_new_user_tile);
-                        final EditText input_login = layout_login_new_user_tile.findViewById(R.id.input_login);
-                        final EditText input_password = layout_login_new_user_tile.findViewById(R.id.input_password);
-                        layout_login_new_user_tile.findViewById(R.id.login).setOnClickListener(new View.OnClickListener() {
+                        // show UI: new user
+                        final ViewGroup new_user_tile = (ViewGroup) inflate(R.layout.layout_login_new_user_tile);
+                        final EditText input_login = new_user_tile.findViewById(R.id.input_login);
+                        final EditText input_password = new_user_tile.findViewById(R.id.input_password);
+                        new_user_tile.findViewById(R.id.login).setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
                                 Log.v(TAG, "new_user_tile login clicked");
@@ -225,43 +248,43 @@ public class LoginActivity extends ConnectedActivity {
                                 String password = "";
                                 if (input_login != null) login = input_login.getText().toString();
                                 if (input_password != null) password = input_password.getText().toString();
-                                auth(login, password, "student", true);
+                                login(login, password, "student", true);
                             }
                         });
-                        layout_login_new_user_tile.findViewById(R.id.help).setOnClickListener(new View.OnClickListener() {
+                        new_user_tile.findViewById(R.id.help).setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
                                 FirebaseAnalyticsProvider.logBasicEvent(getBaseContext(), "Help with login clicked");
                                 new AlertDialog.Builder(activity)
+                                        .setIcon(R.drawable.ic_help)
                                         .setTitle(R.string.auth_help_0)
                                         .setMessage(
-                                                activity.getString(R.string.auth_help_1) +
-                                                "\n" +
-                                                activity.getString(R.string.auth_help_2) +
-                                                "\n\n" +
-                                                activity.getString(R.string.auth_help_3) +
-                                                "\n\n" +
-                                                activity.getString(R.string.auth_help_4)
+                                                activity.getString(R.string.auth_help_1) + "\n" +
+                                                activity.getString(R.string.auth_help_2) + "\n\n" +
+                                                activity.getString(R.string.auth_help_3) + "\n" +
+                                                activity.getString(R.string.auth_help_4) + "\n\n" +
+                                                activity.getString(R.string.auth_help_5)
                                         )
-                                        .setIcon(R.drawable.ic_help)
                                         .setNegativeButton(R.string.close, null)
                                         .create().show();
                             }
                         });
-                        login_tiles_container.addView(layout_login_new_user_tile);
-                        final JSONArray accounts = LoginActivity.accounts.get(activity);
+                        login_tiles_container.addView(new_user_tile);
+                        // show UI: list of existing accounts
+                        final JSONArray accounts = Account.List.get(activity);
                         for (int i = 0; i < accounts.length(); i++) {
                             try {
-                                Log.v(TAG, "account in accounts " + accounts.getString(i));
-                                Storage.file.general.put(activity, "users#current_login", accounts.getString(i));
+                                final String acLogin = accounts.getString(i);
+                                Log.v(TAG, "show | account in accounts | " + acLogin);
+                                Storage.file.general.put(activity, "users#current_login", acLogin);
                                 final String login = Storage.file.perm.get(activity, "user#deifmo#login");
                                 final String password = Storage.file.perm.get(activity, "user#deifmo#password");
                                 final String role = Storage.file.perm.get(activity, "user#role");
                                 final String name = Storage.file.perm.get(activity, "user#name").trim();
                                 Storage.file.general.delete(activity, "users#current_login");
-                                ViewGroup layout_login_user_tile = (ViewGroup) inflate(R.layout.layout_login_user_tile);
-                                View nameView = layout_login_user_tile.findViewById(R.id.name);
-                                View descView = layout_login_user_tile.findViewById(R.id.desc);
+                                final ViewGroup user_tile = (ViewGroup) inflate(R.layout.layout_login_user_tile);
+                                View nameView = user_tile.findViewById(R.id.name);
+                                View descView = user_tile.findViewById(R.id.desc);
                                 String desc = "";
                                 if (!login.isEmpty()) {
                                     desc += login;
@@ -291,7 +314,14 @@ public class LoginActivity extends ConnectedActivity {
                                         Static.removeView(descView);
                                     }
                                 }
-                                layout_login_user_tile.findViewById(R.id.expand_auth_menu).setOnClickListener(new View.OnClickListener() {
+                                user_tile.findViewById(R.id.auth).setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        Log.v(TAG, "user_tile login clicked");
+                                        login(login, password, role, false);
+                                    }
+                                });
+                                user_tile.findViewById(R.id.expand_auth_menu).setOnClickListener(new View.OnClickListener() {
                                     @Override
                                     public void onClick(View view) {
                                         Log.v(TAG, "user_tile expand_auth_menu clicked");
@@ -314,7 +344,7 @@ public class LoginActivity extends ConnectedActivity {
                                                         break;
                                                     }
                                                     case R.id.logout: {
-                                                        Static.logoutConfirmation(activity, new Static.SimpleCallback() {
+                                                        Account.logoutConfirmation(activity, new Static.SimpleCallback() {
                                                             @Override
                                                             public void onCall() {
                                                                 logout(login);
@@ -329,18 +359,71 @@ public class LoginActivity extends ConnectedActivity {
                                         popup.show();
                                     }
                                 });
-                                layout_login_user_tile.findViewById(R.id.auth).setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        Log.v(TAG, "user_tile login clicked");
-                                        auth(login, password, role, false);
-                                    }
-                                });
-                                login_tiles_container.addView(layout_login_user_tile);
+                                login_tiles_container.addView(user_tile);
                             } catch (JSONException e) {
                                 Static.error(e);
                             }
                         }
+                        // show UI: anonymous login
+                        final ViewGroup anonymous_user_tile = (ViewGroup) inflate(R.layout.layout_login_anonymous_user_tile);
+                        final EditText input_group = anonymous_user_tile.findViewById(R.id.input_group);
+                        anonymous_user_tile.findViewById(R.id.login).setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                Log.v(TAG, "anonymous_user_tile login clicked");
+                                String group = "";
+                                if (input_group != null) {
+                                    group = input_group.getText().toString();
+                                }
+                                Storage.file.perm.put(activity, "user#name", activity.getString(R.string.anonymous));
+                                Storage.file.perm.put(activity, "user#group", group);
+                                Storage.file.perm.put(activity, "user#avatar", "");
+                                login(Account.USER_UNAUTHORIZED, Account.USER_UNAUTHORIZED, "anonymous", false);
+                            }
+                        });
+                        anonymous_user_tile.findViewById(R.id.expand_auth_menu).setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                Log.v(TAG, "anonymous_user_tile expand_auth_menu clicked");
+                                final PopupMenu popup = new PopupMenu(activity, view);
+                                final Menu menu = popup.getMenu();
+                                popup.getMenuInflater().inflate(R.menu.auth_anonymous_expanded_menu, menu);
+                                popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                                    @Override
+                                    public boolean onMenuItemClick(MenuItem item) {
+                                        Log.v(TAG, "auth_expanded_menu | popup.MenuItem clicked | " + item.getTitle().toString());
+                                        switch (item.getItemId()) {
+                                            case R.id.offline: {
+                                                Storage.file.general.put(activity, "users#current_login", Account.USER_UNAUTHORIZED);
+                                                route(SIGNAL_GO_OFFLINE);
+                                                break;
+                                            }
+                                        }
+                                        return false;
+                                    }
+                                });
+                                popup.show();
+                            }
+                        });
+                        anonymous_user_tile.findViewById(R.id.info).setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                FirebaseAnalyticsProvider.logBasicEvent(getBaseContext(), "Help with anonymous login clicked");
+                                new AlertDialog.Builder(activity)
+                                        .setIcon(R.drawable.ic_help)
+                                        .setTitle(R.string.anonymous_login)
+                                        .setMessage(
+                                                activity.getString(R.string.anonymous_login_info_1) + "\n" +
+                                                activity.getString(R.string.anonymous_login_info_2) + "\n\n" +
+                                                activity.getString(R.string.anonymous_login_info_3) + "\n" +
+                                                activity.getString(R.string.anonymous_login_info_4)
+                                        )
+                                        .setNegativeButton(R.string.close, null)
+                                        .create().show();
+                            }
+                        });
+                        login_tiles_container.addView(anonymous_user_tile);
+                        // draw UI
                         Static.T.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -360,269 +443,95 @@ public class LoginActivity extends ConnectedActivity {
             }
         });
     }
-    private void auth(final String login, final String password, final String role, final boolean newUser) {
-        Static.T.runThread(new Runnable() {
+    private void login(final String login, final String password, final String role, final boolean isNewUser) {
+        Log.v(TAG, "login | login=" + login + " | role=" + role + " | isNewUser=" + Static.logBoolean(isNewUser));
+        Account.login(activity, login, password, role, isNewUser, new Account.LoginHandler() {
             @Override
-            public void run() {
-                Log.v(TAG, "auth | login=" + login + " role=" + role + " newUser=" + (newUser ? "true" : "false"));
-                if (!login.isEmpty() && !password.isEmpty()) {
-                    if (Objects.equals(login, "general")) {
-                        Log.w(TAG, "auth | got login=general that does not supported");
-                        Static.snackBar(activity, activity.getString(R.string.wrong_login_general));
-                        return;
-                    }
-                    Storage.file.general.put(activity, "users#current_login", login);
-                    Storage.file.perm.put(activity, "user#deifmo#login", login);
-                    Storage.file.perm.put(activity, "user#deifmo#password", password);
-                    Storage.file.perm.put(activity, "user#role", role);
-                    DeIfmoClient.check(activity, new ResponseHandler() {
-                        @Override
-                        public void onSuccess(int statusCode, Client.Headers headers, String response) {
-                            Log.v(TAG, "auth | check | success");
-                            authorized(newUser);
-                        }
-                        @Override
-                        public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                            Static.T.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Log.v(TAG, "auth | check | failure " + state);
-                                    switch (state) {
-                                        case DeIfmoClient.FAILED_OFFLINE:
-                                            route(SIGNAL_GO_OFFLINE);
-                                            break;
-                                        case DeIfmoClient.FAILED_SERVER_ERROR:
-                                            Static.snackBar(activity, activity.getString(R.string.auth_failed) + ". " + DeIfmoClient.getFailureMessage(activity, statusCode));
-                                            route(SIGNAL_CHANGE_ACCOUNT);
-                                            break;
-                                        case DeIfmoClient.FAILED_TRY_AGAIN:
-                                        case DeIfmoClient.FAILED_AUTH_TRY_AGAIN:
-                                            Static.snackBar(activity, activity.getString(R.string.auth_failed));
-                                            route(SIGNAL_CHANGE_ACCOUNT);
-                                            break;
-                                        case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
-                                            Static.snackBar(activity, activity.getString(R.string.required_login_password));
-                                            logoutDone(login, false);
-                                            route(SIGNAL_CHANGE_ACCOUNT);
-                                            break;
-                                        case DeIfmoClient.FAILED_AUTH_CREDENTIALS_FAILED:
-                                            Static.snackBar(activity, activity.getString(R.string.invalid_login_password));
-                                            logoutDone(login, false);
-                                            route(SIGNAL_CHANGE_ACCOUNT);
-                                            break;
-                                    }
-                                }
-                            });
-                        }
-                        @Override
-                        public void onProgress(final int state) {
-                            Static.T.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Log.v(TAG, "auth | check | progress " + state);
-                                    draw(R.layout.state_auth);
-                                    if (newUser) {
-                                        View interrupt_auth_container = findViewById(R.id.interrupt_auth_container);
-                                        if (interrupt_auth_container != null) {
-                                            interrupt_auth_container.setVisibility(View.GONE);
-                                        }
-                                    } else {
-                                        View interrupt_auth = findViewById(R.id.interrupt_auth);
-                                        if (interrupt_auth != null) {
-                                            interrupt_auth.setOnClickListener(new View.OnClickListener() {
-                                                @Override
-                                                public void onClick(View v) {
-                                                    Log.v(TAG, "auth | auth interrupted, going offline");
-                                                    if (requestHandle != null) {
-                                                        requestHandle.cancel();
-                                                    }
-                                                    Storage.file.general.put(activity, "users#current_login", login);
-                                                    route(SIGNAL_GO_OFFLINE);
-                                                }
-                                            });
-                                        }
-                                    }
-                                    TextView loading_message = findViewById(R.id.loading_message);
-                                    if (loading_message != null) {
-                                        switch (state) {
-                                            case DeIfmoClient.STATE_CHECKING: loading_message.setText(R.string.auth_check); break;
-                                            case DeIfmoClient.STATE_AUTHORIZATION: loading_message.setText(R.string.authorization); break;
-                                            case DeIfmoClient.STATE_AUTHORIZED: loading_message.setText(R.string.authorized); break;
-                                        }
-                                    }
-                                }
-                            });
-                        }
-                        @Override
-                        public void onNewRequest(Client.Request request) {
-                            requestHandle = request;
-                        }
-                    });
-                } else {
-                    Log.v(TAG, "auth | empty fields");
-                    Static.snackBar(activity, activity.getString(R.string.fill_fields));
-                }
+            public void onSuccess() {
+                Log.v(TAG, "login | onSuccess");
+                finish();
             }
-        });
-    }
-    private void authorized(final boolean newUser) {
-        Static.T.runThread(new Runnable() {
             @Override
-            public void run() {
-                Log.v(TAG, "authorized | newUser=" + (newUser ? "true" : "false"));
-                String current_login = Storage.file.general.get(activity, "users#current_login");
-                if (!current_login.isEmpty()) {
-                    if (newUser) {
-                        FirebaseAnalyticsProvider.logBasicEvent(getBaseContext(), "New user authorized");
-                    }
-                    accounts.push(activity, current_login);
-                    Static.authorized = true;
-                    if (newUser) Static.protocolChangesTrackSetup(activity, 0);
-                    finish();
-                } else {
-                    Log.w(TAG, "authorized | current_login is empty");
-                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                    show();
-                }
+            public void onOffline() {
+                Log.v(TAG, "login | onOffline");
+                finish();
             }
-        });
-    }
-    private void logout(final String login) {
-        Static.T.runThread(new Runnable() {
             @Override
-            public void run() {
-                Log.v(TAG, "logout | login=" + login);
-                Storage.file.general.put(activity, "users#current_login", login);
-                DeIfmoClient.get(activity, "servlet/distributedCDE?Rule=SYSTEM_EXIT", null, new ResponseHandler() {
-                    @Override
-                    public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                        Log.v(TAG, "logout | success");
-                        logoutDone(login, true);
+            public void onFailure(String text) {
+                Log.v(TAG, "login | onFailure | text=" + text);
+                Static.snackBar(activity, text);
+                show();
+            }
+            @Override
+            public void onProgress(String text) {
+                Log.v(TAG, "login | onProgress | text=" + text);
+                draw(R.layout.state_auth);
+                if (isNewUser) {
+                    View interrupt_auth_container = findViewById(R.id.interrupt_auth_container);
+                    if (interrupt_auth_container != null) {
+                        interrupt_auth_container.setVisibility(View.GONE);
                     }
-                    @Override
-                    public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                        Log.v(TAG, "logout | failure " + state);
-                        logoutDone(login, true);
-                    }
-                    @Override
-                    public void onProgress(final int state) {
-                        Static.T.runOnUiThread(new Runnable() {
+                } else {
+                    View interrupt_auth = findViewById(R.id.interrupt_auth);
+                    if (interrupt_auth != null) {
+                        interrupt_auth.setOnClickListener(new View.OnClickListener() {
                             @Override
-                            public void run() {
-                                Log.v(TAG, "logout | progress " + state);
-                                draw(R.layout.state_auth);
-                                View interrupt_auth_container = findViewById(R.id.interrupt_auth_container);
-                                if (interrupt_auth_container != null) {
-                                    interrupt_auth_container.setVisibility(View.GONE);
-                                }
-                                TextView loading_message = findViewById(R.id.loading_message);
-                                if (loading_message != null) {
-                                    loading_message.setText(activity.getString(R.string.exiting) + "\n" + Storage.file.perm.get(getBaseContext(), "user#name"));
+                            public void onClick(View v) {
+                                Log.v(TAG, "login | onProgress | login interrupt clicked");
+                                if (requestHandle != null && requestHandle.cancel()) {
+                                    Log.v(TAG, "login | onProgress | login interrupted, going offline");
+                                    Storage.file.general.put(activity, "users#current_login", login);
+                                    route(SIGNAL_GO_OFFLINE);
                                 }
                             }
                         });
                     }
-                    @Override
-                    public void onNewRequest(Client.Request request) {
-                        requestHandle = request;
-                    }
-                });
+                }
+                TextView loading_message = findViewById(R.id.loading_message);
+                if (loading_message != null) {
+                    loading_message.setText(text);
+                }
+            }
+            @Override
+            public void onNewRequest(Client.Request request) {
+                Log.v(TAG, "login | onNewRequest");
+                requestHandle = request;
             }
         });
     }
-    private void logoutDone(final String login, final boolean showSnackBar) {
-        Static.T.runThread(new Runnable() {
+    private void logout(final String login) {
+        Log.v(TAG, "logout | login=" + login);
+        Account.logout(activity, login, new Account.LogoutHandler() {
             @Override
-            public void run() {
-                Log.v(TAG, "logoutDone | login=" + login);
-                accounts.remove(activity, login);
-                Storage.file.general.put(activity, "users#current_login", login);
-                Static.logout(activity);
-                if (showSnackBar) Static.snackBar(activity, activity.getString(R.string.logged_out));
+            public void onSuccess() {
+                Log.v(TAG, "logout | onSuccess");
+                Static.snackBar(activity, activity.getString(R.string.logged_out));
                 show();
             }
-        });
-    }
-    private static class accounts {
-        private static final String TAG = "LoginActivity.accounts";
-        private static void push(final Context context, final String login) {
-            Static.T.runThread(new Runnable() {
-                @Override
-                public void run() {
-                    Log.v(TAG, "push | login=" + login);
-                    String list = Storage.file.general.get(context, "users#list");
-                    try {
-                        JSONArray accounts;
-                        if (list.isEmpty()) {
-                            accounts = new JSONArray();
-                        } else {
-                            accounts = new JSONArray(list);
-                        }
-                        boolean found = false;
-                        for (int i = 0; i < accounts.length(); i++) {
-                            if (Objects.equals(accounts.getString(i), login)) {
-                                found = true;
-                                break;
-                            }
-                        }
-                        if (!found) accounts.put(login);
-                        Storage.file.general.put(context, "users#list", accounts.toString());
-                        Bundle bundle;
-                        bundle = FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_COUNT, accounts.length());
-                        bundle = FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_NEW, found ? "old" : "new", bundle);
-                        FirebaseAnalyticsProvider.logEvent(
-                                context,
-                                FirebaseAnalyticsProvider.Event.LOGIN,
-                                bundle
-                        );
-                    } catch (Exception e) {
-                        Static.error(e);
-                    }
-                }
-            });
-        }
-        private static void remove(final Context context, final String login) {
-            Static.T.runThread(new Runnable() {
-                @Override
-                public void run() {
-                    Log.v(TAG, "remove | login=" + login);
-                    String list = Storage.file.general.get(context, "users#list");
-                    try {
-                        JSONArray accounts;
-                        if (list.isEmpty()) {
-                            accounts = new JSONArray();
-                        } else {
-                            accounts = new JSONArray(list);
-                        }
-                        for (int i = 0; i < accounts.length(); i++) {
-                            if (Objects.equals(accounts.getString(i), login)) {
-                                accounts.remove(i);
-                                break;
-                            }
-                        }
-                        Storage.file.general.put(context, "users#list", accounts.toString());
-                        FirebaseAnalyticsProvider.logEvent(
-                                context,
-                                FirebaseAnalyticsProvider.Event.LOGOUT,
-                                FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_COUNT, accounts.length())
-                        );
-                    } catch (Exception e) {
-                        Static.error(e);
-                    }
-                }
-            });
-        }
-        private static JSONArray get(Context context){
-            Log.v(TAG, "get");
-            String list = Storage.file.general.get(context, "users#list");
-            JSONArray accounts = new JSONArray();
-            try {
-                if (!list.isEmpty()) accounts = new JSONArray(list);
-            } catch (Exception e) {
-                Static.error(e);
+            @Override
+            public void onFailure(String text) {
+                Log.v(TAG, "logout | onFailure | text=" + text);
+                Static.snackBar(activity, text);
+                show();
             }
-            return accounts;
-        }
+            @Override
+            public void onProgress(String text) {
+                Log.v(TAG, "logout | onProgress | text=" + text);
+                draw(R.layout.state_auth);
+                View interrupt_auth_container = findViewById(R.id.interrupt_auth_container);
+                if (interrupt_auth_container != null) {
+                    interrupt_auth_container.setVisibility(View.GONE);
+                }
+                TextView loading_message = findViewById(R.id.loading_message);
+                if (loading_message != null) {
+                    loading_message.setText(text);
+                }
+            }
+            @Override
+            public void onNewRequest(Client.Request request) {
+                requestHandle = request;
+            }
+        });
     }
 
     private void displayRemoteMessage() {

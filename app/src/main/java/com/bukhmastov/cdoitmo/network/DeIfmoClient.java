@@ -30,6 +30,11 @@ public class DeIfmoClient extends DeIfmo {
                 Log.v(TAG, "check");
                 if (Static.isOnline(context)) {
                     responseHandler.onProgress(STATE_CHECKING);
+                    if (Static.UNAUTHORIZED_MODE) {
+                        Log.v(TAG, "check | UNAUTHORIZED_MODE | success");
+                        responseHandler.onSuccess(200, new Headers(null), "");
+                        return;
+                    }
                     if (checkJsessionId(context)) {
                         authorize(context, new ResponseHandler() {
                             @Override
@@ -121,6 +126,12 @@ public class DeIfmoClient extends DeIfmo {
             public void run() {
                 Log.v(TAG, "authorize");
                 responseHandler.onProgress(STATE_AUTHORIZATION);
+                if (Static.UNAUTHORIZED_MODE) {
+                    Log.v(TAG, "authorize | UNAUTHORIZED_MODE | authorized");
+                    responseHandler.onProgress(STATE_AUTHORIZED);
+                    responseHandler.onSuccess(STATUS_CODE_EMPTY, new Headers(null), "authorized");
+                    return;
+                }
                 String login = Storage.file.perm.get(context, "user#deifmo#login", "").trim();
                 String password = Storage.file.perm.get(context, "user#deifmo#password", "").trim();
                 if (login.isEmpty() || password.isEmpty()) {
@@ -231,6 +242,11 @@ public class DeIfmoClient extends DeIfmo {
             public void run() {
                 Log.v(TAG, "get | url=" + url);
                 if (Static.isOnline(context)) {
+                    if (Static.UNAUTHORIZED_MODE) {
+                        Log.v(TAG, "get | UNAUTHORIZED_MODE | failed");
+                        responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_UNAUTHORIZED_MODE);
+                        return;
+                    }
                     if (reAuth && checkJsessionId(context)) {
                         authorize(context, new ResponseHandler() {
                             @Override
@@ -331,6 +347,11 @@ public class DeIfmoClient extends DeIfmo {
             public void run() {
                 Log.v(TAG, "post | url=" + url);
                 if (Static.isOnline(context)) {
+                    if (Static.UNAUTHORIZED_MODE) {
+                        Log.v(TAG, "post | UNAUTHORIZED_MODE | failed");
+                        responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_UNAUTHORIZED_MODE);
+                        return;
+                    }
                     if (checkJsessionId(context)) {
                         authorize(context, new ResponseHandler() {
                             @Override

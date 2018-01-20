@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:clipToPadding="false"
+    android:padding="@dimen/item_padding_half"
+    android:focusable="true"
+    android:focusableInTouchMode="true" >
+
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        card_view:cardCornerRadius="4dp"
+        card_view:cardElevation="2dp"
+        card_view:cardBackgroundColor="?attr/colorBackgroundCards" >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical" >
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:paddingTop="@dimen/item_padding"
+                android:paddingBottom="0dp"
+                android:paddingStart="@dimen/item_padding"
+                android:paddingEnd="@dimen/item_padding">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    card_view:srcCompat="@drawable/ic_lock_open" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:paddingStart="@dimen/item_padding_half"
+                    android:paddingEnd="0dp"
+                    android:text="@string/anonymous_login"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="@dimen/font_size_16" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingTop="@dimen/item_padding_half"
+                    android:paddingBottom="@dimen/item_padding"
+                    android:paddingStart="@dimen/item_padding"
+                    android:paddingEnd="@dimen/item_padding">
+
+                    <EditText
+                        android:id="@+id/input_group"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ems="10"
+                        android:hint="@string/login_group"
+                        android:inputType="text"
+                        android:selectAllOnFocus="true"
+                        android:textSize="@dimen/font_size_16" />
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/separator"
+                    android:background="?attr/colorSeparator" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:gravity="end"
+                    android:padding="@dimen/item_padding_quarter">
+
+                    <ImageButton
+                        android:id="@+id/info"
+                        style="@style/Widget.AppCompat.ImageButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:src="@drawable/ic_help"
+                        android:paddingTop="@dimen/item_padding_half"
+                        android:paddingBottom="@dimen/item_padding_half"
+                        android:paddingStart="@dimen/item_padding_quarter"
+                        android:paddingEnd="@dimen/item_padding_quarter"/>
+
+                    <ImageButton
+                        android:id="@+id/expand_auth_menu"
+                        style="@style/Widget.AppCompat.ImageButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center_vertical"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:src="@drawable/ic_expand_more_32dp"
+                        android:paddingTop="@dimen/item_padding_half"
+                        android:paddingBottom="@dimen/item_padding_half"
+                        android:paddingStart="@dimen/item_padding_half"
+                        android:paddingEnd="0dp"/>
+
+                    <Button
+                        android:id="@+id/login"
+                        style="@style/Widget.AppCompat.Button.Borderless"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/enter"
+                        android:textSize="@dimen/font_size_14" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </android.support.v7.widget.CardView>
+
+</FrameLayout>
