@@ -115,9 +115,9 @@ public class ProtocolTracker {
             Storage.file.perm.put(context, "protocol_tracker#job_service_running", "0");
             Storage.file.perm.put(context, "protocol_tracker#protocol", "");
             Log.i(TAG, "Stopped");
-            if (callback != null) {
-                callback.onCall();
-            }
+        }
+        if (callback != null) {
+            callback.onCall();
         }
         return this;
     }

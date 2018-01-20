@@ -123,15 +123,34 @@ public class Account {
                         Static.T.runThread(new Runnable() {
                             @Override
                             public void run() {
-                                final String text;
+                                final Static.StringCallback callback = new Static.StringCallback() {
+                                    @Override
+                                    public void onCall(final String text) {
+                                        Static.T.runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                if ("offline".equals(text)) {
+                                                    loginHandler.onOffline();
+                                                } else {
+                                                    loginHandler.onFailure(text);
+                                                }
+                                            }
+                                        });
+                                    }
+                                };
+                                Static.SimpleCallback cb;
                                 switch (state) {
                                     case DeIfmoClient.FAILED_OFFLINE:
                                         if (isNewUser) {
-                                            Account.logoutTemporarily(context, null);
-                                            text = context.getString(R.string.network_unavailable);
+                                            Account.logoutTemporarily(context, new Static.SimpleCallback() {
+                                                @Override
+                                                public void onCall() {
+                                                    callback.onCall(context.getString(R.string.network_unavailable));
+                                                }
+                                            });
                                         } else {
                                             Account.authorized = true;
-                                            text = "offline";
+                                            callback.onCall("offline");
                                         }
                                         break;
                                     default:
@@ -139,28 +158,40 @@ public class Account {
                                     case DeIfmoClient.FAILED_AUTH_TRY_AGAIN:
                                     case DeIfmoClient.FAILED_INTERRUPTED:
                                     case DeIfmoClient.FAILED_SERVER_ERROR:
-                                        Account.logoutTemporarily(context, null);
-                                        text = context.getString(R.string.auth_failed) + (state == DeIfmoClient.FAILED_SERVER_ERROR ? ". " + DeIfmoClient.getFailureMessage(context, statusCode) : "");
+                                        Account.logoutTemporarily(context, new Static.SimpleCallback() {
+                                            @Override
+                                            public void onCall() {
+                                                callback.onCall(context.getString(R.string.auth_failed) + (state == DeIfmoClient.FAILED_SERVER_ERROR ? ". " + DeIfmoClient.getFailureMessage(context, statusCode) : ""));
+                                            }
+                                        });
                                         break;
                                     case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
-                                        Account.logoutPermanently(context, login, null);
-                                        text = context.getString(R.string.required_login_password);
+                                        cb = new Static.SimpleCallback() {
+                                            @Override
+                                            public void onCall() {
+                                                callback.onCall(context.getString(R.string.required_login_password));
+                                            }
+                                        };
+                                        if (isNewUser) {
+                                            Account.logoutPermanently(context, login, cb);
+                                        } else {
+                                            Account.logoutTemporarily(context, login, cb);
+                                        }
                                         break;
                                     case DeIfmoClient.FAILED_AUTH_CREDENTIALS_FAILED:
-                                        Account.logoutPermanently(context, login, null);
-                                        text = context.getString(R.string.invalid_login_password);
+                                        cb = new Static.SimpleCallback() {
+                                            @Override
+                                            public void onCall() {
+                                                callback.onCall(context.getString(R.string.invalid_login_password));
+                                            }
+                                        };
+                                        if (isNewUser) {
+                                            Account.logoutPermanently(context, login, cb);
+                                        } else {
+                                            Account.logoutTemporarily(context, login, cb);
+                                        }
                                         break;
                                 }
-                                Static.T.runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        if ("offline".equals(text)) {
-                                            loginHandler.onOffline();
-                                        } else {
-                                            loginHandler.onFailure(text);
-                                        }
-                                    }
-                                });
                             }
                         });
                     }

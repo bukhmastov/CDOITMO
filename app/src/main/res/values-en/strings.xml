@@ -473,5 +473,10 @@
     <string name="pref_week_force_override_summary">If the current week is determined incorrectly</string>
     <string name="pref_week_force_override_message">Leave the field blank to allow the system to automatically determine the current week. You must restart the application to accept the changes. Please note that You will have to change the current week every half a year.</string>
     <string name="pref_week_force_override_hint">Current week number</string>
+    <string name="change_password">Change password</string>
+    <string name="change_password_title">Change password</string>
+    <string name="change_password_message">You are about to change the password for the account with the login \"%login%\"</string>
+    <string name="password_changed">Password changed</string>
+    <string name="new_password">New password</string>
 
 </resources>

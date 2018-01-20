@@ -1,6 +1,7 @@
 package com.bukhmastov.cdoitmo.activities;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
@@ -348,6 +349,48 @@ public class LoginActivity extends ConnectedActivity {
                                                             @Override
                                                             public void onCall() {
                                                                 logout(login);
+                                                            }
+                                                        });
+                                                        break;
+                                                    }
+                                                    case R.id.change_password: {
+                                                        Static.T.runOnUiThread(new Runnable() {
+                                                            @Override
+                                                            public void run() {
+                                                                try {
+                                                                    final View view = inflate(R.layout.layout_preference_alert_edittext);
+                                                                    final EditText editText = view.findViewById(R.id.edittext);
+                                                                    editText.setHint(R.string.new_password);
+                                                                    new AlertDialog.Builder(activity)
+                                                                            .setTitle(R.string.change_password_title)
+                                                                            .setMessage(activity.getString(R.string.change_password_message).replace("%login%", login))
+                                                                            .setView(view)
+                                                                            .setPositiveButton(R.string.accept, new DialogInterface.OnClickListener() {
+                                                                                @Override
+                                                                                public void onClick(DialogInterface dialog, int which) {
+                                                                                    try {
+                                                                                        final String value = editText.getText().toString().trim();
+                                                                                        if (!value.isEmpty()) {
+                                                                                            Static.T.runThread(new Runnable() {
+                                                                                                @Override
+                                                                                                public void run() {
+                                                                                                    Storage.file.general.put(activity, "users#current_login", acLogin);
+                                                                                                    Storage.file.perm.put(activity, "user#deifmo#password", value);
+                                                                                                    Storage.file.general.delete(activity, "users#current_login");
+                                                                                                    Static.snackBar(activity, activity.getString(R.string.password_changed));
+                                                                                                }
+                                                                                            });
+                                                                                        }
+                                                                                    } catch (Exception e) {
+                                                                                        Static.error(e);
+                                                                                    }
+                                                                                }
+                                                                            })
+                                                                            .setNegativeButton(R.string.cancel, null)
+                                                                            .create().show();
+                                                                } catch (Exception e) {
+                                                                    Static.error(e);
+                                                                }
                                                             }
                                                         });
                                                         break;
