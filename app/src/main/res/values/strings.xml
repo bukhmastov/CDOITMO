@@ -395,7 +395,7 @@
     <string name="schedule_empty_query_settings">Настроить отображение расписания по умолчанию Вы можете проследовав:</string>
     <string name="pref_group_force_override">Переопределить группу</string>
     <string name="pref_group_force_override_summary">Если ваша группа определяется неверно</string>
-    <string name="pref_group_force_override_message">Оставьте поле пустым, чтобы позволить системе автоматически определять группу. Необходимо перезапустить приложение для принятия изменений.</string>
+    <string name="pref_group_force_override_message">Оставьте поле пустым, чтобы позволить системе автоматически определять группу. Необходимо перезапустить приложение для принятия изменений. Обратите внимание, что Вам придется изменять группу раз в год.</string>
     <string name="pref_group_force_override_hint">Номер группы</string>
     <string name="no_rating">Рейтинга нет</string>
     <string name="add_to_cache">Добавить в кэш</string>
@@ -477,5 +477,9 @@
     <string name="anonymous_login_info_3">2. Зачем это нужно</string>
     <string name="anonymous_login_info_4">Этот режим пригодится, если Вы не хотите авторизовываться в системе ЦДО через данное приложение, авторизация по каким-либо причинам в текущий момент недоступна или на дворе октябрь 2077 года, сервера ЦДО более недоступны, а единственное что Вас беспокоит - расписание занятий.</string>
     <string name="login_group">Номер группы (можно оставить пустым)</string>
+    <string name="pref_week_force_override">Переопределить неделю</string>
+    <string name="pref_week_force_override_summary">Если текущая неделя определяется неверно</string>
+    <string name="pref_week_force_override_message">Оставьте поле пустым, чтобы позволить системе автоматически определять текущую неделю. Необходимо перезапустить приложение для принятия изменений. Обратите внимание, что Вам придется изменять текущую неделю раз в пол года.</string>
+    <string name="pref_week_force_override_hint">Номер текущей недели</string>
 
 </resources>

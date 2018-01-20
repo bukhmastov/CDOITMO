@@ -276,21 +276,38 @@ public class Static {
         return getWeek(context, getCalendar());
     }
     public static int getWeek(Context context, Calendar calendar) {
+        int week = -1;
+        long ts = 0;
         try {
-            String weekStr = Storage.file.general.get(context, "user#week").trim();
-            if (!weekStr.isEmpty()) {
-                JSONObject jsonObject = new JSONObject(weekStr);
-                int week = jsonObject.getInt("week");
-                if (week >= 0) {
-                    Calendar past = (Calendar) calendar.clone();
-                    past.setTimeInMillis(jsonObject.getLong("timestamp"));
-                    return week + (calendar.get(Calendar.WEEK_OF_YEAR) - past.get(Calendar.WEEK_OF_YEAR));
+            final String override = Storage.pref.get(context, "pref_week_force_override", "");
+            if (!override.isEmpty()) {
+                try {
+                    String[] v = override.split("#");
+                    if (v.length == 2) {
+                        week = Integer.parseInt(v[0]);
+                        ts = Long.parseLong(v[1]);
+                    }
+                } catch (Exception ignore) {/* ignore */}
+            }
+            if (week < 0) {
+                final String stored = Storage.file.general.get(context, "user#week").trim();
+                if (!stored.isEmpty()) {
+                    try {
+                        JSONObject json = new JSONObject(stored);
+                        week = json.getInt("week");
+                        ts = json.getLong("timestamp");
+                    } catch (Exception e) {
+                        Storage.file.general.delete(context, "user#week");
+                    }
                 }
             }
-        } catch (JSONException e) {
-            Storage.file.general.delete(context, "user#week");
-        }
-        return -1;
+            if (week >= 0) {
+                final Calendar past = (Calendar) calendar.clone();
+                past.setTimeInMillis(ts);
+                return week + (calendar.get(Calendar.WEEK_OF_YEAR) - past.get(Calendar.WEEK_OF_YEAR));
+            }
+        } catch (Exception ignore) {/* ignore */}
+        return week;
     }
     public static int getWeekDay() {
         return getWeekDay(getCalendar());

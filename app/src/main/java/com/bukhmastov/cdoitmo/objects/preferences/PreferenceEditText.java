@@ -1,6 +1,8 @@
 package com.bukhmastov.cdoitmo.objects.preferences;
 
+import android.content.Context;
 import android.content.DialogInterface;
+import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import android.support.v7.app.AlertDialog;
 import android.view.View;
@@ -12,20 +14,29 @@ import com.bukhmastov.cdoitmo.activities.ConnectedActivity;
 import com.bukhmastov.cdoitmo.utils.Storage;
 
 public class PreferenceEditText extends Preference {
+
+    public interface Callback {
+        String onSetText(final Context context, final String value);
+        String onGetText(final Context context, final String value);
+    }
     public @StringRes int message = 0;
     public @StringRes int hint = 0;
     public boolean changeSummary = true;
-    public PreferenceEditText(String key, Object defaultValue, @StringRes int title, @StringRes int summary, @StringRes int message, @StringRes int hint, boolean changeSummary) {
+    public Callback callback = null;
+
+    public PreferenceEditText(String key, Object defaultValue, @StringRes int title, @StringRes int summary, @StringRes int message, @StringRes int hint, boolean changeSummary, @Nullable Callback callback) {
         super(key, defaultValue, title, summary);
         this.message = message;
         this.hint = hint;
         this.changeSummary = changeSummary;
+        this.callback = callback;
     }
-    public PreferenceEditText(String key, Object defaultValue, @StringRes int title, @StringRes int message, @StringRes int hint, boolean changeSummary) {
+    public PreferenceEditText(String key, Object defaultValue, @StringRes int title, @StringRes int message, @StringRes int hint, boolean changeSummary, @Nullable Callback callback) {
         super(key, defaultValue, title);
         this.message = message;
         this.hint = hint;
         this.changeSummary = changeSummary;
+        this.callback = callback;
     }
     public static View getView(final ConnectedActivity activity, final PreferenceEditText preference) {
         final View preference_layout = inflate(activity, R.layout.layout_preference_basic);
@@ -53,12 +64,19 @@ public class PreferenceEditText extends Preference {
                 if (preference.hint != 0) {
                     editText.setHint(preference.hint);
                 }
-                editText.setText(Storage.pref.get(activity, preference.key, preference.defaultValue == null ? "" : (String) preference.defaultValue));
+                String value = Storage.pref.get(activity, preference.key, preference.defaultValue == null ? "" : (String) preference.defaultValue);
+                if (preference.callback != null) {
+                    value = preference.callback.onSetText(activity, value);
+                }
+                editText.setText(value);
                 builder.setView(view);
                 builder.setPositiveButton(R.string.accept, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         String value = editText.getText().toString().trim();
+                        if (preference.callback != null) {
+                            value = preference.callback.onGetText(activity, value);
+                        }
                         Storage.pref.put(activity, preference.key, value);
                         Preference.onPreferenceChanged(activity, preference.key);
                         if (preference.changeSummary) {

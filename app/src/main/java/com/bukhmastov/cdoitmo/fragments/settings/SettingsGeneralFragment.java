@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.fragments.settings;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.v4.app.Fragment;
@@ -19,6 +20,7 @@ import com.bukhmastov.cdoitmo.utils.Storage;
 import com.bukhmastov.cdoitmo.utils.ThemeUtil;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment {
@@ -66,7 +68,47 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
         }));
         preferences.add(new PreferenceSwitch("pref_auto_logout", false, R.string.pref_auto_logout, R.string.pref_auto_logout_summary, null, null));
         preferences.add(new PreferenceSwitch("pref_initial_offline", false, R.string.pref_initial_offline, R.string.pref_initial_offline_summary, null, null));
-        preferences.add(new PreferenceEditText("pref_group_force_override", "", R.string.pref_group_force_override, R.string.pref_group_force_override_summary, R.string.pref_group_force_override_message, R.string.pref_group_force_override_hint, false));
+        preferences.add(new PreferenceEditText("pref_group_force_override", "", R.string.pref_group_force_override, R.string.pref_group_force_override_summary, R.string.pref_group_force_override_message, R.string.pref_group_force_override_hint, false, null));
+        preferences.add(new PreferenceEditText("pref_week_force_override", "", R.string.pref_week_force_override, R.string.pref_week_force_override_summary, R.string.pref_week_force_override_message, R.string.pref_week_force_override_hint, false, new PreferenceEditText.Callback() {
+            @Override
+            public String onSetText(Context context, String value) {
+                try {
+                    if (value.isEmpty()) {
+                        return value;
+                    }
+                    String[] v = value.split("#");
+                    if (v.length == 2) {
+                        final int week = Integer.parseInt(v[0]);
+                        final long ts = Long.parseLong(v[1]);
+                        final Calendar today = Static.getCalendar();
+                        final Calendar past = (Calendar) today.clone();
+                        past.setTimeInMillis(ts);
+                        value = String.valueOf(week + (today.get(Calendar.WEEK_OF_YEAR) - past.get(Calendar.WEEK_OF_YEAR)));
+                    } else {
+                        value = "";
+                    }
+                } catch (Exception e) {
+                    value = "";
+                }
+                return value;
+            }
+            @Override
+            public String onGetText(Context context, String value) {
+                try {
+                    if (value.isEmpty()) {
+                        return value;
+                    }
+                    final int week = Integer.parseInt(value);
+                    final long ts = Static.getCalendar().getTimeInMillis();
+                    if (week > 0) {
+                        value = String.valueOf(week) + "#" + String.valueOf(ts);
+                    }
+                } catch (Exception e) {
+                    value = "";
+                }
+                return value;
+            }
+        }));
         preferences.add(new PreferenceBasic("pref_open_system_settings", null, R.string.pref_open_system_settings, false, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final PreferenceBasic.OnPreferenceClickedCallback callback) {
