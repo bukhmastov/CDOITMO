@@ -1,6 +1,5 @@
 package com.bukhmastov.cdoitmo.fragments.settings;
 
-import android.content.DialogInterface;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 
@@ -29,35 +28,17 @@ public class SettingsCacheFragment extends SettingsTemplatePreferencesFragment {
                 true,
                 R.string.pref_use_cache,
                 new ArrayList<>(Arrays.asList("pref_dynamic_refresh", "pref_static_refresh", "pref_use_university_cache", "pref_clear_cache", "pref_schedule_lessons_clear_cache", "pref_schedule_exams_clear_cache")),
-                new PreferenceSwitch.Callback() {
-                    @Override
-                    public void onApproveChange(final ConnectedActivity activity, final PreferenceSwitch preference, final boolean value, final PreferenceSwitch.ApproveChangeCallback callback) {
-                        if (!value) {
-                            new AlertDialog.Builder(activity)
-                                    .setTitle(R.string.pref_use_cache)
-                                    .setMessage(R.string.pref_use_cache_message)
-                                    .setPositiveButton(R.string.proceed, new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            callback.onDecisionMade(activity, preference, true);
-                                        }
-                                    })
-                                    .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            callback.onDecisionMade(activity, preference, false);
-                                        }
-                                    })
-                                    .setOnCancelListener(new DialogInterface.OnCancelListener() {
-                                        @Override
-                                        public void onCancel(DialogInterface dialog) {
-                                            callback.onDecisionMade(activity, preference, false);
-                                        }
-                                    })
-                                    .create().show();
-                        } else {
-                            callback.onDecisionMade(activity, preference, true);
-                        }
+                (activity, preference, value, callback) -> {
+                    if (!value) {
+                        new AlertDialog.Builder(activity)
+                                .setTitle(R.string.pref_use_cache)
+                                .setMessage(R.string.pref_use_cache_message)
+                                .setPositiveButton(R.string.proceed, (dialog, which) -> callback.onDecisionMade(activity, preference, true))
+                                .setNegativeButton(R.string.cancel, (dialog, which) -> callback.onDecisionMade(activity, preference, false))
+                                .setOnCancelListener(dialog -> callback.onDecisionMade(activity, preference, false))
+                                .create().show();
+                    } else {
+                        callback.onDecisionMade(activity, preference, true);
                     }
                 }
         ));
@@ -67,14 +48,11 @@ public class SettingsCacheFragment extends SettingsTemplatePreferencesFragment {
         preferences.add(new PreferenceBasic("pref_clear_cache", null, R.string.clear_cache, false, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                Static.T.runThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Log.v(TAG, "pref_clear_cache clicked");
-                        if (activity != null) {
-                            boolean success = Storage.file.cache.clear(activity);
-                            Static.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
-                        }
+                Static.T.runThread(() -> {
+                    Log.v(TAG, "pref_clear_cache clicked");
+                    if (activity != null) {
+                        boolean success = Storage.file.cache.clear(activity);
+                        Static.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
                     }
                 });
             }
@@ -86,14 +64,11 @@ public class SettingsCacheFragment extends SettingsTemplatePreferencesFragment {
         preferences.add(new PreferenceBasic("pref_schedule_lessons_clear_cache", null, R.string.clear_schedule_lessons_cache, false, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                Static.T.runThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Log.v(TAG, "pref_schedule_lessons_clear_cache clicked");
-                        if (activity != null) {
-                            boolean success = Storage.file.cache.clear(activity, "schedule_lessons");
-                            Static.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
-                        }
+                Static.T.runThread(() -> {
+                    Log.v(TAG, "pref_schedule_lessons_clear_cache clicked");
+                    if (activity != null) {
+                        boolean success = Storage.file.cache.clear(activity, "schedule_lessons");
+                        Static.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
                     }
                 });
             }
@@ -105,14 +80,11 @@ public class SettingsCacheFragment extends SettingsTemplatePreferencesFragment {
         preferences.add(new PreferenceBasic("pref_schedule_exams_clear_cache", null, R.string.clear_schedule_exams_cache, false, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                Static.T.runThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Log.v(TAG, "pref_schedule_exams_clear_cache clicked");
-                        if (activity != null) {
-                            boolean success = Storage.file.cache.clear(activity, "schedule_exams");
-                            Static.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
-                        }
+                Static.T.runThread(() -> {
+                    Log.v(TAG, "pref_schedule_exams_clear_cache clicked");
+                    if (activity != null) {
+                        boolean success = Storage.file.cache.clear(activity, "schedule_exams");
+                        Static.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
                     }
                 });
             }

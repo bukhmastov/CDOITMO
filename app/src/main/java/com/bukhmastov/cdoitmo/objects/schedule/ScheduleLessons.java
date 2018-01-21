@@ -30,202 +30,127 @@ public class ScheduleLessons extends Schedule {
     @Override
     protected void searchMine(final Context context, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
         Log.v(TAG, "searchMine | personal schedule is unavailable");
-        invokePending("mine", withUserChanges, true, new Pending() {
-            @Override
-            public void invoke(Handler handler) {
-                handler.onFailure(FAILED_INVALID_QUERY);
-            }
-        });
+        invokePending("mine", withUserChanges, true, handler -> handler.onFailure(FAILED_INVALID_QUERY));
     }
     @Override
     protected void searchGroup(final Context context, final String group, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
-        Static.T.runThread(new Runnable() {
+        final SOURCE source = getSource(context);
+        Log.v(TAG, "searchGroup | group=" + group + " | refreshRate=" + refreshRate + " | forceToCache=" + Log.lBool(forceToCache) + " | withUserChanges=" + Log.lBool(withUserChanges) + " | source=" + source2string(source));
+        Static.T.runThread(() -> searchByQuery(context, "group", group, refreshRate, withUserChanges, new SearchByQuery() {
             @Override
-            public void run() {
-                final SOURCE source = getSource(context);
-                Log.v(TAG, "searchGroup | group=" + group + " | refreshRate=" + refreshRate + " | forceToCache=" + Log.lBool(forceToCache) + " | withUserChanges=" + Log.lBool(withUserChanges) + " | source=" + source2string(source));
-                searchByQuery(context, "group", group, refreshRate, withUserChanges, new SearchByQuery() {
-                    @Override
-                    public boolean isWebAvailable() {
-                        return true;
-                    }
-                    @Override
-                    public void onWebRequest(final String query, final String cache, final RestResponseHandler restResponseHandler) {
-                        switch (source) {
-                            case ISU:
-                                invokePending(query, withUserChanges, true, new Pending() {
-                                    @Override
-                                    public void invoke(Handler handler) {
-                                        handler.onFailure(FAILED_INVALID_QUERY);
-                                    }
-                                });
-                                break;
-                            case IFMO: IfmoRestClient.get(context, "schedule_lesson_group/" + query, null, restResponseHandler); break;
-                        }
-                    }
-                    @Override
-                    public void onWebRequestSuccess(final String query, final JSONObject data, final JSONObject template) {
-                        switch (source) {
-                            case ISU:  break;
-                            case IFMO: ScheduleLessons.this.onWebRequestSuccessIfmo(this, query, data, template); break;
-                        }
-                    }
-                    @Override
-                    public void onWebRequestFailed(final int statusCode, final Client.Headers headers, final int state) {
-                        invokePending(group, withUserChanges, true, new Pending() {
-                            @Override
-                            public void invoke(Handler handler) {
-                                handler.onFailure(statusCode, headers, state);
-                            }
-                        });
-                    }
-                    @Override
-                    public void onWebRequestProgress(final int state) {
-                        invokePending(group, withUserChanges, false, new Pending() {
-                            @Override
-                            public void invoke(Handler handler) {
-                                handler.onProgress(state);
-                            }
-                        });
-                    }
-                    @Override
-                    public void onWebNewRequest(final Client.Request request) {
-                        invokePending(group, withUserChanges, false, new Pending() {
-                            @Override
-                            public void invoke(Handler handler) {
-                                handler.onNewRequest(request);
-                            }
-                        });
-                    }
-                    @Override
-                    public void onFound(final String query, final JSONObject data, final boolean putToCache, boolean fromCache) {
-                        ScheduleLessons.this.onFound(context, query, data, putToCache, forceToCache, fromCache, withUserChanges);
-                    }
-                });
+            public boolean isWebAvailable() {
+                return true;
             }
-        });
+            @Override
+            public void onWebRequest(final String query, final String cache, final RestResponseHandler restResponseHandler) {
+                switch (source) {
+                    case ISU:
+                        invokePending(query, withUserChanges, true, handler -> handler.onFailure(FAILED_INVALID_QUERY));
+                        break;
+                    case IFMO: IfmoRestClient.get(context, "schedule_lesson_group/" + query, null, restResponseHandler); break;
+                }
+            }
+            @Override
+            public void onWebRequestSuccess(final String query, final JSONObject data, final JSONObject template) {
+                switch (source) {
+                    case ISU:  break;
+                    case IFMO: ScheduleLessons.this.onWebRequestSuccessIfmo(this, query, data, template); break;
+                }
+            }
+            @Override
+            public void onWebRequestFailed(final int statusCode, final Client.Headers headers, final int state) {
+                invokePending(group, withUserChanges, true, handler -> handler.onFailure(statusCode, headers, state));
+            }
+            @Override
+            public void onWebRequestProgress(final int state) {
+                invokePending(group, withUserChanges, false, handler -> handler.onProgress(state));
+            }
+            @Override
+            public void onWebNewRequest(final Client.Request request) {
+                invokePending(group, withUserChanges, false, handler -> handler.onNewRequest(request));
+            }
+            @Override
+            public void onFound(final String query, final JSONObject data, final boolean putToCache, boolean fromCache) {
+                ScheduleLessons.this.onFound(context, query, data, putToCache, forceToCache, fromCache, withUserChanges);
+            }
+        }));
     }
     @Override
     protected void searchRoom(final Context context, final String room, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
-        Static.T.runThread(new Runnable() {
+        Log.v(TAG, "searchRoom | room=" + room + " | refreshRate=" + refreshRate + " | forceToCache=" + Log.lBool(forceToCache) + " | withUserChanges=" + Log.lBool(withUserChanges));
+        Static.T.runThread(() -> searchByQuery(context, "room", room, refreshRate, withUserChanges, new SearchByQuery() {
             @Override
-            public void run() {
-                Log.v(TAG, "searchRoom | room=" + room + " | refreshRate=" + refreshRate + " | forceToCache=" + Log.lBool(forceToCache) + " | withUserChanges=" + Log.lBool(withUserChanges));
-                searchByQuery(context, "room", room, refreshRate, withUserChanges, new SearchByQuery() {
-                    @Override
-                    public boolean isWebAvailable() {
-                        return true;
-                    }
-                    @Override
-                    public void onWebRequest(final String query, final String cache, final RestResponseHandler restResponseHandler) {
-                        IfmoRestClient.get(context, "schedule_lesson_room/" + query, null, restResponseHandler);
-                    }
-                    @Override
-                    public void onWebRequestSuccess(final String query, final JSONObject data, final JSONObject template) {
-                        ScheduleLessons.this.onWebRequestSuccessIfmo(this, query, data, template);
-                    }
-                    @Override
-                    public void onWebRequestFailed(final int statusCode, final Client.Headers headers, final int state) {
-                        invokePending(room, withUserChanges, true, new Pending() {
-                            @Override
-                            public void invoke(Handler handler) {
-                                handler.onFailure(statusCode, headers, state);
-                            }
-                        });
-                    }
-                    @Override
-                    public void onWebRequestProgress(final int state) {
-                        invokePending(room, withUserChanges, false, new Pending() {
-                            @Override
-                            public void invoke(Handler handler) {
-                                handler.onProgress(state);
-                            }
-                        });
-                    }
-                    @Override
-                    public void onWebNewRequest(final Client.Request request) {
-                        invokePending(room, withUserChanges, false, new Pending() {
-                            @Override
-                            public void invoke(Handler handler) {
-                                handler.onNewRequest(request);
-                            }
-                        });
-                    }
-                    @Override
-                    public void onFound(final String query, final JSONObject data, final boolean putToCache, boolean fromCache) {
-                        ScheduleLessons.this.onFound(context, query, data, putToCache, forceToCache, fromCache, withUserChanges);
-                    }
-                });
+            public boolean isWebAvailable() {
+                return true;
             }
-        });
+            @Override
+            public void onWebRequest(final String query, final String cache, final RestResponseHandler restResponseHandler) {
+                IfmoRestClient.get(context, "schedule_lesson_room/" + query, null, restResponseHandler);
+            }
+            @Override
+            public void onWebRequestSuccess(final String query, final JSONObject data, final JSONObject template) {
+                ScheduleLessons.this.onWebRequestSuccessIfmo(this, query, data, template);
+            }
+            @Override
+            public void onWebRequestFailed(final int statusCode, final Client.Headers headers, final int state) {
+                invokePending(room, withUserChanges, true, handler -> handler.onFailure(statusCode, headers, state));
+            }
+            @Override
+            public void onWebRequestProgress(final int state) {
+                invokePending(room, withUserChanges, false, handler -> handler.onProgress(state));
+            }
+            @Override
+            public void onWebNewRequest(final Client.Request request) {
+                invokePending(room, withUserChanges, false, handler -> handler.onNewRequest(request));
+            }
+            @Override
+            public void onFound(final String query, final JSONObject data, final boolean putToCache, boolean fromCache) {
+                ScheduleLessons.this.onFound(context, query, data, putToCache, forceToCache, fromCache, withUserChanges);
+            }
+        }));
     }
     @Override
     protected void searchTeacher(final Context context, final String teacherId, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
-        Static.T.runThread(new Runnable() {
+        final SOURCE source = getSource(context);
+        Log.v(TAG, "searchTeacher | teacherId=" + teacherId + " | refreshRate=" + refreshRate + " | forceToCache=" + Log.lBool(forceToCache) + " | withUserChanges=" + Log.lBool(withUserChanges) + " | source=" + source2string(source));
+        Static.T.runThread(() -> searchByQuery(context, "teacher", teacherId, refreshRate, withUserChanges, new SearchByQuery() {
             @Override
-            public void run() {
-                final SOURCE source = getSource(context);
-                Log.v(TAG, "searchTeacher | teacherId=" + teacherId + " | refreshRate=" + refreshRate + " | forceToCache=" + Log.lBool(forceToCache) + " | withUserChanges=" + Log.lBool(withUserChanges) + " | source=" + source2string(source));
-                searchByQuery(context, "teacher", teacherId, refreshRate, withUserChanges, new SearchByQuery() {
-                    @Override
-                    public boolean isWebAvailable() {
-                        return true;
-                    }
-                    @Override
-                    public void onWebRequest(final String query, final String cache, final RestResponseHandler restResponseHandler) {
-                        switch (source) {
-                            case ISU:
-                                invokePending(query, withUserChanges, true, new Pending() {
-                                    @Override
-                                    public void invoke(Handler handler) {
-                                        handler.onFailure(FAILED_INVALID_QUERY);
-                                    }
-                                });
-                                break;
-                            case IFMO: IfmoRestClient.get(context, "schedule_lesson_person/" + query, null, restResponseHandler); break;
-                        }
-                    }
-                    @Override
-                    public void onWebRequestSuccess(final String query, final JSONObject data, final JSONObject template) {
-                        switch (source) {
-                            case ISU:  break;
-                            case IFMO: ScheduleLessons.this.onWebRequestSuccessIfmo(this, query, data, template); break;
-                        }
-                    }
-                    @Override
-                    public void onWebRequestFailed(final int statusCode, final Client.Headers headers, final int state) {
-                        invokePending(teacherId, withUserChanges, true, new Pending() {
-                            @Override
-                            public void invoke(Handler handler) {
-                                handler.onFailure(statusCode, headers, state);
-                            }
-                        });
-                    }
-                    @Override
-                    public void onWebRequestProgress(final int state) {
-                        invokePending(teacherId, withUserChanges, false, new Pending() {
-                            @Override
-                            public void invoke(Handler handler) {
-                                handler.onProgress(state);
-                            }
-                        });
-                    }
-                    @Override
-                    public void onWebNewRequest(final Client.Request request) {
-                        invokePending(teacherId, withUserChanges, false, new Pending() {
-                            @Override
-                            public void invoke(Handler handler) {
-                                handler.onNewRequest(request);
-                            }
-                        });
-                    }
-                    @Override
-                    public void onFound(final String query, final JSONObject data, final boolean putToCache, boolean fromCache) {
-                        ScheduleLessons.this.onFound(context, query, data, putToCache, forceToCache, fromCache, withUserChanges);
-                    }
-                });
+            public boolean isWebAvailable() {
+                return true;
             }
-        });
+            @Override
+            public void onWebRequest(final String query, final String cache, final RestResponseHandler restResponseHandler) {
+                switch (source) {
+                    case ISU:
+                        invokePending(query, withUserChanges, true, handler -> handler.onFailure(FAILED_INVALID_QUERY));
+                        break;
+                    case IFMO: IfmoRestClient.get(context, "schedule_lesson_person/" + query, null, restResponseHandler); break;
+                }
+            }
+            @Override
+            public void onWebRequestSuccess(final String query, final JSONObject data, final JSONObject template) {
+                switch (source) {
+                    case ISU:  break;
+                    case IFMO: ScheduleLessons.this.onWebRequestSuccessIfmo(this, query, data, template); break;
+                }
+            }
+            @Override
+            public void onWebRequestFailed(final int statusCode, final Client.Headers headers, final int state) {
+                invokePending(teacherId, withUserChanges, true, handler -> handler.onFailure(statusCode, headers, state));
+            }
+            @Override
+            public void onWebRequestProgress(final int state) {
+                invokePending(teacherId, withUserChanges, false, handler -> handler.onProgress(state));
+            }
+            @Override
+            public void onWebNewRequest(final Client.Request request) {
+                invokePending(teacherId, withUserChanges, false, handler -> handler.onNewRequest(request));
+            }
+            @Override
+            public void onFound(final String query, final JSONObject data, final boolean putToCache, boolean fromCache) {
+                ScheduleLessons.this.onFound(context, query, data, putToCache, forceToCache, fromCache, withUserChanges);
+            }
+        }));
     }
     @Override
     protected String getType() {
@@ -237,87 +162,49 @@ public class ScheduleLessons extends Schedule {
     }
 
     private void onWebRequestSuccessIfmo(final SearchByQuery searchByQuery, final String query, final JSONObject data, final JSONObject template) {
-        Static.T.runThread(new ScheduleLessonsConverterIfmo(data, template, new ScheduleLessonsConverterIfmo.response() {
-            @Override
-            public void finish(final JSONObject json) {
-                searchByQuery.onFound(query, json, true, false);
-            }
-        }));
+        Static.T.runThread(new ScheduleLessonsConverterIfmo(data, template, json -> searchByQuery.onFound(query, json, true, false)));
     }
     private void onFound(final Context context, final String query, final JSONObject data, final boolean putToCache, final boolean forceToCache, final boolean fromCache, final boolean withUserChanges) {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    if (context == null || query == null || data == null) {
-                        Log.w(TAG, "onFound | some values are null | context=" + Log.lNull(context) + " | query=" + Log.lNull(query) + " | data=" + Log.lNull(data));
-                        if (query == null) {
-                            return;
-                        }
-                        invokePending(query, withUserChanges, true, new Pending() {
-                            @Override
-                            public void invoke(Handler handler) {
-                                handler.onFailure(FAILED_LOAD);
-                            }
-                        });
+        Static.T.runThread(() -> {
+            try {
+                if (context == null || query == null || data == null) {
+                    Log.w(TAG, "onFound | some values are null | context=" + Log.lNull(context) + " | query=" + Log.lNull(query) + " | data=" + Log.lNull(data));
+                    if (query == null) {
                         return;
                     }
-                    boolean valid = false;
-                    final JSONArray schedule = data.getJSONArray("schedule");
-                    for (int i = 0; i < schedule.length(); i++) {
-                        final JSONObject day = schedule.getJSONObject(i);
-                        if (day != null) {
-                            final JSONArray lessons = day.getJSONArray("lessons");
-                            if (lessons != null && lessons.length() > 0) {
-                                valid = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (valid) {
-                        if (putToCache) {
-                            putCache(context, query, data.toString(), forceToCache);
-                        }
-                        if (withUserChanges) {
-                            new ScheduleLessonsAdditionalConverter(context, data, new ScheduleLessonsAdditionalConverter.response() {
-                                @Override
-                                public void finish(final JSONObject json) {
-                                    invokePending(query, true, true, new Pending() {
-                                        @Override
-                                        public void invoke(Handler handler) {
-                                            handler.onSuccess(json, fromCache);
-                                        }
-                                    });
-                                }
-                            }).run();
-                        } else {
-                            invokePending(query, false, true, new Pending() {
-                                @Override
-                                public void invoke(Handler handler) {
-                                    handler.onSuccess(data, fromCache);
-                                }
-                            });
-                        }
-                    } else {
-                        if (putToCache) {
-                            putLocalCache(query, data.toString());
-                        }
-                        invokePending(query, withUserChanges, true, new Pending() {
-                            @Override
-                            public void invoke(Handler handler) {
-                                handler.onFailure(FAILED_NOT_FOUND);
-                            }
-                        });
-                    }
-                } catch (Exception e) {
-                    Static.error(e);
-                    invokePending(query, withUserChanges, true, new Pending() {
-                        @Override
-                        public void invoke(Handler handler) {
-                            handler.onFailure(FAILED_LOAD);
-                        }
-                    });
+                    invokePending(query, withUserChanges, true, handler -> handler.onFailure(FAILED_LOAD));
+                    return;
                 }
+                boolean valid = false;
+                final JSONArray schedule = data.getJSONArray("schedule");
+                for (int i = 0; i < schedule.length(); i++) {
+                    final JSONObject day = schedule.getJSONObject(i);
+                    if (day != null) {
+                        final JSONArray lessons = day.getJSONArray("lessons");
+                        if (lessons != null && lessons.length() > 0) {
+                            valid = true;
+                            break;
+                        }
+                    }
+                }
+                if (valid) {
+                    if (putToCache) {
+                        putCache(context, query, data.toString(), forceToCache);
+                    }
+                    if (withUserChanges) {
+                        new ScheduleLessonsAdditionalConverter(context, data, json -> invokePending(query, true, true, handler -> handler.onSuccess(json, fromCache))).run();
+                    } else {
+                        invokePending(query, false, true, handler -> handler.onSuccess(data, fromCache));
+                    }
+                } else {
+                    if (putToCache) {
+                        putLocalCache(query, data.toString());
+                    }
+                    invokePending(query, withUserChanges, true, handler -> handler.onFailure(FAILED_NOT_FOUND));
+                }
+            } catch (Exception e) {
+                Static.error(e);
+                invokePending(query, withUserChanges, true, handler -> handler.onFailure(FAILED_LOAD));
             }
         });
     }
@@ -463,17 +350,9 @@ public class ScheduleLessons extends Schedule {
             extras.putString("title", title);
             extras.putInt("weekday", weekday);
             extras.putString("lesson", lesson.toString());
-            Static.T.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (activity.openActivityOrFragment(ScheduleLessonsModifyFragment.class, extras) && callback != null) {
-                        Static.T.runThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                callback.onCall();
-                            }
-                        });
-                    }
+            Static.T.runOnUiThread(() -> {
+                if (activity.openActivityOrFragment(ScheduleLessonsModifyFragment.class, extras) && callback != null) {
+                    Static.T.runThread(callback::onCall);
                 }
             });
             return true;
@@ -583,17 +462,9 @@ public class ScheduleLessons extends Schedule {
             extras.putString("title", title);
             extras.putInt("weekday", weekday);
             extras.putString("lesson", lesson.toString());
-            Static.T.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (activity.openActivityOrFragment(ScheduleLessonsModifyFragment.class, extras) && callback != null) {
-                        Static.T.runThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                callback.onCall();
-                            }
-                        });
-                    }
+            Static.T.runOnUiThread(() -> {
+                if (activity.openActivityOrFragment(ScheduleLessonsModifyFragment.class, extras) && callback != null) {
+                    Static.T.runThread(callback::onCall);
                 }
             });
             return true;

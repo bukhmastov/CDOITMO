@@ -100,29 +100,23 @@ public class FirebaseCrashlyticsProvider {
     }
 
     public static void exception(final Throwable throwable) {
-        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    if (!enabled) return;
-                    Crashlytics.logException(throwable);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+            try {
+                if (!enabled) return;
+                Crashlytics.logException(throwable);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         });
     }
 
     public static void log(final LEVEL level, final String TAG, final String log) {
-        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    if (!enabled) return;
-                    Crashlytics.log(level2string(level) + "/" + TAG + " " + log);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+            try {
+                if (!enabled) return;
+                Crashlytics.log(level2string(level) + "/" + TAG + " " + log);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         });
     }

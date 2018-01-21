@@ -7,7 +7,6 @@ import android.support.v7.widget.RecyclerView;
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -152,76 +151,62 @@ public class ScheduleExamsRecyclerViewAdapter extends RecyclerView.Adapter<Recyc
             } else {
                 ((ViewGroup) schedule_lessons_week.getParent()).removeView(schedule_lessons_week);
             }
-            viewHolder.container.findViewById(R.id.schedule_lessons_menu).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(final View view) {
-                    Static.T.runThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            final String cache_token = query == null ? null : query.toLowerCase();
-                            final boolean cached = cache_token != null && !Storage.file.cache.get(activity, "schedule_exams#lessons#" + cache_token, "").isEmpty();
-                            Static.T.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
+            viewHolder.container.findViewById(R.id.schedule_lessons_menu).setOnClickListener(view -> Static.T.runThread(() -> {
+                final String cache_token = query == null ? null : query.toLowerCase();
+                final boolean cached = cache_token != null && !Storage.file.cache.get(activity, "schedule_exams#lessons#" + cache_token, "").isEmpty();
+                Static.T.runOnUiThread(() -> {
+                    try {
+                        final PopupMenu popup = new PopupMenu(activity, view);
+                        final Menu menu = popup.getMenu();
+                        popup.getMenuInflater().inflate(R.menu.schedule_exams, menu);
+                        menu.findItem(cached ? R.id.add_to_cache : R.id.remove_from_cache).setVisible(false);
+                        popup.setOnMenuItemClickListener(item1 -> {
+                            Log.v(TAG, "menu | popup item | clicked | " + item1.getTitle().toString());
+                            switch (item1.getItemId()) {
+                                case R.id.add_to_cache:
+                                case R.id.remove_from_cache: {
                                     try {
-                                        final PopupMenu popup = new PopupMenu(activity, view);
-                                        final Menu menu = popup.getMenu();
-                                        popup.getMenuInflater().inflate(R.menu.schedule_exams, menu);
-                                        menu.findItem(cached ? R.id.add_to_cache : R.id.remove_from_cache).setVisible(false);
-                                        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                                            @Override
-                                            public boolean onMenuItemClick(final MenuItem item) {
-                                                Log.v(TAG, "menu | popup item | clicked | " + item.getTitle().toString());
-                                                switch (item.getItemId()) {
-                                                    case R.id.add_to_cache:
-                                                    case R.id.remove_from_cache: {
-                                                        try {
-                                                            if (cache_token == null) {
-                                                                Static.snackBar(activity, activity.getString(R.string.cache_failed));
-                                                            } else {
-                                                                if (Storage.file.cache.exists(activity, "schedule_exams#lessons#" + cache_token)) {
-                                                                    if (Storage.file.cache.delete(activity, "schedule_exams#lessons#" + cache_token)) {
-                                                                        Static.snackBar(activity, activity.getString(R.string.cache_false));
-                                                                    } else {
-                                                                        Static.snackBar(activity, activity.getString(R.string.cache_failed));
-                                                                    }
-                                                                } else {
-                                                                    if (data == null) {
-                                                                        Static.snackBar(activity, activity.getString(R.string.cache_failed));
-                                                                    } else {
-                                                                        if (Storage.file.cache.put(activity, "schedule_exams#lessons#" + cache_token, data.toString())) {
-                                                                            Static.snackBar(activity, activity.getString(R.string.cache_true));
-                                                                        } else {
-                                                                            Static.snackBar(activity, activity.getString(R.string.cache_failed));
-                                                                        }
-                                                                    }
-                                                                }
-                                                            }
-                                                        } catch (Exception e) {
-                                                            Static.error(e);
-                                                            Static.snackBar(activity, activity.getString(R.string.cache_failed));
-                                                        }
-                                                        break;
-                                                    }
-                                                    case R.id.open_settings: {
-                                                        activity.openActivityOrFragment(ConnectedActivity.TYPE.stackable, SettingsScheduleExamsFragment.class, null);
-                                                        break;
+                                        if (cache_token == null) {
+                                            Static.snackBar(activity, activity.getString(R.string.cache_failed));
+                                        } else {
+                                            if (Storage.file.cache.exists(activity, "schedule_exams#lessons#" + cache_token)) {
+                                                if (Storage.file.cache.delete(activity, "schedule_exams#lessons#" + cache_token)) {
+                                                    Static.snackBar(activity, activity.getString(R.string.cache_false));
+                                                } else {
+                                                    Static.snackBar(activity, activity.getString(R.string.cache_failed));
+                                                }
+                                            } else {
+                                                if (data == null) {
+                                                    Static.snackBar(activity, activity.getString(R.string.cache_failed));
+                                                } else {
+                                                    if (Storage.file.cache.put(activity, "schedule_exams#lessons#" + cache_token, data.toString())) {
+                                                        Static.snackBar(activity, activity.getString(R.string.cache_true));
+                                                    } else {
+                                                        Static.snackBar(activity, activity.getString(R.string.cache_failed));
                                                     }
                                                 }
-                                                return false;
                                             }
-                                        });
-                                        popup.show();
+                                        }
                                     } catch (Exception e) {
                                         Static.error(e);
-                                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                        Static.snackBar(activity, activity.getString(R.string.cache_failed));
                                     }
+                                    break;
                                 }
-                            });
-                        }
-                    });
-                }
-            });
+                                case R.id.open_settings: {
+                                    activity.openActivityOrFragment(ConnectedActivity.TYPE.stackable, SettingsScheduleExamsFragment.class, null);
+                                    break;
+                                }
+                            }
+                            return false;
+                        });
+                        popup.show();
+                    } catch (Exception e) {
+                        Static.error(e);
+                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                    }
+                });
+            }));
         } catch (Exception e) {
             Static.error(e);
         }
@@ -266,55 +251,49 @@ public class ScheduleExamsRecyclerViewAdapter extends RecyclerView.Adapter<Recyc
             View exam_touch_icon = viewHolder.container.findViewById(R.id.exam_touch_icon);
             exam_touch_icon.setVisibility(touch_icon_enabled ? View.VISIBLE : View.GONE);
             if (touch_icon_enabled) {
-                exam_touch_icon.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        try {
-                            Log.v(TAG, "exam_touch_icon clicked");
-                            PopupMenu popup = new PopupMenu(activity, view);
-                            Menu menu = popup.getMenu();
-                            popup.getMenuInflater().inflate(R.menu.schedule_exams_item, menu);
-                            switch (type) {
-                                case "group": {
-                                    menu.findItem(R.id.open_group).setVisible(false);
-                                    menu.findItem(R.id.open_teacher).setTitle(teacher);
-                                    menu.findItem(R.id.open_teacher).setVisible(true);
-                                    break;
-                                }
-                                case "teacher": {
-                                    menu.findItem(R.id.open_group).setTitle(activity.getString(R.string.group) + " " + group);
-                                    menu.findItem(R.id.open_group).setVisible(true);
-                                    menu.findItem(R.id.open_teacher).setVisible(false);
-                                    break;
-                                }
-                                default: {
-                                    menu.findItem(R.id.open_group).setVisible(false);
-                                    menu.findItem(R.id.open_teacher).setVisible(false);
+                exam_touch_icon.setOnClickListener(view -> {
+                    try {
+                        Log.v(TAG, "exam_touch_icon clicked");
+                        PopupMenu popup = new PopupMenu(activity, view);
+                        Menu menu = popup.getMenu();
+                        popup.getMenuInflater().inflate(R.menu.schedule_exams_item, menu);
+                        switch (type) {
+                            case "group": {
+                                menu.findItem(R.id.open_group).setVisible(false);
+                                menu.findItem(R.id.open_teacher).setTitle(teacher);
+                                menu.findItem(R.id.open_teacher).setVisible(true);
+                                break;
+                            }
+                            case "teacher": {
+                                menu.findItem(R.id.open_group).setTitle(activity.getString(R.string.group) + " " + group);
+                                menu.findItem(R.id.open_group).setVisible(true);
+                                menu.findItem(R.id.open_teacher).setVisible(false);
+                                break;
+                            }
+                            default: {
+                                menu.findItem(R.id.open_group).setVisible(false);
+                                menu.findItem(R.id.open_teacher).setVisible(false);
+                                break;
+                            }
+                        }
+                        popup.setOnMenuItemClickListener(item1 -> {
+                            Log.v(TAG, "popup.MenuItem clicked | " + item1.getTitle().toString());
+                            switch (item1.getItemId()) {
+                                case R.id.open_group: if (group != null && !group.isEmpty()) callback.onCall(group); break;
+                                case R.id.open_teacher: {
+                                    if (teacher_id != null && !teacher_id.isEmpty()) {
+                                        callback.onCall(teacher_id);
+                                    } else if (teacher != null && !teacher.isEmpty()) {
+                                        callback.onCall(teacher);
+                                    }
                                     break;
                                 }
                             }
-                            popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                                @Override
-                                public boolean onMenuItemClick(MenuItem item) {
-                                    Log.v(TAG, "popup.MenuItem clicked | " + item.getTitle().toString());
-                                    switch (item.getItemId()) {
-                                        case R.id.open_group: if (group != null && !group.isEmpty()) callback.onCall(group); break;
-                                        case R.id.open_teacher: {
-                                            if (teacher_id != null && !teacher_id.isEmpty()) {
-                                                callback.onCall(teacher_id);
-                                            } else if (teacher != null && !teacher.isEmpty()) {
-                                                callback.onCall(teacher);
-                                            }
-                                            break;
-                                        }
-                                    }
-                                    return false;
-                                }
-                            });
-                            popup.show();
-                        } catch (Exception e){
-                            Static.error(e);
-                        }
+                            return false;
+                        });
+                        popup.show();
+                    } catch (Exception e){
+                        Static.error(e);
                     }
                 });
             }
@@ -446,12 +425,9 @@ public class ScheduleExamsRecyclerViewAdapter extends RecyclerView.Adapter<Recyc
                 teacher += " (" + post + ")";
             }
             ((TextView) viewHolder.container.findViewById(R.id.teacher_picker_title)).setText(teacher);
-            viewHolder.container.findViewById(R.id.teacher_picker_item).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    if (pid != null && !pid.isEmpty()) {
-                        callback.onCall(pid);
-                    }
+            viewHolder.container.findViewById(R.id.teacher_picker_item).setOnClickListener(view -> {
+                if (pid != null && !pid.isEmpty()) {
+                    callback.onCall(pid);
                 }
             });
         } catch (Exception e) {

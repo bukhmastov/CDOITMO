@@ -68,14 +68,8 @@ public abstract class Preference {
             case "pref_use_notifications":
             case "pref_notify_frequency":
             case "pref_notify_network_unmetered":
-                Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
-                    @Override
-                    public void run() {
-                        new ProtocolTracker(activity).restart();
-                    }
-                });
+                Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> new ProtocolTracker(activity).restart());
                 break;
-
             case "pref_protocol_changes_track":
                 if (Storage.pref.get(activity, "pref_protocol_changes_track", true)) {
                     Static.protocolChangesTrackSetup(activity, 0);
@@ -106,12 +100,7 @@ public abstract class Preference {
                 }
                 break;
             case "pref_lang":
-                Static.snackBar(activity, activity.getString(R.string.restart_required), activity.getString(R.string.restart), new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        Static.reLaunch(activity);
-                    }
-                });
+                Static.snackBar(activity, activity.getString(R.string.restart_required), activity.getString(R.string.restart), v -> Static.reLaunch(activity));
                 break;
         }
     }

@@ -58,12 +58,7 @@ public class ProtocolTracker {
     }
     public ProtocolTracker restart(@Nullable final Static.SimpleCallback callback) {
         Log.v(TAG, "restart");
-        stop(new Static.SimpleCallback() {
-            @Override
-            public void onCall() {
-                start(callback);
-            }
-        });
+        stop(() -> start(callback));
         return this;
     }
 

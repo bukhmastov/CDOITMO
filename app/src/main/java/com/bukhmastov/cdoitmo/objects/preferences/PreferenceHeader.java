@@ -25,12 +25,7 @@ public class PreferenceHeader {
         View header = inflate(activity, R.layout.layout_preference_header);
         ((ImageView) header.findViewById(R.id.preference_header_icon)).setImageResource(preference.icon);
         ((TextView) header.findViewById(R.id.preference_header_title)).setText(preference.title);
-        header.findViewById(R.id.preference_header).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                activity.openFragment(ConnectedActivity.TYPE.stackable, preference.fragment, null);
-            }
-        });
+        header.findViewById(R.id.preference_header).setOnClickListener(v -> activity.openFragment(ConnectedActivity.TYPE.stackable, preference.fragment, null));
         return header;
     }
     private static View inflate(final Context context, final int layoutId) throws InflateException {

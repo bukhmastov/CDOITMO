@@ -17,8 +17,6 @@ import com.bukhmastov.cdoitmo.utils.Static;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.Objects;
-
 public class Room101ReviewBuilder implements Runnable {
 
     private static final String TAG = "Room101ReviewBuilder";
@@ -64,12 +62,9 @@ public class Room101ReviewBuilder implements Runnable {
                     final int reid = request.getInt("reid");
                     final String statusText = request.getString("status");
                     if (reid != 0) {
-                        requestLayout.findViewById(R.id.request_deny_button).setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                Log.v(TAG, "request_deny_button clicked");
-                                register.onDenyRequest(reid, Objects.equals(statusText.toLowerCase(), "удовлетворена") ? 1 : 0);
-                            }
+                        requestLayout.findViewById(R.id.request_deny_button).setOnClickListener(v -> {
+                            Log.v(TAG, "request_deny_button clicked");
+                            register.onDenyRequest(reid, "удовлетворена".equals(statusText.toLowerCase()) ? 1 : 0);
                         });
                     } else {
                         ((ViewGroup) requestLayout.findViewById(R.id.request_deny)).removeView(requestLayout.findViewById(R.id.request_deny_button));

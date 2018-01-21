@@ -1,6 +1,5 @@
 package com.bukhmastov.cdoitmo.objects.preferences;
 
-import android.content.DialogInterface;
 import android.support.annotation.ArrayRes;
 import android.support.annotation.StringRes;
 import android.support.v7.app.AlertDialog;
@@ -44,31 +43,25 @@ public class PreferenceList extends Preference {
         } else {
             preference_list_summary.setText(titles.get(values.indexOf(Storage.pref.get(activity, preference.key, preference.defaultValue == null ? "" : (String) preference.defaultValue))));
         }
-        preference_list.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (preference.isDisabled()) return;
-                int checked = 0;
-                if (preference.defaultValue != null) {
-                    checked = values.indexOf(Storage.pref.get(activity, preference.key, (String) preference.defaultValue));
-                }
-                new AlertDialog.Builder(activity)
-                        .setTitle(preference.title)
-                        .setSingleChoiceItems(preference.arrayTitles, checked, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                String value = values.get(which);
-                                Storage.pref.put(activity, preference.key, value);
-                                Preference.onPreferenceChanged(activity, preference.key);
-                                if (preference.changeSummary) {
-                                    preference_list_summary.setText(titles.get(which));
-                                }
-                                dialog.dismiss();
-                            }
-                        })
-                        .setNegativeButton(R.string.cancel, null)
-                        .create().show();
+        preference_list.setOnClickListener(v -> {
+            if (preference.isDisabled()) return;
+            int checked = 0;
+            if (preference.defaultValue != null) {
+                checked = values.indexOf(Storage.pref.get(activity, preference.key, (String) preference.defaultValue));
             }
+            new AlertDialog.Builder(activity)
+                    .setTitle(preference.title)
+                    .setSingleChoiceItems(preference.arrayTitles, checked, (dialog, which) -> {
+                        String value = values.get(which);
+                        Storage.pref.put(activity, preference.key, value);
+                        Preference.onPreferenceChanged(activity, preference.key);
+                        if (preference.changeSummary) {
+                            preference_list_summary.setText(titles.get(which));
+                        }
+                        dialog.dismiss();
+                    })
+                    .setNegativeButton(R.string.cancel, null)
+                    .create().show();
         });
         preference_list.setTag(preference.key);
         return preference_layout;

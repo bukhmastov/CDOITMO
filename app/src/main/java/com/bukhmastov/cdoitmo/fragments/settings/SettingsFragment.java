@@ -5,7 +5,6 @@ import android.support.v4.app.Fragment;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.fragments.AboutFragment;
-import com.bukhmastov.cdoitmo.fragments.LinkedAccountsFragment;
 import com.bukhmastov.cdoitmo.objects.preferences.Preference;
 import com.bukhmastov.cdoitmo.objects.preferences.PreferenceHeader;
 import com.bukhmastov.cdoitmo.utils.Storage;

@@ -57,31 +57,22 @@ public class LinkedAccountsFragment extends ConnectedFragment {
             final View account_cdo_link = view.findViewById(R.id.account_cdo_link);
             final View account_cdo_info = view.findViewById(R.id.account_cdo_info);
             if (account_cdo_link != null) {
-                account_cdo_link.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        Log.v(TAG, "account_cdo_link clicked");
-                        try {
-                            activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://de.ifmo.ru")));
-                        } catch (Exception e) {
-                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                        }
+                account_cdo_link.setOnClickListener(v -> {
+                    Log.v(TAG, "account_cdo_link clicked");
+                    try {
+                        activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://de.ifmo.ru")));
+                    } catch (Exception e) {
+                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 });
             }
-            Static.T.runThread(new Runnable() {
-                @Override
-                public void run() {
-                    final String cdo_user_info = Storage.file.perm.get(activity, "user#deifmo#login", "").trim() + " (" + Storage.file.perm.get(activity, "user#name", "").trim() + ")";
-                    Static.T.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (account_cdo_info != null) {
-                                ((TextView) account_cdo_info).setText(cdo_user_info);
-                            }
-                        }
-                    });
-                }
+            Static.T.runThread(() -> {
+                final String cdo_user_info = Storage.file.perm.get(activity, "user#deifmo#login", "").trim() + " (" + Storage.file.perm.get(activity, "user#name", "").trim() + ")";
+                Static.T.runOnUiThread(() -> {
+                    if (account_cdo_info != null) {
+                        ((TextView) account_cdo_info).setText(cdo_user_info);
+                    }
+                });
             });
 
         } catch (Exception e) {

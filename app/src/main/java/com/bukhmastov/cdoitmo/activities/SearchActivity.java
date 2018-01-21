@@ -12,11 +12,9 @@ import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapters.SuggestionsListView;
@@ -58,12 +56,9 @@ public abstract class SearchActivity extends AppCompatActivity {
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
         Log.v(TAG, "onPostCreate");
-        findViewById(R.id.search_close).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.v(TAG, "search_close clicked");
-                finish();
-            }
+        findViewById(R.id.search_close).setOnClickListener(v -> {
+            Log.v(TAG, "search_close clicked");
+            finish();
         });
         search_edit_text = findViewById(R.id.search_edittext);
         search_edit_text.setHint(getHint());
@@ -90,71 +85,55 @@ public abstract class SearchActivity extends AppCompatActivity {
     }
 
     private void setMode(final EXTRA_ACTION_MODE mode) {
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "setMode | mode=" + mode.toString());
-                final ViewGroup search_extra_action = findViewById(R.id.search_extra_action);
-                final ImageView search_extra_action_image = findViewById(R.id.search_extra_action_image);
-                if (search_extra_action != null) {
-                    search_extra_action.setOnClickListener(null);
-                    if (mode != EXTRA_ACTION_MODE.None) {
-                        switch (mode) {
-                            case Speech_recognition: {
-                                if (checkVoiceRecognition()) {
-                                    Log.v(TAG, "voice recognition not supported");
-                                    setMode(EXTRA_ACTION_MODE.None);
-                                    return;
-                                }
-                                search_extra_action_image.setImageDrawable(getDrawable(R.drawable.ic_keyboard_voice));
-                                search_extra_action.setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        Log.v(TAG, "speech_recognition clicked");
-                                        startRecognition();
-                                    }
-                                });
-                                break;
+        Static.T.runOnUiThread(() -> {
+            Log.v(TAG, "setMode | mode=" + mode.toString());
+            final ViewGroup search_extra_action = findViewById(R.id.search_extra_action);
+            final ImageView search_extra_action_image = findViewById(R.id.search_extra_action_image);
+            if (search_extra_action != null) {
+                search_extra_action.setOnClickListener(null);
+                if (mode != EXTRA_ACTION_MODE.None) {
+                    switch (mode) {
+                        case Speech_recognition: {
+                            if (checkVoiceRecognition()) {
+                                Log.v(TAG, "voice recognition not supported");
+                                setMode(EXTRA_ACTION_MODE.None);
+                                return;
                             }
-                            case Clear: {
-                                search_extra_action_image.setImageDrawable(getDrawable(R.drawable.ic_close));
-                                search_extra_action.setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        Log.v(TAG, "clear clicked");
-                                        search_edit_text.setText("");
-                                    }
-                                });
-                                break;
-                            }
+                            search_extra_action_image.setImageDrawable(getDrawable(R.drawable.ic_keyboard_voice));
+                            search_extra_action.setOnClickListener(v -> {
+                                Log.v(TAG, "speech_recognition clicked");
+                                startRecognition();
+                            });
+                            break;
                         }
-                        search_extra_action_image.setVisibility(View.VISIBLE);
-                    } else {
-                        search_extra_action_image.setVisibility(View.GONE);
+                        case Clear: {
+                            search_extra_action_image.setImageDrawable(getDrawable(R.drawable.ic_close));
+                            search_extra_action.setOnClickListener(v -> {
+                                Log.v(TAG, "clear clicked");
+                                search_edit_text.setText("");
+                            });
+                            break;
+                        }
                     }
+                    search_extra_action_image.setVisibility(View.VISIBLE);
+                } else {
+                    search_extra_action_image.setVisibility(View.GONE);
                 }
             }
         });
     }
     private void setSuggestions(final ArrayList<Suggestion> suggestions) {
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "setSuggestions");
-                try {
-                    ListView search_suggestions = findViewById(R.id.search_suggestions);
-                    if (search_suggestions == null) throw new Exception("search_suggestions listview is null");
-                    search_suggestions.setDividerHeight(0);
-                    search_suggestions.setDivider(null);
-                    search_suggestions.setAdapter(new SuggestionsListView(self, suggestions));
-                    search_suggestions.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                            done(suggestions.get(position).query, suggestions.get(position).label);
-                        }
-                    });
-                } catch (Exception e) {
-                    Static.error(e);
-                }
+        Static.T.runOnUiThread(() -> {
+            Log.v(TAG, "setSuggestions");
+            try {
+                ListView search_suggestions = findViewById(R.id.search_suggestions);
+                if (search_suggestions == null) throw new Exception("search_suggestions listview is null");
+                search_suggestions.setDividerHeight(0);
+                search_suggestions.setDivider(null);
+                search_suggestions.setAdapter(new SuggestionsListView(self, suggestions));
+                search_suggestions.setOnItemClickListener((parent, view, position, id) -> done(suggestions.get(position).query, suggestions.get(position).label));
+            } catch (Exception e) {
+                Static.error(e);
             }
         });
     }
@@ -177,27 +156,24 @@ public abstract class SearchActivity extends AppCompatActivity {
             startActivityForResult(intent, REQ_CODE_SPEECH_INPUT);
         } catch (ActivityNotFoundException a) {
             Log.v(TAG, "voice recognition not supported");
-            Toast.makeText(getApplicationContext(), R.string.speech_recognition_is_not_supported, Toast.LENGTH_SHORT).show();
+            Static.toast(getApplicationContext(), R.string.speech_recognition_is_not_supported);
         }
     }
     @Override
     protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                switch (requestCode) {
-                    case REQ_CODE_SPEECH_INPUT: {
-                        Log.v(TAG, "doneRecognition");
-                        if (resultCode == RESULT_OK && data != null) {
-                            ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                            if (result.size() > 0) {
-                                Log.v(TAG, "resultRecognition | " + result.get(0));
-                                search_edit_text.setText(result.get(0));
-                            }
+        Static.T.runOnUiThread(() -> {
+            switch (requestCode) {
+                case REQ_CODE_SPEECH_INPUT: {
+                    Log.v(TAG, "doneRecognition");
+                    if (resultCode == RESULT_OK && data != null) {
+                        ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                        if (result.size() > 0) {
+                            Log.v(TAG, "resultRecognition | " + result.get(0));
+                            search_edit_text.setText(result.get(0));
                         }
-                        break;
                     }
+                    break;
                 }
             }
         });
@@ -210,17 +186,14 @@ public abstract class SearchActivity extends AppCompatActivity {
         public void onTextChanged(CharSequence s, int start, int before, int count) {}
         @Override
         public void afterTextChanged(final Editable s) {
-            Static.T.runThread(new Runnable() {
-                @Override
-                public void run() {
-                    String query = s.toString().trim();
-                    if (query.isEmpty()) {
-                        setMode(EXTRA_ACTION_MODE.Speech_recognition);
-                    } else {
-                        setMode(EXTRA_ACTION_MODE.Clear);
-                    }
-                    setSuggestions(getSuggestions(query));
+            Static.T.runThread(() -> {
+                String query = s.toString().trim();
+                if (query.isEmpty()) {
+                    setMode(EXTRA_ACTION_MODE.Speech_recognition);
+                } else {
+                    setMode(EXTRA_ACTION_MODE.Clear);
                 }
+                setSuggestions(getSuggestions(query));
             });
         }
     };
@@ -236,5 +209,4 @@ public abstract class SearchActivity extends AppCompatActivity {
             return false;
         }
     };
-
 }

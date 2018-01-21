@@ -58,27 +58,21 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
         }
         View trw_container = findViewById(R.id.trw_container);
         if (trw_container != null) {
-            trw_container.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Log.v(TAG, "trw_container clicked");
-                    Intent intent = new Intent(getBaseContext(), MainActivity.class);
-                    intent.addFlags(Static.intentFlagRestart);
-                    intent.putExtra("action", "schedule_lessons");
-                    intent.putExtra("action_extra", query);
-                    startActivity(intent);
-                    close();
-                }
+            trw_container.setOnClickListener(v -> {
+                Log.v(TAG, "trw_container clicked");
+                Intent intent = new Intent(getBaseContext(), MainActivity.class);
+                intent.addFlags(Static.intentFlagRestart);
+                intent.putExtra("action", "schedule_lessons");
+                intent.putExtra("action_extra", query);
+                startActivity(intent);
+                close();
             });
         }
         View time_remaining_widget = findViewById(R.id.time_remaining_widget);
         if (time_remaining_widget != null) {
-            time_remaining_widget.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Log.v(TAG, "time_remaining_widget clicked");
-                    close();
-                }
+            time_remaining_widget.setOnClickListener(v -> {
+                Log.v(TAG, "time_remaining_widget clicked");
+                close();
             });
         }
     }
@@ -204,42 +198,39 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
         if (data.current == null && data.next == null && data.day == null) {
             message(activity.getString(R.string.lessons_gone));
         } else {
-            Static.T.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (is_message_displaying) {
-                        draw(R.layout.layout_time_remaining_widget);
-                        is_message_displaying = false;
-                    }
-                    if (data.current != null) {
-                        setText(R.id.lesson_title, activity.getString(R.string.current_lesson));
-                        setText(R.id.lesson_remaining, data.current);
-                    } else {
-                        setText(R.id.lesson_title, activity.getString(R.string.next_lesson));
-                        if (data.next == null) {
-                            setText(R.id.day_remaining, activity.getString(R.string.unknown));
-                        } else {
-                            setText(R.id.lesson_remaining, data.next);
-                        }
-                    }
-                    if (data.day == null) {
+            Static.T.runOnUiThread(() -> {
+                if (is_message_displaying) {
+                    draw(R.layout.layout_time_remaining_widget);
+                    is_message_displaying = false;
+                }
+                if (data.current != null) {
+                    setText(R.id.lesson_title, activity.getString(R.string.current_lesson));
+                    setText(R.id.lesson_remaining, data.current);
+                } else {
+                    setText(R.id.lesson_title, activity.getString(R.string.next_lesson));
+                    if (data.next == null) {
                         setText(R.id.day_remaining, activity.getString(R.string.unknown));
                     } else {
-                        setText(R.id.day_remaining, data.day);
+                        setText(R.id.lesson_remaining, data.next);
                     }
-                    View current_lesson_15min = activity.findViewById(R.id.current_lesson_15min);
-                    View current_lesson_15min_separator = activity.findViewById(R.id.current_lesson_15min_separator);
-                    if (data.current_15min != null) {
-                        if (current_lesson_15min != null && current_lesson_15min_separator != null && current_lesson_15min.getVisibility() == View.GONE) {
-                            current_lesson_15min.setVisibility(View.VISIBLE);
-                            current_lesson_15min_separator.setVisibility(View.VISIBLE);
-                        }
-                        setText(R.id.lesson_15min_remaining, data.current_15min);
-                    } else {
-                        if (current_lesson_15min != null && current_lesson_15min_separator != null && current_lesson_15min.getVisibility() == View.VISIBLE) {
-                            current_lesson_15min.setVisibility(View.GONE);
-                            current_lesson_15min_separator.setVisibility(View.GONE);
-                        }
+                }
+                if (data.day == null) {
+                    setText(R.id.day_remaining, activity.getString(R.string.unknown));
+                } else {
+                    setText(R.id.day_remaining, data.day);
+                }
+                View current_lesson_15min = activity.findViewById(R.id.current_lesson_15min);
+                View current_lesson_15min_separator = activity.findViewById(R.id.current_lesson_15min_separator);
+                if (data.current_15min != null) {
+                    if (current_lesson_15min != null && current_lesson_15min_separator != null && current_lesson_15min.getVisibility() == View.GONE) {
+                        current_lesson_15min.setVisibility(View.VISIBLE);
+                        current_lesson_15min_separator.setVisibility(View.VISIBLE);
+                    }
+                    setText(R.id.lesson_15min_remaining, data.current_15min);
+                } else {
+                    if (current_lesson_15min != null && current_lesson_15min_separator != null && current_lesson_15min.getVisibility() == View.VISIBLE) {
+                        current_lesson_15min.setVisibility(View.GONE);
+                        current_lesson_15min_separator.setVisibility(View.GONE);
                     }
                 }
             });
@@ -254,53 +245,41 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
 
     private void begin() {
         final TimeRemainingWidgetActivity self = this;
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "begin");
-                message(activity.getString(R.string.loaded));
-                if (timeRemainingWidget != null) {
-                    timeRemainingWidget.stop();
-                    timeRemainingWidget = null;
-                }
-                timeRemainingWidget = new TimeRemainingWidget(self);
-                timeRemainingWidget.start(self, schedule);
+        Static.T.runThread(() -> {
+            Log.v(TAG, "begin");
+            message(activity.getString(R.string.loaded));
+            if (timeRemainingWidget != null) {
+                timeRemainingWidget.stop();
+                timeRemainingWidget = null;
             }
+            timeRemainingWidget = new TimeRemainingWidget(self);
+            timeRemainingWidget.start(self, schedule);
         });
     }
     private void close() {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "close");
-                if (requestHandle != null) {
-                    requestHandle.cancel();
-                }
-                finish();
+        Static.T.runThread(() -> {
+            Log.v(TAG, "close");
+            if (requestHandle != null) {
+                requestHandle.cancel();
             }
+            finish();
         });
     }
     private void setText(final int layout, final String text) {
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                TextView textView = activity.findViewById(layout);
-                if (textView != null) {
-                    textView.setText(text);
-                }
+        Static.T.runOnUiThread(() -> {
+            TextView textView = activity.findViewById(layout);
+            if (textView != null) {
+                textView.setText(text);
             }
         });
     }
     private void message(final String text) {
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                draw(R.layout.layout_time_remaining_widget_message);
-                is_message_displaying = true;
-                TextView trw_message = activity.findViewById(R.id.trw_message);
-                if (trw_message != null) {
-                    trw_message.setText(text);
-                }
+        Static.T.runOnUiThread(() -> {
+            draw(R.layout.layout_time_remaining_widget_message);
+            is_message_displaying = true;
+            TextView trw_message = activity.findViewById(R.id.trw_message);
+            if (trw_message != null) {
+                trw_message.setText(text);
             }
         });
     }

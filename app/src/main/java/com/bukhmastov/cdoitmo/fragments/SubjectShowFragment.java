@@ -1,6 +1,5 @@
 package com.bukhmastov.cdoitmo.fragments;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -102,118 +101,100 @@ public class SubjectShowFragment extends ConnectedFragment {
 
     private void display() {
         if (data == null) return;
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Log.v(TAG, "display");
-                    final JSONObject subject = data.getJSONObject("subject");
-                    final int term = data.getInt("term");
-                    final ERegisterSubjectRecyclerViewAdapter adapter = new ERegisterSubjectRecyclerViewAdapter(activity, subject, term);
-                    Static.T.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                // отображаем заголовок
-                                activity.updateToolbar(activity, subject.getString("name"), R.drawable.ic_e_journal);
-                                // отображаем список
-                                final LinearLayoutManager layoutManager = new LinearLayoutManager(activity);
-                                final RecyclerView points_list = activity.findViewById(R.id.points_list);
-                                if (points_list == null) throw new SilentException();
-                                points_list.setLayoutManager(layoutManager);
-                                points_list.setAdapter(adapter);
-                            } catch (SilentException e) {
-                                activity.back();
-                            } catch (Exception e) {
-                                Static.error(e);
-                                activity.back();
-                            }
-                        }
-                    });
-                } catch (Exception e) {
-                    Static.error(e);
-                    activity.back();
-                }
+        Static.T.runThread(() -> {
+            try {
+                Log.v(TAG, "display");
+                final JSONObject subject = data.getJSONObject("subject");
+                final int term = data.getInt("term");
+                final ERegisterSubjectRecyclerViewAdapter adapter = new ERegisterSubjectRecyclerViewAdapter(activity, subject, term);
+                Static.T.runOnUiThread(() -> {
+                    try {
+                        // отображаем заголовок
+                        activity.updateToolbar(activity, subject.getString("name"), R.drawable.ic_e_journal);
+                        // отображаем список
+                        final LinearLayoutManager layoutManager = new LinearLayoutManager(activity);
+                        final RecyclerView points_list = activity.findViewById(R.id.points_list);
+                        if (points_list == null) throw new SilentException();
+                        points_list.setLayoutManager(layoutManager);
+                        points_list.setAdapter(adapter);
+                    } catch (SilentException e) {
+                        activity.back();
+                    } catch (Exception e) {
+                        Static.error(e);
+                        activity.back();
+                    }
+                });
+            } catch (Exception e) {
+                Static.error(e);
+                activity.back();
             }
         });
     }
     private void toggleShare() {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    if (data == null || activity.toolbar == null) return;
-                    final JSONObject subject = data.getJSONObject("subject");
-                    final String sbj = subject.getString("name");
-                    final JSONArray attestations = subject.getJSONArray("attestations");
-                    if (sbj == null || sbj.isEmpty() || attestations == null || attestations.length() == 0) return;
-                    final ArrayList<ShareEntity> shareEntities = new ArrayList<>();
-                    for (int i = 0; i < attestations.length(); i++) {
-                        final JSONObject attestation = attestations.getJSONObject(i);
-                        final String name = attestation.getString("name");
-                        final String mark = attestation.getString("mark");
-                        final double value = attestation.getDouble("value");
-                        if ((mark == null || mark.isEmpty()) && value <= 0.0) continue;
-                        ShareEntity shareEntity = new ShareEntity();
-                        shareEntity.attestation = name;
-                        shareEntity.mark = mark;
-                        shareEntity.value = value;
-                        shareEntity.text = getShareText(sbj, shareEntity);
-                        shareEntities.add(shareEntity);
-                    }
-                    if (shareEntities.size() == 0) return;
-                    Static.T.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
+        Static.T.runThread(() -> {
+            try {
+                if (data == null || activity.toolbar == null) return;
+                final JSONObject subject = data.getJSONObject("subject");
+                final String sbj = subject.getString("name");
+                final JSONArray attestations = subject.getJSONArray("attestations");
+                if (sbj == null || sbj.isEmpty() || attestations == null || attestations.length() == 0) return;
+                final ArrayList<ShareEntity> shareEntities = new ArrayList<>();
+                for (int i = 0; i < attestations.length(); i++) {
+                    final JSONObject attestation = attestations.getJSONObject(i);
+                    final String name = attestation.getString("name");
+                    final String mark = attestation.getString("mark");
+                    final double value = attestation.getDouble("value");
+                    if ((mark == null || mark.isEmpty()) && value <= 0.0) continue;
+                    ShareEntity shareEntity = new ShareEntity();
+                    shareEntity.attestation = name;
+                    shareEntity.mark = mark;
+                    shareEntity.value = value;
+                    shareEntity.text = getShareText(sbj, shareEntity);
+                    shareEntities.add(shareEntity);
+                }
+                if (shareEntities.size() == 0) return;
+                Static.T.runOnUiThread(() -> {
+                    try {
+                        final MenuItem action_share = activity.toolbar.findItem(R.id.action_share);
+                        if (action_share == null) return;
+                        action_share.setVisible(true);
+                        action_share.setOnMenuItemClickListener(menuItem -> {
                             try {
-                                final MenuItem action_share = activity.toolbar.findItem(R.id.action_share);
-                                if (action_share == null) return;
-                                action_share.setVisible(true);
-                                action_share.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-                                    @Override
-                                    public boolean onMenuItemClick(MenuItem menuItem) {
-                                        try {
-                                            if (shareEntities.size() == 1) {
-                                                share(shareEntities.get(0).text);
-                                            } else {
-                                                final ArrayList<String> labels = new ArrayList<>();
-                                                for (ShareEntity shareEntity : shareEntities) {
-                                                    labels.add(shareEntity.attestation != null && !shareEntity.attestation.isEmpty() ? shareEntity.attestation : sbj);
-                                                }
-                                                final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(activity, R.layout.spinner_layout);
-                                                arrayAdapter.addAll(labels);
-                                                new AlertDialog.Builder(activity)
-                                                        .setAdapter(arrayAdapter, new DialogInterface.OnClickListener() {
-                                                            @Override
-                                                            public void onClick(DialogInterface dialogInterface, int position) {
-                                                                try {
-                                                                    share(shareEntities.get(position).text);
-                                                                } catch (Exception e) {
-                                                                    Static.error(e);
-                                                                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                                                }
-                                                            }
-                                                        })
-                                                        .setNegativeButton(R.string.do_cancel, null)
-                                                        .create().show();
-                                            }
-                                        } catch (Exception e) {
-                                            Static.error(e);
-                                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                        }
-                                        return false;
+                                if (shareEntities.size() == 1) {
+                                    share(shareEntities.get(0).text);
+                                } else {
+                                    final ArrayList<String> labels = new ArrayList<>();
+                                    for (ShareEntity shareEntity : shareEntities) {
+                                        labels.add(shareEntity.attestation != null && !shareEntity.attestation.isEmpty() ? shareEntity.attestation : sbj);
                                     }
-                                });
+                                    final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(activity, R.layout.spinner_layout);
+                                    arrayAdapter.addAll(labels);
+                                    new AlertDialog.Builder(activity)
+                                            .setAdapter(arrayAdapter, (dialogInterface, position) -> {
+                                                try {
+                                                    share(shareEntities.get(position).text);
+                                                } catch (Exception e) {
+                                                    Static.error(e);
+                                                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                                }
+                                            })
+                                            .setNegativeButton(R.string.do_cancel, null)
+                                            .create().show();
+                                }
                             } catch (Exception e) {
                                 Static.error(e);
                                 Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                             }
-                        }
-                    });
-                } catch (Exception e) {
-                    Static.error(e);
-                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                }
+                            return false;
+                        });
+                    } catch (Exception e) {
+                        Static.error(e);
+                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                    }
+                });
+            } catch (Exception e) {
+                Static.error(e);
+                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
@@ -275,21 +256,18 @@ public class SubjectShowFragment extends ConnectedFragment {
         }
     }
     private void share(final String title) {
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "share | " + title);
-                Intent intent = new Intent(Intent.ACTION_SEND);
-                intent.setType("text/plain");
-                intent.putExtra(android.content.Intent.EXTRA_TEXT, title + " " + "https://goo.gl/cCp2SP");
-                activity.startActivity(Intent.createChooser(intent, activity.getString(R.string.share)));
-                // track statistics
-                FirebaseAnalyticsProvider.logEvent(
-                        activity,
-                        FirebaseAnalyticsProvider.Event.EREGISTER_SHARE,
-                        FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TITLE, title.substring(0, title.length() > 100 ? 100 : title.length()))
-                );
-            }
+        Static.T.runOnUiThread(() -> {
+            Log.v(TAG, "share | " + title);
+            Intent intent = new Intent(Intent.ACTION_SEND);
+            intent.setType("text/plain");
+            intent.putExtra(Intent.EXTRA_TEXT, title + " " + "https://goo.gl/cCp2SP");
+            activity.startActivity(Intent.createChooser(intent, activity.getString(R.string.share)));
+            // track statistics
+            FirebaseAnalyticsProvider.logEvent(
+                    activity,
+                    FirebaseAnalyticsProvider.Event.EREGISTER_SHARE,
+                    FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TITLE, title.substring(0, title.length() > 100 ? 100 : title.length()))
+            );
         });
     }
 }

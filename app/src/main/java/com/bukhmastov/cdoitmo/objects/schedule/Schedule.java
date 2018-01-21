@@ -74,87 +74,54 @@ public abstract class Schedule {
     // -->- Search schedule ->--
     // Search functions to be invoked.
     public void search(final Context context, final String query) {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                search(context, query, getRefreshRate(context));
-            }
-        });
+        Static.T.runThread(() -> search(context, query, getRefreshRate(context)));
     }
     public void search(final Context context, final String query, final int refreshRate) {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                search(context, query, refreshRate, Storage.pref.get(context, "pref_schedule_lessons_use_cache", false));
-            }
-        });
+        Static.T.runThread(() -> search(context, query, refreshRate, Storage.pref.get(context, "pref_schedule_lessons_use_cache", false)));
     }
     public void search(final Context context, final String query, final boolean forceToCache) {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                search(context, query, getRefreshRate(context), forceToCache);
-            }
-        });
+        Static.T.runThread(() -> search(context, query, getRefreshRate(context), forceToCache));
     }
     public void search(final Context context, final String query, final boolean forceToCache, final boolean withUserChanges) {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                search(context, query, getRefreshRate(context), forceToCache, withUserChanges);
-            }
-        });
+        Static.T.runThread(() -> search(context, query, getRefreshRate(context), forceToCache, withUserChanges));
     }
     public void search(final Context context, final String query, final int refreshRate, final boolean forceToCache) {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                search(context, query, refreshRate, forceToCache, true);
-            }
-        });
+        Static.T.runThread(() -> search(context, query, refreshRate, forceToCache, true));
     }
     public void search(final Context context, final String query, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                String q = query.trim();
-                Log.v(TAG, "search | query=" + q + " | refreshRate=" + refreshRate + " | forceToCache=" + (forceToCache ? "true" : "false") + " | withUserChanges=" + (withUserChanges ? "true" : "false"));
-                if (q.isEmpty()) {
-                    handler.onFailure(FAILED_EMPTY_QUERY);
-                    return;
-                }
-                handler.onCancelRequest();
-                if (q.contains(" ")) {
-                    q = q.split(" ")[0].trim();
-                }
-                if (addPending(q, withUserChanges, handler)) {
-                    Log.v(TAG, "search | query=" + q + " | initialized the pending stack | starting the search procedure");
-                    if (q.equals("mine")) {
-                        searchMine(context, refreshRate, forceToCache, withUserChanges);
-                    } else if (q.matches("^[0-9]{6}$")) {
-                        searchTeacher(context, q, refreshRate, forceToCache, withUserChanges);
-                    } else if (q.matches("^[0-9](.)*$")) {
-                        searchRoom(context, q, refreshRate, forceToCache, withUserChanges);
-                    } else if (q.matches("^[a-zA-Z](.)*$")) {
-                        if (q.matches("^[a-zA-Z][0-9]{4}[a-zA-Z]?$")) {
-                            q = q.substring(0, 1).toUpperCase() + q.substring(1).toLowerCase();
-                        }
-                        searchGroup(context, q, refreshRate, forceToCache, withUserChanges);
-                    } else if (q.matches("^[а-яА-Я\\s]+$")) {
-                        q = q.toLowerCase();
-                        searchTeachers(context, q, refreshRate, forceToCache, withUserChanges);
-                    } else {
-                        Log.v(TAG, "search | got invalid query: " + q);
-                        invokePending(q, withUserChanges, true, new Pending() {
-                            @Override
-                            public void invoke(Handler handler) {
-                                handler.onFailure(FAILED_INVALID_QUERY);
-                            }
-                        });
+        Static.T.runThread(() -> {
+            String q = query.trim();
+            Log.v(TAG, "search | query=" + q + " | refreshRate=" + refreshRate + " | forceToCache=" + (forceToCache ? "true" : "false") + " | withUserChanges=" + (withUserChanges ? "true" : "false"));
+            if (q.isEmpty()) {
+                handler.onFailure(FAILED_EMPTY_QUERY);
+                return;
+            }
+            handler.onCancelRequest();
+            if (q.contains(" ")) {
+                q = q.split(" ")[0].trim();
+            }
+            if (addPending(q, withUserChanges, handler)) {
+                Log.v(TAG, "search | query=" + q + " | initialized the pending stack | starting the search procedure");
+                if (q.equals("mine")) {
+                    searchMine(context, refreshRate, forceToCache, withUserChanges);
+                } else if (q.matches("^[0-9]{6}$")) {
+                    searchTeacher(context, q, refreshRate, forceToCache, withUserChanges);
+                } else if (q.matches("^[0-9](.)*$")) {
+                    searchRoom(context, q, refreshRate, forceToCache, withUserChanges);
+                } else if (q.matches("^[a-zA-Z](.)*$")) {
+                    if (q.matches("^[a-zA-Z][0-9]{4}[a-zA-Z]?$")) {
+                        q = q.substring(0, 1).toUpperCase() + q.substring(1).toLowerCase();
                     }
+                    searchGroup(context, q, refreshRate, forceToCache, withUserChanges);
+                } else if (q.matches("^[а-яА-Я\\s]+$")) {
+                    q = q.toLowerCase();
+                    searchTeachers(context, q, refreshRate, forceToCache, withUserChanges);
                 } else {
-                    Log.v(TAG, "search | query=" + q + " | added to the pending stack");
+                    Log.v(TAG, "search | got invalid query: " + q);
+                    invokePending(q, withUserChanges, true, handler -> handler.onFailure(FAILED_INVALID_QUERY));
                 }
+            } else {
+                Log.v(TAG, "search | query=" + q + " | added to the pending stack");
             }
         });
     }
@@ -201,165 +168,126 @@ public abstract class Schedule {
     protected abstract void searchTeacher(final Context context, final String teacherId, final int refreshRate, final boolean forceToCache, final boolean withUserChanges);
     protected void searchTeachers(final Context context, final String teacherName, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
         // Teachers search is the same for lessons and exams
-        Static.T.runThread(new Runnable() {
+        Log.v(TAG, "searchTeachers | teacherName=" + teacherName + " | refreshRate=" + refreshRate + " | forceToCache=" + (forceToCache ? "true" : "false") + " | withUserChanges=" + (withUserChanges ? "true" : "false"));
+        Static.T.runThread(() -> searchByQuery(context, "teachers", teacherName, refreshRate, withUserChanges, new SearchByQuery() {
             @Override
-            public void run() {
-                Log.v(TAG, "searchTeachers | teacherName=" + teacherName + " | refreshRate=" + refreshRate + " | forceToCache=" + (forceToCache ? "true" : "false") + " | withUserChanges=" + (withUserChanges ? "true" : "false"));
-                searchByQuery(context, "teachers", teacherName, refreshRate, withUserChanges, new SearchByQuery() {
-                    @Override
-                    public boolean isWebAvailable() {
-                        return true;
-                    }
-                    @Override
-                    public void onWebRequest(final String query, final String cache, final RestResponseHandler restResponseHandler) {
-                        IfmoRestClient.get(context, "schedule_person?lastname=" + query, null, restResponseHandler);
-                    }
-                    @Override
-                    public void onWebRequestSuccess(final String query, final JSONObject data, final JSONObject template) {
-                        final SearchByQuery self = this;
-                        Static.T.runThread(new ScheduleTeachersConverter(data, template, new ScheduleTeachersConverter.response() {
-                            @Override
-                            public void finish(final JSONObject json) {
-                                self.onFound(query, json, false, false);
-                            }
-                        }));
-                    }
-                    @Override
-                    public void onWebRequestFailed(final int statusCode, final Client.Headers headers, final int state) {
-                        invokePending(teacherName, withUserChanges, true, new Pending() {
-                            @Override
-                            public void invoke(Handler handler) {
-                                handler.onFailure(statusCode, headers, state);
-                            }
-                        });
-                    }
-                    @Override
-                    public void onWebRequestProgress(final int state) {
-                        invokePending(teacherName, withUserChanges, false, new Pending() {
-                            @Override
-                            public void invoke(Handler handler) {
-                                handler.onProgress(state);
-                            }
-                        });
-                    }
-                    @Override
-                    public void onWebNewRequest(final Client.Request request) {
-                        invokePending(teacherName, withUserChanges, false, new Pending() {
-                            @Override
-                            public void invoke(Handler handler) {
-                                handler.onNewRequest(request);
-                            }
-                        });
-                    }
-                    @Override
-                    public void onFound(final String query, final JSONObject data, final boolean putToCache, boolean fromCache) {
-                        invokePending(teacherName, withUserChanges, true, new Pending() {
-                            @Override
-                            public void invoke(Handler handler) {
-                                putLocalCache(query, data.toString());
-                                handler.onSuccess(data, false);
-                            }
-                        });
-                    }
+            public boolean isWebAvailable() {
+                return true;
+            }
+            @Override
+            public void onWebRequest(final String query, final String cache, final RestResponseHandler restResponseHandler) {
+                IfmoRestClient.get(context, "schedule_person?lastname=" + query, null, restResponseHandler);
+            }
+            @Override
+            public void onWebRequestSuccess(final String query, final JSONObject data, final JSONObject template) {
+                final SearchByQuery self = this;
+                Static.T.runThread(new ScheduleTeachersConverter(data, template, json -> self.onFound(query, json, false, false)));
+            }
+            @Override
+            public void onWebRequestFailed(final int statusCode, final Client.Headers headers, final int state) {
+                invokePending(teacherName, withUserChanges, true, handler -> handler.onFailure(statusCode, headers, state));
+            }
+            @Override
+            public void onWebRequestProgress(final int state) {
+                invokePending(teacherName, withUserChanges, false, handler -> handler.onProgress(state));
+            }
+            @Override
+            public void onWebNewRequest(final Client.Request request) {
+                invokePending(teacherName, withUserChanges, false, handler -> handler.onNewRequest(request));
+            }
+            @Override
+            public void onFound(final String query, final JSONObject data, final boolean putToCache, boolean fromCache) {
+                invokePending(teacherName, withUserChanges, true, handler -> {
+                    putLocalCache(query, data.toString());
+                    handler.onSuccess(data, false);
                 });
             }
-        });
+        }));
     }
     // Private functions to proceed search and get schedule from cache
     protected void searchByQuery(final Context context, final String type, final String query, final int refreshRate, final boolean withUserChanges, final SearchByQuery search) {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "searchByQuery | type=" + type + " | query=" + query + " | refreshRate=" + refreshRate);
-                final String cache = getCache(context, query);
-                if (!Static.OFFLINE_MODE) {
-                    if (search.isWebAvailable()) {
-                        final RestResponseHandler restResponseHandler = new RestResponseHandler() {
-                            @Override
-                            public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject data, final JSONArray responseArr) {
-                                Static.T.runThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        Log.v(TAG, "searchByQuery | type=" + type + " | query=" + query + " || onSuccess | statusCode=" + statusCode + " | data=" + (data == null ? "<null>" : "<notnull>"));
-                                        if (statusCode == 200 && data != null) {
-                                            final JSONObject template = getTemplate(query, type);
-                                            if (template == null) {
-                                                search.onWebRequestFailed(statusCode, headers, FAILED_LOAD);
-                                            } else {
-                                                search.onWebRequestSuccess(query, data, template);
-                                            }
-                                        } else {
-                                            searchFromCache(context, type, cache, query, new SearchFromCache() {
-                                                @Override
-                                                public void onDone(final String query, final JSONObject data) {
-                                                    search.onFound(query, data, false, true);
-                                                }
-                                                @Override
-                                                public void onEmpty(String query) {
-                                                    search.onWebRequestFailed(statusCode, headers, FAILED_LOAD);
-                                                }
-                                            });
+        Static.T.runThread(() -> {
+            Log.v(TAG, "searchByQuery | type=" + type + " | query=" + query + " | refreshRate=" + refreshRate);
+            final String cache = getCache(context, query);
+            if (!Static.OFFLINE_MODE) {
+                if (search.isWebAvailable()) {
+                    final RestResponseHandler restResponseHandler = new RestResponseHandler() {
+                        @Override
+                        public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject data, final JSONArray responseArr) {
+                            Static.T.runThread(() -> {
+                                Log.v(TAG, "searchByQuery | type=" + type + " | query=" + query + " || onSuccess | statusCode=" + statusCode + " | data=" + (data == null ? "<null>" : "<notnull>"));
+                                if (statusCode == 200 && data != null) {
+                                    final JSONObject template = getTemplate(query, type);
+                                    if (template == null) {
+                                        search.onWebRequestFailed(statusCode, headers, FAILED_LOAD);
+                                    } else {
+                                        search.onWebRequestSuccess(query, data, template);
+                                    }
+                                } else {
+                                    searchFromCache(context, type, cache, query, new SearchFromCache() {
+                                        @Override
+                                        public void onDone(final String query1, final JSONObject data1) {
+                                            search.onFound(query1, data1, false, true);
                                         }
-                                    }
-                                });
-                            }
-                            @Override
-                            public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                                Log.v(TAG, "searchByQuery | type=" + type + " | query=" + query + " || onFailure | statusCode=" + statusCode + " | state=" + state);
-                                searchFromCache(context, type, cache, query, new SearchFromCache() {
-                                    @Override
-                                    public void onDone(final String query, final JSONObject data) {
-                                        search.onFound(query, data, false, true);
-                                    }
-                                    @Override
-                                    public void onEmpty(String query) {
-                                        search.onWebRequestFailed(statusCode, headers, state);
-                                    }
-                                });
-                            }
-                            @Override
-                            public void onProgress(final int state) {
-                                Log.v(TAG, "searchByQuery | type=" + type + " | query=" + query + " || onProgress | state=" + state);
-                                search.onWebRequestProgress(state);
-                            }
-                            @Override
-                            public void onNewRequest(final Client.Request request) {
-                                search.onWebNewRequest(request);
-                            }
-                        };
-                        if (isForceRefresh(cache, refreshRate)) {
-                            Log.v(TAG, "searchByQuery | type=" + type + " | query=" + query + " | force refresh");
-                            search.onWebRequest(query, cache, restResponseHandler);
-                        } else {
+                                        @Override
+                                        public void onEmpty(String query1) {
+                                            search.onWebRequestFailed(statusCode, headers, FAILED_LOAD);
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                        @Override
+                        public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
+                            Log.v(TAG, "searchByQuery | type=" + type + " | query=" + query + " || onFailure | statusCode=" + statusCode + " | state=" + state);
                             searchFromCache(context, type, cache, query, new SearchFromCache() {
                                 @Override
-                                public void onDone(String query, JSONObject data) {
-                                    search.onFound(query, data, false, true);
+                                public void onDone(final String query12, final JSONObject data) {
+                                    search.onFound(query12, data, false, true);
                                 }
                                 @Override
-                                public void onEmpty(String query) {
-                                    search.onWebRequest(query, cache, restResponseHandler);
+                                public void onEmpty(String query12) {
+                                    search.onWebRequestFailed(statusCode, headers, state);
                                 }
                             });
                         }
+                        @Override
+                        public void onProgress(final int state) {
+                            Log.v(TAG, "searchByQuery | type=" + type + " | query=" + query + " || onProgress | state=" + state);
+                            search.onWebRequestProgress(state);
+                        }
+                        @Override
+                        public void onNewRequest(final Client.Request request) {
+                            search.onWebNewRequest(request);
+                        }
+                    };
+                    if (isForceRefresh(cache, refreshRate)) {
+                        Log.v(TAG, "searchByQuery | type=" + type + " | query=" + query + " | force refresh");
+                        search.onWebRequest(query, cache, restResponseHandler);
+                    } else {
+                        searchFromCache(context, type, cache, query, new SearchFromCache() {
+                            @Override
+                            public void onDone(String query12, JSONObject data) {
+                                search.onFound(query12, data, false, true);
+                            }
+                            @Override
+                            public void onEmpty(String query12) {
+                                search.onWebRequest(query12, cache, restResponseHandler);
+                            }
+                        });
                     }
-                } else {
-                    searchFromCache(context, type, cache, query, new SearchFromCache() {
-                        @Override
-                        public void onDone(String query, JSONObject data) {
-                            search.onFound(query, data, false, true);
-                        }
-                        @Override
-                        public void onEmpty(String query) {
-                            invokePending(query, withUserChanges,true, new Pending() {
-                                @Override
-                                public void invoke(Handler handler) {
-                                    handler.onFailure(FAILED_OFFLINE);
-                                }
-                            });
-                        }
-                    });
                 }
+            } else {
+                searchFromCache(context, type, cache, query, new SearchFromCache() {
+                    @Override
+                    public void onDone(String query12, JSONObject data) {
+                        search.onFound(query12, data, false, true);
+                    }
+                    @Override
+                    public void onEmpty(String query12) {
+                        invokePending(query12, withUserChanges,true, handler -> handler.onFailure(FAILED_OFFLINE));
+                    }
+                });
             }
         });
     }

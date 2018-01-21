@@ -9,7 +9,6 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -208,14 +207,11 @@ public class ERegisterConverter implements Runnable {
         for (int i = 0; i < subjects.length(); i++) {
             sort.add(subjects.getJSONObject(i));
         }
-        Collections.sort(sort, new Comparator<JSONObject>() {
-            @Override
-            public int compare(JSONObject o1, JSONObject o2) {
-                try {
-                    return o1.getString("name").compareTo(o2.getString("name"));
-                } catch (JSONException e) {
-                    return 0;
-                }
+        Collections.sort(sort, (o1, o2) -> {
+            try {
+                return o1.getString("name").compareTo(o2.getString("name"));
+            } catch (JSONException e) {
+                return 0;
             }
         });
         return new JSONArray(sort);

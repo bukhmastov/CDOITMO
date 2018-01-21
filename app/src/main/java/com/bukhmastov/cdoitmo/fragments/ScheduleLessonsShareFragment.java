@@ -14,7 +14,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
@@ -124,25 +123,22 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
     }
 
     private void load(final Bundle extras) {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Log.v(TAG, "load | action=" + action);
-                    switch (action) {
-                        case "handle": loadHandle(extras); break;
-                        case "share": loadShare(extras); break;
-                        default: throw new Exception();
-                    }
-                } catch (Exception e) {
-                    if (e.getMessage().equals("Corrupted file")) {
-                        Static.toast(activity, activity.getString(R.string.corrupted_file));
-                    } else {
-                        Static.error(e);
-                        Static.toast(activity, activity.getString(R.string.something_went_wrong));
-                    }
-                    finish();
+        Static.T.runThread(() -> {
+            try {
+                Log.v(TAG, "load | action=" + action);
+                switch (action) {
+                    case "handle": loadHandle(extras); break;
+                    case "share": loadShare(extras); break;
+                    default: throw new Exception();
                 }
+            } catch (Exception e) {
+                if (e.getMessage() != null && "corrupted file".equals(e.getMessage().toLowerCase())) {
+                    Static.toast(activity, activity.getString(R.string.corrupted_file));
+                } else {
+                    Static.error(e);
+                    Static.toast(activity, activity.getString(R.string.something_went_wrong));
+                }
+                finish();
             }
         });
     }
@@ -182,19 +178,16 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                 throw new Exception("Corrupted file");
             }
         }
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    TextView share_title = activity.findViewById(R.id.share_title);
-                    if (share_title != null) {
-                        share_title.setText(ScheduleLessons.getScheduleHeader(activity, content.getString("title"), content.getString("type")));
-                    }
-                } catch (Exception e) {
-                    Static.error(e);
-                    Static.toast(activity, activity.getString(R.string.something_went_wrong));
-                    finish();
+        Static.T.runOnUiThread(() -> {
+            try {
+                TextView share_title = activity.findViewById(R.id.share_title);
+                if (share_title != null) {
+                    share_title.setText(ScheduleLessons.getScheduleHeader(activity, content.getString("title"), content.getString("type")));
                 }
+            } catch (Exception e) {
+                Static.error(e);
+                Static.toast(activity, activity.getString(R.string.something_went_wrong));
+                finish();
             }
         });
         final JSONArray scheduleAdded = content.getJSONArray("added");
@@ -235,113 +228,99 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
         if (query == null || title == null || type == null) {
             throw new NullPointerException("Some extras are null: " + query + " | " + title + " | " + type);
         }
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    TextView share_title = activity.findViewById(R.id.share_title);
-                    if (share_title != null) {
-                        share_title.setText(ScheduleLessons.getScheduleHeader(activity, title, type));
-                    }
-                    ViewGroup share_info = activity.findViewById(R.id.share_info);
-                    if (share_info != null) {
-                        share_info.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
-                                Static.T.runThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        if (activity != null) {
-                                            new AlertDialog.Builder(activity)
-                                                    .setTitle(R.string.share_changes)
-                                                    .setMessage(R.string.share_changes_info)
-                                                    .setPositiveButton(R.string.close, null)
-                                                    .create().show();
-                                        }
-                                    }
-                                });
-                            }
-                        });
-                    }
-                } catch (Exception e) {
-                    Static.error(e);
-                    Static.toast(activity, activity.getString(R.string.something_went_wrong));
-                    finish();
+        Static.T.runOnUiThread(() -> {
+            try {
+                TextView share_title = activity.findViewById(R.id.share_title);
+                if (share_title != null) {
+                    share_title.setText(ScheduleLessons.getScheduleHeader(activity, title, type));
                 }
+                ViewGroup share_info = activity.findViewById(R.id.share_info);
+                if (share_info != null) {
+                    share_info.setOnClickListener(view -> Static.T.runThread(() -> {
+                        if (activity != null) {
+                            new AlertDialog.Builder(activity)
+                                    .setTitle(R.string.share_changes)
+                                    .setMessage(R.string.share_changes_info)
+                                    .setPositiveButton(R.string.close, null)
+                                    .create().show();
+                        }
+                    }));
+                }
+            } catch (Exception e) {
+                Static.error(e);
+                Static.toast(activity, activity.getString(R.string.something_went_wrong));
+                finish();
             }
         });
         new ScheduleLessons(new Schedule.Handler() {
             @Override
             public void onSuccess(final JSONObject json, final boolean fromCache) {
-                Static.T.runThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            Log.v(TAG, "loadShare | success | json=" + (json == null ? "null" : "notnull"));
-                            if (json == null || json.getString("type").equals("teachers")) {
-                                Static.toast(activity, activity.getString(R.string.something_went_wrong));
-                                finish();
-                                return;
-                            }
-                            final String token = query.toLowerCase();
-                            final JSONArray schedule = json.getJSONArray("schedule");
-                            final JSONArray scheduleAdded = string2json(Storage.file.perm.get(activity, "schedule_lessons#added#" + token, ""));
-                            final JSONArray scheduleReduced = string2json(Storage.file.perm.get(activity, "schedule_lessons#reduced#" + token, ""));
-                            for (int i = 0; i < scheduleAdded.length(); i++) {
-                                try {
-                                    JSONObject day = scheduleAdded.getJSONObject(i);
-                                    JSONArray lessons = day.getJSONArray("lessons");
-                                    int weekday = day.getInt("weekday");
-                                    if (lessons.length() > 0) {
-                                        for (int j = 0; j < lessons.length(); j++) {
-                                            try {
-                                                JSONObject lesson = lessons.getJSONObject(j);
-                                                changes.add(new Change(TYPE.ADDED, true, weekday, lesson));
-                                            } catch (Exception ignore) {
-                                                // ignore
-                                            }
-                                        }
-                                    }
-                                } catch (Exception ignore) {
-                                    // ignore
-                                }
-                            }
-                            for (int i = 0; i < scheduleReduced.length(); i++) {
-                                try {
-                                    JSONObject day = scheduleReduced.getJSONObject(i);
-                                    JSONArray lessons = day.getJSONArray("lessons");
-                                    int weekday = day.getInt("weekday");
-                                    if (lessons.length() > 0) {
-                                        for (int j = 0; j < lessons.length(); j++) {
-                                            try {
-                                                String hash = lessons.getString(j);
-                                                for (int k = 0; k < 7; k++) {
-                                                    JSONObject dayOriginal = schedule.getJSONObject(k);
-                                                    JSONArray lessonsOriginal = dayOriginal.getJSONArray("lessons");
-                                                    for (int a = 0; a < lessonsOriginal.length(); a++) {
-                                                        JSONObject lessonOriginal = lessonsOriginal.getJSONObject(a);
-                                                        String hashOriginal = ScheduleLessons.getLessonHash(lessonOriginal);
-                                                        if (hashOriginal.equals(hash)) {
-                                                            lessonOriginal.put("hash", hash);
-                                                            changes.add(new Change(TYPE.REDUCED, true, weekday, lessonOriginal));
-                                                        }
-                                                    }
-                                                }
-                                            } catch (Exception ignore) {
-                                                // ignore
-                                            }
-                                        }
-                                    }
-                                } catch (Exception ignore) {
-                                    // ignore
-                                }
-                            }
-                            display(null);
-                        } catch (Exception e) {
-                            Static.error(e);
+                Static.T.runThread(() -> {
+                    try {
+                        Log.v(TAG, "loadShare | success | json=" + (json == null ? "null" : "notnull"));
+                        if (json == null || json.getString("type").equals("teachers")) {
                             Static.toast(activity, activity.getString(R.string.something_went_wrong));
                             finish();
+                            return;
                         }
+                        final String token = query.toLowerCase();
+                        final JSONArray schedule = json.getJSONArray("schedule");
+                        final JSONArray scheduleAdded = string2json(Storage.file.perm.get(activity, "schedule_lessons#added#" + token, ""));
+                        final JSONArray scheduleReduced = string2json(Storage.file.perm.get(activity, "schedule_lessons#reduced#" + token, ""));
+                        for (int i = 0; i < scheduleAdded.length(); i++) {
+                            try {
+                                JSONObject day = scheduleAdded.getJSONObject(i);
+                                JSONArray lessons = day.getJSONArray("lessons");
+                                int weekday = day.getInt("weekday");
+                                if (lessons.length() > 0) {
+                                    for (int j = 0; j < lessons.length(); j++) {
+                                        try {
+                                            JSONObject lesson = lessons.getJSONObject(j);
+                                            changes.add(new Change(TYPE.ADDED, true, weekday, lesson));
+                                        } catch (Exception ignore) {
+                                            // ignore
+                                        }
+                                    }
+                                }
+                            } catch (Exception ignore) {
+                                // ignore
+                            }
+                        }
+                        for (int i = 0; i < scheduleReduced.length(); i++) {
+                            try {
+                                JSONObject day = scheduleReduced.getJSONObject(i);
+                                JSONArray lessons = day.getJSONArray("lessons");
+                                int weekday = day.getInt("weekday");
+                                if (lessons.length() > 0) {
+                                    for (int j = 0; j < lessons.length(); j++) {
+                                        try {
+                                            String hash = lessons.getString(j);
+                                            for (int k = 0; k < 7; k++) {
+                                                JSONObject dayOriginal = schedule.getJSONObject(k);
+                                                JSONArray lessonsOriginal = dayOriginal.getJSONArray("lessons");
+                                                for (int a = 0; a < lessonsOriginal.length(); a++) {
+                                                    JSONObject lessonOriginal = lessonsOriginal.getJSONObject(a);
+                                                    String hashOriginal = ScheduleLessons.getLessonHash(lessonOriginal);
+                                                    if (hashOriginal.equals(hash)) {
+                                                        lessonOriginal.put("hash", hash);
+                                                        changes.add(new Change(TYPE.REDUCED, true, weekday, lessonOriginal));
+                                                    }
+                                                }
+                                            }
+                                        } catch (Exception ignore) {
+                                            // ignore
+                                        }
+                                    }
+                                }
+                            } catch (Exception ignore) {
+                                // ignore
+                            }
+                        }
+                        display(null);
+                    } catch (Exception e) {
+                        Static.error(e);
+                        Static.toast(activity, activity.getString(R.string.something_went_wrong));
+                        finish();
                     }
                 });
             }
@@ -351,56 +330,50 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
             }
             @Override
             public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                Static.T.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            Log.v(TAG, "loadShare | failure " + state);
-                            ViewGroup share_content = activity.findViewById(R.id.share_content);
-                            if (share_content != null) {
-                                share_content.removeAllViews();
-                                switch (state) {
-                                    case Client.FAILED_OFFLINE:
-                                    case ScheduleLessons.FAILED_OFFLINE:
-                                        share_content.addView(inflate(R.layout.state_offline_without_align));
-                                        break;
-                                    case Client.FAILED_SERVER_ERROR:
-                                        View view = inflate(R.layout.state_failed_without_align);
-                                        ((TextView) view.findViewById(R.id.text)).setText(Client.getFailureMessage(activity, statusCode));
-                                        share_content.addView(view);
-                                        break;
-                                    case Client.FAILED_TRY_AGAIN:
-                                    case ScheduleLessons.FAILED_LOAD:
-                                    case ScheduleLessons.FAILED_EMPTY_QUERY:
-                                    case ScheduleLessons.FAILED_NOT_FOUND:
-                                    case ScheduleLessons.FAILED_INVALID_QUERY:
-                                    case ScheduleLessons.FAILED_MINE_NEED_ISU:
-                                    default:
-                                        share_content.addView(inflate(R.layout.state_failed_without_align));
-                                        break;
-                                }
+                Static.T.runOnUiThread(() -> {
+                    try {
+                        Log.v(TAG, "loadShare | failure " + state);
+                        ViewGroup share_content = activity.findViewById(R.id.share_content);
+                        if (share_content != null) {
+                            share_content.removeAllViews();
+                            switch (state) {
+                                case Client.FAILED_OFFLINE:
+                                case ScheduleLessons.FAILED_OFFLINE:
+                                    share_content.addView(inflate(R.layout.state_offline_without_align));
+                                    break;
+                                case Client.FAILED_SERVER_ERROR:
+                                    View view = inflate(R.layout.state_failed_without_align);
+                                    ((TextView) view.findViewById(R.id.text)).setText(Client.getFailureMessage(activity, statusCode));
+                                    share_content.addView(view);
+                                    break;
+                                case Client.FAILED_TRY_AGAIN:
+                                case ScheduleLessons.FAILED_LOAD:
+                                case ScheduleLessons.FAILED_EMPTY_QUERY:
+                                case ScheduleLessons.FAILED_NOT_FOUND:
+                                case ScheduleLessons.FAILED_INVALID_QUERY:
+                                case ScheduleLessons.FAILED_MINE_NEED_ISU:
+                                default:
+                                    share_content.addView(inflate(R.layout.state_failed_without_align));
+                                    break;
                             }
-                        } catch (Exception e) {
-                            Static.error(e);
                         }
+                    } catch (Exception e) {
+                        Static.error(e);
                     }
                 });
             }
             @Override
             public void onProgress(final int state) {
-                Static.T.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Log.v(TAG, "loadShare | progress " + state);
-                        try {
-                            ViewGroup share_content = activity.findViewById(R.id.share_content);
-                            if (share_content != null) {
-                                share_content.removeAllViews();
-                                share_content.addView(inflate(R.layout.state_loading_without_align));
-                            }
-                        } catch (Exception e) {
-                            Static.error(e);
+                Static.T.runOnUiThread(() -> {
+                    Log.v(TAG, "loadShare | progress " + state);
+                    try {
+                        ViewGroup share_content = activity.findViewById(R.id.share_content);
+                        if (share_content != null) {
+                            share_content.removeAllViews();
+                            share_content.addView(inflate(R.layout.state_loading_without_align));
                         }
+                    } catch (Exception e) {
+                        Static.error(e);
                     }
                 });
             }
@@ -422,147 +395,116 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
         );
     }
     private void display(final String notification) {
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Log.v(TAG, "display | action=" + action);
-                    ViewGroup share_content = activity.findViewById(R.id.share_content);
-                    if (share_content == null) {
-                        return;
-                    }
-                    share_content.removeAllViews();
-                    if (notification != null) {
-                        View layout_notification_warning = inflate(R.layout.layout_notification_warning);
-                        ((TextView) layout_notification_warning.findViewById(R.id.notification_warning_text)).setText(notification);
-                        share_content.addView(layout_notification_warning);
-                    }
-                    if (changes.size() == 0) {
-                        ViewGroup nothing_to_display = (ViewGroup) inflate(R.layout.nothing_to_display);
-                        ((TextView) nothing_to_display.findViewById(R.id.ntd_text)).setText(R.string.nothing_to_share);
-                        share_content.addView(nothing_to_display);
-                        return;
-                    }
-                    boolean headerAdded = true;
-                    boolean headerReduced = true;
-                    for (final Change change : changes) {
-                        try {
-                            if (headerAdded && change.type == TYPE.ADDED) {
-                                headerAdded = false;
-                                final View header = inflate(R.layout.fragment_schedule_lessons_share_header);
-                                ((TextView) header.findViewById(R.id.text)).setText("handle".equals(action) ? R.string.add_lessons : R.string.added_lessons);
-                                share_content.addView(header);
-                            }
-                            if (headerReduced && change.type == TYPE.REDUCED) {
-                                headerReduced = false;
-                                final View header = inflate(R.layout.fragment_schedule_lessons_share_header);
-                                ((TextView) header.findViewById(R.id.text)).setText("handle".equals(action) ? R.string.reduce_lessons : R.string.reduced_lessons);
-                                share_content.addView(header);
-                            }
-                            final View item = inflate(R.layout.fragment_schedule_lessons_share_item);
-                            final ViewGroup lesson = (ViewGroup) inflate(R.layout.layout_schedule_lessons_item);
-                            final CheckBox checkbox = item.findViewById(R.id.checkbox);
-                            final ViewGroup content = item.findViewById(R.id.content);
-                            checkbox.setChecked(change.enabled);
-                            lesson.findViewById(R.id.lesson_reduced_icon).setVisibility(View.GONE);
-                            lesson.findViewById(R.id.lesson_synthetic_icon).setVisibility(View.GONE);
-                            lesson.findViewById(R.id.lesson_touch_icon).setVisibility(View.GONE);
-                            ((TextView) lesson.findViewById(R.id.lesson_time_start)).setText(change.content.getString("timeStart"));
-                            ((TextView) lesson.findViewById(R.id.lesson_time_end)).setText(change.content.getString("timeEnd"));
-                            ((TextView) lesson.findViewById(R.id.lesson_title)).setText(change.content.getString("subject"));
-                            setDesc(change.content, (TextView) lesson.findViewById(R.id.lesson_desc));
-                            setFlags(change.content, (ViewGroup) lesson.findViewById(R.id.lesson_flags));
-                            setMeta(change.content, (TextView) lesson.findViewById(R.id.lesson_meta));
-                            checkbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                                @Override
-                                public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                                    change.enabled = checked;
-                                }
-                            });
-                            item.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View view) {
-                                    checkbox.setChecked(!checkbox.isChecked());
-                                }
-                            });
-                            content.addView(lesson);
-                            share_content.addView(item);
-                        } catch (Exception e) {
-                            Static.error(e);
-                        }
-                    }
-                    switch (action) {
-                        case "share":
-                        default: {
-                            Button share_execute = activity.findViewById(R.id.share_execute);
-                            if (share_execute != null) {
-                                share_execute.setVisibility(View.VISIBLE);
-                                share_execute.setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View view) {
-                                        execute();
-                                    }
-                                });
-                            }
-                            break;
-                        }
-                        case "handle": {
-                            Button action_deny = activity.findViewById(R.id.action_deny);
-                            Button action_accept = activity.findViewById(R.id.action_accept);
-                            if (action_deny != null) {
-                                action_deny.setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View view) {
-                                        finish();
-                                    }
-                                });
-                            }
-                            if (action_accept != null) {
-                                action_accept.setVisibility(View.VISIBLE);
-                                action_accept.setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View view) {
-                                        execute();
-                                    }
-                                });
-                            }
-                            break;
-                        }
-                    }
-                } catch (Exception e) {
-                    Static.error(e);
-                    Static.toast(activity, activity.getString(R.string.something_went_wrong));
-                    finish();
+        Static.T.runOnUiThread(() -> {
+            try {
+                Log.v(TAG, "display | action=" + action);
+                ViewGroup share_content = activity.findViewById(R.id.share_content);
+                if (share_content == null) {
+                    return;
                 }
+                share_content.removeAllViews();
+                if (notification != null) {
+                    View layout_notification_warning = inflate(R.layout.layout_notification_warning);
+                    ((TextView) layout_notification_warning.findViewById(R.id.notification_warning_text)).setText(notification);
+                    share_content.addView(layout_notification_warning);
+                }
+                if (changes.size() == 0) {
+                    ViewGroup nothing_to_display = (ViewGroup) inflate(R.layout.nothing_to_display);
+                    ((TextView) nothing_to_display.findViewById(R.id.ntd_text)).setText(R.string.nothing_to_share);
+                    share_content.addView(nothing_to_display);
+                    return;
+                }
+                boolean headerAdded = true;
+                boolean headerReduced = true;
+                for (final Change change : changes) {
+                    try {
+                        if (headerAdded && change.type == TYPE.ADDED) {
+                            headerAdded = false;
+                            final View header = inflate(R.layout.fragment_schedule_lessons_share_header);
+                            ((TextView) header.findViewById(R.id.text)).setText("handle".equals(action) ? R.string.add_lessons : R.string.added_lessons);
+                            share_content.addView(header);
+                        }
+                        if (headerReduced && change.type == TYPE.REDUCED) {
+                            headerReduced = false;
+                            final View header = inflate(R.layout.fragment_schedule_lessons_share_header);
+                            ((TextView) header.findViewById(R.id.text)).setText("handle".equals(action) ? R.string.reduce_lessons : R.string.reduced_lessons);
+                            share_content.addView(header);
+                        }
+                        final View item = inflate(R.layout.fragment_schedule_lessons_share_item);
+                        final ViewGroup lesson = (ViewGroup) inflate(R.layout.layout_schedule_lessons_item);
+                        final CheckBox checkbox = item.findViewById(R.id.checkbox);
+                        final ViewGroup content = item.findViewById(R.id.content);
+                        checkbox.setChecked(change.enabled);
+                        lesson.findViewById(R.id.lesson_reduced_icon).setVisibility(View.GONE);
+                        lesson.findViewById(R.id.lesson_synthetic_icon).setVisibility(View.GONE);
+                        lesson.findViewById(R.id.lesson_touch_icon).setVisibility(View.GONE);
+                        ((TextView) lesson.findViewById(R.id.lesson_time_start)).setText(change.content.getString("timeStart"));
+                        ((TextView) lesson.findViewById(R.id.lesson_time_end)).setText(change.content.getString("timeEnd"));
+                        ((TextView) lesson.findViewById(R.id.lesson_title)).setText(change.content.getString("subject"));
+                        setDesc(change.content, lesson.findViewById(R.id.lesson_desc));
+                        setFlags(change.content, lesson.findViewById(R.id.lesson_flags));
+                        setMeta(change.content, lesson.findViewById(R.id.lesson_meta));
+                        checkbox.setOnCheckedChangeListener((compoundButton, checked) -> change.enabled = checked);
+                        item.setOnClickListener(view -> checkbox.setChecked(!checkbox.isChecked()));
+                        content.addView(lesson);
+                        share_content.addView(item);
+                    } catch (Exception e) {
+                        Static.error(e);
+                    }
+                }
+                switch (action) {
+                    case "share":
+                    default: {
+                        Button share_execute = activity.findViewById(R.id.share_execute);
+                        if (share_execute != null) {
+                            share_execute.setVisibility(View.VISIBLE);
+                            share_execute.setOnClickListener(view -> execute());
+                        }
+                        break;
+                    }
+                    case "handle": {
+                        Button action_deny = activity.findViewById(R.id.action_deny);
+                        Button action_accept = activity.findViewById(R.id.action_accept);
+                        if (action_deny != null) {
+                            action_deny.setOnClickListener(view -> finish());
+                        }
+                        if (action_accept != null) {
+                            action_accept.setVisibility(View.VISIBLE);
+                            action_accept.setOnClickListener(view -> execute());
+                        }
+                        break;
+                    }
+                }
+            } catch (Exception e) {
+                Static.error(e);
+                Static.toast(activity, activity.getString(R.string.something_went_wrong));
+                finish();
             }
         });
     }
     private void execute() {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Log.v(TAG, "execute | action=" + action);
-                    boolean selected = false;
-                    for (Change change : changes) {
-                        if (change.enabled) {
-                            selected = true;
-                            break;
-                        }
+        Static.T.runThread(() -> {
+            try {
+                Log.v(TAG, "execute | action=" + action);
+                boolean selected = false;
+                for (Change change : changes) {
+                    if (change.enabled) {
+                        selected = true;
+                        break;
                     }
-                    if (!selected) {
-                        Static.snackBar(activity, activity.getString(R.string.nothing_to_share));
-                        return;
-                    }
-                    switch (action) {
-                        case "handle": executeHandle(); break;
-                        case "share":
-                        default: executeShare(); break;
-                    }
-                } catch (Exception e) {
-                    Static.error(e);
-                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 }
+                if (!selected) {
+                    Static.snackBar(activity, activity.getString(R.string.nothing_to_share));
+                    return;
+                }
+                switch (action) {
+                    case "handle": executeHandle(); break;
+                    case "share":
+                    default: executeShare(); break;
+                }
+            } catch (Exception e) {
+                Static.error(e);
+                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }

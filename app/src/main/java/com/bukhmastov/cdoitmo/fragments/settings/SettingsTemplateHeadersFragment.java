@@ -2,6 +2,7 @@ package com.bukhmastov.cdoitmo.fragments.settings;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.view.InflateException;
 import android.view.LayoutInflater;
@@ -53,7 +54,7 @@ public abstract class SettingsTemplateHeadersFragment extends ConnectedFragment 
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_settings, container, false);
     }
 
@@ -76,19 +77,16 @@ public abstract class SettingsTemplateHeadersFragment extends ConnectedFragment 
         try {
             View view = inflate(R.layout.state_try_again);
             ((TextView) view.findViewById(R.id.try_again_message)).setText(R.string.error_occurred);
-            view.findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    try {
-                        ViewGroup content = activity.findViewById(android.R.id.content);
-                        if (content != null) {
-                            content.addView(inflate(R.layout.fragment_settings));
-                            loaded = false;
-                            load();
-                        }
-                    } catch (Exception e) {
-                        Static.error(e);
+            view.findViewById(R.id.try_again_reload).setOnClickListener(v -> {
+                try {
+                    ViewGroup content = activity.findViewById(android.R.id.content);
+                    if (content != null) {
+                        content.addView(inflate(R.layout.fragment_settings));
+                        loaded = false;
+                        load();
                     }
+                } catch (Exception e) {
+                    Static.error(e);
                 }
             });
         } catch (Exception e) {

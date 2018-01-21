@@ -37,7 +37,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Calendar;
-import java.util.Objects;
 
 public class ScheduleLessonsWidget extends AppWidgetProvider {
 
@@ -77,112 +76,159 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         updateAppWidget(context, appWidgetManager, appWidgetId, force, false);
     }
     public static void updateAppWidget(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final boolean force, final boolean controls) {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.i(TAG, "update | appWidgetId=" + appWidgetId);
-                try {
-                    JSONObject settings = Data.getJson(context, appWidgetId, "settings");
-                    JSONObject cache = Data.getJson(context, appWidgetId, "cache");
-                    if (settings == null) {
-                        needPreparations(context, appWidgetManager, appWidgetId);
-                    } else if (cache == null || force) {
+        Static.T.runThread(() -> {
+            Log.i(TAG, "update | appWidgetId=" + appWidgetId);
+            try {
+                JSONObject settings = Data.getJson(context, appWidgetId, "settings");
+                JSONObject cache = Data.getJson(context, appWidgetId, "cache");
+                if (settings == null) {
+                    needPreparations(context, appWidgetManager, appWidgetId);
+                } else if (cache == null || force) {
+                    refresh(context, appWidgetManager, appWidgetId, settings);
+                } else {
+                    long timestamp = cache.getLong("timestamp");
+                    long shift = settings.getInt("updateTime") * 3600000L;
+                    if (shift != 0 && timestamp + shift < Static.getCalendar().getTimeInMillis()) {
                         refresh(context, appWidgetManager, appWidgetId, settings);
                     } else {
-                        long timestamp = cache.getLong("timestamp");
-                        long shift = settings.getInt("updateTime") * 3600000L;
-                        if (shift != 0 && timestamp + shift < Static.getCalendar().getTimeInMillis()) {
-                            refresh(context, appWidgetManager, appWidgetId, settings);
-                        } else {
-                            display(context, appWidgetManager, appWidgetId, controls);
-                        }
+                        display(context, appWidgetManager, appWidgetId, controls);
                     }
-                } catch (Exception e) {
-                    Static.error(e);
                 }
+            } catch (Exception e) {
+                Static.error(e);
             }
         });
     }
     public static void deleteAppWidget(final Context context, final int appWidgetId) {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.i(TAG, "delete | appWidgetId=" + appWidgetId);
-                Data.delete(context, appWidgetId, "settings");
-                Data.delete(context, appWidgetId, "cache");
-                Data.delete(context, appWidgetId, "cache_converted");
-            }
+        Static.T.runThread(() -> {
+            Log.i(TAG, "delete | appWidgetId=" + appWidgetId);
+            Data.delete(context, appWidgetId, "settings");
+            Data.delete(context, appWidgetId, "cache");
+            Data.delete(context, appWidgetId, "cache_converted");
         });
     }
 
     private static void refresh(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final JSONObject settings) {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.i(TAG, "refresh | appWidgetId=" + appWidgetId);
-                try {
-                    new ScheduleLessons(new Schedule.Handler() {
-                        @Override
-                        public void onSuccess(final JSONObject json, final boolean fromCache) {
-                            Static.T.runThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    try {
-                                        JSONObject jsonObject = new JSONObject();
-                                        jsonObject.put("timestamp", Static.getCalendar().getTimeInMillis());
-                                        jsonObject.put("content", json);
-                                        Data.save(context, appWidgetId, "cache", jsonObject.toString());
-                                        new ScheduleLessonsAdditionalConverter(context, json, new ScheduleLessonsAdditionalConverter.response() {
-                                            @Override
-                                            public void finish(final JSONObject content) {
-                                                Data.save(context, appWidgetId, "cache_converted", content.toString());
-                                                display(context, appWidgetManager, appWidgetId, false);
-                                            }
-                                        }).run();
-                                    } catch (Exception e) {
-                                        Static.error(e);
-                                        failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_show_schedule));
-                                    }
-                                }
-                            });
-                        }
-                        @Override
-                        public void onFailure(int state) {
-                            this.onFailure(0, null, state);
-                        }
-                        @Override
-                        public void onFailure(int statusCode, Client.Headers headers, int state) {
-                            failed(context, appWidgetManager, appWidgetId, settings, state == IfmoRestClient.FAILED_SERVER_ERROR ? IfmoRestClient.getFailureMessage(context, statusCode) : context.getString(R.string.failed_to_load_schedule));
-                        }
-                        @Override
-                        public void onProgress(int state) {
-                            progress(context, appWidgetManager, appWidgetId, settings);
-                        }
-                        @Override
-                        public void onNewRequest(Client.Request request) {
-                            requestHandler = request;
-                        }
-                        @Override
-                        public void onCancelRequest() {
-                            if (requestHandler != null) {
-                                requestHandler.cancel();
+        Static.T.runThread(() -> {
+            Log.i(TAG, "refresh | appWidgetId=" + appWidgetId);
+            try {
+                new ScheduleLessons(new Schedule.Handler() {
+                    @Override
+                    public void onSuccess(final JSONObject json, final boolean fromCache) {
+                        Static.T.runThread(() -> {
+                            try {
+                                JSONObject jsonObject = new JSONObject();
+                                jsonObject.put("timestamp", Static.getCalendar().getTimeInMillis());
+                                jsonObject.put("content", json);
+                                Data.save(context, appWidgetId, "cache", jsonObject.toString());
+                                new ScheduleLessonsAdditionalConverter(context, json, content -> {
+                                    Data.save(context, appWidgetId, "cache_converted", content.toString());
+                                    display(context, appWidgetManager, appWidgetId, false);
+                                }).run();
+                            } catch (Exception e) {
+                                Static.error(e);
+                                failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_show_schedule));
                             }
+                        });
+                    }
+                    @Override
+                    public void onFailure(int state) {
+                        this.onFailure(0, null, state);
+                    }
+                    @Override
+                    public void onFailure(int statusCode, Client.Headers headers, int state) {
+                        failed(context, appWidgetManager, appWidgetId, settings, state == IfmoRestClient.FAILED_SERVER_ERROR ? IfmoRestClient.getFailureMessage(context, statusCode) : context.getString(R.string.failed_to_load_schedule));
+                    }
+                    @Override
+                    public void onProgress(int state) {
+                        progress(context, appWidgetManager, appWidgetId, settings);
+                    }
+                    @Override
+                    public void onNewRequest(Client.Request request) {
+                        requestHandler = request;
+                    }
+                    @Override
+                    public void onCancelRequest() {
+                        if (requestHandler != null) {
+                            requestHandler.cancel();
                         }
-                    }).search(context, settings.getString("query"), 0, false, false);
-                } catch (Exception e) {
-                    Static.error(e);
-                    failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_load_schedule));
-                }
+                    }
+                }).search(context, settings.getString("query"), 0, false, false);
+            } catch (Exception e) {
+                Static.error(e);
+                failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_load_schedule));
             }
         });
     }
     private static void progress(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final JSONObject settings) {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "progress | appWidgetId=" + appWidgetId);
+        Static.T.runThread(() -> {
+            Log.v(TAG, "progress | appWidgetId=" + appWidgetId);
+            final SIZE size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
+            final Colors colors = getColors(settings);
+            final RemoteViews layout = new RemoteViews(context.getPackageName(), getViewLayout(size));
+            // цвет
+            layout.setInt(R.id.widget_content, "setBackgroundColor", colors.background);
+            layout.setInt(R.id.widget_header, "setBackgroundColor", colors.background);
+            layout.setInt(R.id.widget_title, "setTextColor", colors.text);
+            layout.setInt(R.id.widget_day_title, "setTextColor", colors.text);
+            // заголовки
+            layout.setViewVisibility(R.id.widget_title, View.VISIBLE);
+            layout.setViewVisibility(R.id.widget_day_title, View.GONE);
+            layout.setTextViewText(R.id.widget_title, context.getString(R.string.schedule_lessons));
+            // кнопки управления
+            switch (size) {
+                case REGULAR:
+                case NARROW: {
+                    layout.setViewVisibility(R.id.widget_refresh_container, View.GONE);
+                    layout.setViewVisibility(R.id.widget_controls_open_container, View.GONE);
+                    layout.setViewVisibility(R.id.widget_controls_close_container, View.GONE);
+                    break;
+                }
+                case WIDE: {
+                    layout.setViewVisibility(R.id.widget_refresh_container, View.GONE);
+                    layout.setViewVisibility(R.id.widget_before_container, View.GONE);
+                    layout.setViewVisibility(R.id.widget_reset_container, View.GONE);
+                    layout.setViewVisibility(R.id.widget_next_container, View.GONE);
+                    break;
+                }
+            }
+            // панель управления
+            layout.setViewVisibility(R.id.widget_controls, View.GONE);
+            // контент
+            layout.removeAllViews(R.id.widget_container);
+            layout.addView(R.id.widget_container, new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget_loading));
+            layout.setInt(R.id.slw_loading_text, "setTextColor", colors.text);
+            // установки
+            bindOpen(context, appWidgetId, layout);
+            appWidgetManager.updateAppWidget(appWidgetId, layout);
+        });
+    }
+    private static void display(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final boolean controls) {
+        Static.T.runThread(() -> {
+            Log.v(TAG, "display | appWidgetId=" + appWidgetId + " | controls=" + (controls ? "true" : "false"));
+            JSONObject settings = Data.getJson(context, appWidgetId, "settings");
+            JSONObject cache = Data.getJson(context, appWidgetId, "cache");
+            try {
+                if (settings == null) {
+                    needPreparations(context, appWidgetManager, appWidgetId);
+                    return;
+                }
+                if (cache == null) {
+                    refresh(context, appWidgetManager, appWidgetId, settings);
+                    return;
+                }
+                if (!settings.has("shift")) {
+                    settings.put("shift", 0);
+                }
                 final SIZE size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
                 final Colors colors = getColors(settings);
+                final JSONObject json = cache.getJSONObject("content");
+                final int shift = settings.getInt("shift");
+                final Calendar calendar = Static.getCalendar();
+                if (shift != 0) {
+                    calendar.add(Calendar.HOUR, shift * 24);
+                }
+                final int week = Static.getWeek(context, calendar) % 2;
                 final RemoteViews layout = new RemoteViews(context.getPackageName(), getViewLayout(size));
                 // цвет
                 layout.setInt(R.id.widget_content, "setBackgroundColor", colors.background);
@@ -191,275 +237,201 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 layout.setInt(R.id.widget_day_title, "setTextColor", colors.text);
                 // заголовки
                 layout.setViewVisibility(R.id.widget_title, View.VISIBLE);
-                layout.setViewVisibility(R.id.widget_day_title, View.GONE);
-                layout.setTextViewText(R.id.widget_title, context.getString(R.string.schedule_lessons));
+                layout.setViewVisibility(R.id.widget_day_title, View.VISIBLE);
+                layout.setTextViewText(R.id.widget_title, json.getString("title") + ("room".equals(json.getString("type")) ? " " + context.getString(R.string.room).toLowerCase() : ""));
+                layout.setTextViewText(R.id.widget_day_title,
+                        (shift != 0 ? (shift > 0 ? "+" : "") + String.valueOf(shift) + " " : "") +
+                        Static.getDay(context, calendar.get(Calendar.DAY_OF_WEEK)) +
+                        (week == 0 ? " (" + context.getString(R.string.tab_even) + ")" : (week == 1 ? " (" + context.getString(R.string.tab_odd) + ")" : ""))
+                );
                 // кнопки управления
                 switch (size) {
-                    case REGULAR:
+                    case REGULAR: {
+                        layout.setViewVisibility(R.id.widget_refresh_container, View.VISIBLE);
+                        layout.setImageViewBitmap(R.id.widget_refresh_button, getBitmap(context, R.drawable.ic_widget_refresh, colors.text));
+                        if (controls) {
+                            layout.setViewVisibility(R.id.widget_controls_open_container, View.GONE);
+                            layout.setViewVisibility(R.id.widget_controls_close_container, View.VISIBLE);
+                            layout.setImageViewBitmap(R.id.widget_controls_close_button, getBitmap(context, R.drawable.ic_widget_close, colors.text));
+                        } else {
+                            layout.setViewVisibility(R.id.widget_controls_open_container, View.VISIBLE);
+                            layout.setViewVisibility(R.id.widget_controls_close_container, View.GONE);
+                            layout.setImageViewBitmap(R.id.widget_controls_open_button, getBitmap(context, R.drawable.ic_widget_expand, colors.text));
+                        }
+                        break;
+                    }
                     case NARROW: {
                         layout.setViewVisibility(R.id.widget_refresh_container, View.GONE);
-                        layout.setViewVisibility(R.id.widget_controls_open_container, View.GONE);
-                        layout.setViewVisibility(R.id.widget_controls_close_container, View.GONE);
+                        if (controls) {
+                            layout.setViewVisibility(R.id.widget_controls_open_container, View.GONE);
+                            layout.setViewVisibility(R.id.widget_controls_close_container, View.VISIBLE);
+                            layout.setImageViewBitmap(R.id.widget_controls_close_button, getBitmap(context, R.drawable.ic_widget_close, colors.text));
+                        } else {
+                            layout.setViewVisibility(R.id.widget_controls_open_container, View.VISIBLE);
+                            layout.setViewVisibility(R.id.widget_controls_close_container, View.GONE);
+                            layout.setImageViewBitmap(R.id.widget_controls_open_button, getBitmap(context, R.drawable.ic_widget_expand, colors.text));
+                        }
                         break;
                     }
                     case WIDE: {
-                        layout.setViewVisibility(R.id.widget_refresh_container, View.GONE);
-                        layout.setViewVisibility(R.id.widget_before_container, View.GONE);
-                        layout.setViewVisibility(R.id.widget_reset_container, View.GONE);
-                        layout.setViewVisibility(R.id.widget_next_container, View.GONE);
+                        layout.setViewVisibility(R.id.widget_refresh_container, View.VISIBLE);
+                        layout.setViewVisibility(R.id.widget_before_container, View.VISIBLE);
+                        layout.setViewVisibility(R.id.widget_reset_container, View.VISIBLE);
+                        layout.setViewVisibility(R.id.widget_next_container, View.VISIBLE);
+                        layout.setImageViewBitmap(R.id.widget_refresh_button, getBitmap(context, R.drawable.ic_widget_refresh, colors.text));
+                        layout.setImageViewBitmap(R.id.widget_before_button, getBitmap(context, R.drawable.ic_widget_before, colors.text));
+                        layout.setImageViewBitmap(R.id.widget_reset_button, getBitmap(context, R.drawable.ic_widget_reset, colors.text));
+                        layout.setImageViewBitmap(R.id.widget_next_button, getBitmap(context, R.drawable.ic_widget_next, colors.text));
                         break;
                     }
                 }
+                bindMenu(context, appWidgetId, layout, size);
                 // панель управления
-                layout.setViewVisibility(R.id.widget_controls, View.GONE);
-                // контент
-                layout.removeAllViews(R.id.widget_container);
-                layout.addView(R.id.widget_container, new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget_loading));
-                layout.setInt(R.id.slw_loading_text, "setTextColor", colors.text);
-                // установки
-                bindOpen(context, appWidgetId, layout);
-                appWidgetManager.updateAppWidget(appWidgetId, layout);
-            }
-        });
-    }
-    private static void display(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final boolean controls) {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "display | appWidgetId=" + appWidgetId + " | controls=" + (controls ? "true" : "false"));
-                JSONObject settings = Data.getJson(context, appWidgetId, "settings");
-                JSONObject cache = Data.getJson(context, appWidgetId, "cache");
-                try {
-                    if (settings == null) {
-                        needPreparations(context, appWidgetManager, appWidgetId);
-                        return;
-                    }
-                    if (cache == null) {
-                        refresh(context, appWidgetManager, appWidgetId, settings);
-                        return;
-                    }
-                    if (!settings.has("shift")) {
-                        settings.put("shift", 0);
-                    }
-                    final SIZE size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
-                    final Colors colors = getColors(settings);
-                    final JSONObject json = cache.getJSONObject("content");
-                    final int shift = settings.getInt("shift");
-                    final Calendar calendar = Static.getCalendar();
-                    if (shift != 0) {
-                        calendar.add(Calendar.HOUR, shift * 24);
-                    }
-                    final int week = Static.getWeek(context, calendar) % 2;
-                    final RemoteViews layout = new RemoteViews(context.getPackageName(), getViewLayout(size));
-                    // цвет
-                    layout.setInt(R.id.widget_content, "setBackgroundColor", colors.background);
-                    layout.setInt(R.id.widget_header, "setBackgroundColor", colors.background);
-                    layout.setInt(R.id.widget_title, "setTextColor", colors.text);
-                    layout.setInt(R.id.widget_day_title, "setTextColor", colors.text);
-                    // заголовки
-                    layout.setViewVisibility(R.id.widget_title, View.VISIBLE);
-                    layout.setViewVisibility(R.id.widget_day_title, View.VISIBLE);
-                    layout.setTextViewText(R.id.widget_title, json.getString("title") + (Objects.equals(json.getString("type"), "room") ? " " + context.getString(R.string.room).toLowerCase() : ""));
-                    layout.setTextViewText(R.id.widget_day_title,
-                            (shift != 0 ? (shift > 0 ? "+" : "") + String.valueOf(shift) + " " : "") +
-                            Static.getDay(context, calendar.get(Calendar.DAY_OF_WEEK)) +
-                            (week == 0 ? " (" + context.getString(R.string.tab_even) + ")" : (week == 1 ? " (" + context.getString(R.string.tab_odd) + ")" : ""))
-                    );
-                    // кнопки управления
-                    switch (size) {
-                        case REGULAR: {
-                            layout.setViewVisibility(R.id.widget_refresh_container, View.VISIBLE);
-                            layout.setImageViewBitmap(R.id.widget_refresh_button, getBitmap(context, R.drawable.ic_widget_refresh, colors.text));
-                            if (controls) {
-                                layout.setViewVisibility(R.id.widget_controls_open_container, View.GONE);
-                                layout.setViewVisibility(R.id.widget_controls_close_container, View.VISIBLE);
-                                layout.setImageViewBitmap(R.id.widget_controls_close_button, getBitmap(context, R.drawable.ic_widget_close, colors.text));
-                            } else {
-                                layout.setViewVisibility(R.id.widget_controls_open_container, View.VISIBLE);
-                                layout.setViewVisibility(R.id.widget_controls_close_container, View.GONE);
-                                layout.setImageViewBitmap(R.id.widget_controls_open_button, getBitmap(context, R.drawable.ic_widget_expand, colors.text));
-                            }
-                            break;
-                        }
-                        case NARROW: {
-                            layout.setViewVisibility(R.id.widget_refresh_container, View.GONE);
-                            if (controls) {
-                                layout.setViewVisibility(R.id.widget_controls_open_container, View.GONE);
-                                layout.setViewVisibility(R.id.widget_controls_close_container, View.VISIBLE);
-                                layout.setImageViewBitmap(R.id.widget_controls_close_button, getBitmap(context, R.drawable.ic_widget_close, colors.text));
-                            } else {
-                                layout.setViewVisibility(R.id.widget_controls_open_container, View.VISIBLE);
-                                layout.setViewVisibility(R.id.widget_controls_close_container, View.GONE);
-                                layout.setImageViewBitmap(R.id.widget_controls_open_button, getBitmap(context, R.drawable.ic_widget_expand, colors.text));
-                            }
-                            break;
-                        }
-                        case WIDE: {
-                            layout.setViewVisibility(R.id.widget_refresh_container, View.VISIBLE);
-                            layout.setViewVisibility(R.id.widget_before_container, View.VISIBLE);
-                            layout.setViewVisibility(R.id.widget_reset_container, View.VISIBLE);
-                            layout.setViewVisibility(R.id.widget_next_container, View.VISIBLE);
-                            layout.setImageViewBitmap(R.id.widget_refresh_button, getBitmap(context, R.drawable.ic_widget_refresh, colors.text));
+                switch (size) {
+                    case REGULAR: {
+                        if (controls) {
+                            layout.setViewVisibility(R.id.widget_controls, View.VISIBLE);
+                            layout.setInt(R.id.widget_controls, "setBackgroundColor", colors.background);
+                            layout.setImageViewBitmap(R.id.widget_next_button, getBitmap(context, R.drawable.ic_widget_next, colors.text));
                             layout.setImageViewBitmap(R.id.widget_before_button, getBitmap(context, R.drawable.ic_widget_before, colors.text));
                             layout.setImageViewBitmap(R.id.widget_reset_button, getBitmap(context, R.drawable.ic_widget_reset, colors.text));
-                            layout.setImageViewBitmap(R.id.widget_next_button, getBitmap(context, R.drawable.ic_widget_next, colors.text));
-                            break;
-                        }
-                    }
-                    bindMenu(context, appWidgetId, layout, size);
-                    // панель управления
-                    switch (size) {
-                        case REGULAR: {
-                            if (controls) {
-                                layout.setViewVisibility(R.id.widget_controls, View.VISIBLE);
-                                layout.setInt(R.id.widget_controls, "setBackgroundColor", colors.background);
-                                layout.setImageViewBitmap(R.id.widget_next_button, getBitmap(context, R.drawable.ic_widget_next, colors.text));
-                                layout.setImageViewBitmap(R.id.widget_before_button, getBitmap(context, R.drawable.ic_widget_before, colors.text));
-                                layout.setImageViewBitmap(R.id.widget_reset_button, getBitmap(context, R.drawable.ic_widget_reset, colors.text));
-                                bindControls(context, appWidgetId, layout, size);
-                            } else {
-                                layout.setViewVisibility(R.id.widget_controls, View.GONE);
-                            }
-                            break;
-                        }
-                        case NARROW: {
-                            if (controls) {
-                                layout.setViewVisibility(R.id.widget_controls, View.VISIBLE);
-                                layout.setInt(R.id.widget_controls, "setBackgroundColor", colors.background);
-                                layout.setImageViewBitmap(R.id.widget_before_button, getBitmap(context, R.drawable.ic_widget_before, colors.text));
-                                layout.setImageViewBitmap(R.id.widget_refresh_control_button, getBitmap(context, R.drawable.ic_widget_refresh, colors.text));
-                                layout.setImageViewBitmap(R.id.widget_next_button, getBitmap(context, R.drawable.ic_widget_next, colors.text));
-                                bindControls(context, appWidgetId, layout, size);
-                            } else {
-                                layout.setViewVisibility(R.id.widget_controls, View.GONE);
-                            }
-                            break;
-                        }
-                        case WIDE: {
+                            bindControls(context, appWidgetId, layout, size);
+                        } else {
                             layout.setViewVisibility(R.id.widget_controls, View.GONE);
-                            break;
                         }
+                        break;
                     }
-                    // контент
-                    layout.removeAllViews(R.id.widget_container);
-                    layout.addView(R.id.widget_container, new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget_list));
-                    // установки
-                    bindOpen(context, appWidgetId, layout);
-                    // список расписания
-                    Intent intent = new Intent(context, ScheduleLessonsWidgetService.class);
-                    intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
-                    intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
-                    layout.setRemoteAdapter(R.id.slw_day_schedule, intent);
-                    appWidgetManager.updateAppWidget(appWidgetId, layout);
-                    appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.slw_day_schedule);
-                } catch (Exception e) {
-                    if (!(Objects.equals(e.getMessage(), "settings cannot be null") || Objects.equals(e.getMessage(), "cache cannot be null"))) {
-                        Static.error(e);
+                    case NARROW: {
+                        if (controls) {
+                            layout.setViewVisibility(R.id.widget_controls, View.VISIBLE);
+                            layout.setInt(R.id.widget_controls, "setBackgroundColor", colors.background);
+                            layout.setImageViewBitmap(R.id.widget_before_button, getBitmap(context, R.drawable.ic_widget_before, colors.text));
+                            layout.setImageViewBitmap(R.id.widget_refresh_control_button, getBitmap(context, R.drawable.ic_widget_refresh, colors.text));
+                            layout.setImageViewBitmap(R.id.widget_next_button, getBitmap(context, R.drawable.ic_widget_next, colors.text));
+                            bindControls(context, appWidgetId, layout, size);
+                        } else {
+                            layout.setViewVisibility(R.id.widget_controls, View.GONE);
+                        }
+                        break;
                     }
-                    failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_show_schedule));
+                    case WIDE: {
+                        layout.setViewVisibility(R.id.widget_controls, View.GONE);
+                        break;
+                    }
                 }
+                // контент
+                layout.removeAllViews(R.id.widget_container);
+                layout.addView(R.id.widget_container, new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget_list));
+                // установки
+                bindOpen(context, appWidgetId, layout);
+                // список расписания
+                Intent intent = new Intent(context, ScheduleLessonsWidgetService.class);
+                intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+                intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
+                layout.setRemoteAdapter(R.id.slw_day_schedule, intent);
+                appWidgetManager.updateAppWidget(appWidgetId, layout);
+                appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.slw_day_schedule);
+            } catch (Exception e) {
+                if (!("settings cannot be null".equals(e.getMessage()) || "cache cannot be null".equals(e.getMessage()))) {
+                    Static.error(e);
+                }
+                failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_show_schedule));
             }
         });
     }
     private static void failed(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final JSONObject settings, final String text) {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "failed | appWidgetId=" + appWidgetId + " | text=" + text);
-                final SIZE size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
-                final Colors colors = getColors(settings);
-                final RemoteViews layout = new RemoteViews(context.getPackageName(), getViewLayout(size));
-                // цвет
-                layout.setInt(R.id.widget_content, "setBackgroundColor", colors.background);
-                layout.setInt(R.id.widget_header, "setBackgroundColor", colors.background);
-                layout.setInt(R.id.widget_title, "setTextColor", colors.text);
-                layout.setInt(R.id.widget_day_title, "setTextColor", colors.text);
-                // заголовки
-                layout.setViewVisibility(R.id.widget_title, View.VISIBLE);
-                layout.setViewVisibility(R.id.widget_day_title, View.GONE);
-                layout.setTextViewText(R.id.widget_title, context.getString(R.string.schedule_lessons));
-                // кнопки управления
-                switch (size) {
-                    case REGULAR:
-                    case NARROW: {
-                        layout.setViewVisibility(R.id.widget_refresh_container, View.VISIBLE);
-                        layout.setViewVisibility(R.id.widget_controls_open_container, View.GONE);
-                        layout.setViewVisibility(R.id.widget_controls_close_container, View.GONE);
-                        layout.setImageViewBitmap(R.id.widget_refresh_button, getBitmap(context, R.drawable.ic_widget_refresh, colors.text));
-                        break;
-                    }
-                    case WIDE: {
-                        layout.setViewVisibility(R.id.widget_refresh_container, View.VISIBLE);
-                        layout.setViewVisibility(R.id.widget_before_container, View.GONE);
-                        layout.setViewVisibility(R.id.widget_reset_container, View.GONE);
-                        layout.setViewVisibility(R.id.widget_next_container, View.GONE);
-                        layout.setImageViewBitmap(R.id.widget_refresh_button, getBitmap(context, R.drawable.ic_widget_refresh, colors.text));
-                        break;
-                    }
+        Static.T.runThread(() -> {
+            Log.v(TAG, "failed | appWidgetId=" + appWidgetId + " | text=" + text);
+            final SIZE size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
+            final Colors colors = getColors(settings);
+            final RemoteViews layout = new RemoteViews(context.getPackageName(), getViewLayout(size));
+            // цвет
+            layout.setInt(R.id.widget_content, "setBackgroundColor", colors.background);
+            layout.setInt(R.id.widget_header, "setBackgroundColor", colors.background);
+            layout.setInt(R.id.widget_title, "setTextColor", colors.text);
+            layout.setInt(R.id.widget_day_title, "setTextColor", colors.text);
+            // заголовки
+            layout.setViewVisibility(R.id.widget_title, View.VISIBLE);
+            layout.setViewVisibility(R.id.widget_day_title, View.GONE);
+            layout.setTextViewText(R.id.widget_title, context.getString(R.string.schedule_lessons));
+            // кнопки управления
+            switch (size) {
+                case REGULAR:
+                case NARROW: {
+                    layout.setViewVisibility(R.id.widget_refresh_container, View.VISIBLE);
+                    layout.setViewVisibility(R.id.widget_controls_open_container, View.GONE);
+                    layout.setViewVisibility(R.id.widget_controls_close_container, View.GONE);
+                    layout.setImageViewBitmap(R.id.widget_refresh_button, getBitmap(context, R.drawable.ic_widget_refresh, colors.text));
+                    break;
                 }
-                bindMenu(context, appWidgetId, layout, size);
-                // панель управления
-                layout.setViewVisibility(R.id.widget_controls, View.GONE);
-                // контент
-                layout.removeAllViews(R.id.widget_container);
-                layout.addView(R.id.widget_container, new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget_message));
-                layout.setInt(R.id.slw_message_text, "setTextColor", colors.text);
-                layout.setTextViewText(R.id.slw_message_text, text);
-                layout.setImageViewBitmap(R.id.slw_message_icon, getBitmap(context, R.drawable.ic_widget_error_outline, colors.text));
-                // установки
-                bindOpen(context, appWidgetId, layout);
-                appWidgetManager.updateAppWidget(appWidgetId, layout);
+                case WIDE: {
+                    layout.setViewVisibility(R.id.widget_refresh_container, View.VISIBLE);
+                    layout.setViewVisibility(R.id.widget_before_container, View.GONE);
+                    layout.setViewVisibility(R.id.widget_reset_container, View.GONE);
+                    layout.setViewVisibility(R.id.widget_next_container, View.GONE);
+                    layout.setImageViewBitmap(R.id.widget_refresh_button, getBitmap(context, R.drawable.ic_widget_refresh, colors.text));
+                    break;
+                }
             }
+            bindMenu(context, appWidgetId, layout, size);
+            // панель управления
+            layout.setViewVisibility(R.id.widget_controls, View.GONE);
+            // контент
+            layout.removeAllViews(R.id.widget_container);
+            layout.addView(R.id.widget_container, new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget_message));
+            layout.setInt(R.id.slw_message_text, "setTextColor", colors.text);
+            layout.setTextViewText(R.id.slw_message_text, text);
+            layout.setImageViewBitmap(R.id.slw_message_icon, getBitmap(context, R.drawable.ic_widget_error_outline, colors.text));
+            // установки
+            bindOpen(context, appWidgetId, layout);
+            appWidgetManager.updateAppWidget(appWidgetId, layout);
         });
     }
     private static void needPreparations(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId) {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "needPreparations | appWidgetId=" + appWidgetId);
-                final SIZE size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
-                final Colors colors = getColors();
-                final RemoteViews layout = new RemoteViews(context.getPackageName(), getViewLayout(size));
-                // цвет
-                layout.setInt(R.id.widget_content, "setBackgroundColor", colors.background);
-                layout.setInt(R.id.widget_header, "setBackgroundColor", colors.background);
-                layout.setInt(R.id.widget_title, "setTextColor", colors.text);
-                layout.setInt(R.id.widget_day_title, "setTextColor", colors.text);
-                // заголовки
-                layout.setViewVisibility(R.id.widget_title, View.VISIBLE);
-                layout.setViewVisibility(R.id.widget_day_title, View.GONE);
-                layout.setTextViewText(R.id.widget_title, context.getString(R.string.schedule_lessons));
-                // кнопки управления
-                switch (size) {
-                    case REGULAR:
-                    case NARROW: {
-                        layout.setViewVisibility(R.id.widget_refresh_container, View.VISIBLE);
-                        layout.setViewVisibility(R.id.widget_controls_open_container, View.GONE);
-                        layout.setViewVisibility(R.id.widget_controls_close_container, View.GONE);
-                        layout.setImageViewBitmap(R.id.widget_refresh_button, getBitmap(context, R.drawable.ic_widget_refresh, colors.text));
-                        break;
-                    }
-                    case WIDE: {
-                        layout.setViewVisibility(R.id.widget_refresh_container, View.VISIBLE);
-                        layout.setViewVisibility(R.id.widget_before_container, View.GONE);
-                        layout.setViewVisibility(R.id.widget_reset_container, View.GONE);
-                        layout.setViewVisibility(R.id.widget_next_container, View.GONE);
-                        layout.setImageViewBitmap(R.id.widget_refresh_button, getBitmap(context, R.drawable.ic_widget_refresh, colors.text));
-                        break;
-                    }
+        Static.T.runThread(() -> {
+            Log.v(TAG, "needPreparations | appWidgetId=" + appWidgetId);
+            final SIZE size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
+            final Colors colors = getColors();
+            final RemoteViews layout = new RemoteViews(context.getPackageName(), getViewLayout(size));
+            // цвет
+            layout.setInt(R.id.widget_content, "setBackgroundColor", colors.background);
+            layout.setInt(R.id.widget_header, "setBackgroundColor", colors.background);
+            layout.setInt(R.id.widget_title, "setTextColor", colors.text);
+            layout.setInt(R.id.widget_day_title, "setTextColor", colors.text);
+            // заголовки
+            layout.setViewVisibility(R.id.widget_title, View.VISIBLE);
+            layout.setViewVisibility(R.id.widget_day_title, View.GONE);
+            layout.setTextViewText(R.id.widget_title, context.getString(R.string.schedule_lessons));
+            // кнопки управления
+            switch (size) {
+                case REGULAR:
+                case NARROW: {
+                    layout.setViewVisibility(R.id.widget_refresh_container, View.VISIBLE);
+                    layout.setViewVisibility(R.id.widget_controls_open_container, View.GONE);
+                    layout.setViewVisibility(R.id.widget_controls_close_container, View.GONE);
+                    layout.setImageViewBitmap(R.id.widget_refresh_button, getBitmap(context, R.drawable.ic_widget_refresh, colors.text));
+                    break;
                 }
-                bindMenu(context, appWidgetId, layout, size);
-                // панель управления
-                layout.setViewVisibility(R.id.widget_controls, View.GONE);
-                // контент
-                layout.removeAllViews(R.id.widget_container);
-                layout.addView(R.id.widget_container, new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget_message));
-                layout.setInt(R.id.slw_message_text, "setTextColor", colors.text);
-                layout.setImageViewBitmap(R.id.slw_message_icon, getBitmap(context, R.drawable.ic_widget_info_outline, colors.text));
-                // установки
-                bindOpen(context, appWidgetId, layout);
-                appWidgetManager.updateAppWidget(appWidgetId, layout);
+                case WIDE: {
+                    layout.setViewVisibility(R.id.widget_refresh_container, View.VISIBLE);
+                    layout.setViewVisibility(R.id.widget_before_container, View.GONE);
+                    layout.setViewVisibility(R.id.widget_reset_container, View.GONE);
+                    layout.setViewVisibility(R.id.widget_next_container, View.GONE);
+                    layout.setImageViewBitmap(R.id.widget_refresh_button, getBitmap(context, R.drawable.ic_widget_refresh, colors.text));
+                    break;
+                }
             }
+            bindMenu(context, appWidgetId, layout, size);
+            // панель управления
+            layout.setViewVisibility(R.id.widget_controls, View.GONE);
+            // контент
+            layout.removeAllViews(R.id.widget_container);
+            layout.addView(R.id.widget_container, new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget_message));
+            layout.setInt(R.id.slw_message_text, "setTextColor", colors.text);
+            layout.setImageViewBitmap(R.id.slw_message_icon, getBitmap(context, R.drawable.ic_widget_info_outline, colors.text));
+            // установки
+            bindOpen(context, appWidgetId, layout);
+            appWidgetManager.updateAppWidget(appWidgetId, layout);
         });
     }
 
@@ -550,89 +522,80 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
 
     public void onReceive(final Context context, final Intent intent) {
         super.onReceive(context, intent);
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                final String action = intent.getAction();
-                final int appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
-                Log.v(TAG, "onReceive | action=" + action);
-                switch (action != null ? action : "") {
-                    case ACTION_WIDGET_UPDATE: {
-                        logStatistic(context, "force_update");
-                        updateAppWidget(context, AppWidgetManager.getInstance(context), appWidgetId, true);
-                        break;
-                    }
-                    case ACTION_WIDGET_OPEN_CONTROLS: {
-                        logStatistic(context, "controls_open");
-                        display(context, AppWidgetManager.getInstance(context), appWidgetId, true);
-                        break;
-                    }
-                    case ACTION_WIDGET_CLOSE_CONTROLS: {
-                        logStatistic(context, "controls_close");
-                        display(context, AppWidgetManager.getInstance(context), appWidgetId, false);
-                        break;
-                    }
-                    case ACTION_WIDGET_CONTROLS_NEXT:
-                    case ACTION_WIDGET_CONTROLS_BEFORE:
-                    case ACTION_WIDGET_CONTROLS_RESET: {
-                        Static.T.runThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                switch (action) {
-                                    case ACTION_WIDGET_CONTROLS_NEXT: logStatistic(context, "shift_next"); break;
-                                    case ACTION_WIDGET_CONTROLS_BEFORE: logStatistic(context, "shift_before"); break;
-                                    case ACTION_WIDGET_CONTROLS_RESET: logStatistic(context, "shift_reset"); break;
-                                }
-                                JSONObject settings = Data.getJson(context, appWidgetId, "settings");
-                                if (settings != null) {
-                                    int shift;
-                                    try {
-                                        shift = settings.getInt("shift");
-                                    } catch (JSONException e) {
-                                        shift = 0;
-                                    }
-                                    switch (action) {
-                                        case ACTION_WIDGET_CONTROLS_NEXT: shift++; break;
-                                        case ACTION_WIDGET_CONTROLS_BEFORE: shift--; break;
-                                        case ACTION_WIDGET_CONTROLS_RESET: shift = 0; break;
-                                    }
-                                    if (shift > 180 || shift < -180) {
-                                        shift = 0;
-                                        context.startActivity(new Intent(context, PikaActivity.class));
-                                    }
-                                    try {
-                                        settings.put("shift", shift);
-                                        Data.save(context, appWidgetId, "settings", settings.toString());
-                                    } catch (JSONException ignore) {
-                                        // ignore
-                                    }
-                                }
-                                display(context, AppWidgetManager.getInstance(context), appWidgetId, !Objects.equals(action, ACTION_WIDGET_CONTROLS_RESET));
+        Static.T.runThread(() -> {
+            final String action = intent.getAction() != null ? intent.getAction() : "";
+            final int appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
+            Log.v(TAG, "onReceive | action=" + action);
+            switch (action) {
+                case ACTION_WIDGET_UPDATE: {
+                    logStatistic(context, "force_update");
+                    updateAppWidget(context, AppWidgetManager.getInstance(context), appWidgetId, true);
+                    break;
+                }
+                case ACTION_WIDGET_OPEN_CONTROLS: {
+                    logStatistic(context, "controls_open");
+                    display(context, AppWidgetManager.getInstance(context), appWidgetId, true);
+                    break;
+                }
+                case ACTION_WIDGET_CLOSE_CONTROLS: {
+                    logStatistic(context, "controls_close");
+                    display(context, AppWidgetManager.getInstance(context), appWidgetId, false);
+                    break;
+                }
+                case ACTION_WIDGET_CONTROLS_NEXT:
+                case ACTION_WIDGET_CONTROLS_BEFORE:
+                case ACTION_WIDGET_CONTROLS_RESET: {
+                    Static.T.runThread(() -> {
+                        switch (action) {
+                            case ACTION_WIDGET_CONTROLS_NEXT: logStatistic(context, "shift_next"); break;
+                            case ACTION_WIDGET_CONTROLS_BEFORE: logStatistic(context, "shift_before"); break;
+                            case ACTION_WIDGET_CONTROLS_RESET: logStatistic(context, "shift_reset"); break;
+                        }
+                        JSONObject settings = Data.getJson(context, appWidgetId, "settings");
+                        if (settings != null) {
+                            int shift;
+                            try {
+                                shift = settings.getInt("shift");
+                            } catch (JSONException e) {
+                                shift = 0;
                             }
-                        });
-                        break;
-                    }
-                    case ACTION_WIDGET_OPEN: {
-                        Static.T.runThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                logStatistic(context, "schedule_open");
-                                Intent oIntent = new Intent(context, MainActivity.class);
-                                oIntent.addFlags(Static.intentFlagRestart);
-                                oIntent.putExtra("action", "schedule_lessons");
-                                try {
-                                    String settings = Data.get(context, appWidgetId, "settings");
-                                    if (settings != null) {
-                                        oIntent.putExtra("action_extra", new JSONObject(settings).getString("query"));
-                                    }
-                                } catch (Exception e) {
-                                    Static.error(e);
-                                }
-                                context.startActivity(oIntent);
+                            switch (action) {
+                                case ACTION_WIDGET_CONTROLS_NEXT: shift++; break;
+                                case ACTION_WIDGET_CONTROLS_BEFORE: shift--; break;
+                                case ACTION_WIDGET_CONTROLS_RESET: shift = 0; break;
                             }
-                        });
-                        break;
-                    }
+                            if (shift > 180 || shift < -180) {
+                                shift = 0;
+                                context.startActivity(new Intent(context, PikaActivity.class));
+                            }
+                            try {
+                                settings.put("shift", shift);
+                                Data.save(context, appWidgetId, "settings", settings.toString());
+                            } catch (JSONException ignore) {
+                                // ignore
+                            }
+                        }
+                        display(context, AppWidgetManager.getInstance(context), appWidgetId, !ACTION_WIDGET_CONTROLS_RESET.equals(action));
+                    });
+                    break;
+                }
+                case ACTION_WIDGET_OPEN: {
+                    Static.T.runThread(() -> {
+                        logStatistic(context, "schedule_open");
+                        Intent oIntent = new Intent(context, MainActivity.class);
+                        oIntent.addFlags(Static.intentFlagRestart);
+                        oIntent.putExtra("action", "schedule_lessons");
+                        try {
+                            String settings = Data.get(context, appWidgetId, "settings");
+                            if (settings != null) {
+                                oIntent.putExtra("action_extra", new JSONObject(settings).getString("query"));
+                            }
+                        } catch (Exception e) {
+                            Static.error(e);
+                        }
+                        context.startActivity(oIntent);
+                    });
+                    break;
                 }
             }
         });

@@ -2,18 +2,15 @@ package com.bukhmastov.cdoitmo.utils;
 
 import android.app.TimePickerDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.support.v7.app.AlertDialog;
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CompoundButton;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.TimePicker;
 
 import com.bukhmastov.cdoitmo.R;
 
@@ -105,201 +102,126 @@ public class ThemeUtil {
 
     public void show() {
         Log.v(TAG, "show");
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                final ViewGroup theme_layout = (ViewGroup) inflate(R.layout.layout_theme_picker);
-                Static.T.runThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            final ViewGroup theme_container_static = theme_layout.findViewById(R.id.theme_container_static);
-                            final ViewGroup theme_container_auto = theme_layout.findViewById(R.id.theme_container_auto);
-                            final ViewGroup switcher_container = theme_layout.findViewById(R.id.switcher_container);
-                            final Switch switcher = theme_layout.findViewById(R.id.switcher);
-                            final TextView t1_time = theme_layout.findViewById(R.id.t1_time);
-                            final TextView t2_time = theme_layout.findViewById(R.id.t2_time);
-                            final TextView t1_spinner = theme_layout.findViewById(R.id.t1_spinner);
-                            final TextView t2_spinner = theme_layout.findViewById(R.id.t2_spinner);
-                            // setup switcher
-                            switcher.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                                @Override
-                                public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                                    auto_enabled = checked;
-                                    Log.v(TAG, "switcher clicked | auto_enabled = " + (auto_enabled ? "true" : "false"));
-                                    if (auto_enabled) {
-                                        theme_container_static.setVisibility(View.GONE);
-                                        theme_container_auto.setVisibility(View.VISIBLE);
-                                    } else {
-                                        theme_container_static.setVisibility(View.VISIBLE);
-                                        theme_container_auto.setVisibility(View.GONE);
-                                    }
-                                }
-                            });
-                            switcher_container.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View view) {
-                                    Log.v(TAG, "switcher_container clicked");
-                                    switcher.setChecked(!auto_enabled);
-                                }
-                            });
-                            switcher.setChecked(auto_enabled);
-                            if (auto_enabled) {
-                                theme_container_static.setVisibility(View.GONE);
-                                theme_container_auto.setVisibility(View.VISIBLE);
-                            } else {
-                                theme_container_static.setVisibility(View.VISIBLE);
-                                theme_container_auto.setVisibility(View.GONE);
-                            }
-                            // setup static theme selector
-                            Static.T.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    for (int i = 0; i < pref_theme_titles.size(); i++) {
-                                        final RadioButton radioButton = (RadioButton) inflate(R.layout.layout_theme_picker_static_item);
-                                        radioButton.setText(pref_theme_titles.get(i));
-                                        radioButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                                            @Override
-                                            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                                                if (isChecked) {
-                                                    static_value = pref_theme_values.get(pref_theme_titles.indexOf(buttonView.getText().toString().trim()));
-                                                }
-                                            }
-                                        });
-                                        theme_container_static.addView(radioButton);
-                                        if (pref_theme_values.indexOf(static_value) == i) {
-                                            ((RadioGroup) theme_container_static).check(radioButton.getId());
-                                        }
-                                    }
-                                }
-                            });
-                            // setup automatic theme selector
-                            t1_time.setText(t1_hour + ":" + Static.ldgZero(t1_minutes));
-                            t1_time.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View view) {
-                                    Log.v(TAG, "t1_time clicked");
-                                    showTimePicker(t1_hour, t1_minutes, new TimePickerCallback() {
-                                        @Override
-                                        public void onDone(int hours, int minutes) {
-                                            Log.v(TAG, "t1_time showTimePicker done | " + hours + " | " + minutes);
-                                            t1_hour = hours;
-                                            t1_minutes = minutes;
-                                            t1_time.setText(t1_hour + ":" + Static.ldgZero(t1_minutes));
-                                        }
-                                    });
-                                }
-                            });
-                            t2_time.setText(t2_hour + ":" + Static.ldgZero(t2_minutes));
-                            t2_time.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View view) {
-                                    showTimePicker(t2_hour, t2_minutes, new TimePickerCallback() {
-                                        @Override
-                                        public void onDone(int hours, int minutes) {
-                                            Log.v(TAG, "t2_time showTimePicker done | " + hours + " | " + minutes);
-                                            t2_hour = hours;
-                                            t2_minutes = minutes;
-                                            t2_time.setText(t2_hour + ":" + Static.ldgZero(t2_minutes));
-                                        }
-                                    });
-                                }
-                            });
-                            t1_spinner.setText(pref_theme_titles.get(pref_theme_values.indexOf(t1_value)));
-                            t1_spinner.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View view) {
-                                    showThemePicker(t1_value, new ThemePickerCallback() {
-                                        @Override
-                                        public void onDone(String theme) {
-                                            Log.v(TAG, "t1_spinner showThemePicker done | " + theme);
-                                            t1_value = theme;
-                                            t1_spinner.setText(pref_theme_titles.get(pref_theme_values.indexOf(t1_value)));
-                                        }
-                                    });
-                                }
-                            });
-                            t2_spinner.setText(pref_theme_titles.get(pref_theme_values.indexOf(t2_value)));
-                            t2_spinner.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View view) {
-                                    showThemePicker(t2_value, new ThemePickerCallback() {
-                                        @Override
-                                        public void onDone(String theme) {
-                                            Log.v(TAG, "t2_spinner showThemePicker done | " + theme);
-                                            t2_value = theme;
-                                            t2_spinner.setText(pref_theme_titles.get(pref_theme_values.indexOf(t2_value)));
-                                        }
-                                    });
-                                }
-                            });
-                            // show picker
-                            Static.T.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    new AlertDialog.Builder(context)
-                                            .setTitle(R.string.theme)
-                                            .setView(theme_layout)
-                                            .setPositiveButton(R.string.accept, new DialogInterface.OnClickListener() {
-                                                @Override
-                                                public void onClick(DialogInterface dialog, int which) {
-                                                    Static.T.runThread(new Runnable() {
-                                                        @Override
-                                                        public void run() {
-                                                            Log.v(TAG, "show picker accepted");
-                                                            String theme;
-                                                            if (auto_enabled) {
-                                                                theme = t1_hour + ":" + Static.ldgZero(t1_minutes) + "#" + t1_value + "#" + t2_hour + ":" + Static.ldgZero(t2_minutes) + "#" + t2_value;
-                                                            } else {
-                                                                theme = static_value;
-                                                            }
-                                                            cb.onDone(theme, getThemeDesc(context, theme));
-                                                        }
-                                                    });
-                                                }
-                                            })
-                                            .create().show();
-                                }
-                            });
-                        } catch (Exception e) {
-                            Static.error(e);
+        Static.T.runOnUiThread(() -> {
+            final ViewGroup theme_layout = (ViewGroup) inflate(R.layout.layout_theme_picker);
+            Static.T.runThread(() -> {
+                try {
+                    final ViewGroup theme_container_static = theme_layout.findViewById(R.id.theme_container_static);
+                    final ViewGroup theme_container_auto = theme_layout.findViewById(R.id.theme_container_auto);
+                    final ViewGroup switcher_container = theme_layout.findViewById(R.id.switcher_container);
+                    final Switch switcher = theme_layout.findViewById(R.id.switcher);
+                    final TextView t1_time = theme_layout.findViewById(R.id.t1_time);
+                    final TextView t2_time = theme_layout.findViewById(R.id.t2_time);
+                    final TextView t1_spinner = theme_layout.findViewById(R.id.t1_spinner);
+                    final TextView t2_spinner = theme_layout.findViewById(R.id.t2_spinner);
+                    // setup switcher
+                    switcher.setOnCheckedChangeListener((compoundButton, checked) -> {
+                        auto_enabled = checked;
+                        Log.v(TAG, "switcher clicked | auto_enabled = " + (auto_enabled ? "true" : "false"));
+                        if (auto_enabled) {
+                            theme_container_static.setVisibility(View.GONE);
+                            theme_container_auto.setVisibility(View.VISIBLE);
+                        } else {
+                            theme_container_static.setVisibility(View.VISIBLE);
+                            theme_container_auto.setVisibility(View.GONE);
                         }
+                    });
+                    switcher_container.setOnClickListener(view -> {
+                        Log.v(TAG, "switcher_container clicked");
+                        switcher.setChecked(!auto_enabled);
+                    });
+                    switcher.setChecked(auto_enabled);
+                    if (auto_enabled) {
+                        theme_container_static.setVisibility(View.GONE);
+                        theme_container_auto.setVisibility(View.VISIBLE);
+                    } else {
+                        theme_container_static.setVisibility(View.VISIBLE);
+                        theme_container_auto.setVisibility(View.GONE);
                     }
-                });
-            }
+                    // setup static theme selector
+                    Static.T.runOnUiThread(() -> {
+                        for (int i = 0; i < pref_theme_titles.size(); i++) {
+                            final RadioButton radioButton = (RadioButton) inflate(R.layout.layout_theme_picker_static_item);
+                            radioButton.setText(pref_theme_titles.get(i));
+                            radioButton.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                                if (isChecked) {
+                                    static_value = pref_theme_values.get(pref_theme_titles.indexOf(buttonView.getText().toString().trim()));
+                                }
+                            });
+                            theme_container_static.addView(radioButton);
+                            if (pref_theme_values.indexOf(static_value) == i) {
+                                ((RadioGroup) theme_container_static).check(radioButton.getId());
+                            }
+                        }
+                    });
+                    // setup automatic theme selector
+                    t1_time.setText(t1_hour + ":" + Static.ldgZero(t1_minutes));
+                    t1_time.setOnClickListener(view -> {
+                        Log.v(TAG, "t1_time clicked");
+                        showTimePicker(t1_hour, t1_minutes, (hours, minutes) -> {
+                            Log.v(TAG, "t1_time showTimePicker done | " + hours + " | " + minutes);
+                            t1_hour = hours;
+                            t1_minutes = minutes;
+                            t1_time.setText(t1_hour + ":" + Static.ldgZero(t1_minutes));
+                        });
+                    });
+                    t2_time.setText(t2_hour + ":" + Static.ldgZero(t2_minutes));
+                    t2_time.setOnClickListener(view -> showTimePicker(t2_hour, t2_minutes, (hours, minutes) -> {
+                        Log.v(TAG, "t2_time showTimePicker done | " + hours + " | " + minutes);
+                        t2_hour = hours;
+                        t2_minutes = minutes;
+                        t2_time.setText(t2_hour + ":" + Static.ldgZero(t2_minutes));
+                    }));
+                    t1_spinner.setText(pref_theme_titles.get(pref_theme_values.indexOf(t1_value)));
+                    t1_spinner.setOnClickListener(view -> showThemePicker(t1_value, theme -> {
+                        Log.v(TAG, "t1_spinner showThemePicker done | " + theme);
+                        t1_value = theme;
+                        t1_spinner.setText(pref_theme_titles.get(pref_theme_values.indexOf(t1_value)));
+                    }));
+                    t2_spinner.setText(pref_theme_titles.get(pref_theme_values.indexOf(t2_value)));
+                    t2_spinner.setOnClickListener(view -> showThemePicker(t2_value, theme -> {
+                        Log.v(TAG, "t2_spinner showThemePicker done | " + theme);
+                        t2_value = theme;
+                        t2_spinner.setText(pref_theme_titles.get(pref_theme_values.indexOf(t2_value)));
+                    }));
+                    // show picker
+                    Static.T.runOnUiThread(() -> new AlertDialog.Builder(context)
+                            .setTitle(R.string.theme)
+                            .setView(theme_layout)
+                            .setPositiveButton(R.string.accept, (dialog, which) -> Static.T.runThread(() -> {
+                                Log.v(TAG, "show picker accepted");
+                                String theme;
+                                if (auto_enabled) {
+                                    theme = t1_hour + ":" + Static.ldgZero(t1_minutes) + "#" + t1_value + "#" + t2_hour + ":" + Static.ldgZero(t2_minutes) + "#" + t2_value;
+                                } else {
+                                    theme = static_value;
+                                }
+                                cb.onDone(theme, getThemeDesc(context, theme));
+                            }))
+                            .create().show());
+                } catch (Exception e) {
+                    Static.error(e);
+                }
+            });
         });
     }
     private void showThemePicker(final String value, final ThemePickerCallback callback) {
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "showThemePicker | " + value);
-                new AlertDialog.Builder(context)
-                        .setTitle(R.string.theme)
-                        .setSingleChoiceItems(R.array.pref_theme_titles, pref_theme_values.indexOf(value), new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int position) {
-                                callback.onDone(pref_theme_values.get(position));
-                                dialogInterface.dismiss();
-                            }
-                        })
-                        .setNegativeButton(R.string.cancel, null)
-                        .create().show();
-            }
+        Static.T.runOnUiThread(() -> {
+            Log.v(TAG, "showThemePicker | " + value);
+            new AlertDialog.Builder(context)
+                    .setTitle(R.string.theme)
+                    .setSingleChoiceItems(R.array.pref_theme_titles, pref_theme_values.indexOf(value), (dialogInterface, position) -> {
+                        callback.onDone(pref_theme_values.get(position));
+                        dialogInterface.dismiss();
+                    })
+                    .setNegativeButton(R.string.cancel, null)
+                    .create().show();
         });
     }
     private void showTimePicker(final int hours, final int minutes, final TimePickerCallback callback) {
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "showTimePicker | " + hours + " | " + minutes);
-                new TimePickerDialog(context, new TimePickerDialog.OnTimeSetListener() {
-                    @Override
-                    public void onTimeSet(TimePicker timePicker, int hourOfDay, int minute) {
-                        callback.onDone(hourOfDay, minute);
-                    }
-                }, hours, minutes, true).show();
-            }
+        Static.T.runOnUiThread(() -> {
+            Log.v(TAG, "showTimePicker | " + hours + " | " + minutes);
+            new TimePickerDialog(context, (timePicker, hourOfDay, minute) -> callback.onDone(hourOfDay, minute), hours, minutes, true).show();
         });
     }
 

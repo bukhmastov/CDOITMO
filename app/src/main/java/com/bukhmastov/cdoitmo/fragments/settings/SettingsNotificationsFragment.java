@@ -96,19 +96,16 @@ public class SettingsNotificationsFragment extends SettingsTemplatePreferencesFr
         preferences.add(new PreferenceBasic("pref_open_system_notifications_settings", null, R.string.pref_open_system_notifications_settings, false, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                Static.T.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            Intent intent = new Intent("android.settings.APP_NOTIFICATION_SETTINGS");
-                            intent.putExtra("android.provider.extra.APP_PACKAGE", activity.getPackageName());
-                            intent.putExtra("app_package", activity.getPackageName());
-                            intent.putExtra("app_uid", activity.getApplicationInfo().uid);
-                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            activity.startActivity(intent);
-                        } catch (Exception e) {
-                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                        }
+                Static.T.runOnUiThread(() -> {
+                    try {
+                        Intent intent = new Intent("android.settings.APP_NOTIFICATION_SETTINGS");
+                        intent.putExtra("android.provider.extra.APP_PACKAGE", activity.getPackageName());
+                        intent.putExtra("app_package", activity.getPackageName());
+                        intent.putExtra("app_uid", activity.getApplicationInfo().uid);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        activity.startActivity(intent);
+                    } catch (Exception e) {
+                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 });
             }

@@ -68,16 +68,13 @@ public class WebViewActivity extends AppCompatActivity {
         if (swipe != null) {
             swipe.setColorSchemeColors(Static.colorAccent);
             swipe.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
-            swipe.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-                @Override
-                public void onRefresh() {
-                    if (swipe != null && swipe.isRefreshing()) {
-                        swipe.setRefreshing(false);
-                    }
-                    if (webview != null) {
-                        webview.stopLoading();
-                        webview.reload();
-                    }
+            swipe.setOnRefreshListener(() -> {
+                if (swipe != null && swipe.isRefreshing()) {
+                    swipe.setRefreshing(false);
+                }
+                if (webview != null) {
+                    webview.stopLoading();
+                    webview.reload();
                 }
             });
         }

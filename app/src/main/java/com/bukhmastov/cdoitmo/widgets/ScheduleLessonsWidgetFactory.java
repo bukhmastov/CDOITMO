@@ -13,7 +13,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.Calendar;
-import java.util.Objects;
 
 class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFactory {
 
@@ -71,7 +70,7 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
                             final JSONObject lesson = lessons.getJSONObject(j);
                             if (lesson != null) {
                                 if (week == -1 || (lesson.getInt("week") == 2 || lesson.getInt("week") == week)) {
-                                    if (!Objects.equals(lesson.getString("cdoitmo_type"), "reduced")) {
+                                    if (!"reduced".equals(lesson.getString("cdoitmo_type"))) {
                                         this.lessons.put(lesson);
                                     }
                                 }
@@ -85,7 +84,7 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
                 this.lessons = new JSONArray();
             }
         } catch (Exception e) {
-            if (!(Objects.equals(e.getMessage(), "settings cannot be null") || Objects.equals(e.getMessage(), "content cannot be null"))) {
+            if (!("settings cannot be null".equals(e.getMessage()) || "content cannot be null".equals(e.getMessage()))) {
                 Static.error(e);
             }
             this.lessons = new JSONArray();

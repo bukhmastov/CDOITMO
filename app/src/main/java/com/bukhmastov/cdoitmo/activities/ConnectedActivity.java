@@ -167,26 +167,23 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     }
 
     public void updateToolbar(final Context context, final String title, final Integer image) {
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                ActionBar actionBar = getSupportActionBar();
-                if (actionBar != null) {
-                    actionBar.setTitle(title);
-                    if (image == null || !Static.tablet) {
-                        actionBar.setHomeButtonEnabled(true);
-                        actionBar.setLogo(null);
-                    } else {
-                        actionBar.setHomeButtonEnabled(false);
-                        Drawable drawable = getDrawable(image);
-                        if (drawable != null) {
-                            try {
-                                drawable.setTint(Static.resolveColor(context, R.attr.colorToolbarContent));
-                            } catch (Exception ignore) {
-                                // ignore
-                            }
-                            actionBar.setLogo(drawable);
+        Static.T.runOnUiThread(() -> {
+            ActionBar actionBar = getSupportActionBar();
+            if (actionBar != null) {
+                actionBar.setTitle(title);
+                if (image == null || !Static.tablet) {
+                    actionBar.setHomeButtonEnabled(true);
+                    actionBar.setLogo(null);
+                } else {
+                    actionBar.setHomeButtonEnabled(false);
+                    Drawable drawable = getDrawable(image);
+                    if (drawable != null) {
+                        try {
+                            drawable.setTint(Static.resolveColor(context, R.attr.colorToolbarContent));
+                        } catch (Exception ignore) {
+                            // ignore
                         }
+                        actionBar.setLogo(drawable);
                     }
                 }
             }

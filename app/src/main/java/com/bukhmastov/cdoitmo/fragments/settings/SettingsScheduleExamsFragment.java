@@ -26,18 +26,10 @@ public class SettingsScheduleExamsFragment extends SettingsTemplatePreferencesFr
         preferences.add(new PreferenceBasic("pref_schedule_exams_default", "{\"query\":\"auto\",\"title\":\"\"}", R.string.default_schedule, true, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                new SettingsScheduleExams(activity, preference, new SettingsScheduleExams.Callback() {
-                    @Override
-                    public void onDone(final String value) {
-                        Static.T.runThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Storage.pref.put(activity, "pref_schedule_exams_default", value);
-                                callback.onSetSummary(activity, value);
-                            }
-                        });
-                    }
-                }).show();
+                new SettingsScheduleExams(activity, preference, value -> Static.T.runThread(() -> {
+                    Storage.pref.put(activity, "pref_schedule_exams_default", value);
+                    callback.onSetSummary(activity, value);
+                })).show();
             }
             @Override
             public String onGetSummary(ConnectedActivity activity, String value) {
@@ -60,14 +52,11 @@ public class SettingsScheduleExamsFragment extends SettingsTemplatePreferencesFr
         preferences.add(new PreferenceBasic("pref_schedule_exams_clear_cache", null, R.string.clear_schedule_cache, false, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                Static.T.runThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Log.v(TAG, "pref_schedule_exams_clear_cache clicked");
-                        if (activity != null) {
-                            boolean success = Storage.file.cache.clear(activity, "schedule_exams");
-                            Static.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
-                        }
+                Static.T.runThread(() -> {
+                    Log.v(TAG, "pref_schedule_exams_clear_cache clicked");
+                    if (activity != null) {
+                        boolean success = Storage.file.cache.clear(activity, "schedule_exams");
+                        Static.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
                     }
                 });
             }

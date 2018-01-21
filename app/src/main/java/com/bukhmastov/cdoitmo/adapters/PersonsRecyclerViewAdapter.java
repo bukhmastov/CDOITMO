@@ -90,17 +90,14 @@ public class PersonsRecyclerViewAdapter extends UniversityRecyclerViewAdapter {
                         .transform(new CircularTransformation())
                         .into((ImageView) avatarView);
             }
-            viewHolder.container.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    try {
-                        Intent intent = new Intent(context, UniversityPersonCardActivity.class);
-                        intent.putExtra("pid", item.data.getInt("persons_id"));
-                        intent.putExtra("person", item.data.toString());
-                        context.startActivity(intent);
-                    } catch (Exception e) {
-                        Static.error(e);
-                    }
+            viewHolder.container.setOnClickListener(v -> {
+                try {
+                    Intent intent = new Intent(context, UniversityPersonCardActivity.class);
+                    intent.putExtra("pid", item.data.getInt("persons_id"));
+                    intent.putExtra("person", item.data.toString());
+                    context.startActivity(intent);
+                } catch (Exception e) {
+                    Static.error(e);
                 }
             });
         } catch (Exception e) {

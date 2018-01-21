@@ -3,7 +3,6 @@ package com.bukhmastov.cdoitmo.fragments;
 import android.content.Context;
 import android.support.v4.app.Fragment;
 import android.util.SparseArray;
-import android.view.View;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.ConnectedActivity;
@@ -101,18 +100,12 @@ public abstract class ScheduleLessonsTabHostFragment extends Fragment {
     }
     public static void invalidateOnDemand() {
         if (!isActive() || activity == null) return;
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "invalidateOnDemand");
-                Static.snackBar(activity.findViewById(android.R.id.content), activity.getString(R.string.schedule_refresh), activity.getString(R.string.update), new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        setQuery(getQuery());
-                        invalidate();
-                    }
-                });
-            }
+        Static.T.runThread(() -> {
+            Log.v(TAG, "invalidateOnDemand");
+            Static.snackBar(activity.findViewById(android.R.id.content), activity.getString(R.string.schedule_refresh), activity.getString(R.string.update), v -> {
+                setQuery(getQuery());
+                invalidate();
+            });
         });
     }
 }

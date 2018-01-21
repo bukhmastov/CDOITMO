@@ -33,12 +33,9 @@ public class PikaActivity extends AppCompatActivity {
         }
         View pika_container = findViewById(R.id.pika_container);
         if (pika_container != null) {
-            pika_container.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    finish();
-                    overridePendingTransition(R.anim.zoom_bottom_in, R.anim.zoom_bottom_out);
-                }
+            pika_container.setOnClickListener(v -> {
+                finish();
+                overridePendingTransition(R.anim.zoom_bottom_in, R.anim.zoom_bottom_out);
             });
         }
     }
@@ -57,5 +54,4 @@ public class PikaActivity extends AppCompatActivity {
     protected void attachBaseContext(Context context) {
         super.attachBaseContext(CtxWrapper.wrap(context));
     }
-
 }

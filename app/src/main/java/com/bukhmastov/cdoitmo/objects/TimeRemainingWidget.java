@@ -9,7 +9,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.Calendar;
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -91,7 +90,7 @@ public class TimeRemainingWidget {
                     long day = -1;
                     for (int i = 0; i < lessons.length(); i++) {
                         JSONObject lesson = lessons.getJSONObject(i);
-                        if (Objects.equals(lesson.getString("cdoitmo_type"), "reduced")) continue;
+                        if ("reduced".equals(lesson.getString("cdoitmo_type"))) continue;
                         int lesson_week = lesson.getInt("week");
                         if (!(week == lesson_week || lesson_week == 2 || week < 0)) continue;
                         Matcher timeStart = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(lesson.getString("timeStart"));

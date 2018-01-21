@@ -210,6 +210,9 @@ public class Log {
         return "[" + Thread.currentThread().getName() + ":" + Thread.currentThread().getId() + "] " + (log == null ? "" : log);
     }
 
+    public static String lString(String str) {
+        return str == null ? "<null>" : str;
+    }
     public static String lBool(boolean bool) {
         return bool ? "true" : "false";
     }

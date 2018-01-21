@@ -98,53 +98,39 @@ public class FacultiesRecyclerViewAdapter extends UniversityRecyclerViewAdapter 
                 final String[] sites = (getString(item.data, "site") == null ? "" : getString(item.data, "site")).trim().split("[;,]");
                 final String working_hours = getString(item.data, "working_hours");
                 if (address != null) {
-                    structure_container.addView(getConnectContainer(R.drawable.ic_location, address.trim(), is_first_container, new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            try {
-                                context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + address)));
-                            } catch (ActivityNotFoundException e) {
-                                Static.toast(context, context.getString(R.string.failed_to_start_geo_activity));
-                            }
+                    structure_container.addView(getConnectContainer(R.drawable.ic_location, address.trim(), is_first_container, v -> {
+                        try {
+                            context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + address)));
+                        } catch (ActivityNotFoundException e) {
+                            Static.toast(context, context.getString(R.string.failed_to_start_geo_activity));
                         }
                     }));
                     is_first_container = false;
                 }
                 for (final String phone : phones) {
                     if (phone != null && !phone.trim().isEmpty()) {
-                        structure_container.addView(getConnectContainer(R.drawable.ic_phone, phone.trim(), is_first_container, new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + phone.trim()));
-                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                context.startActivity(intent);
-                            }
+                        structure_container.addView(getConnectContainer(R.drawable.ic_phone, phone.trim(), is_first_container, v -> {
+                            Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + phone.trim()));
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            context.startActivity(intent);
                         }));
                         is_first_container = false;
                     }
                 }
                 for (final String email : emails) {
                     if (email != null && !email.trim().isEmpty()) {
-                        structure_container.addView(getConnectContainer(R.drawable.ic_email, email.trim(), is_first_container, new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                Intent emailIntent = new Intent(Intent.ACTION_SEND);
-                                emailIntent.setType("message/rfc822");
-                                emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{email.trim()});
-                                context.startActivity(Intent.createChooser(emailIntent, context.getString(R.string.send_mail) + "..."));
-                            }
+                        structure_container.addView(getConnectContainer(R.drawable.ic_email, email.trim(), is_first_container, v -> {
+                            Intent emailIntent = new Intent(Intent.ACTION_SEND);
+                            emailIntent.setType("message/rfc822");
+                            emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{email.trim()});
+                            context.startActivity(Intent.createChooser(emailIntent, context.getString(R.string.send_mail) + "..."));
                         }));
                         is_first_container = false;
                     }
                 }
                 for (final String site : sites) {
                     if (site != null && !site.trim().isEmpty()) {
-                        structure_container.addView(getConnectContainer(R.drawable.ic_web, site.trim(), is_first_container, new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(site.trim())));
-                            }
-                        }));
+                        structure_container.addView(getConnectContainer(R.drawable.ic_web, site.trim(), is_first_container, v -> context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(site.trim())))));
                         is_first_container = false;
                     }
                 }
@@ -182,41 +168,32 @@ public class FacultiesRecyclerViewAdapter extends UniversityRecyclerViewAdapter 
                 final String[] deanery_phones = (getString(item.data, "deanery_phone") == null ? "" : getString(item.data, "deanery_phone")).trim().split("[;,]");
                 final String[] deanery_emails = (getString(item.data, "deanery_email") == null ? "" : getString(item.data, "deanery_email")).trim().split("[;,]");
                 if (deanery_address != null && !deanery_address.trim().isEmpty()) {
-                    structure_container.addView(getConnectContainer(R.drawable.ic_location, deanery_address.trim(), is_first_container, new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            try {
-                                context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + deanery_address)));
-                            } catch (ActivityNotFoundException e) {
-                                Static.toast(context, context.getString(R.string.failed_to_start_geo_activity));
-                            }
+                    structure_container.addView(getConnectContainer(R.drawable.ic_location, deanery_address.trim(), is_first_container, v -> {
+                        try {
+                            context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + deanery_address)));
+                        } catch (ActivityNotFoundException e) {
+                            Static.toast(context, context.getString(R.string.failed_to_start_geo_activity));
                         }
                     }));
                     is_first_container = false;
                 }
                 for (final String deanery_phone : deanery_phones) {
                     if (deanery_phone != null && !deanery_phone.trim().isEmpty()) {
-                        structure_container.addView(getConnectContainer(R.drawable.ic_phone, deanery_phone.trim(), is_first_container, new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + deanery_phone.trim()));
-                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                context.startActivity(intent);
-                            }
+                        structure_container.addView(getConnectContainer(R.drawable.ic_phone, deanery_phone.trim(), is_first_container, v -> {
+                            Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + deanery_phone.trim()));
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            context.startActivity(intent);
                         }));
                         is_first_container = false;
                     }
                 }
                 for (final String deanery_email : deanery_emails) {
                     if (deanery_email != null && !deanery_email.trim().isEmpty()) {
-                        structure_container.addView(getConnectContainer(R.drawable.ic_email, deanery_email.trim(), is_first_container, new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                Intent emailIntent = new Intent(Intent.ACTION_SEND);
-                                emailIntent.setType("message/rfc822");
-                                emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{deanery_email.trim()});
-                                context.startActivity(Intent.createChooser(emailIntent, context.getString(R.string.send_mail) + "..."));
-                            }
+                        structure_container.addView(getConnectContainer(R.drawable.ic_email, deanery_email.trim(), is_first_container, v -> {
+                            Intent emailIntent = new Intent(Intent.ACTION_SEND);
+                            emailIntent.setType("message/rfc822");
+                            emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{deanery_email.trim()});
+                            context.startActivity(Intent.createChooser(emailIntent, context.getString(R.string.send_mail) + "..."));
                         }));
                         is_first_container = false;
                     }
@@ -246,27 +223,21 @@ public class FacultiesRecyclerViewAdapter extends UniversityRecyclerViewAdapter 
                                 .transform(new CircularTransformation())
                                 .into((ImageView) layout_university_persons_list_item.findViewById(R.id.avatar));
                     }
-                    layout_university_persons_list_item.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            Intent intent = new Intent(context, UniversityPersonCardActivity.class);
-                            intent.putExtra("pid", head_pid);
-                            context.startActivity(intent);
-                        }
+                    layout_university_persons_list_item.setOnClickListener(v -> {
+                        Intent intent = new Intent(context, UniversityPersonCardActivity.class);
+                        intent.putExtra("pid", head_pid);
+                        context.startActivity(intent);
                     });
                     structure_container.addView(layout_university_persons_list_item);
                     is_first_container = false;
                 }
                 for (final String head_email : head_emails) {
                     if (head_email != null && !head_email.trim().isEmpty()) {
-                        structure_container.addView(getConnectContainer(R.drawable.ic_email, head_email.trim(), is_first_container, new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                Intent emailIntent = new Intent(Intent.ACTION_SEND);
-                                emailIntent.setType("message/rfc822");
-                                emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{head_email.trim()});
-                                context.startActivity(Intent.createChooser(emailIntent, context.getString(R.string.send_mail) + "..."));
-                            }
+                        structure_container.addView(getConnectContainer(R.drawable.ic_email, head_email.trim(), is_first_container, v -> {
+                            Intent emailIntent = new Intent(Intent.ACTION_SEND);
+                            emailIntent.setType("message/rfc822");
+                            emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{head_email.trim()});
+                            context.startActivity(Intent.createChooser(emailIntent, context.getString(R.string.send_mail) + "..."));
                         }));
                         is_first_container = false;
                     }
@@ -299,12 +270,9 @@ public class FacultiesRecyclerViewAdapter extends UniversityRecyclerViewAdapter 
                     if (title != null && !title.trim().isEmpty()) {
                         View view = inflate(R.layout.layout_university_faculties_divisions_list_item);
                         ((TextView) view.findViewById(R.id.title)).setText(title);
-                        view.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                if (onDivisionClickListener != null) {
-                                    onDivisionClickListener.onClick(id);
-                                }
+                        view.setOnClickListener(v -> {
+                            if (onDivisionClickListener != null) {
+                                onDivisionClickListener.onClick(id);
                             }
                         });
                         structure_container.addView(view);

@@ -38,13 +38,7 @@ public class ScheduleLessonsSearchActivity extends SearchActivity {
         Log.v(TAG, "getSuggestions | query=" + query);
         try {
             ArrayList<Suggestion> suggestions = new ArrayList<>();
-            String recentString = Storage.file.perm.get(this, "schedule_lessons#recent");
-            JSONArray recent;
-            if (recentString.isEmpty()) {
-                recent = new JSONArray();
-            } else {
-                recent = new JSONArray(recentString);
-            }
+            JSONArray recent = Static.string2jsonArray(Storage.file.perm.get(this, "schedule_lessons#recent", ""));
             int counter = 0;
             for (int i = 0; i < recent.length(); i++) {
                 String item = recent.getString(i);
@@ -82,41 +76,32 @@ public class ScheduleLessonsSearchActivity extends SearchActivity {
     @Override
     void onDone(final String query, final String label) {
         final ScheduleLessonsSearchActivity self = this;
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "onDone | query=" + query + " | label=" + label);
-                try {
-                    String recentString = Storage.file.perm.get(self, "schedule_lessons#recent");
-                    JSONArray recent;
-                    if (recentString.isEmpty()) {
-                        recent = new JSONArray();
-                    } else {
-                        recent = new JSONArray(recentString);
+        Static.T.runThread(() -> {
+            Log.v(TAG, "onDone | query=" + query + " | label=" + label);
+            try {
+                JSONArray recent = Static.string2jsonArray(Storage.file.perm.get(this, "schedule_lessons#recent", ""));
+                for (int i = 0; i < recent.length(); i++) {
+                    if (recent.getString(i).equals(label)) {
+                        recent.remove(i);
+                        break;
                     }
-                    for (int i = 0; i < recent.length(); i++) {
-                        if (recent.getString(i).equals(label)) {
-                            recent.remove(i);
-                            break;
-                        }
-                    }
-                    for (int i = recent.length() - 1; i >= 0; i--) {
-                        recent.put(i + 1, recent.getString(i));
-                    }
-                    recent.put(0, label);
-                    if (recent.length() > maxCountOfSuggestionsToStore) {
-                        for (int i = maxCountOfSuggestionsToStore; i < recent.length(); i++) {
-                            recent.remove(i);
-                        }
-                    }
-                    Storage.file.perm.put(self, "schedule_lessons#recent", recent.toString());
-                } catch (Exception e) {
-                    Static.error(e);
-                    Storage.file.perm.delete(self, "schedule_lessons#recent");
                 }
-                ScheduleLessonsTabHostFragment.setQuery(query);
-                ScheduleLessonsTabHostFragment.invalidate();
+                for (int i = recent.length() - 1; i >= 0; i--) {
+                    recent.put(i + 1, recent.getString(i));
+                }
+                recent.put(0, label);
+                if (recent.length() > maxCountOfSuggestionsToStore) {
+                    for (int i = maxCountOfSuggestionsToStore; i < recent.length(); i++) {
+                        recent.remove(i);
+                    }
+                }
+                Storage.file.perm.put(self, "schedule_lessons#recent", recent.toString());
+            } catch (Exception e) {
+                Static.error(e);
+                Storage.file.perm.delete(self, "schedule_lessons#recent");
             }
+            ScheduleLessonsTabHostFragment.setQuery(query);
+            ScheduleLessonsTabHostFragment.invalidate();
         });
     }
 

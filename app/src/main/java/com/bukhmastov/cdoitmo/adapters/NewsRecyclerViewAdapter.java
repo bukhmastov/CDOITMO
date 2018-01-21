@@ -8,7 +8,6 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
@@ -105,7 +104,7 @@ public class NewsRecyclerViewAdapter extends UniversityRecyclerViewAdapter {
                     if (news_image != null) {
                         Picasso.with(context)
                                 .load(img)
-                                .into((ImageView) viewHolder.container.findViewById(R.id.news_image), new Callback() {
+                                .into(viewHolder.container.findViewById(R.id.news_image), new Callback() {
                                     @Override
                                     public void onSuccess() {}
                                     @Override
@@ -184,16 +183,13 @@ public class NewsRecyclerViewAdapter extends UniversityRecyclerViewAdapter {
                 }
             }
             if (webview != null && !webview.trim().isEmpty()) {
-                viewHolder.container.findViewById(R.id.news_click).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Intent intent = new Intent(context, WebViewActivity.class);
-                        Bundle extras = new Bundle();
-                        extras.putString("url", webview.trim());
-                        extras.putString("title", context.getString(R.string.news));
-                        intent.putExtras(extras);
-                        context.startActivity(intent);
-                    }
+                viewHolder.container.findViewById(R.id.news_click).setOnClickListener(v -> {
+                    Intent intent = new Intent(context, WebViewActivity.class);
+                    Bundle extras = new Bundle();
+                    extras.putString("url", webview.trim());
+                    extras.putString("title", context.getString(R.string.news));
+                    intent.putExtras(extras);
+                    context.startActivity(intent);
                 });
             }
         } catch (Exception e) {
@@ -232,7 +228,7 @@ public class NewsRecyclerViewAdapter extends UniversityRecyclerViewAdapter {
                     if (news_image != null) {
                         Picasso.with(context)
                                 .load(img)
-                                .into((ImageView) viewHolder.container.findViewById(R.id.news_image), new Callback() {
+                                .into(viewHolder.container.findViewById(R.id.news_image), new Callback() {
                                     @Override
                                     public void onSuccess() {}
                                     @Override
@@ -304,16 +300,13 @@ public class NewsRecyclerViewAdapter extends UniversityRecyclerViewAdapter {
                 }
             }
             if (webview != null && !webview.trim().isEmpty()) {
-                viewHolder.container.findViewById(R.id.news_click).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Intent intent = new Intent(context, WebViewActivity.class);
-                        Bundle extras = new Bundle();
-                        extras.putString("url", webview.trim());
-                        extras.putString("title", context.getString(R.string.news));
-                        intent.putExtras(extras);
-                        context.startActivity(intent);
-                    }
+                viewHolder.container.findViewById(R.id.news_click).setOnClickListener(v -> {
+                    Intent intent = new Intent(context, WebViewActivity.class);
+                    Bundle extras = new Bundle();
+                    extras.putString("url", webview.trim());
+                    extras.putString("title", context.getString(R.string.news));
+                    intent.putExtras(extras);
+                    context.startActivity(intent);
                 });
             }
         } catch (Exception e) {

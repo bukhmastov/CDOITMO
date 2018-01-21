@@ -76,12 +76,7 @@ public class Wipe {
             case 71: {
                 Storage.pref.delete(context, "pref_open_drawer_at_startup");
                 Storage.pref.put(context, "pref_first_launch", Storage.file.general.get(context, "users#list", "").trim().isEmpty());
-                Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
-                    @Override
-                    public void run() {
-                        new ProtocolTracker(context).reset();
-                    }
-                });
+                Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> new ProtocolTracker(context).reset());
                 break;
             }
             case 78: {

@@ -3,6 +3,7 @@ package com.bukhmastov.cdoitmo.fragments;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -46,124 +47,103 @@ public class AboutFragment extends ConnectedFragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_about, container, false);
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         TextView app_version = view.findViewById(R.id.app_version);
         if (app_version != null) {
             app_version.setText(activity.getString(R.string.version) + " " + Static.versionName + " (" + Static.versionCode + " " + activity.getString(R.string.build) + ")");
         }
-
+        // ----------
         View block_pika = view.findViewById(R.id.block_pika);
         if (block_pika != null) {
-            block_pika.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (counterToPika >= tapsToPika) {
-                        if (random.nextInt(200) % 10 == 0) {
-                            startActivity(new Intent(activity, PikaActivity.class));
-                        }
-                    } else {
-                        counterToPika++;
+            block_pika.setOnClickListener(v -> {
+                if (counterToPika >= tapsToPika) {
+                    if (random.nextInt(200) % 10 == 0) {
+                        startActivity(new Intent(activity, PikaActivity.class));
                     }
+                } else {
+                    counterToPika++;
                 }
             });
         }
-
+        // ----------
         View open_log = view.findViewById(R.id.open_log);
         if (open_log != null) {
-            open_log.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    activity.openFragment(ConnectedActivity.TYPE.stackable, LogFragment.class, null);
-                }
-            });
+            open_log.setOnClickListener(v -> activity.openFragment(ConnectedActivity.TYPE.stackable, LogFragment.class, null));
         }
-
+        // ----------
         View block_send_mail = view.findViewById(R.id.block_send_mail);
         if (block_send_mail != null) {
-            block_send_mail.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Log.v(TAG, "send_mail clicked");
-                    try {
-                        Intent emailIntent = new Intent(Intent.ACTION_SEND);
-                        emailIntent.setType("message/rfc822");
-                        emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{"bukhmastov-alex@ya.ru"});
-                        startActivity(Intent.createChooser(emailIntent, activity.getString(R.string.send_mail) + "..."));
-                    } catch (Exception e) {
-                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                    }
+            block_send_mail.setOnClickListener(v -> {
+                Log.v(TAG, "send_mail clicked");
+                FirebaseAnalyticsProvider.logBasicEvent(activity, "send mail clicked");
+                try {
+                    Intent emailIntent = new Intent(Intent.ACTION_SEND);
+                    emailIntent.setType("message/rfc822");
+                    emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{"bukhmastov-alex@ya.ru"});
+                    startActivity(Intent.createChooser(emailIntent, activity.getString(R.string.send_mail) + "..."));
+                } catch (Exception e) {
+                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 }
             });
         }
-
+        // ----------
         View block_send_vk = view.findViewById(R.id.block_send_vk);
         if (block_send_vk != null) {
-            block_send_vk.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Log.v(TAG, "send_vk clicked");
-                    try {
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://vk.com/write9780714")));
-                    } catch (Exception e) {
-                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                    }
+            block_send_vk.setOnClickListener(v -> {
+                Log.v(TAG, "send_vk clicked");
+                FirebaseAnalyticsProvider.logBasicEvent(activity, "send vk clicked");
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://vk.com/write9780714")));
+                } catch (Exception e) {
+                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 }
             });
         }
-
+        // ----------
         View block_rate = view.findViewById(R.id.block_rate);
         if (block_rate != null) {
-            block_rate.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Log.v(TAG, "block_rate clicked");
-                    FirebaseAnalyticsProvider.logBasicEvent(activity, "app rate clicked");
+            block_rate.setOnClickListener(v -> {
+                Log.v(TAG, "block_rate clicked");
+                FirebaseAnalyticsProvider.logBasicEvent(activity, "app rate clicked");
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.bukhmastov.cdoitmo")));
+                } catch (Exception e) {
                     try {
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.bukhmastov.cdoitmo")));
-                    } catch (Exception e) {
-                        try {
-                            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.bukhmastov.cdoitmo")));
-                        } catch (Exception e2) {
-                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                        }
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.bukhmastov.cdoitmo")));
+                    } catch (Exception e2) {
+                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 }
             });
         }
-
+        // ----------
         View block_github = view.findViewById(R.id.block_github);
         if (block_github != null) {
-            block_github.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Log.v(TAG, "block_github clicked");
-                    FirebaseAnalyticsProvider.logBasicEvent(activity, "view github clicked");
-                    try {
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/bukhmastov/cdoitmo")));
-                    } catch (Exception e) {
-                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                    }
+            block_github.setOnClickListener(v -> {
+                Log.v(TAG, "block_github clicked");
+                FirebaseAnalyticsProvider.logBasicEvent(activity, "view github clicked");
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/bukhmastov/cdoitmo")));
+                } catch (Exception e) {
+                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 }
             });
         }
-
+        // ----------
         View block_donate = view.findViewById(R.id.block_donate);
         if (block_donate != null) {
-            block_donate.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Log.v(TAG, "block_donate clicked  ┬─┬ ノ( ゜-゜ノ)");
-                    FirebaseAnalyticsProvider.logBasicEvent(activity, "donate clicked");
-                    try {
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://yasobe.ru/na/cdoifmo")));
-                    } catch (Exception e) {
-                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                    }
+            block_donate.setOnClickListener(v -> {
+                Log.v(TAG, "block_donate clicked  ┬─┬ ノ( ゜-゜ノ)");
+                FirebaseAnalyticsProvider.logBasicEvent(activity, "donate clicked");
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://yasobe.ru/na/cdoifmo")));
+                } catch (Exception e) {
+                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 }
             });
         }

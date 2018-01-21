@@ -3,7 +3,6 @@ package com.bukhmastov.cdoitmo.adapters;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -14,7 +13,6 @@ import android.util.SparseIntArray;
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -197,148 +195,105 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
             } else {
                 ((ViewGroup) schedule_lessons_week.getParent()).removeView(schedule_lessons_week);
             }
-            viewHolder.container.findViewById(R.id.schedule_lessons_menu).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(final View view) {
-                    Static.T.runThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            final String cache_token = query == null ? null : query.toLowerCase();
-                            final boolean cached = cache_token != null && !Storage.file.cache.get(activity, "schedule_lessons#lessons#" + cache_token, "").isEmpty();
-                            Static.T.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
+            viewHolder.container.findViewById(R.id.schedule_lessons_menu).setOnClickListener(view -> Static.T.runThread(() -> {
+                final String cache_token = query == null ? null : query.toLowerCase();
+                final boolean cached = cache_token != null && !Storage.file.cache.get(activity, "schedule_lessons#lessons#" + cache_token, "").isEmpty();
+                Static.T.runOnUiThread(() -> {
+                    try {
+                        final PopupMenu popup = new PopupMenu(activity, view);
+                        final Menu menu = popup.getMenu();
+                        popup.getMenuInflater().inflate(R.menu.schedule_lessons, menu);
+                        menu.findItem(cached ? R.id.add_to_cache : R.id.remove_from_cache).setVisible(false);
+                        popup.setOnMenuItemClickListener(item1 -> {
+                            Log.v(TAG, "menu | popup item | clicked | " + item1.getTitle().toString());
+                            switch (item1.getItemId()) {
+                                case R.id.add_to_cache:
+                                case R.id.remove_from_cache: {
                                     try {
-                                        final PopupMenu popup = new PopupMenu(activity, view);
-                                        final Menu menu = popup.getMenu();
-                                        popup.getMenuInflater().inflate(R.menu.schedule_lessons, menu);
-                                        menu.findItem(cached ? R.id.add_to_cache : R.id.remove_from_cache).setVisible(false);
-                                        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                                            @Override
-                                            public boolean onMenuItemClick(final MenuItem item) {
-                                                Log.v(TAG, "menu | popup item | clicked | " + item.getTitle().toString());
-                                                switch (item.getItemId()) {
-                                                    case R.id.add_to_cache:
-                                                    case R.id.remove_from_cache: {
-                                                        try {
-                                                            if (cache_token == null) {
-                                                                Static.snackBar(activity, activity.getString(R.string.cache_failed));
-                                                            } else {
-                                                                if (Storage.file.cache.exists(activity, "schedule_lessons#lessons#" + cache_token)) {
-                                                                    if (Storage.file.cache.delete(activity, "schedule_lessons#lessons#" + cache_token)) {
-                                                                        Static.snackBar(activity, activity.getString(R.string.cache_false));
-                                                                    } else {
-                                                                        Static.snackBar(activity, activity.getString(R.string.cache_failed));
-                                                                    }
-                                                                } else {
-                                                                    if (data == null) {
-                                                                        Static.snackBar(activity, activity.getString(R.string.cache_failed));
-                                                                    } else {
-                                                                        if (Storage.file.cache.put(activity, "schedule_lessons#lessons#" + cache_token, data.toString())) {
-                                                                            Static.snackBar(activity, activity.getString(R.string.cache_true));
-                                                                        } else {
-                                                                            Static.snackBar(activity, activity.getString(R.string.cache_failed));
-                                                                        }
-                                                                    }
-                                                                }
-                                                            }
-                                                        } catch (Exception e) {
-                                                            Static.error(e);
-                                                            Static.snackBar(activity, activity.getString(R.string.cache_failed));
-                                                        }
-                                                        break;
-                                                    }
-                                                    case R.id.add_lesson: {
-                                                        Static.T.runThread(new Runnable() {
-                                                            @Override
-                                                            public void run() {
-                                                                try {
-                                                                    if (!ScheduleLessons.createLesson(activity, query, data.getString("title"), type, Static.getWeekDay(), new JSONObject(), null)) {
-                                                                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                                                    }
-                                                                } catch (Exception e) {
-                                                                    Static.error(e);
-                                                                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                                                }
-                                                            }
-                                                        });
-                                                        break;
-                                                    }
-                                                    case R.id.share_changes: {
-                                                        Static.T.runThread(new Runnable() {
-                                                            @Override
-                                                            public void run() {
-                                                                try {
-                                                                    final Bundle extras = new Bundle();
-                                                                    extras.putString("action", "share");
-                                                                    extras.putString("query", query);
-                                                                    extras.putString("type", type);
-                                                                    extras.putString("title", data.getString("title"));
-                                                                    Static.T.runOnUiThread(new Runnable() {
-                                                                        @Override
-                                                                        public void run() {
-                                                                            activity.openActivityOrFragment(ScheduleLessonsShareFragment.class, extras);
-                                                                        }
-                                                                    });
-                                                                } catch (Exception e) {
-                                                                    Static.error(e);
-                                                                }
-                                                            }
-                                                        });
-                                                        break;
-                                                    }
-                                                    case R.id.remove_changes: {
-                                                        Static.T.runThread(new Runnable() {
-                                                            @Override
-                                                            public void run() {
-                                                                new AlertDialog.Builder(activity)
-                                                                        .setTitle(R.string.pref_schedule_lessons_clear_additional_title)
-                                                                        .setMessage(R.string.pref_schedule_lessons_clear_direct_additional_warning)
-                                                                        .setIcon(R.drawable.ic_warning)
-                                                                        .setPositiveButton(R.string.proceed, new DialogInterface.OnClickListener() {
-                                                                            @Override
-                                                                            public void onClick(DialogInterface dialog, int which) {
-                                                                                Static.T.runThread(new Runnable() {
-                                                                                    @Override
-                                                                                    public void run() {
-                                                                                        Log.v(TAG, "menu | popup item | remove_changes | dialog accepted");
-                                                                                        if (!ScheduleLessons.clearChanges(activity, query, new Static.SimpleCallback() {
-                                                                                            @Override
-                                                                                            public void onCall() {
-                                                                                                ScheduleLessonsTabHostFragment.invalidateOnDemand();
-                                                                                            }
-                                                                                        })) {
-                                                                                            Static.snackBar(activity, activity.getString(R.string.no_changes));
-                                                                                        }
-                                                                                    }
-                                                                                });
-                                                                            }
-                                                                        })
-                                                                        .setNegativeButton(R.string.cancel, null)
-                                                                        .create().show();
-                                                            }
-                                                        });
-                                                        break;
-                                                    }
-                                                    case R.id.open_settings: {
-                                                        activity.openActivityOrFragment(ConnectedActivity.TYPE.stackable, SettingsScheduleLessonsFragment.class, null);
-                                                        break;
+                                        if (cache_token == null) {
+                                            Static.snackBar(activity, activity.getString(R.string.cache_failed));
+                                        } else {
+                                            if (Storage.file.cache.exists(activity, "schedule_lessons#lessons#" + cache_token)) {
+                                                if (Storage.file.cache.delete(activity, "schedule_lessons#lessons#" + cache_token)) {
+                                                    Static.snackBar(activity, activity.getString(R.string.cache_false));
+                                                } else {
+                                                    Static.snackBar(activity, activity.getString(R.string.cache_failed));
+                                                }
+                                            } else {
+                                                if (data == null) {
+                                                    Static.snackBar(activity, activity.getString(R.string.cache_failed));
+                                                } else {
+                                                    if (Storage.file.cache.put(activity, "schedule_lessons#lessons#" + cache_token, data.toString())) {
+                                                        Static.snackBar(activity, activity.getString(R.string.cache_true));
+                                                    } else {
+                                                        Static.snackBar(activity, activity.getString(R.string.cache_failed));
                                                     }
                                                 }
-                                                return false;
                                             }
-                                        });
-                                        popup.show();
+                                        }
                                     } catch (Exception e) {
                                         Static.error(e);
-                                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                        Static.snackBar(activity, activity.getString(R.string.cache_failed));
                                     }
+                                    break;
                                 }
-                            });
-                        }
-                    });
-                }
-            });
+                                case R.id.add_lesson: {
+                                    Static.T.runThread(() -> {
+                                        try {
+                                            if (!ScheduleLessons.createLesson(activity, query, data.getString("title"), type, Static.getWeekDay(), new JSONObject(), null)) {
+                                                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                            }
+                                        } catch (Exception e) {
+                                            Static.error(e);
+                                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                        }
+                                    });
+                                    break;
+                                }
+                                case R.id.share_changes: {
+                                    Static.T.runThread(() -> {
+                                        try {
+                                            final Bundle extras = new Bundle();
+                                            extras.putString("action", "share");
+                                            extras.putString("query", query);
+                                            extras.putString("type", type);
+                                            extras.putString("title", data.getString("title"));
+                                            Static.T.runOnUiThread(() -> activity.openActivityOrFragment(ScheduleLessonsShareFragment.class, extras));
+                                        } catch (Exception e) {
+                                            Static.error(e);
+                                        }
+                                    });
+                                    break;
+                                }
+                                case R.id.remove_changes: {
+                                    Static.T.runThread(() -> new AlertDialog.Builder(activity)
+                                            .setTitle(R.string.pref_schedule_lessons_clear_additional_title)
+                                            .setMessage(R.string.pref_schedule_lessons_clear_direct_additional_warning)
+                                            .setIcon(R.drawable.ic_warning)
+                                            .setPositiveButton(R.string.proceed, (dialog, which) -> Static.T.runThread(() -> {
+                                                Log.v(TAG, "menu | popup item | remove_changes | dialog accepted");
+                                                if (!ScheduleLessons.clearChanges(activity, query, ScheduleLessonsTabHostFragment::invalidateOnDemand)) {
+                                                    Static.snackBar(activity, activity.getString(R.string.no_changes));
+                                                }
+                                            }))
+                                            .setNegativeButton(R.string.cancel, null)
+                                            .create().show());
+                                    break;
+                                }
+                                case R.id.open_settings: {
+                                    activity.openActivityOrFragment(ConnectedActivity.TYPE.stackable, SettingsScheduleLessonsFragment.class, null);
+                                    break;
+                                }
+                            }
+                            return false;
+                        });
+                        popup.show();
+                    } catch (Exception e) {
+                        Static.error(e);
+                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                    }
+                });
+            }));
         } catch (Exception e) {
             Static.error(e);
         }
@@ -376,125 +331,89 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
             // badges
             viewHolder.container.findViewById(R.id.lesson_reduced_icon).setVisibility(isReduced ? View.VISIBLE : View.GONE);
             viewHolder.container.findViewById(R.id.lesson_synthetic_icon).setVisibility(isSynthetic ? View.VISIBLE : View.GONE);
-            viewHolder.container.findViewById(R.id.lesson_touch_icon).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    try {
-                        Log.v(TAG, "lesson_touch_icon clicked");
-                        final String group = getMenuTitle(lesson, "group");
-                        final String teacher = getMenuTitle(lesson, "teacher");
-                        final String teacher_id = getMenuTitle(lesson, "teacher", "teacher_id");
-                        final String room = getMenuTitle(lesson, "room");
-                        final String building = getMenuTitle(lesson, "building");
-                        final PopupMenu popup = new PopupMenu(activity, view);
-                        final Menu menu = popup.getMenu();
-                        popup.getMenuInflater().inflate(R.menu.schedule_lessons_item, menu);
-                        bindMenuItem(menu, R.id.open_group, group == null ? null : activity.getString(R.string.group) + " " + group);
-                        bindMenuItem(menu, R.id.open_teacher, teacher == null || teacher_id == null ? null : teacher);
-                        bindMenuItem(menu, R.id.open_room, room == null ? null : activity.getString(R.string.room) + " " + room);
-                        bindMenuItem(menu, R.id.open_location, building);
-                        bindMenuItem(menu, R.id.reduce_lesson, cdoitmo_type.equals("normal") ? activity.getString(R.string.reduce_lesson) : null);
-                        bindMenuItem(menu, R.id.restore_lesson, cdoitmo_type.equals("reduced") ? activity.getString(R.string.restore_lesson) : null);
-                        bindMenuItem(menu, R.id.delete_lesson, cdoitmo_type.equals("synthetic") ? activity.getString(R.string.delete_lesson) : null);
-                        bindMenuItem(menu, R.id.edit_lesson, cdoitmo_type.equals("synthetic") ? activity.getString(R.string.edit_lesson) : null);
-                        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                            @Override
-                            public boolean onMenuItemClick(MenuItem item) {
-                                Log.v(TAG, "lesson_touch_icon | popup.MenuItem clicked | " + item.getTitle().toString());
-                                switch (item.getItemId()) {
-                                    case R.id.open_group: callback.onCall(group); break;
-                                    case R.id.open_teacher: callback.onCall(teacher_id); break;
-                                    case R.id.open_room: callback.onCall(room); break;
-                                    case R.id.open_location:
-                                        try {
-                                            activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=Санкт-Петербург, " + building)));
-                                        } catch (ActivityNotFoundException e) {
-                                            Static.snackBar(activity, activity.getString(R.string.failed_to_start_geo_activity));
-                                        }
-                                        break;
-                                    case R.id.reduce_lesson:
-                                        Static.T.runThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                if (!ScheduleLessons.reduceLesson(activity, query, weekday, lesson, new Static.SimpleCallback() {
-                                                    @Override
-                                                    public void onCall() {
-                                                        ScheduleLessonsTabHostFragment.invalidateOnDemand();
-                                                    }
-                                                })) {
-                                                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                                }
-                                            }
-                                        });
-                                        break;
-                                    case R.id.restore_lesson:
-                                        Static.T.runThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                if (!ScheduleLessons.restoreLesson(activity, query, weekday, lesson, new Static.SimpleCallback() {
-                                                    @Override
-                                                    public void onCall() {
-                                                        ScheduleLessonsTabHostFragment.invalidateOnDemand();
-                                                    }
-                                                })) {
-                                                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                                }
-                                            }
-                                        });
-                                        break;
-                                    case R.id.delete_lesson:
-                                        Static.T.runThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                if (!ScheduleLessons.deleteLesson(activity, query, weekday, lesson, new Static.SimpleCallback() {
-                                                    @Override
-                                                    public void onCall() {
-                                                        ScheduleLessonsTabHostFragment.invalidateOnDemand();
-                                                    }
-                                                })) {
-                                                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                                }
-                                            }
-                                        });
-                                        break;
-                                    case R.id.copy_lesson:
-                                        Static.T.runThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                try {
-                                                    if (!ScheduleLessons.createLesson(activity, query, data.getString("title"), ScheduleLessonsRecyclerViewAdapter.this.type, weekday, lesson, null)) {
-                                                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                                    }
-                                                } catch (Exception e) {
-                                                    Static.error(e);
-                                                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                                }
-                                            }
-                                        });
-                                        break;
-                                    case R.id.edit_lesson:
-                                        Static.T.runThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                try {
-                                                    if (!ScheduleLessons.editLesson(activity, query, data.getString("title"), ScheduleLessonsRecyclerViewAdapter.this.type, weekday, lesson, null)) {
-                                                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                                    }
-                                                } catch (Exception e) {
-                                                    Static.error(e);
-                                                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                                }
-                                            }
-                                        });
-                                        break;
+            viewHolder.container.findViewById(R.id.lesson_touch_icon).setOnClickListener(view -> {
+                try {
+                    Log.v(TAG, "lesson_touch_icon clicked");
+                    final String group = getMenuTitle(lesson, "group");
+                    final String teacher = getMenuTitle(lesson, "teacher");
+                    final String teacher_id = getMenuTitle(lesson, "teacher", "teacher_id");
+                    final String room = getMenuTitle(lesson, "room");
+                    final String building = getMenuTitle(lesson, "building");
+                    final PopupMenu popup = new PopupMenu(activity, view);
+                    final Menu menu = popup.getMenu();
+                    popup.getMenuInflater().inflate(R.menu.schedule_lessons_item, menu);
+                    bindMenuItem(menu, R.id.open_group, group == null ? null : activity.getString(R.string.group) + " " + group);
+                    bindMenuItem(menu, R.id.open_teacher, teacher == null || teacher_id == null ? null : teacher);
+                    bindMenuItem(menu, R.id.open_room, room == null ? null : activity.getString(R.string.room) + " " + room);
+                    bindMenuItem(menu, R.id.open_location, building);
+                    bindMenuItem(menu, R.id.reduce_lesson, cdoitmo_type.equals("normal") ? activity.getString(R.string.reduce_lesson) : null);
+                    bindMenuItem(menu, R.id.restore_lesson, cdoitmo_type.equals("reduced") ? activity.getString(R.string.restore_lesson) : null);
+                    bindMenuItem(menu, R.id.delete_lesson, cdoitmo_type.equals("synthetic") ? activity.getString(R.string.delete_lesson) : null);
+                    bindMenuItem(menu, R.id.edit_lesson, cdoitmo_type.equals("synthetic") ? activity.getString(R.string.edit_lesson) : null);
+                    popup.setOnMenuItemClickListener(item1 -> {
+                        Log.v(TAG, "lesson_touch_icon | popup.MenuItem clicked | " + item1.getTitle().toString());
+                        switch (item1.getItemId()) {
+                            case R.id.open_group: callback.onCall(group); break;
+                            case R.id.open_teacher: callback.onCall(teacher_id); break;
+                            case R.id.open_room: callback.onCall(room); break;
+                            case R.id.open_location:
+                                try {
+                                    activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=Санкт-Петербург, " + building)));
+                                } catch (ActivityNotFoundException e) {
+                                    Static.snackBar(activity, activity.getString(R.string.failed_to_start_geo_activity));
                                 }
-                                return false;
-                            }
-                        });
-                        popup.show();
-                    } catch (Exception e){
-                        Static.error(e);
-                    }
+                                break;
+                            case R.id.reduce_lesson:
+                                Static.T.runThread(() -> {
+                                    if (!ScheduleLessons.reduceLesson(activity, query, weekday, lesson, ScheduleLessonsTabHostFragment::invalidateOnDemand)) {
+                                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                    }
+                                });
+                                break;
+                            case R.id.restore_lesson:
+                                Static.T.runThread(() -> {
+                                    if (!ScheduleLessons.restoreLesson(activity, query, weekday, lesson, ScheduleLessonsTabHostFragment::invalidateOnDemand)) {
+                                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                    }
+                                });
+                                break;
+                            case R.id.delete_lesson:
+                                Static.T.runThread(() -> {
+                                    if (!ScheduleLessons.deleteLesson(activity, query, weekday, lesson, ScheduleLessonsTabHostFragment::invalidateOnDemand)) {
+                                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                    }
+                                });
+                                break;
+                            case R.id.copy_lesson:
+                                Static.T.runThread(() -> {
+                                    try {
+                                        if (!ScheduleLessons.createLesson(activity, query, data.getString("title"), ScheduleLessonsRecyclerViewAdapter.this.type, weekday, lesson, null)) {
+                                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                        }
+                                    } catch (Exception e) {
+                                        Static.error(e);
+                                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                    }
+                                });
+                                break;
+                            case R.id.edit_lesson:
+                                Static.T.runThread(() -> {
+                                    try {
+                                        if (!ScheduleLessons.editLesson(activity, query, data.getString("title"), ScheduleLessonsRecyclerViewAdapter.this.type, weekday, lesson, null)) {
+                                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                        }
+                                    } catch (Exception e) {
+                                        Static.error(e);
+                                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                    }
+                                });
+                                break;
+                        }
+                        return false;
+                    });
+                    popup.show();
+                } catch (Exception e){
+                    Static.error(e);
                 }
             });
             // title and time
@@ -638,12 +557,9 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
                 teacher += " (" + post + ")";
             }
             ((TextView) viewHolder.container.findViewById(R.id.teacher_picker_title)).setText(teacher);
-            viewHolder.container.findViewById(R.id.teacher_picker_item).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    if (pid != null && !pid.isEmpty()) {
-                        callback.onCall(pid);
-                    }
+            viewHolder.container.findViewById(R.id.teacher_picker_item).setOnClickListener(view -> {
+                if (pid != null && !pid.isEmpty()) {
+                    callback.onCall(pid);
                 }
             });
         } catch (Exception e) {

@@ -1,12 +1,8 @@
 package com.bukhmastov.cdoitmo.firebase;
 
-import android.support.annotation.NonNull;
-
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 
@@ -48,63 +44,46 @@ public class FirebaseConfigProvider {
 
     public static void getString(final String key, final Result result) {
         Log.v(TAG, "getString | key=" + key);
-        fetch(new Callback() {
-            @Override
-            public void onComplete(boolean successful) {
-                String value = getFirebaseRemoteConfig().getString(key);
-                Log.v(TAG, "getString | onComplete | key=" + key + " | value=" + value);
-                result.onResult(value);
-            }
+        fetch(successful -> {
+            String value = getFirebaseRemoteConfig().getString(key);
+            Log.v(TAG, "getString | onComplete | key=" + key + " | value=" + value);
+            result.onResult(value);
         });
     }
     public static void getJson(final String key, final ResultJson result) {
         Log.v(TAG, "getJson | key=" + key);
-        fetch(new Callback() {
-            @Override
-            public void onComplete(boolean successful) {
-                try {
-                    String value = getFirebaseRemoteConfig().getString(key);
-                    Log.v(TAG, "getJson | onComplete | key=" + key + " | value=" + value);
-                    if (value == null || value.isEmpty()) {
-                        result.onResult(null);
-                        return;
-                    }
-                    Object object = new JSONTokener(value).nextValue();
-                    if (object instanceof JSONObject) {
-                        result.onResult((JSONObject) object);
-                    } else {
-                        result.onResult(null);
-                    }
-                } catch (Exception ignore) {
+        fetch(successful -> {
+            try {
+                String value = getFirebaseRemoteConfig().getString(key);
+                Log.v(TAG, "getJson | onComplete | key=" + key + " | value=" + value);
+                if (value == null || value.isEmpty()) {
+                    result.onResult(null);
+                    return;
+                }
+                Object object = new JSONTokener(value).nextValue();
+                if (object instanceof JSONObject) {
+                    result.onResult((JSONObject) object);
+                } else {
                     result.onResult(null);
                 }
+            } catch (Exception ignore) {
+                result.onResult(null);
             }
         });
     }
 
     private static void fetch(final Callback callback) {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "fetch");
-                getFirebaseRemoteConfig().fetch(DEBUG ? 0 : cacheExpiration)
-                        .addOnCompleteListener(new OnCompleteListener<Void>() {
-                            @Override
-                            public void onComplete(@NonNull final Task<Void> task) {
-                                Static.T.runThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        boolean successful = task.isSuccessful();
-                                        Log.v(TAG, "fetch | onComplete | successful=" + Log.lBool(successful));
-                                        if (successful) {
-                                            getFirebaseRemoteConfig().activateFetched();
-                                        }
-                                        callback.onComplete(successful);
-                                    }
-                                });
-                            }
-                        });
-            }
+        Static.T.runThread(() -> {
+            Log.v(TAG, "fetch");
+            getFirebaseRemoteConfig().fetch(DEBUG ? 0 : cacheExpiration)
+                    .addOnCompleteListener(task -> Static.T.runThread(() -> {
+                        boolean successful = task.isSuccessful();
+                        Log.v(TAG, "fetch | onComplete | successful=" + Log.lBool(successful));
+                        if (successful) {
+                            getFirebaseRemoteConfig().activateFetched();
+                        }
+                        callback.onComplete(successful);
+                    }));
         });
     }
 }

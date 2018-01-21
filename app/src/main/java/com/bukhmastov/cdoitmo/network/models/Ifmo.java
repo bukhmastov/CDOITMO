@@ -12,38 +12,29 @@ import java.util.Map;
 public abstract class Ifmo extends Client {
 
     protected static void g(final Context context, final String url, final Map<String, String> query, final RawHandler rawHandler) {
-        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    _g(url, getHeaders(context), query, rawHandler);
-                } catch (Throwable throwable) {
-                    rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
-                }
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+            try {
+                _g(url, getHeaders(context), query, rawHandler);
+            } catch (Throwable throwable) {
+                rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
             }
         });
     }
     protected static void p(final Context context, final String url, final Map<String, String> params, final RawHandler rawHandler) {
-        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    _p(url, getHeaders(context), null, params, rawHandler);
-                } catch (Throwable throwable) {
-                    rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
-                }
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+            try {
+                _p(url, getHeaders(context), null, params, rawHandler);
+            } catch (Throwable throwable) {
+                rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
             }
         });
     }
     protected static void gJson(final Context context, final String url, final Map<String, String> query, final RawJsonHandler rawJsonHandler) {
-        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    _gJson(url, getHeaders(context), query, rawJsonHandler);
-                } catch (Throwable throwable) {
-                    rawJsonHandler.onError(STATUS_CODE_EMPTY, null, throwable);
-                }
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+            try {
+                _gJson(url, getHeaders(context), query, rawJsonHandler);
+            } catch (Throwable throwable) {
+                rawJsonHandler.onError(STATUS_CODE_EMPTY, null, throwable);
             }
         });
     }

@@ -114,16 +114,13 @@ public class EventsRecyclerViewAdapter extends UniversityRecyclerViewAdapter {
                 Static.removeView(countViewContainerView);
             }
             if (webview != null && !webview.trim().isEmpty()) {
-                viewHolder.container.findViewById(R.id.news_click).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Intent intent = new Intent(context, WebViewActivity.class);
-                        Bundle extras = new Bundle();
-                        extras.putString("url", webview.trim());
-                        extras.putString("title", context.getString(R.string.events));
-                        intent.putExtras(extras);
-                        context.startActivity(intent);
-                    }
+                viewHolder.container.findViewById(R.id.news_click).setOnClickListener(v -> {
+                    Intent intent = new Intent(context, WebViewActivity.class);
+                    Bundle extras = new Bundle();
+                    extras.putString("url", webview.trim());
+                    extras.putString("title", context.getString(R.string.events));
+                    intent.putExtras(extras);
+                    context.startActivity(intent);
                 });
             }
         } catch (Exception e) {

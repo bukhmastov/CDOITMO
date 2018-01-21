@@ -1,11 +1,9 @@
 package com.bukhmastov.cdoitmo.fragments.settings;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
-import android.view.View;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.ConnectedActivity;
@@ -34,31 +32,17 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
         preferences.add(new PreferenceBasic("pref_theme", "light", R.string.theme, true, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                Static.T.runThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Log.v(TAG, "pref_theme clicked");
-                        final String theme = Storage.pref.get(activity, "pref_theme", "light");
-                        new ThemeUtil(activity, theme, new ThemeUtil.Callback() {
-                            @Override
-                            public void onDone(final String theme, final String desc) {
-                                Static.T.runThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        Storage.pref.put(activity, "pref_theme", theme);
-                                        callback.onSetSummary(activity, desc);
-                                        Static.snackBar(activity, activity.getString(R.string.restart_required), activity.getString(R.string.restart), new View.OnClickListener() {
-                                            @Override
-                                            public void onClick(View view) {
-                                                Static.updateAppTheme(activity);
-                                                Static.reLaunch(activity);
-                                            }
-                                        });
-                                    }
-                                });
-                            }
-                        }).show();
-                    }
+                Static.T.runThread(() -> {
+                    Log.v(TAG, "pref_theme clicked");
+                    final String theme = Storage.pref.get(activity, "pref_theme", "light");
+                    new ThemeUtil(activity, theme, (theme1, desc) -> Static.T.runThread(() -> {
+                        Storage.pref.put(activity, "pref_theme", theme1);
+                        callback.onSetSummary(activity, desc);
+                        Static.snackBar(activity, activity.getString(R.string.restart_required), activity.getString(R.string.restart), view -> {
+                            Static.updateAppTheme(activity);
+                            Static.reLaunch(activity);
+                        });
+                    })).show();
                 });
             }
             @Override
@@ -112,23 +96,20 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
         preferences.add(new PreferenceBasic("pref_open_system_settings", null, R.string.pref_open_system_settings, false, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                Static.T.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
+                Static.T.runOnUiThread(() -> {
+                    try {
+                        Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                        intent.setData(android.net.Uri.parse("package:" + activity.getPackageName()));
+                        intent.addCategory(Intent.CATEGORY_DEFAULT);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        activity.startActivity(intent);
+                    } catch (Exception e) {
                         try {
-                            Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                            intent.setData(android.net.Uri.parse("package:" + activity.getPackageName()));
-                            intent.addCategory(Intent.CATEGORY_DEFAULT);
+                            Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS);
                             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                             activity.startActivity(intent);
-                        } catch (Exception e) {
-                            try {
-                                Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS);
-                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                activity.startActivity(intent);
-                            } catch (Exception ignore) {
-                                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                            }
+                        } catch (Exception ignore) {
+                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                         }
                     }
                 });
@@ -141,24 +122,18 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
         preferences.add(new PreferenceBasic("pref_reset_application", null, R.string.pref_reset_application_summary, false, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                Static.T.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Log.v(TAG, "pref_reset_application clicked");
-                        new AlertDialog.Builder(activity)
-                                .setTitle(R.string.pref_reset_application_summary)
-                                .setMessage(R.string.pref_reset_application_warning)
-                                .setIcon(R.drawable.ic_warning)
-                                .setPositiveButton(R.string.proceed, new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        Log.v(TAG, "pref_reset_application dialog accepted");
-                                        Static.hardReset(activity);
-                                    }
-                                })
-                                .setNegativeButton(R.string.cancel, null)
-                                .create().show();
-                    }
+                Static.T.runOnUiThread(() -> {
+                    Log.v(TAG, "pref_reset_application clicked");
+                    new AlertDialog.Builder(activity)
+                            .setTitle(R.string.pref_reset_application_summary)
+                            .setMessage(R.string.pref_reset_application_warning)
+                            .setIcon(R.drawable.ic_warning)
+                            .setPositiveButton(R.string.proceed, (dialog, which) -> {
+                                Log.v(TAG, "pref_reset_application dialog accepted");
+                                Static.hardReset(activity);
+                            })
+                            .setNegativeButton(R.string.cancel, null)
+                            .create().show();
                 });
             }
             @Override

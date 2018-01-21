@@ -85,13 +85,10 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
                 if (action_schedule_lessons_search != null && !action_schedule_lessons_search.isVisible()) {
                     Log.v(TAG, "Revealing action_schedule_lessons_search");
                     action_schedule_lessons_search.setVisible(true);
-                    action_schedule_lessons_search.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-                        @Override
-                        public boolean onMenuItemClick(MenuItem item) {
-                            Log.v(TAG, "action_schedule_lessons_search clicked");
-                            startActivity(new Intent(activity, ScheduleLessonsSearchActivity.class));
-                            return false;
-                        }
+                    action_schedule_lessons_search.setOnMenuItemClickListener(item -> {
+                        Log.v(TAG, "action_schedule_lessons_search clicked");
+                        startActivity(new Intent(activity, ScheduleLessonsSearchActivity.class));
+                        return false;
                     });
                 }
             }
@@ -123,69 +120,63 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
 
     private void load() {
         final FragmentManager fragmentManager = getChildFragmentManager();
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                if (activity == null) {
-                    Log.w(TAG, "load | activity is null");
-                    return;
-                }
-                final int week = Static.getWeek(activity);
-                if (ScheduleLessonsTabHostFragment.getQuery() == null) {
-                    ScheduleLessonsTabHostFragment.setQuery(ScheduleLessons.getDefaultScope(activity, ScheduleLessons.TYPE));
-                }
-                Static.T.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
+        Static.T.runThread(() -> {
+            if (activity == null) {
+                Log.w(TAG, "load | activity is null");
+                return;
+            }
+            final int week = Static.getWeek(activity);
+            if (ScheduleLessonsTabHostFragment.getQuery() == null) {
+                ScheduleLessonsTabHostFragment.setQuery(ScheduleLessons.getDefaultScope(activity, ScheduleLessons.TYPE));
+            }
+            Static.T.runOnUiThread(() -> {
+                try {
+                    if (activity == null) {
+                        Log.w(TAG, "load | activity is null");
+                        return;
+                    }
+                    // setup pager adapter
+                    final TabLayout fixed_tabs = activity.findViewById(R.id.fixed_tabs);
+                    if (fixed_tabs == null) {
+                        loaded = false;
+                        return;
+                    }
+                    fixed_tabs.setVisibility(View.VISIBLE);
+                    draw(activity, R.layout.layout_schedule_lessons_tabs);
+                    final ViewPager schedule_view = activity.findViewById(R.id.schedule_pager);
+                    if (schedule_view != null) {
+                        schedule_view.setAdapter(new PagerLessonsAdapter(fragmentManager, activity));
+                        schedule_view.addOnPageChangeListener(ScheduleLessonsFragment.this);
+                        fixed_tabs.setupWithViewPager(schedule_view);
+                    }
+                    // select tab
+                    TabLayout.Tab tab = null;
+                    if (activeTab != -1) {
                         try {
-                            if (activity == null) {
-                                Log.w(TAG, "load | activity is null");
-                                return;
-                            }
-                            // setup pager adapter
-                            final TabLayout fixed_tabs = activity.findViewById(R.id.fixed_tabs);
-                            if (fixed_tabs == null) {
-                                loaded = false;
-                                return;
-                            }
-                            fixed_tabs.setVisibility(View.VISIBLE);
-                            draw(activity, R.layout.layout_schedule_lessons_tabs);
-                            final ViewPager schedule_view = activity.findViewById(R.id.schedule_pager);
-                            if (schedule_view != null) {
-                                schedule_view.setAdapter(new PagerLessonsAdapter(fragmentManager, activity));
-                                schedule_view.addOnPageChangeListener(ScheduleLessonsFragment.this);
-                                fixed_tabs.setupWithViewPager(schedule_view);
-                            }
-                            // select tab
-                            TabLayout.Tab tab = null;
-                            if (activeTab != -1) {
-                                try {
-                                    tab = fixed_tabs.getTabAt(activeTab);
-                                } catch (Exception e) {
-                                    activeTab = -1;
-                                }
-                            }
-                            if (activeTab == -1) {
-                                int activeTabByDefault = Integer.parseInt(Storage.pref.get(activity, "pref_schedule_lessons_week", "-1"));
-                                if (activeTabByDefault == -1) {
-                                    tab = fixed_tabs.getTabAt(week >= 0 ? (week % 2) + 1 : 0);
-                                } else {
-                                    tab = fixed_tabs.getTabAt(activeTabByDefault);
-                                }
-                            }
-                            if (tab != null) tab.select();
+                            tab = fixed_tabs.getTabAt(activeTab);
                         } catch (Exception e) {
-                            Static.error(e);
-                            try {
-                                failed(activity);
-                            } catch (Exception e1) {
-                                loaded = false;
-                                Static.error(e1);
-                            }
+                            activeTab = -1;
                         }
                     }
-                });
-            }
+                    if (activeTab == -1) {
+                        int activeTabByDefault = Integer.parseInt(Storage.pref.get(activity, "pref_schedule_lessons_week", "-1"));
+                        if (activeTabByDefault == -1) {
+                            tab = fixed_tabs.getTabAt(week >= 0 ? (week % 2) + 1 : 0);
+                        } else {
+                            tab = fixed_tabs.getTabAt(activeTabByDefault);
+                        }
+                    }
+                    if (tab != null) tab.select();
+                } catch (Exception e) {
+                    Static.error(e);
+                    try {
+                        failed(activity);
+                    } catch (Exception e1) {
+                        loaded = false;
+                        Static.error(e1);
+                    }
+                }
+            });
         });
     }
     private void failed(Activity activity) {
@@ -195,12 +186,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
                 return;
             }
             View state_try_again = inflate(activity, R.layout.state_try_again);
-            state_try_again.findViewById(R.id.try_again_reload).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    load();
-                }
-            });
+            state_try_again.findViewById(R.id.try_again_reload).setOnClickListener(view -> load());
             draw(activity, state_try_again);
         } catch (Exception e) {
             Static.error(e);

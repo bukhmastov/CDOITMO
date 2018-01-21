@@ -20,46 +20,37 @@ public class IfmoClient extends Ifmo {
         get(context, DEFAULT_PROTOCOL, url, query, responseHandler);
     }
     public static void get(final Context context, final Protocol protocol, final String url, final Map<String, String> query, final ResponseHandler responseHandler) {
-        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "get | url=" + url);
-                if (Static.isOnline(context)) {
-                    responseHandler.onProgress(STATE_HANDLING);
-                    g(context, getAbsoluteUrl(protocol, url), query, new RawHandler() {
-                        @Override
-                        public void onDone(final int code, final okhttp3.Headers headers, final String response) {
-                            Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
-                                @Override
-                                public void run() {
-                                    Log.v(TAG, "get | url=" + url + " | success | statusCode=" + code);
-                                    if (code >= 500 && code < 600) {
-                                        responseHandler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
-                                        return;
-                                    }
-                                    responseHandler.onSuccess(code, new Headers(headers), response);
-                                }
-                            });
-                        }
-                        @Override
-                        public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
-                            Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
-                                @Override
-                                public void run() {
-                                    Log.v(TAG, "get | url=" + url + " | failure" + (throwable != null ? " | throwable=" + throwable.getMessage() : ""));
-                                    responseHandler.onFailure(code, new Headers(headers), FAILED_TRY_AGAIN);
-                                }
-                            });
-                        }
-                        @Override
-                        public void onNewRequest(Request request) {
-                            responseHandler.onNewRequest(request);
-                        }
-                    });
-                } else {
-                    Log.v(TAG, "get | url=" + url + " | offline");
-                    responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_OFFLINE);
-                }
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+            Log.v(TAG, "get | url=" + url);
+            if (Static.isOnline(context)) {
+                responseHandler.onProgress(STATE_HANDLING);
+                g(context, getAbsoluteUrl(protocol, url), query, new RawHandler() {
+                    @Override
+                    public void onDone(final int code, final okhttp3.Headers headers, final String response) {
+                        Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+                            Log.v(TAG, "get | url=" + url + " | success | statusCode=" + code);
+                            if (code >= 500 && code < 600) {
+                                responseHandler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
+                                return;
+                            }
+                            responseHandler.onSuccess(code, new Headers(headers), response);
+                        });
+                    }
+                    @Override
+                    public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
+                        Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+                            Log.v(TAG, "get | url=" + url + " | failure | throwable=" + Log.lThrow(throwable));
+                            responseHandler.onFailure(code, new Headers(headers), FAILED_TRY_AGAIN);
+                        });
+                    }
+                    @Override
+                    public void onNewRequest(Request request) {
+                        responseHandler.onNewRequest(request);
+                    }
+                });
+            } else {
+                Log.v(TAG, "get | url=" + url + " | offline");
+                responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_OFFLINE);
             }
         });
     }

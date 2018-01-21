@@ -63,27 +63,21 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
         }
         View drw_container = findViewById(R.id.drw_container);
         if (drw_container != null) {
-            drw_container.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Log.v(TAG, "drw_container clicked");
-                    Intent intent = new Intent(getBaseContext(), MainActivity.class);
-                    intent.addFlags(Static.intentFlagRestart);
-                    intent.putExtra("action", "schedule_exams");
-                    intent.putExtra("action_extra", query);
-                    startActivity(intent);
-                    close();
-                }
+            drw_container.setOnClickListener(v -> {
+                Log.v(TAG, "drw_container clicked");
+                Intent intent = new Intent(getBaseContext(), MainActivity.class);
+                intent.addFlags(Static.intentFlagRestart);
+                intent.putExtra("action", "schedule_exams");
+                intent.putExtra("action_extra", query);
+                startActivity(intent);
+                close();
             });
         }
         View days_remaining_widget = findViewById(R.id.days_remaining_widget);
         if (days_remaining_widget != null) {
-            days_remaining_widget.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Log.v(TAG, "days_remaining_widget clicked");
-                    close();
-                }
+            days_remaining_widget.setOnClickListener(v -> {
+                Log.v(TAG, "days_remaining_widget clicked");
+                close();
             });
         }
     }
@@ -230,104 +224,86 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
 
     private void begin() {
         final DaysRemainingWidgetActivity self = this;
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "begin");
-                message(activity.getString(R.string.loaded));
-                if (daysRemainingWidget != null) {
-                    daysRemainingWidget.stop();
-                    daysRemainingWidget = null;
-                }
-                daysRemainingWidget = new DaysRemainingWidget(self);
-                daysRemainingWidget.start(self, schedule);
+        Static.T.runThread(() -> {
+            Log.v(TAG, "begin");
+            message(activity.getString(R.string.loaded));
+            if (daysRemainingWidget != null) {
+                daysRemainingWidget.stop();
+                daysRemainingWidget = null;
             }
+            daysRemainingWidget = new DaysRemainingWidget(self);
+            daysRemainingWidget.start(self, schedule);
         });
     }
     private void close() {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "close");
-                if (requestHandle != null) {
-                    requestHandle.cancel();
-                }
-                finish();
+        Static.T.runThread(() -> {
+            Log.v(TAG, "close");
+            if (requestHandle != null) {
+                requestHandle.cancel();
             }
+            finish();
         });
     }
     private void setText(final int layout, final String text) {
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                TextView textView = findViewById(layout);
-                if (textView != null) {
-                    if (text == null || text.isEmpty()) {
-                        if (textView.getLayoutParams() == showMatch || textView.getLayoutParams() != hide) {
-                            textView.setLayoutParams(hide);
-                        }
-                    } else {
-                        textView.setText(text);
-                        if (textView.getLayoutParams() == hide || textView.getLayoutParams() != showMatch) {
-                            textView.setLayoutParams(showMatch);
-                        }
+        Static.T.runOnUiThread(() -> {
+            TextView textView = findViewById(layout);
+            if (textView != null) {
+                if (text == null || text.isEmpty()) {
+                    if (textView.getLayoutParams() == showMatch || textView.getLayoutParams() != hide) {
+                        textView.setLayoutParams(hide);
+                    }
+                } else {
+                    textView.setText(text);
+                    if (textView.getLayoutParams() == hide || textView.getLayoutParams() != showMatch) {
+                        textView.setLayoutParams(showMatch);
                     }
                 }
             }
         });
     }
     private void setText(final int container, final int layout, final String text) {
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    if (text == null) {
-                        View view = findViewById(container);
-                        if (view != null && (view.getLayoutParams() == show || view.getLayoutParams() != hide)) {
-                            view.setLayoutParams(hide);
-                        }
-                    } else {
-                        View view = findViewById(container);
-                        if (view != null && (view.getLayoutParams() == hide || view.getLayoutParams() != show)) {
-                            view.setLayoutParams(show);
-                        }
-                        TextView textView = findViewById(layout);
-                        if (textView != null) {
-                            textView.setText(text);
-                        }
+        Static.T.runOnUiThread(() -> {
+            try {
+                if (text == null) {
+                    View view = findViewById(container);
+                    if (view != null && (view.getLayoutParams() == show || view.getLayoutParams() != hide)) {
+                        view.setLayoutParams(hide);
                     }
-                } catch (Exception e) {
-                    Static.error(e);
+                } else {
+                    View view = findViewById(container);
+                    if (view != null && (view.getLayoutParams() == hide || view.getLayoutParams() != show)) {
+                        view.setLayoutParams(show);
+                    }
+                    TextView textView = findViewById(layout);
+                    if (textView != null) {
+                        textView.setText(text);
+                    }
                 }
+            } catch (Exception e) {
+                Static.error(e);
             }
         });
     }
     private void message(final String text) {
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                draw(R.layout.layout_days_remaining_widget_message);
-                is_message_displaying = true;
-                TextView drw_message = findViewById(R.id.drw_message);
-                if (drw_message != null) {
-                    drw_message.setText(text);
-                }
+        Static.T.runOnUiThread(() -> {
+            draw(R.layout.layout_days_remaining_widget_message);
+            is_message_displaying = true;
+            TextView drw_message = findViewById(R.id.drw_message);
+            if (drw_message != null) {
+                drw_message.setText(text);
             }
         });
     }
     private void draw(final int layoutId) {
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    ViewGroup vg = findViewById(R.id.drw_container);
-                    if (vg != null) {
-                        vg.removeAllViews();
-                        vg.addView(((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-                    }
-                } catch (Exception e){
-                    Static.error(e);
+        Static.T.runOnUiThread(() -> {
+            try {
+                ViewGroup vg = findViewById(R.id.drw_container);
+                if (vg != null) {
+                    vg.removeAllViews();
+                    vg.addView(((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
                 }
+            } catch (Exception e){
+                Static.error(e);
             }
         });
     }

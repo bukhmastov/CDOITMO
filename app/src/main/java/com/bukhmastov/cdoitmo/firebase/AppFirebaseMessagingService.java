@@ -32,25 +32,22 @@ public class AppFirebaseMessagingService extends FirebaseMessagingService {
     }
 
     private void sendNotification(final String title, final String text, final long timestamp) {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    if (title.isEmpty() || text.isEmpty()) {
-                        Log.w(TAG, "Got FCM message with empty title/text | title='" + title + "' | text='" + text + "'");
-                        return;
-                    }
-                    Log.v(TAG, "sendNotification | title=" + title + " | text=" + text);
-                    // prepare intent
-                    Intent intent = new Intent(getBaseContext(), MainActivity.class);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                    PendingIntent pendingIntent = PendingIntent.getActivity(getBaseContext(), 0, intent, PendingIntent.FLAG_ONE_SHOT);
-                    // prepare and send notification
-                    Notifications notifications = new Notifications(getBaseContext());
-                    notifications.notify(-1, notifications.getSystem(getBaseContext(), title, text, timestamp, true, pendingIntent));
-                } catch (Throwable e) {
-                    Static.error(e);
+        Static.T.runThread(() -> {
+            try {
+                if (title.isEmpty() || text.isEmpty()) {
+                    Log.w(TAG, "Got FCM message with empty title/text | title='" + title + "' | text='" + text + "'");
+                    return;
                 }
+                Log.v(TAG, "sendNotification | title=" + title + " | text=" + text);
+                // prepare intent
+                Intent intent = new Intent(getBaseContext(), MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                PendingIntent pendingIntent = PendingIntent.getActivity(getBaseContext(), 0, intent, PendingIntent.FLAG_ONE_SHOT);
+                // prepare and send notification
+                Notifications notifications = new Notifications(getBaseContext());
+                notifications.notify(-1, notifications.getSystem(getBaseContext(), title, text, timestamp, true, pendingIntent));
+            } catch (Throwable e) {
+                Static.error(e);
             }
         });
     }

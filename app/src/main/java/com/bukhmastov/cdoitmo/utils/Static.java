@@ -3,7 +3,6 @@ package com.bukhmastov.cdoitmo.utils;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
@@ -18,6 +17,7 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Process;
 import android.support.annotation.IdRes;
+import android.support.annotation.StringRes;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
@@ -29,7 +29,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
@@ -57,7 +56,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.UUID;
 
 public class Static {
@@ -131,14 +129,11 @@ public class Static {
             }
             log("runThread | run with Handler.post | id = " + th.thread.getId() + " | name = " + th.thread.getName());
             try {
-                new Handler(th.thread.getLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            runnable.run();
-                        } catch (Throwable throwable) {
-                            Log.exception("Run on " + th.thread.getName() + " thread failed", throwable);
-                        }
+                new Handler(th.thread.getLooper()).post(() -> {
+                    try {
+                        runnable.run();
+                    } catch (Throwable throwable) {
+                        Log.exception("Run on " + th.thread.getName() + " thread failed", throwable);
                     }
                 });
             } catch (Throwable throwable) {
@@ -159,14 +154,11 @@ public class Static {
             } else {
                 log("runOnUiThread | run with Handler.post");
                 try {
-                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                runnable.run();
-                            } catch (Throwable throwable) {
-                                Log.exception("Run on main thread failed", throwable);
-                            }
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        try {
+                            runnable.run();
+                        } catch (Throwable throwable) {
+                            Log.exception("Run on main thread failed", throwable);
                         }
                     });
                 } catch (Throwable throwable) {
@@ -253,15 +245,12 @@ public class Static {
             Log.w(TAG, "hardReset | context is null");
             return;
         }
-        Account.logoutPermanently(context, new SimpleCallback() {
-            @Override
-            public void onCall() {
-                Storage.file.all.reset(context);
-                Static.firstLaunch = true;
-                Static.OFFLINE_MODE = false;
-                MainActivity.loaded = false;
-                Static.reLaunch(context);
-            }
+        Account.logoutPermanently(context, () -> {
+            Storage.file.all.reset(context);
+            Static.firstLaunch = true;
+            Static.OFFLINE_MODE = false;
+            MainActivity.loaded = false;
+            Static.reLaunch(context);
         });
     }
     public static int resolveColor(Context context, int reference) throws Exception {
@@ -445,16 +434,16 @@ public class Static {
         }
         return hash;
     }
+    public static void toast(final Context context, @StringRes final int resId) {
+        toast(context, context.getString(resId));
+    }
     public static void toast(final Context context, final String text) {
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (context == null) {
-                    Log.w(TAG, "toast | context is null");
-                    return;
-                }
-                Toast.makeText(context, text, Toast.LENGTH_SHORT).show();
+        Static.T.runOnUiThread(() -> {
+            if (context == null) {
+                Log.w(TAG, "toast | context is null");
+                return;
             }
+            Toast.makeText(context, text, Toast.LENGTH_SHORT).show();
         });
     }
     public static void snackBar(Activity activity, String text) {
@@ -489,62 +478,43 @@ public class Static {
         Static.snackBar(activity.findViewById(layout), text, action, onClickListener);
     }
     public static void snackBar(final View layout, final String text, final String action, final View.OnClickListener onClickListener) {
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (layout != null) {
-                    Snackbar snackbar = Snackbar.make(layout, text, Snackbar.LENGTH_LONG);
-                    snackbar.getView().setBackgroundColor(Static.colorBackgroundSnackBar);
-                    if (action != null) snackbar.setAction(action, onClickListener);
-                    snackbar.show();
-                }
+        Static.T.runOnUiThread(() -> {
+            if (layout != null) {
+                Snackbar snackbar = Snackbar.make(layout, text, Snackbar.LENGTH_LONG);
+                snackbar.getView().setBackgroundColor(Static.colorBackgroundSnackBar);
+                if (action != null) snackbar.setAction(action, onClickListener);
+                snackbar.show();
             }
         });
     }
     public static void protocolChangesTrackSetup(final Context context, final int attempt) {
-        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "protocolChangesTrackSetup | attempt=" + attempt);
-                if (!Storage.pref.get(context, "pref_protocol_changes_track", true)) {
-                    Log.v(TAG, "protocolChangesTrackSetup | pref_protocol_changes_track=false");
-                    return;
-                }
-                if (attempt < 3) {
-                    DeIfmoRestClient.get(context, "eregisterlog?days=126", null, new RestResponseHandler() {
-                        @Override
-                        public void onSuccess(final int statusCode, Client.Headers headers, JSONObject responseObj, final JSONArray responseArr) {
-                            Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
-                                @Override
-                                public void run() {
-                                    if (statusCode == 200 && responseArr != null) {
-                                        new ProtocolConverter(context, responseArr, 18, new ProtocolConverter.response() {
-                                            @Override
-                                            public void finish(JSONObject json) {
-                                                Log.i(TAG, "protocolChangesTrackSetup | uploaded");
-                                            }
-                                        }).run();
-                                    } else {
-                                        protocolChangesTrackSetup(context, attempt + 1);
-                                    }
-                                }
-                            });
-                        }
-                        @Override
-                        public void onFailure(int statusCode, Client.Headers headers, int state) {
-                            Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
-                                @Override
-                                public void run() {
-                                    protocolChangesTrackSetup(context, attempt + 1);
-                                }
-                            });
-                        }
-                        @Override
-                        public void onProgress(int state) {}
-                        @Override
-                        public void onNewRequest(Client.Request request) {}
-                    });
-                }
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+            Log.v(TAG, "protocolChangesTrackSetup | attempt=" + attempt);
+            if (!Storage.pref.get(context, "pref_protocol_changes_track", true)) {
+                Log.v(TAG, "protocolChangesTrackSetup | pref_protocol_changes_track=false");
+                return;
+            }
+            if (attempt < 3) {
+                DeIfmoRestClient.get(context, "eregisterlog?days=126", null, new RestResponseHandler() {
+                    @Override
+                    public void onSuccess(final int statusCode, Client.Headers headers, JSONObject responseObj, final JSONArray responseArr) {
+                        Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+                            if (statusCode == 200 && responseArr != null) {
+                                new ProtocolConverter(context, responseArr, 18, json -> Log.i(TAG, "protocolChangesTrackSetup | uploaded")).run();
+                            } else {
+                                protocolChangesTrackSetup(context, attempt + 1);
+                            }
+                        });
+                    }
+                    @Override
+                    public void onFailure(int statusCode, Client.Headers headers, int state) {
+                        Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> protocolChangesTrackSetup(context, attempt + 1));
+                    }
+                    @Override
+                    public void onProgress(int state) {}
+                    @Override
+                    public void onNewRequest(Client.Request request) {}
+                });
             }
         });
     }
@@ -614,93 +584,75 @@ public class Static {
     }
     public static class NavigationMenu {
         public static void displayEnableDisableOfflineButton(final NavigationView navigationView) {
-            Static.T.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (navigationView != null) {
-                        try {
-                            Menu menu = navigationView.getMenu();
-                            MenuItem nav_enable_offline_mode = menu.findItem(R.id.nav_enable_offline_mode);
-                            MenuItem nav_disable_offline_mode = menu.findItem(R.id.nav_disable_offline_mode);
-                            if (Static.OFFLINE_MODE) {
-                                nav_enable_offline_mode.setVisible(false);
-                                nav_disable_offline_mode.setVisible(true);
-                            } else {
-                                nav_enable_offline_mode.setVisible(true);
-                                nav_disable_offline_mode.setVisible(false);
-                            }
-                        } catch (Exception e) {
-                            Static.error(e);
+            Static.T.runOnUiThread(() -> {
+                if (navigationView != null) {
+                    try {
+                        Menu menu = navigationView.getMenu();
+                        MenuItem nav_enable_offline_mode = menu.findItem(R.id.nav_enable_offline_mode);
+                        MenuItem nav_disable_offline_mode = menu.findItem(R.id.nav_disable_offline_mode);
+                        if (Static.OFFLINE_MODE) {
+                            nav_enable_offline_mode.setVisible(false);
+                            nav_disable_offline_mode.setVisible(true);
+                        } else {
+                            nav_enable_offline_mode.setVisible(true);
+                            nav_disable_offline_mode.setVisible(false);
                         }
+                    } catch (Exception e) {
+                        Static.error(e);
                     }
                 }
             });
         }
         public static void displayUserData(final Context context, final NavigationView navigationView) {
-            Static.T.runThread(new Runnable() {
-                @Override
-                public void run() {
-                    final String name = Storage.file.perm.get(context, "user#name");
-                    final String group = Storage.file.perm.get(context, "user#group");
-                    Static.T.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            displayUserData(navigationView, R.id.user_name, name);
-                            displayUserData(navigationView, R.id.user_group, group);
-                        }
-                    });
-                }
+            Static.T.runThread(() -> {
+                final String name = Storage.file.perm.get(context, "user#name");
+                final String group = Storage.file.perm.get(context, "user#group");
+                Static.T.runOnUiThread(() -> {
+                    displayUserData(navigationView, R.id.user_name, name);
+                    displayUserData(navigationView, R.id.user_group, group);
+                });
             });
         }
         public static void displayUserData(final NavigationView navigationView, final int id, final String text) {
-            Static.T.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (navigationView == null) return;
-                    View activity_main_nav_header = navigationView.getHeaderView(0);
-                    if (activity_main_nav_header == null) return;
-                    TextView textView = activity_main_nav_header.findViewById(id);
-                    if (textView != null) {
-                        if (!text.isEmpty()) {
-                            textView.setText(text);
-                            textView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                        } else {
-                            textView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0));
-                        }
+            Static.T.runOnUiThread(() -> {
+                if (navigationView == null) return;
+                View activity_main_nav_header = navigationView.getHeaderView(0);
+                if (activity_main_nav_header == null) return;
+                TextView textView = activity_main_nav_header.findViewById(id);
+                if (textView != null) {
+                    if (!text.isEmpty()) {
+                        textView.setText(text);
+                        textView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                    } else {
+                        textView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0));
                     }
                 }
             });
         }
         public static void snackbarOffline(final Activity activity) {
-            Static.T.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (Static.OFFLINE_MODE) {
-                        Static.snackBar(activity, activity.getString(R.string.offline_mode_on));
-                    }
+            Static.T.runOnUiThread(() -> {
+                if (Static.OFFLINE_MODE) {
+                    Static.snackBar(activity, activity.getString(R.string.offline_mode_on));
                 }
             });
         }
         public static void drawOffline(final Menu menu) {
-            Static.T.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (menu != null) {
-                        if (Static.OFFLINE_MODE) {
-                            for (int i = 0; i < menu.size(); i++) {
-                                menu.getItem(i).setVisible(false);
-                            }
+            Static.T.runOnUiThread(() -> {
+                if (menu != null) {
+                    if (Static.OFFLINE_MODE) {
+                        for (int i = 0; i < menu.size(); i++) {
+                            menu.getItem(i).setVisible(false);
                         }
-                        MenuItem menuItem = menu.findItem(R.id.offline_mode);
-                        if (menuItem != null) {
-                            menuItem.setVisible(Static.OFFLINE_MODE);
-                        }
+                    }
+                    MenuItem menuItem = menu.findItem(R.id.offline_mode);
+                    if (menuItem != null) {
+                        menuItem.setVisible(Static.OFFLINE_MODE);
                     }
                 }
             });
         }
         public static void displayRemoteMessage(final Activity activity) {
-            Static.T.runThread(() -> FirebaseConfigProvider.getJson(FirebaseConfigProvider.MESSAGE_MENU, value -> T.runThread(() -> {
+            Static.T.runThread(() -> FirebaseConfigProvider.getJson(FirebaseConfigProvider.MESSAGE_MENU, value -> Static.T.runThread(() -> {
                 try {
                     if (value == null) return;
                     final int type = value.getInt("type");
@@ -710,7 +662,7 @@ public class Static {
                     if (hash != null && hash.equals(Storage.file.general.get(activity, "firebase#remote_message#menu", ""))) {
                         return;
                     }
-                    T.runOnUiThread(() -> {
+                    Static.T.runOnUiThread(() -> {
                         final ViewGroup message_menu = activity.findViewById(R.id.message_menu);
                         final View message_menu_separator = activity.findViewById(R.id.message_menu_separator);
                         final View layout = Static.getRemoteMessage(activity, type, message, (context, view) -> {
@@ -722,9 +674,9 @@ public class Static {
                                             message_menu_separator.setVisibility(View.GONE);
                                         }
                                     }
-                                    Static.snackBar(activity, activity.getString(R.string.notification_dismissed), activity.getString(R.string.undo), v -> T.runThread(() -> {
+                                    Static.snackBar(activity, activity.getString(R.string.notification_dismissed), activity.getString(R.string.undo), v -> Static.T.runThread(() -> {
                                         if (Storage.file.general.delete(activity, "firebase#remote_message#menu")) {
-                                            T.runOnUiThread(() -> {
+                                            Static.T.runOnUiThread(() -> {
                                                 if (message_menu != null && view != null) {
                                                     message_menu.addView(view);
                                                     if (message_menu_separator != null) {
@@ -772,14 +724,11 @@ public class Static {
         return locale;
     }
     public static void removeView(final View view) {
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    ((ViewGroup) view.getParent()).removeView(view);
-                } catch (Throwable e) {
-                    Static.error(e);
-                }
+        Static.T.runOnUiThread(() -> {
+            try {
+                ((ViewGroup) view.getParent()).removeView(view);
+            } catch (Throwable e) {
+                Static.error(e);
             }
         });
     }
@@ -888,149 +837,115 @@ public class Static {
                 Log.v(TAG, "new Instance");
                 this.context = context;
                 this.callback = callback;
-                Static.T.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            ViewGroup layout = (ViewGroup) inflate(context, R.layout.layout_color_picker_dialog);
-                            container = layout.findViewById(R.id.colorPickerContainer);
-                            alertDialog = new AlertDialog.Builder(context)
-                                    .setTitle(R.string.choose_color)
-                                    .setView(layout)
-                                    .setPositiveButton(R.string.apply, new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialogInterface, int i) {
-                                            Log.v(TAG, "apply | selected=" + selected);
-                                            if (!selected.isEmpty()) {
-                                                callback.result(selected);
-                                            }
-                                        }
-                                    })
-                                    .setNegativeButton(R.string.do_cancel, null)
-                                    .create();
-                        } catch (Exception e) {
-                            callback.exception(e);
-                        }
+                Static.T.runOnUiThread(() -> {
+                    try {
+                        ViewGroup layout = (ViewGroup) inflate(context, R.layout.layout_color_picker_dialog);
+                        container = layout.findViewById(R.id.colorPickerContainer);
+                        alertDialog = new AlertDialog.Builder(context)
+                                .setTitle(R.string.choose_color)
+                                .setView(layout)
+                                .setPositiveButton(R.string.apply, (dialogInterface, i) -> {
+                                    Log.v(TAG, "apply | selected=" + selected);
+                                    if (!selected.isEmpty()) {
+                                        callback.result(selected);
+                                    }
+                                })
+                                .setNegativeButton(R.string.do_cancel, null)
+                                .create();
+                    } catch (Exception e) {
+                        callback.exception(e);
                     }
                 });
             }
             public void show() {
                 Log.v(TAG, "show");
-                Static.T.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            if (alertDialog != null && !alertDialog.isShowing()) {
-                                alertDialog.show();
-                                displayColors(-1);
-                            }
-                        } catch (Exception e) {
-                            callback.exception(e);
+                Static.T.runOnUiThread(() -> {
+                    try {
+                        if (alertDialog != null && !alertDialog.isShowing()) {
+                            alertDialog.show();
+                            displayColors(-1);
                         }
+                    } catch (Exception e) {
+                        callback.exception(e);
                     }
                 });
             }
             public void close() {
                 Log.v(TAG, "close");
-                Static.T.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            if (alertDialog != null && alertDialog.isShowing()) {
-                                alertDialog.dismiss();
-                            }
-                        } catch (Exception e) {
-                            callback.exception(e);
+                Static.T.runOnUiThread(() -> {
+                    try {
+                        if (alertDialog != null && alertDialog.isShowing()) {
+                            alertDialog.dismiss();
                         }
+                    } catch (Exception e) {
+                        callback.exception(e);
                     }
                 });
             }
             private void displayColors(final int index) {
                 Log.v(TAG, "displayColors | index=" + index);
-                Static.T.runThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            final boolean modeAllColors = index < 0 || index > COLORS.length;
-                            final String[] colors;
-                            if (modeAllColors) { // display all colors
-                                colors = new String[COLORS.length];
-                                for (int i = 0; i < COLORS.length; i++) {
-                                    colors[i] = COLORS[i][0];
-                                }
-                            } else { // display certain colors
-                                colors = new String[COLORS[index].length];
-                                System.arraycopy(COLORS[index], 1, colors, 0, COLORS[index].length - 1);
-                                colors[COLORS[index].length - 1] = "back";
+                Static.T.runThread(() -> {
+                    try {
+                        final boolean modeAllColors = index < 0 || index > COLORS.length;
+                        final String[] colors;
+                        if (modeAllColors) { // display all colors
+                            colors = new String[COLORS.length];
+                            for (int i = 0; i < COLORS.length; i++) {
+                                colors[i] = COLORS[i][0];
                             }
-                            Static.T.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    try {
-                                        if (gridAdapter == null) {
-                                            gridAdapter = new GridAdapter(context);
-                                            container.setAdapter(gridAdapter);
-                                        }
-                                        container.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                                            @Override
-                                            public void onItemClick(AdapterView<?> adapterView, View view, final int i, long l) {
-                                                Log.v(TAG, "color clicked | i=" + i);
-                                                Static.T.runThread(new Runnable() {
-                                                    @Override
-                                                    public void run() {
-                                                        try {
-                                                            if (modeAllColors) {
-                                                                if (COLORS[i].length > 1) {
-                                                                    displayColors(i);
-                                                                } else {
-                                                                    String color = gridAdapter.getItem(i);
-                                                                    if (Objects.equals(color, "back")) {
-                                                                        Log.v(TAG, "back clicked");
-                                                                        displayColors(-1);
-                                                                    } else {
-                                                                        Log.v(TAG, "color selected | color=" + color);
-                                                                        selected = color;
-                                                                        Static.T.runOnUiThread(new Runnable() {
-                                                                            @Override
-                                                                            public void run() {
-                                                                                gridAdapter.notifyDataSetChanged();
-                                                                            }
-                                                                        });
-                                                                    }
-                                                                }
-                                                            } else {
-                                                                String color = gridAdapter.getItem(i);
-                                                                if (Objects.equals(color, "back")) {
-                                                                    Log.v(TAG, "back clicked");
-                                                                    displayColors(-1);
-                                                                } else {
-                                                                    Log.v(TAG, "color selected | color=" + color);
-                                                                    selected = color;
-                                                                    Static.T.runOnUiThread(new Runnable() {
-                                                                        @Override
-                                                                        public void run() {
-                                                                            gridAdapter.notifyDataSetChanged();
-                                                                        }
-                                                                    });
-                                                                }
-                                                            }
-                                                        } catch (Exception e) {
-                                                            callback.exception(e);
-                                                        }
-                                                    }
-                                                });
-                                            }
-                                        });
-                                        gridAdapter.updateColors(colors);
-                                        gridAdapter.notifyDataSetChanged();
-                                    } catch (Exception e) {
-                                        callback.exception(e);
-                                    }
-                                }
-                            });
-                        } catch (Exception e) {
-                            callback.exception(e);
+                        } else { // display certain colors
+                            colors = new String[COLORS[index].length];
+                            System.arraycopy(COLORS[index], 1, colors, 0, COLORS[index].length - 1);
+                            colors[COLORS[index].length - 1] = "back";
                         }
+                        Static.T.runOnUiThread(() -> {
+                            try {
+                                if (gridAdapter == null) {
+                                    gridAdapter = new GridAdapter(context);
+                                    container.setAdapter(gridAdapter);
+                                }
+                                container.setOnItemClickListener((adapterView, view, i, l) -> {
+                                    Log.v(TAG, "color clicked | i=" + i);
+                                    Static.T.runThread(() -> {
+                                        try {
+                                            if (modeAllColors) {
+                                                if (COLORS[i].length > 1) {
+                                                    displayColors(i);
+                                                } else {
+                                                    String color = gridAdapter.getItem(i);
+                                                    if ("back".equals(color)) {
+                                                        Log.v(TAG, "back clicked");
+                                                        displayColors(-1);
+                                                    } else {
+                                                        Log.v(TAG, "color selected | color=" + color);
+                                                        selected = color;
+                                                        Static.T.runOnUiThread(() -> gridAdapter.notifyDataSetChanged());
+                                                    }
+                                                }
+                                            } else {
+                                                String color = gridAdapter.getItem(i);
+                                                if ("back".equals(color)) {
+                                                    Log.v(TAG, "back clicked");
+                                                    displayColors(-1);
+                                                } else {
+                                                    Log.v(TAG, "color selected | color=" + color);
+                                                    selected = color;
+                                                    Static.T.runOnUiThread(() -> gridAdapter.notifyDataSetChanged());
+                                                }
+                                            }
+                                        } catch (Exception e) {
+                                            callback.exception(e);
+                                        }
+                                    });
+                                });
+                                gridAdapter.updateColors(colors);
+                                gridAdapter.notifyDataSetChanged();
+                            } catch (Exception e) {
+                                callback.exception(e);
+                            }
+                        });
+                    } catch (Exception e) {
+                        callback.exception(e);
                     }
                 });
             }
@@ -1064,7 +979,7 @@ public class Static {
                             convertView = inflater.inflate(R.layout.layout_color_picker_dialog_item, parent, false);
                         }
                         String color = getItem(position);
-                        if (Objects.equals(color, "back")) {
+                        if ("back".equals(color)) {
                             GradientDrawable sd = (GradientDrawable) convertView.getBackground();
                             sd.setColor(Color.BLACK);
                             convertView.findViewById(R.id.sign_selected).setVisibility(View.GONE);
@@ -1074,7 +989,7 @@ public class Static {
                         } else {
                             GradientDrawable sd = (GradientDrawable) convertView.getBackground();
                             sd.setColor(Color.parseColor(color));
-                            if (Objects.equals(selected.toLowerCase(), color.toLowerCase())) {
+                            if (color.toLowerCase().equals(selected.toLowerCase())) {
                                 convertView.findViewById(R.id.sign_selected).setVisibility(View.VISIBLE);
                                 ImageView sign_selected_mark = convertView.findViewById(R.id.sign_selected_mark);
                                 sign_selected_mark.setImageTintList(ColorStateList.valueOf(Color.parseColor(color) > Color.parseColor("#757575") ? Color.BLACK : Color.WHITE));
@@ -1124,12 +1039,7 @@ public class Static {
             }
             final View layout = ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
             ((TextView) layout.findViewById(R.id.text)).setText(message);
-            layout.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    callback.onDismiss(context, layout);
-                }
-            });
+            layout.setOnClickListener(v -> callback.onDismiss(context, layout));
             return layout;
         } catch (Exception e) {
             Static.error(e);

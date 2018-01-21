@@ -9,7 +9,6 @@ import org.htmlcleaner.TagNode;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -63,7 +62,7 @@ public class RatingListParse implements Runnable {
                             String[] attrs = as[0].getAttributeByName("href").replace("&amp;", "&").split("&");
                             for (String attr : attrs) {
                                 String[] pair = attr.split("=");
-                                if (Objects.equals(pair[0], "depId")) faculties.getJSONObject(i).put("depId", pair[1]);
+                                if ("depId".equals(pair[0])) faculties.getJSONObject(i).put("depId", pair[1]);
                             }
                         }
                     }

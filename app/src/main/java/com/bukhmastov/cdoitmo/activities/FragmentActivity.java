@@ -149,36 +149,33 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
     public void invoke(final Class connectedFragmentClass, final Bundle extras) {
         final FragmentActivity self = this;
         final FragmentManager fragmentManager = getSupportFragmentManager();
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "invoke | " + connectedFragmentClass.toString());
-                try {
-                    ConnectedFragment.Data data = ConnectedFragment.getData(self, connectedFragmentClass);
-                    if (data == null) {
-                        throw new NullPointerException("data cannot be null");
-                    }
-                    updateToolbar(self, data.title, null);
-                    ViewGroup root = findViewById(getRootViewId());
-                    if (root != null) {
-                        root.removeAllViews();
-                    }
-                    Fragment fragment = (Fragment) data.connectedFragmentClass.newInstance();
-                    if (extras != null) {
-                        fragment.setArguments(extras);
-                    }
-                    if (fragmentManager != null) {
-                        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-                        if (fragmentTransaction != null) {
-                            fragmentTransaction.replace(getRootViewId(), fragment);
-                            fragmentTransaction.commitAllowingStateLoss();
-                            pushFragment(new StackElement(TYPE.root, connectedFragmentClass, extras));
-                        }
-                    }
-                } catch (Exception e) {
-                    Static.error(e);
-                    finish();
+        Static.T.runOnUiThread(() -> {
+            Log.v(TAG, "invoke | " + connectedFragmentClass.toString());
+            try {
+                ConnectedFragment.Data data = ConnectedFragment.getData(self, connectedFragmentClass);
+                if (data == null) {
+                    throw new NullPointerException("data cannot be null");
                 }
+                updateToolbar(self, data.title, null);
+                ViewGroup root = findViewById(getRootViewId());
+                if (root != null) {
+                    root.removeAllViews();
+                }
+                Fragment fragment = (Fragment) data.connectedFragmentClass.newInstance();
+                if (extras != null) {
+                    fragment.setArguments(extras);
+                }
+                if (fragmentManager != null) {
+                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                    if (fragmentTransaction != null) {
+                        fragmentTransaction.replace(getRootViewId(), fragment);
+                        fragmentTransaction.commitAllowingStateLoss();
+                        pushFragment(new StackElement(TYPE.root, connectedFragmentClass, extras));
+                    }
+                }
+            } catch (Exception e) {
+                Static.error(e);
+                finish();
             }
         });
     }

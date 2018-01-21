@@ -30,7 +30,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -101,10 +100,27 @@ public class Room101AddRequest {
                 return;
         }
         switch (CURRENT_STAGE) {
-            case STAGE_PICK_DATE: if(pick_date == null){ Static.snackBar(activity, activity.getString(R.string.need_to_peek_date)); return; } break;
-            case STAGE_PICK_TIME_START: if(pick_time_start == null){ Static.snackBar(activity, activity.getString(R.string.need_to_peek_time_start)); return; } break;
-            case STAGE_PICK_TIME_END: if(pick_time_end == null){ Static.snackBar(activity, activity.getString(R.string.need_to_peek_time_end)); return; } break;
-            case STAGE_PICK_DONE: close(true); return;
+            case STAGE_PICK_DATE:
+                if (pick_date == null) {
+                    Static.snackBar(activity, activity.getString(R.string.need_to_peek_date));
+                    return;
+                }
+                break;
+            case STAGE_PICK_TIME_START:
+                if (pick_time_start == null) {
+                    Static.snackBar(activity, activity.getString(R.string.need_to_peek_time_start));
+                    return;
+                }
+                break;
+            case STAGE_PICK_TIME_END:
+                if (pick_time_end == null) {
+                    Static.snackBar(activity, activity.getString(R.string.need_to_peek_time_end));
+                    return;
+                }
+                break;
+            case STAGE_PICK_DONE:
+                close(true);
+                return;
         }
         CURRENT_STAGE++;
         proceedStage();
@@ -136,451 +152,388 @@ public class Room101AddRequest {
     }
 
     private void loadDatePick(final int stage) {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "loadDatePick | stage=" + stage);
-                if (stage == 0) {
-                    callback.onDraw(getLoadingLayout(activity.getString(R.string.data_loading)));
-                    data = null;
-                    pick_date = null;
-                    Room101Fragment.execute(activity, "newRequest", new ResponseHandler() {
-                        @Override
-                        public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                            Static.T.runThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    if (statusCode == 200) {
-                                        new Room101DatePickParse(response, new Room101DatePickParse.response() {
-                                            @Override
-                                            public void finish(JSONObject json) {
-                                                if (json != null) {
-                                                    data = json;
-                                                    loadDatePick(1);
-                                                } else {
-                                                    failed();
-                                                }
-                                            }
-                                        }).run();
+        Static.T.runThread(() -> {
+            Log.v(TAG, "loadDatePick | stage=" + stage);
+            if (stage == 0) {
+                callback.onDraw(getLoadingLayout(activity.getString(R.string.data_loading)));
+                data = null;
+                pick_date = null;
+                Room101Fragment.execute(activity, "newRequest", new ResponseHandler() {
+                    @Override
+                    public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
+                        Static.T.runThread(() -> {
+                            if (statusCode == 200) {
+                                new Room101DatePickParse(response, json -> {
+                                    if (json != null) {
+                                        data = json;
+                                        loadDatePick(1);
                                     } else {
                                         failed();
                                     }
-                                }
-                            });
-                        }
-                        @Override
-                        public void onFailure(int statusCode, Client.Headers headers, int state) {
-                            if (state == Room101Client.FAILED_SERVER_ERROR) {
-                                failed(Room101Client.getFailureMessage(activity, statusCode));
+                                }).run();
                             } else {
                                 failed();
                             }
+                        });
+                    }
+                    @Override
+                    public void onFailure(int statusCode, Client.Headers headers, int state) {
+                        if (state == Room101Client.FAILED_SERVER_ERROR) {
+                            failed(Room101Client.getFailureMessage(activity, statusCode));
+                        } else {
+                            failed();
                         }
-                        @Override
-                        public void onProgress(int state) {}
-                        @Override
-                        public void onNewRequest(Client.Request request) {
-                            requestHandle = request;
-                        }
-                    });
-                } else if (stage == 1) {
-                    HashMap<String, String> params = new HashMap<>();
-                    params.put("month", "next");
-                    params.put("login", Storage.file.perm.get(activity, "user#deifmo#login"));
-                    params.put("password", Storage.file.perm.get(activity, "user#deifmo#password"));
-                    Room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
-                        @Override
-                        public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                            Static.T.runThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    if (statusCode == 200) {
-                                        new Room101DatePickParse(response, new Room101DatePickParse.response() {
-                                            @Override
-                                            public void finish(JSONObject json) {
-                                                if (json != null) {
-                                                    if (data == null) {
-                                                        data = json;
-                                                    } else {
-                                                        try {
-                                                            JSONArray jsonArray = data.getJSONArray("data");
-                                                            JSONArray jsonArrayNew = json.getJSONArray("data");
-                                                            for (int i = 0; i < jsonArrayNew.length(); i++) jsonArray.put(jsonArrayNew.getJSONObject(i));
-                                                            data.put("data", jsonArray);
-                                                        } catch (Exception e) {
-                                                            Static.error(e);
-                                                            data = json;
-                                                        }
-                                                    }
-                                                }
-                                                CURRENT_STAGE++;
-                                                proceedStage();
+                    }
+                    @Override
+                    public void onProgress(int state) {}
+                    @Override
+                    public void onNewRequest(Client.Request request) {
+                        requestHandle = request;
+                    }
+                });
+            } else if (stage == 1) {
+                HashMap<String, String> params = new HashMap<>();
+                params.put("month", "next");
+                params.put("login", Storage.file.perm.get(activity, "user#deifmo#login"));
+                params.put("password", Storage.file.perm.get(activity, "user#deifmo#password"));
+                Room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
+                    @Override
+                    public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
+                        Static.T.runThread(() -> {
+                            if (statusCode == 200) {
+                                new Room101DatePickParse(response, json -> {
+                                    if (json != null) {
+                                        if (data == null) {
+                                            data = json;
+                                        } else {
+                                            try {
+                                                JSONArray jsonArray = data.getJSONArray("data");
+                                                JSONArray jsonArrayNew = json.getJSONArray("data");
+                                                for (int i = 0; i < jsonArrayNew.length(); i++) jsonArray.put(jsonArrayNew.getJSONObject(i));
+                                                data.put("data", jsonArray);
+                                            } catch (Exception e) {
+                                                Static.error(e);
+                                                data = json;
                                             }
-                                        }).run();
-                                    } else {
-                                        failed();
+                                        }
                                     }
-                                }
-                            });
-                        }
-                        @Override
-                        public void onFailure(int statusCode, Client.Headers headers, int state) {
-                            if (state == Room101Client.FAILED_SERVER_ERROR) {
-                                failed(Room101Client.getFailureMessage(activity, statusCode));
+                                    CURRENT_STAGE++;
+                                    proceedStage();
+                                }).run();
                             } else {
                                 failed();
                             }
+                        });
+                    }
+                    @Override
+                    public void onFailure(int statusCode, Client.Headers headers, int state) {
+                        if (state == Room101Client.FAILED_SERVER_ERROR) {
+                            failed(Room101Client.getFailureMessage(activity, statusCode));
+                        } else {
+                            failed();
                         }
-                        @Override
-                        public void onProgress(int state) {}
-                        @Override
-                        public void onNewRequest(Client.Request request) {
-                            requestHandle = request;
-                        }
-                    });
-                } else {
-                    failed();
-                }
+                    }
+                    @Override
+                    public void onProgress(int state) {}
+                    @Override
+                    public void onNewRequest(Client.Request request) {
+                        requestHandle = request;
+                    }
+                });
+            } else {
+                failed();
             }
         });
     }
     private void loadTimeStartPick() {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "loadTimeStartPick");
-                callback.onDraw(getLoadingLayout(activity.getString(R.string.data_handling)));
-                data = null;
-                pick_time_start = null;
-                HashMap<String, String> params = new HashMap<>();
-                params.put("getFunc", "getWindowBegin");
-                params.put("dateRequest", pick_date);
-                params.put("timeBegin", "");
-                params.put("timeEnd", "");
-                params.put("login", Storage.file.perm.get(activity, "user#deifmo#login"));
-                params.put("password", Storage.file.perm.get(activity, "user#deifmo#password"));
-                Room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
-                    @Override
-                    public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                        Static.T.runThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                if (statusCode == 200) {
-                                    new Room101TimeStartPickParse(response, new Room101TimeStartPickParse.response() {
-                                        @Override
-                                        public void finish(JSONObject json) {
-                                            if (json != null) {
-                                                data = json;
-                                                CURRENT_STAGE++;
-                                                proceedStage();
-                                            } else {
-                                                failed();
-                                            }
-                                        }
-                                    }).run();
+        Static.T.runThread(() -> {
+            Log.v(TAG, "loadTimeStartPick");
+            callback.onDraw(getLoadingLayout(activity.getString(R.string.data_handling)));
+            data = null;
+            pick_time_start = null;
+            HashMap<String, String> params = new HashMap<>();
+            params.put("getFunc", "getWindowBegin");
+            params.put("dateRequest", pick_date);
+            params.put("timeBegin", "");
+            params.put("timeEnd", "");
+            params.put("login", Storage.file.perm.get(activity, "user#deifmo#login"));
+            params.put("password", Storage.file.perm.get(activity, "user#deifmo#password"));
+            Room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
+                @Override
+                public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
+                    Static.T.runThread(() -> {
+                        if (statusCode == 200) {
+                            new Room101TimeStartPickParse(response, json -> {
+                                if (json != null) {
+                                    data = json;
+                                    CURRENT_STAGE++;
+                                    proceedStage();
                                 } else {
                                     failed();
                                 }
-                            }
-                        });
-                    }
-                    @Override
-                    public void onFailure(int statusCode, Client.Headers headers, int state) {
-                        if (state == Room101Client.FAILED_SERVER_ERROR) {
-                            failed(Room101Client.getFailureMessage(activity, statusCode));
+                            }).run();
                         } else {
                             failed();
                         }
+                    });
+                }
+                @Override
+                public void onFailure(int statusCode, Client.Headers headers, int state) {
+                    if (state == Room101Client.FAILED_SERVER_ERROR) {
+                        failed(Room101Client.getFailureMessage(activity, statusCode));
+                    } else {
+                        failed();
                     }
-                    @Override
-                    public void onProgress(int state) {}
-                    @Override
-                    public void onNewRequest(Client.Request request) {
-                        requestHandle = request;
-                    }
-                });
-            }
+                }
+                @Override
+                public void onProgress(int state) {}
+                @Override
+                public void onNewRequest(Client.Request request) {
+                    requestHandle = request;
+                }
+            });
         });
     }
     private void loadTimeEndPick() {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "loadTimeEndPick");
-                callback.onDraw(getLoadingLayout(activity.getString(R.string.data_handling)));
-                data = null;
-                pick_time_end = null;
-                HashMap<String, String> params = new HashMap<>();
-                params.put("getFunc", "getWindowEnd");
-                params.put("dateRequest", pick_date);
-                params.put("timeBegin", pick_time_start);
-                params.put("timeEnd", "");
-                params.put("login", Storage.file.perm.get(activity, "user#deifmo#login"));
-                params.put("password", Storage.file.perm.get(activity, "user#deifmo#password"));
-                Room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
-                    @Override
-                    public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                        Static.T.runThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                if (statusCode == 200) {
-                                    new Room101TimeEndPickParse(response, new Room101TimeEndPickParse.response() {
-                                        @Override
-                                        public void finish(JSONObject json) {
-                                            if (json != null) {
-                                                data = json;
-                                                CURRENT_STAGE++;
-                                                proceedStage();
-                                            } else {
-                                                failed();
-                                            }
-                                        }
-                                    }).run();
+        Static.T.runThread(() -> {
+            Log.v(TAG, "loadTimeEndPick");
+            callback.onDraw(getLoadingLayout(activity.getString(R.string.data_handling)));
+            data = null;
+            pick_time_end = null;
+            HashMap<String, String> params = new HashMap<>();
+            params.put("getFunc", "getWindowEnd");
+            params.put("dateRequest", pick_date);
+            params.put("timeBegin", pick_time_start);
+            params.put("timeEnd", "");
+            params.put("login", Storage.file.perm.get(activity, "user#deifmo#login"));
+            params.put("password", Storage.file.perm.get(activity, "user#deifmo#password"));
+            Room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
+                @Override
+                public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
+                    Static.T.runThread(() -> {
+                        if (statusCode == 200) {
+                            new Room101TimeEndPickParse(response, json -> {
+                                if (json != null) {
+                                    data = json;
+                                    CURRENT_STAGE++;
+                                    proceedStage();
                                 } else {
                                     failed();
                                 }
-                            }
-                        });
-                    }
-                    @Override
-                    public void onFailure(int statusCode, Client.Headers headers, int state) {
-                        if (state == Room101Client.FAILED_SERVER_ERROR) {
-                            failed(Room101Client.getFailureMessage(activity, statusCode));
+                            }).run();
                         } else {
                             failed();
                         }
+                    });
+                }
+                @Override
+                public void onFailure(int statusCode, Client.Headers headers, int state) {
+                    if (state == Room101Client.FAILED_SERVER_ERROR) {
+                        failed(Room101Client.getFailureMessage(activity, statusCode));
+                    } else {
+                        failed();
                     }
-                    @Override
-                    public void onProgress(int state) {}
-                    @Override
-                    public void onNewRequest(Client.Request request) {
-                        requestHandle = request;
-                    }
-                });
-            }
+                }
+                @Override
+                public void onProgress(int state) {}
+                @Override
+                public void onNewRequest(Client.Request request) {
+                    requestHandle = request;
+                }
+            });
         });
     }
     private void loadConfirmation() {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "loadConfirmation");
-                data = null;
-                CURRENT_STAGE++;
-                proceedStage();
-            }
+        Static.T.runThread(() -> {
+            Log.v(TAG, "loadConfirmation");
+            data = null;
+            CURRENT_STAGE++;
+            proceedStage();
         });
     }
     private void create() {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "create");
-                callback.onDraw(getLoadingLayout(activity.getString(R.string.add_request)));
-                data = null;
-                HashMap<String, String> params = new HashMap<>();
-                params.put("getFunc", "saveRequest");
-                params.put("dateRequest", pick_date);
-                params.put("timeBegin", pick_time_start);
-                params.put("timeEnd", pick_time_end);
-                params.put("login", Storage.file.perm.get(activity, "user#deifmo#login"));
-                params.put("password", Storage.file.perm.get(activity, "user#deifmo#password"));
-                Room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
-                    @Override
-                    public void onSuccess(int statusCode, Client.Headers headers, String response) {
-                        try {
-                            data = new JSONObject();
-                            data.put("done", statusCode == 302);
-                            CURRENT_STAGE++;
-                            proceedStage();
-                        } catch (JSONException e) {
-                            Static.error(e);
-                            failed();
-                        }
+        Static.T.runThread(() -> {
+            Log.v(TAG, "create");
+            callback.onDraw(getLoadingLayout(activity.getString(R.string.add_request)));
+            data = null;
+            HashMap<String, String> params = new HashMap<>();
+            params.put("getFunc", "saveRequest");
+            params.put("dateRequest", pick_date);
+            params.put("timeBegin", pick_time_start);
+            params.put("timeEnd", pick_time_end);
+            params.put("login", Storage.file.perm.get(activity, "user#deifmo#login"));
+            params.put("password", Storage.file.perm.get(activity, "user#deifmo#password"));
+            Room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
+                @Override
+                public void onSuccess(int statusCode, Client.Headers headers, String response) {
+                    try {
+                        data = new JSONObject();
+                        data.put("done", statusCode == 302);
+                        CURRENT_STAGE++;
+                        proceedStage();
+                    } catch (JSONException e) {
+                        Static.error(e);
+                        failed();
                     }
-                    @Override
-                    public void onFailure(int statusCode, Client.Headers headers, int state) {
-                        try {
-                            data = new JSONObject();
-                            data.put("done", false);
-                            data.put("message", state == Room101Client.FAILED_SERVER_ERROR ? Room101Client.getFailureMessage(activity, statusCode) : activity.getString(R.string.request_denied));
-                            CURRENT_STAGE++;
-                            proceedStage();
-                        } catch (JSONException e) {
-                            Static.error(e);
-                            failed();
-                        }
+                }
+                @Override
+                public void onFailure(int statusCode, Client.Headers headers, int state) {
+                    try {
+                        data = new JSONObject();
+                        data.put("done", false);
+                        data.put("message", state == Room101Client.FAILED_SERVER_ERROR ? Room101Client.getFailureMessage(activity, statusCode) : activity.getString(R.string.request_denied));
+                        CURRENT_STAGE++;
+                        proceedStage();
+                    } catch (JSONException e) {
+                        Static.error(e);
+                        failed();
                     }
-                    @Override
-                    public void onProgress(int state) {}
-                    @Override
-                    public void onNewRequest(Client.Request request) {
-                        requestHandle = request;
-                    }
-                });
-            }
+                }
+                @Override
+                public void onProgress(int state) {}
+                @Override
+                public void onNewRequest(Client.Request request) {
+                    requestHandle = request;
+                }
+            });
         });
     }
 
     private void datePick() {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "datePick | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
-                try {
-                    if (data == null) throw new NullPointerException("data cannot be null");
-                    if (!Objects.equals(data.getString("type"), "date_pick")) throw new Exception("Wrong data.type. Expected 'date_pick', got '" + data.getString("type") + "'");
-                    if (!data.has("data")) throw new Exception("Empty data.data");
-                    final JSONArray date_pick = data.getJSONArray("data");
-                    if (date_pick.length() > 0) {
-                        callback.onDraw(getChooserLayout(activity.getString(R.string.peek_date), null, date_pick, new CompoundButton.OnCheckedChangeListener() {
-                            @Override
-                            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                                if (isChecked) {
-                                    try {
-                                        pick_date = buttonView.getText().toString().trim();
-                                    } catch (Exception e) {
-                                        Static.error(e);
-                                        failed();
-                                    }
-                                }
+        Static.T.runThread(() -> {
+            Log.v(TAG, "datePick | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
+            try {
+                if (data == null) throw new NullPointerException("data cannot be null");
+                if (!"date_pick".equals(data.getString("type"))) throw new Exception("Wrong data.type. Expected 'date_pick', got '" + data.getString("type") + "'");
+                if (!data.has("data")) throw new Exception("Empty data.data");
+                final JSONArray date_pick = data.getJSONArray("data");
+                if (date_pick.length() > 0) {
+                    callback.onDraw(getChooserLayout(activity.getString(R.string.peek_date), null, date_pick, (buttonView, isChecked) -> {
+                        if (isChecked) {
+                            try {
+                                pick_date = buttonView.getText().toString().trim();
+                            } catch (Exception e) {
+                                Static.error(e);
+                                failed();
                             }
-                        }));
-                    } else {
-                        callback.onDraw(getEmptyLayout(activity.getString(R.string.no_date_to_peek)));
-                    }
-                } catch (Exception e){
-                    Static.error(e);
-                    failed();
+                        }
+                    }));
+                } else {
+                    callback.onDraw(getEmptyLayout(activity.getString(R.string.no_date_to_peek)));
                 }
+            } catch (Exception e){
+                Static.error(e);
+                failed();
             }
         });
     }
     private void timeStartPick() {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "timeStartPick | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
-                try {
-                    if (data == null) throw new NullPointerException("data cannot be null");
-                    if (!Objects.equals(data.getString("type"), "time_start_pick")) throw new Exception("Wrong data.type. Expected 'time_start_pick', got '" + data.getString("type") + "'");
-                    if (!data.has("data")) throw new Exception("Empty data.data");
-                    final JSONArray time_pick = data.getJSONArray("data");
-                    if (time_pick.length() > 0) {
-                        callback.onDraw(getChooserLayout(activity.getString(R.string.peek_time_start), null, time_pick, new CompoundButton.OnCheckedChangeListener() {
-                            @Override
-                            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                                if (isChecked) {
-                                    try {
-                                        String value = buttonView.getText().toString().trim();
-                                        Matcher m = timePickerPattern.matcher(value);
-                                        if (m.find()) {
-                                            value = m.group(1);
-                                        }
-                                        pick_time_start = value + ":00";
-                                    } catch (Exception e) {
-                                        Static.error(e);
-                                        failed();
-                                    }
+        Static.T.runThread(() -> {
+            Log.v(TAG, "timeStartPick | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
+            try {
+                if (data == null) throw new NullPointerException("data cannot be null");
+                if (!"time_start_pick".equals(data.getString("type"))) throw new Exception("Wrong data.type. Expected 'time_start_pick', got '" + data.getString("type") + "'");
+                if (!data.has("data")) throw new Exception("Empty data.data");
+                final JSONArray time_pick = data.getJSONArray("data");
+                if (time_pick.length() > 0) {
+                    callback.onDraw(getChooserLayout(activity.getString(R.string.peek_time_start), null, time_pick, (buttonView, isChecked) -> {
+                        if (isChecked) {
+                            try {
+                                String value = buttonView.getText().toString().trim();
+                                Matcher m = timePickerPattern.matcher(value);
+                                if (m.find()) {
+                                    value = m.group(1);
                                 }
+                                pick_time_start = value + ":00";
+                            } catch (Exception e) {
+                                Static.error(e);
+                                failed();
                             }
-                        }));
-                    } else {
-                        callback.onDraw(getEmptyLayout(activity.getString(R.string.no_time_to_peek)));
-                    }
-                } catch (Exception e){
-                    Static.error(e);
-                    failed();
+                        }
+                    }));
+                } else {
+                    callback.onDraw(getEmptyLayout(activity.getString(R.string.no_time_to_peek)));
                 }
+            } catch (Exception e){
+                Static.error(e);
+                failed();
             }
         });
     }
     private void timeEndPick() {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "timeEndPick | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
-                try {
-                    if (data == null) throw new NullPointerException("data cannot be null");
-                    if (!Objects.equals(data.getString("type"), "time_end_pick")) throw new Exception("Wrong data.type. Expected 'time_end_pick', got '" + data.getString("type") + "'");
-                    if (!data.has("data")) throw new Exception("Empty data.data");
-                    final JSONArray time_pick = data.getJSONArray("data");
-                    if (time_pick.length() > 0) {
-                        callback.onDraw(getChooserLayout(activity.getString(R.string.peek_time_end), activity.getString(R.string.peek_time_end_desc), time_pick, new CompoundButton.OnCheckedChangeListener() {
-                            @Override
-                            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                                if (isChecked) {
-                                    try {
-                                        String value = buttonView.getText().toString().trim();
-                                        Matcher m = timePickerPattern.matcher(value);
-                                        if (m.find()) {
-                                            value = m.group(1);
-                                        }
-                                        pick_time_end = value + ":00";
-                                    } catch (Exception e) {
-                                        Static.error(e);
-                                        failed();
-                                    }
+        Static.T.runThread(() -> {
+            Log.v(TAG, "timeEndPick | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
+            try {
+                if (data == null) throw new NullPointerException("data cannot be null");
+                if (!"time_end_pick".equals(data.getString("type"))) throw new Exception("Wrong data.type. Expected 'time_end_pick', got '" + data.getString("type") + "'");
+                if (!data.has("data")) throw new Exception("Empty data.data");
+                final JSONArray time_pick = data.getJSONArray("data");
+                if (time_pick.length() > 0) {
+                    callback.onDraw(getChooserLayout(activity.getString(R.string.peek_time_end), activity.getString(R.string.peek_time_end_desc), time_pick, (buttonView, isChecked) -> {
+                        if (isChecked) {
+                            try {
+                                String value = buttonView.getText().toString().trim();
+                                Matcher m = timePickerPattern.matcher(value);
+                                if (m.find()) {
+                                    value = m.group(1);
                                 }
+                                pick_time_end = value + ":00";
+                            } catch (Exception e) {
+                                Static.error(e);
+                                failed();
                             }
-                        }));
-                    } else {
-                        callback.onDraw(getEmptyLayout(activity.getString(R.string.no_time_to_peek)));
-                    }
-                } catch (Exception e){
-                    Static.error(e);
-                    failed();
+                        }
+                    }));
+                } else {
+                    callback.onDraw(getEmptyLayout(activity.getString(R.string.no_time_to_peek)));
                 }
+            } catch (Exception e){
+                Static.error(e);
+                failed();
             }
         });
     }
     private void confirmation() {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "confirmation | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
-                try {
-                    if (pick_date == null) throw new NullPointerException("pick_date cannot be null");
-                    if (pick_time_start == null) throw new NullPointerException("pick_time_start cannot be null");
-                    if (pick_time_end == null) throw new NullPointerException("pick_time_end cannot be null");
-                    callback.onDraw(getChooserLayout(activity.getString(R.string.attention), activity.getString(R.string.room101_warning), null, null));
-                } catch (Exception e){
-                    Static.error(e);
-                    failed();
-                }
+        Static.T.runThread(() -> {
+            Log.v(TAG, "confirmation | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
+            try {
+                if (pick_date == null) throw new NullPointerException("pick_date cannot be null");
+                if (pick_time_start == null) throw new NullPointerException("pick_time_start cannot be null");
+                if (pick_time_end == null) throw new NullPointerException("pick_time_end cannot be null");
+                callback.onDraw(getChooserLayout(activity.getString(R.string.attention), activity.getString(R.string.room101_warning), null, null));
+            } catch (Exception e){
+                Static.error(e);
+                failed();
             }
         });
     }
     private void done() {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "done | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
-                try {
-                    if (data == null) throw new NullPointerException("data cannot be null");
-                    if (!data.has("done")) throw new Exception("Empty data.done");
-                    String message;
-                    if (data.getBoolean("done")) {
-                        message = activity.getString(R.string.request_accepted);
+        Static.T.runThread(() -> {
+            Log.v(TAG, "done | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
+            try {
+                if (data == null) throw new NullPointerException("data cannot be null");
+                if (!data.has("done")) throw new Exception("Empty data.done");
+                String message;
+                if (data.getBoolean("done")) {
+                    message = activity.getString(R.string.request_accepted);
+                } else {
+                    if (data.has("message")) {
+                        message = data.getString("message");
                     } else {
-                        if (data.has("message")) {
-                            message = data.getString("message");
-                        } else {
-                            message = activity.getString(R.string.request_denied);
-                        }
+                        message = activity.getString(R.string.request_denied);
                     }
-                    callback.onDraw(getChooserLayout(message, null, null, null));
-                    if (data.getBoolean("done")) {
-                        FirebaseAnalyticsProvider.logEvent(
-                                activity,
-                                FirebaseAnalyticsProvider.Event.ROOM101_REQUEST_ADDED,
-                                FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.ROOM101_REQUEST_DETAILS, pick_date + "#" + pick_time_start + "#" + pick_time_end)
-                        );
-                    }
-                } catch (Exception e){
-                    Static.error(e);
-                    failed();
                 }
+                callback.onDraw(getChooserLayout(message, null, null, null));
+                if (data.getBoolean("done")) {
+                    FirebaseAnalyticsProvider.logEvent(
+                            activity,
+                            FirebaseAnalyticsProvider.Event.ROOM101_REQUEST_ADDED,
+                            FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.ROOM101_REQUEST_DETAILS, pick_date + "#" + pick_time_start + "#" + pick_time_end)
+                    );
+                }
+            } catch (Exception e){
+                Static.error(e);
+                failed();
             }
         });
     }
@@ -639,25 +592,22 @@ public class Room101AddRequest {
                 }
             }
         }
-        if (desc != null && !Objects.equals(desc, "")){
+        if (desc != null && !desc.isEmpty()){
             ((TextView) view.findViewById(R.id.ars_request_desc)).setText(desc);
         } else {
             removeView(view, R.id.ars_request_desc);
         }
-        if ((array == null || array.length() == 0) && (desc == null || Objects.equals(desc, ""))) {
+        if ((array == null || array.length() == 0) && (desc == null || desc.isEmpty())) {
             removeView(view, R.id.ars_request_content);
         }
         return view;
     }
     private void setRequestInfo(final ViewGroup viewGroup, final int layout, final boolean show, final String text) {
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (show) {
-                    ((TextView) viewGroup.findViewById(layout)).setText(text);
-                } else {
-                    removeView(viewGroup, layout);
-                }
+        Static.T.runOnUiThread(() -> {
+            if (show) {
+                ((TextView) viewGroup.findViewById(layout)).setText(text);
+            } else {
+                removeView(viewGroup, layout);
             }
         });
     }

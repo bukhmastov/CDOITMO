@@ -173,200 +173,185 @@ public abstract class Client {
     public static final int FAILED_INTERRUPTED = 3;
 
     protected static void _g(final String url, final okhttp3.Headers headers, final Map<String, String> query, final RawHandler rawHandler) {
-        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    HttpUrl httpUrl = HttpUrl.parse(url);
-                    if (httpUrl == null) {
-                        throw new NullPointerException("httpUrl is null");
-                    }
-                    if (query != null) {
-                        HttpUrl.Builder builder = httpUrl.newBuilder();
-                        for (Map.Entry<String, String> entry : query.entrySet()) {
-                            builder.addQueryParameter(entry.getKey(), entry.getValue());
-                        }
-                        execute(builder.build(), headers, null, rawHandler);
-                    }
-                    execute(httpUrl, headers, null, rawHandler);
-                } catch (Throwable throwable) {
-                    rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+            try {
+                HttpUrl httpUrl = HttpUrl.parse(url);
+                if (httpUrl == null) {
+                    throw new NullPointerException("httpUrl is null");
                 }
+                if (query != null) {
+                    HttpUrl.Builder builder = httpUrl.newBuilder();
+                    for (Map.Entry<String, String> entry : query.entrySet()) {
+                        builder.addQueryParameter(entry.getKey(), entry.getValue());
+                    }
+                    execute(builder.build(), headers, null, rawHandler);
+                }
+                execute(httpUrl, headers, null, rawHandler);
+            } catch (Throwable throwable) {
+                rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
             }
         });
     }
     protected static void _p(final String url, final okhttp3.Headers headers, final Map<String, String> query, final Map<String, String> params, final RawHandler rawHandler) {
-        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    HttpUrl httpUrl = HttpUrl.parse(url);
-                    if (httpUrl == null) {
-                        throw new NullPointerException("httpUrl is null");
-                    }
-                    HttpUrl.Builder builder = httpUrl.newBuilder();
-                    if (query != null) {
-                        for (Map.Entry<String, String> entry : query.entrySet()) {
-                            builder.addQueryParameter(entry.getKey(), entry.getValue());
-                        }
-                    }
-                    if (params != null) {
-                        FormBody.Builder formBody = new FormBody.Builder();
-                        for (Map.Entry<String, String> param : params.entrySet()) {
-                            formBody.add(param.getKey(), param.getValue());
-                        }
-                        execute(builder.build(), headers, formBody.build(), rawHandler);
-                    } else {
-                        execute(builder.build(), headers, null, rawHandler);
-                    }
-                } catch (Throwable throwable) {
-                    rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+            try {
+                HttpUrl httpUrl = HttpUrl.parse(url);
+                if (httpUrl == null) {
+                    throw new NullPointerException("httpUrl is null");
                 }
+                HttpUrl.Builder builder = httpUrl.newBuilder();
+                if (query != null) {
+                    for (Map.Entry<String, String> entry : query.entrySet()) {
+                        builder.addQueryParameter(entry.getKey(), entry.getValue());
+                    }
+                }
+                if (params != null) {
+                    FormBody.Builder formBody = new FormBody.Builder();
+                    for (Map.Entry<String, String> param : params.entrySet()) {
+                        formBody.add(param.getKey(), param.getValue());
+                    }
+                    execute(builder.build(), headers, formBody.build(), rawHandler);
+                } else {
+                    execute(builder.build(), headers, null, rawHandler);
+                }
+            } catch (Throwable throwable) {
+                rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
             }
         });
     }
     protected static void _gJson(final String url, final okhttp3.Headers headers, final Map<String, String> query, final RawJsonHandler rawJsonHandler) {
-        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    HttpUrl httpUrl = HttpUrl.parse(url);
-                    if (httpUrl == null) {
-                        throw new NullPointerException("httpUrl is null");
-                    }
-                    RawHandler rawHandler = new RawHandler() {
-                        @Override
-                        public void onDone(final int code, final okhttp3.Headers responseHeaders, final String response) {
-                            Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
-                                @Override
-                                public void run() {
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+            try {
+                HttpUrl httpUrl = HttpUrl.parse(url);
+                if (httpUrl == null) {
+                    throw new NullPointerException("httpUrl is null");
+                }
+                RawHandler rawHandler = new RawHandler() {
+                    @Override
+                    public void onDone(final int code, final okhttp3.Headers responseHeaders, final String response) {
+                        Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+                            try {
+                                if (response.isEmpty()) {
+                                    rawJsonHandler.onDone(code, headers, response, new JSONObject(), new JSONArray());
+                                } else {
                                     try {
-                                        if (response.isEmpty()) {
-                                            rawJsonHandler.onDone(code, headers, response, new JSONObject(), new JSONArray());
+                                        Object object = new JSONTokener(response).nextValue();
+                                        if (object instanceof JSONObject) {
+                                            rawJsonHandler.onDone(code, headers, response, (JSONObject) object, null);
+                                        } else if (object instanceof JSONArray) {
+                                            rawJsonHandler.onDone(code, headers, response, null, (JSONArray) object);
                                         } else {
-                                            try {
-                                                Object object = new JSONTokener(response).nextValue();
-                                                if (object instanceof JSONObject) {
-                                                    rawJsonHandler.onDone(code, headers, response, (JSONObject) object, null);
-                                                } else if (object instanceof JSONArray) {
-                                                    rawJsonHandler.onDone(code, headers, response, null, (JSONArray) object);
-                                                } else {
-                                                    throw new Exception("Failed to use JSONTokener");
-                                                }
-                                            } catch (Exception e) {
-                                                if (response.startsWith("{") && response.endsWith("}")) {
-                                                    try {
-                                                        JSONObject jsonObject;
-                                                        try {
-                                                            jsonObject = new JSONObject(response);
-                                                        } catch (Throwable throwable) {
-                                                            jsonObject = new JSONObject(fixInvalidResponse(response));
-                                                        }
-                                                        rawJsonHandler.onDone(code, headers, response, jsonObject, null);
-                                                    } catch (Throwable throwable) {
-                                                        rawJsonHandler.onError(code, headers, new ParseException("Failed to parse JSONObject", 0));
-                                                    }
-                                                } else if (response.startsWith("[") && response.endsWith("]")) {
-                                                    try {
-                                                        JSONArray jsonArray;
-                                                        try {
-                                                            jsonArray = new JSONArray(response);
-                                                        } catch (Throwable throwable) {
-                                                            jsonArray = new JSONArray(fixInvalidResponse(response));
-                                                        }
-                                                        rawJsonHandler.onDone(code, headers, response, null, jsonArray);
-                                                    } catch (Throwable throwable) {
-                                                        rawJsonHandler.onError(code, headers, new ParseException("Failed to parse JSONArray", 0));
-                                                    }
-                                                } else {
-                                                    rawJsonHandler.onError(code, headers, new Exception("Response is not recognized as JSONObject or JSONArray"));
-                                                }
-                                            }
+                                            throw new Exception("Failed to use JSONTokener");
                                         }
-                                    } catch (Throwable throwable) {
-                                        rawJsonHandler.onError(code, headers, throwable);
+                                    } catch (Exception e) {
+                                        if (response.startsWith("{") && response.endsWith("}")) {
+                                            try {
+                                                JSONObject jsonObject;
+                                                try {
+                                                    jsonObject = new JSONObject(response);
+                                                } catch (Throwable throwable) {
+                                                    jsonObject = new JSONObject(fixInvalidResponse(response));
+                                                }
+                                                rawJsonHandler.onDone(code, headers, response, jsonObject, null);
+                                            } catch (Throwable throwable) {
+                                                rawJsonHandler.onError(code, headers, new ParseException("Failed to parse JSONObject", 0));
+                                            }
+                                        } else if (response.startsWith("[") && response.endsWith("]")) {
+                                            try {
+                                                JSONArray jsonArray;
+                                                try {
+                                                    jsonArray = new JSONArray(response);
+                                                } catch (Throwable throwable) {
+                                                    jsonArray = new JSONArray(fixInvalidResponse(response));
+                                                }
+                                                rawJsonHandler.onDone(code, headers, response, null, jsonArray);
+                                            } catch (Throwable throwable) {
+                                                rawJsonHandler.onError(code, headers, new ParseException("Failed to parse JSONArray", 0));
+                                            }
+                                        } else {
+                                            rawJsonHandler.onError(code, headers, new Exception("Response is not recognized as JSONObject or JSONArray"));
+                                        }
                                     }
                                 }
-                            });
-                        }
-                        @Override
-                        public void onNewRequest(Request request) {
-                            rawJsonHandler.onNewRequest(request);
-                        }
-                        @Override
-                        public void onError(int code, okhttp3.Headers headers, Throwable throwable) {
-                            rawJsonHandler.onError(code, headers, throwable);
-                        }
-                    };
-                    if (query != null) {
-                        HttpUrl.Builder builder = httpUrl.newBuilder();
-                        for (Map.Entry<String, String> entry : query.entrySet()) {
-                            builder.addQueryParameter(entry.getKey(), entry.getValue());
-                        }
-                        execute(builder.build(), headers, null, rawHandler);
+                            } catch (Throwable throwable) {
+                                rawJsonHandler.onError(code, headers, throwable);
+                            }
+                        });
                     }
-                    execute(httpUrl, headers, null, rawHandler);
-                } catch (Throwable throwable) {
-                    rawJsonHandler.onError(STATUS_CODE_EMPTY, null, throwable);
+                    @Override
+                    public void onNewRequest(Request request) {
+                        rawJsonHandler.onNewRequest(request);
+                    }
+                    @Override
+                    public void onError(int code, okhttp3.Headers headers1, Throwable throwable) {
+                        rawJsonHandler.onError(code, headers1, throwable);
+                    }
+                };
+                if (query != null) {
+                    HttpUrl.Builder builder = httpUrl.newBuilder();
+                    for (Map.Entry<String, String> entry : query.entrySet()) {
+                        builder.addQueryParameter(entry.getKey(), entry.getValue());
+                    }
+                    execute(builder.build(), headers, null, rawHandler);
                 }
+                execute(httpUrl, headers, null, rawHandler);
+            } catch (Throwable throwable) {
+                rawJsonHandler.onError(STATUS_CODE_EMPTY, null, throwable);
             }
         });
     }
     private static void execute(final HttpUrl url, final okhttp3.Headers headers, final RequestBody requestBody, final RawHandler rawHandler) {
-        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Log.v(TAG,
-                            "execute | load | " +
-                            "url=" + (url == null ? "<null>" : url.toString()) + " | " +
-                            "headers=" + getLogHeaders(headers) + " | " +
-                            "requestBody=" + getLogRequestBody(requestBody)
-                    );
-                    okhttp3.Request.Builder builder = new okhttp3.Request.Builder();
-                    if (url != null) {
-                        builder.url(url);
-                    }
-                    if (headers != null) {
-                        builder.headers(headers);
-                    }
-                    if (requestBody != null) {
-                        MediaType contentType = requestBody.contentType();
-                        builder.addHeader("Content-Type", contentType == null ? "application/x-www-form-urlencoded" : contentType.toString());
-                        builder.addHeader("Content-Length", String.valueOf(requestBody.contentLength()));
-                        builder.post(requestBody);
-                    }
-                    okhttp3.Request request = builder.build();
-                    Call call = client.get().newCall(request);
-                    rawHandler.onNewRequest(new Request(call));
-                    okhttp3.Response response = call.execute();
-                    ResponseBody responseBody = response.body();
-                    String responseString = "";
-                    if (responseBody != null) {
-                        final int bufferSize = 1024;
-                        final char[] buffer = new char[bufferSize];
-                        final StringBuilder out = new StringBuilder();
-                        final Reader reader = responseBody.charStream();
-                        int length;
-                        while ((length = reader.read(buffer, 0, buffer.length)) != -1) {
-                            out.append(buffer, 0, length);
-                        }
-                        responseString = out.toString();
-                    }
-                    call.cancel();
-                    final int code = response.code();
-                    final okhttp3.Headers headers = response.headers();
-                    Log.v(TAG,
-                            "execute | done | " +
-                            "url=" + (url == null ? "<null>" : url.toString()) + " | " +
-                            "code=" + code + " | " +
-                            "headers=" + getLogHeaders(headers) + " | " +
-                            "response=" + (responseString.isEmpty() ? "<empty>" : "<string>")
-                    );
-                    rawHandler.onDone(code, headers, responseString);
-                } catch (Throwable throwable) {
-                    rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
+        Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+            try {
+                Log.v(TAG,
+                        "execute | load | " +
+                        "url=" + (url == null ? "<null>" : url.toString()) + " | " +
+                        "headers=" + getLogHeaders(headers) + " | " +
+                        "requestBody=" + getLogRequestBody(requestBody)
+                );
+                okhttp3.Request.Builder builder = new okhttp3.Request.Builder();
+                if (url != null) {
+                    builder.url(url);
                 }
+                if (headers != null) {
+                    builder.headers(headers);
+                }
+                if (requestBody != null) {
+                    MediaType contentType = requestBody.contentType();
+                    builder.addHeader("Content-Type", contentType == null ? "application/x-www-form-urlencoded" : contentType.toString());
+                    builder.addHeader("Content-Length", String.valueOf(requestBody.contentLength()));
+                    builder.post(requestBody);
+                }
+                okhttp3.Request request = builder.build();
+                Call call = client.get().newCall(request);
+                rawHandler.onNewRequest(new Request(call));
+                Response response = call.execute();
+                ResponseBody responseBody = response.body();
+                String responseString = "";
+                if (responseBody != null) {
+                    final int bufferSize = 1024;
+                    final char[] buffer = new char[bufferSize];
+                    final StringBuilder out = new StringBuilder();
+                    final Reader reader = responseBody.charStream();
+                    int length;
+                    while ((length = reader.read(buffer, 0, buffer.length)) != -1) {
+                        out.append(buffer, 0, length);
+                    }
+                    responseString = out.toString();
+                }
+                call.cancel();
+                final int code = response.code();
+                final okhttp3.Headers headers1 = response.headers();
+                Log.v(TAG,
+                        "execute | done | " +
+                        "url=" + (url == null ? "<null>" : url.toString()) + " | " +
+                        "code=" + code + " | " +
+                        "headers=" + getLogHeaders(headers1) + " | " +
+                        "response=" + (responseString.isEmpty() ? "<empty>" : "<string>")
+                );
+                rawHandler.onDone(code, headers1, responseString);
+            } catch (Throwable throwable) {
+                rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
             }
         });
     }

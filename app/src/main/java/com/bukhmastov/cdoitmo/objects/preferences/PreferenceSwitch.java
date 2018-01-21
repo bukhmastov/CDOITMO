@@ -3,7 +3,6 @@ package com.bukhmastov.cdoitmo.objects.preferences;
 import android.support.annotation.StringRes;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.TextView;
 
@@ -64,41 +63,32 @@ public class PreferenceSwitch extends Preference {
             preference.enabled = Storage.pref.get(activity, preference.key, (Boolean) preference.defaultValue);
             preference_switcher_switch.setChecked(preference.enabled);
         }
-        preference_switcher_switch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(final CompoundButton buttonView, final boolean isChecked) {
-                if (preference.isDisabled()) {
-                    buttonView.setChecked(!isChecked);
-                    return;
-                }
-                if (preference.callback == null) {
-                    preference.enabled = isChecked;
-                    Storage.pref.put(activity, preference.key, isChecked);
-                    Preference.onPreferenceChanged(activity, preference.key);
-                    toggleDependencies(activity, preference, isChecked);
-                } else {
-                    preference.callback.onApproveChange(activity, preference, isChecked, new ApproveChangeCallback() {
-                        @Override
-                        public void onDecisionMade(ConnectedActivity activity, PreferenceSwitch preference, boolean decision) {
-                            if (decision) {
-                                preference.enabled = isChecked;
-                                Storage.pref.put(activity, preference.key, isChecked);
-                                Preference.onPreferenceChanged(activity, preference.key);
-                                toggleDependencies(activity, preference, isChecked);
-                            } else {
-                                preference_switcher_switch.setChecked(!isChecked);
-                            }
-                        }
-                    });
-                }
+        preference_switcher_switch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (preference.isDisabled()) {
+                buttonView.setChecked(!isChecked);
+                return;
+            }
+            if (preference.callback == null) {
+                preference.enabled = isChecked;
+                Storage.pref.put(activity, preference.key, isChecked);
+                Preference.onPreferenceChanged(activity, preference.key);
+                toggleDependencies(activity, preference, isChecked);
+            } else {
+                preference.callback.onApproveChange(activity, preference, isChecked, (activity1, preference1, decision) -> {
+                    if (decision) {
+                        preference1.enabled = isChecked;
+                        Storage.pref.put(activity1, preference1.key, isChecked);
+                        Preference.onPreferenceChanged(activity1, preference1.key);
+                        toggleDependencies(activity1, preference1, isChecked);
+                    } else {
+                        preference_switcher_switch.setChecked(!isChecked);
+                    }
+                });
             }
         });
-        preference_switcher.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (preference.isDisabled()) return;
-                preference_switcher_switch.setChecked(!preference_switcher_switch.isChecked());
-            }
+        preference_switcher.setOnClickListener(v -> {
+            if (preference.isDisabled()) return;
+            preference_switcher_switch.setChecked(!preference_switcher_switch.isChecked());
         });
         preference_switcher.setTag(preference.key);
         return preference_layout;

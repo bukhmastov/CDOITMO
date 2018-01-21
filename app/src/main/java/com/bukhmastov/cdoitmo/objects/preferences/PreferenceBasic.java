@@ -46,32 +46,21 @@ public class PreferenceBasic extends Preference {
                 preference_basic_summary.setVisibility(View.GONE);
             }
         }
-        preference_basic.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (preference.isDisabled()) return;
-                preference.callback.onPreferenceClicked(activity, preference, new OnPreferenceClickedCallback() {
-                    @Override
-                    public void onSetSummary(final ConnectedActivity activity, final String value) {
-                        Static.T.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                if (preference.changeSummary && value != null) {
-                                    final String summary = preference.callback.onGetSummary(activity, value);
-                                    if (summary != null) {
-                                        preference_basic_summary.setVisibility(View.VISIBLE);
-                                        preference_basic_summary.setText(summary);
-                                    } else {
-                                        preference_basic_summary.setVisibility(View.GONE);
-                                    }
-                                } else {
-                                    preference_basic_summary.setVisibility(View.GONE);
-                                }
-                            }
-                        });
+        preference_basic.setOnClickListener(view -> {
+            if (preference.isDisabled()) return;
+            preference.callback.onPreferenceClicked(activity, preference, (a, v) -> Static.T.runOnUiThread(() -> {
+                if (preference.changeSummary && v != null) {
+                    final String summary = preference.callback.onGetSummary(a, v);
+                    if (summary != null) {
+                        preference_basic_summary.setVisibility(View.VISIBLE);
+                        preference_basic_summary.setText(summary);
+                    } else {
+                        preference_basic_summary.setVisibility(View.GONE);
                     }
-                });
-            }
+                } else {
+                    preference_basic_summary.setVisibility(View.GONE);
+                }
+            }));
         });
         preference_basic.setTag(preference.key);
         return preference_layout;

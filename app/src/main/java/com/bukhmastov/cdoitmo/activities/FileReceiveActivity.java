@@ -68,44 +68,41 @@ public class FileReceiveActivity extends ConnectedActivity {
     }
 
     private void proceed() {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    final Intent intent = activity.getIntent();
-                    if (intent == null) {
-                        throw new NullPointerException("Intent is null");
-                    }
-                    Log.v(TAG, "proceed | intent: " + intent.toString());
-                    final Uri uri = intent.getData();
-                    if (uri == null) {
-                        throw new NullPointerException("Intent's data (uri) is null");
-                    }
-                    final String scheme = uri.getScheme();
-                    if (scheme == null) {
-                        throw new NullPointerException("Uri's scheme is null");
-                    }
-                    final String file;
-                    switch (scheme) {
-                        case "file":    file = fileFromUri(activity, uri); break;
-                        case "http":
-                        case "https":   file = fileFromWeb(activity, uri); break;
-                        case "content": file = fileFromContent(activity, uri); break;
-                        default:        throw new MessageException(activity.getString(R.string.failed_to_handle_file));
-                    }
-                    final JSONObject object = (JSONObject) new JSONTokener(file).nextValue();
-                    switch (object.getString("type")) {
-                        case "share_schedule_of_lessons": share_schedule_of_lessons(file, object); break;
-                        /* Place for future file types (if any) */
-                        default: throw new MessageException(activity.getString(R.string.file_doesnot_supported));
-                    }
-                } catch (MessageException e) {
-                    Log.v(TAG, "proceed | MessageException: " + e.getMessage());
-                    failure(e.getMessage());
-                } catch (Throwable throwable) {
-                    Log.w(TAG, "proceed | Throwable: " + throwable.getMessage());
-                    failure(activity.getString(R.string.failed_to_handle_file));
+        Static.T.runThread(() -> {
+            try {
+                final Intent intent = activity.getIntent();
+                if (intent == null) {
+                    throw new NullPointerException("Intent is null");
                 }
+                Log.v(TAG, "proceed | intent: " + intent.toString());
+                final Uri uri = intent.getData();
+                if (uri == null) {
+                    throw new NullPointerException("Intent's data (uri) is null");
+                }
+                final String scheme = uri.getScheme();
+                if (scheme == null) {
+                    throw new NullPointerException("Uri's scheme is null");
+                }
+                final String file;
+                switch (scheme) {
+                    case "file":    file = fileFromUri(activity, uri); break;
+                    case "http":
+                    case "https":   file = fileFromWeb(activity, uri); break;
+                    case "content": file = fileFromContent(activity, uri); break;
+                    default:        throw new MessageException(activity.getString(R.string.failed_to_handle_file));
+                }
+                final JSONObject object = (JSONObject) new JSONTokener(file).nextValue();
+                switch (object.getString("type")) {
+                    case "share_schedule_of_lessons": share_schedule_of_lessons(file, object); break;
+                    /* Place for future file types (if any) */
+                    default: throw new MessageException(activity.getString(R.string.file_doesnot_supported));
+                }
+            } catch (MessageException e) {
+                Log.v(TAG, "proceed | MessageException: " + e.getMessage());
+                failure(e.getMessage());
+            } catch (Throwable throwable) {
+                Log.w(TAG, "proceed | Throwable: " + throwable.getMessage());
+                failure(activity.getString(R.string.failed_to_handle_file));
             }
         });
     }
@@ -188,60 +185,51 @@ public class FileReceiveActivity extends ConnectedActivity {
     }
 
     private void share_schedule_of_lessons(final String file, final JSONObject object) {
-        Static.T.runThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Log.v(TAG, "share_schedule_of_lessons");
-                    if (Storage.file.general.get(activity, "users#current_login", "").trim().isEmpty()) {
-                        throw new MessageException(activity.getString(R.string.file_requires_auth));
-                    }
-                    if (object.has("content")) {
-                        final JSONObject content = object.getJSONObject("content");
-                        if (
-                                !(content.has("query") && content.get("query") instanceof String) ||
-                                !(content.has("title") && content.get("title") instanceof String) ||
-                                !(content.has("added") && content.get("added") instanceof JSONArray) ||
-                                !(content.has("reduced") && content.get("reduced") instanceof JSONArray)
-                        ) {
-                            throw new MessageException(activity.getString(R.string.corrupted_file));
-                        }
-                    } else {
+        Static.T.runThread(() -> {
+            try {
+                Log.v(TAG, "share_schedule_of_lessons");
+                if (Storage.file.general.get(activity, "users#current_login", "").trim().isEmpty()) {
+                    throw new MessageException(activity.getString(R.string.file_requires_auth));
+                }
+                if (object.has("content")) {
+                    final JSONObject content = object.getJSONObject("content");
+                    if (
+                            !(content.has("query") && content.get("query") instanceof String) ||
+                            !(content.has("title") && content.get("title") instanceof String) ||
+                            !(content.has("added") && content.get("added") instanceof JSONArray) ||
+                            !(content.has("reduced") && content.get("reduced") instanceof JSONArray)
+                    ) {
                         throw new MessageException(activity.getString(R.string.corrupted_file));
                     }
-                    Static.T.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Bundle extras = new Bundle();
-                            extras.putString("action", "handle");
-                            extras.putString("data", file);
-                            if (!openFragment(TYPE.root, ScheduleLessonsShareFragment.class, extras)) {
-                                failure(activity.getString(R.string.failed_to_display_file));
-                            }
-                        }
-                    });
-                } catch (MessageException e) {
-                    Log.v(TAG, "share_schedule_of_lessons | MessageException: " + e.getMessage());
-                    failure(e.getMessage());
-                } catch (Throwable throwable) {
-                    Log.w(TAG, "share_schedule_of_lessons | Throwable: " + throwable.getMessage());
-                    failure(activity.getString(R.string.failed_to_decode_file));
+                } else {
+                    throw new MessageException(activity.getString(R.string.corrupted_file));
                 }
+                Static.T.runOnUiThread(() -> {
+                    Bundle extras = new Bundle();
+                    extras.putString("action", "handle");
+                    extras.putString("data", file);
+                    if (!openFragment(TYPE.root, ScheduleLessonsShareFragment.class, extras)) {
+                        failure(activity.getString(R.string.failed_to_display_file));
+                    }
+                });
+            } catch (MessageException e) {
+                Log.v(TAG, "share_schedule_of_lessons | MessageException: " + e.getMessage());
+                failure(e.getMessage());
+            } catch (Throwable throwable) {
+                Log.w(TAG, "share_schedule_of_lessons | Throwable: " + throwable.getMessage());
+                failure(activity.getString(R.string.failed_to_decode_file));
             }
         });
     }
 
     private void failure(final String message) {
-        Static.T.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.v(TAG, "failure | message=" + message);
-                View state_failed_without_align = inflate(R.layout.state_failed_without_align);
-                ((TextView) state_failed_without_align.findViewById(R.id.text)).setText(message);
-                ViewGroup container = activity.findViewById(getRootViewId());
-                container.removeAllViews();
-                container.addView(state_failed_without_align);
-            }
+        Static.T.runOnUiThread(() -> {
+            Log.v(TAG, "failure | message=" + message);
+            View state_failed_without_align = inflate(R.layout.state_failed_without_align);
+            ((TextView) state_failed_without_align.findViewById(R.id.text)).setText(message);
+            ViewGroup container = activity.findViewById(getRootViewId());
+            container.removeAllViews();
+            container.addView(state_failed_without_align);
         });
     }
 

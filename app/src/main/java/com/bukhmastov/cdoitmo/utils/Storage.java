@@ -9,7 +9,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -448,12 +447,7 @@ public class Storage {
                     elementMeta.rate = ((double) elementMeta.requests / (double) requests) * elementMeta.priority;
                 }
                 List<ElementMeta> elementMetas = new ArrayList<>(stackOfMeta.values());
-                Collections.sort(elementMetas, new Comparator<ElementMeta>() {
-                    @Override
-                    public int compare(ElementMeta s1, ElementMeta s2) {
-                        return s1.rate > s2.rate ? -1 : (s1.rate < s2.rate ? 1 : 0);
-                    }
-                });
+                Collections.sort(elementMetas, (s1, s2) -> s1.rate > s2.rate ? -1 : (s1.rate < s2.rate ? 1 : 0));
                 for (int i = maxStack; i < elementMetas.size(); i++) {
                     stackOfData.remove(elementMetas.get(i).path);
                 }
