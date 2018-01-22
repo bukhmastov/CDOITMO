@@ -217,12 +217,12 @@ public class DeIfmoClient extends DeIfmo {
         Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
             Log.v(TAG, "get | url=" + url);
             if (Static.isOnline(context)) {
-                if (Static.UNAUTHORIZED_MODE) {
+                if (Static.UNAUTHORIZED_MODE && !url.startsWith("index.php")) {
                     Log.v(TAG, "get | UNAUTHORIZED_MODE | failed");
                     responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_UNAUTHORIZED_MODE);
                     return;
                 }
-                if (reAuth && checkJsessionId(context)) {
+                if (!Static.UNAUTHORIZED_MODE && reAuth && checkJsessionId(context)) {
                     authorize(context, new ResponseHandler() {
                         @Override
                         public void onSuccess(int statusCode, Headers headers, String response) {
@@ -261,7 +261,7 @@ public class DeIfmoClient extends DeIfmo {
                                         throw new NullPointerException("data cannot be null");
                                     if (response.contains("Закончился интервал неактивности") || response.contains("Доступ запрещен")) {
                                         Log.v(TAG, "get | url=" + url + " | success | auth required");
-                                        if (reAuth) {
+                                        if (!Static.UNAUTHORIZED_MODE && reAuth) {
                                             authorize(context, new ResponseHandler() {
                                                 @Override
                                                 public void onSuccess(int statusCode, Headers headers, String response) {
@@ -318,12 +318,12 @@ public class DeIfmoClient extends DeIfmo {
         Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
             Log.v(TAG, "post | url=" + url);
             if (Static.isOnline(context)) {
-                if (Static.UNAUTHORIZED_MODE) {
+                if (Static.UNAUTHORIZED_MODE && !url.startsWith("index.php")) {
                     Log.v(TAG, "post | UNAUTHORIZED_MODE | failed");
                     responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_UNAUTHORIZED_MODE);
                     return;
                 }
-                if (checkJsessionId(context)) {
+                if (!Static.UNAUTHORIZED_MODE && checkJsessionId(context)) {
                     authorize(context, new ResponseHandler() {
                         @Override
                         public void onSuccess(int statusCode, Headers headers, String response) {
@@ -361,25 +361,29 @@ public class DeIfmoClient extends DeIfmo {
                                     if (response == null)
                                         throw new NullPointerException("data cannot be null");
                                     if (response.contains("Закончился интервал неактивности") || response.contains("Доступ запрещен")) {
-                                        Log.v(TAG, "p | success | auth required");
-                                        authorize(context, new ResponseHandler() {
-                                            @Override
-                                            public void onSuccess(int sc, Headers h, String r) {
-                                                post(context, protocol, url, params, responseHandler);
-                                            }
-                                            @Override
-                                            public void onProgress(int s) {
-                                                responseHandler.onProgress(s);
-                                            }
-                                            @Override
-                                            public void onFailure(int sc, Headers h, int s) {
-                                                responseHandler.onFailure(sc, h, s);
-                                            }
-                                            @Override
-                                            public void onNewRequest(Request r) {
-                                                responseHandler.onNewRequest(r);
-                                            }
-                                        });
+                                        Log.v(TAG, "post | url=" + url + " | success | auth required");
+                                        if (!Static.UNAUTHORIZED_MODE) {
+                                            authorize(context, new ResponseHandler() {
+                                                @Override
+                                                public void onSuccess(int statusCode, Headers headers, String response) {
+                                                    post(context, protocol, url, params, responseHandler);
+                                                }
+                                                @Override
+                                                public void onProgress(int state) {
+                                                    responseHandler.onProgress(state);
+                                                }
+                                                @Override
+                                                public void onFailure(int statusCode, Headers headers, int state) {
+                                                    responseHandler.onFailure(statusCode, headers, state);
+                                                }
+                                                @Override
+                                                public void onNewRequest(Request request) {
+                                                    responseHandler.onNewRequest(request);
+                                                }
+                                            });
+                                        } else {
+                                            responseHandler.onFailure(code, new Headers(headers), FAILED_AUTH_CREDENTIALS_REQUIRED);
+                                        }
                                     } else {
                                         responseHandler.onSuccess(code, new Headers(headers), response);
                                     }

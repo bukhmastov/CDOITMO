@@ -50,7 +50,7 @@ public class Account {
             }
             Account.authorized = false;
             Storage.file.general.put(context, "users#current_login", login);
-            if (isNewUser) {
+            if (isNewUser || IS_USER_UNAUTHORIZED) {
                 Storage.file.perm.put(context, "user#deifmo#login", login);
                 Storage.file.perm.put(context, "user#deifmo#password", password);
                 Storage.file.perm.put(context, "user#role", role);

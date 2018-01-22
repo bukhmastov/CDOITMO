@@ -41,11 +41,18 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
     private boolean spinner_group_blocker = true, spinner_period_blocker = true;
     private boolean loaded = false;
     private Client.Request requestHandle = null;
+    protected boolean forbidden = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.v(TAG, "Fragment created");
+        if (Static.UNAUTHORIZED_MODE) {
+            forbidden = true;
+            Log.w(TAG, "Fragment created | UNAUTHORIZED_MODE not allowed, closing fragment...");
+            close();
+            return;
+        }
         FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
         group = Storage.file.cache.get(activity, "eregister#params#selected_group", "");
         term = -2;
@@ -66,6 +73,9 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
     public void onResume() {
         super.onResume();
         Log.v(TAG, "resumed");
+        if (forbidden) {
+            return;
+        }
         FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
         if (!loaded) {
             loaded = true;

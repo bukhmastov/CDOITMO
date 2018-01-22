@@ -110,7 +110,7 @@ public class Storage {
         }
 
         private static synchronized boolean put(Context context, STORAGE storage, TYPE type, String path, String data) {
-            Log.v(TAG, "file | put | storage=" + (storage == null ? "both" : storage.toString()) + " | type=" + type2string(type) + " | path=" + path);
+            Log.v(TAG, "file | put | storage=" + (storage == null ? "both" : storage.toString()) + " | type=" + type.toString() + " | path=" + path);
             if (context == null) {
                 Log.w(TAG, "file | put | context is null");
                 return false;
@@ -139,7 +139,7 @@ public class Storage {
             return get(context, storage, type, path, "");
         }
         private static String get(Context context, STORAGE storage, TYPE type, String path, String def) {
-            Log.v(TAG, "file | get | storage=" + (storage == null ? "both" : storage.toString()) + " | type=" + type2string(type) + " | path=" + path);
+            Log.v(TAG, "file | get | storage=" + (storage == null ? "both" : storage.toString()) + " | type=" + type.toString() + " | path=" + path);
             if (context == null) {
                 Log.w(TAG, "file | get | context is null");
                 return def;
@@ -165,7 +165,7 @@ public class Storage {
             }
         }
         private static boolean delete(Context context, STORAGE storage, TYPE type, String path) {
-            Log.v(TAG, "file | delete | storage=" + (storage == null ? "both" : storage.toString()) + " | type=" + type2string(type) + " | path=" + path);
+            Log.v(TAG, "file | delete | storage=" + (storage == null ? "both" : storage.toString()) + " | type=" + type.toString() + " | path=" + path);
             if (context == null) {
                 Log.w(TAG, "file | delete | context is null");
                 return false;
@@ -180,7 +180,7 @@ public class Storage {
             }
         }
         private static boolean clear(Context context, STORAGE storage, TYPE type) {
-            Log.v(TAG, "file | clear | storage=" + (storage == null ? "both" : storage.toString()) + " | type=" + type2string(type));
+            Log.v(TAG, "file | clear | storage=" + (storage == null ? "both" : storage.toString()) + " | type=" + type.toString());
             if (context == null) {
                 Log.w(TAG, "file | clear | context is null");
                 return false;
@@ -196,7 +196,7 @@ public class Storage {
             }
         }
         private static boolean clear(Context context, STORAGE storage, String path, TYPE type) {
-            Log.v(TAG, "file | clear | storage=" + (storage == null ? "both" : storage.toString()) + " | type=" + type2string(type) + " | path=" + path);
+            Log.v(TAG, "file | clear | storage=" + (storage == null ? "both" : storage.toString()) + " | type=" + type.toString() + " | path=" + path);
             if (context == null) {
                 Log.w(TAG, "file | clear | context is null");
                 return false;
@@ -212,7 +212,7 @@ public class Storage {
             }
         }
         private static boolean exists(Context context, STORAGE storage, TYPE type, String path) {
-            Log.v(TAG, "file | exists | storage=" + (storage == null ? "both" : storage.toString()) + " | type=" + type2string(type) + " | path=" + path);
+            Log.v(TAG, "file | exists | storage=" + (storage == null ? "both" : storage.toString()) + " | type=" + type.toString() + " | path=" + path);
             if (context == null) {
                 Log.w(TAG, "file | exists | context is null");
                 return false;
@@ -242,7 +242,7 @@ public class Storage {
             }
         }
         private static ArrayList<String> list(Context context, STORAGE storage, TYPE type, String path) {
-            Log.v(TAG, "file | list | storage=" + (storage == null ? "both" : storage.toString()) + " | type=" + type2string(type) + " | path=" + path);
+            Log.v(TAG, "file | list | storage=" + (storage == null ? "both" : storage.toString()) + " | type=" + type.toString() + " | path=" + path);
             ArrayList<String> response = new ArrayList<>();
             if (context == null) {
                 Log.w(TAG, "file | list | context is null");
@@ -281,14 +281,12 @@ public class Storage {
             return getLocation(context, storage, type) + path;
         }
         private static String getLocation(Context context, STORAGE storage, TYPE type) throws Exception {
-            String login = type2string(type);
-            if (login.equals(type2string(TYPE.USER))) {
-                login = file.general.get(context, "users#current_login");
-                if (login == null) {
-                    login = "";
-                }
+            String login;
+            switch (type) {
+                case GENERAL: login = "general"; break;
+                case USER: default: login = file.general.get(context, "users#current_login"); break;
             }
-            if (login.isEmpty()) {
+            if (login == null || login.isEmpty()) {
                 throw new Exception("getLocation | login is empty");
             }
             return getCoreLocation(context, storage) + File.separator + login;
@@ -457,13 +455,6 @@ public class Storage {
             requests = 0;
             stackOfMeta.clear();
             stackOfData.clear();
-        }
-    }
-
-    private static String type2string(TYPE type) {
-        switch (type) {
-            case GENERAL: return "general";
-            case USER: default: return "user";
         }
     }
 }

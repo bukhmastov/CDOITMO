@@ -57,6 +57,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Static {
 
@@ -702,6 +704,34 @@ public class Static {
                 }
             })));
         }
+        public static void hideIfUnauthorizedMode(final NavigationView navigationView) {
+            Static.T.runOnUiThread(() -> {
+                try {
+                    if (navigationView != null) {
+                        final Menu menu = navigationView.getMenu();
+                        if (menu.findItem(R.id.nav_e_register).isVisible()) {
+                            if (Static.UNAUTHORIZED_MODE) {
+                                menu.findItem(R.id.nav_e_register).setVisible(false);
+                                menu.findItem(R.id.nav_protocol_changes).setVisible(false);
+                                menu.findItem(R.id.nav_room101).setVisible(false);
+                                menu.findItem(R.id.nav_do_clean_auth).setVisible(false);
+                                menu.findItem(R.id.nav_logout).setVisible(false);
+                            }
+                        } else {
+                            if (!Static.UNAUTHORIZED_MODE) {
+                                menu.findItem(R.id.nav_e_register).setVisible(true);
+                                menu.findItem(R.id.nav_protocol_changes).setVisible(true);
+                                menu.findItem(R.id.nav_room101).setVisible(true);
+                                menu.findItem(R.id.nav_do_clean_auth).setVisible(true);
+                                menu.findItem(R.id.nav_logout).setVisible(true);
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    Static.error(e);
+                }
+            });
+        }
     }
     @SuppressWarnings("deprecation")
     public static Locale getLocale(Context context) {
@@ -1097,5 +1127,14 @@ public class Static {
             json = new JSONObject(text);
         }
         return json;
+    }
+    public static String prettifyGroupNumber(String group) {
+        if (group != null && !group.isEmpty()) {
+            Matcher m = Pattern.compile("([a-z])(\\d{4}\\S?)").matcher(group);
+            if (m.find()) {
+                group = m.group(1).toUpperCase() + m.group(2).toLowerCase();
+            }
+        }
+        return group;
     }
 }

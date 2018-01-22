@@ -67,6 +67,11 @@ public class ProtocolTracker {
     }
     private ProtocolTracker start(@Nullable final Static.SimpleCallback callback) {
         Log.v(TAG, "start");
+        if (Static.UNAUTHORIZED_MODE) {
+            Log.v(TAG, "start | UNAUTHORIZED_MODE");
+            stop(callback);
+            return this;
+        }
         boolean enabled = Storage.pref.get(context, "pref_use_notifications", true);
         boolean running = "1".equals(Storage.file.perm.get(context, "protocol_tracker#job_service_running", "0"));
         if (enabled && !running) {

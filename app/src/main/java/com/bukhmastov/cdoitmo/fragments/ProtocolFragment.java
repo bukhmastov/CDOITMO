@@ -45,11 +45,18 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
     private boolean spinner_weeks_blocker = true;
     private boolean loaded = false;
     private Client.Request requestHandle = null;
+    protected boolean forbidden = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.v(TAG, "Fragment created");
+        if (Static.UNAUTHORIZED_MODE) {
+            forbidden = true;
+            Log.w(TAG, "Fragment created | UNAUTHORIZED_MODE not allowed, closing fragment...");
+            close();
+            return;
+        }
         FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
         number_of_weeks = Integer.parseInt(Storage.pref.get(activity, "pref_protocol_changes_weeks", "1"));
     }
@@ -79,6 +86,9 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
     public void onResume() {
         super.onResume();
         Log.v(TAG, "resumed");
+        if (forbidden) {
+            return;
+        }
         FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
         try {
             if (activity.toolbar != null) {

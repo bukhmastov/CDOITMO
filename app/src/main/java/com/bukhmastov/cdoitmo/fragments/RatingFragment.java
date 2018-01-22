@@ -170,6 +170,10 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
             }
         });
         Static.T.runThread(() -> {
+            if (Static.UNAUTHORIZED_MODE && type == TYPE.own) {
+                loaded(type);
+                return;
+            }
             Log.v(TAG, "load | type=" + type.toString() + " | force=" + (force ? "true" : "false"));
             if ((!force || !Static.isOnline(activity)) && Storage.pref.get(activity, "pref_use_cache", true)) {
                 try {
@@ -360,7 +364,11 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
         Static.T.runThread(() -> {
             switch (type) {
                 case common: {
-                    load(TYPE.own);
+                    if (!Static.UNAUTHORIZED_MODE) {
+                        load(TYPE.own);
+                    } else {
+                        display();
+                    }
                     break;
                 }
                 case own: {
@@ -417,7 +425,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                 }
                 // извлекаем информацию личного рейтинга
                 final ArrayList<HashMap<String, String>> courses = new ArrayList<>();
-                if (own_available) {
+                if (own_available && !Static.UNAUTHORIZED_MODE) {
                     JSONArray coursesArr = own.data.getJSONObject("rating").getJSONArray("courses");
                     for (int i = 0; i < coursesArr.length(); i++) {
                         JSONObject course = coursesArr.getJSONObject(i);
@@ -502,7 +510,12 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                             }
                         }
                         // отображаем личный рейтинг
-                        if (own_available) {
+                        if (Static.UNAUTHORIZED_MODE) {
+                            View rating_own = activity.findViewById(R.id.rating_own);
+                            if (rating_own != null) {
+                                rating_own.setVisibility(View.GONE);
+                            }
+                        } else if (own_available) {
                             // работаем со списком
                             ListView rl_list_view = activity.findViewById(R.id.rl_list_view);
                             if (rl_list_view != null) {

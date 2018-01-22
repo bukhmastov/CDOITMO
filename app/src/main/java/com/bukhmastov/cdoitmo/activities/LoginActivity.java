@@ -364,11 +364,13 @@ public class LoginActivity extends ConnectedActivity {
                         Log.v(TAG, "anonymous_user_tile login clicked");
                         String group = "";
                         if (input_group != null) {
-                            group = input_group.getText().toString();
+                            group = Static.prettifyGroupNumber(input_group.getText().toString());
                         }
+                        Storage.file.general.put(activity, "users#current_login", Account.USER_UNAUTHORIZED);
                         Storage.file.perm.put(activity, "user#name", activity.getString(R.string.anonymous));
                         Storage.file.perm.put(activity, "user#group", group);
                         Storage.file.perm.put(activity, "user#avatar", "");
+                        Storage.file.general.delete(activity, "users#current_login");
                         login(Account.USER_UNAUTHORIZED, Account.USER_UNAUTHORIZED, "anonymous", false);
                     });
                     anonymous_user_tile.findViewById(R.id.expand_auth_menu).setOnClickListener(view -> {
@@ -404,6 +406,9 @@ public class LoginActivity extends ConnectedActivity {
                                 .create().show();
                     });
                     login_tiles_container.addView(anonymous_user_tile);
+                    Storage.file.general.put(activity, "users#current_login", Account.USER_UNAUTHORIZED);
+                    input_group.setText(Storage.file.perm.get(activity, "user#group", ""));
+                    Storage.file.general.delete(activity, "users#current_login");
                     // draw UI
                     Static.T.runOnUiThread(() -> {
                         try {

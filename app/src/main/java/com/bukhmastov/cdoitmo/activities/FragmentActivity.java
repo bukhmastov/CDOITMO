@@ -84,6 +84,7 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
         if (layout_with_menu) {
             NavigationView navigationView = findViewById(R.id.nav_view);
             Static.NavigationMenu.displayEnableDisableOfflineButton(navigationView);
+            Static.NavigationMenu.hideIfUnauthorizedMode(navigationView);
             Static.NavigationMenu.displayUserData(this, navigationView);
             Static.NavigationMenu.displayRemoteMessage(this);
         }

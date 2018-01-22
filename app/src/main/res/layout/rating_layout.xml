@@ -83,33 +83,42 @@
         android:layout_height="@dimen/separator"
         android:background="?attr/colorSeparator"/>
 
-    <TextView
+    <LinearLayout
+        android:id="@+id/rating_own"
+        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?attr/colorBackgroundSection"
-        android:gravity="center_vertical"
-        android:padding="@dimen/item_padding"
-        android:text="@string/your_rating"
-        android:textColor="?android:attr/textColorSecondary"
-        android:textSize="@dimen/font_size_14" />
+        android:layout_height="match_parent"
+        android:visibility="visible">
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/separator"
-        android:background="?attr/colorSeparator"/>
-
-    <android.support.v4.widget.SwipeRefreshLayout
-        android:id="@+id/swipe_container"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <ListView
+        <TextView
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:id="@+id/rl_list_view"
-            android:divider="?attr/colorSeparator"
-            android:dividerHeight="@dimen/separator" />
+            android:layout_height="wrap_content"
+            android:background="?attr/colorBackgroundSection"
+            android:gravity="center_vertical"
+            android:padding="@dimen/item_padding"
+            android:text="@string/your_rating"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="@dimen/font_size_14" />
 
-    </android.support.v4.widget.SwipeRefreshLayout>
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/separator"
+            android:background="?attr/colorSeparator"/>
+
+        <android.support.v4.widget.SwipeRefreshLayout
+            android:id="@+id/swipe_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ListView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/rl_list_view"
+                android:divider="?attr/colorSeparator"
+                android:dividerHeight="@dimen/separator" />
+
+        </android.support.v4.widget.SwipeRefreshLayout>
+
+    </LinearLayout>
 
 </LinearLayout>

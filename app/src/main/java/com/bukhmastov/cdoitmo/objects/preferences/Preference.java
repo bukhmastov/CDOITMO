@@ -15,8 +15,6 @@ import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 
 import java.util.ArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public abstract class Preference {
     protected static final String TAG = "Preference";
@@ -94,10 +92,7 @@ public abstract class Preference {
                 }
                 break;
             case "pref_group_force_override":
-                Matcher m = Pattern.compile("([a-z])(\\d{4}\\S?)").matcher(Storage.pref.get(activity, "pref_group_force_override", ""));
-                if (m.find()) {
-                    Storage.pref.put(activity, "pref_group_force_override", m.group(1).toUpperCase() + m.group(2).toLowerCase());
-                }
+                Storage.pref.put(activity, "pref_group_force_override", Static.prettifyGroupNumber(Storage.pref.get(activity, "pref_group_force_override", "")));
                 break;
             case "pref_lang":
                 Static.snackBar(activity, activity.getString(R.string.restart_required), activity.getString(R.string.restart), v -> Static.reLaunch(activity));

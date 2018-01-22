@@ -163,7 +163,9 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
         super.onResume();
         Log.v(TAG, "Activity resumed");
         if (initialized) {
-            Static.NavigationMenu.displayEnableDisableOfflineButton(findViewById(R.id.nav_view));
+            final NavigationView navigationView = activity.findViewById(R.id.nav_view);
+            Static.NavigationMenu.displayEnableDisableOfflineButton(navigationView);
+            Static.NavigationMenu.hideIfUnauthorizedMode(navigationView);
             if (Static.OFFLINE_MODE || Account.authorized) {
                 authorized();
             } else {
@@ -268,7 +270,20 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
             }
         });
     }
-    private void selectSection(final int section) {
+    private void selectSection(final int s) {
+        final int section;
+        if (Static.UNAUTHORIZED_MODE) {
+            switch (s) {
+                case R.id.nav_e_register:
+                case R.id.nav_protocol_changes: section = R.id.nav_schedule; break;
+                case R.id.nav_room101: section = R.id.nav_university; break;
+                case R.id.nav_do_clean_auth:
+                case R.id.nav_logout: section = R.id.nav_change_account; break;
+                default: section = s; break;
+            }
+        } else {
+            section = s;
+        }
         Static.T.runThread(() -> {
             Log.v(TAG, "selectSection | section=" + section);
             switch (section) {

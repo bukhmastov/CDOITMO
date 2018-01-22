@@ -125,7 +125,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
             mineFaculty = "";
             hideShareButton();
             if (!Static.OFFLINE_MODE) {
-                DeIfmoClient.get(activity, "?node=rating&std&depId=" + faculty + "&year=" + course + "&app=" + years, null, new ResponseHandler() {
+                DeIfmoClient.get(activity, "index.php?node=rating&std&depId=" + faculty + "&year=" + course + "&app=" + years, null, new ResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                         Static.T.runThread(() -> {

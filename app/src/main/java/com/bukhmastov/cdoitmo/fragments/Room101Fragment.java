@@ -42,11 +42,18 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
     private boolean loaded = false;
     public static Client.Request requestHandle = null;
     private String action_extra = null;
+    protected boolean forbidden = false;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.v(TAG, "Fragment created");
+        if (Static.UNAUTHORIZED_MODE) {
+            forbidden = true;
+            Log.w(TAG, "Fragment created | UNAUTHORIZED_MODE not allowed, closing fragment...");
+            close();
+            return;
+        }
         FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
         Activity activity = getActivity();
         if (activity != null) {
@@ -75,6 +82,9 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
     public void onResume() {
         super.onResume();
         Log.v(TAG, "resumed");
+        if (forbidden) {
+            return;
+        }
         FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
         if (!loaded) {
             loaded = true;
