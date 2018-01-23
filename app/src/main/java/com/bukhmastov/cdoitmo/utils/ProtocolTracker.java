@@ -86,7 +86,7 @@ public class ProtocolTracker {
                 jobScheduler.schedule(builder.build());
                 Storage.file.perm.put(context, "protocol_tracker#job_service_running", "1");
                 Storage.file.perm.put(context, "protocol_tracker#protocol", "");
-                Log.i(TAG, "Started | user = " + Storage.file.general.get(context, "users#current_login") + " | frequency = " + frequency);
+                Log.i(TAG, "Started | user = " + Storage.file.general.perm.get(context, "users#current_login") + " | frequency = " + frequency);
                 if (callback != null) {
                     callback.onCall();
                 }

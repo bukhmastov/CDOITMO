@@ -188,7 +188,7 @@ public class FileReceiveActivity extends ConnectedActivity {
         Static.T.runThread(() -> {
             try {
                 Log.v(TAG, "share_schedule_of_lessons");
-                if (Storage.file.general.get(activity, "users#current_login", "").trim().isEmpty()) {
+                if (Storage.file.general.perm.get(activity, "users#current_login", "").trim().isEmpty()) {
                     throw new MessageException(activity.getString(R.string.file_requires_auth));
                 }
                 if (object.has("content")) {

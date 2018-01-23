@@ -49,7 +49,7 @@ public class Account {
                 return;
             }
             Account.authorized = false;
-            Storage.file.general.put(context, "users#current_login", login);
+            Storage.file.general.perm.put(context, "users#current_login", login);
             if (isNewUser || IS_USER_UNAUTHORIZED) {
                 Storage.file.perm.put(context, "user#deifmo#login", login);
                 Storage.file.perm.put(context, "user#deifmo#password", password);
@@ -168,7 +168,7 @@ public class Account {
     }
     public static void logout(@NonNull final Context context, @Nullable final String login, @NonNull final LogoutHandler logoutHandler) {
         Static.T.runThread(() -> {
-            @NonNull final String cLogin = login != null ? login : Storage.file.general.get(context, "users#current_login");
+            @NonNull final String cLogin = login != null ? login : Storage.file.general.perm.get(context, "users#current_login");
             final boolean IS_USER_UNAUTHORIZED = USER_UNAUTHORIZED.equals(cLogin);
             Log.i(TAG, "logout | login=" + cLogin + " | IS_USER_UNAUTHORIZED=" + Log.lBool(IS_USER_UNAUTHORIZED) + " | OFFLINE_MODE=" + Log.lBool(Static.OFFLINE_MODE));
             if ("general".equals(login)) {
@@ -180,7 +180,7 @@ public class Account {
                 logoutPermanently(context, cLogin, logoutHandler::onSuccess);
                 return;
             }
-            Storage.file.general.put(context, "users#current_login", cLogin);
+            Storage.file.general.perm.put(context, "users#current_login", cLogin);
             final String uName = Storage.file.perm.get(context, "user#name");
             DeIfmoClient.get(context, "servlet/distributedCDE?Rule=SYSTEM_EXIT", null, new ResponseHandler() {
                 @Override
@@ -209,19 +209,19 @@ public class Account {
     }
     public static void logoutPermanently(@NonNull final Context context, @Nullable final String login, @Nullable final Static.SimpleCallback callback) {
         Static.T.runThread(() -> {
-            @NonNull final String cLogin = login != null ? login : Storage.file.general.get(context, "users#current_login");
+            @NonNull final String cLogin = login != null ? login : Storage.file.general.perm.get(context, "users#current_login");
             final boolean IS_USER_UNAUTHORIZED = USER_UNAUTHORIZED.equals(cLogin);
             final boolean IS_LOGIN_EMPTY = cLogin.isEmpty();
             Log.v(TAG, "logoutPermanently | login=" + cLogin + " | IS_USER_UNAUTHORIZED=" + Log.lBool(IS_USER_UNAUTHORIZED));
             if (!IS_LOGIN_EMPTY) {
-                Storage.file.general.put(context, "users#current_login", cLogin);
+                Storage.file.general.perm.put(context, "users#current_login", cLogin);
             }
             final Static.SimpleCallback cb = () -> {
                 if (!IS_USER_UNAUTHORIZED && !IS_LOGIN_EMPTY) {
                     Storage.file.all.clear(context);
                     List.remove(context, cLogin);
                 }
-                Storage.file.general.delete(context, "users#current_login");
+                Storage.file.general.perm.delete(context, "users#current_login");
                 Storage.cache.reset();
                 Account.authorized = false;
                 Static.UNAUTHORIZED_MODE = false;
@@ -241,11 +241,11 @@ public class Account {
     }
     public static void logoutTemporarily(@NonNull final Context context, @Nullable final String login, @Nullable final Static.SimpleCallback callback) {
         Static.T.runThread(() -> {
-            @NonNull final String cLogin = login != null ? login : Storage.file.general.get(context, "users#current_login");
+            @NonNull final String cLogin = login != null ? login : Storage.file.general.perm.get(context, "users#current_login");
             final boolean IS_USER_UNAUTHORIZED = USER_UNAUTHORIZED.equals(cLogin);
             Log.i(TAG, "logoutTemporarily | login=" + cLogin + " | IS_USER_UNAUTHORIZED=" + Log.lBool(IS_USER_UNAUTHORIZED));
             final Static.SimpleCallback cb = () -> {
-                Storage.file.general.delete(context, "users#current_login");
+                Storage.file.general.perm.delete(context, "users#current_login");
                 Storage.cache.reset();
                 Account.authorized = false;
                 Static.UNAUTHORIZED_MODE = false;
@@ -279,7 +279,7 @@ public class Account {
                     Log.v(TAG, "push | login=" + login);
                     boolean isNewAuthorization = true;
                     // save login on top of the list of authorized users
-                    JSONArray list = Static.string2jsonArray(Storage.file.general.get(context, "users#list", ""));
+                    JSONArray list = Static.string2jsonArray(Storage.file.general.perm.get(context, "users#list", ""));
                     JSONArray accounts = new JSONArray();
                     accounts.put(login);
                     for (int i = 0; i < list.length(); i++) {
@@ -290,7 +290,7 @@ public class Account {
                             accounts.put(entry);
                         }
                     }
-                    Storage.file.general.put(context, "users#list", accounts.toString());
+                    Storage.file.general.perm.put(context, "users#list", accounts.toString());
                     // track statistics
                     Bundle bundle;
                     bundle = FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_COUNT, accounts.length());
@@ -311,14 +311,14 @@ public class Account {
                 try {
                     Log.v(TAG, "remove | login=" + login);
                     // remove login from the list of authorized users
-                    JSONArray list = Static.string2jsonArray(Storage.file.general.get(context, "users#list", ""));
+                    JSONArray list = Static.string2jsonArray(Storage.file.general.perm.get(context, "users#list", ""));
                     for (int i = 0; i < list.length(); i++) {
                         if (list.getString(i).equals(login)) {
                             list.remove(i);
                             break;
                         }
                     }
-                    Storage.file.general.put(context, "users#list", list.toString());
+                    Storage.file.general.perm.put(context, "users#list", list.toString());
                     // track statistics
                     FirebaseAnalyticsProvider.logEvent(
                             context,
@@ -333,7 +333,7 @@ public class Account {
         public static JSONArray get(@NonNull Context context) {
             Log.v(TAG, "get");
             try {
-                return Static.string2jsonArray(Storage.file.general.get(context, "users#list", ""));
+                return Static.string2jsonArray(Storage.file.general.perm.get(context, "users#list", ""));
             } catch (Exception e) {
                 Static.error(e);
                 return new JSONArray();

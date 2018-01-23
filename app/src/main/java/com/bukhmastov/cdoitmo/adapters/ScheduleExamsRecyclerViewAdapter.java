@@ -153,7 +153,7 @@ public class ScheduleExamsRecyclerViewAdapter extends RecyclerView.Adapter<Recyc
             }
             viewHolder.container.findViewById(R.id.schedule_lessons_menu).setOnClickListener(view -> Static.T.runThread(() -> {
                 final String cache_token = query == null ? null : query.toLowerCase();
-                final boolean cached = cache_token != null && !Storage.file.cache.get(activity, "schedule_exams#lessons#" + cache_token, "").isEmpty();
+                final boolean cached = cache_token != null && !Storage.file.general.cache.get(activity, "schedule_exams#lessons#" + cache_token, "").isEmpty();
                 Static.T.runOnUiThread(() -> {
                     try {
                         final PopupMenu popup = new PopupMenu(activity, view);
@@ -169,8 +169,8 @@ public class ScheduleExamsRecyclerViewAdapter extends RecyclerView.Adapter<Recyc
                                         if (cache_token == null) {
                                             Static.snackBar(activity, activity.getString(R.string.cache_failed));
                                         } else {
-                                            if (Storage.file.cache.exists(activity, "schedule_exams#lessons#" + cache_token)) {
-                                                if (Storage.file.cache.delete(activity, "schedule_exams#lessons#" + cache_token)) {
+                                            if (Storage.file.general.cache.exists(activity, "schedule_exams#lessons#" + cache_token)) {
+                                                if (Storage.file.general.cache.delete(activity, "schedule_exams#lessons#" + cache_token)) {
                                                     Static.snackBar(activity, activity.getString(R.string.cache_false));
                                                 } else {
                                                     Static.snackBar(activity, activity.getString(R.string.cache_failed));
@@ -179,7 +179,7 @@ public class ScheduleExamsRecyclerViewAdapter extends RecyclerView.Adapter<Recyc
                                                 if (data == null) {
                                                     Static.snackBar(activity, activity.getString(R.string.cache_failed));
                                                 } else {
-                                                    if (Storage.file.cache.put(activity, "schedule_exams#lessons#" + cache_token, data.toString())) {
+                                                    if (Storage.file.general.cache.put(activity, "schedule_exams#lessons#" + cache_token, data.toString())) {
                                                         Static.snackBar(activity, activity.getString(R.string.cache_true));
                                                     } else {
                                                         Static.snackBar(activity, activity.getString(R.string.cache_failed));

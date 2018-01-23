@@ -143,7 +143,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         Static.T.runThread(() -> {
             Log.v(TAG, "load | refresh_rate=" + refresh_rate);
             if (Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
-                String cache = Storage.file.cache.get(activity, "university#buildings").trim();
+                String cache = Storage.file.general.cache.get(activity, "university#buildings").trim();
                 if (!cache.isEmpty()) {
                     try {
                         JSONObject cacheJson = new JSONObject(cache);
@@ -182,7 +182,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                                 long now = Static.getCalendar().getTimeInMillis();
                                 if (json != null && Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
                                     try {
-                                        Storage.file.cache.put(activity, "university#buildings", new JSONObject()
+                                        Storage.file.general.cache.put(activity, "university#buildings", new JSONObject()
                                                 .put("timestamp", now)
                                                 .put("data", json)
                                                 .toString()

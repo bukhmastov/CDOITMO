@@ -60,7 +60,7 @@ public class SettingsScheduleLessonsFragment extends SettingsTemplatePreferences
                 Static.T.runThread(() -> {
                     Log.v(TAG, "pref_schedule_lessons_clear_cache clicked");
                     if (activity != null) {
-                        boolean success = Storage.file.cache.clear(activity, "schedule_lessons");
+                        boolean success = Storage.file.general.cache.clear(activity, "schedule_lessons");
                         Static.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
                     }
                 });

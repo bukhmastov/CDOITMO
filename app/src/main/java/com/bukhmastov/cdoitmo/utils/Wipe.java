@@ -75,14 +75,14 @@ public class Wipe {
             }
             case 71: {
                 Storage.pref.delete(context, "pref_open_drawer_at_startup");
-                Storage.pref.put(context, "pref_first_launch", Storage.file.general.get(context, "users#list", "").trim().isEmpty());
+                Storage.pref.put(context, "pref_first_launch", Storage.file.general.perm.get(context, "users#list", "").trim().isEmpty());
                 Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> new ProtocolTracker(context).reset());
                 break;
             }
             case 78: {
-                ArrayList<String> appWidgetIds = Storage.file.general.list(context, "widget_schedule_lessons");
+                ArrayList<String> appWidgetIds = Storage.file.general.perm.list(context, "widget_schedule_lessons");
                 for (String appWidgetId : appWidgetIds) {
-                    String settings = Storage.file.general.get(context, "widget_schedule_lessons#" + appWidgetId + "#settings", "");
+                    String settings = Storage.file.general.perm.get(context, "widget_schedule_lessons#" + appWidgetId + "#settings", "");
                     boolean empty_settings = false;
                     if (settings != null) {
                         settings = settings.trim();
@@ -103,11 +103,11 @@ public class Wipe {
                                     }
                                     settingsJson.remove("darkTheme");
                                     settingsJson.put("theme", theme);
-                                    Storage.file.general.put(context, "widget_schedule_lessons#" + appWidgetId + "#settings", settingsJson.toString());
+                                    Storage.file.general.perm.put(context, "widget_schedule_lessons#" + appWidgetId + "#settings", settingsJson.toString());
                                 }
                             } catch (Exception e) {
                                 Static.error(e);
-                                Storage.file.general.delete(context, "widget_schedule_lessons#" + appWidgetId + "#settings");
+                                Storage.file.general.perm.delete(context, "widget_schedule_lessons#" + appWidgetId + "#settings");
                             }
                         } else {
                             empty_settings = true;
@@ -116,27 +116,27 @@ public class Wipe {
                         empty_settings = true;
                     }
                     if (empty_settings) {
-                        Storage.file.general.delete(context, "widget_schedule_lessons#" + appWidgetId + "#settings");
-                        Storage.file.general.delete(context, "widget_schedule_lessons#" + appWidgetId + "#cache");
-                        Storage.file.general.delete(context, "widget_schedule_lessons#" + appWidgetId + "#cache_converted");
+                        Storage.file.general.perm.delete(context, "widget_schedule_lessons#" + appWidgetId + "#settings");
+                        Storage.file.general.perm.delete(context, "widget_schedule_lessons#" + appWidgetId + "#cache");
+                        Storage.file.general.perm.delete(context, "widget_schedule_lessons#" + appWidgetId + "#cache_converted");
                     }
                 }
                 break;
             }
             case 83: {
-                ArrayList<String> appWidgetIds = Storage.file.general.list(context, "widget_schedule_lessons");
+                ArrayList<String> appWidgetIds = Storage.file.general.perm.list(context, "widget_schedule_lessons");
                 for (String appWidgetId : appWidgetIds) {
-                    String settings = Storage.file.general.get(context, "widget_schedule_lessons#" + appWidgetId + "#settings", "");
+                    String settings = Storage.file.general.perm.get(context, "widget_schedule_lessons#" + appWidgetId + "#settings", "");
                     if (settings != null) {
                         settings = settings.trim();
                         if (!settings.isEmpty()) {
                             try {
                                 JSONObject settingsJson = new JSONObject(settings);
                                 settingsJson.put("shift", 0);
-                                Storage.file.general.put(context, "widget_schedule_lessons#" + appWidgetId + "#settings", settingsJson.toString());
+                                Storage.file.general.perm.put(context, "widget_schedule_lessons#" + appWidgetId + "#settings", settingsJson.toString());
                             } catch (Exception e) {
                                 Static.error(e);
-                                Storage.file.general.delete(context, "widget_schedule_lessons#" + appWidgetId + "#settings");
+                                Storage.file.general.perm.delete(context, "widget_schedule_lessons#" + appWidgetId + "#settings");
                             }
                         }
                     }
@@ -569,66 +569,179 @@ public class Wipe {
 
     // version 103
     private static void apply103(final Context context) {
+        apply103convertERegister(context);
+        apply103moveCacheToGeneral(context);
+    }
+    private static void apply103convertERegister(final Context context) {
         try {
-            String cacheRootPath = context.getCacheDir() + File.separator + "app_data";
-            File cacheRoot = new File(cacheRootPath);
-            if (cacheRoot.exists()) {
-                File[] users = cacheRoot.listFiles();
-                for (File user : users) {
-                    try {
-                        if (!user.isDirectory()) continue;
-                        String userLogin = user.getName();
-                        if (userLogin.equals("general")) continue;
-                        String eregisterCorePath = cacheRootPath + File.separator + userLogin + File.separator + "eregister" + File.separator + "core.txt";
-                        File eregisterCore = new File(eregisterCorePath);
-                        if (eregisterCore.exists()) {
-                            // get old data from file
-                            FileReader fileReader = new FileReader(eregisterCore);
-                            StringBuilder sb = new StringBuilder();
-                            int c;
-                            while ((c = fileReader.read()) != -1) sb.append((char) c);
-                            fileReader.close();
-                            String data = sb.toString();
-                            // delete old file
-                            eregisterCore.delete();
-                            // modify old data
-                            JSONObject json = new JSONObject(data);
-                            JSONArray groups = json.getJSONArray("groups");
-                            for (int i = 0; i < groups.length(); i++) {
-                                JSONArray terms = groups.getJSONObject(i).getJSONArray("terms");
-                                for (int j = 0; j < terms.length(); j++) {
-                                    JSONArray subjects = terms.getJSONObject(j).getJSONArray("subjects");
-                                    for (int k = 0; k < subjects.length(); k++) {
-                                        JSONObject subject = subjects.getJSONObject(k);
-                                        subjects.put(k, new JSONObject()
-                                                .put("name", subject.getString("name"))
-                                                .put("attestations", new JSONArray().put(new JSONObject()
-                                                        .put("name", subject.getString("type"))
-                                                        .put("mark", subject.getString("mark"))
-                                                        .put("markdate", subject.getString("markDate"))
-                                                        .put("value", subject.getDouble("currentPoints"))
-                                                        .put("points", subject.getJSONArray("points"))
-                                                ))
-                                        );
-                                    }
+            final String rootPath = context.getCacheDir() + File.separator + "app_data";
+            getUsersFolder(context, rootPath, (file, user) -> {
+                try {
+                    if (user.equals("general")) return;
+                    String eregisterCorePath = rootPath + File.separator + user + File.separator + "eregister" + File.separator + "core.txt";
+                    File eregisterCore = new File(eregisterCorePath);
+                    if (eregisterCore.exists()) {
+                        // get old data from file
+                        String data = readFile(eregisterCore);
+                        // delete old file
+                        eregisterCore.delete();
+                        // modify old data
+                        JSONObject json = new JSONObject(data);
+                        JSONArray groups = json.getJSONArray("groups");
+                        for (int i = 0; i < groups.length(); i++) {
+                            JSONArray terms = groups.getJSONObject(i).getJSONArray("terms");
+                            for (int j = 0; j < terms.length(); j++) {
+                                JSONArray subjects = terms.getJSONObject(j).getJSONArray("subjects");
+                                for (int k = 0; k < subjects.length(); k++) {
+                                    JSONObject subject = subjects.getJSONObject(k);
+                                    subjects.put(k, new JSONObject()
+                                            .put("name", subject.getString("name"))
+                                            .put("attestations", new JSONArray().put(new JSONObject()
+                                                    .put("name", subject.getString("type"))
+                                                    .put("mark", subject.getString("mark"))
+                                                    .put("markdate", subject.getString("markDate"))
+                                                    .put("value", subject.getDouble("currentPoints"))
+                                                    .put("points", subject.getJSONArray("points"))
+                                            ))
+                                    );
                                 }
                             }
-                            data = json.toString();
-                            // create new file and write updated eregister data
-                            File newEregisterCore = new File(eregisterCorePath);
-                            if (!newEregisterCore.exists()) {
-                                newEregisterCore.getParentFile().mkdirs();
-                                if (!newEregisterCore.createNewFile()) {
-                                    throw new Exception("Failed to create file: " + newEregisterCore.getPath());
-                                }
-                            }
-                            FileWriter fileWriter = new FileWriter(newEregisterCore);
-                            fileWriter.write(data);
-                            fileWriter.close();
                         }
-                    } catch (Exception ignore) {/* ignore */}
-                }
-            }
+                        data = json.toString();
+                        // create new file and write updated eregister data
+                        writeFile(eregisterCorePath, data);
+                    }
+                } catch (Exception ignore) {/* ignore */}
+            });
         } catch (Exception ignore) {/* ignore */}
+    }
+    private static void apply103moveCacheToGeneral(final Context context) {
+        try {
+            final String rootPath = context.getCacheDir() + File.separator + "app_data";
+            final String destinationPath = rootPath + File.separator + "general" + File.separator;
+            getUsersFolder(context, rootPath, (file, user) -> {
+                try {
+                    if (user.equals("general")) return;
+                    // move schedule_lessons
+                    final String scheduleLessonsCorePath = rootPath + File.separator + user + File.separator + "schedule_lessons" + File.separator + "lessons";
+                    final File fileSL = new File(scheduleLessonsCorePath);
+                    if (fileSL.exists() && fileSL.isDirectory()) {
+                        final File[] fileListSL = fileSL.listFiles();
+                        for (File fileItemSL : fileListSL) {
+                            try {
+                                if (fileItemSL.isDirectory()) {
+                                    fileItemSL.delete();
+                                    continue;
+                                }
+                                String name = fileItemSL.getName();
+                                String data = readFile(fileItemSL);
+                                fileItemSL.delete();
+                                writeFile(destinationPath + "schedule_lessons" + File.separator + "lessons" + File.separator + name, data);
+                            } catch (Exception ignore) {/* ignore */}
+                        }
+                        fileSL.delete();
+                        final File fileSLcore = new File(rootPath + File.separator + user + File.separator + "schedule_lessons");
+                        if (fileSLcore.exists()) {
+                            fileSLcore.delete();
+                        }
+                    }
+                    // move schedule_exams
+                    final String scheduleExamsCorePath = rootPath + File.separator + user + File.separator + "schedule_exams" + File.separator + "lessons";
+                    final File fileSE = new File(scheduleExamsCorePath);
+                    if (fileSE.exists() && fileSE.isDirectory()) {
+                        final File[] fileListSE = fileSE.listFiles();
+                        for (File fileItemSE : fileListSE) {
+                            try {
+                                if (fileItemSE.isDirectory()) {
+                                    fileItemSE.delete();
+                                    continue;
+                                }
+                                String name = fileItemSE.getName();
+                                String data = readFile(fileItemSE);
+                                fileItemSE.delete();
+                                writeFile(destinationPath + "schedule_exams" + File.separator + "lessons" + File.separator + name, data);
+                            } catch (Exception ignore) {/* ignore */}
+                        }
+                        fileSE.delete();
+                        final File fileSEcore = new File(rootPath + File.separator + user + File.separator + "schedule_exams");
+                        if (fileSEcore.exists()) {
+                            fileSEcore.delete();
+                        }
+                    }
+                    // move university
+                    final String universityCorePath = rootPath + File.separator + user + File.separator + "university";
+                    final File fileU = new File(universityCorePath);
+                    if (fileU.exists() && fileU.isDirectory()) {
+                        final File[] fileListU = fileU.listFiles();
+                        for (File fileItemU : fileListU) {
+                            try {
+                                if (fileItemU.isDirectory()) {
+                                    final String folderName = fileItemU.getName();
+                                    final File[] fileItemListU = fileItemU.listFiles();
+                                    for (File fileItemItemU : fileItemListU) {
+                                        try {
+                                            if (fileItemItemU.isDirectory()) {
+                                                fileItemItemU.delete();
+                                                continue;
+                                            }
+                                            String name = fileItemItemU.getName();
+                                            String data = readFile(fileItemItemU);
+                                            fileItemItemU.delete();
+                                            writeFile(destinationPath + "university" + File.separator + folderName + File.separator + name, data);
+                                        } catch (Exception ignore) {/* ignore */}
+                                    }
+                                    fileItemU.delete();
+                                } else {
+                                    String name = fileItemU.getName();
+                                    String data = readFile(fileItemU);
+                                    fileItemU.delete();
+                                    writeFile(destinationPath + "university" + File.separator + name, data);
+                                }
+                            } catch (Exception ignore) {/* ignore */}
+                        }
+                        fileU.delete();
+                    }
+                } catch (Exception ignore) {/* ignore */}
+            });
+        } catch (Exception ignore) {/* ignore */}
+    }
+
+
+    // tools to change files
+    private interface Callback {
+        void onUserFolder(final File file, String user);
+    }
+    private static void getUsersFolder(final Context context, final String rootPath, final Callback callback) throws Exception {
+        File root = new File(rootPath);
+        if (root.exists() && root.isDirectory()) {
+            File[] users = root.listFiles();
+            for (File user : users) {
+                try {
+                    if (!user.isDirectory()) continue;
+                    String uLogin = user.getName();
+                    callback.onUserFolder(user, uLogin);
+                } catch (Exception ignore) {/* ignore */}
+            }
+        }
+    }
+    private static String readFile(File file) throws Exception {
+        FileReader fileReader = new FileReader(file);
+        StringBuilder sb = new StringBuilder();
+        int c;
+        while ((c = fileReader.read()) != -1) sb.append((char) c);
+        fileReader.close();
+        return sb.toString();
+    }
+    private static void writeFile(String path, String data) throws Exception {
+        File file = new File(path);
+        if (!file.exists()) {
+            file.getParentFile().mkdirs();
+            if (!file.createNewFile()) {
+                throw new Exception("Failed to create file: " + file.getPath());
+            }
+        }
+        FileWriter fileWriter = new FileWriter(file);
+        fileWriter.write(data);
+        fileWriter.close();
     }
 }

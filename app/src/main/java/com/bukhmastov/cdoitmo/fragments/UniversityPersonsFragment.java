@@ -110,7 +110,7 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
         Static.T.runThread(() -> {
             Log.v(TAG, "load | search=" + search + " | refresh_rate=" + refresh_rate);
             if (Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
-                String cache = Storage.file.cache.get(activity, "university#persons").trim();
+                String cache = Storage.file.general.cache.get(activity, "university#persons").trim();
                 if (!cache.isEmpty()) {
                     try {
                         JSONObject cacheJson = new JSONObject(cache);
@@ -151,7 +151,7 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
                                 long now = Static.getCalendar().getTimeInMillis();
                                 if (json != null && Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
                                     try {
-                                        Storage.file.cache.put(activity, "university#persons", new JSONObject()
+                                        Storage.file.general.cache.put(activity, "university#persons", new JSONObject()
                                                 .put("timestamp", now)
                                                 .put("data", json)
                                                 .toString()
@@ -309,7 +309,7 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
                                         timestamp = now;
                                         if (Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
                                             try {
-                                                Storage.file.cache.put(activity, "university#persons", new JSONObject()
+                                                Storage.file.general.cache.put(activity, "university#persons", new JSONObject()
                                                         .put("timestamp", now)
                                                         .put("data", persons)
                                                         .toString()

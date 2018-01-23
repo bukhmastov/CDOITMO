@@ -55,7 +55,7 @@ public class SettingsScheduleExamsFragment extends SettingsTemplatePreferencesFr
                 Static.T.runThread(() -> {
                     Log.v(TAG, "pref_schedule_exams_clear_cache clicked");
                     if (activity != null) {
-                        boolean success = Storage.file.cache.clear(activity, "schedule_exams");
+                        boolean success = Storage.file.general.cache.clear(activity, "schedule_exams");
                         Static.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
                     }
                 });

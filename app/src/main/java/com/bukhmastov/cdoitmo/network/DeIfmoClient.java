@@ -70,14 +70,14 @@ public class DeIfmoClient extends DeIfmo {
                                     Storage.file.perm.put(context, "user#group", pref_group_force_override.isEmpty() ? result.get("group") : pref_group_force_override);
                                     Storage.file.perm.put(context, "user#avatar", result.get("avatar"));
                                     try {
-                                        Storage.file.general.put(context, "user#week", new JSONObject()
+                                        Storage.file.general.perm.put(context, "user#week", new JSONObject()
                                                 .put("week", Integer.parseInt(result.get("week")))
                                                 .put("timestamp", Static.getCalendar().getTimeInMillis())
                                                 .toString()
                                         );
                                     } catch (Exception e) {
                                         Static.error(e);
-                                        Storage.file.general.delete(context, "user#week");
+                                        Storage.file.general.perm.delete(context, "user#week");
                                     }
                                     FirebaseAnalyticsProvider.setUserProperties(context, result.get("group"));
                                     responseHandler.onSuccess(200, headers, "");

@@ -281,14 +281,14 @@ public class Static {
                 } catch (Exception ignore) {/* ignore */}
             }
             if (week < 0) {
-                final String stored = Storage.file.general.get(context, "user#week").trim();
+                final String stored = Storage.file.general.perm.get(context, "user#week").trim();
                 if (!stored.isEmpty()) {
                     try {
                         JSONObject json = new JSONObject(stored);
                         week = json.getInt("week");
                         ts = json.getLong("timestamp");
                     } catch (Exception e) {
-                        Storage.file.general.delete(context, "user#week");
+                        Storage.file.general.perm.delete(context, "user#week");
                     }
                 }
             }
@@ -661,7 +661,7 @@ public class Static {
                     final String message = value.getString("message");
                     if (message == null || message.trim().isEmpty()) return;
                     final String hash = Static.crypt(message);
-                    if (hash != null && hash.equals(Storage.file.general.get(activity, "firebase#remote_message#menu", ""))) {
+                    if (hash != null && hash.equals(Storage.file.general.perm.get(activity, "firebase#remote_message#menu", ""))) {
                         return;
                     }
                     Static.T.runOnUiThread(() -> {
@@ -669,7 +669,7 @@ public class Static {
                         final View message_menu_separator = activity.findViewById(R.id.message_menu_separator);
                         final View layout = Static.getRemoteMessage(activity, type, message, (context, view) -> {
                             if (hash != null) {
-                                if (Storage.file.general.put(activity, "firebase#remote_message#menu", hash)) {
+                                if (Storage.file.general.perm.put(activity, "firebase#remote_message#menu", hash)) {
                                     if (message_menu != null && view != null) {
                                         message_menu.removeView(view);
                                         if (message_menu_separator != null) {
@@ -677,7 +677,7 @@ public class Static {
                                         }
                                     }
                                     Static.snackBar(activity, activity.getString(R.string.notification_dismissed), activity.getString(R.string.undo), v -> Static.T.runThread(() -> {
-                                        if (Storage.file.general.delete(activity, "firebase#remote_message#menu")) {
+                                        if (Storage.file.general.perm.delete(activity, "firebase#remote_message#menu")) {
                                             Static.T.runOnUiThread(() -> {
                                                 if (message_menu != null && view != null) {
                                                     message_menu.addView(view);

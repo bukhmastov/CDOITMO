@@ -48,9 +48,9 @@ public class ScheduleExamsSearchActivity extends SearchActivity {
                 }
                 if (counter >= numberOfSuggestions) break;
             }
-            ArrayList<String> cachedFiles = Storage.file.cache.list(this, "schedule_exams#lessons");
+            ArrayList<String> cachedFiles = Storage.file.general.cache.list(this, "schedule_exams#lessons");
             for (String file : cachedFiles) {
-                String cachedFile = Storage.file.cache.get(this, "schedule_exams#lessons#" + file);
+                String cachedFile = Storage.file.general.cache.get(this, "schedule_exams#lessons#" + file);
                 if (!cachedFile.isEmpty()) {
                     try {
                         JSONObject cached = new JSONObject(cachedFile);

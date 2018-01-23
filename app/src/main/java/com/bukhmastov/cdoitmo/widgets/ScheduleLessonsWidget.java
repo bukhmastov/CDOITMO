@@ -682,7 +682,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 Log.w(TAG, "get | prevented due to invalid appwidget id");
                 pref = "";
             } else {
-                pref = Storage.file.general.get(context, "widget_schedule_lessons#" + appWidgetId + "#" + type).trim();
+                pref = Storage.file.general.perm.get(context, "widget_schedule_lessons#" + appWidgetId + "#" + type).trim();
             }
             return pref.isEmpty() ? null : pref;
         }
@@ -704,7 +704,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 Log.w(TAG, "save | prevented due to invalid appwidget id");
                 return;
             }
-            Storage.file.general.put(context, "widget_schedule_lessons#" + appWidgetId + "#" + type, text);
+            Storage.file.general.perm.put(context, "widget_schedule_lessons#" + appWidgetId + "#" + type, text);
         }
         public static void delete(Context context, int appWidgetId, String type) {
             Log.v(TAG, "delete | appWidgetId=" + appWidgetId + " | type=" + type);
@@ -712,7 +712,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 Log.w(TAG, "delete | prevented due to invalid appwidget id");
                 return;
             }
-            Storage.file.general.delete(context, "widget_schedule_lessons#" + appWidgetId + "#" + type);
+            Storage.file.general.perm.delete(context, "widget_schedule_lessons#" + appWidgetId + "#" + type);
         }
     }
 

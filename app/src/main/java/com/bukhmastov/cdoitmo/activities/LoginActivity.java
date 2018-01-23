@@ -138,7 +138,7 @@ public class LoginActivity extends ConnectedActivity {
                     break;
                 }
                 case SIGNAL_CHANGE_ACCOUNT: {
-                    String current_login = Storage.file.general.get(activity, "users#current_login");
+                    String current_login = Storage.file.general.perm.get(activity, "users#current_login");
                     if (!current_login.isEmpty()) {
                         Account.logoutTemporarily(activity, this::show);
                     } else {
@@ -147,7 +147,7 @@ public class LoginActivity extends ConnectedActivity {
                     break;
                 }
                 case SIGNAL_DO_CLEAN_AUTH: {
-                    String current_login = Storage.file.general.get(activity, "users#current_login");
+                    String current_login = Storage.file.general.perm.get(activity, "users#current_login");
                     if (!current_login.isEmpty()) {
                         Storage.file.perm.delete(activity, "user#deifmo#cookies");
                     }
@@ -155,7 +155,7 @@ public class LoginActivity extends ConnectedActivity {
                     break;
                 }
                 case SIGNAL_LOGOUT: {
-                    String current_login = Storage.file.general.get(activity, "users#current_login");
+                    String current_login = Storage.file.general.perm.get(activity, "users#current_login");
                     if (!current_login.isEmpty()) {
                         logout(current_login);
                     } else {
@@ -164,7 +164,7 @@ public class LoginActivity extends ConnectedActivity {
                     break;
                 }
                 case SIGNAL_CREDENTIALS_REQUIRED: {
-                    String current_login = Storage.file.general.get(activity, "users#current_login");
+                    String current_login = Storage.file.general.perm.get(activity, "users#current_login");
                     if (!current_login.isEmpty()) {
                         Storage.file.perm.delete(activity, "user#deifmo#cookies");
                         Account.logoutTemporarily(activity, () -> {
@@ -176,7 +176,7 @@ public class LoginActivity extends ConnectedActivity {
                     break;
                 }
                 case SIGNAL_CREDENTIALS_FAILED: {
-                    String current_login = Storage.file.general.get(activity, "users#current_login");
+                    String current_login = Storage.file.general.perm.get(activity, "users#current_login");
                     if (!current_login.isEmpty()) {
                         Storage.file.perm.delete(activity, "user#deifmo#cookies");
                         Storage.file.perm.delete(activity, "user#deifmo#password");
@@ -201,7 +201,7 @@ public class LoginActivity extends ConnectedActivity {
             try {
                 Log.v(TAG, "show");
                 FirebaseAnalyticsProvider.logEvent(activity, FirebaseAnalyticsProvider.Event.LOGIN_REQUIRED);
-                String current_login = Storage.file.general.get(activity, "users#current_login");
+                String current_login = Storage.file.general.perm.get(activity, "users#current_login");
                 String cLogin = "", cPassword = "", cRole = "";
                 if (!current_login.isEmpty()) {
                     cLogin = Storage.file.perm.get(activity, "user#deifmo#login");
@@ -250,12 +250,12 @@ public class LoginActivity extends ConnectedActivity {
                         try {
                             final String acLogin = accounts.getString(i);
                             Log.v(TAG, "show | account in accounts | " + acLogin);
-                            Storage.file.general.put(activity, "users#current_login", acLogin);
+                            Storage.file.general.perm.put(activity, "users#current_login", acLogin);
                             final String login = Storage.file.perm.get(activity, "user#deifmo#login");
                             final String password = Storage.file.perm.get(activity, "user#deifmo#password");
                             final String role = Storage.file.perm.get(activity, "user#role");
                             final String name = Storage.file.perm.get(activity, "user#name").trim();
-                            Storage.file.general.delete(activity, "users#current_login");
+                            Storage.file.general.perm.delete(activity, "users#current_login");
                             final ViewGroup user_tile = (ViewGroup) inflate(R.layout.layout_login_user_tile);
                             View nameView = user_tile.findViewById(R.id.name);
                             View descView = user_tile.findViewById(R.id.desc);
@@ -301,12 +301,12 @@ public class LoginActivity extends ConnectedActivity {
                                     Log.v(TAG, "auth_expanded_menu | popup.MenuItem clicked | " + item.getTitle().toString());
                                     switch (item.getItemId()) {
                                         case R.id.offline: {
-                                            Storage.file.general.put(activity, "users#current_login", login);
+                                            Storage.file.general.perm.put(activity, "users#current_login", login);
                                             route(SIGNAL_GO_OFFLINE);
                                             break;
                                         }
                                         case R.id.clean_auth: {
-                                            Storage.file.general.put(activity, "users#current_login", login);
+                                            Storage.file.general.perm.put(activity, "users#current_login", login);
                                             route(SIGNAL_DO_CLEAN_AUTH);
                                             break;
                                         }
@@ -329,9 +329,9 @@ public class LoginActivity extends ConnectedActivity {
                                                                     final String value = editText.getText().toString().trim();
                                                                     if (!value.isEmpty()) {
                                                                         Static.T.runThread(() -> {
-                                                                            Storage.file.general.put(activity, "users#current_login", acLogin);
+                                                                            Storage.file.general.perm.put(activity, "users#current_login", acLogin);
                                                                             Storage.file.perm.put(activity, "user#deifmo#password", value);
-                                                                            Storage.file.general.delete(activity, "users#current_login");
+                                                                            Storage.file.general.perm.delete(activity, "users#current_login");
                                                                             Static.snackBar(activity, activity.getString(R.string.password_changed));
                                                                         });
                                                                     }
@@ -366,11 +366,11 @@ public class LoginActivity extends ConnectedActivity {
                         if (input_group != null) {
                             group = Static.prettifyGroupNumber(input_group.getText().toString());
                         }
-                        Storage.file.general.put(activity, "users#current_login", Account.USER_UNAUTHORIZED);
+                        Storage.file.general.perm.put(activity, "users#current_login", Account.USER_UNAUTHORIZED);
                         Storage.file.perm.put(activity, "user#name", activity.getString(R.string.anonymous));
                         Storage.file.perm.put(activity, "user#group", group);
                         Storage.file.perm.put(activity, "user#avatar", "");
-                        Storage.file.general.delete(activity, "users#current_login");
+                        Storage.file.general.perm.delete(activity, "users#current_login");
                         login(Account.USER_UNAUTHORIZED, Account.USER_UNAUTHORIZED, "anonymous", false);
                     });
                     anonymous_user_tile.findViewById(R.id.expand_auth_menu).setOnClickListener(view -> {
@@ -382,7 +382,7 @@ public class LoginActivity extends ConnectedActivity {
                             Log.v(TAG, "auth_expanded_menu | popup.MenuItem clicked | " + item.getTitle().toString());
                             switch (item.getItemId()) {
                                 case R.id.offline: {
-                                    Storage.file.general.put(activity, "users#current_login", Account.USER_UNAUTHORIZED);
+                                    Storage.file.general.perm.put(activity, "users#current_login", Account.USER_UNAUTHORIZED);
                                     route(SIGNAL_GO_OFFLINE);
                                     break;
                                 }
@@ -406,9 +406,9 @@ public class LoginActivity extends ConnectedActivity {
                                 .create().show();
                     });
                     login_tiles_container.addView(anonymous_user_tile);
-                    Storage.file.general.put(activity, "users#current_login", Account.USER_UNAUTHORIZED);
+                    Storage.file.general.perm.put(activity, "users#current_login", Account.USER_UNAUTHORIZED);
                     input_group.setText(Storage.file.perm.get(activity, "user#group", ""));
-                    Storage.file.general.delete(activity, "users#current_login");
+                    Storage.file.general.perm.delete(activity, "users#current_login");
                     // draw UI
                     Static.T.runOnUiThread(() -> {
                         try {
@@ -460,7 +460,7 @@ public class LoginActivity extends ConnectedActivity {
                             Log.v(TAG, "login | onProgress | login interrupt clicked");
                             if (requestHandle != null && requestHandle.cancel()) {
                                 Log.v(TAG, "login | onProgress | login interrupted, going offline");
-                                Storage.file.general.put(activity, "users#current_login", login);
+                                Storage.file.general.perm.put(activity, "users#current_login", login);
                                 route(SIGNAL_GO_OFFLINE);
                             }
                         });
@@ -521,7 +521,7 @@ public class LoginActivity extends ConnectedActivity {
                 final String message = value.getString("message");
                 if (message == null || message.trim().isEmpty()) return;
                 final String hash = Static.crypt(message);
-                if (hash != null && hash.equals(Storage.file.general.get(activity, "firebase#remote_message#login", ""))) {
+                if (hash != null && hash.equals(Storage.file.general.perm.get(activity, "firebase#remote_message#login", ""))) {
                     return;
                 }
                 Static.T.runOnUiThread(() -> {
@@ -529,14 +529,14 @@ public class LoginActivity extends ConnectedActivity {
                     final View layout = Static.getRemoteMessage(activity, type, message, (context, view) -> {
                         if (hash != null) {
                             Static.T.runThread(() -> {
-                                if (Storage.file.general.put(activity, "firebase#remote_message#login", hash)) {
+                                if (Storage.file.general.perm.put(activity, "firebase#remote_message#login", hash)) {
                                     Static.T.runOnUiThread(() -> {
                                         if (message_login != null && view != null) {
                                             message_login.removeView(view);
                                         }
                                     });
                                     Static.snackBar(activity, activity.getString(R.string.notification_dismissed), activity.getString(R.string.undo), v -> Static.T.runThread(() -> {
-                                        if (Storage.file.general.delete(activity, "firebase#remote_message#login")) {
+                                        if (Storage.file.general.perm.delete(activity, "firebase#remote_message#login")) {
                                             Static.T.runOnUiThread(() -> {
                                                 if (message_login != null && view != null) {
                                                     message_login.addView(view);

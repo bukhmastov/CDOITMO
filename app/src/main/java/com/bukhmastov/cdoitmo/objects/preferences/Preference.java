@@ -88,7 +88,7 @@ public abstract class Preference {
                 break;
             case "pref_use_university_cache":
                 if (!Storage.pref.get(activity, "pref_use_university_cache", false)) {
-                    Storage.file.cache.clear(activity, "university");
+                    Storage.file.general.cache.clear(activity, "university");
                 }
                 break;
             case "pref_group_force_override":

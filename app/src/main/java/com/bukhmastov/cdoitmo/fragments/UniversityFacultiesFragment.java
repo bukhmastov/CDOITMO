@@ -108,7 +108,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
             Log.v(TAG, "load | refresh_rate=" + refresh_rate);
             String fid = stack.size() == 0 ? "0" : stack.get(stack.size() - 1);
             if (Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
-                String cache = Storage.file.cache.get(activity, "university#faculties#" + fid).trim();
+                String cache = Storage.file.general.cache.get(activity, "university#faculties#" + fid).trim();
                 if (!cache.isEmpty()) {
                     try {
                         JSONObject cacheJson = new JSONObject(cache);
@@ -152,7 +152,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
             }
             if ((!force || !Static.isOnline(activity)) && Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
                 try {
-                    String c = cache.isEmpty() ? Storage.file.cache.get(activity, "university#faculties#" + fid).trim() : cache;
+                    String c = cache.isEmpty() ? Storage.file.general.cache.get(activity, "university#faculties#" + fid).trim() : cache;
                     if (!c.isEmpty()) {
                         Log.v(TAG, "load | from cache");
                         display(new JSONObject(c).getJSONObject("data"));
@@ -160,7 +160,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                     }
                 } catch (Exception e) {
                     Log.v(TAG, "load | failed to load from cache");
-                    Storage.file.cache.delete(activity, "university#faculties#" + fid);
+                    Storage.file.general.cache.delete(activity, "university#faculties#" + fid);
                 }
             }
             if (!Static.OFFLINE_MODE) {
@@ -172,7 +172,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                                 long now = Static.getCalendar().getTimeInMillis();
                                 if (json != null && Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
                                     try {
-                                        Storage.file.cache.put(activity, "university#faculties#" + fid, new JSONObject()
+                                        Storage.file.general.cache.put(activity, "university#faculties#" + fid, new JSONObject()
                                                 .put("timestamp", now)
                                                 .put("data", json)
                                                 .toString()

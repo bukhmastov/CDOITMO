@@ -74,6 +74,60 @@ public class Storage {
                 return Storage.file.list(context, STORAGE.PERMANENT, TYPE.USER, path);
             }
         }
+        public static class general {
+            public static class cache {
+                public static boolean put(Context context, String path, String data) {
+                    return Storage.file.put(context, STORAGE.CACHE, TYPE.GENERAL, path, data);
+                }
+                public static String get(Context context, String path) {
+                    return Storage.file.get(context, STORAGE.CACHE, TYPE.GENERAL, path);
+                }
+                public static String get(Context context, String path, String def) {
+                    return Storage.file.get(context, STORAGE.CACHE, TYPE.GENERAL, path, def);
+                }
+                public static boolean delete(Context context, String path) {
+                    return Storage.file.delete(context, STORAGE.CACHE, TYPE.GENERAL, path);
+                }
+                public static boolean clear(Context context) {
+                    return Storage.file.clear(context, STORAGE.CACHE, TYPE.GENERAL);
+                }
+                public static boolean clear(Context context, String path) {
+                    return Storage.file.clear(context, STORAGE.CACHE, path, TYPE.GENERAL);
+                }
+                public static boolean exists(Context context, String path) {
+                    return Storage.file.exists(context, STORAGE.CACHE, TYPE.GENERAL, path);
+                }
+                public static ArrayList<String> list(Context context, String path) {
+                    return Storage.file.list(context, STORAGE.CACHE, TYPE.GENERAL, path);
+                }
+            }
+            public static class perm {
+                public static boolean put(Context context, String path, String data) {
+                    return Storage.file.put(context, STORAGE.PERMANENT, TYPE.GENERAL, path, data);
+                }
+                public static String get(Context context, String path) {
+                    return Storage.file.get(context, STORAGE.PERMANENT, TYPE.GENERAL, path);
+                }
+                public static String get(Context context, String path, String def) {
+                    return Storage.file.get(context, STORAGE.PERMANENT, TYPE.GENERAL, path, def);
+                }
+                public static boolean delete(Context context, String path) {
+                    return Storage.file.delete(context, STORAGE.PERMANENT, TYPE.GENERAL, path);
+                }
+                public static boolean clear(Context context) {
+                    return Storage.file.clear(context, STORAGE.PERMANENT, TYPE.GENERAL);
+                }
+                public static boolean clear(Context context, String path) {
+                    return Storage.file.clear(context, STORAGE.PERMANENT, path, TYPE.GENERAL);
+                }
+                public static boolean exists(Context context, String path) {
+                    return Storage.file.exists(context, STORAGE.PERMANENT, TYPE.GENERAL, path);
+                }
+                public static ArrayList<String> list(Context context, String path) {
+                    return Storage.file.list(context, STORAGE.PERMANENT, TYPE.GENERAL, path);
+                }
+            }
+        }
         public static class all {
             public static boolean clear(Context context) {
                 return Storage.file.clear(context, null, TYPE.USER);
@@ -83,29 +137,6 @@ public class Storage {
             }
             public static boolean reset(Context context) {
                 return Storage.file.reset(context, null);
-            }
-        }
-        public static class general {
-            public static boolean put(Context context, String path, String data) {
-                return Storage.file.put(context, STORAGE.PERMANENT, TYPE.GENERAL, path, data);
-            }
-            public static String get(Context context, String path) {
-                return Storage.file.get(context, STORAGE.PERMANENT, TYPE.GENERAL, path);
-            }
-            public static String get(Context context, String path, String def) {
-                return Storage.file.get(context, STORAGE.PERMANENT, TYPE.GENERAL, path, def);
-            }
-            public static boolean delete(Context context, String path) {
-                return Storage.file.delete(context, STORAGE.PERMANENT, TYPE.GENERAL, path);
-            }
-            public static boolean clear(Context context) {
-                return Storage.file.clear(context, STORAGE.PERMANENT, TYPE.GENERAL);
-            }
-            public static boolean exists(Context context, String path) {
-                return Storage.file.exists(context, STORAGE.PERMANENT, TYPE.GENERAL, path);
-            }
-            public static ArrayList<String> list(Context context, String path) {
-                return Storage.file.list(context, STORAGE.PERMANENT, TYPE.GENERAL, path);
             }
         }
 
@@ -284,7 +315,7 @@ public class Storage {
             String login;
             switch (type) {
                 case GENERAL: login = "general"; break;
-                case USER: default: login = file.general.get(context, "users#current_login"); break;
+                case USER: default: login = general.perm.get(context, "users#current_login"); break;
             }
             if (login == null || login.isEmpty()) {
                 throw new Exception("getLocation | login is empty");

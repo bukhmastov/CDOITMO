@@ -328,7 +328,7 @@ public abstract class Schedule {
             }
         }
         if (cache == null || cache.isEmpty()) {
-            cache = Storage.file.cache.get(context, "schedule_" + getType() + "#lessons#" + token, "");
+            cache = Storage.file.general.cache.get(context, "schedule_" + getType() + "#lessons#" + token, "");
         }
         return cache;
     }
@@ -337,9 +337,9 @@ public abstract class Schedule {
             Log.v(TAG, "putCache | token=" + token + " | forceToCache=" + (forceToCache ? "true" : "false"));
             token = token.toLowerCase();
             putLocalCache(token, value);
-            if (forceToCache || token.equals(getDefaultScope(context).toLowerCase()) || Storage.file.cache.exists(context, "schedule_" + getType() + "#lessons#" + token)) {
+            if (forceToCache || token.equals(getDefaultScope(context).toLowerCase()) || Storage.file.general.cache.exists(context, "schedule_" + getType() + "#lessons#" + token)) {
                 Log.v(TAG, "putCache | token=" + token + " | proceed");
-                Storage.file.cache.put(context, "schedule_" + getType() + "#lessons#" + token, value);
+                Storage.file.general.cache.put(context, "schedule_" + getType() + "#lessons#" + token, value);
             }
         }
     }
@@ -369,7 +369,7 @@ public abstract class Schedule {
                 cache.remove(memoizeKey);
             }
         }
-        Storage.file.cache.delete(context, "schedule_" + getType() + "#lessons#" + token);
+        Storage.file.general.cache.delete(context, "schedule_" + getType() + "#lessons#" + token);
     }
     // --<- Cache schedule -<--
 
