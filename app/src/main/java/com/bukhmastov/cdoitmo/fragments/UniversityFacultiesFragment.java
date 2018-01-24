@@ -22,9 +22,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.adapters.FacultiesRecyclerViewAdapter;
-import com.bukhmastov.cdoitmo.adapters.RecyclerViewOnScrollListener;
-import com.bukhmastov.cdoitmo.adapters.UniversityRecyclerViewAdapter;
+import com.bukhmastov.cdoitmo.adapters.rva.university.UniversityFacultiesRVA;
+import com.bukhmastov.cdoitmo.adapters.rva.RecyclerViewOnScrollListener;
+import com.bukhmastov.cdoitmo.adapters.rva.university.UniversityRVA;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
@@ -48,7 +48,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
     private boolean loaded = false;
     private final ArrayList<String> stack = new ArrayList<>();
     private final ArrayMap<String, String> history = new ArrayMap<>();
-    private FacultiesRecyclerViewAdapter facultiesRecyclerViewAdapter = null;
+    private UniversityFacultiesRVA facultiesRecyclerViewAdapter = null;
     private long timestamp = 0;
 
     @Override
@@ -319,15 +319,15 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                     }
                 }
                 // список
-                facultiesRecyclerViewAdapter = new FacultiesRecyclerViewAdapter(activity);
+                facultiesRecyclerViewAdapter = new UniversityFacultiesRVA(activity);
                 final RecyclerView list = container.findViewById(R.id.list);
                 list.setLayoutManager(new LinearLayoutManager(activity));
                 list.setAdapter(facultiesRecyclerViewAdapter);
                 list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
                 displayContent(structure, divisions);
                 if (timestamp > 0 && timestamp + 5000 < Static.getCalendar().getTimeInMillis()) {
-                    UniversityRecyclerViewAdapter.Item item = new UniversityRecyclerViewAdapter.Item();
-                    item.type = UniversityRecyclerViewAdapter.TYPE_INFO_ABOUT_UPDATE_TIME;
+                    UniversityRVA.Item item = new UniversityRVA.Item();
+                    item.type = UniversityRVA.TYPE_INFO_ABOUT_UPDATE_TIME;
                     item.data = new JSONObject().put("title", activity.getString(R.string.update_date) + " " + Static.getUpdateTime(activity, timestamp));
                     facultiesRecyclerViewAdapter.addItem(item);
                 }
@@ -361,7 +361,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
     private void displayContent(final JSONObject structure, final JSONArray divisions) {
         Static.T.runThread(() -> {
             try {
-                final ArrayList<FacultiesRecyclerViewAdapter.Item> items = new ArrayList<>();
+                final ArrayList<UniversityFacultiesRVA.Item> items = new ArrayList<>();
                 if (structure != null) {
                     final JSONObject info = getJsonObject(structure, "info");
                     if (info != null) {
@@ -370,8 +370,8 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                         final String phone = getString(info, "phone");
                         final String site = getString(info, "site");
                         if (isValid(address) || isValid(phone) || isValid(site)) {
-                            FacultiesRecyclerViewAdapter.Item item = new FacultiesRecyclerViewAdapter.Item();
-                            item.type = FacultiesRecyclerViewAdapter.TYPE_UNIT_STRUCTURE_COMMON;
+                            UniversityFacultiesRVA.Item item = new UniversityFacultiesRVA.Item();
+                            item.type = UniversityFacultiesRVA.TYPE_UNIT_STRUCTURE_COMMON;
                             item.data = new JSONObject()
                                     .put("header", activity.getString(R.string.faculty_section_general))
                                     .put("address", isValid(address) ? address : null)
@@ -384,8 +384,8 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                         final String deanery_phone = getString(info, "dekanat_phone");
                         final String deanery_email = getString(info, "dekanat_email");
                         if (isValid(deanery_address) || isValid(deanery_phone) || isValid(deanery_email)) {
-                            FacultiesRecyclerViewAdapter.Item item = new FacultiesRecyclerViewAdapter.Item();
-                            item.type = FacultiesRecyclerViewAdapter.TYPE_UNIT_STRUCTURE_DEANERY;
+                            UniversityFacultiesRVA.Item item = new UniversityFacultiesRVA.Item();
+                            item.type = UniversityFacultiesRVA.TYPE_UNIT_STRUCTURE_DEANERY;
                             item.data = new JSONObject()
                                     .put("header", activity.getString(R.string.faculty_section_deanery))
                                     .put("deanery_address", isValid(deanery_address) ? deanery_address : null)
@@ -403,8 +403,8 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                         final int head_pid = getInt(info, "ifmo_person_id");
                         final String head_email = getString(info, "email");
                         if (isValid(head_lastname) || isValid(head_firstname) || isValid(head_middlename) || isValid(head_email)) {
-                            FacultiesRecyclerViewAdapter.Item item = new FacultiesRecyclerViewAdapter.Item();
-                            item.type = FacultiesRecyclerViewAdapter.TYPE_UNIT_STRUCTURE_HEAD;
+                            UniversityFacultiesRVA.Item item = new UniversityFacultiesRVA.Item();
+                            item.type = UniversityFacultiesRVA.TYPE_UNIT_STRUCTURE_HEAD;
                             item.data = new JSONObject()
                                     .put("header", isValid(head_post) ? head_post : activity.getString(R.string.faculty_section_head))
                                     .put("head_lastname", isValid(head_lastname) ? head_lastname : null)
@@ -428,8 +428,8 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                                 .put("id", getInt(division, "cis_dep_id"))
                         );
                     }
-                    FacultiesRecyclerViewAdapter.Item item = new FacultiesRecyclerViewAdapter.Item();
-                    item.type = FacultiesRecyclerViewAdapter.TYPE_UNIT_DIVISIONS;
+                    UniversityFacultiesRVA.Item item = new UniversityFacultiesRVA.Item();
+                    item.type = UniversityFacultiesRVA.TYPE_UNIT_DIVISIONS;
                     item.data = new JSONObject()
                             .put("header", stack.size() == 0 ? null : activity.getString(R.string.faculty_section_divisions))
                             .put("divisions", d);

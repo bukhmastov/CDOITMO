@@ -488,5 +488,7 @@
     <string name="new_password">Новый пароль</string>
     <string name="notification_dismissed">Текущее уведомление скрыто</string>
     <string name="undo">Отменить</string>
+    <string name="no_subjects">Нет предметов</string>
+    <string name="no_data">Нет данных</string>
 
 </resources>

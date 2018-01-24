@@ -1,4 +1,4 @@
-package com.bukhmastov.cdoitmo.adapters;
+package com.bukhmastov.cdoitmo.adapters.rva.university;
 
 import android.content.Context;
 import android.content.Intent;
@@ -20,12 +20,12 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-public class PersonsRecyclerViewAdapter extends UniversityRecyclerViewAdapter {
+public class UniversityPersonsRVA extends UniversityRVA {
 
-    public PersonsRecyclerViewAdapter(final Context context) {
+    public UniversityPersonsRVA(final Context context) {
         super(context, null);
     }
-    public PersonsRecyclerViewAdapter(final Context context, final ArrayList<Item> dataset) {
+    public UniversityPersonsRVA(final Context context, final ArrayList<Item> dataset) {
         super(context, dataset);
     }
 

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/separator"
+        android:background="?attr/colorSeparator"/>
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorBackgroundSection"
+        android:gravity="center_vertical"
+        android:padding="@dimen/item_padding"
+        android:text="@string/lorem_ipsum"
+        android:textColor="?android:attr/textColorSecondary"
+        android:textSize="@dimen/font_size_14" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/separator"
+        android:background="?attr/colorSeparator"/>
+
+</LinearLayout>

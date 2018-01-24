@@ -5,21 +5,18 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.ArrayMap;
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ImageButton;
-import android.widget.ListView;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.LoginActivity;
-import com.bukhmastov.cdoitmo.adapters.RatingListView;
+import com.bukhmastov.cdoitmo.adapters.rva.RatingRVA;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.interfaces.ResponseHandler;
@@ -30,21 +27,18 @@ import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
 import com.bukhmastov.cdoitmo.utils.Storage;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
 
 public class RatingFragment extends ConnectedFragment implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "RatingFragment";
-    private enum TYPE {common, own}
-    private enum STATUS {empty, loaded, failed, offline, server_error}
+    private boolean loaded = false;
+    private Client.Request requestHandle = null;
     private final ArrayMap<TYPE, Info> data = new ArrayMap<>();
-    private class Info {
+    public enum TYPE {common, own}
+    public enum STATUS {empty, loaded, failed, offline, server_error}
+    public class Info {
         public STATUS status = STATUS.empty;
         public JSONObject data = null;
         public Info(STATUS status, JSONObject data) {
@@ -52,9 +46,6 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
             this.data = data;
         }
     }
-    private String rating_list_choose_faculty, rating_list_choose_course;
-    private boolean loaded = false;
-    private Client.Request requestHandle = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -63,8 +54,6 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
         FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
         data.put(TYPE.common, new Info(STATUS.empty, null));
         data.put(TYPE.own,    new Info(STATUS.empty, null));
-        rating_list_choose_faculty = Storage.file.cache.get(activity, "rating#choose#faculty");
-        rating_list_choose_course = Storage.file.cache.get(activity, "rating#choose#course");
     }
 
     @Override
@@ -396,172 +385,74 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
         Static.T.runThread(() -> {
             Log.v(TAG, "display");
             try {
-                // извлекаем информацию
-                final Info common = data.get(TYPE.common);
-                final Info own    = data.get(TYPE.own);
-                final boolean common_available = common.status == STATUS.loaded && common.data != null;
-                final boolean own_available    = own.status == STATUS.loaded && own.data != null;
-                // извлекаем информацию подробного рейтинга
-                final ArrayList<String> rl_spinner_faculty_arr = new ArrayList<>();
-                final ArrayList<String> rl_spinner_faculty_arr_ids = new ArrayList<>();
-                final ArrayList<String> rl_spinner_course_arr = new ArrayList<>();
-                final ArrayList<String> rl_spinner_course_arr_ids = new ArrayList<>();
-                final ArrayList<Integer> choose = new ArrayList<>();
-                if (common_available) {
-                    JSONArray faculties = common.data.getJSONObject("rating").getJSONArray("faculties");
-                    choose.add(0, 0);
-                    choose.add(1, 0);
-                    for (int i = 0; i < faculties.length(); i++) {
-                        JSONObject faculty = faculties.getJSONObject(i);
-                        rl_spinner_faculty_arr.add(faculty.getString("name"));
-                        rl_spinner_faculty_arr_ids.add(faculty.getString("depId"));
-                        if (rating_list_choose_faculty.equals(faculty.getString("depId"))) choose.add(0, i);
+                final RatingRVA adapter = new RatingRVA(activity, data);
+                adapter.setOnElementClickListener(R.id.common_apply, (v, data) -> Static.T.runThread(() -> {
+                    try {
+                        FirebaseAnalyticsProvider.logBasicEvent(activity, "Detailed rating used");
+                        final JSONObject d = (JSONObject) data.get("data");
+                        final String faculty = d.getString("faculty");
+                        final String course = d.getString("course");
+                        Log.v(TAG, "detailed rating used | faculty=" + faculty + " | course=" + course);
+                        Static.T.runOnUiThread(() -> {
+                            try {
+                                Bundle extras = new Bundle();
+                                extras.putString("faculty", faculty);
+                                extras.putString("course", course);
+                                activity.openActivityOrFragment(RatingListFragment.class, extras);
+                            } catch (Exception e) {
+                                Static.error(e);
+                                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                            }
+                        });
+                    } catch (Exception e) {
+                        Static.error(e);
+                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
-                    for (int i = 1; i <= 4; i++) {
-                        rl_spinner_course_arr.add(i + " " + activity.getString(R.string.course));
-                        rl_spinner_course_arr_ids.add(String.valueOf(i));
-                        if (rating_list_choose_course.equals(String.valueOf(i))) choose.add(1, i - 1);
+                }));
+                adapter.setOnElementClickListener(R.id.own_apply, (v, data) -> Static.T.runThread(() -> {
+                    try {
+                        final JSONObject d = (JSONObject) data.get("data");
+                        if (d != null) {
+                            FirebaseAnalyticsProvider.logBasicEvent(activity, "Own rating used");
+                            final String faculty = d.getString("faculty");
+                            final String course = d.getString("course");
+                            final String years = d.getString("years");
+                            Log.v(TAG, "own rating used | faculty=" + faculty + " | course=" + course + " | years=" + years);
+                            Static.T.runOnUiThread(() -> {
+                                try {
+                                    Bundle extras = new Bundle();
+                                    extras.putString("faculty", faculty);
+                                    extras.putString("course", course);
+                                    extras.putString("years", years);
+                                    activity.openActivityOrFragment(RatingListFragment.class, extras);
+                                } catch (Exception e) {
+                                    Static.error(e);
+                                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                }
+                            });
+                        } else {
+                            Log.v(TAG, "own rating used | not found");
+                        }
+                    } catch (Exception e) {
+                        Static.error(e);
+                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
-                }
-                // извлекаем информацию личного рейтинга
-                final ArrayList<HashMap<String, String>> courses = new ArrayList<>();
-                if (own_available && !Static.UNAUTHORIZED_MODE) {
-                    JSONArray coursesArr = own.data.getJSONObject("rating").getJSONArray("courses");
-                    for (int i = 0; i < coursesArr.length(); i++) {
-                        JSONObject course = coursesArr.getJSONObject(i);
-                        HashMap<String, String> hashMap = new HashMap<>();
-                        hashMap.put("name", course.getString("faculty") + " — " + course.getInt("course") + " " + activity.getString(R.string.course));
-                        hashMap.put("position", course.getString("position"));
-                        hashMap.put("faculty", course.getString("faculty"));
-                        hashMap.put("course", String.valueOf(course.getInt("course")));
-                        courses.add(hashMap);
-                    }
-                }
+                }));
                 Static.T.runOnUiThread(() -> {
                     try {
-                        // отображаем интерфейс
-                        draw(R.layout.rating_layout);
-                        // работаем со свайпом
-                        SwipeRefreshLayout swipe_container = activity.findViewById(R.id.swipe_container);
+                        draw(R.layout.layout_rating);
+                        // set adapter to recycler view
+                        final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
+                        final RecyclerView rating_list = activity.findViewById(R.id.rating_list);
+                        rating_list.setLayoutManager(layoutManager);
+                        rating_list.setAdapter(adapter);
+                        rating_list.setHasFixedSize(true);
+                        // setup swipe
+                        final SwipeRefreshLayout swipe_container = activity.findViewById(R.id.swipe_container);
                         if (swipe_container != null) {
                             swipe_container.setColorSchemeColors(Static.colorAccent);
                             swipe_container.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
                             swipe_container.setOnRefreshListener(this);
-                        }
-                        // отображаем подробный рейтинг
-                        if (common_available) {
-                            // работаем с выбором факультета
-                            Spinner rl_spinner_faculty = activity.findViewById(R.id.rl_spinner_faculty);
-                            if (rl_spinner_faculty != null) {
-                                ArrayAdapter<String> adapter = new ArrayAdapter<>(activity, R.layout.spinner_rating_layout, rl_spinner_faculty_arr);
-                                adapter.setDropDownViewResource(R.layout.spinner_layout_normal_case);
-                                rl_spinner_faculty.setAdapter(adapter);
-                                rl_spinner_faculty.setSelection(choose.get(0));
-                                rl_spinner_faculty.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                                    public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
-                                        Static.T.runThread(() -> {
-                                            rating_list_choose_faculty = rl_spinner_faculty_arr_ids.get(position);
-                                            Log.v(TAG, "rl_spinner_faculty clicked | rating_list_choose_faculty=" + rating_list_choose_faculty);
-                                            Storage.file.cache.put(activity, "rating#choose#faculty", rating_list_choose_faculty);
-                                        });
-                                    }
-                                    public void onNothingSelected(AdapterView<?> parent) {}
-                                });
-                            }
-                            // работаем с выбором курса
-                            Spinner rl_spinner_course = activity.findViewById(R.id.rl_spinner_course);
-                            if (rl_spinner_course != null) {
-                                ArrayAdapter<String> adapter = new ArrayAdapter<>(activity, R.layout.spinner_rating_layout, rl_spinner_course_arr);
-                                adapter.setDropDownViewResource(R.layout.spinner_layout_normal_case);
-                                rl_spinner_course.setAdapter(adapter);
-                                rl_spinner_course.setSelection(choose.get(1));
-                                rl_spinner_course.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                                    public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
-                                        Static.T.runThread(() -> {
-                                            rating_list_choose_course = rl_spinner_course_arr_ids.get(position);
-                                            Log.v(TAG, "rl_spinner_course clicked | rating_list_choose_course=" + rating_list_choose_course);
-                                            Storage.file.cache.put(activity, "rating#choose#course", rating_list_choose_course);
-                                        });
-                                    }
-                                    public void onNothingSelected(AdapterView<?> parent) {}
-                                });
-                            }
-                            // инициализируем кнопку
-                            ImageButton rl_button = activity.findViewById(R.id.rl_button);
-                            if (rl_button != null) {
-                                rl_button.setOnClickListener(v -> Static.T.runOnUiThread(() -> {
-                                    FirebaseAnalyticsProvider.logBasicEvent(activity, "Detailed rating used");
-                                    Bundle extras = new Bundle();
-                                    extras.putString("faculty", rating_list_choose_faculty);
-                                    extras.putString("course", rating_list_choose_course);
-                                    activity.openActivityOrFragment(RatingListFragment.class, extras);
-                                    Log.v(TAG, "rl_button clicked | faculty=" + rating_list_choose_faculty + " | course=" + rating_list_choose_course);
-                                }));
-                            }
-                        } else {
-                            ViewGroup vg = activity.findViewById(R.id.rl_list_container);
-                            if (vg != null) {
-                                vg.removeAllViews();
-                                View view = inflate(common.status == STATUS.offline ? R.layout.state_offline_compact : R.layout.state_failed_compact);
-                                if (common.status == STATUS.server_error) {
-                                    ((TextView) view.findViewById(R.id.state_failed_compact_message)).setText(DeIfmoClient.getFailureMessage(activity, -1));
-                                }
-                                vg.addView(view);
-                            }
-                        }
-                        // отображаем личный рейтинг
-                        if (Static.UNAUTHORIZED_MODE) {
-                            View rating_own = activity.findViewById(R.id.rating_own);
-                            if (rating_own != null) {
-                                rating_own.setVisibility(View.GONE);
-                            }
-                        } else if (own_available) {
-                            // работаем со списком
-                            ListView rl_list_view = activity.findViewById(R.id.rl_list_view);
-                            if (rl_list_view != null) {
-                                rl_list_view.setAdapter(new RatingListView(activity, courses));
-                                rl_list_view.setOnItemClickListener((parent, view, position, id) -> Static.T.runThread(() -> {
-                                    FirebaseAnalyticsProvider.logBasicEvent(activity, "Own rating used");
-                                    Log.v(TAG, "rl_list_view clicked");
-                                    try {
-                                        if (common.status == STATUS.loaded && common.data != null) {
-                                            HashMap<String, String> hashMap = courses.get(position);
-                                            JSONArray array = common.data.getJSONObject("rating").getJSONArray("faculties");
-                                            int max_course = own.data.getJSONObject("rating").getInt("max_course");
-                                            for (int i = 0; i < array.length(); i++) {
-                                                JSONObject obj = array.getJSONObject(i);
-                                                if (obj.getString("name").contains(hashMap.get("faculty"))) {
-                                                    int course_delta = (max_course - Integer.parseInt(hashMap.get("course")));
-                                                    Calendar now = Static.getCalendar();
-                                                    int year = now.get(Calendar.YEAR) - course_delta;
-                                                    int month = now.get(Calendar.MONTH);
-                                                    String years = month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year;
-                                                    Log.v(TAG, "rl_list_view clicked and found | faculty=" + obj.getString("depId") + " | course=" + hashMap.get("course") + " | years=" + years);
-                                                    final Bundle extras = new Bundle();
-                                                    extras.putString("faculty", obj.getString("depId"));
-                                                    extras.putString("course", hashMap.get("course"));
-                                                    extras.putString("years", years);
-                                                    Static.T.runOnUiThread(() -> activity.openActivityOrFragment(RatingListFragment.class, extras));
-                                                    break;
-                                                }
-                                            }
-                                        } else {
-                                            Log.v(TAG, "Info.common is null");
-                                        }
-                                    } catch (Exception e) {
-                                        Static.error(e);
-                                    }
-                                }));
-                            }
-                        } else {
-                            if (swipe_container != null) {
-                                swipe_container.removeAllViews();
-                                View view = inflate(own.status == STATUS.offline ? R.layout.state_offline_compact : R.layout.state_failed_compact);
-                                if (own.status == STATUS.server_error) {
-                                    ((TextView) view.findViewById(R.id.state_failed_compact_message)).setText(DeIfmoClient.getFailureMessage(activity, -1));
-                                }
-                                swipe_container.addView(view);
-                            }
                         }
                     } catch (Exception e) {
                         Static.error(e);

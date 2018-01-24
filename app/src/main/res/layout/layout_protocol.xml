@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/eregister_layout">
+    android:id="@+id/protocol_layout">
 
     <android.support.v4.widget.SwipeRefreshLayout
         android:id="@+id/swipe_container"
@@ -10,19 +10,20 @@
         android:layout_height="match_parent"
         android:layout_alignParentTop="true"
         android:layout_alignParentStart="true"
-        android:layout_above="@+id/erl_separator">
+        android:layout_above="@+id/separator">
 
-        <ListView
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/protocol_list"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:id="@+id/erl_list_view"
-            android:divider="?attr/colorSeparator"
-            android:dividerHeight="@dimen/separator" />
+            android:layout_height="wrap_content"
+            android:scrollbars="vertical"
+            android:fadeScrollbars="true"
+            android:scrollbarSize="@dimen/scroll_thumb_size"/>
 
     </android.support.v4.widget.SwipeRefreshLayout>
 
     <View
-        android:id="@+id/erl_separator"
+        android:id="@+id/separator"
         android:layout_above="@+id/spinners_layout"
         android:layout_width="match_parent"
         android:layout_height="@dimen/separator"
@@ -37,25 +38,12 @@
         android:layout_alignParentStart="true">
 
         <Spinner
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:id="@+id/erl_group_spinner"
+            android:id="@+id/pl_weeks_spinner"
             android:layout_weight="1"
             android:spinnerMode="dialog" />
 
-        <View
-            android:layout_width="@dimen/separator"
-            android:layout_height="match_parent"
-            android:layout_marginTop="5dp"
-            android:layout_marginBottom="5dp"
-            android:background="?attr/colorSeparator"/>
-
-        <Spinner
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:id="@+id/erl_period_spinner"
-            android:layout_weight="1"
-            android:spinnerMode="dialog" />
     </LinearLayout>
 
 </RelativeLayout>

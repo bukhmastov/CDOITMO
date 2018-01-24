@@ -1,4 +1,4 @@
-package com.bukhmastov.cdoitmo.adapters;
+package com.bukhmastov.cdoitmo.adapters.rva;
 
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
@@ -8,7 +8,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
 import android.support.v7.widget.PopupMenu;
-import android.support.v7.widget.RecyclerView;
 import android.util.SparseIntArray;
 import android.view.InflateException;
 import android.view.LayoutInflater;
@@ -35,9 +34,9 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Calendar;
 
-public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class ScheduleLessonsRVA extends RecyclerViewAdapter {
 
-    private static final String TAG = "SLRVAdapter";
+    private static final String TAG = "ScheduleLessonsRVA";
 
     private static final int TYPE_HEADER = 0;
     private static final int TYPE_DAY = 1;
@@ -51,33 +50,10 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
     private static final int TYPE_PICKER_HEADER = 9;
     private static final int TYPE_PICKER_ITEM = 10;
     private static final int TYPE_PICKER_NO_TEACHERS = 11;
-    public static class Item {
-        public int type;
-        public JSONObject data;
-        public Item (int type, JSONObject data) {
-            this.type = type;
-            this.data = data;
-        }
-    }
-    public static class ItemLesson extends Item {
-        public int weekday;
-        public ItemLesson(int type, int weekday, JSONObject data) {
-            super(type, data);
-            this.weekday = weekday;
-        }
-    }
 
-    private class ViewHolder extends RecyclerView.ViewHolder {
-        protected final ViewGroup container;
-        ViewHolder(ViewGroup container) {
-            super(container);
-            this.container = container;
-        }
-    }
     private final ConnectedActivity activity;
     private final int TYPE;
     private final JSONObject data;
-    private final ArrayList<Item> dataset;
     private final SparseIntArray days_positions = new SparseIntArray();
     private final Static.StringCallback callback;
     private String reduced_lesson_mode = "compact";
@@ -85,12 +61,11 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
     private String query = null;
     private int colorScheduleFlagTEXT = -1, colorScheduleFlagCommonBG = -1, colorScheduleFlagPracticeBG = -1, colorScheduleFlagLectureBG = -1, colorScheduleFlagLabBG = -1;
 
-    public ScheduleLessonsRecyclerViewAdapter(final ConnectedActivity activity, int TYPE, JSONObject data, int weekday, final Static.StringCallback callback) {
+    public ScheduleLessonsRVA(final ConnectedActivity activity, int TYPE, JSONObject data, int weekday, final Static.StringCallback callback) {
         this.activity = activity;
         this.TYPE = TYPE;
         this.data = data;
         this.callback = callback;
-        this.dataset = new ArrayList<>();
         try {
             reduced_lesson_mode = Storage.pref.get(activity, "pref_schedule_lessons_view_of_reduced_lesson", "compact");
             type = data.getString("type");
@@ -102,19 +77,9 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
     }
 
     @Override
-    public int getItemCount() {
-        return dataset.size();
-    }
-
-    @Override
-    public int getItemViewType(int position) {
-        return dataset.get(position).type;
-    }
-
-    @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    protected int onGetLayout(int type) throws NullPointerException {
         @LayoutRes int layout;
-        switch (viewType) {
+        switch (type) {
             case TYPE_HEADER: layout = R.layout.layout_schedule_both_header; break;
             case TYPE_DAY: layout = R.layout.layout_schedule_lessons_day; break;
             case TYPE_LESSON_TOP: layout = R.layout.layout_schedule_lessons_item_top; break;
@@ -127,75 +92,73 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
             case TYPE_PICKER_HEADER: layout = R.layout.layout_schedule_teacher_picker_header; break;
             case TYPE_PICKER_ITEM: layout = R.layout.layout_schedule_teacher_picker_item; break;
             case TYPE_PICKER_NO_TEACHERS: layout = R.layout.nothing_to_display; break;
-            default: return null;
+            default: throw new NullPointerException("Invalid type provided");
         }
-        return new ViewHolder((ViewGroup) LayoutInflater.from(parent.getContext()).inflate(layout, parent, false));
+        return layout;
     }
 
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-        Item item = dataset.get(position);
+    protected void onBind(View container, RecyclerViewAdapter.Item item) {
         switch (item.type) {
             case TYPE_HEADER: {
-                bindHeader(holder, item);
+                bindHeader(container, item);
                 break;
             }
             case TYPE_DAY: {
-                bindDay(holder, item);
+                bindDay(container, item);
                 break;
             }
             case TYPE_LESSON_TOP:
             case TYPE_LESSON_REGULAR:
             case TYPE_LESSON_BOTTOM:
             case TYPE_LESSON_SINGLE: {
-                bindLesson(holder, (ItemLesson) item);
+                bindLesson(container, item);
                 break;
             }
             case TYPE_NOTIFICATION: {
-                bindNotification(holder, item);
+                bindNotification(container, item);
                 break;
             }
             case TYPE_UPDATE_TIME: {
-                bindUpdateTime(holder, item);
+                bindUpdateTime(container, item);
                 break;
             }
             case TYPE_NO_LESSONS: {
-                bindNoLessons(holder, item);
+                bindNoLessons(container, item);
                 break;
             }
             case TYPE_PICKER_HEADER: {
-                bindPickerHeader(holder, item);
+                bindPickerHeader(container, item);
                 break;
             }
             case TYPE_PICKER_ITEM: {
-                bindPickerItem(holder, item);
+                bindPickerItem(container, item);
                 break;
             }
             case TYPE_PICKER_NO_TEACHERS: {
-                bindPickerNoTeachers(holder, item);
+                bindPickerNoTeachers(container, item);
                 break;
             }
         }
     }
 
-    private void bindHeader(RecyclerView.ViewHolder holder, Item item) {
+    private void bindHeader(View container, Item item) {
         try {
             final String title = getString(item.data, "title");
             final String week = getString(item.data, "week");
-            ViewHolder viewHolder = (ViewHolder) holder;
-            TextView schedule_lessons_header = viewHolder.container.findViewById(R.id.schedule_lessons_header);
+            TextView schedule_lessons_header = container.findViewById(R.id.schedule_lessons_header);
             if (title != null && !title.isEmpty()) {
                 schedule_lessons_header.setText(title);
             } else {
                 ((ViewGroup) schedule_lessons_header.getParent()).removeView(schedule_lessons_header);
             }
-            TextView schedule_lessons_week = viewHolder.container.findViewById(R.id.schedule_lessons_week);
+            TextView schedule_lessons_week = container.findViewById(R.id.schedule_lessons_week);
             if (week != null && !week.isEmpty()) {
                 schedule_lessons_week.setText(week);
             } else {
                 ((ViewGroup) schedule_lessons_week.getParent()).removeView(schedule_lessons_week);
             }
-            viewHolder.container.findViewById(R.id.schedule_lessons_menu).setOnClickListener(view -> Static.T.runThread(() -> {
+            container.findViewById(R.id.schedule_lessons_menu).setOnClickListener(view -> Static.T.runThread(() -> {
                 final String cache_token = query == null ? null : query.toLowerCase();
                 final boolean cached = cache_token != null && !Storage.file.general.cache.get(activity, "schedule_lessons#lessons#" + cache_token, "").isEmpty();
                 Static.T.runOnUiThread(() -> {
@@ -298,20 +261,18 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
             Static.error(e);
         }
     }
-    private void bindDay(RecyclerView.ViewHolder holder, Item item) {
+    private void bindDay(View container, Item item) {
         try {
             final String text = getString(item.data, "text");
-            ViewHolder viewHolder = (ViewHolder) holder;
-            ((TextView) viewHolder.container.findViewById(R.id.day_title)).setText(text != null && !text.isEmpty() ? text : Static.GLITCH);
+            ((TextView) container.findViewById(R.id.day_title)).setText(text != null && !text.isEmpty() ? text : Static.GLITCH);
         } catch (Exception e) {
             Static.error(e);
         }
     }
-    private void bindLesson(RecyclerView.ViewHolder holder, ItemLesson item) {
+    private void bindLesson(View container, Item item) {
         try {
-            ViewHolder viewHolder = (ViewHolder) holder;
             final JSONObject lesson = item.data;
-            final int weekday = item.weekday;
+            final int weekday = (int) item.extras.get("weekday");
             final String cdoitmo_type = getString(lesson, "cdoitmo_type");
             final String type = getString(lesson, "type");
             final int week = getInt(lesson, "week");
@@ -320,18 +281,18 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
             final boolean isSynthetic = "synthetic".equals(cdoitmo_type);
             final float alpha = isReduced ? 0.3F : 1F;
             // reduced and compact
-            viewHolder.container.findViewById(R.id.time).setAlpha(alpha);
-            viewHolder.container.findViewById(R.id.data).setAlpha(alpha);
-            ((TextView) viewHolder.container.findViewById(R.id.lesson_title)).setMaxLines(isCompact ? 1 : 10);
-            viewHolder.container.findViewById(R.id.lesson_time_icon).setVisibility(isCompact ? View.GONE : View.VISIBLE);
-            viewHolder.container.findViewById(R.id.lesson_time_end).setVisibility(isCompact ? View.GONE : View.VISIBLE);
-            viewHolder.container.findViewById(R.id.lesson_desc).setVisibility(isCompact ? View.GONE : View.VISIBLE);
-            viewHolder.container.findViewById(R.id.lesson_flags).setVisibility(isCompact ? View.GONE : View.VISIBLE);
-            viewHolder.container.findViewById(R.id.lesson_meta).setVisibility(isCompact ? View.GONE : View.VISIBLE);
+            container.findViewById(R.id.time).setAlpha(alpha);
+            container.findViewById(R.id.data).setAlpha(alpha);
+            ((TextView) container.findViewById(R.id.lesson_title)).setMaxLines(isCompact ? 1 : 10);
+            container.findViewById(R.id.lesson_time_icon).setVisibility(isCompact ? View.GONE : View.VISIBLE);
+            container.findViewById(R.id.lesson_time_end).setVisibility(isCompact ? View.GONE : View.VISIBLE);
+            container.findViewById(R.id.lesson_desc).setVisibility(isCompact ? View.GONE : View.VISIBLE);
+            container.findViewById(R.id.lesson_flags).setVisibility(isCompact ? View.GONE : View.VISIBLE);
+            container.findViewById(R.id.lesson_meta).setVisibility(isCompact ? View.GONE : View.VISIBLE);
             // badges
-            viewHolder.container.findViewById(R.id.lesson_reduced_icon).setVisibility(isReduced ? View.VISIBLE : View.GONE);
-            viewHolder.container.findViewById(R.id.lesson_synthetic_icon).setVisibility(isSynthetic ? View.VISIBLE : View.GONE);
-            viewHolder.container.findViewById(R.id.lesson_touch_icon).setOnClickListener(view -> {
+            container.findViewById(R.id.lesson_reduced_icon).setVisibility(isReduced ? View.VISIBLE : View.GONE);
+            container.findViewById(R.id.lesson_synthetic_icon).setVisibility(isSynthetic ? View.VISIBLE : View.GONE);
+            container.findViewById(R.id.lesson_touch_icon).setOnClickListener(view -> {
                 try {
                     Log.v(TAG, "lesson_touch_icon clicked");
                     final String group = getMenuTitle(lesson, "group");
@@ -387,7 +348,7 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
                             case R.id.copy_lesson:
                                 Static.T.runThread(() -> {
                                     try {
-                                        if (!ScheduleLessons.createLesson(activity, query, data.getString("title"), ScheduleLessonsRecyclerViewAdapter.this.type, weekday, lesson, null)) {
+                                        if (!ScheduleLessons.createLesson(activity, query, data.getString("title"), ScheduleLessonsRVA.this.type, weekday, lesson, null)) {
                                             Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                         }
                                     } catch (Exception e) {
@@ -399,7 +360,7 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
                             case R.id.edit_lesson:
                                 Static.T.runThread(() -> {
                                     try {
-                                        if (!ScheduleLessons.editLesson(activity, query, data.getString("title"), ScheduleLessonsRecyclerViewAdapter.this.type, weekday, lesson, null)) {
+                                        if (!ScheduleLessons.editLesson(activity, query, data.getString("title"), ScheduleLessonsRVA.this.type, weekday, lesson, null)) {
                                             Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                         }
                                     } catch (Exception e) {
@@ -417,11 +378,11 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
                 }
             });
             // title and time
-            ((TextView) viewHolder.container.findViewById(R.id.lesson_title)).setText(getString(lesson, "subject"));
-            ((TextView) viewHolder.container.findViewById(R.id.lesson_time_start)).setText(getString(lesson, "timeStart"));
-            ((TextView) viewHolder.container.findViewById(R.id.lesson_time_end)).setText(getString(lesson, "timeEnd"));
+            ((TextView) container.findViewById(R.id.lesson_title)).setText(getString(lesson, "subject"));
+            ((TextView) container.findViewById(R.id.lesson_time_start)).setText(getString(lesson, "timeStart"));
+            ((TextView) container.findViewById(R.id.lesson_time_end)).setText(getString(lesson, "timeEnd"));
             // desc
-            TextView lesson_desc = viewHolder.container.findViewById(R.id.lesson_desc);
+            TextView lesson_desc = container.findViewById(R.id.lesson_desc);
             String desc = null;
             switch (this.type) {
                 case "group": desc = getString(lesson, "teacher"); break;
@@ -446,7 +407,7 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
                 lesson_desc.setText(desc);
             }
             // flags
-            ViewGroup lesson_flags = viewHolder.container.findViewById(R.id.lesson_flags);
+            ViewGroup lesson_flags = container.findViewById(R.id.lesson_flags);
             lesson_flags.removeAllViews();
             if (colorScheduleFlagTEXT == -1) colorScheduleFlagTEXT = Static.resolveColor(activity, R.attr.colorScheduleFlagTEXT);
             if (colorScheduleFlagCommonBG == -1) colorScheduleFlagCommonBG = Static.resolveColor(activity, R.attr.colorScheduleFlagCommonBG);
@@ -473,7 +434,7 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
                 lesson_flags.addView(getFlag(week == 0 ? activity.getString(R.string.tab_even) : activity.getString(R.string.tab_odd), colorScheduleFlagTEXT, colorScheduleFlagCommonBG));
             }
             // meta
-            TextView lesson_meta = viewHolder.container.findViewById(R.id.lesson_meta);
+            TextView lesson_meta = container.findViewById(R.id.lesson_meta);
             String meta = null;
             switch (this.type) {
                 case "mine":
@@ -506,35 +467,31 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
             Static.error(e);
         }
     }
-    private void bindNotification(RecyclerView.ViewHolder holder, Item item) {
+    private void bindNotification(View container, Item item) {
         try {
             final String text = getString(item.data, "text");
-            ViewHolder viewHolder = (ViewHolder) holder;
-            ((TextView) viewHolder.container.findViewById(R.id.lessons_warning)).setText(text != null && !text.isEmpty() ? text : Static.GLITCH);
+            ((TextView) container.findViewById(R.id.lessons_warning)).setText(text != null && !text.isEmpty() ? text : Static.GLITCH);
         } catch (Exception e) {
             Static.error(e);
         }
     }
-    private void bindUpdateTime(RecyclerView.ViewHolder holder, Item item) {
+    private void bindUpdateTime(View container, Item item) {
         try {
             final String text = getString(item.data, "text");
-            ViewHolder viewHolder = (ViewHolder) holder;
-            ((TextView) viewHolder.container.findViewById(R.id.update_time)).setText(text != null && !text.isEmpty() ? text : Static.GLITCH);
+            ((TextView) container.findViewById(R.id.update_time)).setText(text != null && !text.isEmpty() ? text : Static.GLITCH);
         } catch (Exception e) {
             Static.error(e);
         }
     }
-    private void bindNoLessons(RecyclerView.ViewHolder holder, Item item) {
+    private void bindNoLessons(View container, Item item) {
         try {
-            ViewHolder viewHolder = (ViewHolder) holder;
-            ((TextView) viewHolder.container.findViewById(R.id.ntd_text)).setText(R.string.no_lessons);
+            ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_lessons);
         } catch (Exception e) {
             Static.error(e);
         }
     }
-    private void bindPickerHeader(RecyclerView.ViewHolder holder, Item item) {
+    private void bindPickerHeader(View container, Item item) {
         try {
-            ViewHolder viewHolder = (ViewHolder) holder;
             String query = item.data.getString("query");
             String text;
             if (query == null || query.isEmpty()) {
@@ -542,22 +499,21 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
             } else {
                 text = activity.getString(R.string.on_search_for) + " \"" + query + "\" " + activity.getString(R.string.teachers_found) + ":";
             }
-            ((TextView) viewHolder.container.findViewById(R.id.teacher_picker_header)).setText(text);
+            ((TextView) container.findViewById(R.id.teacher_picker_header)).setText(text);
         } catch (Exception e) {
             Static.error(e);
         }
     }
-    private void bindPickerItem(RecyclerView.ViewHolder holder, Item item) {
+    private void bindPickerItem(View container, Item item) {
         try {
-            ViewHolder viewHolder = (ViewHolder) holder;
             final String pid = item.data.getString("pid");
             String teacher = item.data.getString("person");
             String post = item.data.getString("post");
             if (post != null && !post.isEmpty()) {
                 teacher += " (" + post + ")";
             }
-            ((TextView) viewHolder.container.findViewById(R.id.teacher_picker_title)).setText(teacher);
-            viewHolder.container.findViewById(R.id.teacher_picker_item).setOnClickListener(view -> {
+            ((TextView) container.findViewById(R.id.teacher_picker_title)).setText(teacher);
+            container.findViewById(R.id.teacher_picker_item).setOnClickListener(view -> {
                 if (pid != null && !pid.isEmpty()) {
                     callback.onCall(pid);
                 }
@@ -566,9 +522,8 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
             Static.error(e);
         }
     }
-    private void bindPickerNoTeachers(RecyclerView.ViewHolder holder, Item item) {
+    private void bindPickerNoTeachers(View container, Item item) {
         try {
-            ViewHolder viewHolder = (ViewHolder) holder;
             String query = item.data.getString("query");
             String text;
             if (query == null || query.isEmpty()) {
@@ -576,13 +531,13 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
             } else {
                 text = activity.getString(R.string.on_search_for) + " \"" + query + "\" " + activity.getString(R.string.no_teachers).toLowerCase();
             }
-            ((TextView) viewHolder.container.findViewById(R.id.ntd_text)).setText(text);
+            ((TextView) container.findViewById(R.id.ntd_text)).setText(text);
         } catch (Exception e) {
             Static.error(e);
         }
     }
 
-    public ArrayList<Item> json2dataset(ConnectedActivity activity, JSONObject json, int weekday) throws JSONException {
+    private ArrayList<Item> json2dataset(ConnectedActivity activity, JSONObject json, int weekday) throws JSONException {
         final ArrayList<Item> dataset = new ArrayList<>();
         // check
         if (!ScheduleLessons.TYPE.equals(json.getString("schedule_type"))) {
@@ -592,19 +547,19 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
             // teacher picker mode
             final JSONArray schedule = json.getJSONArray("schedule");
             if (schedule.length() > 0) {
-                dataset.add(new Item(TYPE_PICKER_HEADER, new JSONObject().put("query", query)));
+                dataset.add(getNewItem(TYPE_PICKER_HEADER, new JSONObject().put("query", query)));
                 for (int i = 0; i < schedule.length(); i++) {
                     final JSONObject teacher = schedule.getJSONObject(i);
-                    dataset.add(new Item(TYPE_PICKER_ITEM, teacher));
+                    dataset.add(getNewItem(TYPE_PICKER_ITEM, teacher));
                 }
             } else {
-                dataset.add(new Item(TYPE_PICKER_NO_TEACHERS, new JSONObject().put("query", query)));
+                dataset.add(getNewItem(TYPE_PICKER_NO_TEACHERS, new JSONObject().put("query", query)));
             }
         } else {
             // regular schedule mode
             int position = 0;
             // header
-            dataset.add(new Item(TYPE_HEADER, new JSONObject()
+            dataset.add(getNewItem(TYPE_HEADER, new JSONObject()
                     .put("title", ScheduleLessons.getScheduleHeader(activity, json.getString("title"), json.getString("type")))
                     .put("week", ScheduleLessons.getScheduleWeek(activity, weekday))
             ));
@@ -663,7 +618,7 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
                         }
                         break;
                 }
-                dataset.add(new Item(TYPE_DAY, new JSONObject().put("text", day_title)));
+                dataset.add(getNewItem(TYPE_DAY, new JSONObject().put("text", day_title)));
                 days_positions.append(day_weekday, position++);
                 int day_lessons_count_total = lessons.length();
                 for (int j = 0; j < day_lessons_count_total; j++) {
@@ -677,79 +632,35 @@ public class ScheduleLessonsRecyclerViewAdapter extends RecyclerView.Adapter<Rec
                     } else if (j == day_lessons_count_total - 1) {
                         type = TYPE_LESSON_BOTTOM;
                     }
-                    dataset.add(new ItemLesson(type, day_weekday, lessons.getJSONObject(j)));
+                    Item item = getNewItem(type, lessons.getJSONObject(j));
+                    item.extras.put("weekday", day_weekday);
+                    dataset.add(item);
                     position++;
                     lessons_count++;
                 }
             }
             if (lessons_count == 0) {
-                dataset.add(new Item(TYPE_NO_LESSONS, null));
+                dataset.add(getNewItem(TYPE_NO_LESSONS, null));
             } else {
                 // notification
                 Calendar calendar = Static.getCalendar();
                 int month = calendar.get(Calendar.MONTH);
                 int day = calendar.get(Calendar.DAY_OF_MONTH);
                 if (month == Calendar.AUGUST && day > 21 || month == Calendar.SEPTEMBER && day < 21 || month == Calendar.JANUARY && day > 14 || month == Calendar.FEBRUARY && day < 14) {
-                    dataset.add(new Item(TYPE_NOTIFICATION, new JSONObject().put("text", activity.getString(R.string.schedule_lessons_unstable_warning))));
+                    dataset.add(getNewItem(TYPE_NOTIFICATION, new JSONObject().put("text", activity.getString(R.string.schedule_lessons_unstable_warning))));
                 }
                 // update time
-                dataset.add(new Item(TYPE_UPDATE_TIME, new JSONObject().put("text", activity.getString(R.string.update_date) + " " + Static.getUpdateTime(activity, json.getLong("timestamp")))));
+                dataset.add(getNewItem(TYPE_UPDATE_TIME, new JSONObject().put("text", activity.getString(R.string.update_date) + " " + Static.getUpdateTime(activity, json.getLong("timestamp")))));
             }
         }
         // that's all
         return dataset;
-    }
-    public void addItem(Item item) {
-        this.dataset.add(item);
-        this.notifyItemInserted(this.dataset.size() - 1);
-    }
-    public void addItems(ArrayList<Item> dataset) {
-        int itemStart = this.dataset.size() - 1;
-        this.dataset.addAll(dataset);
-        this.notifyItemRangeInserted(itemStart, dataset.size() - 1);
-    }
-    public void removeItem(int position) {
-        this.dataset.remove(position);
-        this.notifyItemRemoved(position);
-        this.notifyItemRangeChanged(position, this.dataset.size() - 1);
     }
 
     public int getDayPosition(int weekday) {
         return days_positions.get(weekday, -1);
     }
 
-    protected JSONObject getJsonObject(JSONObject json, String key) throws JSONException {
-        if (json.has(key)) {
-            Object object = json.get(key);
-            if (object == null) {
-                return null;
-            } else {
-                try {
-                    return (JSONObject) object;
-                } catch (Exception e) {
-                    return null;
-                }
-            }
-        } else {
-            return null;
-        }
-    }
-    protected JSONArray getJsonArray(JSONObject json, String key) throws JSONException {
-        if (json.has(key)) {
-            Object object = json.get(key);
-            if (object == null) {
-                return null;
-            } else {
-                try {
-                    return (JSONArray) object;
-                } catch (Exception e) {
-                    return null;
-                }
-            }
-        } else {
-            return null;
-        }
-    }
     protected String getString(JSONObject json, String key) throws JSONException {
         if (json.has(key)) {
             Object object = json.get(key);

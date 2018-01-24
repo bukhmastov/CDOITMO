@@ -1,4 +1,4 @@
-package com.bukhmastov.cdoitmo.adapters;
+package com.bukhmastov.cdoitmo.adapters.rva.university;
 
 import android.content.Context;
 import android.content.Intent;
@@ -19,12 +19,12 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 import java.util.Objects;
 
-public class NewsRecyclerViewAdapter extends UniversityRecyclerViewAdapter {
+public class UniversityNewsRVA extends UniversityRVA {
 
-    public NewsRecyclerViewAdapter(final Context context) {
+    public UniversityNewsRVA(final Context context) {
         super(context, null);
     }
-    public NewsRecyclerViewAdapter(final Context context, final ArrayList<Item> dataset) {
+    public UniversityNewsRVA(final Context context, final ArrayList<Item> dataset) {
         super(context, dataset);
     }
 

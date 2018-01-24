@@ -480,5 +480,7 @@
     <string name="new_password">New password</string>
     <string name="notification_dismissed">Notification dismissed</string>
     <string name="undo">Undo</string>
+    <string name="no_subjects">No subjects</string>
+    <string name="no_data">No data</string>
 
 </resources>

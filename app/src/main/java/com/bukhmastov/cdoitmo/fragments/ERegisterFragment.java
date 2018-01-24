@@ -4,18 +4,19 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.adapters.SubjectListView;
+import com.bukhmastov.cdoitmo.adapters.rva.ERegisterSubjectsRVA;
 import com.bukhmastov.cdoitmo.converters.ERegisterConverter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
@@ -265,8 +266,8 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
             try {
                 if (data == null) throw new NullPointerException("data cannot be null");
                 checkData(data);
-                // получаем список предметов для отображения
-                final ArrayList<JSONObject> subjectsArrayList = new ArrayList<>();
+                // creating adapter
+                final JSONArray subjectsList = new JSONArray();
                 final JSONArray groups = data.getJSONArray("groups");
                 for (int i = 0; i < groups.length(); i++) {
                     final JSONObject group = groups.getJSONObject(i);
@@ -274,13 +275,13 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                         final JSONArray terms = group.getJSONArray("terms");
                         for (int j = 0; j < terms.length(); j++) {
                             final JSONObject term = terms.getJSONObject(j);
-                            if (this.term == -1 || this.term == term.getInt("number")) {
+                            final int termNumber = term.getInt("number");
+                            if (this.term == -1 || this.term == termNumber) {
                                 final JSONArray subjects = term.getJSONArray("subjects");
                                 for (int k = 0; k < subjects.length(); k++) {
                                     final JSONObject subject = subjects.getJSONObject(k);
-                                    subjectsArrayList.add(new JSONObject()
-                                            .put("group", group.getString("name"))
-                                            .put("term", term.getInt("number"))
+                                    subjectsList.put(new JSONObject()
+                                            .put("term", termNumber)
                                             .put("subject", subject)
                                     );
                                 }
@@ -289,38 +290,38 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                         break;
                     }
                 }
+                final ERegisterSubjectsRVA adapter = new ERegisterSubjectsRVA(activity, subjectsList);
+                adapter.setOnElementClickListener(R.id.subject, (v, data) -> Static.T.runThread(() -> {
+                    try {
+                        Log.v(TAG, "erl_list_view clicked");
+                        final Bundle extras = new Bundle();
+                        extras.putString("data", data.get("data").toString());
+                        Static.T.runOnUiThread(() -> activity.openActivityOrFragment(SubjectShowFragment.class, extras));
+                    } catch (Exception e) {
+                        Static.error(e);
+                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                    }
+                }));
                 Static.T.runOnUiThread(() -> {
                     try {
-                        // отображаем интерфейс
-                        draw(R.layout.eregister_layout);
-                        // работаем со списком
-                        ListView erl_list_view = activity.findViewById(R.id.erl_list_view);
-                        if (erl_list_view != null) {
-                            erl_list_view.setAdapter(new SubjectListView(activity, subjectsArrayList));
-                            erl_list_view.setOnItemClickListener((parent, view, position, id) -> Static.T.runThread(() -> {
-                                try {
-                                    Log.v(TAG, "erl_list_view clicked");
-                                    final JSONObject subject = subjectsArrayList.get(position);
-                                    final Bundle extras = new Bundle();
-                                    extras.putString("data", subject.toString());
-                                    Static.T.runOnUiThread(() -> activity.openActivityOrFragment(SubjectShowFragment.class, extras));
-                                } catch (Exception e) {
-                                    Static.error(e);
-                                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                }
-                            }));
+                        draw(R.layout.layout_eregister);
+                        // set adapter to recycler view
+                        final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
+                        final RecyclerView erl_list_view = activity.findViewById(R.id.erl_list_view);
+                        erl_list_view.setLayoutManager(layoutManager);
+                        erl_list_view.setAdapter(adapter);
+                        erl_list_view.setHasFixedSize(true);
+                        // setup swipe
+                        final SwipeRefreshLayout swipe_container = activity.findViewById(R.id.swipe_container);
+                        if (swipe_container != null) {
+                            swipe_container.setColorSchemeColors(Static.colorAccent);
+                            swipe_container.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
+                            swipe_container.setOnRefreshListener(this);
                         }
-                        // работаем со свайпом
-                        SwipeRefreshLayout mSwipeRefreshLayout = activity.findViewById(R.id.swipe_container);
-                        if (mSwipeRefreshLayout != null) {
-                            mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
-                            mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
-                            mSwipeRefreshLayout.setOnRefreshListener(this);
-                        }
-                        // работаем с раскрывающимися списками
+                        // setup spinners
                         int selection = 0, counter = 0;
-                        // список групп
-                        Spinner spinner_group = activity.findViewById(R.id.erl_group_spinner);
+                        // spinner: groups
+                        final Spinner spinner_group = activity.findViewById(R.id.erl_group_spinner);
                         if (spinner_group != null) {
                             final ArrayList<String> spinner_group_arr = new ArrayList<>();
                             final ArrayList<String> spinner_group_arr_names = new ArrayList<>();
@@ -350,8 +351,8 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                                 public void onNothingSelected(AdapterView<?> parent) {}
                             });
                         }
-                        // список семестров
-                        Spinner spinner_period = activity.findViewById(R.id.erl_period_spinner);
+                        // spinner: terms
+                        final Spinner spinner_period = activity.findViewById(R.id.erl_period_spinner);
                         if (spinner_period != null) {
                             final ArrayList<String> spinner_period_arr = new ArrayList<>();
                             final ArrayList<Integer> spinner_period_arr_values = new ArrayList<>();
@@ -390,6 +391,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                                 public void onNothingSelected(AdapterView<?> parent) {}
                             });
                         }
+                        // show update time
                         Static.showUpdateTime(activity, data.getLong("timestamp"), true);
                     } catch (Exception e) {
                         Static.error(e);

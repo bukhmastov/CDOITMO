@@ -15,7 +15,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.adapters.ERegisterSubjectRecyclerViewAdapter;
+import com.bukhmastov.cdoitmo.adapters.rva.ERegisterSubjectViewRVA;
 import com.bukhmastov.cdoitmo.exceptions.SilentException;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.utils.Log;
@@ -106,17 +106,18 @@ public class SubjectShowFragment extends ConnectedFragment {
                 Log.v(TAG, "display");
                 final JSONObject subject = data.getJSONObject("subject");
                 final int term = data.getInt("term");
-                final ERegisterSubjectRecyclerViewAdapter adapter = new ERegisterSubjectRecyclerViewAdapter(activity, subject, term);
+                final ERegisterSubjectViewRVA adapter = new ERegisterSubjectViewRVA(activity, subject, term);
                 Static.T.runOnUiThread(() -> {
                     try {
                         // отображаем заголовок
                         activity.updateToolbar(activity, subject.getString("name"), R.drawable.ic_e_journal);
                         // отображаем список
-                        final LinearLayoutManager layoutManager = new LinearLayoutManager(activity);
+                        final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
                         final RecyclerView points_list = activity.findViewById(R.id.points_list);
                         if (points_list == null) throw new SilentException();
                         points_list.setLayoutManager(layoutManager);
                         points_list.setAdapter(adapter);
+                        points_list.setHasFixedSize(true);
                     } catch (SilentException e) {
                         activity.back();
                     } catch (Exception e) {

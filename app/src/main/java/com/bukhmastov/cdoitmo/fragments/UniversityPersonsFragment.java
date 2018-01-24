@@ -20,9 +20,9 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.adapters.PersonsRecyclerViewAdapter;
-import com.bukhmastov.cdoitmo.adapters.RecyclerViewOnScrollListener;
-import com.bukhmastov.cdoitmo.adapters.UniversityRecyclerViewAdapter;
+import com.bukhmastov.cdoitmo.adapters.rva.university.UniversityPersonsRVA;
+import com.bukhmastov.cdoitmo.adapters.rva.RecyclerViewOnScrollListener;
+import com.bukhmastov.cdoitmo.adapters.rva.university.UniversityRVA;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
@@ -48,7 +48,7 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
     private final int limit = 20;
     private int offset = 0;
     private String search = "";
-    private PersonsRecyclerViewAdapter personsRecyclerViewAdapter = null;
+    private UniversityPersonsRVA personsRecyclerViewAdapter = null;
     private long timestamp = 0;
 
     @Override
@@ -284,7 +284,7 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
                 // список
                 JSONArray list = persons.getJSONArray("list");
                 if (list.length() > 0) {
-                    personsRecyclerViewAdapter = new PersonsRecyclerViewAdapter(activity);
+                    personsRecyclerViewAdapter = new UniversityPersonsRVA(activity);
                     final RecyclerView persons_list = container.findViewById(R.id.persons_list);
                     persons_list.setLayoutManager(new LinearLayoutManager(activity));
                     persons_list.setAdapter(personsRecyclerViewAdapter);
@@ -338,8 +338,8 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
                         }));
                     });
                     if (timestamp > 0 && timestamp + 5000 < Static.getCalendar().getTimeInMillis()) {
-                        UniversityRecyclerViewAdapter.Item item = new UniversityRecyclerViewAdapter.Item();
-                        item.type = UniversityRecyclerViewAdapter.TYPE_INFO_ABOUT_UPDATE_TIME;
+                        UniversityRVA.Item item = new UniversityRVA.Item();
+                        item.type = UniversityRVA.TYPE_INFO_ABOUT_UPDATE_TIME;
                         item.data = new JSONObject().put("title", activity.getString(R.string.update_date) + " " + Static.getUpdateTime(activity, timestamp));
                         personsRecyclerViewAdapter.addItem(item);
                     }
@@ -379,12 +379,12 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
     private void displayContent(final JSONArray list) {
         Static.T.runThread(() -> {
             try {
-                final ArrayList<PersonsRecyclerViewAdapter.Item> items = new ArrayList<>();
+                final ArrayList<UniversityPersonsRVA.Item> items = new ArrayList<>();
                 for (int i = 0; i < list.length(); i++) {
                     try {
                         final JSONObject news = list.getJSONObject(i);
-                        PersonsRecyclerViewAdapter.Item item = new PersonsRecyclerViewAdapter.Item();
-                        item.type = PersonsRecyclerViewAdapter.TYPE_MAIN;
+                        UniversityPersonsRVA.Item item = new UniversityPersonsRVA.Item();
+                        item.type = UniversityPersonsRVA.TYPE_MAIN;
                         item.data = news;
                         items.add(item);
                     } catch (Exception e) {

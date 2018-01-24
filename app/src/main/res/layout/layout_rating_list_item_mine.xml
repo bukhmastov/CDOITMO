@@ -4,27 +4,48 @@
     android:layout_height="@dimen/rating_list_height">
 
     <RelativeLayout
-        android:id="@+id/lvrl_number_layout"
+        android:id="@+id/position_layout"
         android:layout_width="@dimen/rating_list_height"
         android:layout_height="@dimen/rating_list_height">
 
+        <FrameLayout
+            android:id="@+id/its_me"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <View
+                android:id="@+id/its_me_1"
+                android:background="?attr/colorRatingHighlightBackground"
+                android:rotation="45"
+                android:layout_height="@dimen/rating_list_triangle"
+                android:layout_width="@dimen/rating_list_triangle"
+                android:layout_margin="@dimen/rating_list_triangle_margin" />
+
+            <View
+                android:id="@+id/its_me_2"
+                android:background="?attr/colorRatingHighlightBackground"
+                android:layout_height="@dimen/rating_list_height"
+                android:layout_width="@dimen/rating_list_height_half" />
+
+        </FrameLayout>
+
         <ImageView
-            android:id="@+id/lvrl_crown"
+            android:id="@+id/crown"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:src="@drawable/ic_crown"
-            android:tint="?android:attr/textColorPrimary"
+            android:tint="?attr/colorRatingHighlightText"
             android:visibility="gone"/>
 
         <TextView
-            android:id="@+id/lvrl_number"
+            android:id="@+id/position"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:fontFamily="@string/font_bold"
             android:gravity="center"
             android:text="@string/lorem_number_short"
-            android:textColor="?android:attr/textColorPrimary"
+            android:textColor="?attr/colorRatingHighlightText"
             android:textSize="@dimen/font_size_18"
             android:visibility="visible"/>
 
@@ -33,13 +54,15 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="@dimen/rating_list_height"
-        android:layout_toEndOf="@+id/lvrl_number_layout"
-        android:layout_toStartOf="@+id/lvrl_delta_container"
+        android:layout_toEndOf="@+id/position_layout"
+        android:layout_toStartOf="@+id/delta_container"
+        android:layout_marginStart="@dimen/item_padding_half"
+        android:layout_marginEnd="0dp"
         android:gravity="center"
         android:orientation="vertical" >
 
         <TextView
-            android:id="@+id/lvrl_fio"
+            android:id="@+id/fio"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:maxLines="1"
@@ -49,7 +72,7 @@
             android:ellipsize="end" />
 
         <TextView
-            android:id="@+id/lvrl_meta"
+            android:id="@+id/meta"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:maxLines="1"
@@ -61,14 +84,14 @@
     </LinearLayout>
 
     <FrameLayout
-        android:id="@+id/lvrl_delta_container"
+        android:id="@+id/delta_container"
         android:layout_width="wrap_content"
         android:layout_height="@dimen/rating_list_height"
         android:layout_alignParentEnd="true"
         android:visibility="gone" >
 
         <TextView
-            android:id="@+id/lvrl_delta"
+            android:id="@+id/delta"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:gravity="center"
@@ -79,5 +102,11 @@
             android:textStyle="bold" />
 
     </FrameLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/separator"
+        android:background="?attr/colorSeparator"
+        android:layout_alignParentBottom="true"/>
 
 </RelativeLayout>

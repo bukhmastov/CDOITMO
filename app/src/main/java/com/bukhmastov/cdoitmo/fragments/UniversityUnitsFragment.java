@@ -22,9 +22,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.adapters.FacultiesRecyclerViewAdapter;
-import com.bukhmastov.cdoitmo.adapters.RecyclerViewOnScrollListener;
-import com.bukhmastov.cdoitmo.adapters.UniversityRecyclerViewAdapter;
+import com.bukhmastov.cdoitmo.adapters.rva.university.UniversityFacultiesRVA;
+import com.bukhmastov.cdoitmo.adapters.rva.RecyclerViewOnScrollListener;
+import com.bukhmastov.cdoitmo.adapters.rva.university.UniversityRVA;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
@@ -48,7 +48,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
     private boolean loaded = false;
     private final ArrayList<String> stack = new ArrayList<>();
     private final ArrayMap<String, String> history = new ArrayMap<>();
-    private FacultiesRecyclerViewAdapter facultiesRecyclerViewAdapter = null;
+    private UniversityFacultiesRVA facultiesRecyclerViewAdapter = null;
     private long timestamp = 0;
 
     @Override
@@ -313,15 +313,15 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                     }
                 }
                 // список
-                facultiesRecyclerViewAdapter = new FacultiesRecyclerViewAdapter(activity);
+                facultiesRecyclerViewAdapter = new UniversityFacultiesRVA(activity);
                 final RecyclerView list = container.findViewById(R.id.list);
                 list.setLayoutManager(new LinearLayoutManager(activity));
                 list.setAdapter(facultiesRecyclerViewAdapter);
                 list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
                 displayContent(unit, divisions);
                 if (timestamp > 0 && timestamp + 5000 < Static.getCalendar().getTimeInMillis()) {
-                    UniversityRecyclerViewAdapter.Item item = new UniversityRecyclerViewAdapter.Item();
-                    item.type = UniversityRecyclerViewAdapter.TYPE_INFO_ABOUT_UPDATE_TIME;
+                    UniversityRVA.Item item = new UniversityRVA.Item();
+                    item.type = UniversityRVA.TYPE_INFO_ABOUT_UPDATE_TIME;
                     item.data = new JSONObject().put("title", activity.getString(R.string.update_date) + " " + Static.getUpdateTime(activity, timestamp));
                     facultiesRecyclerViewAdapter.addItem(item);
                 }
@@ -355,7 +355,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
     private void displayContent(final JSONObject unit, final JSONArray divisions) {
         Static.T.runThread(() -> {
             try {
-                final ArrayList<FacultiesRecyclerViewAdapter.Item> items = new ArrayList<>();
+                final ArrayList<UniversityFacultiesRVA.Item> items = new ArrayList<>();
                 if (unit != null) {
                     // основная информация
                     final String address = getString(unit, "address");
@@ -364,8 +364,8 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                     final String site = getString(unit, "site");
                     final String working_hours = getString(unit, "working_hours");
                     if (isValid(address) || isValid(phone) || isValid(email) || isValid(site) || isValid(working_hours)) {
-                        FacultiesRecyclerViewAdapter.Item item = new FacultiesRecyclerViewAdapter.Item();
-                        item.type = FacultiesRecyclerViewAdapter.TYPE_UNIT_STRUCTURE_COMMON;
+                        UniversityFacultiesRVA.Item item = new UniversityFacultiesRVA.Item();
+                        item.type = UniversityFacultiesRVA.TYPE_UNIT_STRUCTURE_COMMON;
                         item.data = new JSONObject()
                                 .put("header", activity.getString(R.string.faculty_section_general))
                                 .put("address", isValid(address) ? address : null)
@@ -383,8 +383,8 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                     final String head_avatar = getString(unit, "avatar");
                     final int head_pid = getInt(unit, "ifmo_person_id");
                     if (isValid(head_lastname) || isValid(head_firstname) || isValid(head_middlename)) {
-                        FacultiesRecyclerViewAdapter.Item item = new FacultiesRecyclerViewAdapter.Item();
-                        item.type = FacultiesRecyclerViewAdapter.TYPE_UNIT_STRUCTURE_HEAD;
+                        UniversityFacultiesRVA.Item item = new UniversityFacultiesRVA.Item();
+                        item.type = UniversityFacultiesRVA.TYPE_UNIT_STRUCTURE_HEAD;
                         item.data = new JSONObject()
                                 .put("header", isValid(head_post) ? head_post : activity.getString(R.string.faculty_section_head))
                                 .put("head_lastname", isValid(head_lastname) ? head_lastname : null)
@@ -405,8 +405,8 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                                 .put("id", getInt(division, "unit_id"))
                         );
                     }
-                    FacultiesRecyclerViewAdapter.Item item = new FacultiesRecyclerViewAdapter.Item();
-                    item.type = FacultiesRecyclerViewAdapter.TYPE_UNIT_DIVISIONS;
+                    UniversityFacultiesRVA.Item item = new UniversityFacultiesRVA.Item();
+                    item.type = UniversityFacultiesRVA.TYPE_UNIT_DIVISIONS;
                     item.data = new JSONObject()
                             .put("header", stack.size() == 0 ? null : activity.getString(R.string.faculty_section_divisions))
                             .put("divisions", d);

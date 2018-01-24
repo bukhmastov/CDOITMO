@@ -1,4 +1,4 @@
-package com.bukhmastov.cdoitmo.adapters;
+package com.bukhmastov.cdoitmo.adapters.rva.university;
 
 import android.content.Context;
 import android.content.Intent;
@@ -16,12 +16,12 @@ import com.bukhmastov.cdoitmo.utils.Static;
 
 import java.util.ArrayList;
 
-public class EventsRecyclerViewAdapter extends UniversityRecyclerViewAdapter {
+public class UniversityEventsRVA extends UniversityRVA {
 
-    public EventsRecyclerViewAdapter(final Context context) {
+    public UniversityEventsRVA(final Context context) {
         super(context, null);
     }
-    public EventsRecyclerViewAdapter(final Context context, final ArrayList<Item> dataset) {
+    public UniversityEventsRVA(final Context context, final ArrayList<Item> dataset) {
         super(context, dataset);
     }
 
@@ -32,10 +32,10 @@ public class EventsRecyclerViewAdapter extends UniversityRecyclerViewAdapter {
                 return new ViewHolder((ViewGroup) LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_university_update_time, parent, false));
             }
             case TYPE_MINOR: {
-                return new EventsRecyclerViewAdapter.ViewHolder((ViewGroup) LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_university_news_card_compact, parent, false));
+                return new UniversityEventsRVA.ViewHolder((ViewGroup) LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_university_news_card_compact, parent, false));
             }
             case TYPE_STATE: {
-                return new EventsRecyclerViewAdapter.ViewHolder((ViewGroup) LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_university_list_item_state, parent, false));
+                return new UniversityEventsRVA.ViewHolder((ViewGroup) LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_university_list_item_state, parent, false));
             }
         }
         return null;
@@ -62,7 +62,7 @@ public class EventsRecyclerViewAdapter extends UniversityRecyclerViewAdapter {
 
     private void bindMinor(RecyclerView.ViewHolder holder, Item item) {
         try {
-            EventsRecyclerViewAdapter.ViewHolder viewHolder = (EventsRecyclerViewAdapter.ViewHolder) holder;
+            UniversityEventsRVA.ViewHolder viewHolder = (UniversityEventsRVA.ViewHolder) holder;
             String title = getString(item.data, "name");
             String type = getString(item.data, "type_name");
             String color_hex = "#DF1843";
@@ -129,7 +129,7 @@ public class EventsRecyclerViewAdapter extends UniversityRecyclerViewAdapter {
     }
     private void bindState(RecyclerView.ViewHolder holder, Item item) {
         try {
-            EventsRecyclerViewAdapter.ViewHolder viewHolder = (EventsRecyclerViewAdapter.ViewHolder) holder;
+            UniversityEventsRVA.ViewHolder viewHolder = (UniversityEventsRVA.ViewHolder) holder;
             for (int i = viewHolder.container.getChildCount() - 1; i >= 0; i--) {
                 View child = viewHolder.container.getChildAt(i);
                 if (child.getId() == item.data_state_keep) {

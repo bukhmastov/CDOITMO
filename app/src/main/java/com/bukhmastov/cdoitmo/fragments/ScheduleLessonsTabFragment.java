@@ -16,7 +16,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.ConnectedActivity;
-import com.bukhmastov.cdoitmo.adapters.ScheduleLessonsRecyclerViewAdapter;
+import com.bukhmastov.cdoitmo.adapters.rva.ScheduleLessonsRVA;
 import com.bukhmastov.cdoitmo.exceptions.SilentException;
 import com.bukhmastov.cdoitmo.fragments.settings.SettingsScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.network.models.Client;
@@ -157,7 +157,7 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
                             // ignore
                         }
                         final int week = Static.getWeek(activity);
-                        final ScheduleLessonsRecyclerViewAdapter adapter = new ScheduleLessonsRecyclerViewAdapter(activity, TYPE, json, week, data -> {
+                        final ScheduleLessonsRVA adapter = new ScheduleLessonsRVA(activity, TYPE, json, week, data -> {
                             setQuery(data);
                             invalidate(false);
                         });

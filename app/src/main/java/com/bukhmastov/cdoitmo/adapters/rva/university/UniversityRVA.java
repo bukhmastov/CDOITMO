@@ -1,4 +1,4 @@
-package com.bukhmastov.cdoitmo.adapters;
+package com.bukhmastov.cdoitmo.adapters.rva.university;
 
 import android.content.Context;
 import android.support.v4.util.ArrayMap;
@@ -16,7 +16,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-public abstract class UniversityRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public abstract class UniversityRVA extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     public static final int TYPE_INFO_ABOUT_UPDATE_TIME = 0;
     public static final int TYPE_MAIN = 1;
@@ -46,10 +46,10 @@ public abstract class UniversityRecyclerViewAdapter extends RecyclerView.Adapter
     protected final Context context;
     protected ArrayList<Item> dataset = new ArrayList<>();
 
-    public UniversityRecyclerViewAdapter(final Context context) {
+    public UniversityRVA(final Context context) {
         this(context, null);
     }
-    public UniversityRecyclerViewAdapter(final Context context, final ArrayList<Item> dataset) {
+    public UniversityRVA(final Context context, final ArrayList<Item> dataset) {
         this.context = context;
         if (dataset != null) {
             this.dataset = new ArrayList<>();

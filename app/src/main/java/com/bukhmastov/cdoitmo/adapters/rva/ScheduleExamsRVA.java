@@ -1,11 +1,7 @@
-package com.bukhmastov.cdoitmo.adapters;
+package com.bukhmastov.cdoitmo.adapters.rva;
 
-import android.content.Context;
 import android.support.annotation.LayoutRes;
 import android.support.v7.widget.PopupMenu;
-import android.support.v7.widget.RecyclerView;
-import android.view.InflateException;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,9 +21,9 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-public class ScheduleExamsRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>  {
+public class ScheduleExamsRVA extends RecyclerViewAdapter  {
 
-    private static final String TAG = "SERVAdapter";
+    private static final String TAG = "ScheduleExamsRVA";
 
     private static final int TYPE_HEADER = 0;
     private static final int TYPE_EXAM = 1;
@@ -36,34 +32,17 @@ public class ScheduleExamsRecyclerViewAdapter extends RecyclerView.Adapter<Recyc
     private static final int TYPE_PICKER_HEADER = 4;
     private static final int TYPE_PICKER_ITEM = 5;
     private static final int TYPE_PICKER_NO_TEACHERS = 6;
-    public static class Item {
-        public int type;
-        public JSONObject data;
-        public Item (int type, JSONObject data) {
-            this.type = type;
-            this.data = data;
-        }
-    }
 
-    private class ViewHolder extends RecyclerView.ViewHolder {
-        protected final ViewGroup container;
-        ViewHolder(ViewGroup container) {
-            super(container);
-            this.container = container;
-        }
-    }
     private final ConnectedActivity activity;
     private final JSONObject data;
-    private final ArrayList<Item> dataset;
     private final Static.StringCallback callback;
     private String type = "";
     private String query = null;
 
-    public ScheduleExamsRecyclerViewAdapter(final ConnectedActivity activity, JSONObject data, final Static.StringCallback callback) {
+    public ScheduleExamsRVA(final ConnectedActivity activity, JSONObject data, final Static.StringCallback callback) {
         this.activity = activity;
         this.data = data;
         this.callback = callback;
-        this.dataset = new ArrayList<>();
         try {
             type = data.getString("type");
             query = data.getString("query");
@@ -74,19 +53,9 @@ public class ScheduleExamsRecyclerViewAdapter extends RecyclerView.Adapter<Recyc
     }
 
     @Override
-    public int getItemCount() {
-        return dataset.size();
-    }
-
-    @Override
-    public int getItemViewType(int position) {
-        return dataset.get(position).type;
-    }
-
-    @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    protected int onGetLayout(int type) throws NullPointerException {
         @LayoutRes int layout;
-        switch (viewType) {
+        switch (type) {
             case TYPE_HEADER: layout = R.layout.layout_schedule_both_header; break;
             case TYPE_EXAM: layout = R.layout.layout_schedule_exams_item; break;
             case TYPE_UPDATE_TIME: layout = R.layout.layout_schedule_both_update_time; break;
@@ -94,64 +63,62 @@ public class ScheduleExamsRecyclerViewAdapter extends RecyclerView.Adapter<Recyc
             case TYPE_PICKER_HEADER: layout = R.layout.layout_schedule_teacher_picker_header; break;
             case TYPE_PICKER_ITEM: layout = R.layout.layout_schedule_teacher_picker_item; break;
             case TYPE_PICKER_NO_TEACHERS: layout = R.layout.nothing_to_display; break;
-            default: return null;
+            default: throw new NullPointerException("Invalid type provided");
         }
-        return new ViewHolder((ViewGroup) LayoutInflater.from(parent.getContext()).inflate(layout, parent, false));
+        return layout;
     }
 
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-        Item item = dataset.get(position);
+    protected void onBind(View container, RecyclerViewAdapter.Item item) {
         switch (item.type) {
             case TYPE_HEADER: {
-                bindHeader(holder, item);
+                bindHeader(container, item);
                 break;
             }
             case TYPE_EXAM: {
-                bindExam(holder, item);
+                bindExam(container, item);
                 break;
             }
             case TYPE_UPDATE_TIME: {
-                bindUpdateTime(holder, item);
+                bindUpdateTime(container, item);
                 break;
             }
             case TYPE_NO_EXAMS: {
-                bindNoExams(holder, item);
+                bindNoExams(container, item);
                 break;
             }
             case TYPE_PICKER_HEADER: {
-                bindPickerHeader(holder, item);
+                bindPickerHeader(container, item);
                 break;
             }
             case TYPE_PICKER_ITEM: {
-                bindPickerItem(holder, item);
+                bindPickerItem(container, item);
                 break;
             }
             case TYPE_PICKER_NO_TEACHERS: {
-                bindPickerNoTeachers(holder, item);
+                bindPickerNoTeachers(container, item);
                 break;
             }
         }
     }
 
-    private void bindHeader(RecyclerView.ViewHolder holder, Item item) {
+    private void bindHeader(View container, Item item) {
         try {
             final String title = getString(item.data, "title");
             final String week = getString(item.data, "week");
-            ViewHolder viewHolder = (ViewHolder) holder;
-            TextView schedule_lessons_header = viewHolder.container.findViewById(R.id.schedule_lessons_header);
+            TextView schedule_lessons_header = container.findViewById(R.id.schedule_lessons_header);
             if (title != null && !title.isEmpty()) {
                 schedule_lessons_header.setText(title);
             } else {
                 ((ViewGroup) schedule_lessons_header.getParent()).removeView(schedule_lessons_header);
             }
-            TextView schedule_lessons_week = viewHolder.container.findViewById(R.id.schedule_lessons_week);
+            TextView schedule_lessons_week = container.findViewById(R.id.schedule_lessons_week);
             if (week != null && !week.isEmpty()) {
                 schedule_lessons_week.setText(week);
             } else {
                 ((ViewGroup) schedule_lessons_week.getParent()).removeView(schedule_lessons_week);
             }
-            viewHolder.container.findViewById(R.id.schedule_lessons_menu).setOnClickListener(view -> Static.T.runThread(() -> {
+            container.findViewById(R.id.schedule_lessons_menu).setOnClickListener(view -> Static.T.runThread(() -> {
                 final String cache_token = query == null ? null : query.toLowerCase();
                 final boolean cached = cache_token != null && !Storage.file.general.cache.get(activity, "schedule_exams#lessons#" + cache_token, "").isEmpty();
                 Static.T.runOnUiThread(() -> {
@@ -211,9 +178,8 @@ public class ScheduleExamsRecyclerViewAdapter extends RecyclerView.Adapter<Recyc
             Static.error(e);
         }
     }
-    private void bindExam(RecyclerView.ViewHolder holder, Item item) {
+    private void bindExam(View container, Item item) {
         try {
-            ViewHolder viewHolder = (ViewHolder) holder;
             final String subject = item.data.getString("subject");
             final String group = item.data.getString("group");
             final String teacher = item.data.getString("teacher");
@@ -240,15 +206,15 @@ public class ScheduleExamsRecyclerViewAdapter extends RecyclerView.Adapter<Recyc
                 }
             }
             // title and description
-            ((TextView) viewHolder.container.findViewById(R.id.exam_header)).setText(subject.toUpperCase());
+            ((TextView) container.findViewById(R.id.exam_header)).setText(subject.toUpperCase());
             if (desc != null && !desc.trim().isEmpty()) {
-                ((TextView) viewHolder.container.findViewById(R.id.exam_desc)).setText(desc);
-                viewHolder.container.findViewById(R.id.exam_desc).setVisibility(View.VISIBLE);
+                ((TextView) container.findViewById(R.id.exam_desc)).setText(desc);
+                container.findViewById(R.id.exam_desc).setVisibility(View.VISIBLE);
             } else {
-                viewHolder.container.findViewById(R.id.exam_desc).setVisibility(View.GONE);
+                container.findViewById(R.id.exam_desc).setVisibility(View.GONE);
             }
             // badges (actually, only one)
-            View exam_touch_icon = viewHolder.container.findViewById(R.id.exam_touch_icon);
+            View exam_touch_icon = container.findViewById(R.id.exam_touch_icon);
             exam_touch_icon.setVisibility(touch_icon_enabled ? View.VISIBLE : View.GONE);
             if (touch_icon_enabled) {
                 exam_touch_icon.setOnClickListener(view -> {
@@ -325,8 +291,8 @@ public class ScheduleExamsRecyclerViewAdapter extends RecyclerView.Adapter<Recyc
                     try {
                         date = Static.cuteDate(activity, date_format, date);
                     } catch (Exception ignore) {/* ignore */}
-                    ((TextView) viewHolder.container.findViewById(R.id.exam_info_advice_date)).setText(date);
-                    TextView exam_info_advice_place = viewHolder.container.findViewById(R.id.exam_info_advice_place);
+                    ((TextView) container.findViewById(R.id.exam_info_advice_date)).setText(date);
+                    TextView exam_info_advice_place = container.findViewById(R.id.exam_info_advice_place);
                     if (!place.isEmpty()) {
                         exam_info_advice_place.setText(place);
                         exam_info_advice_place.setVisibility(View.VISIBLE);
@@ -364,8 +330,8 @@ public class ScheduleExamsRecyclerViewAdapter extends RecyclerView.Adapter<Recyc
                     try {
                         date = Static.cuteDate(activity, date_format, date);
                     } catch (Exception ignore) {/* ignore */}
-                    ((TextView) viewHolder.container.findViewById(R.id.exam_info_exam_date)).setText(date);
-                    TextView exam_info_exam_place = viewHolder.container.findViewById(R.id.exam_info_exam_place);
+                    ((TextView) container.findViewById(R.id.exam_info_exam_date)).setText(date);
+                    TextView exam_info_exam_place = container.findViewById(R.id.exam_info_exam_place);
                     if (!place.isEmpty()) {
                         exam_info_exam_place.setText(place);
                         exam_info_exam_place.setVisibility(View.VISIBLE);
@@ -375,34 +341,31 @@ public class ScheduleExamsRecyclerViewAdapter extends RecyclerView.Adapter<Recyc
                     isExamExists = true;
                 }
             }
-            viewHolder.container.findViewById(R.id.exam_info_advice).setVisibility(isAdviceExists ? View.VISIBLE : View.GONE);
-            viewHolder.container.findViewById(R.id.exam_info_exam).setVisibility(isExamExists ? View.VISIBLE : View.GONE);
-            viewHolder.container.findViewById(R.id.separator_small).setVisibility((isAdviceExists && !isExamExists) || (!isAdviceExists && isExamExists) ? View.GONE : View.VISIBLE);
-            viewHolder.container.findViewById(R.id.exam_info).setVisibility(isAdviceExists || isExamExists ? View.VISIBLE : View.GONE);
+            container.findViewById(R.id.exam_info_advice).setVisibility(isAdviceExists ? View.VISIBLE : View.GONE);
+            container.findViewById(R.id.exam_info_exam).setVisibility(isExamExists ? View.VISIBLE : View.GONE);
+            container.findViewById(R.id.separator_small).setVisibility((isAdviceExists && !isExamExists) || (!isAdviceExists && isExamExists) ? View.GONE : View.VISIBLE);
+            container.findViewById(R.id.exam_info).setVisibility(isAdviceExists || isExamExists ? View.VISIBLE : View.GONE);
         } catch (Exception e) {
             Static.error(e);
         }
     }
-    private void bindUpdateTime(RecyclerView.ViewHolder holder, Item item) {
+    private void bindUpdateTime(View container, Item item) {
         try {
             final String text = getString(item.data, "text");
-            ViewHolder viewHolder = (ViewHolder) holder;
-            ((TextView) viewHolder.container.findViewById(R.id.update_time)).setText(text != null && !text.isEmpty() ? text : Static.GLITCH);
+            ((TextView) container.findViewById(R.id.update_time)).setText(text != null && !text.isEmpty() ? text : Static.GLITCH);
         } catch (Exception e) {
             Static.error(e);
         }
     }
-    private void bindNoExams(RecyclerView.ViewHolder holder, Item item) {
+    private void bindNoExams(View container, Item item) {
         try {
-            ViewHolder viewHolder = (ViewHolder) holder;
-            ((TextView) viewHolder.container.findViewById(R.id.ntd_text)).setText(R.string.no_exams);
+            ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_exams);
         } catch (Exception e) {
             Static.error(e);
         }
     }
-    private void bindPickerHeader(RecyclerView.ViewHolder holder, Item item) {
+    private void bindPickerHeader(View container, Item item) {
         try {
-            ViewHolder viewHolder = (ViewHolder) holder;
             String query = item.data.getString("query");
             String text;
             if (query == null || query.isEmpty()) {
@@ -410,22 +373,21 @@ public class ScheduleExamsRecyclerViewAdapter extends RecyclerView.Adapter<Recyc
             } else {
                 text = activity.getString(R.string.on_search_for) + " \"" + query + "\" " + activity.getString(R.string.teachers_found) + ":";
             }
-            ((TextView) viewHolder.container.findViewById(R.id.teacher_picker_header)).setText(text);
+            ((TextView) container.findViewById(R.id.teacher_picker_header)).setText(text);
         } catch (Exception e) {
             Static.error(e);
         }
     }
-    private void bindPickerItem(RecyclerView.ViewHolder holder, Item item) {
+    private void bindPickerItem(View container, Item item) {
         try {
-            ViewHolder viewHolder = (ViewHolder) holder;
             final String pid = item.data.getString("pid");
             String teacher = item.data.getString("person");
             String post = item.data.getString("post");
             if (post != null && !post.isEmpty()) {
                 teacher += " (" + post + ")";
             }
-            ((TextView) viewHolder.container.findViewById(R.id.teacher_picker_title)).setText(teacher);
-            viewHolder.container.findViewById(R.id.teacher_picker_item).setOnClickListener(view -> {
+            ((TextView) container.findViewById(R.id.teacher_picker_title)).setText(teacher);
+            container.findViewById(R.id.teacher_picker_item).setOnClickListener(view -> {
                 if (pid != null && !pid.isEmpty()) {
                     callback.onCall(pid);
                 }
@@ -434,9 +396,8 @@ public class ScheduleExamsRecyclerViewAdapter extends RecyclerView.Adapter<Recyc
             Static.error(e);
         }
     }
-    private void bindPickerNoTeachers(RecyclerView.ViewHolder holder, Item item) {
+    private void bindPickerNoTeachers(View container, Item item) {
         try {
-            ViewHolder viewHolder = (ViewHolder) holder;
             String query = item.data.getString("query");
             String text;
             if (query == null || query.isEmpty()) {
@@ -444,13 +405,13 @@ public class ScheduleExamsRecyclerViewAdapter extends RecyclerView.Adapter<Recyc
             } else {
                 text = activity.getString(R.string.on_search_for) + " \"" + query + "\" " + activity.getString(R.string.no_teachers).toLowerCase();
             }
-            ((TextView) viewHolder.container.findViewById(R.id.ntd_text)).setText(text);
+            ((TextView) container.findViewById(R.id.ntd_text)).setText(text);
         } catch (Exception e) {
             Static.error(e);
         }
     }
 
-    public ArrayList<Item> json2dataset(ConnectedActivity activity, JSONObject json) throws JSONException {
+    private ArrayList<Item> json2dataset(ConnectedActivity activity, JSONObject json) throws JSONException {
         final ArrayList<Item> dataset = new ArrayList<>();
         // check
         if (!ScheduleExams.TYPE.equals(json.getString("schedule_type"))) {
@@ -493,53 +454,7 @@ public class ScheduleExamsRecyclerViewAdapter extends RecyclerView.Adapter<Recyc
         // that's all
         return dataset;
     }
-    public void addItem(Item item) {
-        this.dataset.add(item);
-        this.notifyItemInserted(this.dataset.size() - 1);
-    }
-    public void addItems(ArrayList<Item> dataset) {
-        int itemStart = this.dataset.size() - 1;
-        this.dataset.addAll(dataset);
-        this.notifyItemRangeInserted(itemStart, dataset.size() - 1);
-    }
-    public void removeItem(int position) {
-        this.dataset.remove(position);
-        this.notifyItemRemoved(position);
-        this.notifyItemRangeChanged(position, this.dataset.size() - 1);
-    }
 
-    protected JSONObject getJsonObject(JSONObject json, String key) throws JSONException {
-        if (json.has(key)) {
-            Object object = json.get(key);
-            if (object == null) {
-                return null;
-            } else {
-                try {
-                    return (JSONObject) object;
-                } catch (Exception e) {
-                    return null;
-                }
-            }
-        } else {
-            return null;
-        }
-    }
-    protected JSONArray getJsonArray(JSONObject json, String key) throws JSONException {
-        if (json.has(key)) {
-            Object object = json.get(key);
-            if (object == null) {
-                return null;
-            } else {
-                try {
-                    return (JSONArray) object;
-                } catch (Exception e) {
-                    return null;
-                }
-            }
-        } else {
-            return null;
-        }
-    }
     protected String getString(JSONObject json, String key) throws JSONException {
         if (json.has(key)) {
             Object object = json.get(key);
@@ -567,8 +482,5 @@ public class ScheduleExamsRecyclerViewAdapter extends RecyclerView.Adapter<Recyc
         } else {
             return -1;
         }
-    }
-    private View inflate(int layout) throws InflateException {
-        return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layout, null);
     }
 }

@@ -20,9 +20,9 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.adapters.NewsRecyclerViewAdapter;
-import com.bukhmastov.cdoitmo.adapters.RecyclerViewOnScrollListener;
-import com.bukhmastov.cdoitmo.adapters.UniversityRecyclerViewAdapter;
+import com.bukhmastov.cdoitmo.adapters.rva.university.UniversityNewsRVA;
+import com.bukhmastov.cdoitmo.adapters.rva.RecyclerViewOnScrollListener;
+import com.bukhmastov.cdoitmo.adapters.rva.university.UniversityRVA;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
@@ -48,7 +48,7 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
     private final int limit = 10;
     private int offset = 0;
     private String search = "";
-    private NewsRecyclerViewAdapter newsRecyclerViewAdapter = null;
+    private UniversityNewsRVA newsRecyclerViewAdapter = null;
     private long timestamp = 0;
 
     @Override
@@ -284,7 +284,7 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                 // список
                 JSONArray list = news.getJSONArray("list");
                 if (list.length() > 0) {
-                    newsRecyclerViewAdapter = new NewsRecyclerViewAdapter(activity);
+                    newsRecyclerViewAdapter = new UniversityNewsRVA(activity);
                     final RecyclerView news_list = container.findViewById(R.id.news_list);
                     news_list.setLayoutManager(new LinearLayoutManager(activity));
                     news_list.setAdapter(newsRecyclerViewAdapter);
@@ -338,8 +338,8 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                         }));
                     });
                     if (timestamp > 0 && timestamp + 5000 < Static.getCalendar().getTimeInMillis()) {
-                        UniversityRecyclerViewAdapter.Item item = new UniversityRecyclerViewAdapter.Item();
-                        item.type = UniversityRecyclerViewAdapter.TYPE_INFO_ABOUT_UPDATE_TIME;
+                        UniversityRVA.Item item = new UniversityRVA.Item();
+                        item.type = UniversityRVA.TYPE_INFO_ABOUT_UPDATE_TIME;
                         item.data = new JSONObject().put("title", activity.getString(R.string.update_date) + " " + Static.getUpdateTime(activity, timestamp));
                         newsRecyclerViewAdapter.addItem(item);
                     }
@@ -379,12 +379,12 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
     private void displayContent(final JSONArray list) {
         Static.T.runThread(() -> {
             try {
-                final ArrayList<NewsRecyclerViewAdapter.Item> items = new ArrayList<>();
+                final ArrayList<UniversityNewsRVA.Item> items = new ArrayList<>();
                 for (int i = 0; i < list.length(); i++) {
                     try {
                         final JSONObject news = list.getJSONObject(i);
-                        NewsRecyclerViewAdapter.Item item = new NewsRecyclerViewAdapter.Item();
-                        item.type = getBoolean(news, "main") ? NewsRecyclerViewAdapter.TYPE_MAIN : NewsRecyclerViewAdapter.TYPE_MINOR;
+                        UniversityNewsRVA.Item item = new UniversityNewsRVA.Item();
+                        item.type = getBoolean(news, "main") ? UniversityNewsRVA.TYPE_MAIN : UniversityNewsRVA.TYPE_MINOR;
                         item.data = news;
                         items.add(item);
                     } catch (Exception e) {

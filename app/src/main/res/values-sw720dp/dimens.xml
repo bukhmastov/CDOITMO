@@ -99,4 +99,6 @@
 
     <dimen name="rating_crown_margin">10dp</dimen>
 
+    <dimen name="scroll_thumb_size">6dp</dimen>
+
 </resources>

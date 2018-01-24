@@ -1,4 +1,4 @@
-package com.bukhmastov.cdoitmo.adapters;
+package com.bukhmastov.cdoitmo.adapters.rva.university;
 
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -28,14 +28,14 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class FacultiesRecyclerViewAdapter extends UniversityRecyclerViewAdapter {
+public class UniversityFacultiesRVA extends UniversityRVA {
 
     private final Pattern working_hours_pattern = Pattern.compile("(\\D*/.*\\|?)+");
 
-    public FacultiesRecyclerViewAdapter(final Context context) {
+    public UniversityFacultiesRVA(final Context context) {
         super(context, null);
     }
-    public FacultiesRecyclerViewAdapter(final Context context, final ArrayList<Item> dataset) {
+    public UniversityFacultiesRVA(final Context context, final ArrayList<Item> dataset) {
         super(context, dataset);
     }
 

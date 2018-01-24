@@ -4,7 +4,8 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.util.SparseArray;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -12,15 +13,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.adapters.ProtocolListView;
+import com.bukhmastov.cdoitmo.adapters.rva.ProtocolRVA;
 import com.bukhmastov.cdoitmo.converters.ProtocolConverter;
-import com.bukhmastov.cdoitmo.exceptions.SilentException;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
@@ -34,7 +32,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshLayout.OnRefreshListener {
 
@@ -326,226 +323,64 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
             Log.v(TAG, "display");
             try {
                 if (data == null) throw new NullPointerException("data cannot be null");
-                // отображаем нужный режим
-                switch (Storage.pref.get(activity, "pref_protocol_changes_mode", "advanced")) {
-                    case "simple": {
-                        // получаем список предметов для отображения
-                        number_of_weeks = data.getInt("number_of_weeks");
-                        JSONArray jsonArray = data.getJSONArray("protocol");
-                        final ArrayList<HashMap<String, String>> changes = new ArrayList<>();
-                        for (int i = 0; i < jsonArray.length(); i++) {
-                            JSONObject jsonObject = jsonArray.getJSONObject(i);
-                            HashMap<String, String> hashMap = new HashMap<>();
-                            JSONObject var = jsonObject.getJSONObject("var");
-                            hashMap.put("name", jsonObject.getString("subject"));
-                            hashMap.put("desc", var.getString("name") + " [" + var.getString("min") + "/" + var.getString("threshold") + "/" + var.getString("max") + "]");
-                            hashMap.put("meta", ("..".equals(jsonObject.getString("sign")) ? "" : jsonObject.getString("sign") + " | ") + jsonObject.getString("date"));
-                            hashMap.put("value", jsonObject.getString("value"));
-                            hashMap.put("delta", jsonObject.getString("cdoitmo_delta"));
-                            hashMap.put("delta_here", jsonObject.getDouble("cdoitmo_delta_double") == 0 ? "false" : "true");
-                            hashMap.put("delta_negative", jsonObject.getDouble("cdoitmo_delta_double") < 0 ? "true" : "false");
-                            changes.add(hashMap);
+                final ProtocolRVA adapter = new ProtocolRVA(activity, data.getJSONArray("protocol"), "advanced".equals(Storage.pref.get(activity, "pref_protocol_changes_mode", "advanced")));
+                Static.T.runOnUiThread(() -> {
+                    try {
+                        draw(R.layout.layout_protocol);
+                        // set adapter to recycler view
+                        final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
+                        final RecyclerView protocol_list = activity.findViewById(R.id.protocol_list);
+                        protocol_list.setLayoutManager(layoutManager);
+                        protocol_list.setAdapter(adapter);
+                        protocol_list.setHasFixedSize(true);
+                        // setup swipe
+                        final SwipeRefreshLayout swipe_container = activity.findViewById(R.id.swipe_container);
+                        if (swipe_container != null) {
+                            swipe_container.setColorSchemeColors(Static.colorAccent);
+                            swipe_container.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
+                            swipe_container.setOnRefreshListener(this);
                         }
-                        Static.T.runOnUiThread(() -> {
-                            try {
-                                // отображаем интерфейс
-                                draw(R.layout.protocol_layout);
-                                // отображаем интерфейс простого режима
-                                ViewGroup protocol_container = activity.findViewById(R.id.protocol_container);
-                                if (protocol_container == null) throw new SilentException();
-                                protocol_container.addView(inflate(R.layout.protocol_layout_mode_simple));
-                                // работаем со списком
-                                ListView pl_list_view = activity.findViewById(R.id.pl_list_view);
-                                if (pl_list_view != null) {
-                                    if (changes.size() == 0) {
-                                        ViewGroup swipe_container = activity.findViewById(R.id.swipe_container);
-                                        if (swipe_container != null) {
-                                            swipe_container.removeView(pl_list_view);
-                                            View view = inflate(R.layout.nothing_to_display);
-                                            ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_changes_for_period);
-                                            swipe_container.addView(view);
+                        // setup spinner: weeks
+                        final Spinner spinner_weeks = activity.findViewById(R.id.pl_weeks_spinner);
+                        if (spinner_weeks != null) {
+                            final ArrayList<String> spinner_weeks_arr = new ArrayList<>();
+                            final ArrayList<Integer> spinner_weeks_arr_values = new ArrayList<>();
+                            for (int i = 1; i <= 4; i++) {
+                                String value = activity.getString(R.string.for_the) + " ";
+                                switch (i){
+                                    case 1: value += activity.getString(R.string.last_week); break;
+                                    case 2: value += activity.getString(R.string.last_2_weeks); break;
+                                    case 3: value += activity.getString(R.string.last_3_weeks); break;
+                                    case 4: value += activity.getString(R.string.last_4_weeks); break;
+                                }
+                                spinner_weeks_arr.add(value);
+                                spinner_weeks_arr_values.add(i);
+                            }
+                            spinner_weeks.setAdapter(new ArrayAdapter<>(activity, R.layout.spinner_layout_single_line, spinner_weeks_arr));
+                            spinner_weeks.setSelection(data.getInt("number_of_weeks") - 1);
+                            spinner_weeks_blocker = true;
+                            spinner_weeks.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                                public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
+                                    Static.T.runThread(() -> {
+                                        if (spinner_weeks_blocker) {
+                                            spinner_weeks_blocker = false;
+                                            return;
                                         }
-                                    } else {
-                                        pl_list_view.setAdapter(new ProtocolListView(activity, changes));
-                                    }
+                                        number_of_weeks = spinner_weeks_arr_values.get(position);
+                                        Log.v(TAG, "spinner_weeks clicked | number_of_weeks=" + number_of_weeks);
+                                        load(true);
+                                    });
                                 }
-                                displayCommonPart();
-                            } catch (SilentException ignore) {
-                                loadFailed();
-                            } catch (Exception e) {
-                                Static.error(e);
-                                loadFailed();
-                            }
-                        });
-                        break;
-                    }
-                    case "advanced": {
-                        // Формируем группированный список из изменений по предметам и датам
-                        final JSONArray protocol = data.getJSONArray("protocol");
-                        final SparseArray<JSONObject> groups = new SparseArray<>();
-                        int key = 0;
-                        for (int i = 0; i < protocol.length(); i++) {
-                            JSONObject item = protocol.getJSONObject(i);
-                            String subject = item.getString("subject");
-                            String date = item.getString("date");
-                            String token = subject + "#" + date;
-                            boolean found = false;
-                            for (int j = 0; j < groups.size(); j++) {
-                                JSONObject obj = groups.get(groups.keyAt(j));
-                                if (token.equals(obj.getString("token"))) {
-                                    found = true;
-                                    break;
-                                }
-                            }
-                            if (!found) {
-                                JSONObject obj = new JSONObject();
-                                obj.put("token", token);
-                                obj.put("subject", subject);
-                                obj.put("changes", new JSONArray());
-                                groups.append(key++, obj);
-                            }
-                            for (int j = 0; j < groups.size(); j++) {
-                                JSONObject obj = groups.get(groups.keyAt(j));
-                                if (token.equals(obj.getString("token"))) {
-                                    obj.getJSONArray("changes").put(item);
-                                    break;
-                                }
-                            }
-                        }
-                        // Объединяем одинаковые предметы, идущие подряд
-                        for (int i = 1; i < groups.size(); i++) {
-                            JSONObject groupPrevious = groups.get(groups.keyAt(i - 1));
-                            JSONObject group = groups.get(groups.keyAt(i));
-                            if (group.getString("subject").equals(groupPrevious.getString("subject"))) {
-                                JSONArray changesPrevious = groupPrevious.getJSONArray("changes");
-                                JSONArray changes = group.getJSONArray("changes");
-                                for (int j = 0; j < changes.length(); j++) {
-                                    changesPrevious.put(changes.getJSONObject(j));
-                                }
-                                group.put("changes", changesPrevious);
-                                groups.remove(groups.keyAt(i - 1));
-                                i--;
-                            }
-                        }
-                        Static.T.runOnUiThread(() -> {
-                            try {
-                                // отображаем интерфейс
-                                draw(R.layout.protocol_layout);
-                                // Отображаем группированный список изменений
-                                ViewGroup protocol_container = activity.findViewById(R.id.protocol_container);
-                                if (protocol_container == null) throw new SilentException();
-                                protocol_container.addView(inflate(R.layout.protocol_layout_mode_advanced));
-                                ViewGroup pl_advanced_container = activity.findViewById(R.id.pl_advanced_container);
-                                if (protocol.length() == 0) {
-                                    ViewGroup swipe_container = activity.findViewById(R.id.swipe_container);
-                                    if (swipe_container != null) {
-                                        swipe_container.removeAllViews();
-                                        View view = inflate(R.layout.nothing_to_display);
-                                        ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_changes_for_period);
-                                        swipe_container.addView(view);
-                                    }
-                                } else {
-                                    for (int j = 0; j < groups.size(); j++) {
-                                        JSONObject group = groups.get(groups.keyAt(j));
-                                        String title = group.getString("subject");
-                                        JSONArray changes = group.getJSONArray("changes");
-                                        LinearLayout header = (LinearLayout) inflate(R.layout.protocol_layout_mode_advanced_header);
-                                        ((TextView) header.findViewById(R.id.lv_protocol_name)).setText(title);
-                                        pl_advanced_container.addView(header);
-                                        for (int i = 0; i < changes.length(); i++) {
-                                            JSONObject change = changes.getJSONObject(i);
-                                            JSONObject var = change.getJSONObject("var");
-                                            LinearLayout element = (LinearLayout) inflate(R.layout.protocol_layout_mode_advanced_change);
-                                            if (i == changes.length() - 1 && j != groups.size() - 1) {
-                                                Static.removeView(element.findViewById(R.id.lv_protocol_separator));
-                                            }
-                                            ((TextView) element.findViewById(R.id.lv_protocol_desc)).setText(var.getString("name") + " [" + var.getString("min") + "/" + var.getString("threshold") + "/" + var.getString("max") + "]");
-                                            ((TextView) element.findViewById(R.id.lv_protocol_meta)).setText("..".equals(change.getString("sign")) ? "" : change.getString("sign") + " | " + change.getString("date"));
-                                            ((TextView) element.findViewById(R.id.lv_protocol_value)).setText(change.getString("value"));
-                                            TextView lv_protocol_delta = element.findViewById(R.id.lv_protocol_delta);
-                                            if (change.getDouble("cdoitmo_delta_double") != 0.0) {
-                                                lv_protocol_delta.setText(change.getString("cdoitmo_delta"));
-                                                try {
-                                                    lv_protocol_delta.setTextColor(Static.resolveColor(activity, change.getDouble("cdoitmo_delta_double") < 0.0 ? R.attr.colorNegativeTrend : R.attr.colorPositiveTrend));
-                                                } catch (Exception e) {
-                                                    Static.error(e);
-                                                }
-                                            } else {
-                                                lv_protocol_delta.setWidth(0);
-                                                lv_protocol_delta.setHeight(0);
-                                            }
-                                            pl_advanced_container.addView(element);
-                                        }
-                                    }
-                                }
-                                displayCommonPart();
-                            } catch (SilentException ignore) {
-                                loadFailed();
-                            } catch (Exception e) {
-                                Static.error(e);
-                                loadFailed();
-                            }
-                        });
-                        break;
-                    }
-                    default: {
-                        Log.wtf(TAG, "preference pref_protocol_changes_mode with wrong value: " + Storage.pref.get(activity, "pref_protocol_changes_mode", "simple") + ". Going to reset preference.");
-                        Storage.pref.put(activity, "pref_protocol_changes_mode", "advanced");
-                        display();
-                        break;
-                    }
-                }
-            } catch (Exception e) {
-                Static.error(e);
-                loadFailed();
-            }
-        });
-    }
-    private void displayCommonPart() {
-        Static.T.runOnUiThread(() -> {
-            try {
-                // работаем со свайпом
-                SwipeRefreshLayout swipe_container = activity.findViewById(R.id.swipe_container);
-                if (swipe_container != null) {
-                    swipe_container.setColorSchemeColors(Static.colorAccent);
-                    swipe_container.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
-                    swipe_container.setOnRefreshListener(this);
-                }
-                // работаем с раскрывающимся списком
-                Spinner spinner_weeks = activity.findViewById(R.id.pl_weeks_spinner);
-                if (spinner_weeks != null) {
-                    final ArrayList<String> spinner_weeks_arr = new ArrayList<>();
-                    final ArrayList<Integer> spinner_weeks_arr_values = new ArrayList<>();
-                    for (int i = 1; i <= 4; i++) {
-                        String value = activity.getString(R.string.for_the) + " ";
-                        switch (i){
-                            case 1: value += activity.getString(R.string.last_week); break;
-                            case 2: value += activity.getString(R.string.last_2_weeks); break;
-                            case 3: value += activity.getString(R.string.last_3_weeks); break;
-                            case 4: value += activity.getString(R.string.last_4_weeks); break;
-                        }
-                        spinner_weeks_arr.add(value);
-                        spinner_weeks_arr_values.add(i);
-                    }
-                    spinner_weeks.setAdapter(new ArrayAdapter<>(activity, R.layout.spinner_layout_single_line, spinner_weeks_arr));
-                    spinner_weeks.setSelection(data.getInt("number_of_weeks") - 1);
-                    spinner_weeks_blocker = true;
-                    spinner_weeks.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                        public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
-                            Static.T.runThread(() -> {
-                                if (spinner_weeks_blocker) {
-                                    spinner_weeks_blocker = false;
-                                    return;
-                                }
-                                number_of_weeks = spinner_weeks_arr_values.get(position);
-                                Log.v(TAG, "spinner_weeks clicked | number_of_weeks=" + number_of_weeks);
-                                load(true);
+                                public void onNothingSelected(AdapterView<?> parent) {}
                             });
                         }
-                        public void onNothingSelected(AdapterView<?> parent) {}
-                    });
-                }
-                Static.showUpdateTime(activity, data.getLong("timestamp"), false);
+                        // show update time
+                        Static.showUpdateTime(activity, data.getLong("timestamp"), false);
+                    } catch (Exception e) {
+                        Static.error(e);
+                        loadFailed();
+                    }
+                });
             } catch (Exception e) {
                 Static.error(e);
                 loadFailed();

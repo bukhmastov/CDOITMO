@@ -6,16 +6,17 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.adapters.RatingTopListView;
+import com.bukhmastov.cdoitmo.adapters.rva.RatingListRVA;
 import com.bukhmastov.cdoitmo.exceptions.SilentException;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
@@ -29,9 +30,7 @@ import com.bukhmastov.cdoitmo.utils.Storage;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -227,15 +226,15 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                 mineFaculty = "";
                 hideShareButton();
                 // получаем список для отображения рейтинга
-                final ArrayList<HashMap<String, String>> users = new ArrayList<>();
-                JSONArray list = data.getJSONArray("list");
+                final JSONArray list = data.getJSONArray("list");
+                final JSONArray rating = new JSONArray();
                 if (list != null && list.length() > 0) {
                     for (int i = 0; i < list.length(); i++) {
                         JSONObject jsonObject = list.getJSONObject(i);
                         if (jsonObject == null) continue;
                         int position = jsonObject.getInt("number");
-                        boolean is_me = jsonObject.getBoolean("is_me");
-                        if (minePosition == -1 && is_me) {
+                        boolean mine = jsonObject.getBoolean("is_me");
+                        if (minePosition == -1 && mine) {
                             minePosition = position;
                             Matcher m = Pattern.compile("^(.*)\\(.*\\)$").matcher(title);
                             if (m.find()) {
@@ -244,37 +243,35 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                                 mineFaculty = title;
                             }
                         }
-                        HashMap<String, String> hashMap = new HashMap<>();
-                        hashMap.put("number", String.valueOf(position));
-                        hashMap.put("fio", jsonObject.getString("fio"));
-                        hashMap.put("meta", jsonObject.getString("group") + " — " + jsonObject.getString("department"));
-                        hashMap.put("is_me", is_me ? "1" : "0");
-                        hashMap.put("change", jsonObject.getString("change"));
-                        hashMap.put("delta", jsonObject.getString("delta"));
-                        users.add(hashMap);
+                        rating.put(new JSONObject()
+                                .put("position", position)
+                                .put("fio", jsonObject.getString("fio"))
+                                .put("meta", jsonObject.getString("group") + " — " + jsonObject.getString("department"))
+                                .put("mine", mine)
+                                .put("change", jsonObject.getString("change"))
+                                .put("delta", jsonObject.getString("delta"))
+                        );
                     }
                 }
                 if (minePosition != -1) {
                     showShareButton();
                 }
+                final RatingListRVA adapter = new RatingListRVA(activity, rating);
                 Static.T.runOnUiThread(() -> {
                     try {
-                        if (users.size() > 0) {
-                            // отображаем интерфейс
-                            draw(R.layout.rating_list_layout);
-                            // работаем со списком
-                            ListView rl_list_view = activity.findViewById(R.id.rl_list_view);
-                            if (rl_list_view != null) rl_list_view.setAdapter(new RatingTopListView(activity, users));
-                            // работаем со свайпом
-                            SwipeRefreshLayout swipe_container = activity.findViewById(R.id.swipe_container);
-                            if (swipe_container != null) {
-                                swipe_container.setColorSchemeColors(Static.colorAccent);
-                                swipe_container.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
-                                swipe_container.setOnRefreshListener(this);
-                            }
-                        } else {
-                            draw(R.layout.nothing_to_display);
-                            ((TextView) activity.findViewById(R.id.ntd_text)).setText(R.string.no_rating);
+                        draw(R.layout.layout_rating_list);
+                        // set adapter to recycler view
+                        final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
+                        final RecyclerView rating_list = activity.findViewById(R.id.rating_list);
+                        rating_list.setLayoutManager(layoutManager);
+                        rating_list.setAdapter(adapter);
+                        rating_list.setHasFixedSize(true);
+                        // setup swipe
+                        final SwipeRefreshLayout swipe_container = activity.findViewById(R.id.swipe_container);
+                        if (swipe_container != null) {
+                            swipe_container.setColorSchemeColors(Static.colorAccent);
+                            swipe_container.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
+                            swipe_container.setOnRefreshListener(this);
                         }
                     } catch (Exception e) {
                         Static.error(e);
@@ -329,17 +326,18 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
     }
     private void share(final String title) throws Exception {
         Static.T.runOnUiThread(() -> {
+            Log.v(TAG, "share | " + title);
             Intent intent = new Intent(Intent.ACTION_SEND);
             intent.setType("text/plain");
             intent.putExtra(Intent.EXTRA_TEXT, title + " " + "https://goo.gl/NpAhMF");
             activity.startActivity(Intent.createChooser(intent, activity.getString(R.string.share)));
+            // track statistics
+            FirebaseAnalyticsProvider.logEvent(
+                    activity,
+                    FirebaseAnalyticsProvider.Event.RATING_SHARE,
+                    FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TITLE, title.substring(0, title.length() > 100 ? 100 : title.length()))
+            );
         });
-        // track statistics
-        FirebaseAnalyticsProvider.logEvent(
-                activity,
-                FirebaseAnalyticsProvider.Event.RATING_SHARE,
-                FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TITLE, title.substring(0, title.length() > 100 ? 100 : title.length()))
-        );
     }
 
     private void draw(int layoutId) {

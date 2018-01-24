@@ -1,4 +1,4 @@
-package com.bukhmastov.cdoitmo.adapters;
+package com.bukhmastov.cdoitmo.adapters.rva;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
