@@ -30,6 +30,7 @@ import com.bukhmastov.cdoitmo.adapters.TeacherPickerAdapter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.models.Client;
 import com.bukhmastov.cdoitmo.objects.schedule.Schedule;
+import com.bukhmastov.cdoitmo.objects.schedule.ScheduleAttestations;
 import com.bukhmastov.cdoitmo.objects.schedule.ScheduleExams;
 import com.bukhmastov.cdoitmo.objects.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.receivers.ShortcutReceiver;
@@ -107,6 +108,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
         shortcuts.add(new Shortcut("room101", "create", activity.getString(R.string.room101create), null, R.mipmap.ic_shortcut_room101_add));
         shortcuts.add(new Shortcut("schedule_lessons", null, activity.getString(R.string.schedule_lessons), activity.getString(R.string.need_to_choose_schedule), R.mipmap.ic_shortcut_schedule_lessons));
         shortcuts.add(new Shortcut("schedule_exams", null, activity.getString(R.string.schedule_exams), activity.getString(R.string.need_to_choose_schedule), R.mipmap.ic_shortcut_schedule_exams));
+        shortcuts.add(new Shortcut("schedule_attestations", null, activity.getString(R.string.schedule_attestations), activity.getString(R.string.need_to_choose_schedule), R.mipmap.ic_shortcut_schedule_attestations));
         shortcuts.add(new Shortcut("university", null, activity.getString(R.string.university), activity.getString(R.string.need_to_choose_type), R.mipmap.ic_shortcut_university));
     }
 
@@ -351,6 +353,21 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                     });
                                     break;
                                 }
+                                case "schedule_attestations": {
+                                    String group = Storage.file.perm.get(activity, "user#group", "");
+                                    getScheduleAttestations(group.isEmpty() ? null : group, (title, query) -> {
+                                        try {
+                                            addShortcut(
+                                                    shortcut.id,
+                                                    new JSONObject().put("label", title).put("query", query).toString()
+                                            );
+                                        } catch (Exception e) {
+                                            Static.error(e);
+                                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                        }
+                                    });
+                                    break;
+                                }
                                 case "university": {
                                     final ArrayList<String> labels = new ArrayList<>(Arrays.asList(activity.getString(R.string.persons),
                                             activity.getString(R.string.faculties),
@@ -503,6 +520,9 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
     }
     private void getScheduleExams(final String scope, final result callback) {
         getSchedule(scope, callback, (context, query, handler) -> new ScheduleExams(handler).search(context, query));
+    }
+    private void getScheduleAttestations(final String scope, final result callback) {
+        getSchedule(scope, callback, (context, query, handler) -> new ScheduleAttestations(handler).search(context, query));
     }
     private void getSchedule(final String scope, final result callback, final Schedule.ScheduleSearchProvider scheduleSearchProvider) {
         Static.T.runThread(() -> {

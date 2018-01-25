@@ -75,7 +75,6 @@ public class ScheduleExamsSearchActivity extends SearchActivity {
 
     @Override
     void onDone(final String query, final String label) {
-        final ScheduleExamsSearchActivity self = this;
         Static.T.runThread(() -> {
             Log.v(TAG, "onDone | query=" + query + " | label=" + label);
             try {
@@ -95,10 +94,10 @@ public class ScheduleExamsSearchActivity extends SearchActivity {
                         recent.remove(i);
                     }
                 }
-                Storage.file.perm.put(self, "schedule_exams#recent", recent.toString());
+                Storage.file.perm.put(this, "schedule_exams#recent", recent.toString());
             } catch (Exception e) {
                 Static.error(e);
-                Storage.file.perm.delete(self, "schedule_exams#recent");
+                Storage.file.perm.delete(this, "schedule_exams#recent");
             }
             ScheduleExamsFragment.setQuery(query);
             ScheduleExamsFragment.invalidate();

@@ -108,6 +108,7 @@
             android:theme="@style/AppTheme.Transparent" />
         <activity android:name=".activities.ScheduleLessonsSearchActivity" />
         <activity android:name=".activities.ScheduleExamsSearchActivity" />
+        <activity android:name=".activities.ScheduleAttestationsSearchActivity" />
 
         <service
             android:name=".utils.TrackingProtocolJobService"

@@ -64,6 +64,7 @@ public abstract class SettingsSchedule {
                 teacherPickerAdapter = new TeacherPickerAdapter(activity, new ArrayList<>());
                 teacherPickerAdapter.setNotifyOnChange(true);
                 lsp_search.setAdapter(teacherPickerAdapter);
+                lsp_search.setHint(getHint());
                 lsp_search.addTextChangedListener(new TextWatcher() {
                     @Override
                     public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
@@ -185,6 +186,7 @@ public abstract class SettingsSchedule {
         });
     }
     protected abstract void search(final String query);
+    protected abstract String getHint();
     protected void search(final String q, final Schedule.ScheduleSearchProvider scheduleSearchProvider) {
         Static.T.runThread(() -> scheduleSearchProvider.onSearch(activity, q, new Schedule.Handler() {
             @Override

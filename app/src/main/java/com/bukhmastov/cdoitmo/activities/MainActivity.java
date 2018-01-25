@@ -23,6 +23,7 @@ import com.bukhmastov.cdoitmo.fragments.HomeScreenInteractionFragment;
 import com.bukhmastov.cdoitmo.fragments.ProtocolFragment;
 import com.bukhmastov.cdoitmo.fragments.RatingFragment;
 import com.bukhmastov.cdoitmo.fragments.Room101Fragment;
+import com.bukhmastov.cdoitmo.fragments.ScheduleAttestationsFragment;
 import com.bukhmastov.cdoitmo.fragments.ScheduleExamsFragment;
 import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.fragments.UniversityFragment;
@@ -144,6 +145,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                     case "rating": selectedSection = R.id.nav_rating; break;
                     case "schedule_lessons": selectedSection = R.id.nav_schedule; break;
                     case "schedule_exams": selectedSection = R.id.nav_schedule_exams; break;
+                    case "schedule_attestations": selectedSection = R.id.nav_schedule_attestations; break;
                     case "room101": selectedSection = R.id.nav_room101; break;
                     case "university": selectedSection = R.id.nav_university; break;
                     default:
@@ -292,6 +294,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                 case R.id.nav_rating:
                 case R.id.nav_schedule:
                 case R.id.nav_schedule_exams:
+                case R.id.nav_schedule_attestations:
                 case R.id.nav_room101:
                 case R.id.nav_university: {
                     final Class connectedFragmentClass;
@@ -302,6 +305,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                         case R.id.nav_rating: connectedFragmentClass = RatingFragment.class; break;
                         case R.id.nav_schedule: connectedFragmentClass = ScheduleLessonsFragment.class; break;
                         case R.id.nav_schedule_exams: connectedFragmentClass = ScheduleExamsFragment.class; break;
+                        case R.id.nav_schedule_attestations: connectedFragmentClass = ScheduleAttestationsFragment.class; break;
                         case R.id.nav_room101: connectedFragmentClass = Room101Fragment.class; break;
                         case R.id.nav_university: connectedFragmentClass = UniversityFragment.class; break;
                     }

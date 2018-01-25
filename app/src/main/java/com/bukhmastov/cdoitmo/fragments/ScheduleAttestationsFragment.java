@@ -1,92 +1,151 @@
 package com.bukhmastov.cdoitmo.fragments;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.InflateException;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.ConnectedActivity;
-import com.bukhmastov.cdoitmo.adapters.rva.ScheduleLessonsRVA;
+import com.bukhmastov.cdoitmo.activities.ScheduleAttestationsSearchActivity;
+import com.bukhmastov.cdoitmo.adapters.rva.ScheduleAttestationsRVA;
 import com.bukhmastov.cdoitmo.exceptions.SilentException;
-import com.bukhmastov.cdoitmo.fragments.settings.SettingsScheduleLessonsFragment;
+import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
+import com.bukhmastov.cdoitmo.fragments.settings.SettingsScheduleAttestationsFragment;
 import com.bukhmastov.cdoitmo.network.models.Client;
 import com.bukhmastov.cdoitmo.objects.schedule.Schedule;
-import com.bukhmastov.cdoitmo.objects.schedule.ScheduleLessons;
+import com.bukhmastov.cdoitmo.objects.schedule.ScheduleAttestations;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
-import com.bukhmastov.cdoitmo.utils.Storage;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.Calendar;
+public class ScheduleAttestationsFragment extends ConnectedFragment {
 
-public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
-
-    private static final String TAG = "SLTabFragment";
+    private static final String TAG = "SAFragment";
+    public interface TabProvider {
+        void onInvalidate(boolean refresh);
+    }
+    public class Scroll {
+        public int position = 0;
+        public int offset = 0;
+    }
     private boolean loaded = false;
-    private ScheduleLessons scheduleLessons = null;
+    private ScheduleAttestations scheduleAttestations = null;
     private Client.Request requestHandle = null;
-    private View container = null;
+    private static String lastQuery = null;
+    private static String query = null;
+    public static Scroll scroll = null;
+    public static TabProvider tab = null;
+
+    private boolean invalidate = false;
+    private boolean invalidate_refresh = false;
+
+    public static void setQuery(String query) {
+        ScheduleAttestationsFragment.lastQuery = ScheduleAttestationsFragment.query;
+        ScheduleAttestationsFragment.query = query;
+    }
+    public static String getQuery() {
+        return ScheduleAttestationsFragment.query;
+    }
+    public static boolean isSameQueryRequested() {
+        return lastQuery != null && query != null && lastQuery.equals(query);
+    }
+    public static void invalidate() {
+        invalidate(false);
+    }
+    public static void invalidate(boolean refresh) {
+        if (tab != null) {
+            tab.onInvalidate(refresh);
+        }
+    }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        final Bundle bundle = getArguments();
-        if (bundle != null && bundle.containsKey("type")) {
-            TYPE = bundle.getInt("type");
-        } else {
-            Log.w(TAG, "onCreate | UNDEFINED TYPE, going to use TYPE=" + DEFAULT_TYPE);
-            TYPE = DEFAULT_TYPE;
-        }
-        Log.v(TAG, "Fragment created | TYPE=" + TYPE);
-        tabs.put(TYPE, refresh -> {
-            Log.v(TAG, "onInvalidate | TYPE=" + TYPE + " | refresh=" + Log.lBool(refresh));
-            if (isResumed()) {
-                invalidate = false;
-                invalidate_refresh = false;
-                load(refresh);
-            } else {
-                invalidate = true;
-                invalidate_refresh = refresh;
+        Log.v(TAG, "Fragment created");
+        FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
+        // define query
+        ScheduleAttestationsFragment.setQuery(ScheduleAttestations.getDefaultScope(activity, ScheduleAttestations.TYPE));
+        final Intent intent = activity.getIntent();
+        if (intent != null && intent.hasExtra("action_extra")) {
+            String action_extra = intent.getStringExtra("action_extra");
+            if (action_extra != null && !action_extra.isEmpty()) {
+                intent.removeExtra("action_extra");
+                ScheduleAttestationsFragment.setQuery(action_extra);
             }
-        });
+        }
     }
 
     @Override
     public void onDestroy() {
-        Log.v(TAG, "Fragment destroyed | TYPE=" + TYPE);
-        tabs.remove(TYPE);
-        scroll.remove(TYPE);
+        Log.v(TAG, "Fragment destroyed");
+        try {
+            if (activity.toolbar != null) {
+                MenuItem action_schedule_attestations_search = activity.toolbar.findItem(R.id.action_schedule_attestations_search);
+                if (action_schedule_attestations_search != null && action_schedule_attestations_search.isVisible()) {
+                    Log.v(TAG, "Hiding action_schedule_attestations_search");
+                    action_schedule_attestations_search.setVisible(false);
+                    action_schedule_attestations_search.setOnMenuItemClickListener(null);
+                }
+            }
+        } catch (Exception e){
+            Static.error(e);
+        }
+        tab = null;
+        scroll = null;
         super.onDestroy();
     }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        this.container = inflater.inflate(R.layout.fragment_tab_schedule_lessons, container, false);
-        return this.container;
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        loaded = false;
+        return inflater.inflate(R.layout.fragment_schedule_attestations, container, false);
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        Log.v(TAG, "resumed | TYPE=" + TYPE + " | loaded=" + Log.lBool(loaded) + " | invalidate=" + Log.lBool(invalidate) + " | invalidate_refresh=" + Log.lBool(invalidate_refresh));
+        Log.v(TAG, "resumed");
+        FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
+        try {
+            if (activity.toolbar != null && !Static.OFFLINE_MODE) {
+                MenuItem action_schedule_attestations_search = activity.toolbar.findItem(R.id.action_schedule_attestations_search);
+                if (action_schedule_attestations_search != null && !action_schedule_attestations_search.isVisible()) {
+                    Log.v(TAG, "Revealing action_schedule_attestations_search");
+                    action_schedule_attestations_search.setVisible(true);
+                    action_schedule_attestations_search.setOnMenuItemClickListener(item -> {
+                        Log.v(TAG, "action_schedule_attestations_search clicked");
+                        startActivity(new Intent(activity, ScheduleAttestationsSearchActivity.class));
+                        return false;
+                    });
+                }
+            }
+        } catch (Exception e){
+            Static.error(e);
+        }
+        if (tab == null) {
+            tab = refresh -> {
+                Log.v(TAG, "onInvalidate | refresh=" + Log.lBool(refresh));
+                if (isResumed()) {
+                    invalidate = false;
+                    invalidate_refresh = false;
+                    load(refresh);
+                } else {
+                    invalidate = true;
+                    invalidate_refresh = refresh;
+                }
+            };
+        }
         if (invalidate) {
             invalidate = false;
             loaded = true;
@@ -101,9 +160,8 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
     @Override
     public void onPause() {
         super.onPause();
-        Log.v(TAG, "paused | TYPE=" + TYPE);
+        Log.v(TAG, "paused");
         if (requestHandle != null && requestHandle.cancel()) {
-            Log.v(TAG, "paused | TYPE=" + TYPE + " | paused and requested reload");
             loaded = false;
         }
     }
@@ -112,7 +170,7 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
         Static.T.runOnUiThread(() -> {
             if (activity == null) {
                 Log.w(TAG, "load | activity is null");
-                failed(activity);
+                failed(getContext());
                 return;
             }
             draw(activity, R.layout.state_loading);
@@ -120,16 +178,17 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
                 try {
                     if (activity == null || getQuery() == null) {
                         Log.w(TAG, "load | some values are null | activity=" + Log.lNull(activity) + " | getQuery()=" + Log.lNull(getQuery()));
-                        failed(activity);
+                        failed(getContext());
                         return;
                     }
-                    if (!isSameQueryRequested()) {
-                        scroll.clear();
+                    if (scroll != null && !isSameQueryRequested()) {
+                        scroll.position = 0;
+                        scroll.offset = 0;
                     }
                     if (refresh) {
-                        getScheduleLessons(activity).search(activity, getQuery(), 0);
+                        getScheduleAttestations(activity).search(activity, getQuery(), 0);
                     } else {
-                        getScheduleLessons(activity).search(activity, getQuery());
+                        getScheduleAttestations(activity).search(activity, getQuery());
                     }
                 } catch (Exception e) {
                     Static.error(e);
@@ -138,35 +197,20 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
             });
         });
     }
-    private @NonNull ScheduleLessons getScheduleLessons(final ConnectedActivity activity) {
-        if (scheduleLessons == null) scheduleLessons = new ScheduleLessons(new Schedule.Handler() {
+    private @NonNull ScheduleAttestations getScheduleAttestations(final ConnectedActivity activity) {
+        if (scheduleAttestations == null) scheduleAttestations = new ScheduleAttestations(new Schedule.Handler() {
             @Override
             public void onSuccess(final JSONObject json, final boolean fromCache) {
                 Static.T.runThread(() -> {
                     try {
-                        try {
-                            if (json.getString("type").equals("teachers")) {
-                                JSONArray schedule = json.getJSONArray("schedule");
-                                if (schedule.length() == 1) {
-                                    setQuery(schedule.getJSONObject(0).getString("pid"));
-                                    invalidate(false);
-                                    return;
-                                }
-                            }
-                        } catch (Exception ignore) {
-                            // ignore
-                        }
                         final int week = Static.getWeek(activity);
-                        final ScheduleLessonsRVA adapter = new ScheduleLessonsRVA(activity, TYPE, json, week, data -> {
-                            setQuery(data);
-                            invalidate(false);
-                        });
+                        final ScheduleAttestationsRVA adapter = new ScheduleAttestationsRVA(activity, json, week);
                         Static.T.runOnUiThread(() -> {
                             try {
                                 draw(activity, R.layout.layout_schedule_both_recycle_list);
                                 // prepare
-                                final SwipeRefreshLayout swipe_container = container.findViewById(R.id.schedule_swipe);
-                                final RecyclerView schedule_list = container.findViewById(R.id.schedule_list);
+                                final SwipeRefreshLayout swipe_container = activity.findViewById(R.id.schedule_swipe);
+                                final RecyclerView schedule_list = activity.findViewById(R.id.schedule_list);
                                 if (swipe_container == null || schedule_list == null) throw new SilentException();
                                 final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
                                 // swipe
@@ -174,7 +218,7 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
                                 swipe_container.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
                                 swipe_container.setOnRefreshListener(() -> {
                                     swipe_container.setRefreshing(false);
-                                    invalidate(true);
+                                    load(true);
                                 });
                                 // recycle view (list)
                                 schedule_list.setLayoutManager(layoutManager);
@@ -185,35 +229,16 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
                                         final int position = layoutManager.findFirstVisibleItemPosition();
                                         final View v = schedule_list.getChildAt(0);
                                         final int offset = (v == null) ? 0 : (v.getTop() - schedule_list.getPaddingTop());
-                                        Scroll s = scroll.get(TYPE, null);
-                                        if (s == null) {
-                                            s = new Scroll();
+                                        if (scroll == null) {
+                                            scroll = new Scroll();
                                         }
-                                        s.position = position;
-                                        s.offset = offset;
-                                        scroll.put(TYPE, s);
+                                        scroll.position = position;
+                                        scroll.offset = offset;
                                     });
                                 }
-                                // scroll to today's schedule
-                                final Scroll s = scroll.get(TYPE, null);
-                                if (s != null) {
-                                    layoutManager.scrollToPositionWithOffset(s.position, s.offset);
-                                } else {
-                                    if (Storage.pref.get(activity, "pref_schedule_lessons_scroll_to_day", true)) {
-                                        int position = -1;
-                                        switch (Static.getCalendar().get(Calendar.DAY_OF_WEEK)) {
-                                            case Calendar.MONDAY: position = adapter.getDayPosition(0); if (position >= 0) break;
-                                            case Calendar.TUESDAY: position = adapter.getDayPosition(1); if (position >= 0) break;
-                                            case Calendar.WEDNESDAY: position = adapter.getDayPosition(2); if (position >= 0) break;
-                                            case Calendar.THURSDAY: position = adapter.getDayPosition(3); if (position >= 0) break;
-                                            case Calendar.FRIDAY: position = adapter.getDayPosition(4); if (position >= 0) break;
-                                            case Calendar.SATURDAY: position = adapter.getDayPosition(5); if (position >= 0) break;
-                                            case Calendar.SUNDAY: position = adapter.getDayPosition(6); if (position >= 0) break;
-                                        }
-                                        if (position >= 0) {
-                                            layoutManager.scrollToPosition(position);
-                                        }
-                                    }
+                                // scroll to previous position
+                                if (scroll != null) {
+                                    layoutManager.scrollToPositionWithOffset(scroll.position, scroll.offset);
                                 }
                             } catch (SilentException ignore) {
                                 failed(activity);
@@ -258,7 +283,7 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
                             }
                             case Schedule.FAILED_EMPTY_QUERY: {
                                 final ViewGroup view = (ViewGroup) inflate(activity, R.layout.schedule_empty_query);
-                                view.findViewById(R.id.open_settings).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.stackable, SettingsScheduleLessonsFragment.class, null));
+                                view.findViewById(R.id.open_settings).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.stackable, SettingsScheduleAttestationsFragment.class, null));
                                 draw(view);
                                 break;
                             }
@@ -311,7 +336,7 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
                 }
             }
         });
-        return scheduleLessons;
+        return scheduleAttestations;
     }
     private void failed(Context context) {
         try {
@@ -329,7 +354,7 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
 
     private void draw(View view) {
         try {
-            ViewGroup vg = container.findViewById(R.id.container_schedule_lessons);
+            ViewGroup vg = activity.findViewById(R.id.container_schedule_attestations);
             if (vg != null) {
                 vg.removeAllViews();
                 vg.addView(view, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));

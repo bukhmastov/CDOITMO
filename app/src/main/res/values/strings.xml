@@ -84,6 +84,7 @@
     <string name="search">Поиск</string>
     <string name="schedule_lessons_search_view_hint">Группа, аудитория, преподаватель…</string>
     <string name="schedule_exams_search_view_hint">Группа, преподаватель…</string>
+    <string name="schedule_attestations_search_view_hint">Группа…</string>
     <string name="choose_teacher">Выберите преподавателя</string>
     <string name="tab_all">Все</string>
     <string name="tab_even">Четная</string>
@@ -490,5 +491,9 @@
     <string name="undo">Отменить</string>
     <string name="no_subjects">Нет предметов</string>
     <string name="no_data">Нет данных</string>
+    <string name="schedule_attestations">Расписание аттестаций</string>
+    <string name="term_autumn">Осенний семестр</string>
+    <string name="term_spring">Весенний семестр</string>
+    <string name="no_attestations">Аттестаций нет</string>
 
 </resources>

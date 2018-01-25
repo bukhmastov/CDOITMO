@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item>
+        <shape>
+            <solid android:color="?attr/colorSeparator" />
+        </shape>
+    </item>
+    <item
+        android:left="@dimen/separator"
+        android:right="@dimen/separator">
+        <shape>
+            <solid android:color="?attr/colorBackgroundSection" />
+        </shape>
+    </item>
+</layer-list>

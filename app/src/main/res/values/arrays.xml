@@ -20,6 +20,7 @@
         <item>@string/rating</item>
         <item>@string/schedule_lessons</item>
         <item>@string/schedule_exams</item>
+        <item>@string/schedule_attestations</item>
         <item>@string/room101</item>
         <item>@string/university</item>
     </string-array>
@@ -29,6 +30,7 @@
         <item>rating</item>
         <item>schedule_lessons</item>
         <item>schedule_exams</item>
+        <item>schedule_attestations</item>
         <item>room101</item>
         <item>university</item>
     </string-array>
@@ -192,6 +194,17 @@
         <item>default</item>
         <item>ru</item>
         <item>en</item>
+    </string-array>
+
+    <string-array name="pref_schedule_attestations_term_titles">
+        <item>@string/automatically</item>
+        <item>@string/term_autumn</item>
+        <item>@string/term_spring</item>
+    </string-array>
+    <string-array name="pref_schedule_attestations_term_values" translatable="false">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
     </string-array>
 
 </resources>

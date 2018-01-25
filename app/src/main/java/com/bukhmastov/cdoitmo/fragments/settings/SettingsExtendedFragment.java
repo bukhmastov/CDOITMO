@@ -18,6 +18,7 @@ public class SettingsExtendedFragment extends SettingsTemplateHeadersFragment {
         preferenceHeaders.add(new PreferenceHeader(R.string.protocol_changes, R.drawable.ic_protocol_changes, SettingsProtocolFragment.class));
         preferenceHeaders.add(new PreferenceHeader(R.string.schedule_lessons, R.drawable.ic_schedule_lessons, SettingsScheduleLessonsFragment.class));
         preferenceHeaders.add(new PreferenceHeader(R.string.schedule_exams, R.drawable.ic_schedule_exams, SettingsScheduleExamsFragment.class));
+        preferenceHeaders.add(new PreferenceHeader(R.string.schedule_attestations, R.drawable.ic_schedule_attestations, SettingsScheduleAttestationsFragment.class));
         preferenceHeaders.add(new PreferenceHeader(R.string.pref_category_system, R.drawable.ic_package, SettingsSystemsFragment.class));
     }
 

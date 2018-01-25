@@ -23,6 +23,10 @@
             android:icon="@drawable/ic_schedule_exams"
             android:title="@string/schedule_exams"/>
         <item
+            android:id="@+id/nav_schedule_attestations"
+            android:icon="@drawable/ic_schedule_attestations"
+            android:title="@string/schedule_attestations"/>
+        <item
             android:id="@+id/nav_room101"
             android:icon="@drawable/ic_room101"
             android:title="@string/room101"/>

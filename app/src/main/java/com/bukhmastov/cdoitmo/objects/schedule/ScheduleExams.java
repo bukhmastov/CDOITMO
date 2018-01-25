@@ -154,6 +154,10 @@ public class ScheduleExams extends Schedule {
         }));
     }
     @Override
+    protected boolean searchTeachersAvailable() {
+        return true;
+    }
+    @Override
     protected String getType() {
         return TYPE;
     }

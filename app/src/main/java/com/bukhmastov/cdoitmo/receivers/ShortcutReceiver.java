@@ -107,7 +107,8 @@ public class ShortcutReceiver extends BroadcastReceiver {
                         break;
                     }
                     case "schedule_lessons":
-                    case "schedule_exams": {
+                    case "schedule_exams":
+                    case "schedule_attestations": {
                         Intent intent = new Intent(context, MainActivity.class);
                         intent.addFlags(Static.intentFlagRestart);
                         intent.putExtra("action", shortcut_type);
@@ -170,6 +171,11 @@ public class ShortcutReceiver extends BroadcastReceiver {
                     case "schedule_exams": {
                         JSONObject json = new JSONObject(data);
                         installShortcut(context, type, data, json.getString("label"), R.mipmap.ic_shortcut_schedule_exams);
+                        break;
+                    }
+                    case "schedule_attestations": {
+                        JSONObject json = new JSONObject(data);
+                        installShortcut(context, type, data, json.getString("label"), R.mipmap.ic_shortcut_schedule_attestations);
                         break;
                     }
                     case "time_remaining_widget": {

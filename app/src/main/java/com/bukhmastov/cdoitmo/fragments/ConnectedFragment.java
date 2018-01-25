@@ -14,6 +14,7 @@ import com.bukhmastov.cdoitmo.fragments.settings.SettingsFragment;
 import com.bukhmastov.cdoitmo.fragments.settings.SettingsGeneralFragment;
 import com.bukhmastov.cdoitmo.fragments.settings.SettingsNotificationsFragment;
 import com.bukhmastov.cdoitmo.fragments.settings.SettingsProtocolFragment;
+import com.bukhmastov.cdoitmo.fragments.settings.SettingsScheduleAttestationsFragment;
 import com.bukhmastov.cdoitmo.fragments.settings.SettingsScheduleExamsFragment;
 import com.bukhmastov.cdoitmo.fragments.settings.SettingsScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.fragments.settings.SettingsSystemsFragment;
@@ -48,6 +49,7 @@ public abstract class ConnectedFragment extends Fragment {
         if (connectedFragment == Room101Fragment.class) return new Data(connectedFragment, context.getString(R.string.room101), R.drawable.ic_room101);
         if (connectedFragment == ScheduleExamsFragment.class) return new Data(connectedFragment, context.getString(R.string.schedule_exams), R.drawable.ic_schedule_exams);
         if (connectedFragment == ScheduleLessonsFragment.class) return new Data(connectedFragment, context.getString(R.string.schedule_lessons), R.drawable.ic_schedule_lessons);
+        if (connectedFragment == ScheduleAttestationsFragment.class) return new Data(connectedFragment, context.getString(R.string.schedule_attestations), R.drawable.ic_schedule_attestations);
         if (connectedFragment == UniversityFragment.class) return new Data(connectedFragment, context.getString(R.string.university), R.drawable.ic_university);
         if (connectedFragment == SubjectShowFragment.class) return new Data(connectedFragment, context.getString(R.string.e_journal), R.drawable.ic_e_journal);
         if (connectedFragment == RatingListFragment.class) return new Data(connectedFragment, context.getString(R.string.top_rating), R.drawable.ic_rating);
@@ -63,6 +65,7 @@ public abstract class ConnectedFragment extends Fragment {
         if (connectedFragment == SettingsProtocolFragment.class) return new Data(connectedFragment, context.getString(R.string.protocol_changes), R.drawable.ic_protocol_changes);
         if (connectedFragment == SettingsScheduleLessonsFragment.class) return new Data(connectedFragment, context.getString(R.string.schedule_lessons), R.drawable.ic_schedule_lessons);
         if (connectedFragment == SettingsScheduleExamsFragment.class) return new Data(connectedFragment, context.getString(R.string.schedule_exams), R.drawable.ic_schedule_exams);
+        if (connectedFragment == SettingsScheduleAttestationsFragment.class) return new Data(connectedFragment, context.getString(R.string.schedule_attestations), R.drawable.ic_schedule_attestations);
         if (connectedFragment == SettingsSystemsFragment.class) return new Data(connectedFragment, context.getString(R.string.pref_category_system), R.drawable.ic_package);
         if (connectedFragment == AboutFragment.class) return new Data(connectedFragment, context.getString(R.string.about), R.drawable.ic_info_outline);
         if (connectedFragment == LogFragment.class) return new Data(connectedFragment, context.getString(R.string.log), R.drawable.ic_info_outline);

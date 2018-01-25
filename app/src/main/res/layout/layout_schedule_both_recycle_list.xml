@@ -7,6 +7,9 @@
     <android.support.v7.widget.RecyclerView
         android:id="@+id/schedule_list"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:scrollbars="vertical"
+        android:fadeScrollbars="true"
+        android:scrollbarSize="@dimen/scroll_thumb_size"/>
 
 </android.support.v4.widget.SwipeRefreshLayout>

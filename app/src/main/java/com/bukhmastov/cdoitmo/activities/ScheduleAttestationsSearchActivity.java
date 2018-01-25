@@ -4,7 +4,7 @@ import android.os.Bundle;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.fragments.ScheduleLessonsTabHostFragment;
+import com.bukhmastov.cdoitmo.fragments.ScheduleAttestationsFragment;
 import com.bukhmastov.cdoitmo.objects.entities.Suggestion;
 import com.bukhmastov.cdoitmo.utils.Log;
 import com.bukhmastov.cdoitmo.utils.Static;
@@ -15,9 +15,9 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-public class ScheduleLessonsSearchActivity extends SearchActivity {
+public class ScheduleAttestationsSearchActivity extends SearchActivity {
 
-    private static final String TAG = "SLSearchActivity";
+    private static final String TAG = "SASearchActivity";
     private static final int numberOfSuggestions = 3;
     private static final int maxCountOfSuggestionsToStore = 100;
 
@@ -30,7 +30,7 @@ public class ScheduleLessonsSearchActivity extends SearchActivity {
     @Override
     String getHint() {
         Log.v(TAG, "getHint");
-        return self.getString(R.string.schedule_lessons_search_view_hint);
+        return self.getString(R.string.schedule_attestations_search_view_hint);
     }
 
     @Override
@@ -38,7 +38,7 @@ public class ScheduleLessonsSearchActivity extends SearchActivity {
         Log.v(TAG, "getSuggestions | query=" + query);
         try {
             ArrayList<Suggestion> suggestions = new ArrayList<>();
-            JSONArray recent = Static.string2jsonArray(Storage.file.perm.get(this, "schedule_lessons#recent", ""));
+            JSONArray recent = Static.string2jsonArray(Storage.file.perm.get(this, "schedule_attestations#recent", ""));
             int counter = 0;
             for (int i = 0; i < recent.length(); i++) {
                 String item = recent.getString(i);
@@ -48,9 +48,9 @@ public class ScheduleLessonsSearchActivity extends SearchActivity {
                 }
                 if (counter >= numberOfSuggestions) break;
             }
-            ArrayList<String> cachedFiles = Storage.file.general.cache.list(this, "schedule_lessons#lessons");
+            ArrayList<String> cachedFiles = Storage.file.general.cache.list(this, "schedule_attestations#lessons");
             for (String file : cachedFiles) {
-                String cachedFile = Storage.file.general.cache.get(this, "schedule_lessons#lessons#" + file);
+                String cachedFile = Storage.file.general.cache.get(this, "schedule_attestations#lessons#" + file);
                 if (!cachedFile.isEmpty()) {
                     try {
                         JSONObject cached = new JSONObject(cachedFile);
@@ -78,7 +78,7 @@ public class ScheduleLessonsSearchActivity extends SearchActivity {
         Static.T.runThread(() -> {
             Log.v(TAG, "onDone | query=" + query + " | label=" + label);
             try {
-                JSONArray recent = Static.string2jsonArray(Storage.file.perm.get(this, "schedule_lessons#recent", ""));
+                JSONArray recent = Static.string2jsonArray(Storage.file.perm.get(this, "schedule_attestations#recent", ""));
                 for (int i = 0; i < recent.length(); i++) {
                     if (recent.getString(i).equals(label)) {
                         recent.remove(i);
@@ -94,13 +94,13 @@ public class ScheduleLessonsSearchActivity extends SearchActivity {
                         recent.remove(i);
                     }
                 }
-                Storage.file.perm.put(this, "schedule_lessons#recent", recent.toString());
+                Storage.file.perm.put(this, "schedule_attestations#recent", recent.toString());
             } catch (Exception e) {
                 Static.error(e);
-                Storage.file.perm.delete(this, "schedule_lessons#recent");
+                Storage.file.perm.delete(this, "schedule_attestations#recent");
             }
-            ScheduleLessonsTabHostFragment.setQuery(query);
-            ScheduleLessonsTabHostFragment.invalidate();
+            ScheduleAttestationsFragment.setQuery(query);
+            ScheduleAttestationsFragment.invalidate();
         });
     }
 

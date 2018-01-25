@@ -52,6 +52,7 @@ public class SettingsFragment extends SettingsTemplateHeadersFragment {
             for (Preference preference : SettingsProtocolFragment.preferences) applyDefaultValues(context, preference);
             for (Preference preference : SettingsScheduleLessonsFragment.preferences) applyDefaultValues(context, preference);
             for (Preference preference : SettingsScheduleExamsFragment.preferences) applyDefaultValues(context, preference);
+            for (Preference preference : SettingsScheduleAttestationsFragment.preferences) applyDefaultValues(context, preference);
             for (Preference preference : SettingsSystemsFragment.preferences) applyDefaultValues(context, preference);
         }
     }

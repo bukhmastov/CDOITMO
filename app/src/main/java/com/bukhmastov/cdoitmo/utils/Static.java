@@ -332,18 +332,18 @@ public class Static {
             Static.snackBar(activity, layout, activity.getString(R.string.update_date) + " " + message);
         }
     }
-    public static String getUpdateTime(Activity activity, long time) {
+    public static String getUpdateTime(Context context, long time) {
         int shift = (int) ((getCalendar().getTimeInMillis() - time) / 1000L);
         String message;
-        if (shift < 21600 && activity != null) {
+        if (shift < 21600 && context != null) {
             if (shift < 5) {
-                message = activity.getString(R.string.right_now);
+                message = context.getString(R.string.right_now);
             } else if (shift < 60) {
-                message = shift + " " + activity.getString(R.string.sec_past);
+                message = shift + " " + context.getString(R.string.sec_past);
             } else if (shift < 3600) {
-                message = shift / 60 + " " + activity.getString(R.string.min_past);
+                message = shift / 60 + " " + context.getString(R.string.min_past);
             } else {
-                message = shift / 3600 + " " + activity.getString(R.string.hour_past);
+                message = shift / 3600 + " " + context.getString(R.string.hour_past);
             }
         } else {
             message = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.ROOT).format(new Date(time));

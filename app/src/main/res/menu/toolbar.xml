@@ -24,6 +24,13 @@
         android:visible="false" />
 
     <item
+        android:id="@+id/action_schedule_attestations_search"
+        android:title="@string/search"
+        android:icon="@drawable/ic_toolbar_search"
+        app:showAsAction="ifRoom"
+        android:visible="false" />
+
+    <item
         android:id="@+id/action_protocol_changes_switch_to_simple"
         android:title="@string/protocol_changes_mode_simple"
         android:icon="@drawable/ic_toolbar_protocol_changes_simple"

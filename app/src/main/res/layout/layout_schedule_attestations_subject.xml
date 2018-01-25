@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingStart="@dimen/item_padding"
+    android:paddingEnd="@dimen/item_padding"
+    android:paddingTop="@dimen/item_padding"
+    android:paddingBottom="0dp">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/shape_lesson_top"
+        android:paddingTop="@dimen/schedule_exams_padding_vertical"
+        android:paddingBottom="@dimen/schedule_exams_padding_vertical" >
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingEnd="@dimen/schedule_exams_padding_horizontal"
+            android:paddingStart="@dimen/schedule_exams_padding_horizontal"
+            android:text="@string/lorem_ipsum"
+            android:textAllCaps="true"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="@dimen/font_size_14"
+            android:textStyle="normal|bold" />
+
+        <TextView
+            android:id="@+id/desc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingEnd="@dimen/schedule_exams_padding_horizontal"
+            android:paddingStart="@dimen/schedule_exams_padding_horizontal"
+            android:text="@string/lorem_ipsum"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="@dimen/font_size_14"
+            android:textStyle="normal|bold" />
+
+    </LinearLayout>
+
+</FrameLayout>

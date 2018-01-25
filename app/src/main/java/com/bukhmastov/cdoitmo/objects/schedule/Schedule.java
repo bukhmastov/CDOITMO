@@ -77,7 +77,7 @@ public abstract class Schedule {
         Static.T.runThread(() -> search(context, query, getRefreshRate(context)));
     }
     public void search(final Context context, final String query, final int refreshRate) {
-        Static.T.runThread(() -> search(context, query, refreshRate, Storage.pref.get(context, "pref_schedule_lessons_use_cache", false)));
+        Static.T.runThread(() -> search(context, query, refreshRate, Storage.pref.get(context, "pref_schedule_" + getType() + "_use_cache", false)));
     }
     public void search(final Context context, final String query, final boolean forceToCache) {
         Static.T.runThread(() -> search(context, query, getRefreshRate(context), forceToCache));
@@ -166,9 +166,15 @@ public abstract class Schedule {
     protected abstract void searchGroup(final Context context, final String group, final int refreshRate, final boolean forceToCache, final boolean withUserChanges);
     protected abstract void searchRoom(final Context context, final String room, final int refreshRate, final boolean forceToCache, final boolean withUserChanges);
     protected abstract void searchTeacher(final Context context, final String teacherId, final int refreshRate, final boolean forceToCache, final boolean withUserChanges);
+    protected abstract boolean searchTeachersAvailable();
     protected void searchTeachers(final Context context, final String teacherName, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
         // Teachers search is the same for lessons and exams
         Log.v(TAG, "searchTeachers | teacherName=" + teacherName + " | refreshRate=" + refreshRate + " | forceToCache=" + (forceToCache ? "true" : "false") + " | withUserChanges=" + (withUserChanges ? "true" : "false"));
+        if (!searchTeachersAvailable()) {
+            Log.v(TAG, "searchTeachers | not available");
+            invokePending(teacherName, withUserChanges, true, handler -> handler.onFailure(FAILED_INVALID_QUERY));
+            return;
+        }
         Static.T.runThread(() -> searchByQuery(context, "teachers", teacherName, refreshRate, withUserChanges, new SearchByQuery() {
             @Override
             public boolean isWebAvailable() {

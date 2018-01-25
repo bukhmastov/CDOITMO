@@ -227,7 +227,7 @@ public class ScheduleExamsFragment extends ConnectedFragment {
                                 final SwipeRefreshLayout swipe_container = activity.findViewById(R.id.schedule_swipe);
                                 final RecyclerView schedule_list = activity.findViewById(R.id.schedule_list);
                                 if (swipe_container == null || schedule_list == null) throw new SilentException();
-                                final LinearLayoutManager layoutManager = new LinearLayoutManager(activity);
+                                final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
                                 // swipe
                                 swipe_container.setColorSchemeColors(Static.colorAccent);
                                 swipe_container.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
@@ -238,6 +238,7 @@ public class ScheduleExamsFragment extends ConnectedFragment {
                                 // recycle view (list)
                                 schedule_list.setLayoutManager(layoutManager);
                                 schedule_list.setAdapter(adapter);
+                                schedule_list.setHasFixedSize(true);
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                                     schedule_list.setOnScrollChangeListener((view, scrollX, scrollY, oldScrollX, oldScrollY) -> {
                                         final int position = layoutManager.findFirstVisibleItemPosition();

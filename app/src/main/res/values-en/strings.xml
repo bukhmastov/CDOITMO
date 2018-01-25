@@ -80,6 +80,7 @@
     <string name="search">Search</string>
     <string name="schedule_lessons_search_view_hint">Group, audience, teacher…</string>
     <string name="schedule_exams_search_view_hint">Group, teacher…</string>
+    <string name="schedule_attestations_search_view_hint">Group…</string>
     <string name="choose_teacher">Choose a teacher</string>
     <string name="tab_all">All</string>
     <string name="tab_even">Even</string>
@@ -482,5 +483,9 @@
     <string name="undo">Undo</string>
     <string name="no_subjects">No subjects</string>
     <string name="no_data">No data</string>
+    <string name="schedule_attestations">Schedule of attestations</string>
+    <string name="term_autumn">Autumn term</string>
+    <string name="term_spring">Spring term</string>
+    <string name="no_attestations">No attestations</string>
 
 </resources>
