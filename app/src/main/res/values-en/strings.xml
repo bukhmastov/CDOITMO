@@ -476,7 +476,7 @@
     <string name="pref_week_force_override_hint">Current week number</string>
     <string name="change_password">Change password</string>
     <string name="change_password_title">Change password</string>
-    <string name="change_password_message">You are about to change the password for the account with the login \"%login%\"</string>
+    <string name="change_password_message">You are about to change the password for the account with the login \"%login%\". Please note that changing the password will only occur in the application (without any changes on the ITMO servers)</string>
     <string name="password_changed">Password changed</string>
     <string name="new_password">New password</string>
     <string name="notification_dismissed">Notification dismissed</string>

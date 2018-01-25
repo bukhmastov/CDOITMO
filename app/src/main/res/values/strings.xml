@@ -484,7 +484,7 @@
     <string name="pref_week_force_override_hint">Номер текущей недели</string>
     <string name="change_password">Изменить пароль</string>
     <string name="change_password_title">Изменение пароля</string>
-    <string name="change_password_message">Вы собираетесь изменить пароль для аккаунта с логином \"%login%\"</string>
+    <string name="change_password_message">Вы собираетесь изменить пароль для аккаунта с логином \"%login%\". Обратите внимание, что изменение пароля произойдет только в приложении (без каких-либо изменений на серверах ИТМО)</string>
     <string name="password_changed">Пароль изменен</string>
     <string name="new_password">Новый пароль</string>
     <string name="notification_dismissed">Текущее уведомление скрыто</string>
