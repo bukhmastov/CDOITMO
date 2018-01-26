@@ -422,10 +422,11 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                 if (this.term == -2) {
                     final JSONArray years = group.getJSONArray("years");
                     if (year == years.getInt(month > Calendar.AUGUST ? 0 : 1)) {
-                        if (Integer.parseInt(Storage.pref.get(activity, "pref_e_journal_term", "0")) == 1) {
-                            this.term = -1;
-                        } else {
-                            this.term = group.getJSONArray("terms").getJSONObject(month > Calendar.AUGUST || month == Calendar.JANUARY ? 0 : 1).getInt("number");
+                        switch (Integer.parseInt(Storage.pref.get(activity, "pref_e_journal_term", "0"))) {
+                            default: case 0: this.term = group.getJSONArray("terms").getJSONObject(month > Calendar.AUGUST || month == Calendar.JANUARY ? 0 : 1).getInt("number"); break;
+                            case 1: this.term = group.getJSONArray("terms").getJSONObject(0).getInt("number"); break;
+                            case 2: this.term = group.getJSONArray("terms").getJSONObject(1).getInt("number"); break;
+                            case 3: this.term = -1; break;
                         }
                     } else {
                         this.term = -1;
@@ -449,10 +450,11 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                 if (currentGroup.isEmpty()) {
                     if (year == years.getInt(month > Calendar.AUGUST ? 0 : 1)) {
                         currentGroup = group.getString("name");
-                        if (Integer.parseInt(Storage.pref.get(activity, "pref_e_journal_term", "0")) == 1) {
-                            currentTerm = -1;
-                        } else {
-                            currentTerm = group.getJSONArray("terms").getJSONObject(month > Calendar.AUGUST || month == Calendar.JANUARY ? 0 : 1).getInt("number");
+                        switch (Integer.parseInt(Storage.pref.get(activity, "pref_e_journal_term", "0"))) {
+                            default: case 0: currentTerm = group.getJSONArray("terms").getJSONObject(month > Calendar.AUGUST || month == Calendar.JANUARY ? 0 : 1).getInt("number"); break;
+                            case 1: currentTerm = group.getJSONArray("terms").getJSONObject(0).getInt("number"); break;
+                            case 2: currentTerm = group.getJSONArray("terms").getJSONObject(1).getInt("number"); break;
+                            case 3: currentTerm = -1; break;
                         }
                     }
                 }

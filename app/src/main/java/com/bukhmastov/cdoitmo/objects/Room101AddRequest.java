@@ -56,7 +56,7 @@ public class Room101AddRequest {
     public static final int STAGES_COUNT = 9;
     private int CURRENT_STAGE = 0;
     private Activity activity = null;
-    private final Pattern timePickerPattern = Pattern.compile("^(\\d{1,2}:\\d{2})\\s?(\\((Свободных мест:\\s)?(\\d*)\\))?$");
+    private final Pattern timePickerPattern;
     private Client.Request requestHandle = null;
 
     private JSONObject data = null;
@@ -67,6 +67,7 @@ public class Room101AddRequest {
     public Room101AddRequest(Activity activity, callback callback) {
         this.callback = callback;
         this.activity = activity;
+        this.timePickerPattern = Pattern.compile("^(\\d{1,2}:\\d{2})\\s?(\\((" + activity.getString(R.string.room101_available) + ":\\s)?(\\d*)\\))?$");
         proceedStage();
     }
 

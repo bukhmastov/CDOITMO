@@ -125,7 +125,7 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
                     action_schedule_attestations_search.setVisible(true);
                     action_schedule_attestations_search.setOnMenuItemClickListener(item -> {
                         Log.v(TAG, "action_schedule_attestations_search clicked");
-                        startActivity(new Intent(activity, ScheduleAttestationsSearchActivity.class));
+                        activity.startActivity(new Intent(activity, ScheduleAttestationsSearchActivity.class));
                         return false;
                     });
                 }

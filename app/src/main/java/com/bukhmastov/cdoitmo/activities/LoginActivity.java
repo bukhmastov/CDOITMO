@@ -57,7 +57,7 @@ public class LoginActivity extends ConnectedActivity {
         // Show introducing activity
         if (Static.showIntroducingActivity) {
             Static.showIntroducingActivity = false;
-            startActivity(new Intent(activity, IntroducingActivity.class));
+            activity.startActivity(new Intent(activity, IntroducingActivity.class));
         }
         // setup toolbar
         Toolbar toolbar = findViewById(R.id.toolbar_login);
@@ -439,6 +439,13 @@ public class LoginActivity extends ConnectedActivity {
                 finish();
             }
             @Override
+            public void onInterrupted() {
+                Log.v(TAG, "login | onInterrupted");
+                FirebaseAnalyticsProvider.logBasicEvent(activity, "login interrupted");
+                Storage.file.general.perm.put(activity, "users#current_login", login);
+                route(SIGNAL_GO_OFFLINE);
+            }
+            @Override
             public void onFailure(String text) {
                 Log.v(TAG, "login | onFailure | text=" + text);
                 Static.snackBar(activity, text);
@@ -459,9 +466,7 @@ public class LoginActivity extends ConnectedActivity {
                         interrupt_auth.setOnClickListener(v -> {
                             Log.v(TAG, "login | onProgress | login interrupt clicked");
                             if (requestHandle != null && requestHandle.cancel()) {
-                                Log.v(TAG, "login | onProgress | login interrupted, going offline");
-                                Storage.file.general.perm.put(activity, "users#current_login", login);
-                                route(SIGNAL_GO_OFFLINE);
+                                Log.v(TAG, "login | onProgress | login interrupted");
                             }
                         });
                     }

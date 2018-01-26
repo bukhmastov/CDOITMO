@@ -87,7 +87,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
                     action_schedule_lessons_search.setVisible(true);
                     action_schedule_lessons_search.setOnMenuItemClickListener(item -> {
                         Log.v(TAG, "action_schedule_lessons_search clicked");
-                        startActivity(new Intent(activity, ScheduleLessonsSearchActivity.class));
+                        activity.startActivity(new Intent(activity, ScheduleLessonsSearchActivity.class));
                         return false;
                     });
                 }

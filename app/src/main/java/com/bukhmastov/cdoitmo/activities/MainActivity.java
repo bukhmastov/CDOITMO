@@ -245,11 +245,13 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
 
     private void authorize(final int state) {
         Static.T.runThread(() -> {
-            Log.v(TAG, "authorize | state=" + state);
-            loaded = false;
-            Intent intent = new Intent(activity, LoginActivity.class);
-            intent.putExtra("state", state);
-            startActivity(intent);
+            try {
+                Log.v(TAG, "authorize | state=" + state);
+                loaded = false;
+                Intent intent = new Intent(activity, LoginActivity.class);
+                intent.putExtra("state", state);
+                activity.startActivity(intent);
+            } catch (Exception ignore) {/* ignore */}
         });
     }
     private void authorized() {

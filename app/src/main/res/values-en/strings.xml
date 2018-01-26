@@ -487,5 +487,7 @@
     <string name="term_autumn">Autumn term</string>
     <string name="term_spring">Spring term</string>
     <string name="no_attestations">No attestations</string>
+    <string name="clear_schedule_attestations_cache">Clear schedule of attestations cache</string>
+    <string name="clear_university_cache">Clear \"University\" cache</string>
 
 </resources>

@@ -79,11 +79,15 @@
 
     <string-array name="pref_e_journal_term_titles">
         <item>@string/automatically</item>
+        <item>@string/term_autumn</item>
+        <item>@string/term_spring</item>
         <item>@string/both_terms</item>
     </string-array>
     <string-array name="pref_e_journal_term_values" translatable="false">
         <item>0</item>
         <item>1</item>
+        <item>2</item>
+        <item>3</item>
     </string-array>
 
     <string-array name="pref_protocol_changes_weeks_titles">

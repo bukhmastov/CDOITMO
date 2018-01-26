@@ -24,6 +24,7 @@ public class Account {
     public interface LoginHandler {
         void onSuccess();
         void onOffline();
+        void onInterrupted();
         void onFailure(final String text);
         void onProgress(final String text);
         void onNewRequest(final Client.Request request);
@@ -114,9 +115,11 @@ public class Account {
                             default:
                             case DeIfmoClient.FAILED_TRY_AGAIN:
                             case DeIfmoClient.FAILED_AUTH_TRY_AGAIN:
-                            case DeIfmoClient.FAILED_INTERRUPTED:
                             case DeIfmoClient.FAILED_SERVER_ERROR:
                                 Account.logoutTemporarily(context, () -> callback.onCall(context.getString(R.string.auth_failed) + (state == DeIfmoClient.FAILED_SERVER_ERROR ? ". " + DeIfmoClient.getFailureMessage(context, statusCode) : "")));
+                                break;
+                            case DeIfmoClient.FAILED_INTERRUPTED:
+                                loginHandler.onInterrupted();
                                 break;
                             case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
                                 cb = () -> callback.onCall(context.getString(R.string.required_login_password));

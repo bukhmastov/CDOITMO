@@ -495,5 +495,7 @@
     <string name="term_autumn">Осенний семестр</string>
     <string name="term_spring">Весенний семестр</string>
     <string name="no_attestations">Аттестаций нет</string>
+    <string name="clear_schedule_attestations_cache">Очистить кэш расписаний аттестаций</string>
+    <string name="clear_university_cache">Очистить кэш \"Университет\"</string>
 
 </resources>

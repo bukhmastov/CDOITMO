@@ -362,7 +362,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                 final int id = building.getInt("id");
                 final String image = building.getString("image");
                 ((TextView) marker_info.findViewById(R.id.marker_text)).setText(title);
-                marker_info.findViewById(R.id.web).setOnClickListener(view -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ifmo.ru/ru/map/" + id + "/"))));
+                marker_info.findViewById(R.id.web).setOnClickListener(view -> activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ifmo.ru/ru/map/" + id + "/"))));
                 Picasso.with(activity)
                         .load(image)
                         .error(R.drawable.ic_sentiment_very_satisfied)

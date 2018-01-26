@@ -307,7 +307,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                     final int unit_id = stack.size() > 0 ? getInt(unit, "unit_id") : -1;
                     final String link = isValid(unit_id) ? "http://www.ifmo.ru/ru/viewunit/" + unit_id + "/" : null;
                     if (link != null) {
-                        container.findViewById(R.id.web).setOnClickListener(view -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(link.trim()))));
+                        container.findViewById(R.id.web).setOnClickListener(view -> activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(link.trim()))));
                     } else {
                         Static.removeView(container.findViewById(R.id.web));
                     }

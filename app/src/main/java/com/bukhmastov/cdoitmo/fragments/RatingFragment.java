@@ -472,7 +472,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                 Log.v(TAG, "gotoLogin | state=" + state);
                 Intent intent = new Intent(activity, LoginActivity.class);
                 intent.putExtra("state", state);
-                startActivity(intent);
+                activity.startActivity(intent);
             } catch (Exception e) {
                 Static.error(e);
                 loadFailed();

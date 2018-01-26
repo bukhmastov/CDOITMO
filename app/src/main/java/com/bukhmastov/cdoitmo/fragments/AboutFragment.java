@@ -63,7 +63,7 @@ public class AboutFragment extends ConnectedFragment {
             block_pika.setOnClickListener(v -> {
                 if (counterToPika >= tapsToPika) {
                     if (random.nextInt(200) % 10 == 0) {
-                        startActivity(new Intent(activity, PikaActivity.class));
+                        activity.startActivity(new Intent(activity, PikaActivity.class));
                     }
                 } else {
                     counterToPika++;
@@ -85,7 +85,7 @@ public class AboutFragment extends ConnectedFragment {
                     Intent emailIntent = new Intent(Intent.ACTION_SEND);
                     emailIntent.setType("message/rfc822");
                     emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{"bukhmastov-alex@ya.ru"});
-                    startActivity(Intent.createChooser(emailIntent, activity.getString(R.string.send_mail) + "..."));
+                    activity.startActivity(Intent.createChooser(emailIntent, activity.getString(R.string.send_mail) + "..."));
                 } catch (Exception e) {
                     Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 }
@@ -98,7 +98,7 @@ public class AboutFragment extends ConnectedFragment {
                 Log.v(TAG, "send_vk clicked");
                 FirebaseAnalyticsProvider.logBasicEvent(activity, "send vk clicked");
                 try {
-                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://vk.com/write9780714")));
+                    activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://vk.com/write9780714")));
                 } catch (Exception e) {
                     Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 }
@@ -111,10 +111,10 @@ public class AboutFragment extends ConnectedFragment {
                 Log.v(TAG, "block_rate clicked");
                 FirebaseAnalyticsProvider.logBasicEvent(activity, "app rate clicked");
                 try {
-                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.bukhmastov.cdoitmo")));
+                    activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.bukhmastov.cdoitmo")));
                 } catch (Exception e) {
                     try {
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.bukhmastov.cdoitmo")));
+                        activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.bukhmastov.cdoitmo")));
                     } catch (Exception e2) {
                         Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
@@ -128,7 +128,7 @@ public class AboutFragment extends ConnectedFragment {
                 Log.v(TAG, "block_github clicked");
                 FirebaseAnalyticsProvider.logBasicEvent(activity, "view github clicked");
                 try {
-                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/bukhmastov/cdoitmo")));
+                    activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/bukhmastov/cdoitmo")));
                 } catch (Exception e) {
                     Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 }
@@ -141,7 +141,7 @@ public class AboutFragment extends ConnectedFragment {
                 Log.v(TAG, "block_donate clicked  ┬─┬ ノ( ゜-゜ノ)");
                 FirebaseAnalyticsProvider.logBasicEvent(activity, "donate clicked");
                 try {
-                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://yasobe.ru/na/cdoifmo")));
+                    activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://yasobe.ru/na/cdoifmo")));
                 } catch (Exception e) {
                     Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 }

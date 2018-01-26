@@ -255,6 +255,10 @@ public class Wipe {
             }
             case 103: {
                 apply103(context);
+                String pref_e_journal_term = Storage.pref.get(context, "pref_e_journal_term", "0");
+                if (pref_e_journal_term.equals("1")) {
+                    Storage.pref.put(context, "pref_e_journal_term", "3");
+                }
                 break;
             }
         }

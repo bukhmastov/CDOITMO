@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.adapters.rva;
 
+import android.content.Context;
 import android.support.annotation.LayoutRes;
 import android.support.v7.widget.PopupMenu;
 import android.view.Menu;
@@ -19,7 +20,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ScheduleExamsRVA extends RecyclerViewAdapter  {
 
@@ -32,6 +38,8 @@ public class ScheduleExamsRVA extends RecyclerViewAdapter  {
     private static final int TYPE_PICKER_HEADER = 4;
     private static final int TYPE_PICKER_ITEM = 5;
     private static final int TYPE_PICKER_NO_TEACHERS = 6;
+
+    private static Pattern patternBrokenDate = Pattern.compile("^(\\d{1,2})(\\s\\S*)(.*)$", Pattern.CASE_INSENSITIVE);
 
     private final ConnectedActivity activity;
     private final JSONObject data;
@@ -266,7 +274,7 @@ public class ScheduleExamsRVA extends RecyclerViewAdapter  {
             // advice
             boolean isAdviceExists = false;
             if (advice != null) {
-                String date_format = "dd.MM.yyyy";
+                String date_format_append = "";
                 String advice_date = advice.getString("date");
                 String advice_time = advice.getString("time");
                 String advice_room = advice.getString("room");
@@ -275,7 +283,7 @@ public class ScheduleExamsRVA extends RecyclerViewAdapter  {
                     String date = advice_date;
                     if (advice_time != null && !advice_time.isEmpty()) {
                         date += " " + advice_time;
-                        date_format += " HH:mm";
+                        date_format_append = " HH:mm";
                     }
                     String place = "";
                     if (advice_room != null && !advice_room.isEmpty()) {
@@ -288,10 +296,7 @@ public class ScheduleExamsRVA extends RecyclerViewAdapter  {
                     if (!place.isEmpty()) {
                         place = activity.getString(R.string.place) + ": " + place;
                     }
-                    try {
-                        date = Static.cuteDate(activity, date_format, date);
-                    } catch (Exception ignore) {/* ignore */}
-                    ((TextView) container.findViewById(R.id.exam_info_advice_date)).setText(date);
+                    ((TextView) container.findViewById(R.id.exam_info_advice_date)).setText(cuteDate(activity, date, date_format_append));
                     TextView exam_info_advice_place = container.findViewById(R.id.exam_info_advice_place);
                     if (!place.isEmpty()) {
                         exam_info_advice_place.setText(place);
@@ -305,7 +310,7 @@ public class ScheduleExamsRVA extends RecyclerViewAdapter  {
             // exam
             boolean isExamExists = false;
             if (exam != null) {
-                String date_format = "dd.MM.yyyy";
+                String date_format_append = "";
                 String exam_date = exam.getString("date");
                 String exam_time = exam.getString("time");
                 String exam_room = exam.getString("room");
@@ -314,7 +319,7 @@ public class ScheduleExamsRVA extends RecyclerViewAdapter  {
                     String date = exam_date;
                     if (exam_time != null && !exam_time.isEmpty()) {
                         date += " " + exam_time;
-                        date_format += " HH:mm";
+                        date_format_append = " HH:mm";
                     }
                     String place = "";
                     if (exam_room != null && !exam_room.isEmpty()) {
@@ -327,10 +332,7 @@ public class ScheduleExamsRVA extends RecyclerViewAdapter  {
                     if (!place.isEmpty()) {
                         place = activity.getString(R.string.place) + ": " + place;
                     }
-                    try {
-                        date = Static.cuteDate(activity, date_format, date);
-                    } catch (Exception ignore) {/* ignore */}
-                    ((TextView) container.findViewById(R.id.exam_info_exam_date)).setText(date);
+                    ((TextView) container.findViewById(R.id.exam_info_exam_date)).setText(cuteDate(activity, date, date_format_append));
                     TextView exam_info_exam_place = container.findViewById(R.id.exam_info_exam_place);
                     if (!place.isEmpty()) {
                         exam_info_exam_place.setText(place);
@@ -455,6 +457,64 @@ public class ScheduleExamsRVA extends RecyclerViewAdapter  {
         return dataset;
     }
 
+    protected static String cuteDate(Context context, String date, String date_format_append) {
+        try {
+            String date_format = "dd.MM.yyyy" + date_format_append;
+            if (isValidFormat(context, date, date_format)) {
+                date = Static.cuteDate(context, date_format, date);
+            } else {
+                Matcher m = patternBrokenDate.matcher(date);
+                if (m.find()) {
+                    String d = m.group(2);
+                    String dt = d.trim();
+                    if (dt.startsWith("янв")) d = ".01";
+                    if (dt.startsWith("фев")) d = ".02";
+                    if (dt.startsWith("мар")) d = ".03";
+                    if (dt.startsWith("апр")) d = ".04";
+                    if (dt.startsWith("май")) d = ".05";
+                    if (dt.startsWith("июн")) d = ".06";
+                    if (dt.startsWith("июл")) d = ".07";
+                    if (dt.startsWith("авг")) d = ".08";
+                    if (dt.startsWith("сен")) d = ".09";
+                    if (dt.startsWith("окт")) d = ".10";
+                    if (dt.startsWith("ноя")) d = ".11";
+                    if (dt.startsWith("дек")) d = ".12";
+                    date = m.group(1) + d + m.group(3);
+                }
+                date_format = "dd.MM" + date_format_append;
+                if (isValidFormat(context, date, date_format)) {
+                    date = cuteDateWOYear(context, date_format, date);
+                }
+            }
+        } catch (Exception ignore) {/* ignore */}
+        return date;
+    }
+    protected static String cuteDateWOYear(Context context, String date_format, String date_string) throws Exception {
+        SimpleDateFormat format_input = new SimpleDateFormat(date_format, Static.getLocale(context));
+        Calendar date = Static.getCalendar();
+        date.setTime(format_input.parse(date_string));
+        return (new StringBuilder())
+                .append(date.get(Calendar.DATE))
+                .append(" ")
+                .append(Static.getGenitiveMonth(context, date.get(Calendar.MONTH)))
+                .append(" ")
+                .append(Static.ldgZero(date.get(Calendar.HOUR_OF_DAY)))
+                .append(":")
+                .append(Static.ldgZero(date.get(Calendar.MINUTE)))
+                .toString();
+    }
+    protected static boolean isValidFormat(Context context, String value, String format) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat(format, Static.getLocale(context));
+            Date date = sdf.parse(value);
+            if (!value.equals(sdf.format(date))) {
+                date = null;
+            }
+            return date != null;
+        } catch (Exception e) {
+            return false;
+        }
+    }
     protected String getString(JSONObject json, String key) throws JSONException {
         if (json.has(key)) {
             Object object = json.get(key);

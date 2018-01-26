@@ -69,7 +69,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
                 intent.addFlags(Static.intentFlagRestart);
                 intent.putExtra("action", "schedule_exams");
                 intent.putExtra("action_extra", query);
-                startActivity(intent);
+                activity.startActivity(intent);
                 close();
             });
         }

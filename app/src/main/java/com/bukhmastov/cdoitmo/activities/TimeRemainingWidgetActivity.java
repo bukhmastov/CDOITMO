@@ -64,7 +64,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
                 intent.addFlags(Static.intentFlagRestart);
                 intent.putExtra("action", "schedule_lessons");
                 intent.putExtra("action_extra", query);
-                startActivity(intent);
+                activity.startActivity(intent);
                 close();
             });
         }

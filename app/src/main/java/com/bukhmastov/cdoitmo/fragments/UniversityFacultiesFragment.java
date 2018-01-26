@@ -313,7 +313,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                     final int id_type = stack.size() > 0 ? getInt(structure, "id_type") : -1;
                     final String link = isValid(getString(structure, "link")) ? getString(structure, "link") : ((isValid(type) && isValid(id_type)) ? "http://www.ifmo.ru/ru/" + ("faculty".equals(type) ? "viewfaculty" : "viewdepartment") + "/" + id_type + "/" : null);
                     if (link != null) {
-                        container.findViewById(R.id.web).setOnClickListener(view -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(link.trim()))));
+                        container.findViewById(R.id.web).setOnClickListener(view -> activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(link.trim()))));
                     } else {
                         Static.removeView(container.findViewById(R.id.web));
                     }

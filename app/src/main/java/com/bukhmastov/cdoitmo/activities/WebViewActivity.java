@@ -84,7 +84,7 @@ public class WebViewActivity extends AppCompatActivity {
                 @Override
                 public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                     try {
-                        startActivity(new Intent(Intent.ACTION_VIEW, request.getUrl()));
+                        activity.startActivity(new Intent(Intent.ACTION_VIEW, request.getUrl()));
                     } catch (Exception e) {
                         Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }

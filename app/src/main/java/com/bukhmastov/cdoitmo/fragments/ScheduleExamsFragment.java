@@ -126,7 +126,7 @@ public class ScheduleExamsFragment extends ConnectedFragment {
                     action_schedule_exams_search.setVisible(true);
                     action_schedule_exams_search.setOnMenuItemClickListener(item -> {
                         Log.v(TAG, "action_schedule_exams_search clicked");
-                        startActivity(new Intent(activity, ScheduleExamsSearchActivity.class));
+                        activity.startActivity(new Intent(activity, ScheduleExamsSearchActivity.class));
                         return false;
                     });
                 }

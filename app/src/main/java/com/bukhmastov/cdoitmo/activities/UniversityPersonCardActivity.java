@@ -237,7 +237,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
             Log.v(TAG, "loadNotFound");
             try {
                 draw(R.layout.nothing_to_display_center_person);
-                findViewById(R.id.web).setOnClickListener(view -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ifmo.ru/ru/viewperson/" + pid + "/"))));
+                findViewById(R.id.web).setOnClickListener(view -> activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ifmo.ru/ru/viewperson/" + pid + "/"))));
             } catch (Exception e) {
                 Static.error(e);
             }
@@ -255,7 +255,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                 // кнопка сайта
                 final String persons_id = person.getString("persons_id");
                 if (persons_id != null && !persons_id.trim().isEmpty()) {
-                    findViewById(R.id.web).setOnClickListener(view -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ifmo.ru/ru/viewperson/" + persons_id.trim() + "/"))));
+                    findViewById(R.id.web).setOnClickListener(view -> activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ifmo.ru/ru/viewperson/" + persons_id.trim() + "/"))));
                 } else {
                     Static.removeView(findViewById(R.id.web));
                 }
@@ -286,7 +286,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                             info_connect_container.addView(getConnectContainer(R.drawable.ic_phone, phone, exists, v -> {
                                 Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + phone.trim()));
                                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                startActivity(intent);
+                                activity.startActivity(intent);
                             }));
                             exists = true;
                         }
@@ -297,14 +297,14 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                                 Intent emailIntent = new Intent(Intent.ACTION_SEND);
                                 emailIntent.setType("message/rfc822");
                                 emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{email.trim()});
-                                startActivity(Intent.createChooser(emailIntent, activity.getString(R.string.send_mail) + "..."));
+                                activity.startActivity(Intent.createChooser(emailIntent, activity.getString(R.string.send_mail) + "..."));
                             }));
                             exists = true;
                         }
                     }
                     for (final String web : webs) {
                         if (!web.isEmpty()) {
-                            info_connect_container.addView(getConnectContainer(R.drawable.ic_web, web, exists, v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(web.trim())))));
+                            info_connect_container.addView(getConnectContainer(R.drawable.ic_web, web, exists, v -> activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(web.trim())))));
                             exists = true;
                         }
                     }

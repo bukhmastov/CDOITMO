@@ -128,7 +128,7 @@ public class LogFragment extends ConnectedFragment {
                             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                             intent.setType(activity.getContentResolver().getType(tempUri));
                             intent.putExtra(Intent.EXTRA_STREAM, tempUri);
-                            startActivity(Intent.createChooser(intent, activity.getString(R.string.send_mail) + "..."));
+                            activity.startActivity(Intent.createChooser(intent, activity.getString(R.string.send_mail) + "..."));
                         }
                     } catch (Exception e) {
                         Static.error(e);
@@ -144,7 +144,7 @@ public class LogFragment extends ConnectedFragment {
                             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                             intent.setType(activity.getContentResolver().getType(tempUri));
                             intent.putExtra(Intent.EXTRA_STREAM, tempUri);
-                            startActivity(Intent.createChooser(intent, activity.getString(R.string.share) + "..."));
+                            activity.startActivity(Intent.createChooser(intent, activity.getString(R.string.share) + "..."));
                         }
                     } catch (Exception e) {
                         Static.error(e);
