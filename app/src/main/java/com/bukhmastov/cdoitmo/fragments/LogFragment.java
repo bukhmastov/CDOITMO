@@ -117,50 +117,62 @@ public class LogFragment extends ConnectedFragment {
             final ViewGroup generic_download_logs = activity.findViewById(R.id.generic_download_logs);
             final TextView log_container = activity.findViewById(R.id.log_container);
             if (allowed) {
-                generic_send_logs.setOnClickListener(v -> Static.T.runThread(() -> {
-                    try {
-                        File logFile = getLogFile(Log.getLog(false));
-                        if (logFile != null) {
-                            Uri tempUri = FileProvider.getUriForFile(activity, "com.bukhmastov.cdoitmo.fileprovider", logFile);
-                            Intent intent = new Intent(Intent.ACTION_SEND);
-                            intent.putExtra(Intent.EXTRA_EMAIL, new String[] {"bukhmastov-alex@ya.ru"});
-                            intent.putExtra(Intent.EXTRA_SUBJECT, "CDOITMO - log report");
-                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                            intent.setType(activity.getContentResolver().getType(tempUri));
-                            intent.putExtra(Intent.EXTRA_STREAM, tempUri);
-                            activity.startActivity(Intent.createChooser(intent, activity.getString(R.string.send_mail) + "..."));
+                if (generic_send_logs != null) {
+                    generic_send_logs.setOnClickListener(v -> Static.T.runThread(() -> {
+                        try {
+                            File logFile = getLogFile(Log.getLog(false));
+                            if (logFile != null) {
+                                Uri tempUri = FileProvider.getUriForFile(activity, "com.bukhmastov.cdoitmo.fileprovider", logFile);
+                                Intent intent = new Intent(Intent.ACTION_SEND);
+                                intent.putExtra(Intent.EXTRA_EMAIL, new String[] {"bukhmastov-alex@ya.ru"});
+                                intent.putExtra(Intent.EXTRA_SUBJECT, "CDOITMO - log report");
+                                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                intent.setType(activity.getContentResolver().getType(tempUri));
+                                intent.putExtra(Intent.EXTRA_STREAM, tempUri);
+                                activity.startActivity(Intent.createChooser(intent, activity.getString(R.string.send_mail) + "..."));
+                            }
+                        } catch (Exception e) {
+                            Static.error(e);
+                            Static.toast(activity, activity.getString(R.string.something_went_wrong));
                         }
-                    } catch (Exception e) {
-                        Static.error(e);
-                        Static.toast(activity, activity.getString(R.string.something_went_wrong));
-                    }
-                }));
-                generic_download_logs.setOnClickListener(v -> Static.T.runThread(() -> {
-                    try {
-                        File logFile = getLogFile(Log.getLog(false));
-                        if (logFile != null) {
-                            Uri tempUri = FileProvider.getUriForFile(activity, "com.bukhmastov.cdoitmo.fileprovider", logFile);
-                            Intent intent = new Intent(Intent.ACTION_SEND);
-                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                            intent.setType(activity.getContentResolver().getType(tempUri));
-                            intent.putExtra(Intent.EXTRA_STREAM, tempUri);
-                            activity.startActivity(Intent.createChooser(intent, activity.getString(R.string.share) + "..."));
+                    }));
+                }
+                if (generic_download_logs != null) {
+                    generic_download_logs.setOnClickListener(v -> Static.T.runThread(() -> {
+                        try {
+                            File logFile = getLogFile(Log.getLog(false));
+                            if (logFile != null) {
+                                Uri tempUri = FileProvider.getUriForFile(activity, "com.bukhmastov.cdoitmo.fileprovider", logFile);
+                                Intent intent = new Intent(Intent.ACTION_SEND);
+                                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                intent.setType(activity.getContentResolver().getType(tempUri));
+                                intent.putExtra(Intent.EXTRA_STREAM, tempUri);
+                                activity.startActivity(Intent.createChooser(intent, activity.getString(R.string.share) + "..."));
+                            }
+                        } catch (Exception e) {
+                            Static.error(e);
+                            Static.toast(activity, activity.getString(R.string.something_went_wrong));
                         }
-                    } catch (Exception e) {
-                        Static.error(e);
-                        Static.toast(activity, activity.getString(R.string.something_went_wrong));
-                    }
-                }));
+                    }));
+                }
                 Static.T.runOnUiThread(() -> {
-                    generic.setAlpha(1F);
-                    log_container.setText(Log.getLog());
+                    if (generic != null) {
+                        generic.setAlpha(1F);
+                    }
+                    if (log_container != null) {
+                        log_container.setText(Log.getLog());
+                    }
                 });
             } else {
-                generic_send_logs.setOnClickListener(null);
-                generic_download_logs.setOnClickListener(null);
+                if (generic_send_logs != null) generic_send_logs.setOnClickListener(null);
+                if (generic_download_logs != null) generic_download_logs.setOnClickListener(null);
                 Static.T.runOnUiThread(() -> {
-                    generic.setAlpha(0.3F);
-                    log_container.setText("");
+                    if (generic != null) {
+                        generic.setAlpha(0.3F);
+                    }
+                    if (log_container != null) {
+                        log_container.setText("");
+                    }
                 });
             }
         });

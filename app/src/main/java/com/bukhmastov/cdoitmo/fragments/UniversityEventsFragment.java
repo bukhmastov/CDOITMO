@@ -286,9 +286,11 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
                 if (list.length() > 0) {
                     eventsRecyclerViewAdapter = new UniversityEventsRVA(activity);
                     final RecyclerView events_list = container.findViewById(R.id.events_list);
-                    events_list.setLayoutManager(new LinearLayoutManager(activity));
-                    events_list.setAdapter(eventsRecyclerViewAdapter);
-                    events_list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
+                    if (events_list != null) {
+                        events_list.setLayoutManager(new LinearLayoutManager(activity));
+                        events_list.setAdapter(eventsRecyclerViewAdapter);
+                        events_list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
+                    }
                     eventsRecyclerViewAdapter.setOnStateClickListener(R.id.load_more, v -> {
                         offset += limit;
                         eventsRecyclerViewAdapter.setState(R.id.loading_more);

@@ -286,9 +286,11 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                 if (list.length() > 0) {
                     newsRecyclerViewAdapter = new UniversityNewsRVA(activity);
                     final RecyclerView news_list = container.findViewById(R.id.news_list);
-                    news_list.setLayoutManager(new LinearLayoutManager(activity));
-                    news_list.setAdapter(newsRecyclerViewAdapter);
-                    news_list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
+                    if (news_list != null) {
+                        news_list.setLayoutManager(new LinearLayoutManager(activity));
+                        news_list.setAdapter(newsRecyclerViewAdapter);
+                        news_list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
+                    }
                     newsRecyclerViewAdapter.setOnStateClickListener(R.id.load_more, v -> {
                         offset += limit;
                         newsRecyclerViewAdapter.setState(R.id.loading_more);

@@ -330,9 +330,11 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                         // set adapter to recycler view
                         final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
                         final RecyclerView protocol_list = activity.findViewById(R.id.protocol_list);
-                        protocol_list.setLayoutManager(layoutManager);
-                        protocol_list.setAdapter(adapter);
-                        protocol_list.setHasFixedSize(true);
+                        if (protocol_list != null) {
+                            protocol_list.setLayoutManager(layoutManager);
+                            protocol_list.setAdapter(adapter);
+                            protocol_list.setHasFixedSize(true);
+                        }
                         // setup swipe
                         final SwipeRefreshLayout swipe_container = activity.findViewById(R.id.swipe_container);
                         if (swipe_container != null) {

@@ -124,6 +124,11 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
             mineFaculty = "";
             hideShareButton();
             if (!Static.OFFLINE_MODE) {
+                if (faculty == null || faculty.isEmpty() || course == null || course.isEmpty() || years == null || years.isEmpty()) {
+                    Log.w(TAG, "load | some data is empty | faculty=" + Log.lString(faculty) + " | course=" + Log.lString(course) + " | years=" + Log.lString(years));
+                    loadFailed();
+                    return;
+                }
                 DeIfmoClient.get(activity, "index.php?node=rating&std&depId=" + faculty + "&year=" + course + "&app=" + years, null, new ResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
@@ -263,9 +268,11 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                         // set adapter to recycler view
                         final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
                         final RecyclerView rating_list = activity.findViewById(R.id.rating_list);
-                        rating_list.setLayoutManager(layoutManager);
-                        rating_list.setAdapter(adapter);
-                        rating_list.setHasFixedSize(true);
+                        if (rating_list != null) {
+                            rating_list.setLayoutManager(layoutManager);
+                            rating_list.setAdapter(adapter);
+                            rating_list.setHasFixedSize(true);
+                        }
                         // setup swipe
                         final SwipeRefreshLayout swipe_container = activity.findViewById(R.id.swipe_container);
                         if (swipe_container != null) {

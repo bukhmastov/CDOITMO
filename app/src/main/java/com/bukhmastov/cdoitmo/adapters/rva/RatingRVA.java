@@ -21,6 +21,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Map;
 
 public class RatingRVA extends RecyclerViewAdapter {
 
@@ -164,9 +165,6 @@ public class RatingRVA extends RecyclerViewAdapter {
                 final ArrayList<String> facultiesAdapterArr = new ArrayList<>();
                 final ArrayList<String> coursesAdapterArr = new ArrayList<>();
                 final ArrayList<Integer> selected = new ArrayList<>();
-                final JSONObject extras = new JSONObject()
-                        .put("faculty", commonSelectedFaculty)
-                        .put("course", commonSelectedCourse);
                 selected.add(0, 0);
                 selected.add(1, 0);
                 for (int i = 0; i < faculties.length(); i++) {
@@ -204,6 +202,7 @@ public class RatingRVA extends RecyclerViewAdapter {
                                 }
                                 public void onNothingSelected(AdapterView<?> parent) {}
                             });
+                            commonSelectedFaculty = faculties.getJSONObject(faculty_spinner.getSelectedItemPosition()).getString("depId");
                         }
                         // course spinner
                         final Spinner course_spinner = container.findViewById(R.id.course);
@@ -225,10 +224,21 @@ public class RatingRVA extends RecyclerViewAdapter {
                                 }
                                 public void onNothingSelected(AdapterView<?> parent) {}
                             });
+                            commonSelectedCourse = String.valueOf(course_spinner.getSelectedItemPosition() + 1);
                         }
                         // apply button
                         if (onElementClickListeners.containsKey(R.id.common_apply)) {
-                            container.findViewById(R.id.common_apply).setOnClickListener(v -> Static.T.runOnUiThread(() -> onElementClickListeners.get(R.id.common_apply).onClick(v, getMap("data", extras))));
+                            container.findViewById(R.id.common_apply).setOnClickListener(v -> Static.T.runThread(() -> {
+                                try {
+                                    final Map<String, Object> extras = getMap("data", new JSONObject()
+                                            .put("faculty", commonSelectedFaculty)
+                                            .put("course", commonSelectedCourse)
+                                    );
+                                    Static.T.runOnUiThread(() -> onElementClickListeners.get(R.id.common_apply).onClick(v, extras));
+                                } catch (Exception e) {
+                                    Static.error(e);
+                                }
+                            }));
                         }
                     } catch (Exception e) {
                         Static.error(e);
@@ -243,11 +253,17 @@ public class RatingRVA extends RecyclerViewAdapter {
         try {
             final String title = item.data.getString("title");
             final String position = item.data.getString("position");
-            final JSONObject extras = item.data.has("extras") && !item.data.isNull("extras") ? item.data.getJSONObject("extras") : null;
             ((TextView) container.findViewById(R.id.title)).setText(title);
             ((TextView) container.findViewById(R.id.position)).setText(position);
             if (onElementClickListeners.containsKey(R.id.own_apply)) {
-                container.findViewById(R.id.own_apply).setOnClickListener(v -> Static.T.runOnUiThread(() -> onElementClickListeners.get(R.id.own_apply).onClick(v, getMap("data", extras))));
+                container.findViewById(R.id.own_apply).setOnClickListener(v -> Static.T.runThread(() -> {
+                    try {
+                        final Map<String, Object> extras = getMap("data", item.data.has("extras") && !item.data.isNull("extras") ? item.data.getJSONObject("extras") : null);
+                        Static.T.runOnUiThread(() -> onElementClickListeners.get(R.id.own_apply).onClick(v, extras));
+                    } catch (Exception e) {
+                        Static.error(e);
+                    }
+                }));
             }
         } catch (Exception e) {
             Static.error(e);

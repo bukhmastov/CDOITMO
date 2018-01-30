@@ -321,9 +321,11 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                 // список
                 facultiesRecyclerViewAdapter = new UniversityFacultiesRVA(activity);
                 final RecyclerView list = container.findViewById(R.id.list);
-                list.setLayoutManager(new LinearLayoutManager(activity));
-                list.setAdapter(facultiesRecyclerViewAdapter);
-                list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
+                if (list != null) {
+                    list.setLayoutManager(new LinearLayoutManager(activity));
+                    list.setAdapter(facultiesRecyclerViewAdapter);
+                    list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
+                }
                 displayContent(structure, divisions);
                 if (timestamp > 0 && timestamp + 5000 < Static.getCalendar().getTimeInMillis()) {
                     UniversityRVA.Item item = new UniversityRVA.Item();
@@ -335,10 +337,12 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                 container.findViewById(R.id.top_panel).post(() -> {
                     try {
                         int height = container.findViewById(R.id.top_panel).getHeight();
-                        list.setPadding(0, height, 0, 0);
-                        list.scrollToPosition(0);
+                        if (list != null) {
+                            list.setPadding(0, height, 0, 0);
+                            list.scrollToPosition(0);
+                        }
                         LinearLayout list_info = container.findViewById(R.id.list_info);
-                        if (list_info.getChildCount() > 0) {
+                        if (list_info != null && list_info.getChildCount() > 0) {
                             list_info.setPadding(0, height, 0, 0);
                         }
                     } catch (Exception ignore) {

@@ -444,9 +444,11 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                         // set adapter to recycler view
                         final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
                         final RecyclerView rating_list = activity.findViewById(R.id.rating_list);
-                        rating_list.setLayoutManager(layoutManager);
-                        rating_list.setAdapter(adapter);
-                        rating_list.setHasFixedSize(true);
+                        if (rating_list != null) {
+                            rating_list.setLayoutManager(layoutManager);
+                            rating_list.setAdapter(adapter);
+                            rating_list.setHasFixedSize(true);
+                        }
                         // setup swipe
                         final SwipeRefreshLayout swipe_container = activity.findViewById(R.id.swipe_container);
                         if (swipe_container != null) {

@@ -308,9 +308,11 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                         // set adapter to recycler view
                         final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
                         final RecyclerView erl_list_view = activity.findViewById(R.id.erl_list_view);
-                        erl_list_view.setLayoutManager(layoutManager);
-                        erl_list_view.setAdapter(adapter);
-                        erl_list_view.setHasFixedSize(true);
+                        if (erl_list_view != null) {
+                            erl_list_view.setLayoutManager(layoutManager);
+                            erl_list_view.setAdapter(adapter);
+                            erl_list_view.setHasFixedSize(true);
+                        }
                         // setup swipe
                         final SwipeRefreshLayout swipe_container = activity.findViewById(R.id.swipe_container);
                         if (swipe_container != null) {

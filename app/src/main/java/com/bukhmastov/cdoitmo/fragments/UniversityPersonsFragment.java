@@ -286,9 +286,11 @@ public class UniversityPersonsFragment extends Fragment implements SwipeRefreshL
                 if (list.length() > 0) {
                     personsRecyclerViewAdapter = new UniversityPersonsRVA(activity);
                     final RecyclerView persons_list = container.findViewById(R.id.persons_list);
-                    persons_list.setLayoutManager(new LinearLayoutManager(activity));
-                    persons_list.setAdapter(personsRecyclerViewAdapter);
-                    persons_list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
+                    if (persons_list != null) {
+                        persons_list.setLayoutManager(new LinearLayoutManager(activity));
+                        persons_list.setAdapter(personsRecyclerViewAdapter);
+                        persons_list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
+                    }
                     personsRecyclerViewAdapter.setOnStateClickListener(R.id.load_more, v -> {
                         offset += limit;
                         personsRecyclerViewAdapter.setState(R.id.loading_more);
