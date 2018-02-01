@@ -231,6 +231,10 @@ public abstract class Client {
                     public void onDone(final int code, final okhttp3.Headers responseHeaders, final String response) {
                         Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
                             try {
+                                if (code >= 500 && code < 600) {
+                                    rawJsonHandler.onDone(code, headers, response, null, null);
+                                    return;
+                                }
                                 if (response.isEmpty()) {
                                     rawJsonHandler.onDone(code, headers, response, new JSONObject(), new JSONArray());
                                 } else {
