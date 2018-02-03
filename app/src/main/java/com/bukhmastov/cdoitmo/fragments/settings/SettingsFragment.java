@@ -1,6 +1,7 @@
 package com.bukhmastov.cdoitmo.fragments.settings;
 
 import android.content.Context;
+import android.os.Build;
 import android.support.v4.app.Fragment;
 
 import com.bukhmastov.cdoitmo.R;
@@ -54,6 +55,7 @@ public class SettingsFragment extends SettingsTemplateHeadersFragment {
             for (Preference preference : SettingsScheduleExamsFragment.preferences) applyDefaultValues(context, preference);
             for (Preference preference : SettingsScheduleAttestationsFragment.preferences) applyDefaultValues(context, preference);
             for (Preference preference : SettingsSystemsFragment.preferences) applyDefaultValues(context, preference);
+            Storage.pref.put(context, "pref_notify_type", Build.VERSION.SDK_INT <= Build.VERSION_CODES.M ? "0" : "1");
         }
     }
     private static void applyDefaultValues(final Context context, final Preference preference) {

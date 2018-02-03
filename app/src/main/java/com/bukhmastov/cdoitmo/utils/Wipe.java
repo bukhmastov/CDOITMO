@@ -3,6 +3,7 @@ package com.bukhmastov.cdoitmo.utils;
 import android.app.job.JobScheduler;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Build;
 
 import com.bukhmastov.cdoitmo.activities.ScheduleLessonsWidgetConfigureActivity;
 import com.bukhmastov.cdoitmo.objects.schedule.ScheduleExams;
@@ -260,6 +261,10 @@ public class Wipe {
                     Storage.pref.put(context, "pref_e_journal_term", "3");
                 }
                 break;
+            }
+            case 106: {
+                Storage.pref.put(context, "pref_notify_type", Build.VERSION.SDK_INT <= Build.VERSION_CODES.M ? "0" : "1");
+                Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> new ProtocolTracker(context).reset());
             }
         }
     }

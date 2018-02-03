@@ -148,7 +148,7 @@ public class ThemeUtil {
                                     static_value = pref_theme_values.get(pref_theme_titles.indexOf(buttonView.getText().toString().trim()));
                                 }
                             });
-                            theme_container_static.addView(radioButton);
+                            theme_container_static.addView(radioButton, RadioGroup.LayoutParams.MATCH_PARENT, RadioGroup.LayoutParams.WRAP_CONTENT);
                             if (pref_theme_values.indexOf(static_value) == i) {
                                 ((RadioGroup) theme_container_static).check(radioButton.getId());
                             }

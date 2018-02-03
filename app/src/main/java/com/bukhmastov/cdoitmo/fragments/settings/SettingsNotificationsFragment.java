@@ -39,11 +39,12 @@ public class SettingsNotificationsFragment extends SettingsTemplatePreferencesFr
                 R.string.pref_use_notifications,
                 R.string.pref_use_notifications_summary,
                 new ArrayList<>((android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O ?
-                        Arrays.asList("pref_notify_frequency", "pref_notify_network_unmetered", "pref_notify_sound", "pref_notify_vibrate", "pref_open_system_notifications_settings") :
-                        Arrays.asList("pref_notify_frequency", "pref_notify_network_unmetered", "pref_open_system_notifications_settings")
+                        Arrays.asList("pref_notify_type", "pref_notify_frequency", "pref_notify_network_unmetered", "pref_notify_sound", "pref_notify_vibrate", "pref_open_system_notifications_settings") :
+                        Arrays.asList("pref_notify_type", "pref_notify_frequency", "pref_notify_network_unmetered", "pref_open_system_notifications_settings")
                 )),
                 null
         ));
+        preferences.add(new PreferenceList("pref_notify_type", "1", R.string.pref_notify_type, 0, R.array.pref_notify_type_titles, R.array.pref_notify_type_desc, R.array.pref_notify_type_values, true));
         preferences.add(new PreferenceList("pref_notify_frequency", "30", R.string.pref_notify_frequency, R.array.pref_notifications_interval_titles, R.array.pref_notifications_interval_values, true));
         preferences.add(new PreferenceSwitch("pref_notify_network_unmetered", false, R.string.pref_notify_network_unmetered, R.string.pref_notify_network_unmetered_summary, null, null));
         if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O) {

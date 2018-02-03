@@ -79,7 +79,7 @@ public class ProtocolTracker {
             try {
                 int frequency = Integer.parseInt(Storage.pref.get(context, "pref_notify_frequency", "30"));
                 boolean network_unmetered = Storage.pref.get(context, "pref_notify_network_unmetered", false);
-                JobInfo.Builder builder = new JobInfo.Builder(0, new ComponentName(context, TrackingProtocolJobService.class));
+                JobInfo.Builder builder = new JobInfo.Builder(0, new ComponentName(context, ProtocolTrackerJobService.class));
                 builder.setPeriodic(frequency * 60000);
                 builder.setPersisted(true);
                 builder.setRequiredNetworkType(network_unmetered ? JobInfo.NETWORK_TYPE_UNMETERED : JobInfo.NETWORK_TYPE_ANY);

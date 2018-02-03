@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/content"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingStart="@dimen/item_padding"
+    android:paddingEnd="@dimen/item_padding"
+    android:paddingTop="@dimen/item_padding_quarter"
+    android:paddingBottom="@dimen/item_padding_quarter"
+    android:background="?android:attr/selectableItemBackground">
+
+    <RadioButton
+        android:id="@+id/button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/lorem_ipsum"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="@dimen/font_size_16"
+        android:paddingStart="@dimen/item_padding_quarter"
+        android:paddingEnd="@dimen/item_padding_quarter"
+        android:paddingTop="@dimen/item_padding_eight"
+        android:paddingBottom="@dimen/item_padding_eight"/>
+
+    <TextView
+        android:id="@+id/desc"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/lorem_ipsum"
+        android:textColor="?android:attr/textColorSecondary"
+        android:textSize="@dimen/font_size_14"
+        android:paddingStart="@dimen/item_padding_quarter"
+        android:paddingEnd="@dimen/item_padding_quarter"
+        android:visibility="gone"/>
+
+</LinearLayout>

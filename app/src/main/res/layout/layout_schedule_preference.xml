@@ -11,7 +11,7 @@
 
         <RadioGroup
             android:id="@+id/lsp_radio_group"
-            android:layout_width="match_parent"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:padding="@dimen/item_padding">
 
@@ -30,7 +30,7 @@
 
             <RadioButton
                 android:id="@+id/lsp_schedule_group"
-                android:layout_width="match_parent"
+                android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/current_group"
                 android:textColor="?android:attr/textColorPrimary"
@@ -42,7 +42,7 @@
 
             <RadioButton
                 android:id="@+id/lsp_schedule_defined"
-                android:layout_width="match_parent"
+                android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/choose_schedule"
                 android:textColor="?android:attr/textColorPrimary"
