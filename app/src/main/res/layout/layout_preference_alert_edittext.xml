@@ -1,16 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:padding="@dimen/item_padding">
+    android:layout_height="wrap_content">
 
-    <EditText
-        android:id="@+id/edittext"
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text=""
-        android:hint=""
-        android:textColor="?android:attr/textColorPrimary"
-        android:textSize="@dimen/font_size_16"/>
+        android:padding="@dimen/item_padding">
 
-</FrameLayout>
+        <TextView
+            android:id="@+id/message"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="0dp"
+            android:paddingBottom="@dimen/item_padding_half"
+            android:paddingStart="@dimen/item_padding_half"
+            android:paddingEnd="@dimen/item_padding_half"
+            android:text="@string/lorem_ipsum"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="@dimen/font_size_14"
+            android:textIsSelectable="true"
+            android:visibility="visible"/>
+
+        <EditText
+            android:id="@+id/edittext"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:hint=""
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="@dimen/font_size_16"/>
+
+    </LinearLayout>
+
+</ScrollView>

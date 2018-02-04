@@ -47,39 +47,51 @@ public class PreferenceEditText extends Preference {
             preference_basic_summary.setVisibility(View.VISIBLE);
             preference_basic_summary.setText(preference.summary);
         } else {
-            preference_basic_summary.setVisibility(View.GONE);
+            String value = Storage.pref.get(activity, preference.key, (String) preference.defaultValue);
+            if (preference.callback != null) {
+                value = preference.callback.onSetText(activity, value);
+            }
+            if (preference.changeSummary && !value.isEmpty()) {
+                preference_basic_summary.setVisibility(View.VISIBLE);
+                preference_basic_summary.setText(value);
+            } else {
+                preference_basic_summary.setVisibility(View.GONE);
+            }
         }
         preference_basic.setOnClickListener(v -> {
             if (preference.isDisabled()) return;
             final View view = inflate(activity, R.layout.layout_preference_alert_edittext);
-            final EditText editText = view.findViewById(R.id.edittext);
-            final AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-            builder.setTitle(preference.title);
-            if (preference.message != 0) {
-                builder.setMessage(preference.message);
-            }
-            if (preference.hint != 0) {
-                editText.setHint(preference.hint);
-            }
+            final TextView message = view.findViewById(R.id.message);
+            final EditText edittext = view.findViewById(R.id.edittext);
             String value = Storage.pref.get(activity, preference.key, preference.defaultValue == null ? "" : (String) preference.defaultValue);
             if (preference.callback != null) {
                 value = preference.callback.onSetText(activity, value);
             }
-            editText.setText(value);
-            builder.setView(view);
-            builder.setPositiveButton(R.string.accept, (dialog, which) -> {
-                String val = editText.getText().toString().trim();
-                if (preference.callback != null) {
-                    val = preference.callback.onGetText(activity, val);
-                }
-                Storage.pref.put(activity, preference.key, val);
-                Preference.onPreferenceChanged(activity, preference.key);
-                if (preference.changeSummary) {
-                    preference_basic_summary.setText(val);
-                }
-            });
-            builder.setNegativeButton(R.string.cancel, null);
-            builder.create().show();
+            edittext.setText(value);
+            if (preference.hint != 0) {
+                edittext.setHint(preference.hint);
+            }
+            if (preference.message != 0) {
+                message.setText(preference.message);
+                message.setVisibility(View.VISIBLE);
+            }
+            new AlertDialog.Builder(activity)
+                    .setTitle(preference.title)
+                    .setView(view)
+                    .setPositiveButton(R.string.accept, (dialog, which) -> {
+                        String val = edittext.getText().toString().trim();
+                        if (preference.callback != null) {
+                            val = preference.callback.onGetText(activity, val);
+                        }
+                        Storage.pref.put(activity, preference.key, val);
+                        Preference.onPreferenceChanged(activity, preference.key);
+                        if (preference.changeSummary) {
+                            preference_basic_summary.setVisibility(View.VISIBLE);
+                            preference_basic_summary.setText(val);
+                        }
+                    })
+                    .setNegativeButton(R.string.cancel, null)
+                    .create().show();
         });
         preference_basic.setTag(preference.key);
         return preference_layout;
