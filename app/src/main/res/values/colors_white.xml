@@ -23,6 +23,7 @@
     <color name="colorScheduleFlagPracticeBGWhite">#7fefb9</color>
     <color name="colorScheduleFlagLectureBGWhite">#69c7f1</color>
     <color name="colorScheduleFlagLabBGWhite">#f7c275</color>
+    <color name="colorScheduleFlagIwsBGWhite">#9d50ab</color>
     <color name="colorScheduleFlagTEXTWhite">#424242</color>
 
     <color name="colorBackgroundPopupWhite">#99000000</color>

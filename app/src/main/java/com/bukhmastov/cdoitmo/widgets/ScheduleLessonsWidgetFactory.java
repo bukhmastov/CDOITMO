@@ -111,6 +111,7 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
                 case "practice": title += " (" + context.getString(R.string.practice) + ")"; break;
                 case "lecture": title += " (" + context.getString(R.string.lecture) + ")"; break;
                 case "lab": title += " (" + context.getString(R.string.lab) + ")"; break;
+                case "iws": title += " (" + context.getString(R.string.iws) + ")"; break;
                 default:
                     if (!type.isEmpty()) title += " (" + type + ")";
                     break;

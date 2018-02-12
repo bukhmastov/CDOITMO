@@ -494,5 +494,6 @@
     <string name="pref_notify_type_value_1">Single notifications</string>
     <string name="pref_notify_type_desc_0">Create a notification for each subject that will contain all the changes for this subject. Best for Android version 8.0, 6.0 and lower.</string>
     <string name="pref_notify_type_desc_1">Create a notification for each change that will be grouped together. Best for Android version 7.0 and higher.</string>
+    <string name="iws">SRS</string>
 
 </resources>

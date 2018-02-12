@@ -444,6 +444,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                     if (lesson.type.toLowerCase().equals(activity.getString(R.string.lecture).toLowerCase())) lesson.type = "lecture";
                                     if (lesson.type.toLowerCase().equals(activity.getString(R.string.practice).toLowerCase())) lesson.type = "practice";
                                     if (lesson.type.toLowerCase().equals(activity.getString(R.string.lab).toLowerCase())) lesson.type = "lab";
+                                    if (lesson.type.toLowerCase().equals(activity.getString(R.string.iws).toLowerCase())) lesson.type = "iws";
                                 }
                                 switch (type) {
                                     case create: {
@@ -506,6 +507,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
             case "practice": lessonUnit.type = activity.getString(R.string.practice); break;
             case "lecture": lessonUnit.type = activity.getString(R.string.lecture); break;
             case "lab": lessonUnit.type = activity.getString(R.string.lab); break;
+            case "iws": lessonUnit.type = activity.getString(R.string.iws); break;
         }
         return lessonUnit;
     }
@@ -517,6 +519,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
             if (lessonUnit.type.toLowerCase().equals(activity.getString(R.string.lecture).toLowerCase())) lessonUnit.type = "lecture";
             if (lessonUnit.type.toLowerCase().equals(activity.getString(R.string.practice).toLowerCase())) lessonUnit.type = "practice";
             if (lessonUnit.type.toLowerCase().equals(activity.getString(R.string.lab).toLowerCase())) lessonUnit.type = "lab";
+            if (lessonUnit.type.toLowerCase().equals(activity.getString(R.string.iws).toLowerCase())) lessonUnit.type = "iws";
         }
         JSONObject lesson = new JSONObject();
         lesson.put("subject", lessonUnit.subject);

@@ -29,6 +29,7 @@
         <attr name="colorScheduleFlagPracticeBG" format="color" />
         <attr name="colorScheduleFlagLectureBG" format="color" />
         <attr name="colorScheduleFlagLabBG" format="color" />
+        <attr name="colorScheduleFlagIwsBG" format="color" />
         <attr name="colorScheduleFlagTEXT" format="color" />
 
         <attr name="colorUniversityIcon" format="color" />

@@ -61,7 +61,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
     private final ArrayList<Change> changes = new ArrayList<>();
     private boolean loaded = false;
     private Client.Request requestHandle = null;
-    private int colorScheduleFlagTEXT = -1, colorScheduleFlagCommonBG = -1, colorScheduleFlagPracticeBG = -1, colorScheduleFlagLectureBG = -1, colorScheduleFlagLabBG = -1;
+    private int colorScheduleFlagTEXT = -1, colorScheduleFlagCommonBG = -1, colorScheduleFlagPracticeBG = -1, colorScheduleFlagLectureBG = -1, colorScheduleFlagLabBG = -1, colorScheduleFlagIwsBG = -1;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -657,6 +657,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
         if (colorScheduleFlagPracticeBG == -1) colorScheduleFlagPracticeBG = Static.resolveColor(activity, R.attr.colorScheduleFlagPracticeBG);
         if (colorScheduleFlagLectureBG == -1) colorScheduleFlagLectureBG = Static.resolveColor(activity, R.attr.colorScheduleFlagLectureBG);
         if (colorScheduleFlagLabBG == -1) colorScheduleFlagLabBG = Static.resolveColor(activity, R.attr.colorScheduleFlagLabBG);
+        if (colorScheduleFlagIwsBG == -1) colorScheduleFlagIwsBG = Static.resolveColor(activity, R.attr.colorScheduleFlagIwsBG);
         if (!type.isEmpty()) {
             switch (type) {
                 case "practice":
@@ -667,6 +668,9 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                     break;
                 case "lab":
                     viewGroup.addView(getFlag(activity.getString(R.string.lab), colorScheduleFlagTEXT, colorScheduleFlagLabBG));
+                    break;
+                case "iws":
+                    viewGroup.addView(getFlag(activity.getString(R.string.iws), colorScheduleFlagTEXT, colorScheduleFlagIwsBG));
                     break;
                 default:
                     viewGroup.addView(getFlag(type, colorScheduleFlagTEXT, colorScheduleFlagCommonBG));

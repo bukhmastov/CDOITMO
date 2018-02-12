@@ -33,6 +33,7 @@
         <item name="colorScheduleFlagPracticeBG">@color/colorScheduleFlagPracticeBGBlack</item>
         <item name="colorScheduleFlagLectureBG">@color/colorScheduleFlagLectureBGBlack</item>
         <item name="colorScheduleFlagLabBG">@color/colorScheduleFlagLabBGBlack</item>
+        <item name="colorScheduleFlagIwsBG">@color/colorScheduleFlagIwsBGBlack</item>
         <item name="colorScheduleFlagTEXT">@color/colorScheduleFlagTEXTBlack</item>
 
         <item name="colorUniversityIcon">@color/colorUniversityIconBlack</item>

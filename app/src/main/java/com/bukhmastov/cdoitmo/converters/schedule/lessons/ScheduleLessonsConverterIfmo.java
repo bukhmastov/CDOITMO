@@ -70,11 +70,18 @@ public class ScheduleLessonsConverterIfmo extends ScheduleLessonsConverter {
         lessonConverted.put("subject", subject);
         // type
         String type = getString(lesson, "status");
-        switch (type) {
-            case "Лек": case "Лекция": type = "lecture"; break;
-            case "Прак": case "Практика": type = "practice"; break;
-            case "Лаб": case "Лабораторная": type = "lab"; break;
-        }
+        try {
+            String lType = type.toLowerCase();
+            if (lType.startsWith("лек")) {
+                type = "lecture";
+            } else if (lType.startsWith("прак")) {
+                type = "practice";
+            } else if (lType.startsWith("лаб")) {
+                type = "lab";
+            } else if (lType.equals("срс")) {
+                type = "iws";
+            }
+        } catch (Exception ignore) {/* ignore */}
         lessonConverted.put("type", type);
         // parity
         int parity = lesson.has("data_week") ? lesson.getInt("data_week") : 0;
