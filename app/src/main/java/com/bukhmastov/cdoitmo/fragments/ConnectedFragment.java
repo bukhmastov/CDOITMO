@@ -27,19 +27,47 @@ public abstract class ConnectedFragment extends Fragment {
     protected Bundle extras = null;
 
     @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        extras = getArguments();
+    }
+
+    @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         try {
             activity = (ConnectedActivity) context;
         } catch (ClassCastException e) {
-            Log.wtf(TAG, context.toString() + " must implement ConnectedActivity");
+            Log.wtf(TAG, context.toString(), " must implement ConnectedActivity");
         }
     }
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        extras = getArguments();
+    public void storeData(ConnectedFragment fragment, String data) {
+        storeData(fragment, data, null);
+    }
+    public void storeData(ConnectedFragment fragment, String data, String extra) {
+        Log.v(TAG, "storeData | activity=", activity, " | fragment=", fragment, " | data=", Log.lNull(data), " | extra=", Log.lNull(extra));
+        if (activity != null && fragment != null && data != null) {
+            activity.storedFragmentName = fragment.getClass().getCanonicalName();
+            activity.storedFragmentData = data;
+            activity.storedFragmentExtra = extra;
+        }
+    }
+    public String restoreData(ConnectedFragment fragment) {
+        Log.v(TAG, "restoreData | activity=", activity, " | fragment=", fragment);
+        if (activity != null && fragment != null && activity.storedFragmentName != null && fragment.getClass().getCanonicalName().equals(activity.storedFragmentName)) {
+            return activity.storedFragmentData;
+        } else {
+            return null;
+        }
+    }
+    public String restoreDataExtra(ConnectedFragment fragment) {
+        Log.v(TAG, "restoreDataExtra | activity=", activity, " | fragment=", fragment);
+        if (activity != null && fragment != null && activity.storedFragmentName != null && fragment.getClass().getCanonicalName().equals(activity.storedFragmentName)) {
+            return activity.storedFragmentExtra;
+        } else {
+            return null;
+        }
     }
 
     public static Data getData(Context context, Class connectedFragment) {
@@ -70,7 +98,7 @@ public abstract class ConnectedFragment extends Fragment {
         if (connectedFragment == AboutFragment.class) return new Data(connectedFragment, context.getString(R.string.about), R.drawable.ic_info_outline);
         if (connectedFragment == LogFragment.class) return new Data(connectedFragment, context.getString(R.string.log), R.drawable.ic_info_outline);
         if (connectedFragment == LinkedAccountsFragment.class) return new Data(connectedFragment, context.getString(R.string.linked_accounts), R.drawable.ic_account_box);
-        Log.wtf(TAG, "getData | fragment class (" + connectedFragment.toString() + ") does not supported!");
+        Log.wtf(TAG, "getData | fragment class (", connectedFragment.toString(), ") does not supported!");
         return null;
     }
 

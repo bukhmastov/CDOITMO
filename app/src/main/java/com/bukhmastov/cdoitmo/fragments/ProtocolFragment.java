@@ -36,8 +36,8 @@ import java.util.ArrayList;
 public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "ProtocolFragment";
-    public static JSONObject data = null;
     private static final int maxAttempts = 3;
+    private JSONObject data = null;
     private int number_of_weeks = 1;
     private boolean spinner_weeks_blocker = true;
     private boolean loaded = false;
@@ -117,7 +117,11 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
         }
         if (!loaded) {
             loaded = true;
-            load();
+            if (getData() == null) {
+                load();
+            } else {
+                display();
+            }
         }
     }
 
@@ -146,8 +150,8 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                 String cache = Storage.file.cache.get(activity, "protocol#core").trim();
                 if (!cache.isEmpty()) {
                     try {
-                        data = new JSONObject(cache);
-                        if (data.getLong("timestamp") + refresh_rate * 3600000L < Static.getCalendar().getTimeInMillis()) {
+                        setData(new JSONObject(cache));
+                        if (getData().getLong("timestamp") + refresh_rate * 3600000L < Static.getCalendar().getTimeInMillis()) {
                             load(true, cache);
                         } else {
                             load(false, cache);
@@ -180,7 +184,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                         Log.v(TAG, "load | from cache");
                         JSONObject d = new JSONObject(c);
                         if (d.getInt("number_of_weeks") == number_of_weeks || !Static.isOnline(activity) || attempt >= maxAttempts) {
-                            data = new JSONObject(c);
+                            setData(new JSONObject(c));
                             display();
                             return;
                         }
@@ -195,7 +199,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                     if (force) {
                         load(false, cache, attempt + 1);
                     } else {
-                        if (data != null) {
+                        if (getData() != null) {
                             display();
                         } else {
                             loadFailed();
@@ -217,7 +221,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                                         } catch (JSONException e) {
                                             Static.error(e);
                                         }
-                                        data = json;
+                                        setData(json);
                                         display();
                                     }).run();
                                 } else {
@@ -231,7 +235,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                                 Log.v(TAG, "load | failure " + state);
                                 switch (state) {
                                     case DeIfmoRestClient.FAILED_OFFLINE:
-                                        if (data != null) {
+                                        if (getData() != null) {
                                             display();
                                         } else {
                                             draw(R.layout.state_offline);
@@ -287,7 +291,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                 }
             } else {
                 Static.T.runOnUiThread(() -> {
-                    if (data != null) {
+                    if (getData() != null) {
                         display();
                     } else {
                         draw(R.layout.state_offline);
@@ -322,8 +326,8 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
         Static.T.runThread(() -> {
             Log.v(TAG, "display");
             try {
-                if (data == null) throw new NullPointerException("data cannot be null");
-                final ProtocolRVA adapter = new ProtocolRVA(activity, data.getJSONArray("protocol"), "advanced".equals(Storage.pref.get(activity, "pref_protocol_changes_mode", "advanced")));
+                if (getData() == null) throw new NullPointerException("data cannot be null");
+                final ProtocolRVA adapter = new ProtocolRVA(activity, getData().getJSONArray("protocol"), "advanced".equals(Storage.pref.get(activity, "pref_protocol_changes_mode", "advanced")));
                 Static.T.runOnUiThread(() -> {
                     try {
                         draw(R.layout.layout_protocol);
@@ -359,7 +363,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                                 spinner_weeks_arr_values.add(i);
                             }
                             spinner_weeks.setAdapter(new ArrayAdapter<>(activity, R.layout.spinner_layout_single_line, spinner_weeks_arr));
-                            spinner_weeks.setSelection(data.getInt("number_of_weeks") - 1);
+                            spinner_weeks.setSelection(getData().getInt("number_of_weeks") - 1);
                             spinner_weeks_blocker = true;
                             spinner_weeks.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                                 public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
@@ -377,7 +381,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                             });
                         }
                         // show update time
-                        Static.showUpdateTime(activity, data.getLong("timestamp"), false);
+                        Static.showUpdateTime(activity, getData().getLong("timestamp"), false);
                     } catch (Exception e) {
                         Static.error(e);
                         loadFailed();
@@ -388,6 +392,26 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                 loadFailed();
             }
         });
+    }
+
+    private void setData(JSONObject data) {
+        this.data = data;
+        storeData(this, data.toString());
+    }
+    private JSONObject getData() {
+        if (data != null) {
+            return data;
+        }
+        try {
+            String stored = restoreData(this);
+            if (stored != null && !stored.isEmpty()) {
+                data = Static.string2json(stored);
+                return data;
+            }
+        } catch (Exception e) {
+            Static.error(e);
+        }
+        return null;
     }
 
     private void draw(final int layoutId) {

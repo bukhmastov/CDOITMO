@@ -56,9 +56,9 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                     try {
                         Log.i(TAG, "App | launched");
                         PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
-                        Log.i(TAG, "App | version code = " + pInfo.versionCode);
-                        Log.i(TAG, "App | sdk = " + Build.VERSION.SDK_INT);
-                        Log.i(TAG, "App | theme = " + Static.getAppTheme(activity));
+                        Log.i(TAG, "App | version code = ", pInfo.versionCode);
+                        Log.i(TAG, "App | sdk = ", Build.VERSION.SDK_INT);
+                        Log.i(TAG, "App | theme = ", Static.getAppTheme(activity));
                     } catch (Exception e) {
                         Static.error(e);
                     }
@@ -129,8 +129,8 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
             Static.firstLaunch = false;
             Static.isFirstLaunchEver = false;
             // do some logging
-            Log.i(TAG, "Device = " + (Static.tablet ? "tablet" : "mobile"));
-            Log.i(TAG, "Mode = " + (Static.OFFLINE_MODE ? "offline" : "online"));
+            Log.i(TAG, "Device = ", (Static.tablet ? "tablet" : "mobile"));
+            Log.i(TAG, "Mode = ", (Static.OFFLINE_MODE ? "offline" : "online"));
             // define section to be opened
             final String action = getIntent().getStringExtra("action");
             if (action == null && savedInstanceState != null && savedInstanceState.containsKey(STATE_SELECTED_SELECTION)) {
@@ -138,7 +138,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                 Log.v(TAG, "Section selected from savedInstanceState");
             } else {
                 String act = action == null ? Storage.pref.get(this, "pref_default_fragment", "e_journal") : action;
-                Log.v(TAG, "Section = " + act + " from " + (action == null ? "preference" : "intent's extras"));
+                Log.v(TAG, "Section = ", act, " from ", (action == null ? "preference" : "intent's extras"));
                 switch (act) {
                     case "e_journal": selectedSection = R.id.nav_e_register; break;
                     case "protocol_changes": selectedSection = R.id.nav_protocol_changes; break;
@@ -149,7 +149,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                     case "room101": selectedSection = R.id.nav_room101; break;
                     case "university": selectedSection = R.id.nav_university; break;
                     default:
-                        Log.wtf(TAG, "unsupported act: '" + act + "'. Going to select 'e_journal' instead");
+                        Log.wtf(TAG, "unsupported act: '", act, "'. Going to select 'e_journal' instead");
                         selectedSection = R.id.nav_e_register;
                         break;
                 }
@@ -191,7 +191,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
 
     @Override
     public boolean onNavigationItemSelected(@NonNull final MenuItem item) {
-        Log.v(TAG, "NavigationItemSelected " + item.getTitle());
+        Log.v(TAG, "NavigationItemSelected | item=", item.getTitle());
         DrawerLayout drawer_layout = findViewById(R.id.drawer_layout);
         if (drawer_layout != null) drawer_layout.closeDrawer(GravityCompat.START);
         selectSection(item.getItemId());
@@ -246,7 +246,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
     private void authorize(final int state) {
         Static.T.runThread(() -> {
             try {
-                Log.v(TAG, "authorize | state=" + state);
+                Log.v(TAG, "authorize | state=", state);
                 loaded = false;
                 Intent intent = new Intent(activity, LoginActivity.class);
                 intent.putExtra("state", state);
@@ -289,7 +289,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
             section = s;
         }
         Static.T.runThread(() -> {
-            Log.v(TAG, "selectSection | section=" + section);
+            Log.v(TAG, "selectSection | section=", section);
             switch (section) {
                 case R.id.nav_e_register:
                 case R.id.nav_protocol_changes:

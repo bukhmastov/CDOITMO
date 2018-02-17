@@ -120,7 +120,7 @@ public class LoginActivity extends ConnectedActivity {
 
     private void route(final int signal) {
         Static.T.runThread(() -> {
-            Log.i(TAG, "route | signal=" + signal);
+            Log.i(TAG, "route | signal=", signal);
             Static.OFFLINE_MODE = false;
             Static.UNAUTHORIZED_MODE = false;
             switch (signal) {
@@ -190,7 +190,7 @@ public class LoginActivity extends ConnectedActivity {
                     break;
                 }
                 default: {
-                    Log.wtf(TAG, "route | unsupported signal: signal=" + signal + " | going to use signal=SIGNAL_LOGIN");
+                    Log.wtf(TAG, "route | unsupported signal: signal=", signal, " | going to use signal=SIGNAL_LOGIN");
                     route(SIGNAL_LOGIN);
                     break;
                 }
@@ -250,7 +250,7 @@ public class LoginActivity extends ConnectedActivity {
                     for (int i = 0; i < accounts.length(); i++) {
                         try {
                             final String acLogin = accounts.getString(i);
-                            Log.v(TAG, "show | account in accounts | " + acLogin);
+                            Log.v(TAG, "show | account in accounts | ", acLogin);
                             Storage.file.general.perm.put(activity, "users#current_login", acLogin);
                             final String login = Storage.file.perm.get(activity, "user#deifmo#login");
                             final String password = Storage.file.perm.get(activity, "user#deifmo#password");
@@ -299,7 +299,7 @@ public class LoginActivity extends ConnectedActivity {
                                 final Menu menu = popup.getMenu();
                                 popup.getMenuInflater().inflate(R.menu.auth_expanded_menu, menu);
                                 popup.setOnMenuItemClickListener(item -> {
-                                    Log.v(TAG, "auth_expanded_menu | popup.MenuItem clicked | " + item.getTitle().toString());
+                                    Log.v(TAG, "auth_expanded_menu | popup.MenuItem clicked | ", item.getTitle().toString());
                                     switch (item.getItemId()) {
                                         case R.id.offline: {
                                             Storage.file.general.perm.put(activity, "users#current_login", login);
@@ -382,7 +382,7 @@ public class LoginActivity extends ConnectedActivity {
                         final Menu menu = popup.getMenu();
                         popup.getMenuInflater().inflate(R.menu.auth_anonymous_expanded_menu, menu);
                         popup.setOnMenuItemClickListener(item -> {
-                            Log.v(TAG, "auth_expanded_menu | popup.MenuItem clicked | " + item.getTitle().toString());
+                            Log.v(TAG, "auth_expanded_menu | popup.MenuItem clicked | ", item.getTitle().toString());
                             switch (item.getItemId()) {
                                 case R.id.offline: {
                                     Storage.file.general.perm.put(activity, "users#current_login", Account.USER_UNAUTHORIZED);
@@ -429,34 +429,39 @@ public class LoginActivity extends ConnectedActivity {
         });
     }
     private void login(final String login, final String password, final String role, final boolean isNewUser) {
-        Log.v(TAG, "login | login=" + login + " | role=" + role + " | isNewUser=" + Log.lBool(isNewUser));
+        Log.v(TAG, "login | login=", login, " | role=", role, " | isNewUser=", isNewUser);
+        Static.lockOrientation(activity, true);
         Account.login(activity, login, password, role, isNewUser, new Account.LoginHandler() {
             @Override
             public void onSuccess() {
                 Log.v(TAG, "login | onSuccess");
+                Static.lockOrientation(activity, false);
                 finish();
             }
             @Override
             public void onOffline() {
                 Log.v(TAG, "login | onOffline");
+                Static.lockOrientation(activity, false);
                 finish();
             }
             @Override
             public void onInterrupted() {
                 Log.v(TAG, "login | onInterrupted");
+                Static.lockOrientation(activity, false);
                 FirebaseAnalyticsProvider.logBasicEvent(activity, "login interrupted");
                 Storage.file.general.perm.put(activity, "users#current_login", login);
                 route(SIGNAL_GO_OFFLINE);
             }
             @Override
             public void onFailure(String text) {
-                Log.v(TAG, "login | onFailure | text=" + text);
+                Log.v(TAG, "login | onFailure | text=", text);
+                Static.lockOrientation(activity, false);
                 Static.snackBar(activity, text);
                 show();
             }
             @Override
             public void onProgress(String text) {
-                Log.v(TAG, "login | onProgress | text=" + text);
+                Log.v(TAG, "login | onProgress | text=", text);
                 draw(R.layout.state_auth);
                 if (isNewUser) {
                     View interrupt_auth_container = findViewById(R.id.interrupt_auth_container);
@@ -487,23 +492,26 @@ public class LoginActivity extends ConnectedActivity {
         });
     }
     private void logout(final String login) {
-        Log.v(TAG, "logout | login=" + login);
+        Log.v(TAG, "logout | login=", login);
+        Static.lockOrientation(activity, true);
         Account.logout(activity, login, new Account.LogoutHandler() {
             @Override
             public void onSuccess() {
                 Log.v(TAG, "logout | onSuccess");
+                Static.lockOrientation(activity, false);
                 Static.snackBar(activity, activity.getString(R.string.logged_out));
                 show();
             }
             @Override
             public void onFailure(String text) {
-                Log.v(TAG, "logout | onFailure | text=" + text);
+                Log.v(TAG, "logout | onFailure | text=", text);
+                Static.lockOrientation(activity, false);
                 Static.snackBar(activity, text);
                 show();
             }
             @Override
             public void onProgress(String text) {
-                Log.v(TAG, "logout | onProgress | text=" + text);
+                Log.v(TAG, "logout | onProgress | text=", text);
                 draw(R.layout.state_auth);
                 View interrupt_auth_container = findViewById(R.id.interrupt_auth_container);
                 if (interrupt_auth_container != null) {

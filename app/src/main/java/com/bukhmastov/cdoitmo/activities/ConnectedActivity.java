@@ -25,9 +25,31 @@ public abstract class ConnectedActivity extends AppCompatActivity {
 
     private static final String TAG = "ConnectedActivity";
     private final ArrayList<StackElement> stack = new ArrayList<>();
+    private static final String STATE_STORED_FRAGMENT_NAME = "storedFragmentName";
+    private static final String STATE_STORED_FRAGMENT_DATA = "storedFragmentData";
+    private static final String STATE_STORED_FRAGMENT_EXTRA = "storedFragmentExtra";
     public final static String ACTIVITY_WITH_MENU = "connected_activity_with_align";
     protected boolean layout_with_menu = true;
     public Menu toolbar = null;
+    public String storedFragmentName = null;
+    public String storedFragmentData = null;
+    public String storedFragmentExtra = null;
+
+    @Override
+    protected void onSaveInstanceState(final Bundle outState) {
+        outState.putString(STATE_STORED_FRAGMENT_NAME, storedFragmentName);
+        outState.putString(STATE_STORED_FRAGMENT_DATA, storedFragmentData);
+        outState.putString(STATE_STORED_FRAGMENT_EXTRA, storedFragmentExtra);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(final Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        storedFragmentName = savedInstanceState.getString(STATE_STORED_FRAGMENT_NAME);
+        storedFragmentData = savedInstanceState.getString(STATE_STORED_FRAGMENT_DATA);
+        storedFragmentExtra = savedInstanceState.getString(STATE_STORED_FRAGMENT_EXTRA);
+    }
 
     protected abstract @IdRes int getRootViewId();
 
@@ -75,13 +97,15 @@ public abstract class ConnectedActivity extends AppCompatActivity {
             if (root_layout != null) {
                 root_layout.removeAllViews();
             }
-            Fragment fragment = (Fragment) data.connectedFragmentClass.newInstance();
-            if (stackElement.extras != null) fragment.setArguments(stackElement.extras);
+            ConnectedFragment connectedFragment = (ConnectedFragment) data.connectedFragmentClass.newInstance();
+            if (stackElement.extras != null) {
+                connectedFragment.setArguments(stackElement.extras);
+            }
             FragmentManager fragmentManager = getSupportFragmentManager();
             if (fragmentManager != null) {
                 FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
                 if (fragmentTransaction != null) {
-                    fragmentTransaction.replace(getRootViewId(), fragment);
+                    fragmentTransaction.replace(getRootViewId(), connectedFragment);
                     fragmentTransaction.commitAllowingStateLoss();
                     pushFragment(stackElement);
                     updateToolbar(this, data.title, layout_with_menu ? data.image : null);

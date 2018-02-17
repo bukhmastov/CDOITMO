@@ -36,15 +36,19 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
         Log.v(TAG, "Fragment created");
         FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
         // define query
-        ScheduleLessonsTabHostFragment.setQuery(ScheduleLessons.getDefaultScope(activity, ScheduleLessons.TYPE));
+        String scope = ScheduleLessonsTabHostFragment.restoreData();
+        if (scope == null) {
+            scope = ScheduleLessons.getDefaultScope(activity, ScheduleLessons.TYPE);
+        }
         final Intent intent = activity.getIntent();
         if (intent != null && intent.hasExtra("action_extra")) {
             String action_extra = intent.getStringExtra("action_extra");
             if (action_extra != null && !action_extra.isEmpty()) {
                 intent.removeExtra("action_extra");
-                ScheduleLessonsTabHostFragment.setQuery(action_extra);
+                scope = action_extra;
             }
         }
+        ScheduleLessonsTabHostFragment.setQuery(scope);
     }
 
     @Override

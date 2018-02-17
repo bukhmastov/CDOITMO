@@ -74,7 +74,26 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
         FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
         if (!loaded) {
             loaded = true;
-            load();
+            try {
+                String storedData = restoreData(this);
+                String storedExtra = restoreDataExtra(this);
+                JSONObject storedCommon = storedData != null && !storedData.isEmpty() ? Static.string2json(storedData) : null;
+                JSONObject storedOwn = storedExtra != null && !storedExtra.isEmpty() ? Static.string2json(storedExtra) : null;
+                if (storedCommon != null) {
+                    data.put(TYPE.common, new Info(STATUS.loaded, storedCommon));
+                }
+                if (storedOwn != null) {
+                    data.put(TYPE.own, new Info(STATUS.loaded, storedOwn));
+                }
+                if (storedCommon == null || storedOwn == null) {
+                    load();
+                } else {
+                    display();
+                }
+            } catch (Exception e) {
+                Static.error(e);
+                load();
+            }
         }
     }
 
@@ -383,8 +402,9 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
     }
     private void display() {
         Static.T.runThread(() -> {
-            Log.v(TAG, "display");
             try {
+                Log.v(TAG, "display");
+                storeData(this, data.get(TYPE.common).data.toString(), data.get(TYPE.own).data.toString());
                 final RatingRVA adapter = new RatingRVA(activity, data);
                 adapter.setOnElementClickListener(R.id.common_apply, (v, data) -> Static.T.runThread(() -> {
                     try {

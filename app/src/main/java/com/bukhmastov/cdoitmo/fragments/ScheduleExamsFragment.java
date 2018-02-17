@@ -77,15 +77,19 @@ public class ScheduleExamsFragment extends ConnectedFragment {
         Log.v(TAG, "Fragment created");
         FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
         // define query
-        ScheduleExamsFragment.setQuery(ScheduleExams.getDefaultScope(activity, ScheduleExams.TYPE));
+        String scope = restoreData(this);
+        if (scope == null) {
+            scope = ScheduleExams.getDefaultScope(activity, ScheduleExams.TYPE);
+        }
         final Intent intent = activity.getIntent();
         if (intent != null && intent.hasExtra("action_extra")) {
             String action_extra = intent.getStringExtra("action_extra");
             if (action_extra != null && !action_extra.isEmpty()) {
                 intent.removeExtra("action_extra");
-                ScheduleExamsFragment.setQuery(action_extra);
+                scope = action_extra;
             }
         }
+        ScheduleExamsFragment.setQuery(scope);
     }
 
     @Override
@@ -137,6 +141,7 @@ public class ScheduleExamsFragment extends ConnectedFragment {
         if (tab == null) {
             tab = refresh -> {
                 Log.v(TAG, "onInvalidate | refresh=" + Log.lBool(refresh));
+                storeData(this, getQuery());
                 if (isResumed()) {
                     invalidate = false;
                     invalidate_refresh = false;
@@ -209,6 +214,7 @@ public class ScheduleExamsFragment extends ConnectedFragment {
                                 JSONArray schedule = json.getJSONArray("schedule");
                                 if (schedule.length() == 1) {
                                     setQuery(schedule.getJSONObject(0).getString("pid"));
+                                    storeData(ScheduleExamsFragment.this, getQuery());
                                     load(false);
                                     return;
                                 }
@@ -218,6 +224,7 @@ public class ScheduleExamsFragment extends ConnectedFragment {
                         }
                         final ScheduleExamsRVA adapter = new ScheduleExamsRVA(activity, json, data -> {
                             setQuery(data);
+                            storeData(ScheduleExamsFragment.this, data);
                             load(false);
                         });
                         Static.T.runOnUiThread(() -> {

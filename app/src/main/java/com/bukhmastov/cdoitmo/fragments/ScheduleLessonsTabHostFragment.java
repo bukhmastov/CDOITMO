@@ -76,6 +76,7 @@ public abstract class ScheduleLessonsTabHostFragment extends Fragment {
     public static void setQuery(String query) {
         ScheduleLessonsTabHostFragment.lastQuery = ScheduleLessonsTabHostFragment.query;
         ScheduleLessonsTabHostFragment.query = query;
+        storeData(query);
     }
     public static String getQuery() {
         return ScheduleLessonsTabHostFragment.query;
@@ -107,5 +108,22 @@ public abstract class ScheduleLessonsTabHostFragment extends Fragment {
                 invalidate();
             });
         });
+    }
+
+    public static void storeData(String data) {
+        Log.v(TAG, "storeData | activity=", activity, " | data=", Log.lNull(data));
+        if (activity != null) {
+            activity.storedFragmentName = "com.bukhmastov.cdoitmo.fragments.ScheduleLessonsTabHostFragment";
+            activity.storedFragmentData = data;
+            activity.storedFragmentExtra = null;
+        }
+    }
+    public static String restoreData() {
+        Log.v(TAG, "restoreData | activity=", activity);
+        if (activity != null && activity.storedFragmentName != null && "com.bukhmastov.cdoitmo.fragments.ScheduleLessonsTabHostFragment".equals(activity.storedFragmentName)) {
+            return activity.storedFragmentData;
+        } else {
+            return null;
+        }
     }
 }

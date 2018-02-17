@@ -38,7 +38,7 @@ import java.util.HashMap;
 public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLayout.OnRefreshListener, Room101ReviewBuilder.register {
 
     private static final String TAG = "Room101Fragment";
-    public static JSONObject data = null;
+    private JSONObject data = null;
     private boolean loaded = false;
     public static Client.Request requestHandle = null;
     private String action_extra = null;
@@ -88,7 +88,11 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
         FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
         if (!loaded) {
             loaded = true;
-            load();
+            if (getData() == null) {
+                load();
+            } else {
+                display();
+            }
         }
     }
 
@@ -393,8 +397,8 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                 String cache = Storage.file.cache.get(activity, "room101#core").trim();
                 if (!cache.isEmpty()) {
                     try {
-                        data = new JSONObject(cache);
-                        if (data.getLong("timestamp") + refresh_rate * 3600000L < Static.getCalendar().getTimeInMillis()) {
+                        setData(new JSONObject(cache));
+                        if (getData().getLong("timestamp") + refresh_rate * 3600000L < Static.getCalendar().getTimeInMillis()) {
                             load(true, cache);
                         } else {
                             load(false, cache);
@@ -422,7 +426,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                     String c = cache.isEmpty() ? Storage.file.cache.get(activity, "room101#core").trim() : cache;
                     if (!c.isEmpty()) {
                         Log.v(TAG, "load | from cache");
-                        data = new JSONObject(c);
+                        setData(new JSONObject(c));
                         display();
                         return;
                     }
@@ -447,18 +451,18 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                                             if (Storage.pref.get(activity, "pref_use_cache", true)) {
                                                 Storage.file.cache.put(activity, "room101#core", json.toString());
                                             }
-                                            data = json;
+                                            setData(data);
                                             display();
                                         } catch (JSONException e) {
                                             Static.error(e);
-                                            if (data != null) {
+                                            if (getData() != null) {
                                                 display();
                                             } else {
                                                 loadFailed();
                                             }
                                         }
                                     } else {
-                                        if (data != null) {
+                                        if (getData() != null) {
                                             display();
                                         } else {
                                             loadFailed();
@@ -466,7 +470,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                                     }
                                 }).run();
                             } else {
-                                if (data != null) {
+                                if (getData() != null) {
                                     display();
                                 } else {
                                     loadFailed();
@@ -480,7 +484,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                             Log.v(TAG, "load | failure " + state);
                             switch (state) {
                                 case Room101Client.FAILED_OFFLINE:
-                                    if (data != null) {
+                                    if (getData() != null) {
                                         display();
                                     } else {
                                         draw(R.layout.state_offline);
@@ -549,7 +553,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                 });
             } else {
                 Static.T.runOnUiThread(() -> {
-                    if (data != null) {
+                    if (getData() != null) {
                         display();
                     } else {
                         draw(R.layout.state_offline);
@@ -578,13 +582,12 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
             }
         });
     }
-
     private void display() {
         Static.T.runOnUiThread(() -> {
             Log.v(TAG, "display");
             try {
-                if (data == null) throw new NullPointerException("data cannot be null");
-                JSONObject viewRequest = data.getJSONObject("data");
+                if (getData() == null) throw new NullPointerException("data cannot be null");
+                JSONObject viewRequest = getData().getJSONObject("data");
                 if (viewRequest == null) throw new NullPointerException("viewRequest cannot be null");
                 if (action_extra != null) {
                     switch (action_extra) {
@@ -639,6 +642,26 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                 loadFailed();
             }
         });
+    }
+
+    private void setData(JSONObject data) {
+        this.data = data;
+        storeData(this, data.toString());
+    }
+    private JSONObject getData() {
+        if (data != null) {
+            return data;
+        }
+        try {
+            String stored = restoreData(this);
+            if (stored != null && !stored.isEmpty()) {
+                data = Static.string2json(stored);
+                return data;
+            }
+        } catch (Exception e) {
+            Static.error(e);
+        }
+        return null;
     }
 
     private void draw(int layoutId) {

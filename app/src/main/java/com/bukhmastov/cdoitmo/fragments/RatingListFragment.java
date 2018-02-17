@@ -98,7 +98,17 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
         FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
         if (!loaded) {
             loaded = true;
-            load();
+            try {
+                String stored = restoreData(this);
+                if (stored != null && !stored.isEmpty()) {
+                    display(Static.string2json(stored));
+                } else {
+                    load();
+                }
+            } catch (Exception e) {
+                Static.error(e);
+                load();
+            }
         }
     }
 
@@ -135,7 +145,10 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                         Static.T.runThread(() -> {
                             Log.v(TAG, "load | success | statusCode=" + statusCode);
                             if (statusCode == 200) {
-                                new RatingTopListParse(response, Storage.file.perm.get(activity, "user#name"), json -> display(json)).run();
+                                new RatingTopListParse(response, Storage.file.perm.get(activity, "user#name"), json -> {
+                                    storeData(RatingListFragment.this, json.toString());
+                                    display(json);
+                                }).run();
                             } else {
                                 loadFailed();
                             }

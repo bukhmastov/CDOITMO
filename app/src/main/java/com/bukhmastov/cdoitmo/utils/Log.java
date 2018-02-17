@@ -1,9 +1,14 @@
 package com.bukhmastov.cdoitmo.utils;
 
+import android.content.Context;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.v4.app.Fragment;
 
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -103,68 +108,65 @@ public class Log {
         return stringBuilder.toString();
     }
 
-    public static int v(String TAG, String log) {
-        log = wrapLog(log);
-        FirebaseCrashlyticsProvider.v(TAG, log);
+    public static int v(String TAG, Object... log) {
+        String l = wrapLog(joinObjects(log));
+        FirebaseCrashlyticsProvider.v(TAG, l);
         if (enabled) {
-            addLog(new LogItem(VERBOSE, TAG, log));
-            return android.util.Log.v(TAG, log);
+            addLog(new LogItem(VERBOSE, TAG, l));
+            return android.util.Log.v(TAG, l);
         } else {
             return 0;
         }
     }
-    public static int d(String log) {
-        return d(TAGD, log);
-    }
-    public static int d(String TAG, String log) {
-        log = wrapLog(log);
-        FirebaseCrashlyticsProvider.d(TAG, log);
+    public static int d(Object... log) {
+        String l = wrapLog(joinObjects(log));
+        FirebaseCrashlyticsProvider.d(TAGD, l);
         if (enabled) {
-            addLog(new LogItem(DEBUG, TAG, log));
-            return android.util.Log.d(TAG, log);
+            addLog(new LogItem(DEBUG, TAGD, l));
+            return android.util.Log.d(TAGD, l);
         } else {
             return 0;
         }
     }
-    public static int i(String TAG, String log) {
-        log = wrapLog(log);
-        FirebaseCrashlyticsProvider.i(TAG, log);
+    public static int i(String TAG, Object... log) {
+        String l = wrapLog(joinObjects(log));
+        FirebaseCrashlyticsProvider.i(TAG, l);
         if (enabled) {
-            addLog(new LogItem(INFO, TAG, log));
-            return android.util.Log.i(TAG, log);
+            addLog(new LogItem(INFO, TAG, l));
+            return android.util.Log.i(TAG, l);
         } else {
             return 0;
         }
     }
-    public static int w(String TAG, String log) {
+    public static int w(String TAG, Object... log) {
         Metrics.warn++;
-        log = wrapLog(log);
-        FirebaseCrashlyticsProvider.w(TAG, log);
+        String l = wrapLog(joinObjects(log));
+        FirebaseCrashlyticsProvider.w(TAG, l);
         if (enabled) {
-            addLog(new LogItem(WARN, TAG, log));
-            return android.util.Log.w(TAG, log);
+            addLog(new LogItem(WARN, TAG, l));
+            return android.util.Log.w(TAG, l);
         } else {
             return 0;
         }
     }
-    public static int e(String TAG, String log) {
+    public static int e(String TAG, Object... log) {
         Metrics.error++;
-        log = wrapLog(log);
-        FirebaseCrashlyticsProvider.e(TAG, log);
+        String l = wrapLog(joinObjects(log));
+        FirebaseCrashlyticsProvider.e(TAG, l);
         if (enabled) {
-            addLog(new LogItem(ERROR, TAG, log));
-            return android.util.Log.e(TAG, log);
+            addLog(new LogItem(ERROR, TAG, l));
+            return android.util.Log.e(TAG, l);
         } else {
             return 0;
         }
     }
-    public static int wtf(String TAG, String log) {
+    public static int wtf(String TAG, Object... log) {
         Metrics.wtf++;
-        log = wrapLog(log);
-        FirebaseCrashlyticsProvider.wtf(TAG, log);
+        String l = wrapLog(joinObjects(log));
+        FirebaseCrashlyticsProvider.wtf(TAG, l);
         if (enabled) {
-            addLog(new LogItem(WTF, TAG, log));
-            return android.util.Log.wtf(TAG, log);
+            addLog(new LogItem(WTF, TAG, l));
+            return android.util.Log.wtf(TAG, l);
         } else {
             return 0;
         }
@@ -206,19 +208,52 @@ public class Log {
         }
     }
 
+    @NonNull
     private static String wrapLog(String log) {
         return "[" + Thread.currentThread().getName() + ":" + Thread.currentThread().getId() + "] " + (log == null ? "" : log);
     }
+    @NonNull
+    private static String joinObjects(Object... log) {
+        StringBuilder sb = new StringBuilder();
+        for (Object item : log) {
+            if (item == null) {
+                sb.append("<null>");
+            } else if (item instanceof String) {
+                sb.append(lString((String) item));
+            } else if (item instanceof Boolean) {
+                sb.append((boolean) item);
+            } else if (item instanceof Integer) {
+                sb.append((int) item);
+            } else if (item instanceof Throwable) {
+                sb.append(lThrow((Throwable) item));
+            } else if (item instanceof Double) {
+                sb.append((double) item);
+            } else if (item instanceof Float) {
+                sb.append((float) item);
+            } else if (item instanceof Long) {
+                sb.append((long) item);
+            } else if (item instanceof Context || item instanceof Fragment || item instanceof JSONObject || item instanceof JSONArray) {
+                sb.append(lNull(item));
+            } else {
+                sb.append(item);
+            }
+        }
+        return sb.toString();
+    }
 
+    @NonNull
     public static String lString(String str) {
         return str == null ? "<null>" : str;
     }
+    @NonNull
     public static String lBool(boolean bool) {
         return bool ? "true" : "false";
     }
+    @NonNull
     public static String lNull(Object o) {
         return o == null ? "<null>" : "<notnull>";
     }
+    @NonNull
     public static String lThrow(Throwable throwable) {
         return throwable != null ? throwable.getMessage() : "<empty>";
     }

@@ -317,9 +317,13 @@ public class Static {
         return weekday;
     }
     public static void lockOrientation(Activity activity, boolean lock) {
-        Log.v(TAG, "lockOrientation | lock=" + (lock ? "true" : "false"));
-        if (activity != null) {
-            activity.setRequestedOrientation(lock ? ActivityInfo.SCREEN_ORIENTATION_LOCKED : ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
+        try {
+            if (activity != null) {
+                Log.v(TAG, "lockOrientation | activity=", activity.getComponentName().getClassName(), " | lock=", lock);
+                activity.setRequestedOrientation(lock ? ActivityInfo.SCREEN_ORIENTATION_LOCKED : ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
+            }
+        } catch (Exception e) {
+            Static.error(e);
         }
     }
     public static void showUpdateTime(Activity activity, long time, boolean show_now) {

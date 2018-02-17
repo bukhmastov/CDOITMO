@@ -76,15 +76,20 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
         Log.v(TAG, "Fragment created");
         FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
         // define query
-        ScheduleAttestationsFragment.setQuery(ScheduleAttestations.getDefaultScope(activity, ScheduleAttestations.TYPE));
+        String scope = restoreData(this);
+        if (scope == null) {
+            scope = ScheduleAttestations.getDefaultScope(activity, ScheduleAttestations.TYPE);
+        }
         final Intent intent = activity.getIntent();
         if (intent != null && intent.hasExtra("action_extra")) {
             String action_extra = intent.getStringExtra("action_extra");
             if (action_extra != null && !action_extra.isEmpty()) {
                 intent.removeExtra("action_extra");
-                ScheduleAttestationsFragment.setQuery(action_extra);
+                scope = action_extra;
             }
         }
+        ScheduleAttestationsFragment.setQuery(scope);
+        storeData(this, scope);
     }
 
     @Override
@@ -136,6 +141,7 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
         if (tab == null) {
             tab = refresh -> {
                 Log.v(TAG, "onInvalidate | refresh=" + Log.lBool(refresh));
+                storeData(this, getQuery());
                 if (isResumed()) {
                     invalidate = false;
                     invalidate_refresh = false;
