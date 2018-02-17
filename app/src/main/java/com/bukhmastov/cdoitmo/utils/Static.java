@@ -608,7 +608,7 @@ public class Static {
         public static void displayUserData(final Context context, final NavigationView navigationView) {
             Static.T.runThread(() -> {
                 final String name = Storage.file.perm.get(context, "user#name");
-                final String group = Storage.file.perm.get(context, "user#group");
+                final String group = Storage.file.perm.get(context, "user#groups");
                 Static.T.runOnUiThread(() -> {
                     displayUserData(navigationView, R.id.user_name, name);
                     displayUserData(navigationView, R.id.user_group, group);
@@ -1130,9 +1130,14 @@ public class Static {
     }
     public static String prettifyGroupNumber(String group) {
         if (group != null && !group.isEmpty()) {
-            Matcher m = Pattern.compile("([a-z])(\\d{4}\\S?)").matcher(group);
+            Matcher m;
+            m = Pattern.compile("(.*)([a-zа-яё])(\\d{4}[a-zа-яё]?)(.*)", Pattern.CASE_INSENSITIVE).matcher(group);
             if (m.find()) {
-                group = m.group(1).toUpperCase() + m.group(2).toLowerCase();
+                group = m.group(1) + m.group(2).toUpperCase() + m.group(3).toLowerCase() + m.group(4);
+            }
+            m = Pattern.compile("(.*)([a-zа-яё]{2}\\d{2}[a-zа-яё]{1,3})(.*)", Pattern.CASE_INSENSITIVE).matcher(group);
+            if (m.find()) {
+                group = m.group(1) + m.group(2).toUpperCase() + m.group(3);
             }
         }
         return group;

@@ -7,6 +7,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -366,9 +367,11 @@ public class LoginActivity extends ConnectedActivity {
                         if (input_group != null) {
                             group = Static.prettifyGroupNumber(input_group.getText().toString());
                         }
+                        String[] groups = group.split(",\\s|\\s|,");
                         Storage.file.general.perm.put(activity, "users#current_login", Account.USER_UNAUTHORIZED);
                         Storage.file.perm.put(activity, "user#name", activity.getString(R.string.anonymous));
-                        Storage.file.perm.put(activity, "user#group", group);
+                        Storage.file.perm.put(activity, "user#group", groups.length > 0 ? groups[0] : "");
+                        Storage.file.perm.put(activity, "user#groups", TextUtils.join(", ", groups));
                         Storage.file.perm.put(activity, "user#avatar", "");
                         Storage.file.general.perm.delete(activity, "users#current_login");
                         login(Account.USER_UNAUTHORIZED, Account.USER_UNAUTHORIZED, "anonymous", false);
@@ -407,7 +410,7 @@ public class LoginActivity extends ConnectedActivity {
                     });
                     login_tiles_container.addView(anonymous_user_tile);
                     Storage.file.general.perm.put(activity, "users#current_login", Account.USER_UNAUTHORIZED);
-                    input_group.setText(Storage.file.perm.get(activity, "user#group", ""));
+                    input_group.setText(Storage.file.perm.get(activity, "user#groups", ""));
                     Storage.file.general.perm.delete(activity, "users#current_login");
                     // draw UI
                     Static.T.runOnUiThread(() -> {

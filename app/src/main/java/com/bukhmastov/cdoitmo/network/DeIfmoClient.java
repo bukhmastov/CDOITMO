@@ -1,6 +1,7 @@
 package com.bukhmastov.cdoitmo.network;
 
 import android.content.Context;
+import android.text.TextUtils;
 
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.interfaces.RawHandler;
@@ -66,8 +67,10 @@ public class DeIfmoClient extends DeIfmo {
                                     } else {
                                         pref_group_force_override = pref_group_force_override.trim();
                                     }
+                                    String[] groups = (pref_group_force_override.isEmpty() ? result.get("group") : pref_group_force_override).split(",\\s|\\s|,");
                                     Storage.file.perm.put(context, "user#name", result.get("name"));
-                                    Storage.file.perm.put(context, "user#group", pref_group_force_override.isEmpty() ? result.get("group") : pref_group_force_override);
+                                    Storage.file.perm.put(context, "user#group", groups.length > 0 ? groups[0] : "");
+                                    Storage.file.perm.put(context, "user#groups", TextUtils.join(", ", groups));
                                     Storage.file.perm.put(context, "user#avatar", result.get("avatar"));
                                     try {
                                         Storage.file.general.perm.put(context, "user#week", new JSONObject()
