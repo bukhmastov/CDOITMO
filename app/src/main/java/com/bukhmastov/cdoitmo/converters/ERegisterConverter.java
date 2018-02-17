@@ -165,7 +165,8 @@ public class ERegisterConverter implements Runnable {
                     term1 = term;
                 } else if (term2 < 1 && term != term1 && term != term2) {
                     term2 = term;
-                } else {
+                }
+                if (term1 > 0 && term2 > 0) {
                     break;
                 }
             } catch (Exception ignore) {/* ignore */}
@@ -180,8 +181,8 @@ public class ERegisterConverter implements Runnable {
             }
         }
         return new JSONArray()
-                .put(new JSONObject().put("number", first).put("subjects", new JSONArray()))
-                .put(new JSONObject().put("number", second).put("subjects", new JSONArray()));
+                .put(new JSONObject().put("number", Math.min(first, second)).put("subjects", new JSONArray()))
+                .put(new JSONObject().put("number", Math.max(first, second)).put("subjects", new JSONArray()));
     }
     private double mark2double(String string) {
         return string2double(markConverter(string));
