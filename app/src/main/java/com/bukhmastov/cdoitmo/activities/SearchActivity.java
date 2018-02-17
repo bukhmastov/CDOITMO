@@ -65,6 +65,7 @@ public abstract class SearchActivity extends AppCompatActivity {
         search_edit_text.addTextChangedListener(textWatcher);
         search_edit_text.setOnKeyListener(onKeyListener);
         setMode(EXTRA_ACTION_MODE.Speech_recognition);
+        setSuggestions(getSuggestions(""));
     }
 
     @Override
