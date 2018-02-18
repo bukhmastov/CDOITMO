@@ -348,6 +348,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                                         case Client.FAILED_OFFLINE: text = activity.getString(R.string.offline_mode_on); break;
                                         case Client.FAILED_TRY_AGAIN: text = activity.getString(R.string.load_failed); break;
                                         case Client.FAILED_SERVER_ERROR: text = Client.getFailureMessage(activity, statusCode); break;
+                                        case Client.FAILED_CORRUPTED_JSON: text = activity.getString(R.string.server_provided_corrupted_json); break;
                                     }
                                     Static.snackBar(activity, text);
                                 });

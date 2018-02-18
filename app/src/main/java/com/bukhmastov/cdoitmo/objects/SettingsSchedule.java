@@ -277,6 +277,10 @@ public abstract class SettingsSchedule {
                             Static.snackBar(activity, Client.getFailureMessage(activity, statusCode));
                             break;
                         }
+                        case Client.FAILED_CORRUPTED_JSON: {
+                            Static.snackBar(activity, activity.getString(R.string.server_provided_corrupted_json));
+                            break;
+                        }
                         default: {
                             Static.snackBar(activity, activity.getString(R.string.schedule_not_found));
                             break;

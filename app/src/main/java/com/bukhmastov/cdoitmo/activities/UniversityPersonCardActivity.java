@@ -170,16 +170,18 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                                         offline_reload.setOnClickListener(v -> load());
                                     }
                                     break;
+                                case IfmoRestClient.FAILED_CORRUPTED_JSON:
                                 case IfmoRestClient.FAILED_SERVER_ERROR:
                                 case IfmoRestClient.FAILED_TRY_AGAIN:
                                     draw(R.layout.state_try_again);
-                                    View try_again_reload = findViewById(R.id.try_again_reload);
-                                    if (state == IfmoRestClient.FAILED_SERVER_ERROR) {
-                                        TextView try_again_message = activity.findViewById(R.id.try_again_message);
-                                        if (try_again_message != null) {
-                                            try_again_message.setText(IfmoRestClient.getFailureMessage(activity, statusCode));
+                                    TextView try_again_message = activity.findViewById(R.id.try_again_message);
+                                    if (try_again_message != null) {
+                                        switch (state) {
+                                            case IfmoRestClient.FAILED_SERVER_ERROR:   try_again_message.setText(IfmoRestClient.getFailureMessage(activity, statusCode)); break;
+                                            case IfmoRestClient.FAILED_CORRUPTED_JSON: try_again_message.setText(R.string.server_provided_corrupted_json); break;
                                         }
                                     }
+                                    View try_again_reload = findViewById(R.id.try_again_reload);
                                     if (try_again_reload != null) {
                                         try_again_reload.setOnClickListener(v -> load());
                                     }

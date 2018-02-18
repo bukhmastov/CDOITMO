@@ -250,12 +250,14 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                                         break;
                                     case DeIfmoRestClient.FAILED_TRY_AGAIN:
                                     case DeIfmoRestClient.FAILED_SERVER_ERROR:
+                                    case DeIfmoRestClient.FAILED_CORRUPTED_JSON:
                                         draw(R.layout.state_try_again);
                                         if (activity != null) {
-                                            if (state == DeIfmoRestClient.FAILED_SERVER_ERROR) {
-                                                TextView try_again_message = activity.findViewById(R.id.try_again_message);
-                                                if (try_again_message != null) {
-                                                    try_again_message.setText(DeIfmoRestClient.getFailureMessage(activity, statusCode));
+                                            TextView try_again_message = activity.findViewById(R.id.try_again_message);
+                                            if (try_again_message != null) {
+                                                switch (state) {
+                                                    case DeIfmoRestClient.FAILED_SERVER_ERROR:   try_again_message.setText(DeIfmoRestClient.getFailureMessage(activity, statusCode)); break;
+                                                    case DeIfmoRestClient.FAILED_CORRUPTED_JSON: try_again_message.setText(R.string.server_provided_corrupted_json); break;
                                                 }
                                             }
                                             View try_again_reload = activity.findViewById(R.id.try_again_reload);

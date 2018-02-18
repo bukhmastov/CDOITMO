@@ -140,6 +140,9 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
                 case IfmoRestClient.FAILED_SERVER_ERROR:
                     message(IfmoRestClient.getFailureMessage(activity, statusCode));
                     break;
+                case IfmoRestClient.FAILED_CORRUPTED_JSON:
+                    message(activity.getString(R.string.server_provided_corrupted_json));
+                    break;
                 case IfmoRestClient.FAILED_TRY_AGAIN:
                 case ScheduleLessons.FAILED_LOAD:
                 case ScheduleLessons.FAILED_EMPTY_QUERY:

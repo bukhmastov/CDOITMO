@@ -137,7 +137,14 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                     }
                     @Override
                     public void onFailure(int statusCode, Client.Headers headers, int state) {
-                        failed(context, appWidgetManager, appWidgetId, settings, state == IfmoRestClient.FAILED_SERVER_ERROR ? IfmoRestClient.getFailureMessage(context, statusCode) : context.getString(R.string.failed_to_load_schedule));
+                        //R.string.server_provided_corrupted_json
+                        String message;
+                        switch (state) {
+                            case IfmoRestClient.FAILED_SERVER_ERROR: message = IfmoRestClient.getFailureMessage(context, statusCode); break;
+                            case IfmoRestClient.FAILED_CORRUPTED_JSON: message = context.getString(R.string.server_provided_corrupted_json); break;
+                            default: message = context.getString(R.string.failed_to_load_schedule); break;
+                        }
+                        failed(context, appWidgetManager, appWidgetId, settings, message);
                     }
                     @Override
                     public void onProgress(int state) {

@@ -171,6 +171,7 @@ public abstract class Client {
     public static final int FAILED_TRY_AGAIN = 1;
     public static final int FAILED_SERVER_ERROR = 2;
     public static final int FAILED_INTERRUPTED = 3;
+    public static final int FAILED_CORRUPTED_JSON = 4;
 
     protected static void _g(final String url, final okhttp3.Headers headers, final Map<String, String> query, final RawHandler rawHandler) {
         Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
@@ -231,7 +232,7 @@ public abstract class Client {
                     public void onDone(final int code, final okhttp3.Headers responseHeaders, final String response) {
                         Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
                             try {
-                                if (code >= 500 && code < 600) {
+                                if (code >= 400) {
                                     rawJsonHandler.onDone(code, headers, response, null, null);
                                     return;
                                 }
@@ -418,7 +419,14 @@ public abstract class Client {
         }
     }
     protected static boolean isInterrupted(final Throwable throwable) {
-        return throwable != null && throwable.getMessage() != null && "socket closed".equals(throwable.getMessage().toLowerCase());
+        return throwable != null && throwable.getMessage() != null && "socket closed".equalsIgnoreCase(throwable.getMessage());
+    }
+    protected static boolean isCorruptedJson(final Throwable throwable) {
+        return throwable != null && throwable.getMessage() != null && (
+                "Response is not recognized as JSONObject or JSONArray".equalsIgnoreCase(throwable.getMessage()) ||
+                "Failed to parse JSONArray".equalsIgnoreCase(throwable.getMessage()) ||
+                "Failed to parse JSONObject".equalsIgnoreCase(throwable.getMessage())
+        );
     }
 
     public static boolean isAuthorized(final Context context) {

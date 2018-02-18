@@ -336,14 +336,20 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                         ViewGroup share_content = activity.findViewById(R.id.share_content);
                         if (share_content != null) {
                             share_content.removeAllViews();
+                            View view;
                             switch (state) {
                                 case Client.FAILED_OFFLINE:
                                 case ScheduleLessons.FAILED_OFFLINE:
                                     share_content.addView(inflate(R.layout.state_offline_without_align));
                                     break;
                                 case Client.FAILED_SERVER_ERROR:
-                                    View view = inflate(R.layout.state_failed_without_align);
+                                    view = inflate(R.layout.state_failed_without_align);
                                     ((TextView) view.findViewById(R.id.text)).setText(Client.getFailureMessage(activity, statusCode));
+                                    share_content.addView(view);
+                                    break;
+                                case Client.FAILED_CORRUPTED_JSON:
+                                    view = inflate(R.layout.state_failed_without_align);
+                                    ((TextView) view.findViewById(R.id.text)).setText(R.string.server_provided_corrupted_json);
                                     share_content.addView(view);
                                     break;
                                 case Client.FAILED_TRY_AGAIN:

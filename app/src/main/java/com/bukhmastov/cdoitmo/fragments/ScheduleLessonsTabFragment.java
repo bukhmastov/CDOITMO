@@ -247,10 +247,12 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
                             }
                             case Client.FAILED_TRY_AGAIN:
                             case Client.FAILED_SERVER_ERROR:
+                            case Client.FAILED_CORRUPTED_JSON:
                             case Schedule.FAILED_LOAD: {
                                 final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_try_again);
-                                if (state == Client.FAILED_TRY_AGAIN) {
-                                    ((TextView) view.findViewById(R.id.try_again_message)).setText(Client.getFailureMessage(activity, statusCode));
+                                switch (state) {
+                                    case Client.FAILED_SERVER_ERROR:   ((TextView) view.findViewById(R.id.try_again_message)).setText(Client.getFailureMessage(activity, statusCode)); break;
+                                    case Client.FAILED_CORRUPTED_JSON: ((TextView) view.findViewById(R.id.try_again_message)).setText(R.string.server_provided_corrupted_json); break;
                                 }
                                 view.findViewById(R.id.try_again_reload).setOnClickListener(v -> load(false));
                                 draw(view);
