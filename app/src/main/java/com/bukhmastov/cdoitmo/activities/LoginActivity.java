@@ -435,29 +435,29 @@ public class LoginActivity extends ConnectedActivity {
             @Override
             public void onSuccess() {
                 Log.v(TAG, "login | onSuccess");
-                Static.lockOrientation(activity, false);
                 finish();
+                Static.lockOrientation(activity, false);
             }
             @Override
             public void onOffline() {
                 Log.v(TAG, "login | onOffline");
-                Static.lockOrientation(activity, false);
                 finish();
+                Static.lockOrientation(activity, false);
             }
             @Override
             public void onInterrupted() {
                 Log.v(TAG, "login | onInterrupted");
-                Static.lockOrientation(activity, false);
                 FirebaseAnalyticsProvider.logBasicEvent(activity, "login interrupted");
                 Storage.file.general.perm.put(activity, "users#current_login", login);
                 route(SIGNAL_GO_OFFLINE);
+                Static.lockOrientation(activity, false);
             }
             @Override
             public void onFailure(String text) {
                 Log.v(TAG, "login | onFailure | text=", text);
-                Static.lockOrientation(activity, false);
                 Static.snackBar(activity, text);
                 show();
+                Static.lockOrientation(activity, false);
             }
             @Override
             public void onProgress(String text) {
@@ -498,16 +498,16 @@ public class LoginActivity extends ConnectedActivity {
             @Override
             public void onSuccess() {
                 Log.v(TAG, "logout | onSuccess");
-                Static.lockOrientation(activity, false);
                 Static.snackBar(activity, activity.getString(R.string.logged_out));
                 show();
+                Static.lockOrientation(activity, false);
             }
             @Override
             public void onFailure(String text) {
                 Log.v(TAG, "logout | onFailure | text=", text);
-                Static.lockOrientation(activity, false);
                 Static.snackBar(activity, text);
                 show();
+                Static.lockOrientation(activity, false);
             }
             @Override
             public void onProgress(String text) {
