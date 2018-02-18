@@ -136,6 +136,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
     private void denyRequest(final int reid, final int status) {
         Static.T.runThread(() -> {
             Log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status);
+            Static.lockOrientation(activity, true);
             HashMap<String, String> params = new HashMap<>();
             switch (status) {
                 case 1: params.put("getFunc", "snatRequest"); break;
@@ -165,6 +166,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                                 try_again_reload.setOnClickListener(v -> denyRequest(reid, status));
                             }
                         }
+                        Static.lockOrientation(activity, false);
                     });
                 }
                 @Override
@@ -184,6 +186,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                         if (try_again_reload != null) {
                             try_again_reload.setOnClickListener(v -> denyRequest(reid, status));
                         }
+                        Static.lockOrientation(activity, false);
                     });
                 }
                 @Override
@@ -215,6 +218,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                 Static.snackBar(activity, R.id.room101_review_swipe, activity.getString(R.string.device_offline_action_refused));
             } else {
                 draw(R.layout.layout_room101_add_request);
+                Static.lockOrientation(activity, true);
                 final View room101_close_add_request = activity.findViewById(R.id.room101_close_add_request);
                 final LinearLayout room101_back = activity.findViewById(R.id.room101_back);
                 final LinearLayout room101_forward = activity.findViewById(R.id.room101_forward);
@@ -290,10 +294,12 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                     @Override
                     public void onClose() {
                         load(false);
+                        Static.lockOrientation(activity, false);
                     }
                     @Override
                     public void onDone() {
                         load(true);
+                        Static.lockOrientation(activity, false);
                     }
                 });
                 if (room101_close_add_request != null) {
@@ -451,7 +457,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                                             if (Storage.pref.get(activity, "pref_use_cache", true)) {
                                                 Storage.file.cache.put(activity, "room101#core", json.toString());
                                             }
-                                            setData(data);
+                                            setData(json);
                                             display();
                                         } catch (JSONException e) {
                                             Static.error(e);
