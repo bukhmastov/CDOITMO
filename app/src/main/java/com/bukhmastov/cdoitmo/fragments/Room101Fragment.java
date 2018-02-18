@@ -279,6 +279,11 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                     public void onDraw(final View view) {
                         Static.T.runOnUiThread(() -> {
                             try {
+                                if (view == null) {
+                                    Static.snackBar(activity, R.id.room101_review_swipe, activity.getString(R.string.error_occurred));
+                                    load(false);
+                                    return;
+                                }
                                 ViewGroup vg = activity.findViewById(R.id.room101_add_request_container);
                                 if (vg != null) {
                                     vg.removeAllViews();

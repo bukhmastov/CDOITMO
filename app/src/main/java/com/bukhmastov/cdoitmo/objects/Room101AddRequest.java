@@ -560,6 +560,9 @@ public class Room101AddRequest {
     }
     private View getChooserLayout(String header, String desc, JSONArray array, CompoundButton.OnCheckedChangeListener onCheckedChangeListener) throws Exception {
         View view = inflate(R.layout.layout_room101_add_request_state);
+        if (view == null) {
+            return null;
+        }
         ViewGroup viewGroup = (ViewGroup) view;
         if (pick_date != null || pick_time_start != null || pick_time_end != null) {
             setRequestInfo(viewGroup, R.id.ars_request_info_pick_date, pick_date != null, activity.getString(R.string.session_date) + ": " + pick_date);

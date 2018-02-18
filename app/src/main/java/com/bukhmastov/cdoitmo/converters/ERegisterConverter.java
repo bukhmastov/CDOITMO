@@ -42,10 +42,10 @@ public class ERegisterConverter implements Runnable {
             for (int i = 0; i < years.length(); i++) {
                 final JSONObject year = years.getJSONObject(i);
                 final String group = year.getString("group");
-                final String studyyear = year.getString("studyyear");
+                final String[] studyyear = year.getString("studyyear").split("/");
                 final JSONArray subjects = year.getJSONArray("subjects");
-                final int year1 = Integer.parseInt(studyyear.split("/")[0]);
-                final int year2 = Integer.parseInt(studyyear.split("/")[1]);
+                final int year1 = Integer.parseInt(studyyear.length > 0 ? (!studyyear[0].isEmpty() ? studyyear[0] : "0") : "0");
+                final int year2 = Integer.parseInt(studyyear.length > 1 ? (!studyyear[1].isEmpty() ? studyyear[1] : "0") : "0");
                 final JSONArray terms = getTermsTemplates(subjects);
                 for (int j = 0; j < subjects.length(); j++) {
                     final JSONObject subject = subjects.getJSONObject(j);

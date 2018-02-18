@@ -1116,7 +1116,7 @@ public class Static {
     }
     public static JSONArray string2jsonArray(String text) throws JSONException {
         JSONArray json;
-        if (text.isEmpty()) {
+        if (text == null || text.isEmpty()) {
             json = new JSONArray();
         } else {
             json = new JSONArray(text);
@@ -1125,7 +1125,7 @@ public class Static {
     }
     public static JSONObject string2json(String text) throws JSONException {
         JSONObject json;
-        if (text.isEmpty()) {
+        if (text == null || text.isEmpty()) {
             json = new JSONObject();
         } else {
             json = new JSONObject(text);

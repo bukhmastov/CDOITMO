@@ -153,7 +153,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                             load(type, false, cache);
                         }
                     } catch (JSONException e) {
-                        Static.error(e);
+                        Log.e(TAG, "load | type=", type.toString(), " | exception=", e);
                         load(type, true, cache);
                     }
                 } else {

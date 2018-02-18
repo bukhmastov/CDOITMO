@@ -113,14 +113,15 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                 String cache = Storage.file.cache.get(activity, "eregister#core").trim();
                 if (!cache.isEmpty()) {
                     try {
-                        setData(new JSONObject(cache));
-                        if (getData().getLong("timestamp") + refresh_rate * 3600000L < Static.getCalendar().getTimeInMillis()) {
+                        JSONObject data = new JSONObject(cache);
+                        setData(data);
+                        if (data.getLong("timestamp") + refresh_rate * 3600000L < Static.getCalendar().getTimeInMillis()) {
                             load(true, cache);
                         } else {
                             load(false, cache);
                         }
-                    } catch (JSONException e) {
-                        Static.error(e);
+                    } catch (Exception e) {
+                        Log.e(TAG, "load | exception=", e);
                         load(true, cache);
                     }
                 } else {

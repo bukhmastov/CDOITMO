@@ -282,7 +282,7 @@ public class Account {
                     Log.v(TAG, "push | login=" + login);
                     boolean isNewAuthorization = true;
                     // save login on top of the list of authorized users
-                    JSONArray list = Static.string2jsonArray(Storage.file.general.perm.get(context, "users#list", ""));
+                    JSONArray list = get(context);
                     JSONArray accounts = new JSONArray();
                     accounts.put(login);
                     for (int i = 0; i < list.length(); i++) {
@@ -314,7 +314,7 @@ public class Account {
                 try {
                     Log.v(TAG, "remove | login=" + login);
                     // remove login from the list of authorized users
-                    JSONArray list = Static.string2jsonArray(Storage.file.general.perm.get(context, "users#list", ""));
+                    JSONArray list = get(context);
                     for (int i = 0; i < list.length(); i++) {
                         if (list.getString(i).equals(login)) {
                             list.remove(i);
@@ -334,9 +334,13 @@ public class Account {
             });
         }
         public static JSONArray get(@NonNull Context context) {
-            Log.v(TAG, "get");
             try {
-                return Static.string2jsonArray(Storage.file.general.perm.get(context, "users#list", ""));
+                Log.v(TAG, "get");
+                try {
+                    return Static.string2jsonArray(Storage.file.general.perm.get(context, "users#list", ""));
+                } catch (Exception e) {
+                    return new JSONArray();
+                }
             } catch (Exception e) {
                 Static.error(e);
                 return new JSONArray();
