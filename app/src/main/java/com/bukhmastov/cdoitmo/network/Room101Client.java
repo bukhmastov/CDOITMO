@@ -22,15 +22,15 @@ public class Room101Client extends Room101 {
     }
     public static void get(final Context context, final Protocol protocol, final String url, final Map<String, String> query, final ResponseHandler responseHandler) {
         Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
-            Log.v(TAG, "get | url=" + url);
+            Log.v(TAG, "get | url=", url);
             if (Static.isOnline(context)) {
                 responseHandler.onProgress(STATE_HANDLING);
                 g(context, getAbsoluteUrl(protocol, url), query, new RawHandler() {
                     @Override
                     public void onDone(final int code, final okhttp3.Headers headers, final String response) {
                         Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
-                            Log.v(TAG, "get | url=" + url + " | success | statusCode=" + code);
-                            if (code >= 500 && code < 600) {
+                            Log.v(TAG, "get | url=", url, " | success | statusCode=", code);
+                            if (code >= 400) {
                                 responseHandler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
                                 return;
                             }
@@ -40,8 +40,8 @@ public class Room101Client extends Room101 {
                     @Override
                     public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
                         Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
-                            Log.v(TAG, "get | url=" + url + " | failure | throwable=" + Log.lThrow(throwable));
-                            responseHandler.onFailure(code, new Headers(headers), FAILED_TRY_AGAIN);
+                            Log.v(TAG, "get | url=", url, " | failure | statusCode=", code, " | throwable=", throwable);
+                            responseHandler.onFailure(code, new Headers(headers), (code >= 400 ? FAILED_SERVER_ERROR : FAILED_TRY_AGAIN));
                         });
                     }
                     @Override
@@ -50,7 +50,7 @@ public class Room101Client extends Room101 {
                     }
                 });
             } else {
-                Log.v(TAG, "get | url=" + url + " | offline");
+                Log.v(TAG, "get | url=", url, " | offline");
                 responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_OFFLINE);
             }
         });
@@ -60,15 +60,15 @@ public class Room101Client extends Room101 {
     }
     public static void post(final Context context, final Protocol protocol, final String url, final Map<String, String> params, final ResponseHandler responseHandler) {
         Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
-            Log.v(TAG, "post | url=" + url);
+            Log.v(TAG, "post | url=", url);
             if (Static.isOnline(context)) {
                 responseHandler.onProgress(STATE_HANDLING);
                 p(context, getAbsoluteUrl(protocol, url), params, new RawHandler() {
                     @Override
                     public void onDone(final int code, final okhttp3.Headers headers, final String response) {
                         Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
-                            Log.v(TAG, "post | url=" + url + " | success | statusCode=" + code);
-                            if (code >= 500 && code < 600) {
+                            Log.v(TAG, "post | url=", url, " | success | statusCode=", code);
+                            if (code >= 400) {
                                 responseHandler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
                                 return;
                             }
@@ -78,8 +78,8 @@ public class Room101Client extends Room101 {
                     @Override
                     public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
                         Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
-                            Log.v(TAG, "post | url=" + url + " | failure | throwable=" + Log.lThrow(throwable));
-                            responseHandler.onFailure(code, new Headers(headers), FAILED_TRY_AGAIN);
+                            Log.v(TAG, "post | url=", url, " | failure | statusCode=", code, " | throwable=", throwable);
+                            responseHandler.onFailure(code, new Headers(headers), (code >= 400 ? FAILED_SERVER_ERROR : FAILED_TRY_AGAIN));
                         });
                     }
                     @Override
@@ -88,7 +88,7 @@ public class Room101Client extends Room101 {
                     }
                 });
             } else {
-                Log.v(TAG, "post | url=" + url + " | offline");
+                Log.v(TAG, "post | url=", url, " | offline");
                 responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_OFFLINE);
             }
         });

@@ -95,7 +95,7 @@ public class DeIfmoClient extends DeIfmo {
                         @Override
                         public void onFailure(final int statusCode, final Headers headers, final int state) {
                             Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
-                                Log.v(TAG, "check | failed | statusCode=" + statusCode + " | state=" + state);
+                                Log.v(TAG, "check | failed | statusCode=", statusCode, " | state=", state);
                                 responseHandler.onFailure(statusCode, headers, state);
                             });
                         }
@@ -137,15 +137,16 @@ public class DeIfmoClient extends DeIfmo {
                         Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
                             @Override
                             public void run() {
-                                Log.v(TAG, "authorize | success | code=" + code);
+                                Log.v(TAG, "authorize | success | code=", code);
                                 storeCookies(context, headers);
-                                if (code >= 500 && code < 600) {
+                                if (code >= 400) {
                                     responseHandler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
                                     return;
                                 }
                                 try {
-                                    if (response == null)
+                                    if (response == null) {
                                         throw new NullPointerException("data cannot be null");
+                                    }
                                     if (response.contains("Access is forbidden") && response.contains("Invalid login/password")) {
                                         Log.v(TAG, "authorize | success | FAILED_AUTH_CREDENTIALS_FAILED");
                                         responseHandler.onFailure(code, new Headers(headers), FAILED_AUTH_CREDENTIALS_FAILED);
@@ -160,16 +161,16 @@ public class DeIfmoClient extends DeIfmo {
                                                         responseHandler.onProgress(STATE_AUTHORIZED);
                                                         responseHandler.onSuccess(code, new Headers(headers), "authorized");
                                                     } else {
-                                                        Log.v(TAG, "authorize | success | security group | FAILED_AUTH_TRY_AGAIN | statusCode=" + code + (response != null ? " | response=" + response : ""));
-                                                        responseHandler.onFailure(code, new Headers(headers), FAILED_AUTH_TRY_AGAIN);
+                                                        Log.v(TAG, "authorize | success | security group | FAILED | statusCode=", code, response != null ? " | response=" + response : "");
+                                                        responseHandler.onFailure(code, new Headers(headers), code >= 400 ? FAILED_SERVER_ERROR : FAILED_AUTH_TRY_AGAIN);
                                                     }
                                                 });
                                             }
                                             @Override
                                             public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
                                                 Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
-                                                    Log.v(TAG, "authorize | success | security group | FAILED_AUTH_TRY_AGAIN | throwable=" + Log.lThrow(throwable));
-                                                    responseHandler.onFailure(code, new Headers(headers), FAILED_AUTH_TRY_AGAIN);
+                                                    Log.v(TAG, "authorize | success | security group | FAILED | statusCode=", code, " | throwable=", throwable);
+                                                    responseHandler.onFailure(code, new Headers(headers), code >= 400 ? FAILED_SERVER_ERROR : FAILED_AUTH_TRY_AGAIN);
                                                 });
                                             }
                                             @Override
@@ -195,8 +196,8 @@ public class DeIfmoClient extends DeIfmo {
                     @Override
                     public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
                         Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
-                            Log.v(TAG, "authorize | failure | throwable=" + Log.lThrow(throwable));
-                            responseHandler.onFailure(code, new Headers(headers), isInterrupted(throwable) ? FAILED_INTERRUPTED : FAILED_AUTH_TRY_AGAIN);
+                            Log.v(TAG, "authorize | failure | statusCode=", code, " | throwable=", throwable);
+                            responseHandler.onFailure(code, new Headers(headers), isInterrupted(throwable) ? FAILED_INTERRUPTED : (code >= 400 ? FAILED_SERVER_ERROR : FAILED_AUTH_TRY_AGAIN));
                         });
                     }
                     @Override
@@ -218,7 +219,7 @@ public class DeIfmoClient extends DeIfmo {
     }
     public static void get(final Context context, final Protocol protocol, final String url, final Map<String, String> query, final ResponseHandler responseHandler, final boolean reAuth) {
         Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
-            Log.v(TAG, "get | url=" + url);
+            Log.v(TAG, "get | url=", url);
             if (Static.isOnline(context)) {
                 if (Static.UNAUTHORIZED_MODE && !url.startsWith("index.php")) {
                     Log.v(TAG, "get | UNAUTHORIZED_MODE | failed");
@@ -254,16 +255,17 @@ public class DeIfmoClient extends DeIfmo {
                         Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
                             @Override
                             public void run() {
-                                Log.v(TAG, "get | url=" + url + " | success | statusCode=" + code);
+                                Log.v(TAG, "get | url=", url, " | success | statusCode=", code);
                                 try {
-                                    if (code >= 500 && code < 600) {
+                                    if (code >= 400) {
                                         responseHandler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
                                         return;
                                     }
-                                    if (response == null)
+                                    if (response == null) {
                                         throw new NullPointerException("data cannot be null");
+                                    }
                                     if (response.contains("Закончился интервал неактивности") || response.contains("Доступ запрещен")) {
-                                        Log.v(TAG, "get | url=" + url + " | success | auth required");
+                                        Log.v(TAG, "get | url=", url, " | success | auth required");
                                         if (!Static.UNAUTHORIZED_MODE && reAuth) {
                                             authorize(context, new ResponseHandler() {
                                                 @Override
@@ -299,8 +301,8 @@ public class DeIfmoClient extends DeIfmo {
                     @Override
                     public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
                         Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
-                            Log.v(TAG, "get | url=" + url + " | failure | throwable=" + Log.lThrow(throwable));
-                            responseHandler.onFailure(code, new Headers(headers), isInterrupted(throwable) ? FAILED_INTERRUPTED : FAILED_TRY_AGAIN);
+                            Log.v(TAG, "get | url=", url, " | failure | statusCode=", code, " | throwable=", throwable);
+                            responseHandler.onFailure(code, new Headers(headers), isInterrupted(throwable) ? FAILED_INTERRUPTED : (code >= 400 ? FAILED_SERVER_ERROR : FAILED_AUTH_TRY_AGAIN));
                         });
                     }
                     @Override
@@ -319,7 +321,7 @@ public class DeIfmoClient extends DeIfmo {
     }
     public static void post(final Context context, final Protocol protocol, final String url, final Map<String, String> params, final ResponseHandler responseHandler) {
         Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
-            Log.v(TAG, "post | url=" + url);
+            Log.v(TAG, "post | url=", url);
             if (Static.isOnline(context)) {
                 if (Static.UNAUTHORIZED_MODE && !url.startsWith("index.php")) {
                     Log.v(TAG, "post | UNAUTHORIZED_MODE | failed");
@@ -355,16 +357,16 @@ public class DeIfmoClient extends DeIfmo {
                         Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
                             @Override
                             public void run() {
-                                Log.v(TAG, "post | url=" + url + " | success | statusCode=" + code);
+                                Log.v(TAG, "post | url=", url, " | success | statusCode=", code);
                                 try {
-                                    if (code >= 500 && code < 600) {
+                                    if (code >= 400) {
                                         responseHandler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
                                         return;
                                     }
                                     if (response == null)
                                         throw new NullPointerException("data cannot be null");
                                     if (response.contains("Закончился интервал неактивности") || response.contains("Доступ запрещен")) {
-                                        Log.v(TAG, "post | url=" + url + " | success | auth required");
+                                        Log.v(TAG, "post | url=", url, " | success | auth required");
                                         if (!Static.UNAUTHORIZED_MODE) {
                                             authorize(context, new ResponseHandler() {
                                                 @Override
@@ -400,8 +402,8 @@ public class DeIfmoClient extends DeIfmo {
                     @Override
                     public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
                         Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
-                            Log.v(TAG, "post | url=" + url + " | failure | throwable=" + Log.lThrow(throwable));
-                            responseHandler.onFailure(code, new Headers(headers), isInterrupted(throwable) ? FAILED_INTERRUPTED : FAILED_TRY_AGAIN);
+                            Log.v(TAG, "post | url=", url, " | failure | statusCode=", code, " | throwable=", throwable);
+                            responseHandler.onFailure(code, new Headers(headers), isInterrupted(throwable) ? FAILED_INTERRUPTED : (code >= 400 ? FAILED_SERVER_ERROR : FAILED_AUTH_TRY_AGAIN));
                         });
                     }
                     @Override

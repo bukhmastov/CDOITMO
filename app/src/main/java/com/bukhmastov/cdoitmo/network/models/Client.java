@@ -466,7 +466,7 @@ public abstract class Client {
         }
     }
     public static String getFailureMessage(final Context context, final int statusCode) {
-        return context.getString(R.string.server_error) + (statusCode > 0 ? " [status code: " + statusCode + "]" : "");
+        return context.getString(R.string.server_error) + (statusCode > 0 ? "\n[status code: " + statusCode + "]" : "");
     }
 
     public static class Request {
