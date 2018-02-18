@@ -151,11 +151,8 @@ public class Storage {
                     return false;
                 }
                 File file = new File(getFileLocation(context, storage, type, path, true));
-                if (!file.exists()) {
-                    file.getParentFile().mkdirs();
-                    if (!file.createNewFile()) {
-                        throw new Exception("Failed to create file: " + file.getPath());
-                    }
+                if (!file.exists() && !file.getParentFile().mkdirs() && !file.createNewFile()) {
+                    throw new Exception("Failed to create file: " + file.getPath());
                 }
                 FileWriter fileWriter = new FileWriter(file);
                 fileWriter.write(data);

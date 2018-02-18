@@ -44,6 +44,7 @@
                 android:inputType="textPersonName"
                 android:maxLines="1"
                 android:selectAllOnFocus="true"
+                android:hint="@string/search"
                 android:textSize="@dimen/font_size_16"
                 android:textColor="?attr/colorToolbarContentInvert"
                 android:textColorHint="?attr/colorToolbarContentInvert"/>

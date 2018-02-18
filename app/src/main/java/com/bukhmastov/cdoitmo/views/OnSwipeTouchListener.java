@@ -18,6 +18,9 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
+        if (event != null && v != null && event.getAction() == MotionEvent.ACTION_UP) {
+            v.performClick();
+        }
         return gestureDetector.onTouchEvent(event);
     }
 

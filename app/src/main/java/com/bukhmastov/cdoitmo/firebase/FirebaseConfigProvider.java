@@ -18,7 +18,6 @@ public class FirebaseConfigProvider {
     public static final String MESSAGE_MENU = "message_menu";
 
     private static final long cacheExpiration = 7200; // 2 hours
-    private static FirebaseRemoteConfig firebaseRemoteConfig = null;
     private interface Callback {
         void onComplete(boolean successful);
     }
@@ -30,15 +29,13 @@ public class FirebaseConfigProvider {
     }
 
     private static FirebaseRemoteConfig getFirebaseRemoteConfig() {
-        if (firebaseRemoteConfig == null) {
-            firebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
-            if (DEBUG) {
-                firebaseRemoteConfig.setConfigSettings(new FirebaseRemoteConfigSettings.Builder()
-                        .setDeveloperModeEnabled(true)
-                        .build());
-            }
-            firebaseRemoteConfig.setDefaults(R.xml.remote_config_defaults);
+        FirebaseRemoteConfig firebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
+        if (DEBUG) {
+            firebaseRemoteConfig.setConfigSettings(new FirebaseRemoteConfigSettings.Builder()
+                    .setDeveloperModeEnabled(true)
+                    .build());
         }
+        firebaseRemoteConfig.setDefaults(R.xml.remote_config_defaults);
         return firebaseRemoteConfig;
     }
 

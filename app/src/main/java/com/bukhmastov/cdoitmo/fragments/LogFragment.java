@@ -182,11 +182,8 @@ public class LogFragment extends ConnectedFragment {
     private File getLogFile(String data) {
         try {
             File temp = new File(new File(activity.getCacheDir(), "shared"), "log.tmp");
-            if (!temp.exists()) {
-                temp.getParentFile().mkdirs();
-                if (!temp.createNewFile()) {
-                    throw new Exception("Failed to create file: " + temp.getPath());
-                }
+            if (!temp.exists() && !temp.getParentFile().mkdirs() && !temp.createNewFile()) {
+                throw new Exception("Failed to create file: " + temp.getPath());
             }
             temp.deleteOnExit();
             FileWriter fileWriter = new FileWriter(temp);
