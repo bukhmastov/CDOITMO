@@ -78,7 +78,7 @@
     <RelativeLayout
         android:id="@+id/controls"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="?android:attr/actionBarSize"
         android:layout_alignParentBottom="true"
         android:background="#66000000">
 
