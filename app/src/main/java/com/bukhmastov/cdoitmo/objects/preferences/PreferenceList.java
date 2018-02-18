@@ -92,8 +92,8 @@ public class PreferenceList extends Preference {
                 final TextView desc = item.findViewById(R.id.desc);
                 content.setOnClickListener(v1 -> button.toggle());
                 button.setText(titles.get(index));
-                button.setOnCheckedChangeListener((buttonView, isChecked) -> onCheckedChangeListener.onCheckedChanged(buttonView, isChecked, index));
                 button.setChecked(checked == index);
+                button.setOnCheckedChangeListener((buttonView, isChecked) -> onCheckedChangeListener.onCheckedChanged(buttonView, isChecked, index));
                 if (index < descs.size()) {
                     String text = descs.get(index);
                     if (!text.isEmpty()) {
