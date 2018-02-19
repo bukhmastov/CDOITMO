@@ -404,7 +404,10 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
         Static.T.runThread(() -> {
             try {
                 Log.v(TAG, "display");
-                storeData(this, data.get(TYPE.common).data.toString(), data.get(TYPE.own).data.toString());
+                storeData(this,
+                        data.containsKey(TYPE.common) ? (data.get(TYPE.common).data != null ? data.get(TYPE.common).data.toString() : null) : null,
+                        data.containsKey(TYPE.own) ? (data.get(TYPE.own).data != null ? data.get(TYPE.own).data.toString() : null) : null
+                );
                 final RatingRVA adapter = new RatingRVA(activity, data);
                 adapter.setOnElementClickListener(R.id.common_apply, (v, data) -> Static.T.runThread(() -> {
                     try {

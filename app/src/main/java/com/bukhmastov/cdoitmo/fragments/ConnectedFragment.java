@@ -47,7 +47,7 @@ public abstract class ConnectedFragment extends Fragment {
     }
     public void storeData(ConnectedFragment fragment, String data, String extra) {
         Log.v(TAG, "storeData | activity=", activity, " | fragment=", fragment, " | data=", Log.lNull(data), " | extra=", Log.lNull(extra));
-        if (activity != null && fragment != null && data != null) {
+        if (activity != null && fragment != null) {
             activity.storedFragmentName = fragment.getClass().getCanonicalName();
             activity.storedFragmentData = data;
             activity.storedFragmentExtra = extra;
