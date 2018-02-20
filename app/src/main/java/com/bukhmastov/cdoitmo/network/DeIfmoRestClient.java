@@ -52,6 +52,9 @@ public class DeIfmoRestClient extends DeIfmo {
                                 case DeIfmoClient.FAILED_SERVER_ERROR:
                                     state = FAILED_SERVER_ERROR;
                                     break;
+                                case DeIfmoClient.FAILED_INTERRUPTED:
+                                    state = FAILED_INTERRUPTED;
+                                    break;
                                 case DeIfmoClient.FAILED_TRY_AGAIN:
                                 case DeIfmoClient.FAILED_AUTH_TRY_AGAIN:
                                 case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
@@ -85,7 +88,7 @@ public class DeIfmoRestClient extends DeIfmo {
                     public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
                         Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
                             Log.v(TAG, "get | url=", url, " | failure | statusCode=", code, " | throwable=", throwable);
-                            responseHandler.onFailure(code, new Headers(headers), code >= 400 ? FAILED_SERVER_ERROR : (isCorruptedJson(throwable) ? FAILED_CORRUPTED_JSON : FAILED_TRY_AGAIN));
+                            responseHandler.onFailure(code, new Headers(headers), isInterrupted(throwable) ? FAILED_INTERRUPTED : (code >= 400 ? FAILED_SERVER_ERROR : (isCorruptedJson(throwable) ? FAILED_CORRUPTED_JSON : FAILED_TRY_AGAIN)));
                         });
                     }
                     @Override

@@ -81,7 +81,11 @@ public class ProtocolTrackerJobService extends JobService {
                     }
                     @Override
                     public void onFailure(int statusCode, Client.Headers headers, int state) {
-                        w8andRequest();
+                        if (state != DeIfmoRestClient.FAILED_INTERRUPTED) {
+                            w8andRequest();
+                        } else {
+                            finish();
+                        }
                     }
                     @Override
                     public void onProgress(int state) {}
