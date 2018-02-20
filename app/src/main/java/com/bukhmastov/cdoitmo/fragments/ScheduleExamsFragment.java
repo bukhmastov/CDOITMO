@@ -17,7 +17,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activities.ConnectedActivity;
-import com.bukhmastov.cdoitmo.activities.ScheduleExamsSearchActivity;
+import com.bukhmastov.cdoitmo.activities.search.ScheduleExamsSearchActivity;
 import com.bukhmastov.cdoitmo.adapters.rva.ScheduleExamsRVA;
 import com.bukhmastov.cdoitmo.exceptions.SilentException;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;

@@ -14,14 +14,14 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.objects.entities.Suggestion;
 import com.bukhmastov.cdoitmo.utils.Static;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class SuggestionsListView extends ArrayAdapter<Suggestion> {
 
     private final Context context;
-    private final ArrayList<Suggestion> suggestions;
+    private final List<Suggestion> suggestions;
 
-    public SuggestionsListView(Context context, ArrayList<Suggestion> suggestions) {
+    public SuggestionsListView(Context context, List<Suggestion> suggestions) {
         super(context, R.layout.layout_search_suggestion, suggestions);
         this.context = context;
         this.suggestions = suggestions;
@@ -37,7 +37,7 @@ public class SuggestionsListView extends ArrayAdapter<Suggestion> {
             }
             Suggestion suggestion = suggestions.get(position);
             ((ImageView) convertView.findViewById(R.id.icon)).setImageDrawable(context.getDrawable(suggestion.icon));
-            ((TextView) convertView.findViewById(R.id.label)).setText(suggestion.label);
+            ((TextView) convertView.findViewById(R.id.label)).setText(suggestion.title);
             return convertView;
         } catch (Exception e) {
             Static.error(e);

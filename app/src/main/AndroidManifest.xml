@@ -106,9 +106,9 @@
         <activity
             android:name=".activities.PikaActivity"
             android:theme="@style/AppTheme.Transparent" />
-        <activity android:name=".activities.ScheduleLessonsSearchActivity" />
-        <activity android:name=".activities.ScheduleExamsSearchActivity" />
-        <activity android:name=".activities.ScheduleAttestationsSearchActivity" />
+        <activity android:name=".activities.search.ScheduleLessonsSearchActivity" />
+        <activity android:name=".activities.search.ScheduleExamsSearchActivity" />
+        <activity android:name=".activities.search.ScheduleAttestationsSearchActivity" />
 
         <service
             android:name=".utils.ProtocolTrackerJobService"

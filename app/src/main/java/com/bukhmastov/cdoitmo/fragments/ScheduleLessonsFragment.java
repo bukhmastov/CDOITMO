@@ -16,7 +16,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activities.ScheduleLessonsSearchActivity;
+import com.bukhmastov.cdoitmo.activities.search.ScheduleLessonsSearchActivity;
 import com.bukhmastov.cdoitmo.adapters.PagerLessonsAdapter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.objects.schedule.ScheduleLessons;

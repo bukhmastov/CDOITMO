@@ -265,6 +265,11 @@ public class Wipe {
             case 106: {
                 Storage.pref.put(context, "pref_notify_type", Build.VERSION.SDK_INT <= Build.VERSION_CODES.M ? "0" : "1");
                 Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> new ProtocolTracker(context).reset());
+                break;
+            }
+            case 109: {
+                apply109(context);
+                break;
             }
         }
     }
@@ -715,6 +720,30 @@ public class Wipe {
         } catch (Exception ignore) {/* ignore */}
     }
 
+    // version 109
+    private static void apply109(final Context context) {
+        try {
+            final String rootPath = context.getFilesDir() + File.separator + "app_data";
+            getUsersFolder(context, rootPath, (file, user) -> {
+                try {
+                    if (user.equals("general")) return;
+                    File lessonsRecent = new File(rootPath + File.separator + user + File.separator + "schedule_lessons" + File.separator + "recent.txt");
+                    if (lessonsRecent.exists()) {
+                        lessonsRecent.delete();
+                    }
+                    File examsRecent = new File(rootPath + File.separator + user + File.separator + "schedule_exams" + File.separator + "recent.txt");
+                    if (examsRecent.exists()) {
+                        examsRecent.delete();
+                    }
+                    File attestationsRecent = new File(rootPath + File.separator + user + File.separator + "schedule_attestations" + File.separator + "recent.txt");
+                    if (attestationsRecent.exists()) {
+                        attestationsRecent.delete();
+                    }
+                } catch (Exception ignore) {/* ignore */}
+            });
+
+        } catch (Exception ignore) {/* ignore */}
+    }
 
     // tools to change files
     private interface Callback {
