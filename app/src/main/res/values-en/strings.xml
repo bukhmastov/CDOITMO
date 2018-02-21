@@ -496,5 +496,6 @@
     <string name="pref_notify_type_desc_1">Create a notification for each change that will be grouped together. Best for Android version 7.0 and higher.</string>
     <string name="iws">SRS</string>
     <string name="server_provided_corrupted_json">Failed to parse server response</string>
+    <string name="add_military_day">Add military day</string>
 
 </resources>

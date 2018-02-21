@@ -166,7 +166,7 @@
     <string name="thursday">Четверг</string>
     <string name="friday">Пятница</string>
     <string name="saturday">Суббота</string>
-    <string name="sunday">Воскресение</string>
+    <string name="sunday">Воскресенье</string>
     <string name="every_15_min">Каждые 15 минут</string>
     <string name="every_30_min">Каждые 30 минут</string>
     <string name="every_1_hour">Каждый час</string>
@@ -504,5 +504,6 @@
     <string name="pref_notify_type_desc_1">Создавать по уведомлению на каждое изменение, которые будут сгруппированы вместе. Лучше всего подойдет для Андроид версий 7.0 и выше.</string>
     <string name="iws">СРС</string>
     <string name="server_provided_corrupted_json">Не удалось разобрать ответ сервера</string>
+    <string name="add_military_day">Добавить военный день</string>
 
 </resources>

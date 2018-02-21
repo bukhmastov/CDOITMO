@@ -14,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
@@ -32,7 +33,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.List;
 
 public class ScheduleLessonsRVA extends RecyclerViewAdapter {
 
@@ -210,6 +213,32 @@ public class ScheduleLessonsRVA extends RecyclerViewAdapter {
                                             Static.error(e);
                                             Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                         }
+                                    });
+                                    break;
+                                }
+                                case R.id.add_military_day: {
+                                    Static.T.runOnUiThread(() -> {
+                                        final List<String> days = new ArrayList<>(Arrays.asList(activity.getString(R.string.monday), activity.getString(R.string.tuesday), activity.getString(R.string.wednesday), activity.getString(R.string.thursday), activity.getString(R.string.friday), activity.getString(R.string.saturday), activity.getString(R.string.sunday)));
+                                        final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(activity, R.layout.spinner_layout);
+                                        arrayAdapter.addAll(days);
+                                        new AlertDialog.Builder(activity)
+                                                .setAdapter(arrayAdapter, (dialogInterface, position) -> Static.T.runThread(() -> {
+                                                    try {
+                                                        ScheduleLessons.createLesson(activity, query, position, new JSONObject().put("subject", "Утренний осмотр, строевая подготовка").put("type", "Военка").put("week", 2).put("timeStart", "9:05").put("timeEnd", "9:20").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
+                                                        ScheduleLessons.createLesson(activity, query, position, new JSONObject().put("subject", "1 пара").put("type", "Военка").put("week", 2).put("timeStart", "9:30").put("timeEnd", "10:50").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
+                                                        ScheduleLessons.createLesson(activity, query, position, new JSONObject().put("subject", "2 пара").put("type", "Военка").put("week", 2).put("timeStart", "11:00").put("timeEnd", "12:20").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
+                                                        ScheduleLessons.createLesson(activity, query, position, new JSONObject().put("subject", "3 пара").put("type", "Военка").put("week", 2).put("timeStart", "12:30").put("timeEnd", "13:50").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
+                                                        ScheduleLessons.createLesson(activity, query, position, new JSONObject().put("subject", "4 пара").put("type", "Военка").put("week", 2).put("timeStart", "14:50").put("timeEnd", "16:10").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
+                                                        ScheduleLessons.createLesson(activity, query, position, new JSONObject().put("subject", "Строевая подготовка").put("type", "Военка").put("week", 2).put("timeStart", "16:20").put("timeEnd", "16:35").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
+                                                        ScheduleLessons.createLesson(activity, query, position, new JSONObject().put("subject", "Кураторский час").put("type", "Военка").put("week", 2).put("timeStart", "16:45").put("timeEnd", "17:30").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
+                                                        ScheduleLessonsTabHostFragment.invalidateOnDemand();
+                                                    } catch (Exception e) {
+                                                        Static.error(e);
+                                                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                                    }
+                                                }))
+                                                .setNegativeButton(R.string.do_cancel, null)
+                                                .create().show();
                                     });
                                     break;
                                 }
