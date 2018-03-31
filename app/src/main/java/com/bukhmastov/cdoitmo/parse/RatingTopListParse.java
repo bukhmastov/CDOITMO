@@ -36,7 +36,11 @@ public class RatingTopListParse implements Runnable {
             if (root == null) {
                 throw new SilentException();
             }
-            TagNode div = root.findElementByAttValue("class", "c-page", true, false).findElementByAttValue("class", "p-inner nobt", false, false);
+            TagNode page = root.findElementByAttValue("class", "c-page", true, false);
+            if (page == null) {
+                throw new SilentException();
+            }
+            TagNode div = page.findElementByAttValue("class", "p-inner nobt", false, false);
             if (div == null) {
                 throw new SilentException();
             }

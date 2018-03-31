@@ -146,7 +146,9 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                             Log.v(TAG, "load | success | statusCode=" + statusCode);
                             if (statusCode == 200) {
                                 new RatingTopListParse(response, Storage.file.perm.get(activity, "user#name"), json -> {
-                                    storeData(RatingListFragment.this, json.toString());
+                                    if (json != null) {
+                                        storeData(RatingListFragment.this, json.toString());
+                                    }
                                     display(json);
                                 }).run();
                             } else {
