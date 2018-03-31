@@ -52,11 +52,7 @@ public class FirebaseCrashlyticsProvider {
             } else {
                 Static.snackBar(activity, activity.getString(R.string.changes_will_take_effect_next_startup));
                 Log.i(TAG, "Firebase Crashlytics will be disabled at the next start up");
-                FirebaseAnalyticsProvider.logEvent(
-                        activity,
-                        FirebaseAnalyticsProvider.Event.JOIN_GROUP,
-                        FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.GROUP_ID, "crash_disabled")
-                );
+                FirebaseAnalyticsProvider.logBasicEvent(activity, "crash_disabled");
             }
         } catch (Exception e) {
             Static.error(e);

@@ -87,7 +87,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
                 FirebaseAnalyticsProvider.logEvent(
                         context,
                         FirebaseAnalyticsProvider.Event.SHORTCUT_USE,
-                        FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.SHORTCUT_INFO, shortcut_type + "#" + shortcut_data)
+                        FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.SHORTCUT_TYPE, shortcut_type)
                 );
                 switch (shortcut_type) {
                     case "tab": {
@@ -235,7 +235,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
                 FirebaseAnalyticsProvider.logEvent(
                         context,
                         FirebaseAnalyticsProvider.Event.SHORTCUT_INSTALL,
-                        FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.SHORTCUT_INFO, type + "#" + data)
+                        FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.SHORTCUT_TYPE, type)
                 );
             } catch (Exception e) {
                 Static.error(e);

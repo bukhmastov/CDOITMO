@@ -21,7 +21,6 @@ public class FirebaseAnalyticsProvider {
 
     public static class Event {
         // 500 different types of Events | 40 characters long
-        public static final String JOIN_GROUP = "cdo_join_group";                               // присоединен к определеннйо группе
         public static final String APP_OPEN = "cdo_app_open";                                   // приложение запущено
         public static final String LOGIN_REQUIRED = "cdo_login_required";                       // нужна авторизация
         public static final String LOGIN = "cdo_login";                                         // авторизован
@@ -43,11 +42,10 @@ public class FirebaseAnalyticsProvider {
     }
     public static class Param {
         // 25 unique Params with each Event type | 40 characters long | values 100 characters long
-        public static final String GROUP_ID = "cdo_group_id";
         public static final String LOGIN_COUNT = "cdo_login_count";
         public static final String LOGIN_NEW = "cdo_login_new";
         public static final String APP_VIEW_SCREEN = "cdo_view_screen";
-        public static final String SHORTCUT_INFO = "cdo_shortcut_info";
+        public static final String SHORTCUT_TYPE = "cdo_shortcut_type";
         public static final String WIDGET_QUERY = "cdo_widget_query";
         public static final String LESSON_TITLE = "cdo_lesson_title";
         public static final String ROOM101_REQUEST_DETAILS = "cdo_room101_request_details";
@@ -82,11 +80,7 @@ public class FirebaseAnalyticsProvider {
     public static boolean setEnabled(Context context, boolean enabled, boolean notify) {
         try {
             if (!enabled && notify) {
-                FirebaseAnalyticsProvider.logEvent(
-                        context,
-                        FirebaseAnalyticsProvider.Event.JOIN_GROUP,
-                        FirebaseAnalyticsProvider.getBundle(Param.GROUP_ID, "analytics_disabled")
-                );
+                logBasicEvent(context, "analytics_disabled");
             }
             FirebaseAnalyticsProvider.enabled = enabled;
             FirebaseAnalytics firebaseAnalytics = getFirebaseAnalytics(context);
