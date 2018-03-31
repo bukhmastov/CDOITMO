@@ -318,13 +318,14 @@ public class LoginActivity extends ConnectedActivity {
                                         case R.id.change_password: {
                                             Static.T.runOnUiThread(() -> {
                                                 try {
-                                                    final View view1 = inflate(R.layout.layout_preference_alert_edittext);
-                                                    final EditText editText = view1.findViewById(R.id.edittext);
+                                                    final View layout = inflate(R.layout.layout_preference_alert_edittext);
+                                                    final EditText editText = layout.findViewById(R.id.edittext);
+                                                    final TextView message = layout.findViewById(R.id.message);
                                                     editText.setHint(R.string.new_password);
+                                                    message.setText(activity.getString(R.string.change_password_message).replace("%login%", login));
                                                     new AlertDialog.Builder(activity)
                                                             .setTitle(R.string.change_password_title)
-                                                            .setMessage(activity.getString(R.string.change_password_message).replace("%login%", login))
-                                                            .setView(view1)
+                                                            .setView(layout)
                                                             .setPositiveButton(R.string.accept, (dialog, which) -> {
                                                                 try {
                                                                     final String value = editText.getText().toString().trim();

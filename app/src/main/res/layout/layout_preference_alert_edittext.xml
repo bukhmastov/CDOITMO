@@ -17,7 +17,7 @@
             android:paddingBottom="@dimen/item_padding_half"
             android:paddingStart="@dimen/item_padding_half"
             android:paddingEnd="@dimen/item_padding_half"
-            android:text="@string/lorem_ipsum"
+            android:text=""
             android:textColor="?android:attr/textColorPrimary"
             android:textSize="@dimen/font_size_14"
             android:textIsSelectable="true"
