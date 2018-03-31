@@ -642,14 +642,9 @@ public class Static {
                 }
             });
         }
-        public static void drawOffline(final Menu menu) {
+        public static void toggleOfflineIcon(final Menu menu) {
             Static.T.runOnUiThread(() -> {
                 if (menu != null) {
-                    if (Static.OFFLINE_MODE) {
-                        for (int i = 0; i < menu.size(); i++) {
-                            menu.getItem(i).setVisible(false);
-                        }
-                    }
                     MenuItem menuItem = menu.findItem(R.id.offline_mode);
                     if (menuItem != null) {
                         menuItem.setVisible(Static.OFFLINE_MODE);

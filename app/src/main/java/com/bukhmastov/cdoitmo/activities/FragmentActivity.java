@@ -113,12 +113,14 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.toolbar, menu);
         toolbar = menu;
+        Static.NavigationMenu.toggleOfflineIcon(toolbar);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.offline_mode: MainActivity.exitOfflineMode = true;
             case android.R.id.home: finish(); return true;
             default: return super.onOptionsItemSelected(item);
         }

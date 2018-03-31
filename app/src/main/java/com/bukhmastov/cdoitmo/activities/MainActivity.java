@@ -42,6 +42,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
     private static final String STATE_SELECTED_SELECTION = "selectedSection";
     private static boolean initialized = false;
     public static boolean loaded = false;
+    public static boolean exitOfflineMode = false;
     public static int selectedSection = -1;
     public static MenuItem selectedMenuItem = null;
 
@@ -168,7 +169,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
             final NavigationView navigationView = activity.findViewById(R.id.nav_view);
             Static.NavigationMenu.displayEnableDisableOfflineButton(navigationView);
             Static.NavigationMenu.hideIfUnauthorizedMode(navigationView);
-            if (Static.OFFLINE_MODE || Account.authorized) {
+            if (!exitOfflineMode && (Static.OFFLINE_MODE || Account.authorized)) {
                 authorized();
             } else {
                 authorize(LoginActivity.SIGNAL_LOGIN);
@@ -223,7 +224,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
         getMenuInflater().inflate(R.menu.toolbar, menu);
         toolbar = menu;
         Static.NavigationMenu.snackbarOffline(this);
-        Static.NavigationMenu.drawOffline(toolbar);
+        Static.NavigationMenu.toggleOfflineIcon(toolbar);
         return true;
     }
 
@@ -248,6 +249,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
             try {
                 Log.v(TAG, "authorize | state=", state);
                 loaded = false;
+                exitOfflineMode = false;
                 Intent intent = new Intent(activity, LoginActivity.class);
                 intent.putExtra("state", state);
                 activity.startActivity(intent);
@@ -264,7 +266,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                 Static.NavigationMenu.displayUserData(activity, findViewById(R.id.nav_view));
                 Static.NavigationMenu.displayRemoteMessage(activity);
                 Static.NavigationMenu.snackbarOffline(activity);
-                Static.NavigationMenu.drawOffline(toolbar);
+                Static.NavigationMenu.toggleOfflineIcon(toolbar);
             } else if (selectedMenuItem != null) {
                 try {
                     selectSection(selectedMenuItem.getItemId());

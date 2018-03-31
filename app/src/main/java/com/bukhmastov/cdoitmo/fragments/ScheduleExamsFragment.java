@@ -123,7 +123,7 @@ public class ScheduleExamsFragment extends ConnectedFragment {
         Log.v(TAG, "resumed");
         FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
         try {
-            if (activity.toolbar != null && !Static.OFFLINE_MODE) {
+            if (activity.toolbar != null) {
                 MenuItem action_schedule_exams_search = activity.toolbar.findItem(R.id.action_schedule_exams_search);
                 if (action_schedule_exams_search != null && !action_schedule_exams_search.isVisible()) {
                     Log.v(TAG, "Revealing action_schedule_exams_search");
