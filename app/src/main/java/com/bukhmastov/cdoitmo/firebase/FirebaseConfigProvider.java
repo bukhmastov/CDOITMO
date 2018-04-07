@@ -1,8 +1,8 @@
 package com.bukhmastov.cdoitmo.firebase;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.utils.Log;
-import com.bukhmastov.cdoitmo.utils.Static;
+import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.Static;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 
@@ -16,6 +16,7 @@ public class FirebaseConfigProvider {
 
     public static final String MESSAGE_LOGIN = "message_login";
     public static final String MESSAGE_MENU = "message_menu";
+    public static final String PERFORMANCE_ENABLED = "performance_enabled";
 
     private static final long cacheExpiration = 7200; // 2 hours
     private interface Callback {

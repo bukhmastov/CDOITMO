@@ -8,4 +8,8 @@
         <key>message_menu</key>
         <value>{"type":0,"message":""}</value>
     </entry>
+    <entry>
+        <key>performance_enabled</key>
+        <value>0</value>
+    </entry>
 </defaultsMap>

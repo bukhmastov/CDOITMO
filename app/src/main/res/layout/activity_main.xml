@@ -49,7 +49,7 @@
 
         <LinearLayout
             xmlns:android="http://schemas.android.com/apk/res/android"
-            tools:activity="com.bukhmastov.cdoitmo.activities.MainActivity"
+            tools:activity="com.bukhmastov.cdoitmo.activity.MainActivity"
             android:id="@+id/activity_main"
             android:orientation="vertical"
             android:layout_width="match_parent"

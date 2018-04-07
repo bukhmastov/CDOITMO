@@ -5,9 +5,9 @@ import android.content.res.Configuration;
 
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
-import com.bukhmastov.cdoitmo.utils.Log;
-import com.bukhmastov.cdoitmo.utils.Static;
-import com.bukhmastov.cdoitmo.utils.Storage;
+import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Storage;
 
 import java.util.Locale;
 import java.util.UUID;

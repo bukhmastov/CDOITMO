@@ -5,9 +5,9 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 
-import com.bukhmastov.cdoitmo.utils.Log;
-import com.bukhmastov.cdoitmo.utils.Static;
-import com.bukhmastov.cdoitmo.utils.Storage;
+import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Storage;
 import com.google.firebase.analytics.FirebaseAnalytics;
 
 import java.util.regex.Matcher;
@@ -80,13 +80,13 @@ public class FirebaseAnalyticsProvider {
     public static boolean setEnabled(Context context, boolean enabled, boolean notify) {
         try {
             if (!enabled && notify) {
-                logBasicEvent(context, "analytics_disabled");
+                logBasicEvent(context, "firebase_analytics_disabled");
             }
             FirebaseAnalyticsProvider.enabled = enabled;
             FirebaseAnalytics firebaseAnalytics = getFirebaseAnalytics(context);
             firebaseAnalytics.setAnalyticsCollectionEnabled(FirebaseAnalyticsProvider.enabled);
             firebaseAnalytics.setUserId(Static.getUUID(context));
-            Log.i(TAG, "Firebase Analytics " + (FirebaseAnalyticsProvider.enabled ? "enabled" : "disabled"));
+            Log.i(TAG, "Firebase Analytics ", (FirebaseAnalyticsProvider.enabled ? "enabled" : "disabled"));
         } catch (Exception e) {
             Static.error(e);
         }
@@ -103,7 +103,7 @@ public class FirebaseAnalyticsProvider {
         logCurrentScreen(activity, fragment, null);
     }
     public static void setCurrentScreen(final Activity activity, final Fragment fragment, final String view_screen) {
-        Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+        Static.T.runThread(Static.T.BACKGROUND, () -> {
             try {
                 if (!enabled) return;
                 if (activity == null) return;
@@ -200,7 +200,7 @@ public class FirebaseAnalyticsProvider {
         }
     }
     public static void setUserProperty(final Context context, final String property, final String value) {
-        Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+        Static.T.runThread(Static.T.BACKGROUND, () -> {
             try {
                 if (!enabled) return;
                 getFirebaseAnalytics(context).setUserProperty(property, value);
@@ -214,7 +214,7 @@ public class FirebaseAnalyticsProvider {
         logEvent(context, name, null);
     }
     public static void logEvent(final Context context, final String name, final Bundle params) {
-        Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+        Static.T.runThread(Static.T.BACKGROUND, () -> {
             try {
                 if (!enabled) return;
                 getFirebaseAnalytics(context).logEvent(name, params);
@@ -224,7 +224,7 @@ public class FirebaseAnalyticsProvider {
         });
     }
     public static void logBasicEvent(final Context context, final String content) {
-        Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+        Static.T.runThread(Static.T.BACKGROUND, () -> {
             try {
                 if (!enabled) return;
                 getFirebaseAnalytics(context).logEvent(

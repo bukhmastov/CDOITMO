@@ -6,11 +6,11 @@ import android.text.TextUtils;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.interfaces.RawHandler;
 import com.bukhmastov.cdoitmo.network.interfaces.ResponseHandler;
-import com.bukhmastov.cdoitmo.network.models.DeIfmo;
+import com.bukhmastov.cdoitmo.network.model.DeIfmo;
 import com.bukhmastov.cdoitmo.parse.UserDataParse;
-import com.bukhmastov.cdoitmo.utils.Log;
-import com.bukhmastov.cdoitmo.utils.Static;
-import com.bukhmastov.cdoitmo.utils.Storage;
+import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Storage;
 
 import org.json.JSONObject;
 
@@ -21,11 +21,11 @@ public class DeIfmoClient extends DeIfmo {
 
     private static final String TAG = "DeIfmoClient";
     private static final String BASE_URL = "de.ifmo.ru";
-    private static final Protocol DEFAULT_PROTOCOL = Protocol.HTTPS;
+    private static final String DEFAULT_PROTOCOL = HTTPS;
     private static final boolean DEFAULT_RE_AUTH = true;
 
     public static void check(final Context context, final ResponseHandler responseHandler) {
-        Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+        Static.T.runThread(Static.T.BACKGROUND, () -> {
             Log.v(TAG, "check");
             if (Static.isOnline(context)) {
                 responseHandler.onProgress(STATE_CHECKING);
@@ -58,23 +58,26 @@ public class DeIfmoClient extends DeIfmo {
                         @Override
                         public void onSuccess(final int statusCode, final Headers headers, final String response) {
                             Log.v(TAG, "check | success | going to parse user data");
-                            Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> new UserDataParse(response, result -> {
+                            Static.T.runThread(Static.T.BACKGROUND, () -> new UserDataParse(response, result -> {
                                 if (result != null) {
                                     Log.v(TAG, "check | success | parsed");
+                                    String name = Static.getStringSafely(result, "name", "");
+                                    String avatar = Static.getStringSafely(result, "avatar", "");
+                                    String group = Static.getStringSafely(result, "group", "");
                                     String pref_group_force_override = Storage.pref.get(context, "pref_group_force_override", "");
                                     if (pref_group_force_override == null) {
                                         pref_group_force_override = "";
                                     } else {
                                         pref_group_force_override = pref_group_force_override.trim();
                                     }
-                                    String[] groups = (pref_group_force_override.isEmpty() ? result.get("group") : pref_group_force_override).split(",\\s|\\s|,");
-                                    Storage.file.perm.put(context, "user#name", result.get("name"));
+                                    String[] groups = (pref_group_force_override.isEmpty() ? group : pref_group_force_override).split(",\\s|\\s|,");
+                                    Storage.file.perm.put(context, "user#name", name);
                                     Storage.file.perm.put(context, "user#group", groups.length > 0 ? groups[0] : "");
                                     Storage.file.perm.put(context, "user#groups", TextUtils.join(", ", groups));
-                                    Storage.file.perm.put(context, "user#avatar", result.get("avatar"));
+                                    Storage.file.perm.put(context, "user#avatar", avatar);
                                     try {
                                         Storage.file.general.perm.put(context, "user#week", new JSONObject()
-                                                .put("week", Integer.parseInt(result.get("week")))
+                                                .put("week", Integer.parseInt(result.getString("week")))
                                                 .put("timestamp", Static.getCalendar().getTimeInMillis())
                                                 .toString()
                                         );
@@ -82,7 +85,7 @@ public class DeIfmoClient extends DeIfmo {
                                         Static.error(e);
                                         Storage.file.general.perm.delete(context, "user#week");
                                     }
-                                    FirebaseAnalyticsProvider.setUserProperties(context, result.get("group"));
+                                    FirebaseAnalyticsProvider.setUserProperties(context, group);
                                     responseHandler.onSuccess(200, headers, "");
                                 } else {
                                     Log.v(TAG, "check | success | not parsed");
@@ -94,7 +97,7 @@ public class DeIfmoClient extends DeIfmo {
                         public void onProgress(int state) {}
                         @Override
                         public void onFailure(final int statusCode, final Headers headers, final int state) {
-                            Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+                            Static.T.runThread(Static.T.BACKGROUND, () -> {
                                 Log.v(TAG, "check | failed | statusCode=", statusCode, " | state=", state);
                                 responseHandler.onFailure(statusCode, headers, state);
                             });
@@ -111,7 +114,7 @@ public class DeIfmoClient extends DeIfmo {
         });
     }
     public static void authorize(final Context context, final ResponseHandler responseHandler) {
-        Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+        Static.T.runThread(Static.T.BACKGROUND, () -> {
             Log.v(TAG, "authorize");
             responseHandler.onProgress(STATE_AUTHORIZATION);
             if (Static.UNAUTHORIZED_MODE) {
@@ -134,7 +137,7 @@ public class DeIfmoClient extends DeIfmo {
                     @Override
                     public void onDone(final int code, final okhttp3.Headers headers, final String response) {
                         //noinspection Convert2Lambda
-                        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+                        Static.T.runThread(Static.T.BACKGROUND, new Runnable() {
                             @Override
                             public void run() {
                                 Log.v(TAG, "authorize | success | code=", code);
@@ -155,7 +158,7 @@ public class DeIfmoClient extends DeIfmo {
                                         g(context, getAbsoluteUrl(DEFAULT_PROTOCOL, "servlet/distributedCDE?Rule=APPLYSECURITYGROUP&PERSON=" + Storage.file.perm.get(context, "user#deifmo#login") + "&SECURITYGROUP=8&COMPNAME="), null, new RawHandler() {
                                             @Override
                                             public void onDone(final int code, final okhttp3.Headers headers, final String response) {
-                                                Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+                                                Static.T.runThread(Static.T.BACKGROUND, () -> {
                                                     if (code == 200) {
                                                         Log.v(TAG, "authorize | success | security group | authorized | statusCode=" + code);
                                                         responseHandler.onProgress(STATE_AUTHORIZED);
@@ -168,7 +171,7 @@ public class DeIfmoClient extends DeIfmo {
                                             }
                                             @Override
                                             public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
-                                                Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+                                                Static.T.runThread(Static.T.BACKGROUND, () -> {
                                                     Log.v(TAG, "authorize | success | security group | FAILED | statusCode=", code, " | throwable=", throwable);
                                                     responseHandler.onFailure(code, new Headers(headers), code >= 400 ? FAILED_SERVER_ERROR : FAILED_AUTH_TRY_AGAIN);
                                                 });
@@ -195,7 +198,7 @@ public class DeIfmoClient extends DeIfmo {
                     }
                     @Override
                     public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
-                        Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+                        Static.T.runThread(Static.T.BACKGROUND, () -> {
                             Log.v(TAG, "authorize | failure | statusCode=", code, " | throwable=", throwable);
                             responseHandler.onFailure(code, new Headers(headers), isInterrupted(throwable) ? FAILED_INTERRUPTED : (code >= 400 ? FAILED_SERVER_ERROR : FAILED_AUTH_TRY_AGAIN));
                         });
@@ -211,14 +214,14 @@ public class DeIfmoClient extends DeIfmo {
     public static void get(final Context context, final String url, final Map<String, String> query, final ResponseHandler responseHandler) {
         get(context, DEFAULT_PROTOCOL, url, query, responseHandler, DEFAULT_RE_AUTH);
     }
-    public static void get(final Context context, final Protocol protocol, final String url, final Map<String, String> query, final ResponseHandler responseHandler) {
+    public static void get(final Context context, final @Protocol String protocol, final String url, final Map<String, String> query, final ResponseHandler responseHandler) {
         get(context, protocol, url, query, responseHandler, DEFAULT_RE_AUTH);
     }
     public static void get(final Context context, final String url, final Map<String, String> query, final ResponseHandler responseHandler, final boolean reAuth) {
         get(context, DEFAULT_PROTOCOL, url, query, responseHandler, reAuth);
     }
-    public static void get(final Context context, final Protocol protocol, final String url, final Map<String, String> query, final ResponseHandler responseHandler, final boolean reAuth) {
-        Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+    public static void get(final Context context, final @Protocol String protocol, final String url, final Map<String, String> query, final ResponseHandler responseHandler, final boolean reAuth) {
+        Static.T.runThread(Static.T.BACKGROUND, () -> {
             Log.v(TAG, "get | url=", url);
             if (Static.isOnline(context)) {
                 if (Static.UNAUTHORIZED_MODE && !url.startsWith("index.php")) {
@@ -252,7 +255,7 @@ public class DeIfmoClient extends DeIfmo {
                     @Override
                     public void onDone(final int code, final okhttp3.Headers headers, final String response) {
                         //noinspection Convert2Lambda
-                        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+                        Static.T.runThread(Static.T.BACKGROUND, new Runnable() {
                             @Override
                             public void run() {
                                 Log.v(TAG, "get | url=", url, " | success | statusCode=", code);
@@ -300,7 +303,7 @@ public class DeIfmoClient extends DeIfmo {
                     }
                     @Override
                     public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
-                        Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+                        Static.T.runThread(Static.T.BACKGROUND, () -> {
                             Log.v(TAG, "get | url=", url, " | failure | statusCode=", code, " | throwable=", throwable);
                             responseHandler.onFailure(code, new Headers(headers), isInterrupted(throwable) ? FAILED_INTERRUPTED : (code >= 400 ? FAILED_SERVER_ERROR : FAILED_AUTH_TRY_AGAIN));
                         });
@@ -319,8 +322,8 @@ public class DeIfmoClient extends DeIfmo {
     public static void post(final Context context, final String url, final Map<String, String> params, final ResponseHandler responseHandler) {
         post(context, DEFAULT_PROTOCOL, url, params, responseHandler);
     }
-    public static void post(final Context context, final Protocol protocol, final String url, final Map<String, String> params, final ResponseHandler responseHandler) {
-        Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+    public static void post(final Context context, final @Protocol String protocol, final String url, final Map<String, String> params, final ResponseHandler responseHandler) {
+        Static.T.runThread(Static.T.BACKGROUND, () -> {
             Log.v(TAG, "post | url=", url);
             if (Static.isOnline(context)) {
                 if (Static.UNAUTHORIZED_MODE && !url.startsWith("index.php")) {
@@ -354,7 +357,7 @@ public class DeIfmoClient extends DeIfmo {
                     @Override
                     public void onDone(final int code, final okhttp3.Headers headers, final String response) {
                         //noinspection Convert2Lambda
-                        Static.T.runThread(Static.T.TYPE.BACKGROUND, new Runnable() {
+                        Static.T.runThread(Static.T.BACKGROUND, new Runnable() {
                             @Override
                             public void run() {
                                 Log.v(TAG, "post | url=", url, " | success | statusCode=", code);
@@ -401,7 +404,7 @@ public class DeIfmoClient extends DeIfmo {
                     }
                     @Override
                     public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
-                        Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+                        Static.T.runThread(Static.T.BACKGROUND, () -> {
                             Log.v(TAG, "post | url=", url, " | failure | statusCode=", code, " | throwable=", throwable);
                             responseHandler.onFailure(code, new Headers(headers), isInterrupted(throwable) ? FAILED_INTERRUPTED : (code >= 400 ? FAILED_SERVER_ERROR : FAILED_AUTH_TRY_AGAIN));
                         });
@@ -424,7 +427,7 @@ public class DeIfmoClient extends DeIfmo {
         return !login.isEmpty() && !password.isEmpty();
     }
 
-    private static String getAbsoluteUrl(Protocol protocol, String relativeUrl) {
+    private static String getAbsoluteUrl(@Protocol String protocol, String relativeUrl) {
         return getProtocol(protocol) + BASE_URL + "/" + relativeUrl;
     }
 }

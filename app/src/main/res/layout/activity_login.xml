@@ -5,7 +5,7 @@
     android:id="@+id/activity_login"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:activity="com.bukhmastov.cdoitmo.activities.LoginActivity">
+    tools:activity="com.bukhmastov.cdoitmo.activity.LoginActivity">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar_login"

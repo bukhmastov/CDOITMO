@@ -1,13 +1,17 @@
 package com.bukhmastov.cdoitmo.firebase;
 
 import android.content.Context;
+import android.support.annotation.StringDef;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activities.ConnectedActivity;
-import com.bukhmastov.cdoitmo.utils.Log;
-import com.bukhmastov.cdoitmo.utils.Static;
-import com.bukhmastov.cdoitmo.utils.Storage;
+import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
+import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Storage;
 import com.crashlytics.android.Crashlytics;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 import io.fabric.sdk.android.Fabric;
 
@@ -15,17 +19,15 @@ public class FirebaseCrashlyticsProvider {
 
     private static final String TAG = "FirebaseCrashlyticsProvider";
     private static boolean enabled = true;
-    private enum LEVEL {VERBOSE, DEBUG, INFO, WARN, ERROR}
 
-    private static String level2string(LEVEL level) {
-        switch (level) {
-            case ERROR: return "ERROR";
-            case WARN: return "WARN";
-            case INFO: return "INFO";
-            case DEBUG: return "DEBUG";
-            case VERBOSE: default: return "VERBOSE";
-        }
-    }
+    @Retention(RetentionPolicy.SOURCE)
+    @StringDef({VERBOSE, DEBUG, INFO, WARN, ERROR})
+    private @interface LEVEL {}
+    private static final String VERBOSE = "VERBOSE";
+    private static final String DEBUG = "DEBUG";
+    private static final String INFO = "INFO";
+    private static final String WARN = "WARN";
+    private static final String ERROR = "ERROR";
 
     public static boolean setEnabled(Context context) {
         return setEnabled(context, Storage.pref.get(context, "pref_allow_send_reports", true));
@@ -52,7 +54,7 @@ public class FirebaseCrashlyticsProvider {
             } else {
                 Static.snackBar(activity, activity.getString(R.string.changes_will_take_effect_next_startup));
                 Log.i(TAG, "Firebase Crashlytics will be disabled at the next start up");
-                FirebaseAnalyticsProvider.logBasicEvent(activity, "crash_disabled");
+                FirebaseAnalyticsProvider.logBasicEvent(activity, "firebase_crash_disabled");
             }
         } catch (Exception e) {
             Static.error(e);
@@ -62,27 +64,27 @@ public class FirebaseCrashlyticsProvider {
 
     public static void v(String TAG, String log) {
         if (!enabled) return;
-        FirebaseCrashlyticsProvider.log(LEVEL.VERBOSE, TAG, log);
+        FirebaseCrashlyticsProvider.log(VERBOSE, TAG, log);
     }
 
     public static void d(String TAG, String log) {
         if (!enabled) return;
-        FirebaseCrashlyticsProvider.log(LEVEL.DEBUG, TAG, log);
+        FirebaseCrashlyticsProvider.log(DEBUG, TAG, log);
     }
 
     public static void i(String TAG, String log) {
         if (!enabled) return;
-        FirebaseCrashlyticsProvider.log(LEVEL.INFO, TAG, log);
+        FirebaseCrashlyticsProvider.log(INFO, TAG, log);
     }
 
     public static void w(String TAG, String log) {
         if (!enabled) return;
-        FirebaseCrashlyticsProvider.log(LEVEL.WARN, TAG, log);
+        FirebaseCrashlyticsProvider.log(WARN, TAG, log);
     }
 
     public static void e(String TAG, String log) {
         if (!enabled) return;
-        FirebaseCrashlyticsProvider.log(LEVEL.ERROR, TAG, log);
+        FirebaseCrashlyticsProvider.log(ERROR, TAG, log);
     }
 
     public static void wtf(String TAG, String log) {
@@ -96,7 +98,7 @@ public class FirebaseCrashlyticsProvider {
     }
 
     public static void exception(final Throwable throwable) {
-        Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+        Static.T.runThread(Static.T.BACKGROUND, () -> {
             try {
                 if (!enabled) return;
                 Crashlytics.logException(throwable);
@@ -106,11 +108,11 @@ public class FirebaseCrashlyticsProvider {
         });
     }
 
-    public static void log(final LEVEL level, final String TAG, final String log) {
-        Static.T.runThread(Static.T.TYPE.BACKGROUND, () -> {
+    public static void log(final @LEVEL String level, final String TAG, final String log) {
+        Static.T.runThread(Static.T.BACKGROUND, () -> {
             try {
                 if (!enabled) return;
-                Crashlytics.log(level2string(level) + "/" + TAG + " " + log);
+                Crashlytics.log(level + "/" + TAG + " " + log);
             } catch (Exception e) {
                 e.printStackTrace();
             }

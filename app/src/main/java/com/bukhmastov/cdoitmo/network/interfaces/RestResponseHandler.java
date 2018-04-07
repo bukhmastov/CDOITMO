@@ -1,6 +1,6 @@
 package com.bukhmastov.cdoitmo.network.interfaces;
 
-import com.bukhmastov.cdoitmo.network.models.Client;
+import com.bukhmastov.cdoitmo.network.model.Client;
 
 import org.json.JSONArray;
 import org.json.JSONObject;

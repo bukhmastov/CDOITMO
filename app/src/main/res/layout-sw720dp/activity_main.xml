@@ -75,7 +75,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
-                tools:activity="com.bukhmastov.cdoitmo.activities.MainActivity" >
+                tools:activity="com.bukhmastov.cdoitmo.activity.MainActivity" >
 
                 <FrameLayout
                     android:layout_width="match_parent"

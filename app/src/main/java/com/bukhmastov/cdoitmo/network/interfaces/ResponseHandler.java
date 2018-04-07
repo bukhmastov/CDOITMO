@@ -1,6 +1,6 @@
 package com.bukhmastov.cdoitmo.network.interfaces;
 
-import com.bukhmastov.cdoitmo.network.models.Client;
+import com.bukhmastov.cdoitmo.network.model.Client;
 
 public interface ResponseHandler {
     void onSuccess(final int statusCode, final Client.Headers headers, final String response);

@@ -38,9 +38,12 @@
         <meta-data
             android:name="firebase_crashlytics_collection_enabled"
             android:value="false" />
+        <meta-data
+            android:name="firebase_performance_collection_enabled"
+            android:value="false" />
 
         <activity
-            android:name=".activities.MainActivity"
+            android:name=".activity.MainActivity"
             android:theme="@style/AppTheme.Splash"
             android:launchMode="singleTop" >
             <intent-filter>
@@ -53,7 +56,7 @@
                 android:resource="@xml/shortcuts" />
         </activity>
         <activity
-            android:name=".activities.FileReceiveActivity"
+            android:name=".activity.FileReceiveActivity"
             android:label="@string/handle_file"
             android:launchMode="singleTop"
             android:noHistory="true" >
@@ -89,35 +92,35 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activities.LoginActivity"
-            android:parentActivityName=".activities.MainActivity" >
+            android:name=".activity.LoginActivity"
+            android:parentActivityName=".activity.MainActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.bukhmastov.cdoitmo.activities.MainActivity" />
+                android:value="com.bukhmastov.cdoitmo.activity.MainActivity" />
         </activity>
         <activity
-            android:name=".activities.FragmentActivity"
-            android:parentActivityName=".activities.MainActivity" >
+            android:name=".activity.FragmentActivity"
+            android:parentActivityName=".activity.MainActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.bukhmastov.cdoitmo.activities.MainActivity" />
+                android:value="com.bukhmastov.cdoitmo.activity.MainActivity" />
         </activity>
 
         <activity
-            android:name=".activities.PikaActivity"
+            android:name=".activity.PikaActivity"
             android:theme="@style/AppTheme.Transparent" />
-        <activity android:name=".activities.search.ScheduleLessonsSearchActivity" />
-        <activity android:name=".activities.search.ScheduleExamsSearchActivity" />
-        <activity android:name=".activities.search.ScheduleAttestationsSearchActivity" />
+        <activity android:name=".activity.search.ScheduleLessonsSearchActivity" />
+        <activity android:name=".activity.search.ScheduleExamsSearchActivity" />
+        <activity android:name=".activity.search.ScheduleAttestationsSearchActivity" />
 
         <service
-            android:name=".utils.ProtocolTrackerJobService"
+            android:name=".util.ProtocolTrackerJobService"
             android:enabled="true"
             android:exported="true"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <activity
-            android:name=".activities.ShortcutReceiverActivity"
+            android:name=".activity.ShortcutReceiverActivity"
             android:theme="@android:style/Theme.NoDisplay"
             android:noHistory="true" >
             <intent-filter>
@@ -125,7 +128,7 @@
             </intent-filter>
         </activity>
         <receiver
-            android:name=".receivers.ShortcutReceiver"
+            android:name=".receiver.ShortcutReceiver"
             android:permission="com.bukhmastov.cdoitmo.permission.RECEIVE_SHORTCUT_STATE"
             android:exported="true" >
             <intent-filter>
@@ -136,7 +139,7 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name=".widgets.ScheduleLessonsWidget" >
+        <receiver android:name=".widget.ScheduleLessonsWidget" >
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="com.bukhmastov.cdoitmo.ACTION_WIDGET_UPDATE" />
@@ -146,22 +149,22 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/schedule_lessons_widget_info" />
         </receiver>
-        <activity android:name=".activities.ScheduleLessonsWidgetConfigureActivity" >
+        <activity android:name=".activity.ScheduleLessonsWidgetConfigureActivity" >
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
         </activity>
         <service
-            android:name=".widgets.ScheduleLessonsWidgetService"
+            android:name=".widget.ScheduleLessonsWidgetService"
             android:permission="android.permission.BIND_REMOTEVIEWS" />
 
         <activity
-            android:name=".activities.TimeRemainingWidgetActivity"
+            android:name=".activity.TimeRemainingWidgetActivity"
             android:theme="@style/AppTheme.Popup"
             android:launchMode="singleTop"
             android:noHistory="true" />
         <activity
-            android:name=".activities.DaysRemainingWidgetActivity"
+            android:name=".activity.DaysRemainingWidgetActivity"
             android:theme="@style/AppTheme.Popup"
             android:launchMode="singleTop"
             android:noHistory="true" />
@@ -178,7 +181,7 @@
 
         <service
             tools:ignore="ExportedService"
-            android:name=".firebase.AppFirebaseMessagingService">
+            android:name=".firebase.FirebaseMessagingServiceProvider">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
@@ -188,12 +191,12 @@
             android:resource="@drawable/cdo" />
 
         <activity
-            android:name=".activities.UniversityPersonCardActivity"
+            android:name=".activity.UniversityPersonCardActivity"
             android:theme="@style/AppTheme.TransparentStatusBar"/>
-        <activity android:name=".activities.WebViewActivity" />
+        <activity android:name=".activity.WebViewActivity" />
 
         <activity
-            android:name=".activities.IntroducingActivity"
+            android:name=".activity.IntroducingActivity"
             android:theme="@style/AppTheme.TransparentStatusBar"/>
 
     </application>
