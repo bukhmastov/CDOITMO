@@ -18,13 +18,23 @@ import java.util.List;
 
 public class SuggestionsListView extends ArrayAdapter<Suggestion> {
 
+    public interface OnClickCallback {
+        void onClick(Suggestion suggestion);
+        void onRemove(Suggestion suggestion);
+    }
+
     private final Context context;
     private final List<Suggestion> suggestions;
+    private final OnClickCallback onClickCallback;
 
-    public SuggestionsListView(Context context, List<Suggestion> suggestions) {
+    public SuggestionsListView(@NonNull Context context, @NonNull List<Suggestion> suggestions) {
+        this(context, suggestions, null);
+    }
+    public SuggestionsListView(@NonNull Context context, @NonNull List<Suggestion> suggestions, @Nullable OnClickCallback onClickCallback) {
         super(context, R.layout.layout_search_suggestion, suggestions);
         this.context = context;
         this.suggestions = suggestions;
+        this.onClickCallback = onClickCallback;
     }
 
     @NonNull
@@ -36,8 +46,21 @@ public class SuggestionsListView extends ArrayAdapter<Suggestion> {
                 convertView = inflater.inflate(R.layout.layout_search_suggestion, parent, false);
             }
             Suggestion suggestion = suggestions.get(position);
-            ((ImageView) convertView.findViewById(R.id.icon)).setImageDrawable(context.getDrawable(suggestion.icon));
+            ((ImageView) convertView.findViewById(R.id.typeIcon)).setImageDrawable(context.getDrawable(suggestion.icon));
             ((TextView) convertView.findViewById(R.id.label)).setText(suggestion.title);
+            if (onClickCallback != null) {
+                convertView.setOnClickListener(v -> onClickCallback.onClick(suggestion));
+                convertView.setClickable(true);
+                convertView.setFocusable(true);
+                if (suggestion.removable) {
+                    convertView.findViewById(R.id.remove).setOnClickListener(v -> onClickCallback.onRemove(suggestion));
+                    convertView.findViewById(R.id.remove).setVisibility(View.VISIBLE);
+                } else {
+                    convertView.findViewById(R.id.remove).setVisibility(View.GONE);
+                }
+            } else {
+                convertView.findViewById(R.id.remove).setVisibility(View.GONE);
+            }
             return convertView;
         } catch (Exception e) {
             Static.error(e);

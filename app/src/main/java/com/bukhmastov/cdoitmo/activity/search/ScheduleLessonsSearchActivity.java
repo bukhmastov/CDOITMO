@@ -29,7 +29,7 @@ public class ScheduleLessonsSearchActivity extends SearchActivity {
 
     @Override
     protected String getHint() {
-        return activity.getString(R.string.schedule_lessons_search_view_hint);
+        return context.getString(R.string.schedule_lessons_search_view_hint);
     }
 
     @Override

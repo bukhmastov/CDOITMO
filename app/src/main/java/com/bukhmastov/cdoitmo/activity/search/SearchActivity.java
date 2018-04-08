@@ -39,7 +39,7 @@ public abstract class SearchActivity extends AppCompatActivity {
 
     private static final String TAG = "SearchActivity";
     private static final int REQ_CODE_SPEECH_INPUT = 1337;
-    protected final SearchActivity activity = this;
+    protected final Context context = this;
     private EditText search_edit_text;
     protected final int numberOfSuggestions;
     protected final int maxCountOfSuggestionsToStore;
@@ -155,7 +155,31 @@ public abstract class SearchActivity extends AppCompatActivity {
                 if (search_suggestions != null) {
                     search_suggestions.setDividerHeight(0);
                     search_suggestions.setDivider(null);
-                    search_suggestions.setAdapter(new SuggestionsListView(activity, suggestions));
+                    search_suggestions.setAdapter(new SuggestionsListView(context, suggestions, new SuggestionsListView.OnClickCallback() {
+                        @Override
+                        public void onClick(Suggestion suggestion) {
+                            done(suggestion.query, suggestion.title);
+                        }
+                        @Override
+                        public void onRemove(Suggestion suggestion) {
+                            try {
+                                if (suggestion.removable) {
+                                    JSONArray recent = Static.string2jsonArray(Storage.file.perm.get(context, "schedule_" + getType() + "#recent", ""));
+                                    for (int i = 0; i < recent.length(); i++) {
+                                        String item = recent.getString(i);
+                                        if (SearchActivity.equals(item, suggestion.query) || SearchActivity.equals(item, suggestion.title)) {
+                                            recent.remove(i);
+                                            Storage.file.perm.put(context, "schedule_" + getType() + "#recent", recent.toString());
+                                            setSuggestions(getSuggestions(""));
+                                            break;
+                                        }
+                                    }
+                                }
+                            } catch (Exception ignore) {
+                                /* ignore */
+                            }
+                        }
+                    }));
                     search_suggestions.setOnItemClickListener((parent, view, position, id) -> done(suggestions.get(position).query, suggestions.get(position).title));
                 }
             } catch (Exception e) {
@@ -171,13 +195,13 @@ public abstract class SearchActivity extends AppCompatActivity {
             recentSchedulesIterator(getType(), (item) -> {
                 if (query.isEmpty() || contains(item, query)) {
                     currentNumberOfSuggestions++;
-                    suggestions.add(new Suggestion(item, item, R.drawable.ic_access_time));
+                    suggestions.add(new Suggestion(item, item, R.drawable.ic_access_time, true));
                 }
                 return currentNumberOfSuggestions >= numberOfSuggestions;
             });
             cachedSchedulesIterator(getType(), (q, t) -> {
                 if (query.isEmpty() || contains(q, query) || contains(t, query)) {
-                    suggestions.add(new Suggestion(q, t, R.drawable.ic_save));
+                    suggestions.add(new Suggestion(q, t, R.drawable.ic_save, false));
                 }
                 return false;
             });
@@ -227,10 +251,10 @@ public abstract class SearchActivity extends AppCompatActivity {
             Static.T.runOnUiThread(this::finish);
         });
     }
-    private boolean contains(String first, String second) {
+    private static boolean contains(String first, String second) {
         return first != null && second != null && (first.toLowerCase().contains(second.toLowerCase()) || Static.Translit.cyr2lat(first).toLowerCase().contains(Static.Translit.cyr2lat(second).toLowerCase()));
     }
-    private boolean equals(String first, String second) {
+    private static boolean equals(String first, String second) {
         return first != null && second != null && (first.equalsIgnoreCase(second) || Static.Translit.cyr2lat(first).equalsIgnoreCase(Static.Translit.cyr2lat(second)));
     }
 
@@ -252,7 +276,7 @@ public abstract class SearchActivity extends AppCompatActivity {
             startActivityForResult(intent, REQ_CODE_SPEECH_INPUT);
         } catch (ActivityNotFoundException a) {
             Log.v(TAG, "voice recognition not supported");
-            Static.toast(activity, R.string.speech_recognition_is_not_supported);
+            Static.toast(context, R.string.speech_recognition_is_not_supported);
         }
     }
     @Override

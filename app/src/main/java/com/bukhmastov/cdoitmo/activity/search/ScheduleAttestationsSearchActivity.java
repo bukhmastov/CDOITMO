@@ -29,7 +29,7 @@ public class ScheduleAttestationsSearchActivity extends SearchActivity {
 
     @Override
     protected String getHint() {
-        return activity.getString(R.string.schedule_attestations_search_view_hint);
+        return context.getString(R.string.schedule_attestations_search_view_hint);
     }
 
     @Override
