@@ -507,5 +507,6 @@
     <string name="add_military_day">Добавить военный день</string>
     <string name="pick_color">Выбрать цвет</string>
     <string name="selected_color">Выбранный цвет</string>
+    <string name="set_main_group">Установка основной группы</string>
 
 </resources>

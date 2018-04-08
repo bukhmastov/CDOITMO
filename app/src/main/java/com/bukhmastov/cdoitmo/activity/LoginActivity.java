@@ -370,8 +370,19 @@ public class LoginActivity extends ConnectedActivity {
                         }
                         String[] groups = group.split(",\\s|\\s|,");
                         Storage.file.general.perm.put(activity, "users#current_login", Account.USER_UNAUTHORIZED);
+                        String g = Storage.file.perm.get(activity, "user#group");
+                        boolean gFound = false;
+                        for (String g1 : groups) {
+                            if (g1.equals(g)) {
+                                gFound = true;
+                                break;
+                            }
+                        }
+                        if (!gFound) {
+                            g = groups.length > 0 ? groups[0] : "";
+                        }
                         Storage.file.perm.put(activity, "user#name", activity.getString(R.string.anonymous));
-                        Storage.file.perm.put(activity, "user#group", groups.length > 0 ? groups[0] : "");
+                        Storage.file.perm.put(activity, "user#group", g);
                         Storage.file.perm.put(activity, "user#groups", TextUtils.join(", ", groups));
                         Storage.file.perm.put(activity, "user#avatar", "");
                         Storage.file.general.perm.delete(activity, "users#current_login");

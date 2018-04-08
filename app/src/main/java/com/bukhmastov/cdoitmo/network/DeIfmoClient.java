@@ -71,8 +71,19 @@ public class DeIfmoClient extends DeIfmo {
                                         pref_group_force_override = pref_group_force_override.trim();
                                     }
                                     String[] groups = (pref_group_force_override.isEmpty() ? group : pref_group_force_override).split(",\\s|\\s|,");
+                                    String g = Storage.file.perm.get(context, "user#group");
+                                    boolean gFound = false;
+                                    for (String g1 : groups) {
+                                        if (g1.equals(g)) {
+                                            gFound = true;
+                                            break;
+                                        }
+                                    }
+                                    if (!gFound) {
+                                        g = groups.length > 0 ? groups[0] : "";
+                                    }
                                     Storage.file.perm.put(context, "user#name", name);
-                                    Storage.file.perm.put(context, "user#group", groups.length > 0 ? groups[0] : "");
+                                    Storage.file.perm.put(context, "user#group", g);
                                     Storage.file.perm.put(context, "user#groups", TextUtils.join(", ", groups));
                                     Storage.file.perm.put(context, "user#avatar", avatar);
                                     try {

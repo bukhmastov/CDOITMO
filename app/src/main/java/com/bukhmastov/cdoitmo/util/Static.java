@@ -24,6 +24,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.TypedValue;
 import android.view.InflateException;
@@ -32,11 +33,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -59,8 +60,10 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 import java.util.UUID;
@@ -626,14 +629,32 @@ public class Static {
         public static void displayUserData(final Context context, final NavigationView navigationView) {
             Static.T.runThread(() -> {
                 final String name = Storage.file.perm.get(context, "user#name");
-                final String group = Storage.file.perm.get(context, "user#groups");
+                final List<String> groups = getGroups(context);
+                final String group = TextUtils.join(", ", groups);
                 Static.T.runOnUiThread(() -> {
                     displayUserData(navigationView, R.id.user_name, name);
                     displayUserData(navigationView, R.id.user_group, group);
+                    displayUserDataExpand(context, navigationView, groups);
                 });
             });
         }
-        public static void displayUserData(final NavigationView navigationView, final int id, final String text) {
+        private static List<String> getGroups(final Context context) {
+            final String g = Storage.file.perm.get(context, "user#group").trim();
+            final String[] gs = Storage.file.perm.get(context, "user#groups").split(",");
+            List<String> groups = new ArrayList<>();
+            if (!g.isEmpty()) {
+                groups.add(g);
+            }
+            for (String g1 : gs) {
+                g1 = g1.trim();
+                if (g1.equals(g)) {
+                    continue;
+                }
+                groups.add(g1);
+            }
+            return groups;
+        }
+        private static void displayUserData(final NavigationView navigationView, final int id, final String text) {
             Static.T.runOnUiThread(() -> {
                 if (navigationView == null) return;
                 View activity_main_nav_header = navigationView.getHeaderView(0);
@@ -642,9 +663,40 @@ public class Static {
                 if (textView != null) {
                     if (!text.isEmpty()) {
                         textView.setText(text);
-                        textView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                        textView.setVisibility(View.VISIBLE);
                     } else {
-                        textView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0));
+                        textView.setVisibility(View.GONE);
+                    }
+                }
+            });
+        }
+        private static void displayUserDataExpand(final Context context, final NavigationView navigationView, final List<String> groups) {
+            Static.T.runOnUiThread(() -> {
+                if (navigationView == null) return;
+                View activity_main_nav_header = navigationView.getHeaderView(0);
+                if (activity_main_nav_header == null) return;
+                ViewGroup user_info_expand = activity_main_nav_header.findViewById(R.id.user_info_expand);
+                if (user_info_expand != null) {
+                    if (groups.size() > 1) {
+                        user_info_expand.setOnClickListener(v -> Static.T.runOnUiThread(() -> {
+                            final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(context, R.layout.spinner_layout);
+                            arrayAdapter.addAll(groups);
+                            new AlertDialog.Builder(context)
+                                    .setTitle(R.string.set_main_group)
+                                    .setAdapter(arrayAdapter, (dialogInterface, position) -> Static.T.runThread(() -> {
+                                        try {
+                                            Storage.file.perm.put(context, "user#group", groups.get(position));
+                                            Static.T.runOnUiThread(() -> displayUserData(context, navigationView));
+                                        } catch (Exception e) {
+                                            Static.error(e);
+                                        }
+                                    }))
+                                    .setNegativeButton(R.string.do_cancel, null)
+                                    .create().show();
+                        }));
+                        user_info_expand.setVisibility(View.VISIBLE);
+                    } else {
+                        user_info_expand.setVisibility(View.GONE);
                     }
                 }
             });
