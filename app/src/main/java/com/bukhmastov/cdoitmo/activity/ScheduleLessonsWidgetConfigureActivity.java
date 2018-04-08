@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -133,21 +134,28 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
     private void initPartPreview() {
         Log.v(TAG, "initPartPreview");
         Static.T.runThread(() -> {
-            try {
-                final WallpaperManager wallpaperManager = WallpaperManager.getInstance(activity);
-                if (wallpaperManager == null) {
-                    throw new NullPointerException("WallpaperManager is null");
+            // Starting from Android 27 (8.1) there is no longer free access to current wallpaper
+            // Getting wallpaper requires "dangerous" permission android.permission.READ_EXTERNAL_STORAGE
+            // To avoid using this permission, we just not gonna use wallpaper for widget preview
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O_MR1) {
+                try {
+                    final WallpaperManager wallpaperManager = WallpaperManager.getInstance(activity);
+                    if (wallpaperManager == null) {
+                        throw new NullPointerException("WallpaperManager is null");
+                    }
+                    final Drawable wallpaperDrawable = wallpaperManager.getDrawable();
+                    if (wallpaperDrawable == null) {
+                        throw new NullPointerException("WallpaperDrawable is null");
+                    }
+                    Static.T.runOnUiThread(() -> {
+                        ImageView part_preview_background = activity.findViewById(R.id.part_preview_background);
+                        if (part_preview_background != null) {
+                            part_preview_background.setImageDrawable(wallpaperDrawable);
+                        }
+                    });
+                } catch (Exception ignore) {
+                    // just ignore
                 }
-                final Drawable wallpaperDrawable = wallpaperManager.getDrawable();
-                if (wallpaperDrawable == null) {
-                    throw new NullPointerException("WallpaperDrawable is null");
-                }
-                Static.T.runOnUiThread(() -> {
-                    ImageView part_preview_background = activity.findViewById(R.id.part_preview_background);
-                    part_preview_background.setImageDrawable(wallpaperDrawable);
-                });
-            } catch (Exception ignore) {
-                // just ignore
             }
             Settings.Theme.background = isDarkTheme ? Default.Theme.Dark.background : Default.Theme.Light.background;
             Settings.Theme.text       = isDarkTheme ? Default.Theme.Dark.text       : Default.Theme.Light.text;
