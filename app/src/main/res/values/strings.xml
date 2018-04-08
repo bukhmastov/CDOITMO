@@ -505,5 +505,7 @@
     <string name="iws">СРС</string>
     <string name="server_provided_corrupted_json">Не удалось разобрать ответ сервера</string>
     <string name="add_military_day">Добавить военный день</string>
+    <string name="pick_color">Выбрать цвет</string>
+    <string name="selected_color">Выбранный цвет</string>
 
 </resources>

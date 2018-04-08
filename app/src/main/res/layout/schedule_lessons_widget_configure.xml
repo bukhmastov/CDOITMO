@@ -16,7 +16,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/toolbar_widget"
-        android:layout_above="@+id/add_button">
+        android:layout_above="@+id/block_bottom">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -367,12 +367,26 @@
 
     </ScrollView>
 
-    <Button
-        android:id="@+id/add_button"
+    <LinearLayout
+        android:id="@+id/block_bottom"
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:text="@string/add_widget"
-        android:textSize="@dimen/font_size_14"/>
+        android:layout_alignParentBottom="true" >
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/separator"
+            android:background="?attr/colorSeparator"/>
+
+        <Button
+            android:id="@+id/add_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/add_widget"
+            android:textSize="@dimen/font_size_14"
+            style="@style/Widget.AppCompat.Button.Colored"/>
+
+    </LinearLayout>
 
 </RelativeLayout>

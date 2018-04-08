@@ -20,7 +20,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -406,41 +405,62 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
         Log.v(TAG, "activatePartTheme");
         Static.T.runThread(() -> {
             try {
+                // define variables
                 final ViewGroup layout = (ViewGroup) inflate(R.layout.layout_widget_schedule_lessons_create_theme);
-                final ViewGroup set_light_theme = layout.findViewById(R.id.set_light_theme);
-                final ViewGroup set_dark_theme = layout.findViewById(R.id.set_dark_theme);
-                final EditText background_color_input = layout.findViewById(R.id.background_color_input);
-                final EditText text_color_input = layout.findViewById(R.id.text_color_input);
-                final EditText background_opacity_input = layout.findViewById(R.id.background_opacity_input);
-                final ViewGroup background_color_picker = layout.findViewById(R.id.background_color_picker);
-                final ViewGroup text_color_picker = layout.findViewById(R.id.text_color_picker);
-                final SeekBar background_opacity_seek_bar = layout.findViewById(R.id.background_opacity_seek_bar);
+
+                final ViewGroup default_theme_light = layout.findViewById(R.id.default_theme_light);
                 final TextView default_theme_light_background = layout.findViewById(R.id.default_theme_light_background);
                 final TextView default_theme_light_text = layout.findViewById(R.id.default_theme_light_text);
                 final TextView default_theme_light_opacity = layout.findViewById(R.id.default_theme_light_opacity);
+
+                final ViewGroup default_theme_dark = layout.findViewById(R.id.default_theme_dark);
                 final TextView default_theme_dark_background = layout.findViewById(R.id.default_theme_dark_background);
                 final TextView default_theme_dark_text = layout.findViewById(R.id.default_theme_dark_text);
                 final TextView default_theme_dark_opacity = layout.findViewById(R.id.default_theme_dark_opacity);
+
+                final ViewGroup background_color_picker = layout.findViewById(R.id.background_color_picker);
+                final ImageView background_color_picker_image = layout.findViewById(R.id.background_color_picker_image);
+                final TextView background_color_picker_header = layout.findViewById(R.id.background_color_picker_header);
+                final TextView background_color_picker_value = layout.findViewById(R.id.background_color_picker_value);
+                final TextView background_color_picker_hint = layout.findViewById(R.id.background_color_picker_hint);
+
+                final ViewGroup text_color_picker = layout.findViewById(R.id.text_color_picker);
+                final ImageView text_color_picker_image = layout.findViewById(R.id.text_color_picker_image);
+                final TextView text_color_picker_header = layout.findViewById(R.id.text_color_picker_header);
+                final TextView text_color_picker_value = layout.findViewById(R.id.text_color_picker_value);
+                final TextView text_color_picker_hint = layout.findViewById(R.id.text_color_picker_hint);
+
+                final ViewGroup background_opacity_picker = layout.findViewById(R.id.background_opacity_picker);
+                final SeekBar background_opacity_picker_seek_bar = layout.findViewById(R.id.background_opacity_picker_seek_bar);
+
+                // setup ui
+
                 final AlertDialog alertDialog = new AlertDialog.Builder(activity)
                         .setView(layout)
                         .setPositiveButton(R.string.apply, (dialogInterface, i) -> Static.T.runThread(() -> {
                             Log.v(TAG, "activatePartTheme | apply");
                             try {
-                                String background = background_color_input.getText().toString().trim();
+                                String background = background_color_picker_value.getText().toString().trim();
+                                if (background.charAt(0) != '#') {
+                                    throw new Exception();
+                                }
                                 Color.parseColor(background);
                                 Settings.Theme.background = background;
                             } catch (Exception ignore) {
                                 // just ignore
                             }
                             try {
-                                String text = text_color_input.getText().toString().trim();
+                                String text = text_color_picker_value.getText().toString().trim();
+                                if (text.charAt(0) != '#') {
+                                    throw new Exception();
+                                }
                                 Color.parseColor(text);
                                 Settings.Theme.text = text;
                             } catch (Exception ignore) {
                                 // just ignore
                             }
                             try {
-                                int opacity = Integer.parseInt(background_opacity_input.getText().toString().trim());
+                                int opacity = background_opacity_picker_seek_bar.getProgress();
                                 if (opacity >= 0 && opacity <= 255) {
                                     Settings.Theme.opacity = opacity;
                                 }
@@ -453,17 +473,8 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                         }))
                         .setNegativeButton(R.string.do_cancel, null)
                         .create();
-                default_theme_light_background.setText(activity.getString(R.string.background_color) + ": " + Default.Theme.Light.background);
-                default_theme_light_text.setText(activity.getString(R.string.text_color) + ": " + Default.Theme.Light.text);
-                default_theme_light_opacity.setText(activity.getString(R.string.background_opacity) + ": " + Default.Theme.Light.opacity);
-                default_theme_dark_background.setText(activity.getString(R.string.background_color) + ": " + Default.Theme.Dark.background);
-                default_theme_dark_text.setText(activity.getString(R.string.text_color) + ": " + Default.Theme.Dark.text);
-                default_theme_dark_opacity.setText(activity.getString(R.string.background_opacity) + ": " + Default.Theme.Dark.opacity);
-                background_color_input.setText(Settings.Theme.background);
-                text_color_input.setText(Settings.Theme.text);
-                background_opacity_input.setText(String.valueOf(Settings.Theme.opacity));
-                background_opacity_seek_bar.setProgress(Settings.Theme.opacity);
-                set_light_theme.setOnClickListener(view -> Static.T.runThread(() -> {
+
+                default_theme_light.setOnClickListener(view -> Static.T.runThread(() -> {
                     Log.v(TAG, "activatePartTheme | light theme selected");
                     try {
                         Settings.Theme.text       = Default.Theme.Light.text;
@@ -479,7 +490,11 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                         Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 }));
-                set_dark_theme.setOnClickListener(view -> Static.T.runThread(() -> {
+                default_theme_light_background.setText(activity.getString(R.string.background_color) + ": " + Default.Theme.Light.background);
+                default_theme_light_text.setText(activity.getString(R.string.text_color) + ": " + Default.Theme.Light.text);
+                default_theme_light_opacity.setText(activity.getString(R.string.background_opacity) + ": " + Default.Theme.Light.opacity);
+
+                default_theme_dark.setOnClickListener(view -> Static.T.runThread(() -> {
                     Log.v(TAG, "activatePartTheme | dark theme selected");
                     try {
                         Settings.Theme.text       = Default.Theme.Dark.text;
@@ -495,28 +510,51 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                         Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 }));
-                background_opacity_input.addTextChangedListener(new TextWatcher() {
-                    @Override
-                    public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
-                    @Override
-                    public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
-                    @Override
-                    public void afterTextChanged(Editable editable) {
-                        try {
-                            int value = Integer.parseInt(editable.toString().trim());
-                            if (value < 0) {
-                                value = 0;
-                            }
-                            if (value > 255) {
-                                value = 255;
-                            }
-                            background_opacity_seek_bar.setProgress(value);
-                        } catch (Exception ignore) {
-                            // just ignore
+                default_theme_dark_background.setText(activity.getString(R.string.background_color) + ": " + Default.Theme.Dark.background);
+                default_theme_dark_text.setText(activity.getString(R.string.text_color) + ": " + Default.Theme.Dark.text);
+                default_theme_dark_opacity.setText(activity.getString(R.string.background_opacity) + ": " + Default.Theme.Dark.opacity);
+
+                background_color_picker.setOnClickListener(view -> Static.T.runThread(() -> {
+                    Log.v(TAG, "activatePartTheme | background color picker clicked");
+                    Static.ColorPicker.get(activity, new Static.ColorPicker.ColorPickerCallback() {
+                        @Override
+                        public void result(final String hex) {
+                            Static.T.runThread(() -> {
+                                Log.v(TAG, "activatePartTheme | background color picker | hex=" + hex);
+                                applyColor(hex, background_color_picker, background_color_picker_image, background_color_picker_value, background_color_picker_header, background_color_picker_hint);
+                            });
                         }
-                    }
-                });
-                background_opacity_seek_bar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                        @Override
+                        public void exception(Exception e) {
+                            Static.error(e);
+                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        }
+                    }).show(Settings.Theme.background);
+                }));
+                applyColor(Settings.Theme.background, background_color_picker, background_color_picker_image, background_color_picker_value, background_color_picker_header, background_color_picker_hint);
+
+                text_color_picker.setOnClickListener(view -> Static.T.runThread(() -> {
+                    Log.v(TAG, "activatePartTheme | text color picker clicked");
+                    Static.ColorPicker.get(activity, new Static.ColorPicker.ColorPickerCallback() {
+                        @Override
+                        public void result(final String hex) {
+                            Static.T.runThread(() -> {
+                                Log.v(TAG, "activatePartTheme | text color picker | hex=" + hex);
+                                applyColor(hex, text_color_picker, text_color_picker_image, text_color_picker_value, text_color_picker_header, text_color_picker_hint);
+                            });
+                        }
+                        @Override
+                        public void exception(Exception e) {
+                            Static.error(e);
+                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        }
+                    }).show(Settings.Theme.text);
+                }));
+                applyColor(Settings.Theme.text, text_color_picker, text_color_picker_image, text_color_picker_value, text_color_picker_header, text_color_picker_hint);
+
+                background_opacity_picker.getBackground().setAlpha((int) ((double) (255 - Settings.Theme.opacity) * 0.5));
+                background_opacity_picker_seek_bar.setProgress(Settings.Theme.opacity);
+                background_opacity_picker_seek_bar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                     @Override
                     public void onProgressChanged(SeekBar seekBar, int progress, boolean b) {
                         try {
@@ -526,13 +564,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                             if (progress > 255) {
                                 progress = 255;
                             }
-                            try {
-                                int selection = background_opacity_input.getSelectionStart();
-                                background_opacity_input.setText(String.valueOf(progress));
-                                background_opacity_input.setSelection(selection);
-                            } catch (Exception ignore) {
-                                // just ignore
-                            }
+                            background_opacity_picker.getBackground().setAlpha((int) ((double) (255 - progress) * 0.5));
                         } catch (Exception e) {
                             Static.error(e);
                             Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
@@ -543,40 +575,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                     @Override
                     public void onStopTrackingTouch(SeekBar seekBar) {}
                 });
-                background_color_picker.setOnClickListener(view -> Static.T.runThread(() -> {
-                    Log.v(TAG, "activatePartTheme | background color picker clicked");
-                    Static.ColorPicker.get(activity, new Static.ColorPicker.ColorPickerCallback() {
-                        @Override
-                        public void result(final String hex) {
-                            Static.T.runThread(() -> {
-                                Log.v(TAG, "activatePartTheme | background color picker | hex=" + hex);
-                                background_color_input.setText(hex);
-                            });
-                        }
-                        @Override
-                        public void exception(Exception e) {
-                            Static.error(e);
-                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                        }
-                    }).show();
-                }));
-                text_color_picker.setOnClickListener(view -> Static.T.runThread(() -> {
-                    Log.v(TAG, "activatePartTheme | text color picker clicked");
-                    Static.ColorPicker.get(activity, new Static.ColorPicker.ColorPickerCallback() {
-                        @Override
-                        public void result(final String hex) {
-                            Static.T.runThread(() -> {
-                                Log.v(TAG, "activatePartTheme | text color picker | hex=" + hex);
-                                text_color_input.setText(hex);
-                            });
-                        }
-                        @Override
-                        public void exception(Exception e) {
-                            Static.error(e);
-                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                        }
-                    }).show();
-                }));
+
                 alertDialog.show();
             } catch (Exception e) {
                 Static.error(e);
@@ -749,6 +748,16 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                 Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
+    }
+
+    private void applyColor(String hex, ViewGroup picker, ImageView image, TextView value, TextView header, TextView hint) {
+        ColorStateList highlight = ColorStateList.valueOf(Color.parseColor(hex) > Color.parseColor("#757575") ? Color.BLACK : Color.WHITE);
+        value.setText(hex);
+        picker.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(hex)));
+        image.setImageTintList(highlight);
+        header.setTextColor(highlight);
+        value.setTextColor(highlight);
+        hint.setTextColor(highlight);
     }
 
     private static int parseColor(String color) {

@@ -497,5 +497,7 @@
     <string name="iws">SRS</string>
     <string name="server_provided_corrupted_json">Failed to parse server response</string>
     <string name="add_military_day">Add military day</string>
+    <string name="pick_color">Choose color</string>
+    <string name="selected_color">Selected color</string>
 
 </resources>

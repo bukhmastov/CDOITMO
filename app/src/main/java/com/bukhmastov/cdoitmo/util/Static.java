@@ -23,6 +23,8 @@ import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.TypedValue;
 import android.view.InflateException;
 import android.view.LayoutInflater;
@@ -31,6 +33,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -871,8 +874,8 @@ public class Static {
             private final ColorPickerCallback callback;
             private AlertDialog alertDialog = null;
             private GridView container = null;
+            private EditText selectedColorInput = null;
             private GridAdapter gridAdapter = null;
-            private String selected = "";
             public Instance(final Context context, final ColorPickerCallback callback) {
                 Log.v(TAG, "new Instance");
                 this.context = context;
@@ -881,26 +884,52 @@ public class Static {
                     try {
                         ViewGroup layout = (ViewGroup) inflate(context, R.layout.layout_color_picker_dialog);
                         container = layout.findViewById(R.id.colorPickerContainer);
+                        selectedColorInput = layout.findViewById(R.id.selectedColorInput);
                         alertDialog = new AlertDialog.Builder(context)
                                 .setTitle(R.string.choose_color)
                                 .setView(layout)
                                 .setPositiveButton(R.string.apply, (dialogInterface, i) -> {
-                                    Log.v(TAG, "apply | selected=" + selected);
-                                    if (!selected.isEmpty()) {
+                                    try {
+                                        if (selectedColorInput == null) {
+                                            return;
+                                        }
+                                        String selected = selectedColorInput.getText().toString().trim();
+                                        Log.v(TAG, "apply | selected=" + selected);
+                                        if (selected.isEmpty() || selected.charAt(0) != '#') {
+                                            return;
+                                        }
+                                        Color.parseColor(selected);
                                         callback.result(selected);
-                                    }
+                                    } catch (Exception ignore) {/* ignore */}
                                 })
                                 .setNegativeButton(R.string.do_cancel, null)
                                 .create();
+                        selectedColorInput.addTextChangedListener(new TextWatcher() {
+                            @Override
+                            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                            @Override
+                            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+                            @Override
+                            public void afterTextChanged(Editable s) {
+                                gridAdapter.notifyDataSetChanged();
+                            }
+                        });
                     } catch (Exception e) {
                         callback.exception(e);
                     }
                 });
             }
-            public void show() {
+            public void show(String colorHex) {
                 Log.v(TAG, "show");
                 Static.T.runOnUiThread(() -> {
                     try {
+                        try {
+                            if (selectedColorInput == null || colorHex.isEmpty() || colorHex.charAt(0) != '#') {
+                                throw new Exception();
+                            }
+                            Color.parseColor(colorHex);
+                            selectedColorInput.setText(colorHex);
+                        } catch (Exception ignore) {/* ignore */}
                         if (alertDialog != null && !alertDialog.isShowing()) {
                             alertDialog.show();
                             displayColors(-1);
@@ -948,30 +977,22 @@ public class Static {
                                     Log.v(TAG, "color clicked | i=" + i);
                                     Static.T.runThread(() -> {
                                         try {
-                                            if (modeAllColors) {
-                                                if (COLORS[i].length > 1) {
-                                                    displayColors(i);
-                                                } else {
-                                                    String color = gridAdapter.getItem(i);
-                                                    if ("back".equals(color)) {
-                                                        Log.v(TAG, "back clicked");
-                                                        displayColors(-1);
-                                                    } else {
-                                                        Log.v(TAG, "color selected | color=" + color);
-                                                        selected = color;
-                                                        Static.T.runOnUiThread(() -> gridAdapter.notifyDataSetChanged());
-                                                    }
-                                                }
+                                            String color = gridAdapter.getItem(i);
+                                            if ("back".equals(color)) {
+                                                Log.v(TAG, "back clicked");
+                                                displayColors(-1);
                                             } else {
-                                                String color = gridAdapter.getItem(i);
-                                                if ("back".equals(color)) {
-                                                    Log.v(TAG, "back clicked");
-                                                    displayColors(-1);
-                                                } else {
-                                                    Log.v(TAG, "color selected | color=" + color);
-                                                    selected = color;
-                                                    Static.T.runOnUiThread(() -> gridAdapter.notifyDataSetChanged());
-                                                }
+                                                Log.v(TAG, "color selected | color=" + color);
+                                                Static.T.runOnUiThread(() -> {
+                                                    if (selectedColorInput != null) {
+                                                        selectedColorInput.setText(color);
+                                                    }
+                                                    if (modeAllColors && COLORS[i].length > 1) {
+                                                        displayColors(i);
+                                                    } else {
+                                                        gridAdapter.notifyDataSetChanged();
+                                                    }
+                                                });
                                             }
                                         } catch (Exception e) {
                                             callback.exception(e);
@@ -1029,7 +1050,7 @@ public class Static {
                         } else {
                             GradientDrawable sd = (GradientDrawable) convertView.getBackground();
                             sd.setColor(Color.parseColor(color));
-                            if (color.toLowerCase().equals(selected.toLowerCase())) {
+                            if (selectedColorInput != null && color.toLowerCase().equals(selectedColorInput.getText().toString().toLowerCase())) {
                                 convertView.findViewById(R.id.sign_selected).setVisibility(View.VISIBLE);
                                 ImageView sign_selected_mark = convertView.findViewById(R.id.sign_selected_mark);
                                 sign_selected_mark.setImageTintList(ColorStateList.valueOf(Color.parseColor(color) > Color.parseColor("#757575") ? Color.BLACK : Color.WHITE));
