@@ -90,6 +90,13 @@ public class ShortcutReceiver extends BroadcastReceiver {
                         FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.SHORTCUT_TYPE, shortcut_type)
                 );
                 switch (shortcut_type) {
+                    case "offline": {
+                        Intent intent = new Intent(context, MainActivity.class);
+                        intent.addFlags(Static.intentFlagRestart);
+                        intent.putExtra("mode", "offline");
+                        context.startActivity(intent);
+                        break;
+                    }
                     case "tab": {
                         Intent intent = new Intent(context, MainActivity.class);
                         intent.addFlags(Static.intentFlagRestart);
@@ -142,6 +149,10 @@ public class ShortcutReceiver extends BroadcastReceiver {
             Log.v(TAG, "addShortcut | type=" + type + " | data=" + data);
             try {
                 switch (type) {
+                    case "offline": {
+                        installShortcut(context, type, data, context.getString(R.string.app_name_offline), R.mipmap.ic_shortcut_offline);
+                        break;
+                    }
                     case "tab": {
                         switch (data) {
                             case "e_journal":

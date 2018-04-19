@@ -2,6 +2,7 @@
 <resources>
 
     <string name="app_name">CDE ITMO</string>
+    <string name="app_name_offline">CDE ITMO (offline)</string>
     <string name="title_activity_login">Authorization</string>
     <string name="login">Login</string>
     <string name="password">Password</string>
@@ -500,5 +501,6 @@
     <string name="pick_color">Choose color</string>
     <string name="selected_color">Selected color</string>
     <string name="set_main_group">Set the primary group</string>
+    <string name="launch_app_offline">Launch app in offline mode</string>
 
 </resources>

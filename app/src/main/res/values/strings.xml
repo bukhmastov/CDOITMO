@@ -2,6 +2,7 @@
 <resources>
 
     <string name="app_name">ЦДО ИТМО</string>
+    <string name="app_name_offline">ЦДО ИТМО (оффлайн)</string>
     <string name="title_activity_login">Авторизация</string>
     <string name="login">Логин</string>
     <string name="password">Пароль</string>
@@ -508,5 +509,6 @@
     <string name="pick_color">Выбрать цвет</string>
     <string name="selected_color">Выбранный цвет</string>
     <string name="set_main_group">Установка основной группы</string>
+    <string name="launch_app_offline">Запуск приложения в оффлайн режиме</string>
 
 </resources>

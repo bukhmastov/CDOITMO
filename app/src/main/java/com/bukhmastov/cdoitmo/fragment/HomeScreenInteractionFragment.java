@@ -113,6 +113,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
         apps.add(new App("days_remaining_widget", activity.getString(R.string.days_remaining_widget), activity.getString(R.string.days_remaining_widget_desc), activity.getString(R.string.need_to_choose_schedule), R.mipmap.ic_shortcut_days_remaining_widget));
         // Инициализируем ярлыки
         shortcuts.clear();
+        shortcuts.add(new Shortcut("offline", null, activity.getString(R.string.app_name_offline), activity.getString(R.string.launch_app_offline), R.mipmap.ic_shortcut_offline));
         shortcuts.add(new Shortcut("tab", "e_journal", activity.getString(R.string.e_journal), null, R.mipmap.ic_shortcut_e_journal));
         shortcuts.add(new Shortcut("tab", "protocol_changes", activity.getString(R.string.protocol_changes), null, R.mipmap.ic_shortcut_protocol_changes));
         shortcuts.add(new Shortcut("tab", "rating", activity.getString(R.string.rating), null, R.mipmap.ic_shortcut_rating));
@@ -331,7 +332,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                         }
                         item.setOnClickListener(view -> Static.T.runThread(() -> {
                             switch (shortcut.id) {
-                                case "tab": case "room101": {
+                                case "offline": case "tab": case "room101": {
                                     addShortcut(shortcut.id, shortcut.meta);
                                     break;
                                 }

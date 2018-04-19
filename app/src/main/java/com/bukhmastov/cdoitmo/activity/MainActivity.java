@@ -128,7 +128,9 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
             FirebaseAnalyticsProvider.logCurrentScreen(this);
             FirebaseAnalyticsProvider.setUserProperty(this, FirebaseAnalyticsProvider.Property.DEVICE, Static.tablet ? "tablet" : "mobile");
             // setup static variables
-            Static.OFFLINE_MODE = !Static.isOnline(this) || (Static.firstLaunch && Storage.pref.get(this, "pref_initial_offline", false));
+            Static.OFFLINE_MODE = "offline".equals(getIntent().getStringExtra("mode")) ||
+                    !Static.isOnline(this) ||
+                    (Static.firstLaunch && Storage.pref.get(this, "pref_initial_offline", false));
             Static.firstLaunch = false;
             Static.isFirstLaunchEver = false;
             // do some logging

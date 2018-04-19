@@ -25,12 +25,13 @@ android {
 }
 
 ext {
-    androidSupportVersion = "27.1.1";
-    firebaseVersion = "12.0.1";
-    firebaseCrashlyticsVersion = "2.9.1";
-    okhttpVersion = "3.10.0";
-    htmlcleanerVersion = "2.18";
-    picassoVersion = "2.5.2";
+    androidSupportVersion = "27.1.1"
+    firebaseVersion = "15.0.0"
+    firebaseCrashlyticsVersion = "2.9.1"
+    googlePlayServicesVersion = "15.0.0"
+    okhttpVersion = "3.10.0"
+    htmlcleanerVersion = "2.18"
+    picassoVersion = "2.5.2"
 }
 
 dependencies {
@@ -48,7 +49,7 @@ dependencies {
     implementation "com.google.firebase:firebase-perf:${firebaseVersion}"
     implementation "com.crashlytics.sdk.android:crashlytics:${firebaseCrashlyticsVersion}"
     // android play services
-    implementation "com.google.android.gms:play-services-maps:${firebaseVersion}"
+    implementation "com.google.android.gms:play-services-maps:${googlePlayServicesVersion}"
     // others
     implementation "com.squareup.okhttp3:okhttp:${okhttpVersion}"
     implementation "net.sourceforge.htmlcleaner:htmlcleaner:${htmlcleanerVersion}"
