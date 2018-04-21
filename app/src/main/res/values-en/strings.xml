@@ -2,7 +2,6 @@
 <resources>
 
     <string name="app_name">CDE ITMO</string>
-    <string name="app_name_offline">CDE ITMO (offline)</string>
     <string name="title_activity_login">Authorization</string>
     <string name="login">Login</string>
     <string name="password">Password</string>

@@ -150,7 +150,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
             try {
                 switch (type) {
                     case "offline": {
-                        installShortcut(context, type, data, context.getString(R.string.app_name_offline), R.mipmap.ic_shortcut_offline);
+                        installShortcut(context, type, data, context.getString(R.string.app_name), R.mipmap.ic_shortcut_offline);
                         break;
                     }
                     case "tab": {
