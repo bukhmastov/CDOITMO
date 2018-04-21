@@ -509,5 +509,8 @@
     <string name="selected_color">Выбранный цвет</string>
     <string name="set_main_group">Установка основной группы</string>
     <string name="launch_app_offline">Запуск приложения в оффлайн режиме</string>
+    <string name="time_remaining_widget_share_1">У меня закончились пары!</string>
+    <string name="time_remaining_widget_share_2">Конец пары через</string>
+    <string name="time_remaining_widget_share_3">Конец всех пар через</string>
 
 </resources>

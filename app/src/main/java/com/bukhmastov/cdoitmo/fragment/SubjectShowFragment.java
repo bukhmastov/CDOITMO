@@ -266,8 +266,8 @@ public class SubjectShowFragment extends ConnectedFragment {
             // track statistics
             FirebaseAnalyticsProvider.logEvent(
                     activity,
-                    FirebaseAnalyticsProvider.Event.EREGISTER_SHARE,
-                    FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TITLE, title.substring(0, title.length() > 100 ? 100 : title.length()))
+                    FirebaseAnalyticsProvider.Event.SHARE,
+                    FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "subject")
             );
         });
     }

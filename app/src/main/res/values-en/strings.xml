@@ -501,5 +501,8 @@
     <string name="selected_color">Selected color</string>
     <string name="set_main_group">Set the primary group</string>
     <string name="launch_app_offline">Launch app in offline mode</string>
+    <string name="time_remaining_widget_share_1">I\'m out of lessons!</string>
+    <string name="time_remaining_widget_share_2">The end of the lesson in</string>
+    <string name="time_remaining_widget_share_3">The end of all lessons in</string>
 
 </resources>

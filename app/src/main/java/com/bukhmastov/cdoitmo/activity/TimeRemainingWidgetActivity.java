@@ -32,6 +32,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
     private JSONObject schedule = null;
     private Client.Request requestHandle = null;
     private boolean is_message_displaying = false;
+    private TimeRemainingWidget.Data data = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +68,34 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
                 activity.startActivity(intent);
                 close();
             });
+        }
+        View trw_share = findViewById(R.id.trw_share);
+        if (trw_share != null) {
+            trw_share.setOnClickListener(v -> Static.T.runOnUiThread(() -> {
+                Log.v(TAG, "trw_share clicked");
+                if (data != null) {
+                    String shareString = "";
+                    if (data.current == null && data.next == null && data.day == null) {
+                        shareString = activity.getString(R.string.time_remaining_widget_share_1);
+                    } else if (data.current != null) {
+                        shareString = activity.getString(R.string.time_remaining_widget_share_2) + " " +  data.current;
+                    } else if (data.day != null) {
+                        shareString = activity.getString(R.string.time_remaining_widget_share_3) + " " + data.day;
+                    }
+                    if (!shareString.isEmpty()) {
+                        Intent intent = new Intent(Intent.ACTION_SEND);
+                        intent.setType("text/plain");
+                        intent.putExtra(Intent.EXTRA_TEXT, shareString);
+                        activity.startActivity(Intent.createChooser(intent, activity.getString(R.string.share)));
+                        // track statistics
+                        FirebaseAnalyticsProvider.logEvent(
+                                activity,
+                                FirebaseAnalyticsProvider.Event.SHARE,
+                                FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "time_remaining_widget")
+                        );
+                    }
+                }
+            }));
         }
         View time_remaining_widget = findViewById(R.id.time_remaining_widget);
         if (time_remaining_widget != null) {
@@ -198,6 +227,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
 
     @Override
     public void onAction(final TimeRemainingWidget.Data data) {
+        this.data = data;
         if (data.current == null && data.next == null && data.day == null) {
             message(activity.getString(R.string.lessons_gone));
         } else {

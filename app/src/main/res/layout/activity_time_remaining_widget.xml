@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/time_remaining_widget"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -11,7 +11,52 @@
         android:id="@+id/trw_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:elevation="6dp" />
+        android:layout_centerInParent="true"
+        android:elevation="6dp"
+        android:focusable="true"
+        android:clickable="true" />
 
-</FrameLayout>
+    <FrameLayout
+        android:id="@+id/trw_containershare"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:elevation="6dp"
+        android:visibility="visible"
+        android:alpha="0.6">
+
+        <LinearLayout
+            android:id="@+id/trw_share"
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:paddingTop="@dimen/item_vertical_padding"
+            android:paddingBottom="@dimen/item_vertical_padding"
+            android:paddingStart="@dimen/item_horizontal_padding"
+            android:paddingEnd="@dimen/item_horizontal_padding"
+            android:focusable="true"
+            android:clickable="true">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/ic_share"
+                android:tint="?attr/colorBackgroundPopupFill"
+                android:paddingStart="0dp"
+                android:paddingEnd="@dimen/item_horizontal_padding_half"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="@string/share"
+                android:textSize="@dimen/font_size_14"
+                android:textColor="?attr/colorBackgroundPopupFill"/>
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+</RelativeLayout>

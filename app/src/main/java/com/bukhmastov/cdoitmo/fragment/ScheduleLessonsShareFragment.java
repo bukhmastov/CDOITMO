@@ -574,8 +574,8 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
         }
         FirebaseAnalyticsProvider.logEvent(
                 activity,
-                FirebaseAnalyticsProvider.Event.SCHEDULE_LESSONS_RECEIVE,
-                FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.QUERY, query)
+                FirebaseAnalyticsProvider.Event.RECEIVE,
+                FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "schedule_lessons")
         );
         Static.toast(activity, getString(R.string.changes_applied));
         finish();
@@ -609,8 +609,8 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                 startActivity(Intent.createChooser(intent, activity.getString(R.string.share) + "..."));
                 FirebaseAnalyticsProvider.logEvent(
                         activity,
-                        FirebaseAnalyticsProvider.Event.SCHEDULE_LESSONS_SHARE,
-                        FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.QUERY, query)
+                        FirebaseAnalyticsProvider.Event.SHARE,
+                        FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "schedule_lessons")
                 );
             } catch (Exception ignore) {
                 Static.toast(activity, activity.getString(R.string.failed_to_share_file));

@@ -356,8 +356,8 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
             // track statistics
             FirebaseAnalyticsProvider.logEvent(
                     activity,
-                    FirebaseAnalyticsProvider.Event.RATING_SHARE,
-                    FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TITLE, title.substring(0, title.length() > 100 ? 100 : title.length()))
+                    FirebaseAnalyticsProvider.Event.SHARE,
+                    FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "rating")
             );
         });
     }
