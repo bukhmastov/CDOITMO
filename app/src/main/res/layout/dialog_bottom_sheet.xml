@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorBackgroundPopup"
+    android:elevation="0dp"
+    app:layout_behavior="android.support.design.widget.BottomSheetBehavior">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="@dimen/item_padding_half"
+        android:paddingBottom="@dimen/item_padding_half"
+        android:background="?attr/colorBackgroundPopupFill">
+
+        <TextView
+            android:id="@+id/dialog_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="@dimen/item_padding_half"
+            android:paddingBottom="@dimen/item_padding_half"
+            android:paddingStart="@dimen/item_padding"
+            android:paddingEnd="@dimen/item_padding"
+            android:text="@string/lorem_ipsum"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="@dimen/font_size_15"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:alpha="0.8"
+            android:visibility="visible"/>
+
+        <LinearLayout
+            android:id="@+id/dialog_entries"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
+</LinearLayout>

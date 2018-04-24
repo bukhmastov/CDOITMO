@@ -5,12 +5,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.dialog.BottomSheetDialog;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.model.Client;
@@ -73,28 +75,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
         if (trw_share != null) {
             trw_share.setOnClickListener(v -> Static.T.runOnUiThread(() -> {
                 Log.v(TAG, "trw_share clicked");
-                if (data != null) {
-                    String shareString = "";
-                    if (data.current == null && data.next == null && data.day == null) {
-                        shareString = activity.getString(R.string.time_remaining_widget_share_1);
-                    } else if (data.current != null) {
-                        shareString = activity.getString(R.string.time_remaining_widget_share_2) + " " +  data.current;
-                    } else if (data.day != null) {
-                        shareString = activity.getString(R.string.time_remaining_widget_share_3) + " " + data.day;
-                    }
-                    if (!shareString.isEmpty()) {
-                        Intent intent = new Intent(Intent.ACTION_SEND);
-                        intent.setType("text/plain");
-                        intent.putExtra(Intent.EXTRA_TEXT, shareString);
-                        activity.startActivity(Intent.createChooser(intent, activity.getString(R.string.share)));
-                        // track statistics
-                        FirebaseAnalyticsProvider.logEvent(
-                                activity,
-                                FirebaseAnalyticsProvider.Event.SHARE,
-                                FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "time_remaining_widget")
-                        );
-                    }
-                }
+                share();
             }));
         }
         View time_remaining_widget = findViewById(R.id.time_remaining_widget);
@@ -316,15 +297,64 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
             }
         });
     }
+    private void share() {
+        Static.T.runOnUiThread(() -> {
+            if (data == null) {
+                Static.snackBar(activity, activity.getString(R.string.share_unable));
+                return;
+            }
+            if (data.current == null && data.next == null && data.day == null) {
+                share(activity.getString(R.string.time_remaining_widget_share_1));
+                return;
+            }
+            new BottomSheetDialog(
+                    activity,
+                    activity.getString(R.string.share),
+                    new BottomSheetDialog.Entry(data.current != null ? activity.getString(R.string.current_lesson) : null, "current"),
+                    new BottomSheetDialog.Entry(data.next != null ? activity.getString(R.string.next_lesson) : null, "next"),
+                    new BottomSheetDialog.Entry(data.day != null ? activity.getString(R.string.lessons_day_end) : null, "day")
+            ).setListener(tag -> {
+                switch (tag) {
+                    case "current":
+                        share(activity.getString(R.string.time_remaining_widget_share_2) + " " +  data.current);
+                        break;
+                    case "next":
+                        share(activity.getString(R.string.time_remaining_widget_share_3) + " " +  data.current);
+                        break;
+                    case "day":
+                        share(activity.getString(R.string.time_remaining_widget_share_4) + " " +  data.day);
+                        break;
+                }
+            }).show();
+        });
+    }
+    private void share(String text) {
+        if (!text.isEmpty()) {
+            Intent intent = new Intent(Intent.ACTION_SEND);
+            intent.setType("text/plain");
+            intent.putExtra(Intent.EXTRA_TEXT, text);
+            activity.startActivity(Intent.createChooser(intent, activity.getString(R.string.share)));
+            // track statistics
+            FirebaseAnalyticsProvider.logEvent(
+                    activity,
+                    FirebaseAnalyticsProvider.Event.SHARE,
+                    FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "time_remaining_widget")
+            );
+        }
+    }
+
     private void draw(final int layoutId) {
         try {
             ViewGroup vg = activity.findViewById(R.id.trw_container);
             if (vg != null) {
                 vg.removeAllViews();
-                vg.addView(((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             }
         } catch (Exception e){
             Static.error(e);
         }
+    }
+    private View inflate(int layoutId) throws InflateException {
+        return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
 }

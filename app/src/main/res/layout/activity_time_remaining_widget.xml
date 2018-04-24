@@ -23,7 +23,7 @@
         android:layout_alignParentBottom="true"
         android:elevation="6dp"
         android:visibility="visible"
-        android:alpha="0.6">
+        android:alpha="0.8">
 
         <LinearLayout
             android:id="@+id/trw_share"

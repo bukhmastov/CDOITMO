@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:id="@+id/text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="@dimen/item_padding_half"
+        android:paddingBottom="@dimen/item_padding_half"
+        android:paddingStart="@dimen/item_padding"
+        android:paddingEnd="@dimen/item_padding"
+        android:text="@string/lorem_ipsum"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="@dimen/font_size_15"
+        android:background="?android:attr/selectableItemBackground"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:clickable="true"
+        android:focusable="true"/>
+
+</FrameLayout>
