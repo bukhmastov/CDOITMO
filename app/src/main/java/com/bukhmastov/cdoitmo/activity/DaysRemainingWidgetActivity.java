@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,6 +38,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
     private final LinearLayout.LayoutParams hide = new LinearLayout.LayoutParams(0, 0);
     private final LinearLayout.LayoutParams show = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
     private final LinearLayout.LayoutParams showMatch = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+    private ArrayList<DaysRemainingWidget.Data> data = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +74,13 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
                 activity.startActivity(intent);
                 close();
             });
+        }
+        View trw_share = findViewById(R.id.drw_share);
+        if (trw_share != null) {
+            trw_share.setOnClickListener(v -> Static.T.runOnUiThread(() -> {
+                Log.v(TAG, "drw_share clicked");
+                share();
+            }));
         }
         View days_remaining_widget = findViewById(R.id.days_remaining_widget);
         if (days_remaining_widget != null) {
@@ -199,6 +208,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
 
     @Override
     public void onAction(ArrayList<DaysRemainingWidget.Data> data) {
+        this.data = data;
         if (data.size() == 0) {
             message(activity.getString(R.string.exams_gone));
         } else {
@@ -294,17 +304,116 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
             }
         });
     }
+    private void share() {
+        Static.T.runOnUiThread(() -> {
+            if (data == null) {
+                Static.snackBar(activity, activity.getString(R.string.share_unable));
+                return;
+            }
+            if (data.size() == 0) {
+                share("У меня закончились экзамены!");
+                return;
+            }
+            DaysRemainingWidget.Data currentData = data.get(0);
+            if (currentData.subject == null || currentData.time == null || (currentData.time.day == null && currentData.time.hour == null && currentData.time.min == null && currentData.time.sec == null)) {
+                Static.snackBar(activity, activity.getString(R.string.share_unable));
+                return;
+            }
+            String time = "";
+            try {
+                if (currentData.time.sec != null) {
+                    int sec = Integer.parseInt(currentData.time.sec);
+                    String suffix = "";
+                    if (sec % 100 < 10 || sec % 100 > 20) {
+                        switch (sec % 10) {
+                            case 1: suffix = "у"; break;
+                            case 2: case 3: case 4: suffix = "ы"; break;
+                        }
+                    }
+                    time = currentData.time.sec + " секунд" + suffix + " " + time;
+                }
+            } catch (Exception ignore) {/* ignore */}
+            try {
+                if (currentData.time.min != null) {
+                    int min = Integer.parseInt(currentData.time.min);
+                    String suffix = "";
+                    if (min % 100 < 10 || min % 100 > 20) {
+                        switch (min % 10) {
+                            case 1: suffix = "у"; break;
+                            case 2: case 3: case 4: suffix = "ы"; break;
+                        }
+                    }
+                    time = currentData.time.min + " минут" + suffix + " " + time;
+                }
+            } catch (Exception ignore) {/* ignore */}
+            try {
+                if (currentData.time.hour != null) {
+                    int hour = Integer.parseInt(currentData.time.hour);
+                    String suffix = "ов";
+                    if (hour % 100 < 10 || hour % 100 > 20) {
+                        switch (hour % 10) {
+                            case 1: suffix = ""; break;
+                            case 2: case 3: case 4: suffix = "а"; break;
+                        }
+                    }
+                    time = currentData.time.hour + " час" + suffix + " " + time;
+                }
+            } catch (Exception ignore) {/* ignore */}
+            try {
+                if (currentData.time.day != null) {
+                    int day = Integer.parseInt(currentData.time.day);
+                    String suffix = "дней";
+                    if (day % 100 < 10 || day % 100 > 20) {
+                        switch (day % 10) {
+                            case 1: suffix = "день"; break;
+                            case 2: case 3: case 4: suffix = "дня"; break;
+                        }
+                    }
+                    time = currentData.time.day + " " + suffix + " " + time;
+                }
+            } catch (Exception ignore) {/* ignore */}
+            String scope = "";
+            if (currentData.subject != null) {
+                scope += " по предмету \"%subject%\"".replace("%subject%", currentData.subject);
+            }
+            if (currentData.desc != null) {
+                scope += " (%desc%)".replace("%desc%", currentData.desc);
+            }
+            String pattern = "Следующий экзамен %scope% уже через %time%";
+            pattern = pattern.replace("%scope%", scope.trim());
+            pattern = pattern.replace("%time%", time.trim());
+            share(pattern);
+        });
+    }
+    private void share(String text) {
+        if (!text.isEmpty()) {
+            Intent intent = new Intent(Intent.ACTION_SEND);
+            intent.setType("text/plain");
+            intent.putExtra(Intent.EXTRA_TEXT, text);
+            activity.startActivity(Intent.createChooser(intent, activity.getString(R.string.share)));
+            // track statistics
+            FirebaseAnalyticsProvider.logEvent(
+                    activity,
+                    FirebaseAnalyticsProvider.Event.SHARE,
+                    FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "days_remaining_widget")
+            );
+        }
+    }
+
     private void draw(final int layoutId) {
         Static.T.runOnUiThread(() -> {
             try {
-                ViewGroup vg = findViewById(R.id.drw_container);
+                ViewGroup vg = activity.findViewById(R.id.drw_container);
                 if (vg != null) {
                     vg.removeAllViews();
-                    vg.addView(((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                    vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
                 }
             } catch (Exception e){
                 Static.error(e);
             }
         });
+    }
+    private View inflate(int layoutId) throws InflateException {
+        return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
 }
