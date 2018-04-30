@@ -23,6 +23,7 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.SeekBar;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
@@ -60,6 +61,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
             private static int opacity = 150;
         }
         private static int updateTime = 168;
+        private static boolean useShiftAutomatic = true;
     }
     public static final class Default {
         public static final class Schedule {
@@ -79,6 +81,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
             }
         }
         public static final int updateTime = 168;
+        private static boolean useShiftAutomatic = true;
     }
 
     @Override
@@ -129,6 +132,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
         initPartSchedule();
         initPartTheme();
         initPartUpdate();
+        initPartDynamicShift();
         initFinishButton();
     }
     private void initPartPreview() {
@@ -207,6 +211,25 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                 ViewGroup part_update = activity.findViewById(R.id.part_update);
                 part_update.setOnClickListener(view -> activatePartUpdate());
                 updateUpdateSummary();
+            } catch (Exception e) {
+                Static.error(e);
+                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+            }
+        });
+    }
+    private void initPartDynamicShift() {
+        Log.v(TAG, "initPartDynamicShift");
+        Static.T.runThread(() -> {
+            try {
+                ViewGroup part_dynamic_shift = activity.findViewById(R.id.part_automatic_shift);
+                Switch part_dynamic_shift_switch = activity.findViewById(R.id.part_automatic_shift_switch);
+                part_dynamic_shift_switch.setChecked(Default.useShiftAutomatic);
+                part_dynamic_shift_switch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                    activatePartDynamicShift(isChecked);
+                });
+                part_dynamic_shift.setOnClickListener(view -> {
+                    part_dynamic_shift_switch.setChecked(!part_dynamic_shift_switch.isChecked());
+                });
             } catch (Exception e) {
                 Static.error(e);
                 Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
@@ -629,6 +652,18 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
             }
         });
     }
+    private void activatePartDynamicShift(boolean checked) {
+        Log.v(TAG, "activatePartDynamicShift | checked=", checked);
+        Static.T.runThread(() -> {
+            try {
+                Settings.useShiftAutomatic = checked;
+                updateUpdateSummary();
+            } catch (Exception e) {
+                Static.error(e);
+                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+            }
+        });
+    }
     private void activateFinish() {
         Log.v(TAG, "activateFinish");
         Static.T.runThread(() -> {
@@ -646,6 +681,8 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                 settings.put("theme", theme);
                 settings.put("updateTime", Settings.updateTime);
                 settings.put("shift", 0);
+                settings.put("shiftAutomatic", 0);
+                settings.put("useShiftAutomatic", Settings.useShiftAutomatic);
                 Log.v(TAG, "activateFinish | settings=" + settings.toString());
                 ScheduleLessonsWidget.Data.save(activity, mAppWidgetId, "settings", settings.toString());
                 ScheduleLessonsWidget.updateAppWidget(activity, AppWidgetManager.getInstance(activity), mAppWidgetId, false);

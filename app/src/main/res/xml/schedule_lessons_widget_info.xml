@@ -7,7 +7,7 @@
     android:minWidth="110dp"
     android:previewImage="@drawable/schedule_lessons_widget_preview"
     android:resizeMode="horizontal|vertical"
-    android:updatePeriodMillis="10800000"
+    android:updatePeriodMillis="5400000"
     android:widgetCategory="home_screen">
 
 </appwidget-provider>

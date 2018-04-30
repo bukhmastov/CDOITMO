@@ -34,7 +34,7 @@ import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.ProtocolTracker;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
-import com.bukhmastov.cdoitmo.util.Wipe;
+import com.bukhmastov.cdoitmo.util.Migration;
 
 public class MainActivity extends ConnectedActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -66,7 +66,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                     }
                     Static.applyActivityTheme(activity);
                     // apply compatibility changes
-                    Wipe.check(activity);
+                    Migration.migrate(activity);
                     // set default preferences
                     SettingsFragment.applyDefaultValues(activity);
                     // enable/disable firebase

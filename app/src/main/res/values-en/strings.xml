@@ -506,5 +506,7 @@
     <string name="time_remaining_widget_share_3">The start of the next lesson in</string>
     <string name="time_remaining_widget_share_4">The end of all lessons in</string>
     <string name="share_unable">Nothing to share</string>
+    <string name="automatic_shift">Automatic day shift</string>
+    <string name="automatic_shift_summary">Shift to the nearest day containing the following lessons</string>
 
 </resources>

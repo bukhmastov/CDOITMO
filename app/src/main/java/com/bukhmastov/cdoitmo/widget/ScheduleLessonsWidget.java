@@ -34,12 +34,15 @@ import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Calendar;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ScheduleLessonsWidget extends AppWidgetProvider {
 
@@ -111,9 +114,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     public static void deleteAppWidget(final Context context, final int appWidgetId) {
         Static.T.runThread(() -> {
             Log.i(TAG, "delete | appWidgetId=" + appWidgetId);
-            Data.delete(context, appWidgetId, "settings");
-            Data.delete(context, appWidgetId, "cache");
-            Data.delete(context, appWidgetId, "cache_converted");
+            Data.delete(context, appWidgetId);
         });
     }
 
@@ -239,10 +240,10 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 final @SIZE int size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
                 final Colors colors = getColors(settings);
                 final JSONObject json = cache.getJSONObject("content");
-                final int shift = settings.getInt("shift");
                 final Calendar calendar = Static.getCalendar();
-                if (shift != 0) {
-                    calendar.add(Calendar.HOUR, shift * 24);
+                final int[] shift = getShiftBasedOnTime(context, appWidgetId, settings, calendar);
+                if (shift[0] + shift[1] != 0) {
+                    calendar.add(Calendar.HOUR, (shift[0] + shift[1]) * 24);
                 }
                 final int week = Static.getWeek(context, calendar) % 2;
                 final RemoteViews layout = new RemoteViews(context.getPackageName(), getViewLayout(size));
@@ -256,7 +257,10 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 layout.setViewVisibility(R.id.widget_day_title, View.VISIBLE);
                 layout.setTextViewText(R.id.widget_title, json.getString("title") + ("room".equals(json.getString("type")) ? " " + context.getString(R.string.room).toLowerCase() : ""));
                 layout.setTextViewText(R.id.widget_day_title,
-                        (shift != 0 ? (shift > 0 ? "+" : "") + String.valueOf(shift) + " " : "") +
+                        (
+                                (shift[0] != 0 ? ((shift[0] > 0 ? "+" : "") + String.valueOf(shift[0]) + " ") : "") +
+                                (shift[1] != 0 ? ("(" + (shift[1] > 0 ? "+" : "") + String.valueOf(shift[1] + ") ")) : "")
+                        ) +
                         Static.getDay(context, calendar.get(Calendar.DAY_OF_WEEK)) +
                         (week == 0 ? " (" + context.getString(R.string.tab_even) + ")" : (week == 1 ? " (" + context.getString(R.string.tab_odd) + ")" : ""))
                 );
@@ -537,6 +541,106 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         remoteViews.setOnClickPendingIntent(R.id.widget_title_container, pIntent);
     }
 
+    private static int[] getShiftBasedOnTime(final Context context, final int appWidgetId, JSONObject settings, Calendar calendar) {
+        int shift = 0;
+        int shiftAutomatic = 0;
+        // fetch current shift
+        try {
+            shift = settings.getInt("shift");
+        } catch (Exception e) {
+            return new int[] {shift, shiftAutomatic};
+        }
+        // fetch current auto shift, if enabled
+        try {
+            if (!settings.has("useShiftAutomatic")) {
+                settings.put("useShiftAutomatic", true);
+            }
+            if (!settings.has("shiftAutomatic")) {
+                settings.put("shiftAutomatic", 0);
+            }
+            if (!settings.getBoolean("useShiftAutomatic")) {
+                return new int[] {shift, shiftAutomatic};
+            }
+            shiftAutomatic = settings.getInt("shiftAutomatic");
+        } catch (Exception e) {
+            return new int[] {shift, shiftAutomatic};
+        }
+        // calculate new auto shift from schedule
+        try {
+            // fetch current schedule
+            final JSONObject content = Data.getJson(context, appWidgetId, "cache_converted");
+            if (content == null) {
+                return new int[] {shift, shiftAutomatic};
+            }
+            final JSONArray schedule = content.getJSONArray("schedule");
+            if (schedule == null) {
+                return new int[] {shift, shiftAutomatic};
+            }
+            // seek for next day that contains following lessons
+            // to set new shiftAutomatic variable value
+            // seek only for 14 days starting today
+            final Calendar seek = (Calendar) calendar.clone();
+            final Pattern time = Pattern.compile("^(\\d{1,2}):(\\d{2})$");
+            days_loop: for (int day = 0; day < 14; day++) {
+                if (day > 0) {
+                    seek.add(Calendar.HOUR, 24);
+                }
+                final int week = Static.getWeek(context, seek) % 2;
+                final int weekday = Static.getWeekDay(seek);
+                final JSONArray lessons = getLessonsForWeekday(schedule, week, weekday);
+                // if this day contains lessons
+                if (lessons.length() > 0) {
+                    if (day == 0) {
+                        // if this day - today
+                        // seek for last lesson that contains proper timeEnd value
+                        for (int i = lessons.length() - 1; i >= 0 ; i--) {
+                            final JSONObject lesson = lessons.getJSONObject(i);
+                            final Matcher lessonTimeEnd = time.matcher(lesson.getString("timeEnd"));
+                            if (lessonTimeEnd.find()) {
+                                Calendar calendarLTE = (Calendar) seek.clone();
+                                calendarLTE.set(Calendar.HOUR_OF_DAY, Integer.parseInt(lessonTimeEnd.group(1)));
+                                calendarLTE.set(Calendar.MINUTE, Integer.parseInt(lessonTimeEnd.group(2)));
+                                calendarLTE.set(Calendar.SECOND, 0);
+                                if (calendar.getTimeInMillis() > calendarLTE.getTimeInMillis()) {
+                                    // if current timestamp more than lesson end timestamp
+                                    // then today's lessons have ended and we should continue seeking next day
+                                    continue days_loop;
+                                } else {
+                                    // if current timestamp less than lesson end timestamp
+                                    // then today's lessons still not ended, so current shiftAutomatic should be set to 0
+                                    shiftAutomatic = saveShiftAutomatic(context, appWidgetId, settings, shiftAutomatic, day);
+                                    break days_loop;
+                                }
+                            }
+                        }
+                    } else {
+                        // if this day - not today (any other following day)
+                        // then we found day that contains lessons and current shiftAutomatic should be set to 'day' variable
+                        shiftAutomatic = saveShiftAutomatic(context, appWidgetId, settings, shiftAutomatic, day);
+                    }
+                    break;
+                }
+            }
+        } catch (Exception ignore) {
+            // ignore
+        }
+        return new int[] {shift, shiftAutomatic};
+    }
+    private static int saveShiftAutomatic(final Context context, final int appWidgetId, JSONObject settings, int oldShift, int newShift) {
+        int delta = newShift - oldShift;
+        oldShift = newShift;
+        if (delta != 0) {
+            try {
+                settings.put("shiftAutomatic", oldShift);
+                Data.save(context, appWidgetId, "settings", settings.toString());
+            } catch (Exception e) {
+                // failed to save new shifts, restore to previous ones
+                oldShift -= delta;
+            }
+        }
+        return oldShift;
+    }
+
     public void onReceive(final Context context, final Intent intent) {
         super.onReceive(context, intent);
         Static.T.runThread(() -> {
@@ -731,6 +835,38 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
             }
             Storage.file.general.perm.delete(context, "widget_schedule_lessons#" + appWidgetId + "#" + type);
         }
+        public static void delete(Context context, int appWidgetId) {
+            Log.v(TAG, "delete | appWidgetId=" + appWidgetId);
+            if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
+                Log.w(TAG, "delete | prevented due to invalid appwidget id");
+                return;
+            }
+            Storage.file.general.perm.clear(context, "widget_schedule_lessons#" + appWidgetId);
+        }
+    }
+
+    public static JSONArray getLessonsForWeekday(final JSONArray schedule, final int week, final int weekday) throws JSONException {
+        JSONArray l = new JSONArray();
+        for (int i = 0; i < schedule.length(); i++) {
+            final JSONObject day = schedule.getJSONObject(i);
+            if (day.has("weekday") && day.getInt("weekday") == weekday) {
+                final JSONArray lessons = day.has("lessons") ? day.getJSONArray("lessons") : null;
+                if (lessons != null) {
+                    for (int j = 0; j < lessons.length(); j++) {
+                        final JSONObject lesson = lessons.getJSONObject(j);
+                        if (lesson != null) {
+                            if (week == -1 || (lesson.getInt("week") == 2 || lesson.getInt("week") == week)) {
+                                if (!"reduced".equals(lesson.getString("cdoitmo_type"))) {
+                                    l.put(lesson);
+                                }
+                            }
+                        }
+                    }
+                }
+                break;
+            }
+        }
+        return l;
     }
 
     private static void logStatistic(final Context context, final String info) {

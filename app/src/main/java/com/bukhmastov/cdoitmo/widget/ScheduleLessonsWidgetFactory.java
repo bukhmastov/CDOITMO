@@ -21,7 +21,7 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
     private ScheduleLessonsWidget.Colors colors;
     private String type = "group";
     private int week = -1;
-    private JSONArray lessons = new JSONArray();
+    private JSONArray lessons;
 
     ScheduleLessonsWidgetFactory(Context context, Intent intent) {
         this.context = context;
@@ -50,34 +50,22 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
                 if (!settings.has("shift")) {
                     settings.put("shift", 0);
                 }
-                final int shift = settings.getInt("shift");
+                if (!settings.has("shiftAutomatic")) {
+                    settings.put("shiftAutomatic", 0);
+                }
+                final int shift = settings.getInt("shift") + settings.getInt("shiftAutomatic");
                 final Calendar calendar = Static.getCalendar();
                 if (shift != 0) {
                     calendar.add(Calendar.HOUR, shift * 24);
                 }
                 this.week = Static.getWeek(context, calendar) % 2;
                 this.type = content.getString("type");
-                this.lessons = new JSONArray();
-                final int weekday = Static.getWeekDay(calendar);
                 final JSONArray schedule = content.getJSONArray("schedule");
-                if (schedule == null) throw new NullPointerException("schedule cannot be null");
-                for (int i = 0; i < schedule.length(); i++) {
-                    final JSONObject day = schedule.getJSONObject(i);
-                    if (day.has("weekday") && day.getInt("weekday") == weekday) {
-                        final JSONArray lessons = day.has("lessons") ? day.getJSONArray("lessons") : null;
-                        if (lessons == null) throw new NullPointerException("lessons cannot be null");
-                        for (int j = 0; j < lessons.length(); j++) {
-                            final JSONObject lesson = lessons.getJSONObject(j);
-                            if (lesson != null) {
-                                if (week == -1 || (lesson.getInt("week") == 2 || lesson.getInt("week") == week)) {
-                                    if (!"reduced".equals(lesson.getString("cdoitmo_type"))) {
-                                        this.lessons.put(lesson);
-                                    }
-                                }
-                            }
-                        }
-                        break;
-                    }
+                if (schedule != null) {
+                    final int weekday = Static.getWeekDay(calendar);
+                    this.lessons = ScheduleLessonsWidget.getLessonsForWeekday(schedule, week, weekday);
+                } else {
+                    this.lessons = new JSONArray();
                 }
             } catch (Exception e) {
                 Static.error(e);
