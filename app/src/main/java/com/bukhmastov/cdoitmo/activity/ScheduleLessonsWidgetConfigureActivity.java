@@ -219,7 +219,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
     }
     private void initPartDynamicShift() {
         Log.v(TAG, "initPartDynamicShift");
-        Static.T.runThread(() -> {
+        Static.T.runOnUiThread(() -> {
             try {
                 ViewGroup part_dynamic_shift = activity.findViewById(R.id.part_automatic_shift);
                 Switch part_dynamic_shift_switch = activity.findViewById(R.id.part_automatic_shift_switch);
@@ -657,7 +657,6 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
         Static.T.runThread(() -> {
             try {
                 Settings.useShiftAutomatic = checked;
-                updateUpdateSummary();
             } catch (Exception e) {
                 Static.error(e);
                 Static.snackBar(activity, activity.getString(R.string.something_went_wrong));

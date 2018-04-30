@@ -24,6 +24,9 @@ import com.bukhmastov.cdoitmo.util.Static;
 
 import org.json.JSONObject;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class TimeRemainingWidgetActivity extends AppCompatActivity implements ScheduleLessons.Handler, TimeRemainingWidget.response {
 
     private static final String TAG = "TRWidgetActivity";
@@ -316,13 +319,13 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
             ).setListener(tag -> {
                 switch (tag) {
                     case "current":
-                        share(activity.getString(R.string.time_remaining_widget_share_2) + " " +  data.current);
+                        share(activity.getString(R.string.time_remaining_widget_share_2) + " " + time2readable(data.current));
                         break;
                     case "next":
-                        share(activity.getString(R.string.time_remaining_widget_share_3) + " " +  data.current);
+                        share(activity.getString(R.string.time_remaining_widget_share_3) + " " + time2readable(data.next));
                         break;
                     case "day":
-                        share(activity.getString(R.string.time_remaining_widget_share_4) + " " +  data.day);
+                        share(activity.getString(R.string.time_remaining_widget_share_4) + " " + time2readable(data.day));
                         break;
                 }
             }).show();
@@ -341,6 +344,51 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
                     FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "time_remaining_widget")
             );
         }
+    }
+    private String time2readable(String time) {
+        if (time == null) {
+            return "";
+        }
+        String suffix;
+        Matcher m = Pattern.compile("^(\\d*:?)(\\d*:?)?(\\d*:?)?$").matcher(time);
+        int elements = time.split(":").length;
+        if (m.find()) {
+            time = "";
+            if (elements > 2) {
+                int hour = Integer.parseInt(m.group(elements - 2).replace(":", ""));
+                suffix = "ов";
+                if (hour % 100 < 10 || hour % 100 > 20) {
+                    switch (hour % 10) {
+                        case 1: suffix = ""; break;
+                        case 2: case 3: case 4: suffix = "а"; break;
+                    }
+                }
+                time += " " + hour + " час" + suffix;
+            }
+            if (elements > 1) {
+                int min = Integer.parseInt(m.group(elements - 1).replace(":", ""));
+                suffix = "";
+                if (min % 100 < 10 || min % 100 > 20) {
+                    switch (min % 10) {
+                        case 1: suffix = "у"; break;
+                        case 2: case 3: case 4: suffix = "ы"; break;
+                    }
+                }
+                time += " " + min + " минут" + suffix;
+            }
+            if (elements > 0) {
+                int sec = Integer.parseInt(m.group(elements).replace(":", ""));
+                suffix = "";
+                if (sec % 100 < 10 || sec % 100 > 20) {
+                    switch (sec % 10) {
+                        case 1: suffix = "у"; break;
+                        case 2: case 3: case 4: suffix = "ы"; break;
+                    }
+                }
+                time += (time.isEmpty() ? " " : " и ") + sec + " секунд" + suffix;
+            }
+        }
+        return time.trim();
     }
 
     private void draw(final int layoutId) {
