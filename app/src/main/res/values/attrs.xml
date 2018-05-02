@@ -15,6 +15,7 @@
         <attr name="colorBackgroundSnackBar" format="color" />
         <attr name="colorBackgroundPopup" format="color" />
         <attr name="colorBackgroundPopupFill" format="color" />
+        <attr name="colorBackgroundPopupBright" format="color" />
 
         <attr name="colorPositiveTrend" format="color" />
         <attr name="colorNegativeTrend" format="color" />
@@ -50,4 +51,12 @@
 
     </declare-styleable>
 
+    <declare-styleable name="OutlineTextView">
+        <attr name="outlineSize" format="dimension"/>
+        <attr name="outlineColor" format="color|reference"/>
+        <attr name="android:shadowRadius"/>
+        <attr name="android:shadowDx"/>
+        <attr name="android:shadowDy"/>
+        <attr name="android:shadowColor"/>
+    </declare-styleable>
 </resources>

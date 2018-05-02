@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/time_remaining_widget"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -42,18 +43,20 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:src="@drawable/ic_share"
-                android:tint="?attr/colorBackgroundPopupFill"
+                android:src="@drawable/ic_share_time_widget"
                 android:paddingStart="0dp"
                 android:paddingEnd="@dimen/item_horizontal_padding_half"/>
 
-            <TextView
+            <com.bukhmastov.cdoitmo.view.OutlineTextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:text="@string/share"
-                android:textSize="@dimen/font_size_14"
-                android:textColor="?attr/colorBackgroundPopupFill"/>
+                android:textStyle="bold"
+                android:textSize="@dimen/font_size_16"
+                android:textColor="?attr/colorBackgroundPopupBright"
+                app:outlineSize="2dp"
+                app:outlineColor="?attr/colorBackgroundPopup"/>
 
         </LinearLayout>
 

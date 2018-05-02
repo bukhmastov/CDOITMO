@@ -797,11 +797,13 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
     private void applyColor(String hex, ViewGroup picker, ImageView image, TextView value, TextView header, TextView hint) {
         ColorStateList highlight = ColorStateList.valueOf(Color.parseColor(hex) > Color.parseColor("#757575") ? Color.BLACK : Color.WHITE);
         value.setText(hex);
-        picker.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(hex)));
-        image.setImageTintList(highlight);
-        header.setTextColor(highlight);
-        value.setTextColor(highlight);
-        hint.setTextColor(highlight);
+        if (Build.VERSION.SDK_INT != Build.VERSION_CODES.LOLLIPOP) {
+            picker.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor(hex)));
+            image.setImageTintList(highlight);
+            header.setTextColor(highlight);
+            value.setTextColor(highlight);
+            hint.setTextColor(highlight);
+        }
     }
 
     private static int parseColor(String color) {

@@ -27,6 +27,7 @@
 
     <color name="colorBackgroundPopupBlack">#BB000000</color>
     <color name="colorBackgroundPopupFillBlack">#000000</color>
+    <color name="colorBackgroundPopupBrightBlack">#BDBDBD</color>
     <color name="colorBackgroundNavigationBlack">#101010</color>
     <color name="colorBackgroundCardsBlack">#101010</color>
     <color name="colorBackgroundSectionBlack">#101010</color>

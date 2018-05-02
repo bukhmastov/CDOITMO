@@ -75,6 +75,7 @@
         <item name="android:windowNoTitle">true</item>
         <item name="colorBackgroundPopup">@color/colorBackgroundPopupWhite</item>
         <item name="colorBackgroundPopupFill">@color/colorBackgroundPopupFillWhite</item>
+        <item name="colorBackgroundPopupBright">@color/colorBackgroundPopupBrightWhite</item>
         <item name="colorPrimaryDark">?attr/colorBackgroundPopup</item>
     </style>
     <style name="AppTheme.Search.White" parent="AppTheme.White">

@@ -29,6 +29,7 @@
 
     <color name="colorBackgroundPopupDark">#AA000000</color>
     <color name="colorBackgroundPopupFillDark">#181818</color>
+    <color name="colorBackgroundPopupBrightDark">#E0E0E0</color>
     <color name="colorBackgroundCardsDark">#212121</color>
     <color name="colorBackgroundSearchToolbarDark">#212121</color>
     <color name="colorBackgroundSearchDark">#323232</color>

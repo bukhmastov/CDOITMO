@@ -28,6 +28,7 @@
 
     <color name="colorBackgroundPopupWhite">#99000000</color>
     <color name="colorBackgroundPopupFillWhite">#f0f0f0</color>
+    <color name="colorBackgroundPopupBrightWhite">#FAFAFA</color>
     <color name="colorBackgroundCardsWhite">#FAFAFA</color>
     <color name="colorBackgroundSearchToolbarWhite">#FFFFFF</color>
     <color name="colorBackgroundSearchWhite">#FFFFFF</color>
