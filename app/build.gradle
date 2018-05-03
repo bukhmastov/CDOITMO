@@ -9,8 +9,8 @@ android {
         applicationId "com.bukhmastov.cdoitmo"
         minSdkVersion 21
         targetSdkVersion 27
-        versionCode 110
-        versionName "1.13.0"
+        versionCode 114
+        versionName "1.14.0"
     }
     buildTypes {
         release {
