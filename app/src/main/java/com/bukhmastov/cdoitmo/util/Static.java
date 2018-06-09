@@ -87,6 +87,9 @@ public class Static {
     private static String USER_AGENT = null;
     private static String app_theme = null;
     public static final String GLITCH = "%*<@?!";
+    public static final int LENGTH_MOMENTUM = 600;
+    public static final int LENGTH_SHORT = 1500;
+    public static final int LENGTH_LONG = 2750;
 
     public interface SimpleCallback {
         void onCall();
@@ -343,14 +346,26 @@ public class Static {
             Static.error(e);
         }
     }
-    public static void showUpdateTime(Activity activity, long time, boolean show_now) {
-        showUpdateTime(activity, android.R.id.content, time, show_now);
+    public static void showUpdateTime(Activity activity, long time) {
+        showUpdateTime(activity, time, LENGTH_MOMENTUM, false);
     }
-    public static void showUpdateTime(Activity activity, @IdRes int layout, long time, boolean show_now) {
+    public static void showUpdateTime(Activity activity, long time, int duration) {
+        showUpdateTime(activity, time, LENGTH_MOMENTUM, false);
+    }
+    public static void showUpdateTime(Activity activity, long time, int duration, boolean force) {
+        showUpdateTime(activity, android.R.id.content, time, duration, force);
+    }
+    public static void showUpdateTime(Activity activity, @IdRes int layout, long time) {
+        showUpdateTime(activity, layout, time, LENGTH_MOMENTUM, false);
+    }
+    public static void showUpdateTime(Activity activity, @IdRes int layout, long time, int duration) {
+        showUpdateTime(activity, layout, time, duration, false);
+    }
+    public static void showUpdateTime(Activity activity, @IdRes int layout, long time, int duration, boolean force) {
         String message = getUpdateTime(activity, time);
         int shift = (int) ((getCalendar().getTimeInMillis() - time) / 1000L);
-        if (show_now || shift > 4) {
-            Static.snackBar(activity, layout, activity.getString(R.string.update_date) + " " + message);
+        if (force || shift > 4) {
+            Static.snackBar(activity, layout, activity.getString(R.string.update_date) + " " + message, duration);
         }
     }
     public static String getUpdateTime(Context context, long time) {
@@ -470,40 +485,48 @@ public class Static {
         });
     }
     public static void snackBar(Activity activity, String text) {
-        if (activity == null) {
-            Log.w(TAG, "snackBar | activity is null");
-            return;
-        }
-        Static.snackBar(activity.findViewById(android.R.id.content), text);
+        snackBar(activity, text, LENGTH_LONG);
+    }
+    public static void snackBar(Activity activity, String text, int duration) {
+        snackBar(activity, android.R.id.content, text, duration);
     }
     public static void snackBar(Activity activity, @IdRes int layout, String text) {
+        snackBar(activity, layout, text, LENGTH_LONG);
+    }
+    public static void snackBar(Activity activity, @IdRes int layout, String text, int duration) {
         if (activity == null) {
             Log.w(TAG, "snackBar | activity is null");
             return;
         }
-        Static.snackBar(activity.findViewById(layout), text);
-    }
-    public static void snackBar(View layout, String text) {
-        snackBar(layout, text, null, null);
+        Static.snackBar(activity.findViewById(layout), text, duration);
     }
     public static void snackBar(Activity activity, String text, String action, View.OnClickListener onClickListener) {
-        if (activity == null) {
-            Log.w(TAG, "snackBar | activity is null");
-            return;
-        }
-        Static.snackBar(activity.findViewById(android.R.id.content), text, action, onClickListener);
+        snackBar(activity, text, action, LENGTH_LONG, onClickListener);
     }
-    public static void snackBar(Activity activity, @IdRes int layout, String text, String action, View.OnClickListener onClickListener) {
+    public static void snackBar(Activity activity, String text, String action, int duration, View.OnClickListener onClickListener) {
         if (activity == null) {
             Log.w(TAG, "snackBar | activity is null");
             return;
         }
-        Static.snackBar(activity.findViewById(layout), text, action, onClickListener);
+        Static.snackBar(activity.findViewById(android.R.id.content), text, action, duration, onClickListener);
+    }
+    public static void snackBar(Activity activity, @IdRes int layout, String text, String action, int duration, View.OnClickListener onClickListener) {
+        if (activity == null) {
+            Log.w(TAG, "snackBar | activity is null");
+            return;
+        }
+        Static.snackBar(activity.findViewById(layout), text, action, duration, onClickListener);
+    }
+    public static void snackBar(final View layout, final String text, final int duration) {
+        snackBar(layout, text, null, duration, null);
     }
     public static void snackBar(final View layout, final String text, final String action, final View.OnClickListener onClickListener) {
+        snackBar(layout, text, action, LENGTH_LONG, onClickListener);
+    }
+    public static void snackBar(final View layout, final String text, final String action, final int duration, final View.OnClickListener onClickListener) {
         Static.T.runOnUiThread(() -> {
             if (layout != null) {
-                Snackbar snackbar = Snackbar.make(layout, text, Snackbar.LENGTH_LONG);
+                Snackbar snackbar = Snackbar.make(layout, text, duration);
                 snackbar.getView().setBackgroundColor(Static.colorBackgroundSnackBar);
                 if (action != null) snackbar.setAction(action, onClickListener);
                 snackbar.show();

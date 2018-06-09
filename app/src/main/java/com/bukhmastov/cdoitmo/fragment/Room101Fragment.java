@@ -647,7 +647,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                         addRequest();
                     });
                 }
-                Static.showUpdateTime(activity, R.id.room101_review_swipe, viewRequest.getLong("timestamp"), false);
+                Static.showUpdateTime(activity, R.id.room101_review_swipe, viewRequest.getLong("timestamp"));
             } catch (Exception e){
                 Static.error(e);
                 loadFailed();

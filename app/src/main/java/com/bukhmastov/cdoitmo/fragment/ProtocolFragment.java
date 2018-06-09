@@ -384,7 +384,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                             });
                         }
                         // show update time
-                        Static.showUpdateTime(activity, getData().getLong("timestamp"), false);
+                        Static.showUpdateTime(activity, getData().getLong("timestamp"));
                     } catch (Exception e) {
                         Static.error(e);
                         loadFailed();

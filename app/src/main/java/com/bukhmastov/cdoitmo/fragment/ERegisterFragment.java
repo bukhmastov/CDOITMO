@@ -400,7 +400,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                             });
                         }
                         // show update time
-                        Static.showUpdateTime(activity, getData().getLong("timestamp"), true);
+                        Static.showUpdateTime(activity, getData().getLong("timestamp"), Static.LENGTH_MOMENTUM, true);
                     } catch (Exception e) {
                         Static.error(e);
                         loadFailed();
