@@ -98,6 +98,9 @@
     <string name="no_exams">No exams</string>
     <string name="no_lessons">No lessons</string>
     <string name="exam">Exam</string>
+    <string name="credit">Credit</string>
+    <string name="exams">Exams</string>
+    <string name="credits">Credits</string>
     <string name="consult">Consultation</string>
     <string name="room_short">Aud.</string>
     <string name="place">Place</string>
@@ -508,5 +511,6 @@
     <string name="share_unable">Nothing to share</string>
     <string name="automatic_shift">Automatic day shift</string>
     <string name="automatic_shift_summary">Shift to the nearest day containing the following lessons</string>
+    <string name="default_tab">Default tab</string>
 
 </resources>

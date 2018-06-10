@@ -188,12 +188,13 @@ public class ScheduleExamsRVA extends RVA {
     }
     private void bindExam(View container, Item item) {
         try {
-            final String subject = item.data.getString("subject");
-            final String group = item.data.getString("group");
-            final String teacher = item.data.getString("teacher");
-            final String teacher_id = item.data.getString("teacher_id");
-            final JSONObject exam = item.data.getJSONObject("exam");
-            final JSONObject advice = item.data.getJSONObject("advice");
+            final String t = item.data.has("type") ? item.data.getString("type") : "exam";
+            final String subject = item.data.has("subject") ? item.data.getString("subject") : "";
+            final String group = item.data.has("group") ? item.data.getString("group") : "";
+            final String teacher = item.data.has("teacher") ? item.data.getString("teacher") : "";
+            final String teacher_id = item.data.has("teacher_id") ? item.data.getString("teacher_id") : "";
+            final JSONObject exam = item.data.has("exam") ? item.data.getJSONObject("exam") : null;
+            final JSONObject advice = item.data.has("advice") ? item.data.getJSONObject("advice") : null;
             final String desc;
             final boolean touch_icon_enabled;
             switch (type) {
@@ -332,6 +333,7 @@ public class ScheduleExamsRVA extends RVA {
                     if (!place.isEmpty()) {
                         place = activity.getString(R.string.place) + ": " + place;
                     }
+                    ((TextView) container.findViewById(R.id.exam_info_exam_title)).setText("credit".equals(t) ? R.string.credit : R.string.exam);
                     ((TextView) container.findViewById(R.id.exam_info_exam_date)).setText(cuteDate(activity, date, date_format_append));
                     TextView exam_info_exam_place = container.findViewById(R.id.exam_info_exam_place);
                     if (!place.isEmpty()) {

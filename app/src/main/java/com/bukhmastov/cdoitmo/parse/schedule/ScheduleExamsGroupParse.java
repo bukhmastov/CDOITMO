@@ -13,6 +13,8 @@ import java.util.regex.Pattern;
 public class ScheduleExamsGroupParse extends Parse {
 
     private final String query;
+    private final Pattern groupPattern = Pattern.compile("[a-zа-яё]\\d{4}[a-zа-яё]?", Pattern.CASE_INSENSITIVE);
+    private final Pattern advicePattern = Pattern.compile("^Консультация (.{1,10}) в (\\d{1,2}:\\d{1,2}) Место:(.*)$", Pattern.CASE_INSENSITIVE);
 
     public ScheduleExamsGroupParse(String data, String query, Response delegate) {
         super(data, delegate);
@@ -28,7 +30,7 @@ public class ScheduleExamsGroupParse extends Parse {
             for (TagNode container : containers) {
                 if (container == null) continue;
                 final TagNode[] fields = container.getAllElements(false)[0].getAllElements(false)[0].getAllElements(false)[0].getAllElements(false);
-                if (fields == null) continue;
+                if (fields == null || fields.length < 4) continue;
                 JSONObject examInfo = new JSONObject();
                 JSONObject exam = new JSONObject();
                 JSONObject advice = new JSONObject();
@@ -39,20 +41,35 @@ public class ScheduleExamsGroupParse extends Parse {
                 if (meta != null) {
                     examInfo.put("subject", meta.getAllElements(false)[0].getText().toString().trim());
                     examInfo.put("teacher", meta.getAllElements(false)[1].getText().toString().trim());
-                    Matcher m = Pattern.compile("^Консультация (.{1,10}) в (\\d{1,2}:\\d{1,2}) Место:(.*)$").matcher(meta.getAllElements(false)[2].getText().toString().trim());
+                    Matcher m = advicePattern.matcher(meta.getAllElements(false)[2].getText().toString().trim());
                     if (m.find()) {
                         advice.put("date", m.group(1));
                         advice.put("time", m.group(2));
                         advice.put("room", m.group(3).replace(".", "").trim());
                     }
                 }
+                String type = fields[4].getText().toString().trim().toLowerCase();
+                if (type.startsWith("зач")) {
+                    type = "credit";
+                } else {
+                    type = "exam";
+                }
+                examInfo.put("type", type);
                 examInfo.put("exam", exam);
                 examInfo.put("advice", advice);
                 exams.put(examInfo);
             }
         }
+        String label = query;
+        if (titles != null && titles.length > 0) {
+            label = titles[0].getText().toString().trim();
+            Matcher m = groupPattern.matcher(label);
+            if (m.find()) {
+                label = m.group().trim();
+            }
+        }
         return new JSONObject()
-                .put("label", titles != null && titles.length > 0 ? titles[0].getText().toString().replace("Расписание группы", "").trim() : query)
+                .put("label", label)
                 .put("query", query)
                 .put("exams", exams);
     }

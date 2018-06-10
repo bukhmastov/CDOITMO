@@ -13,6 +13,9 @@ import java.util.regex.Pattern;
 public class ScheduleExamsTeacherParse extends Parse {
 
     private final String query;
+    private final Pattern teacherPattern = Pattern.compile("^(([a-zа-яА-ЯёЁ]|\\s)*).*$", Pattern.CASE_INSENSITIVE);
+    private final Pattern teacherReplacePattern = Pattern.compile("Ассистент|Доцент|Профессор|Ст\\.|препод\\.|Зав\\.|кафедрой|Преподаватель|Расписание\\sэкзаменов|Расписание\\sсессии", Pattern.CASE_INSENSITIVE);
+    private final Pattern advicePattern = Pattern.compile("^Консультация (.{1,10}) в (\\d{1,2}:\\d{1,2}) Место:(.*)$", Pattern.CASE_INSENSITIVE);
 
     public ScheduleExamsTeacherParse(String data, String query, Response delegate) {
         super(data, delegate);
@@ -29,7 +32,7 @@ public class ScheduleExamsTeacherParse extends Parse {
             for (TagNode container : containers) {
                 if (container == null) continue;
                 final TagNode[] fields = container.getAllElements(false)[0].getAllElements(false)[0].getAllElements(false)[0].getAllElements(false);
-                if (fields == null) continue;
+                if (fields == null || fields.length < 5) continue;
                 JSONObject examInfo = new JSONObject();
                 JSONObject exam = new JSONObject();
                 JSONObject advice = new JSONObject();
@@ -40,24 +43,38 @@ public class ScheduleExamsTeacherParse extends Parse {
                 TagNode meta = fields[4].getAllElements(false)[0];
                 if (meta != null) {
                     examInfo.put("subject", meta.getAllElements(false)[0].getText().toString().trim());
-                    label = meta.getAllElements(false)[1].getText().toString().trim();
-                    Matcher m = Pattern.compile("^Консультация (.{1,10}) в (\\d{1,2}:\\d{1,2}) Место:(.*)$").matcher(meta.getAllElements(false)[2].getText().toString().trim());
+                    if (label.isEmpty()) {
+                        label = meta.getAllElements(false)[1].getText().toString().trim();
+                    }
+                    Matcher m = advicePattern.matcher(meta.getAllElements(false)[2].getText().toString().trim());
                     if (m.find()) {
                         advice.put("date", m.group(1));
                         advice.put("time", m.group(2));
                         advice.put("room", m.group(3).replace(".", "").trim());
                     }
                 }
+                String type = fields[5].getText().toString().trim().toLowerCase();
+                if (type.startsWith("зач")) {
+                    type = "credit";
+                } else {
+                    type = "exam";
+                }
+                examInfo.put("type", type);
                 examInfo.put("exam", exam);
                 examInfo.put("advice", advice);
                 exams.put(examInfo);
             }
         }
         if (label.isEmpty()) {
-            label = titles != null && titles.length > 0 ? titles[0].getText().toString() : query;
-            Matcher m = Pattern.compile("^(.*)Расписание экзаменов\\.?$").matcher(label);
-            if (m.find()) {
-                label = m.group(1).trim();
+            label = query;
+            if (titles != null && titles.length > 0) {
+                label = titles[0].getText().toString().trim();
+                label = teacherReplacePattern.matcher(label).replaceAll("");
+                label = label.trim();
+                Matcher m = teacherPattern.matcher(label);
+                if (m.find()) {
+                    label = m.group(1).trim();
+                }
             }
         }
         return new JSONObject()

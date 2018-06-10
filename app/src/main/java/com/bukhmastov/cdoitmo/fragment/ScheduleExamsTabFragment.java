@@ -16,26 +16,23 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
-import com.bukhmastov.cdoitmo.adapter.rva.ScheduleLessonsRVA;
+import com.bukhmastov.cdoitmo.adapter.rva.ScheduleExamsRVA;
 import com.bukhmastov.cdoitmo.exception.SilentException;
-import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleLessonsFragment;
+import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleExamsFragment;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
-import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
+import com.bukhmastov.cdoitmo.object.schedule.ScheduleExams;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
-import com.bukhmastov.cdoitmo.util.Storage;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.Calendar;
-
-public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
+public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
 
     private static final String TAG = "SLTabFragment";
     private boolean loaded = false;
-    private ScheduleLessons scheduleLessons = null;
+    private ScheduleExams scheduleExams = null;
     private Client.Request requestHandle = null;
     private View container = null;
 
@@ -73,7 +70,7 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        this.container = inflater.inflate(R.layout.fragment_tab_schedule_lessons, container, false);
+        this.container = inflater.inflate(R.layout.fragment_tab_schedule_exams, container, false);
         return this.container;
     }
 
@@ -112,7 +109,7 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
         Static.T.runOnUiThread(() -> {
             if (activity == null) {
                 Log.w(TAG, "load | activity is null");
-                failed(activity);
+                failed(getContext());
                 return;
             }
             draw(activity, R.layout.state_loading);
@@ -123,13 +120,13 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
                         failed(activity);
                         return;
                     }
-                    if (!isSameQueryRequested()) {
+                    if (scroll != null && !isSameQueryRequested()) {
                         scroll.clear();
                     }
                     if (refresh) {
-                        getScheduleLessons(activity).search(activity, getQuery(), 0);
+                        getScheduleExams(activity).search(activity, getQuery(), 0);
                     } else {
-                        getScheduleLessons(activity).search(activity, getQuery());
+                        getScheduleExams(activity).search(activity, getQuery());
                     }
                 } catch (Exception e) {
                     Static.error(e);
@@ -138,8 +135,8 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
             });
         });
     }
-    private @NonNull ScheduleLessons getScheduleLessons(final ConnectedActivity activity) {
-        if (scheduleLessons == null) scheduleLessons = new ScheduleLessons(new Schedule.Handler() {
+    private @NonNull ScheduleExams getScheduleExams(final ConnectedActivity activity) {
+        if (scheduleExams == null) scheduleExams = new ScheduleExams(new Schedule.Handler() {
             @Override
             public void onSuccess(final JSONObject json, final boolean fromCache) {
                 Static.T.runThread(() -> {
@@ -156,8 +153,20 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
                         } catch (Exception ignore) {
                             // ignore
                         }
-                        final int week = Static.getWeek(activity);
-                        final ScheduleLessonsRVA adapter = new ScheduleLessonsRVA(activity, TYPE, json, week, data -> {
+                        // fetch only right exams
+                        JSONObject jsonConverted = new JSONObject(json.toString());
+                        JSONArray examsConverted = new JSONArray();
+                        JSONArray exams = json.getJSONArray("schedule");
+                        for (int i = 0; i < exams.length(); i++) {
+                            JSONObject exam = exams.getJSONObject(i);
+                            String type = exam.has("type") ? exam.getString("type") : "exam";
+                            if (TYPE == 0 && "exam".equals(type) || TYPE == 1 && "credit".equals(type)) {
+                                examsConverted.put(exam);
+                            }
+                        }
+                        jsonConverted.put("schedule", examsConverted);
+                        // get rva adapter
+                        final ScheduleExamsRVA adapter = new ScheduleExamsRVA(activity, jsonConverted, data -> {
                             setQuery(data);
                             invalidate(false);
                         });
@@ -194,26 +203,10 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
                                         scroll.put(TYPE, s);
                                     });
                                 }
-                                // scroll to today's schedule
+                                // scroll to previous position
                                 final Scroll s = scroll.get(TYPE, null);
                                 if (s != null) {
                                     layoutManager.scrollToPositionWithOffset(s.position, s.offset);
-                                } else {
-                                    if (Storage.pref.get(activity, "pref_schedule_lessons_scroll_to_day", true)) {
-                                        int position = -1;
-                                        switch (Static.getCalendar().get(Calendar.DAY_OF_WEEK)) {
-                                            case Calendar.MONDAY: position = adapter.getDayPosition(0); if (position >= 0) break;
-                                            case Calendar.TUESDAY: position = adapter.getDayPosition(1); if (position >= 0) break;
-                                            case Calendar.WEDNESDAY: position = adapter.getDayPosition(2); if (position >= 0) break;
-                                            case Calendar.THURSDAY: position = adapter.getDayPosition(3); if (position >= 0) break;
-                                            case Calendar.FRIDAY: position = adapter.getDayPosition(4); if (position >= 0) break;
-                                            case Calendar.SATURDAY: position = adapter.getDayPosition(5); if (position >= 0) break;
-                                            case Calendar.SUNDAY: position = adapter.getDayPosition(6); if (position >= 0) break;
-                                        }
-                                        if (position >= 0) {
-                                            layoutManager.scrollToPosition(position);
-                                        }
-                                    }
                                 }
                             } catch (SilentException ignore) {
                                 failed(activity);
@@ -260,7 +253,7 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
                             }
                             case Schedule.FAILED_EMPTY_QUERY: {
                                 final ViewGroup view = (ViewGroup) inflate(activity, R.layout.schedule_empty_query);
-                                view.findViewById(R.id.open_settings).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleLessonsFragment.class, null));
+                                view.findViewById(R.id.open_settings).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleExamsFragment.class, null));
                                 draw(view);
                                 break;
                             }
@@ -313,7 +306,7 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
                 }
             }
         });
-        return scheduleLessons;
+        return scheduleExams;
     }
     private void failed(Context context) {
         try {
@@ -331,7 +324,7 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
 
     private void draw(View view) {
         try {
-            ViewGroup vg = container.findViewById(R.id.container_schedule_lessons);
+            ViewGroup vg = container.findViewById(R.id.container_schedule_exams);
             if (vg != null) {
                 vg.removeAllViews();
                 vg.addView(view, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));

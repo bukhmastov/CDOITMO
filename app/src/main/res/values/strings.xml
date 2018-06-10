@@ -102,6 +102,9 @@
     <string name="no_exams">Экзаменов нет</string>
     <string name="no_lessons">Занятий нет</string>
     <string name="exam">Экзамен</string>
+    <string name="credit">Зачет</string>
+    <string name="exams">Экзамены</string>
+    <string name="credits">Зачеты</string>
     <string name="consult">Консультация</string>
     <string name="room_short">Ауд.</string>
     <string name="place">Место</string>
@@ -516,5 +519,6 @@
     <string name="share_unable">Нечем делиться</string>
     <string name="automatic_shift">Автоматический сдвиг дня</string>
     <string name="automatic_shift_summary">Сдвигать к ближайшему дню, содержащему следующую пару</string>
+    <string name="default_tab">Вкладка по умолчанию</string>
 
 </resources>

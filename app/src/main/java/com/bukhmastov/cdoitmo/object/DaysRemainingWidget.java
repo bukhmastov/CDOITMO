@@ -74,6 +74,10 @@ public class DaysRemainingWidget {
                     for (int i = 0; i < schedule.length(); i++) {
                         try {
                             final JSONObject fullExam = schedule.getJSONObject(i);
+                            final String type = fullExam.has("type") ? fullExam.getString("type") : "exam";
+                            if (!"exam".equals(type)) {
+                                continue;
+                            }
                             final JSONObject exam = fullExam.getJSONObject("exam");
                             final String subject = fullExam.has("subject") ? fullExam.getString("subject") : "";
                             final String group = fullExam.has("group") ? fullExam.getString("group") : "";

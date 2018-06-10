@@ -233,7 +233,6 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
     }
 
     private void begin() {
-        final DaysRemainingWidgetActivity self = this;
         Static.T.runThread(() -> {
             Log.v(TAG, "begin");
             message(activity.getString(R.string.loaded));
@@ -241,8 +240,8 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
                 daysRemainingWidget.stop();
                 daysRemainingWidget = null;
             }
-            daysRemainingWidget = new DaysRemainingWidget(self);
-            daysRemainingWidget.start(self, schedule);
+            daysRemainingWidget = new DaysRemainingWidget(this);
+            daysRemainingWidget.start(this, schedule);
         });
     }
     private void close() {

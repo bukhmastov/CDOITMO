@@ -27,11 +27,13 @@ public class ScheduleExamsConverterIfmo extends ScheduleExamsConverter {
     private JSONObject getConvertedExam(JSONObject exam) throws Exception {
         final JSONObject ex = exam.getJSONObject("exam");
         final JSONObject ad = exam.getJSONObject("advice");
+        final String type = exam.has("type") ? getString(exam, "type") : "exam";
         final String group = exam.has("group") ? getString(exam, "group") : data.getString("label");
         final String teacher = exam.has("teacher") ? getString(exam, "teacher") : data.getString("label");
         if (templateTitle == null && templateType.equals("group")) templateTitle = group;
         if (templateTitle == null && templateType.equals("teacher")) templateTitle = teacher;
         final JSONObject examConverted = new JSONObject();
+        examConverted.put("type", type);
         examConverted.put("subject", getString(exam, "subject"));
         examConverted.put("group", group);
         examConverted.put("teacher", teacher);
@@ -42,12 +44,14 @@ public class ScheduleExamsConverterIfmo extends ScheduleExamsConverter {
                 .put("room", getString(ex, "room"))
                 .put("building", "")
         );
-        examConverted.put("advice", new JSONObject()
-                .put("date", getString(ad, "date"))
-                .put("time", getString(ad, "time"))
-                .put("room", getString(ad, "room"))
-                .put("building", "")
-        );
+        if (!"credit".equals(type)) {
+            examConverted.put("advice", new JSONObject()
+                    .put("date", getString(ad, "date"))
+                    .put("time", getString(ad, "time"))
+                    .put("room", getString(ad, "room"))
+                    .put("building", "")
+            );
+        }
         return examConverted;
     }
 }

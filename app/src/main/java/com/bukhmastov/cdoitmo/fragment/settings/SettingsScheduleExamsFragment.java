@@ -7,6 +7,7 @@ import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.object.SettingsScheduleExams;
 import com.bukhmastov.cdoitmo.object.preference.Preference;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceBasic;
+import com.bukhmastov.cdoitmo.object.preference.PreferenceList;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
@@ -48,6 +49,7 @@ public class SettingsScheduleExamsFragment extends SettingsTemplatePreferencesFr
         }));
         // TODO implement when isu will be ready
         // pref_schedule_exams_source | PreferenceList | [ifmo, isu]
+        preferences.add(new PreferenceList("pref_schedule_exams_type", "0", R.string.default_tab, R.array.pref_schedule_exams_type_titles, R.array.pref_schedule_exams_type_values, true));
         preferences.add(new PreferenceSwitch("pref_schedule_exams_use_cache", false, R.string.cache_schedule, null, null));
         preferences.add(new PreferenceBasic("pref_schedule_exams_clear_cache", null, R.string.clear_schedule_cache, false, new PreferenceBasic.Callback() {
             @Override

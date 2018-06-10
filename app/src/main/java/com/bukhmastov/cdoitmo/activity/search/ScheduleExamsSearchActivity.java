@@ -4,7 +4,7 @@ import android.os.Bundle;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.fragment.ScheduleExamsFragment;
+import com.bukhmastov.cdoitmo.fragment.ScheduleExamsTabHostFragment;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 
@@ -36,8 +36,8 @@ public class ScheduleExamsSearchActivity extends SearchActivity {
     protected void onDone(final String query) {
         Static.T.runThread(() -> {
             Log.v(TAG, "onDone | query=", query);
-            ScheduleExamsFragment.setQuery(query);
-            ScheduleExamsFragment.invalidate();
+            ScheduleExamsTabHostFragment.setQuery(query);
+            ScheduleExamsTabHostFragment.invalidate();
         });
     }
 }

@@ -1,10 +1,15 @@
 package com.bukhmastov.cdoitmo.fragment;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.design.widget.TabLayout;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.view.ViewPager;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -18,6 +23,7 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.activity.search.ScheduleExamsSearchActivity;
+import com.bukhmastov.cdoitmo.adapter.PagerExamsAdapter;
 import com.bukhmastov.cdoitmo.adapter.rva.ScheduleExamsRVA;
 import com.bukhmastov.cdoitmo.exception.SilentException;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
@@ -27,57 +33,24 @@ import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleExams;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Storage;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class ScheduleExamsFragment extends ConnectedFragment {
+public class ScheduleExamsFragment extends ConnectedFragment implements ViewPager.OnPageChangeListener {
 
     private static final String TAG = "SEFragment";
-    public interface TabProvider {
-        void onInvalidate(boolean refresh);
-    }
-    public class Scroll {
-        public int position = 0;
-        public int offset = 0;
-    }
     private boolean loaded = false;
-    private ScheduleExams scheduleExams = null;
-    private Client.Request requestHandle = null;
-    private static String lastQuery = null;
-    private static String query = null;
-    public static Scroll scroll = null;
-    public static TabProvider tab = null;
-
-    private boolean invalidate = false;
-    private boolean invalidate_refresh = false;
-
-    public static void setQuery(String query) {
-        ScheduleExamsFragment.lastQuery = ScheduleExamsFragment.query;
-        ScheduleExamsFragment.query = query;
-    }
-    public static String getQuery() {
-        return ScheduleExamsFragment.query;
-    }
-    public static boolean isSameQueryRequested() {
-        return lastQuery != null && query != null && lastQuery.equals(query);
-    }
-    public static void invalidate() {
-        invalidate(false);
-    }
-    public static void invalidate(boolean refresh) {
-        if (tab != null) {
-            tab.onInvalidate(refresh);
-        }
-    }
+    private int activeTab = -1;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.v(TAG, "Fragment created");
         FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
         // define query
-        String scope = restoreData(this);
+        String scope = ScheduleExamsTabHostFragment.restoreData();
         if (scope == null) {
             scope = ScheduleExams.getDefaultScope(activity, ScheduleExams.TYPE);
         }
@@ -89,13 +62,18 @@ public class ScheduleExamsFragment extends ConnectedFragment {
                 scope = action_extra;
             }
         }
-        ScheduleExamsFragment.setQuery(scope);
+        ScheduleExamsTabHostFragment.setQuery(scope);
     }
 
     @Override
     public void onDestroy() {
+        super.onDestroy();
         Log.v(TAG, "Fragment destroyed");
         try {
+            final TabLayout fixed_tabs = activity.findViewById(R.id.fixed_tabs);
+            if (fixed_tabs != null) {
+                fixed_tabs.setVisibility(View.GONE);
+            }
             if (activity.toolbar != null) {
                 MenuItem action_schedule_exams_search = activity.toolbar.findItem(R.id.action_schedule_exams_search);
                 if (action_schedule_exams_search != null && action_schedule_exams_search.isVisible()) {
@@ -107,9 +85,6 @@ public class ScheduleExamsFragment extends ConnectedFragment {
         } catch (Exception e){
             Static.error(e);
         }
-        tab = null;
-        scroll = null;
-        super.onDestroy();
     }
 
     @Override
@@ -138,28 +113,9 @@ public class ScheduleExamsFragment extends ConnectedFragment {
         } catch (Exception e){
             Static.error(e);
         }
-        if (tab == null) {
-            tab = refresh -> {
-                Log.v(TAG, "onInvalidate | refresh=" + Log.lBool(refresh));
-                storeData(this, getQuery());
-                if (isResumed()) {
-                    invalidate = false;
-                    invalidate_refresh = false;
-                    load(refresh);
-                } else {
-                    invalidate = true;
-                    invalidate_refresh = refresh;
-                }
-            };
-        }
-        if (invalidate) {
-            invalidate = false;
+        if (!loaded) {
             loaded = true;
-            load(invalidate_refresh);
-            invalidate_refresh = false;
-        } else if (!loaded) {
-            loaded = true;
-            load(false);
+            load();
         }
     }
 
@@ -167,216 +123,92 @@ public class ScheduleExamsFragment extends ConnectedFragment {
     public void onPause() {
         super.onPause();
         Log.v(TAG, "paused");
-        if (requestHandle != null && requestHandle.cancel()) {
-            loaded = false;
-        }
     }
 
-    private void load(final boolean refresh) {
-        Static.T.runOnUiThread(() -> {
+    @Override
+    public void onPageSelected(int position) {
+        activeTab = position;
+    }
+
+    @Override
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
+
+    @Override
+    public void onPageScrollStateChanged(int state) {}
+
+    private void load() {
+        final FragmentManager fragmentManager = getChildFragmentManager();
+        Static.T.runThread(() -> {
             if (activity == null) {
                 Log.w(TAG, "load | activity is null");
-                failed(getContext());
                 return;
             }
-            draw(activity, R.layout.state_loading);
-            Static.T.runThread(() -> {
+            if (ScheduleLessonsTabHostFragment.getQuery() == null) {
+                ScheduleLessonsTabHostFragment.setQuery(ScheduleExams.getDefaultScope(activity, ScheduleExams.TYPE));
+            }
+            Static.T.runOnUiThread(() -> {
                 try {
-                    if (activity == null || getQuery() == null) {
-                        Log.w(TAG, "load | some values are null | activity=" + Log.lNull(activity) + " | getQuery()=" + Log.lNull(getQuery()));
-                        failed(getContext());
+                    if (activity == null) {
+                        Log.w(TAG, "load | activity is null");
                         return;
                     }
-                    if (scroll != null && !isSameQueryRequested()) {
-                        scroll.position = 0;
-                        scroll.offset = 0;
+                    // setup pager adapter
+                    final TabLayout fixed_tabs = activity.findViewById(R.id.fixed_tabs);
+                    if (fixed_tabs == null) {
+                        loaded = false;
+                        return;
                     }
-                    if (refresh) {
-                        getScheduleExams(activity).search(activity, getQuery(), 0);
-                    } else {
-                        getScheduleExams(activity).search(activity, getQuery());
+                    fixed_tabs.setVisibility(View.VISIBLE);
+                    draw(activity, R.layout.layout_schedule_exams_tabs);
+                    final ViewPager schedule_view = activity.findViewById(R.id.schedule_pager);
+                    if (schedule_view != null) {
+                        schedule_view.setAdapter(new PagerExamsAdapter(fragmentManager, activity));
+                        schedule_view.addOnPageChangeListener(ScheduleExamsFragment.this);
+                        fixed_tabs.setupWithViewPager(schedule_view);
                     }
+                    // select tab
+                    TabLayout.Tab tab = null;
+                    if (activeTab != -1) {
+                        try {
+                            tab = fixed_tabs.getTabAt(activeTab);
+                        } catch (Exception e) {
+                            activeTab = -1;
+                        }
+                    }
+                    if (activeTab == -1) {
+                        int activeTabByDefault = Integer.parseInt(Storage.pref.get(activity, "pref_schedule_exams_type", "0"));
+                        tab = fixed_tabs.getTabAt(activeTabByDefault);
+                    }
+                    if (tab != null) tab.select();
                 } catch (Exception e) {
                     Static.error(e);
-                    failed(activity);
+                    try {
+                        failed(activity);
+                    } catch (Exception e1) {
+                        loaded = false;
+                        Static.error(e1);
+                    }
                 }
             });
         });
     }
-    private @NonNull ScheduleExams getScheduleExams(final ConnectedActivity activity) {
-        if (scheduleExams == null) scheduleExams = new ScheduleExams(new Schedule.Handler() {
-            @Override
-            public void onSuccess(final JSONObject json, final boolean fromCache) {
-                Static.T.runThread(() -> {
-                    try {
-                        try {
-                            if (json.getString("type").equals("teachers")) {
-                                JSONArray schedule = json.getJSONArray("schedule");
-                                if (schedule.length() == 1) {
-                                    setQuery(schedule.getJSONObject(0).getString("pid"));
-                                    storeData(ScheduleExamsFragment.this, getQuery());
-                                    load(false);
-                                    return;
-                                }
-                            }
-                        } catch (Exception ignore) {
-                            // ignore
-                        }
-                        final ScheduleExamsRVA adapter = new ScheduleExamsRVA(activity, json, data -> {
-                            setQuery(data);
-                            storeData(ScheduleExamsFragment.this, data);
-                            load(false);
-                        });
-                        Static.T.runOnUiThread(() -> {
-                            try {
-                                draw(activity, R.layout.layout_schedule_both_recycle_list);
-                                // prepare
-                                final SwipeRefreshLayout swipe_container = activity.findViewById(R.id.schedule_swipe);
-                                final RecyclerView schedule_list = activity.findViewById(R.id.schedule_list);
-                                if (swipe_container == null || schedule_list == null) throw new SilentException();
-                                final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
-                                // swipe
-                                swipe_container.setColorSchemeColors(Static.colorAccent);
-                                swipe_container.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
-                                swipe_container.setOnRefreshListener(() -> {
-                                    swipe_container.setRefreshing(false);
-                                    load(true);
-                                });
-                                // recycle view (list)
-                                schedule_list.setLayoutManager(layoutManager);
-                                schedule_list.setAdapter(adapter);
-                                schedule_list.setHasFixedSize(true);
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                    schedule_list.setOnScrollChangeListener((view, scrollX, scrollY, oldScrollX, oldScrollY) -> {
-                                        final int position = layoutManager.findFirstVisibleItemPosition();
-                                        final View v = schedule_list.getChildAt(0);
-                                        final int offset = (v == null) ? 0 : (v.getTop() - schedule_list.getPaddingTop());
-                                        if (scroll == null) {
-                                            scroll = new Scroll();
-                                        }
-                                        scroll.position = position;
-                                        scroll.offset = offset;
-                                    });
-                                }
-                                // scroll to previous position
-                                if (scroll != null) {
-                                    layoutManager.scrollToPositionWithOffset(scroll.position, scroll.offset);
-                                }
-                            } catch (SilentException ignore) {
-                                failed(activity);
-                            } catch (Exception e) {
-                                Static.error(e);
-                                failed(activity);
-                            }
-                        });
-                    } catch (Exception e) {
-                        Static.error(e);
-                        failed(activity);
-                    }
-                });
-            }
-            @Override
-            public void onFailure(int state) {
-                this.onFailure(0, null, state);
-            }
-            @Override
-            public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                Static.T.runOnUiThread(() -> {
-                    try {
-                        Log.v(TAG, "onFailure | statusCode=" + statusCode + " | state=" + state);
-                        switch (state) {
-                            case Client.FAILED_OFFLINE:
-                            case Schedule.FAILED_OFFLINE: {
-                                final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_offline);
-                                view.findViewById(R.id.offline_reload).setOnClickListener(v -> load(false));
-                                draw(view);
-                                break;
-                            }
-                            case Client.FAILED_TRY_AGAIN:
-                            case Client.FAILED_SERVER_ERROR:
-                            case Schedule.FAILED_LOAD: {
-                                final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_try_again);
-                                if (state == Client.FAILED_TRY_AGAIN) {
-                                    ((TextView) view.findViewById(R.id.try_again_message)).setText(Client.getFailureMessage(activity, statusCode));
-                                }
-                                view.findViewById(R.id.try_again_reload).setOnClickListener(v -> load(false));
-                                draw(view);
-                                break;
-                            }
-                            case Schedule.FAILED_EMPTY_QUERY: {
-                                final ViewGroup view = (ViewGroup) inflate(activity, R.layout.schedule_empty_query);
-                                view.findViewById(R.id.open_settings).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleExamsFragment.class, null));
-                                draw(view);
-                                break;
-                            }
-                            case Schedule.FAILED_NOT_FOUND: {
-                                final ViewGroup view = (ViewGroup) inflate(activity, R.layout.nothing_to_display);
-                                ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_schedule);
-                                draw(view);
-                                break;
-                            }
-                            case Schedule.FAILED_INVALID_QUERY: {
-                                final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_failed);
-                                ((TextView) view.findViewById(R.id.text)).setText(R.string.incorrect_query);
-                                draw(view);
-                                break;
-                            }
-                            case Schedule.FAILED_MINE_NEED_ISU: {
-                                // TODO replace with isu auth, when isu will be ready
-                                final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_try_again);
-                                view.findViewById(R.id.try_again_reload).setOnClickListener(v -> load(false));
-                                draw(view);
-                                break;
-                            }
-                        }
-                    } catch (Exception e) {
-                        Static.error(e);
-                    }
-                });
-            }
-            @Override
-            public void onProgress(final int state) {
-                Static.T.runOnUiThread(() -> {
-                    try {
-                        Log.v(TAG, "onProgress | state=" + state);
-                        final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_loading);
-                        ((TextView) view.findViewById(R.id.loading_message)).setText(R.string.loading);
-                        draw(view);
-                    } catch (Exception e) {
-                        Static.error(e);
-                    }
-                });
-            }
-            @Override
-            public void onNewRequest(Client.Request request) {
-                requestHandle = request;
-            }
-            @Override
-            public void onCancelRequest() {
-                if (requestHandle != null) {
-                    requestHandle.cancel();
-                }
-            }
-        });
-        return scheduleExams;
-    }
-    private void failed(Context context) {
+    private void failed(Activity activity) {
         try {
-            if (context == null) {
-                Log.w(TAG, "failed | context is null");
+            if (activity == null) {
+                Log.w(TAG, "failed | activity is null");
                 return;
             }
-            View state_try_again = inflate(context, R.layout.state_try_again);
-            state_try_again.findViewById(R.id.try_again_reload).setOnClickListener(view -> load(false));
-            draw(state_try_again);
+            View state_try_again = inflate(activity, R.layout.state_try_again);
+            state_try_again.findViewById(R.id.try_again_reload).setOnClickListener(view -> load());
+            draw(activity, state_try_again);
         } catch (Exception e) {
             Static.error(e);
         }
     }
 
-    private void draw(View view) {
+    private void draw(Activity activity, View view) {
         try {
-            ViewGroup vg = activity.findViewById(R.id.container_schedule_exams);
+            ViewGroup vg = activity.findViewById(R.id.container_schedule);
             if (vg != null) {
                 vg.removeAllViews();
                 vg.addView(view, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
@@ -385,9 +217,9 @@ public class ScheduleExamsFragment extends ConnectedFragment {
             Static.error(e);
         }
     }
-    private void draw(Context context, int layoutId) {
+    private void draw(Activity activity, int layoutId) {
         try {
-            draw(inflate(context, layoutId));
+            draw(activity, inflate(activity, layoutId));
         } catch (Exception e){
             Static.error(e);
         }

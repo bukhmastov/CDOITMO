@@ -9,10 +9,10 @@ import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 
-public abstract class ScheduleLessonsTabHostFragment extends Fragment {
+public abstract class ScheduleExamsTabHostFragment extends Fragment {
 
-    private static final String TAG = "SLTabHostFragment";
-    private static final String FRAGMENT_NAME = "com.bukhmastov.cdoitmo.fragments.ScheduleLessonsTabHostFragment";
+    private static final String TAG = "SETabHostFragment";
+    private static final String FRAGMENT_NAME = "com.bukhmastov.cdoitmo.fragments.ScheduleExamsTabHostFragment";
     public interface TabProvider {
         void onInvalidate(boolean refresh);
     }
@@ -23,9 +23,9 @@ public abstract class ScheduleLessonsTabHostFragment extends Fragment {
     protected static ConnectedActivity activity = null;
     private static String lastQuery = null;
     private static String query = null;
-    protected static final int DEFAULT_TYPE = 2;
+    protected static final int DEFAULT_TYPE = 0;
     protected static final int DEFAULT_INVALID_TYPE = -1;
-    private static final int TAB_TOTAL_COUNT = 3;
+    private static final int TAB_TOTAL_COUNT = 2;
     public static final SparseArray<Scroll> scroll = new SparseArray<>();
     public static final SparseArray<TabProvider> tabs = new SparseArray<>();
 
@@ -75,12 +75,12 @@ public abstract class ScheduleLessonsTabHostFragment extends Fragment {
         return false;
     }
     public static void setQuery(String query) {
-        ScheduleLessonsTabHostFragment.lastQuery = ScheduleLessonsTabHostFragment.query;
-        ScheduleLessonsTabHostFragment.query = query;
+        ScheduleExamsTabHostFragment.lastQuery = ScheduleExamsTabHostFragment.query;
+        ScheduleExamsTabHostFragment.query = query;
         storeData(query);
     }
     public static String getQuery() {
-        return ScheduleLessonsTabHostFragment.query;
+        return ScheduleExamsTabHostFragment.query;
     }
     public static boolean isSameQueryRequested() {
         return lastQuery != null && query != null && lastQuery.equals(query);
