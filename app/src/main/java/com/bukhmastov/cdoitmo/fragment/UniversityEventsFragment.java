@@ -86,9 +86,9 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup cont, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_university_tab, cont, false);
-        container = view.findViewById(R.id.university_tab_container);
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup c, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_container, c, false);
+        container = view.findViewById(R.id.container);
         return view;
     }
 
@@ -174,7 +174,7 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
                             Log.v(TAG, "load | failure " + state);
                             switch (state) {
                                 case IfmoRestClient.FAILED_OFFLINE:
-                                    draw(R.layout.state_offline);
+                                    draw(R.layout.state_offline_text);
                                     if (activity != null) {
                                         View offline_reload = container.findViewById(R.id.offline_reload);
                                         if (offline_reload != null) {
@@ -185,7 +185,7 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
                                 case IfmoRestClient.FAILED_CORRUPTED_JSON:
                                 case IfmoRestClient.FAILED_SERVER_ERROR:
                                 case IfmoRestClient.FAILED_TRY_AGAIN:
-                                    draw(R.layout.state_try_again);
+                                    draw(R.layout.state_failed_button);
                                     TextView try_again_message = activity.findViewById(R.id.try_again_message);
                                     if (try_again_message != null) {
                                         switch (state) {
@@ -207,7 +207,7 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
                     public void onProgress(final int state) {
                         Static.T.runOnUiThread(() -> {
                             Log.v(TAG, "load | progress " + state);
-                            draw(R.layout.state_loading);
+                            draw(R.layout.state_loading_text);
                             if (activity != null) {
                                 TextView loading_message = container.findViewById(R.id.loading_message);
                                 if (loading_message != null) {
@@ -227,7 +227,7 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
                 });
             } else {
                 Static.T.runOnUiThread(() -> {
-                    draw(R.layout.state_offline);
+                    draw(R.layout.state_offline_text);
                     if (activity != null) {
                         View offline_reload = activity.findViewById(R.id.offline_reload);
                         if (offline_reload != null) {
@@ -246,7 +246,7 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
         Static.T.runOnUiThread(() -> {
             Log.v(TAG, "loadFailed");
             try {
-                draw(R.layout.state_try_again);
+                draw(R.layout.state_failed_button);
                 TextView try_again_message = container.findViewById(R.id.try_again_message);
                 if (try_again_message != null) try_again_message.setText(R.string.load_failed);
                 View try_again_reload = container.findViewById(R.id.try_again_reload);
@@ -266,7 +266,7 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
                 return;
             }
             try {
-                draw(R.layout.layout_university_events_list);
+                draw(R.layout.layout_university_list_infinite);
                 // поиск
                 final EditText search_input = container.findViewById(R.id.search_input);
                 final FrameLayout search_action = container.findViewById(R.id.search_action);
@@ -280,18 +280,18 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
                 });
                 search_input.setText(search);
                 // очищаем сообщение
-                ViewGroup events_list_info = container.findViewById(R.id.events_list_info);
-                events_list_info.removeAllViews();
-                events_list_info.setPadding(0, 0, 0, 0);
+                ViewGroup infinite_list_info = container.findViewById(R.id.infinite_list_info);
+                infinite_list_info.removeAllViews();
+                infinite_list_info.setPadding(0, 0, 0, 0);
                 // список
                 JSONArray list = events.getJSONArray("list");
                 if (list.length() > 0) {
                     eventsRecyclerViewAdapter = new UniversityEventsRVA(activity);
-                    final RecyclerView events_list = container.findViewById(R.id.events_list);
-                    if (events_list != null) {
-                        events_list.setLayoutManager(new LinearLayoutManager(activity));
-                        events_list.setAdapter(eventsRecyclerViewAdapter);
-                        events_list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
+                    final RecyclerView infinite_list = container.findViewById(R.id.infinite_list);
+                    if (infinite_list != null) {
+                        infinite_list.setLayoutManager(new LinearLayoutManager(activity));
+                        infinite_list.setAdapter(eventsRecyclerViewAdapter);
+                        infinite_list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
                     }
                     eventsRecyclerViewAdapter.setOnStateClickListener(R.id.load_more, v -> {
                         offset += limit;
@@ -349,26 +349,26 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
                     }
                     displayContent(list);
                 } else {
-                    View view = inflate(R.layout.nothing_to_display);
+                    View view = inflate(R.layout.state_nothing_to_display_compact);
                     ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_events);
-                    events_list_info.addView(view);
+                    infinite_list_info.addView(view);
                 }
                 // добавляем отступ
                 container.findViewById(R.id.top_panel).post(() -> {
                     try {
                         int height = container.findViewById(R.id.top_panel).getHeight();
-                        RecyclerView events_list = container.findViewById(R.id.events_list);
-                        events_list.setPadding(0, height, 0, 0);
-                        events_list.scrollToPosition(0);
-                        if (events_list_info.getChildCount() > 0) {
-                            events_list_info.setPadding(0, height, 0, 0);
+                        RecyclerView infinite_list = container.findViewById(R.id.infinite_list);
+                        infinite_list.setPadding(0, height, 0, 0);
+                        infinite_list.scrollToPosition(0);
+                        if (infinite_list_info.getChildCount() > 0) {
+                            infinite_list_info.setPadding(0, height, 0, 0);
                         }
                     } catch (Exception ignore) {
                         // ignore
                     }
                 });
                 // работаем со свайпом
-                SwipeRefreshLayout mSwipeRefreshLayout = container.findViewById(R.id.events_list_swipe);
+                SwipeRefreshLayout mSwipeRefreshLayout = container.findViewById(R.id.infinite_list_swipe);
                 if (mSwipeRefreshLayout != null) {
                     mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
                     mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);

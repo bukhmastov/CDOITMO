@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentTop="true"
+        android:layout_above="@+id/share_bottom"
+        android:background="?attr/colorBackground"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/colorBackgroundSection"
+                android:paddingBottom="@dimen/item_padding_half"
+                android:paddingTop="@dimen/item_padding_half">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_centerVertical="true"
+                    android:layout_toStartOf="@+id/share_info"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/share_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingEnd="@dimen/item_horizontal_padding"
+                        android:paddingStart="@dimen/item_horizontal_padding"
+                        android:text="@string/lorem_ipsum"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="@dimen/font_size_14" />
+
+                </LinearLayout>
+
+                <FrameLayout
+                    android:id="@+id/share_info"
+                    android:layout_width="@dimen/schedule_cache_button"
+                    android:layout_height="@dimen/schedule_cache_button"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginEnd="@dimen/item_horizontal_padding"
+                    android:layout_marginStart="0dp"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:focusable="true"
+                    android:clickable="true">
+
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:padding="@dimen/item_padding_quarter"
+                        app:srcCompat="@drawable/ic_info" />
+
+                </FrameLayout>
+
+            </RelativeLayout>
+
+            <include layout="@layout/separator"/>
+
+            <LinearLayout
+                android:id="@+id/share_content"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:padding="@dimen/item_padding_quarter">
+
+                <include layout="@layout/state_loading_compact"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/share_bottom"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true" >
+
+        <include layout="@layout/separator"/>
+
+        <Button
+            android:id="@+id/share_execute"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/share"
+            android:visibility="gone"
+            style="@style/Widget.AppCompat.Button.Borderless"/>
+
+    </LinearLayout>
+
+</RelativeLayout>

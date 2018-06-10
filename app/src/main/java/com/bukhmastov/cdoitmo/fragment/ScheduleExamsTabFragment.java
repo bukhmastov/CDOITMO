@@ -70,7 +70,7 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        this.container = inflater.inflate(R.layout.fragment_tab_schedule_exams, container, false);
+        this.container = inflater.inflate(R.layout.fragment_container, container, false);
         return this.container;
     }
 
@@ -112,7 +112,7 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
                 failed(getContext());
                 return;
             }
-            draw(activity, R.layout.state_loading);
+            draw(activity, R.layout.state_loading_text);
             Static.T.runThread(() -> {
                 try {
                     if (activity == null || getQuery() == null) {
@@ -233,7 +233,7 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
                         switch (state) {
                             case Client.FAILED_OFFLINE:
                             case Schedule.FAILED_OFFLINE: {
-                                final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_offline);
+                                final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_offline_text);
                                 view.findViewById(R.id.offline_reload).setOnClickListener(v -> load(false));
                                 draw(view);
                                 break;
@@ -242,7 +242,7 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
                             case Client.FAILED_SERVER_ERROR:
                             case Client.FAILED_CORRUPTED_JSON:
                             case Schedule.FAILED_LOAD: {
-                                final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_try_again);
+                                final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_failed_button);
                                 switch (state) {
                                     case Client.FAILED_SERVER_ERROR:   ((TextView) view.findViewById(R.id.try_again_message)).setText(Client.getFailureMessage(activity, statusCode)); break;
                                     case Client.FAILED_CORRUPTED_JSON: ((TextView) view.findViewById(R.id.try_again_message)).setText(R.string.server_provided_corrupted_json); break;
@@ -252,26 +252,26 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
                                 break;
                             }
                             case Schedule.FAILED_EMPTY_QUERY: {
-                                final ViewGroup view = (ViewGroup) inflate(activity, R.layout.schedule_empty_query);
+                                final ViewGroup view = (ViewGroup) inflate(activity, R.layout.layout_schedule_empty_query);
                                 view.findViewById(R.id.open_settings).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleExamsFragment.class, null));
                                 draw(view);
                                 break;
                             }
                             case Schedule.FAILED_NOT_FOUND: {
-                                final ViewGroup view = (ViewGroup) inflate(activity, R.layout.nothing_to_display);
+                                final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_nothing_to_display_compact);
                                 ((TextView) view.findViewById(R.id.ntd_text)).setText(R.string.no_schedule);
                                 draw(view);
                                 break;
                             }
                             case Schedule.FAILED_INVALID_QUERY: {
-                                final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_failed);
+                                final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_failed_text);
                                 ((TextView) view.findViewById(R.id.text)).setText(R.string.incorrect_query);
                                 draw(view);
                                 break;
                             }
                             case Schedule.FAILED_MINE_NEED_ISU: {
                                 // TODO replace with isu auth, when isu will be ready
-                                final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_try_again);
+                                final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_failed_button);
                                 view.findViewById(R.id.try_again_reload).setOnClickListener(v -> load(false));
                                 draw(view);
                                 break;
@@ -287,7 +287,7 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
                 Static.T.runOnUiThread(() -> {
                     try {
                         Log.v(TAG, "onProgress | state=", state);
-                        final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_loading);
+                        final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_loading_text);
                         ((TextView) view.findViewById(R.id.loading_message)).setText(R.string.loading);
                         draw(view);
                     } catch (Exception e) {
@@ -314,7 +314,7 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
                 Log.w(TAG, "failed | context is null");
                 return;
             }
-            View state_try_again = inflate(context, R.layout.state_try_again);
+            View state_try_again = inflate(context, R.layout.state_failed_button);
             state_try_again.findViewById(R.id.try_again_reload).setOnClickListener(view -> load(false));
             draw(state_try_again);
         } catch (Exception e) {
@@ -324,7 +324,7 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
 
     private void draw(View view) {
         try {
-            ViewGroup vg = container.findViewById(R.id.container_schedule_exams);
+            ViewGroup vg = container.findViewById(R.id.container);
             if (vg != null) {
                 vg.removeAllViews();
                 vg.addView(view, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));

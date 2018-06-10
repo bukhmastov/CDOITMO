@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/structure_unit"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <View
+    <include
         android:id="@+id/structure_separator"
         android:layout_width="match_parent"
         android:layout_height="@dimen/separator"
         android:layout_gravity="bottom"
-        android:background="?attr/colorSeparator" />
+        layout="@layout/separator"/>
 
     <TextView
         android:id="@+id/structure_header"

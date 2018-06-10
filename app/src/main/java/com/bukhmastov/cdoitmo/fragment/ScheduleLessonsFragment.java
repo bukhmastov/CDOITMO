@@ -75,7 +75,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_schedule_lessons, container, false);
+        return inflater.inflate(R.layout.fragment_container, container, false);
     }
 
     @Override
@@ -146,12 +146,12 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
                         return;
                     }
                     fixed_tabs.setVisibility(View.VISIBLE);
-                    draw(activity, R.layout.layout_schedule_lessons_tabs);
-                    final ViewPager schedule_view = activity.findViewById(R.id.schedule_pager);
-                    if (schedule_view != null) {
-                        schedule_view.setAdapter(new PagerLessonsAdapter(fragmentManager, activity));
-                        schedule_view.addOnPageChangeListener(ScheduleLessonsFragment.this);
-                        fixed_tabs.setupWithViewPager(schedule_view);
+                    draw(activity, R.layout.fragment_pager);
+                    final ViewPager pager = activity.findViewById(R.id.pager);
+                    if (pager != null) {
+                        pager.setAdapter(new PagerLessonsAdapter(fragmentManager, activity));
+                        pager.addOnPageChangeListener(ScheduleLessonsFragment.this);
+                        fixed_tabs.setupWithViewPager(pager);
                     }
                     // select tab
                     TabLayout.Tab tab = null;
@@ -189,7 +189,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
                 Log.w(TAG, "failed | activity is null");
                 return;
             }
-            View state_try_again = inflate(activity, R.layout.state_try_again);
+            View state_try_again = inflate(activity, R.layout.state_failed_button);
             state_try_again.findViewById(R.id.try_again_reload).setOnClickListener(view -> load());
             draw(activity, state_try_again);
         } catch (Exception e) {
@@ -199,7 +199,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
 
     private void draw(Activity activity, View view) {
         try {
-            ViewGroup vg = activity.findViewById(R.id.container_schedule);
+            ViewGroup vg = activity.findViewById(R.id.container);
             if (vg != null) {
                 vg.removeAllViews();
                 vg.addView(view, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));

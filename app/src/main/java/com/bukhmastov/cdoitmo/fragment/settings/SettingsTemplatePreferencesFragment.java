@@ -94,7 +94,7 @@ public abstract class SettingsTemplatePreferencesFragment extends ConnectedFragm
     }
     private void failed() {
         try {
-            View view = inflate(activity, R.layout.state_try_again);
+            View view = inflate(activity, R.layout.state_failed_button);
             ((TextView) view.findViewById(R.id.try_again_message)).setText(R.string.error_occurred);
             view.findViewById(R.id.try_again_reload).setOnClickListener(v -> {
                 try {

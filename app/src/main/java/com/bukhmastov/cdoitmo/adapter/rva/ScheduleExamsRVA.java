@@ -67,10 +67,10 @@ public class ScheduleExamsRVA extends RVA {
             case TYPE_HEADER: layout = R.layout.layout_schedule_both_header; break;
             case TYPE_EXAM: layout = R.layout.layout_schedule_exams_item; break;
             case TYPE_UPDATE_TIME: layout = R.layout.layout_schedule_both_update_time; break;
-            case TYPE_NO_EXAMS: layout = R.layout.nothing_to_display; break;
+            case TYPE_NO_EXAMS: layout = R.layout.state_nothing_to_display_compact; break;
             case TYPE_PICKER_HEADER: layout = R.layout.layout_schedule_teacher_picker_header; break;
             case TYPE_PICKER_ITEM: layout = R.layout.layout_schedule_teacher_picker_item; break;
-            case TYPE_PICKER_NO_TEACHERS: layout = R.layout.nothing_to_display; break;
+            case TYPE_PICKER_NO_TEACHERS: layout = R.layout.state_nothing_to_display_compact; break;
             default: throw new NullPointerException("Invalid type provided");
         }
         return layout;

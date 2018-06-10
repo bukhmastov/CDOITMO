@@ -280,8 +280,8 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                         });
                         // ---------
                         Spinner lesson_week = activity.findViewById(R.id.lesson_week);
-                        ArrayAdapter<?> lesson_week_adapter = ArrayAdapter.createFromResource(activity, R.array.week_types_titles, R.layout.spinner_layout_simple);
-                        lesson_week_adapter.setDropDownViewResource(R.layout.spinner_layout);
+                        ArrayAdapter<?> lesson_week_adapter = ArrayAdapter.createFromResource(activity, R.array.week_types_titles, R.layout.spinner_simple);
+                        lesson_week_adapter.setDropDownViewResource(R.layout.spinner_center);
                         lesson_week.setAdapter(lesson_week_adapter);
                         lesson_week.setSelection((lesson.week + 1) % 3);
                         lesson_week.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -294,8 +294,8 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                         // ---------
                         final String[] week_types_values = activity.getResources().getStringArray(R.array.days_of_week_values);
                         Spinner lesson_day_of_week = activity.findViewById(R.id.lesson_day_of_week);
-                        ArrayAdapter<?> lesson_day_of_week_adapter = ArrayAdapter.createFromResource(activity, R.array.days_of_week_titles, R.layout.spinner_layout_simple);
-                        lesson_day_of_week_adapter.setDropDownViewResource(R.layout.spinner_layout);
+                        ArrayAdapter<?> lesson_day_of_week_adapter = ArrayAdapter.createFromResource(activity, R.array.days_of_week_titles, R.layout.spinner_simple);
+                        lesson_day_of_week_adapter.setDropDownViewResource(R.layout.spinner_center);
                         lesson_day_of_week.setAdapter(lesson_day_of_week_adapter);
                         lesson_day_of_week.setSelection(lesson.weekday < week_types_values.length ? lesson.weekday : 0);
                         lesson_day_of_week.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -308,7 +308,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                         final AutoCompleteTextView lesson_type = activity.findViewById(R.id.lesson_type);
                         if (lesson.type != null) lesson_type.setText(lesson.type);
                         lesson_type.setThreshold(1);
-                        lesson_type.setAdapter(ArrayAdapter.createFromResource(activity, R.array.lessons_types, R.layout.spinner_layout_simple_expanded));
+                        lesson_type.setAdapter(ArrayAdapter.createFromResource(activity, R.array.lessons_types, R.layout.spinner_simple_padding));
                         lesson_type.addTextChangedListener(new TextWatcher() {
                             @Override
                             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -418,7 +418,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                         AutoCompleteTextView lesson_building = activity.findViewById(R.id.lesson_building);
                         if (lesson.building != null) lesson_building.setText(lesson.building);
                         lesson_building.setThreshold(1);
-                        lesson_building.setAdapter(ArrayAdapter.createFromResource(activity, R.array.buildings, R.layout.spinner_layout_simple_expanded));
+                        lesson_building.setAdapter(ArrayAdapter.createFromResource(activity, R.array.buildings, R.layout.spinner_simple_padding));
                         lesson_building.addTextChangedListener(new TextWatcher() {
                             @Override
                             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}

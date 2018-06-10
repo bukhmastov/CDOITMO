@@ -164,7 +164,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                         } else {
                             switch (state) {
                                 case IfmoRestClient.FAILED_OFFLINE:
-                                    draw(R.layout.state_offline);
+                                    draw(R.layout.state_offline_text);
                                     View offline_reload = findViewById(R.id.offline_reload);
                                     if (offline_reload != null) {
                                         offline_reload.setOnClickListener(v -> load());
@@ -173,7 +173,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                                 case IfmoRestClient.FAILED_CORRUPTED_JSON:
                                 case IfmoRestClient.FAILED_SERVER_ERROR:
                                 case IfmoRestClient.FAILED_TRY_AGAIN:
-                                    draw(R.layout.state_try_again);
+                                    draw(R.layout.state_failed_button);
                                     TextView try_again_message = activity.findViewById(R.id.try_again_message);
                                     if (try_again_message != null) {
                                         switch (state) {
@@ -195,7 +195,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                     Static.T.runOnUiThread(() -> {
                         Log.v(TAG, "load | progress " + state);
                         if (first_load) {
-                            draw(R.layout.state_loading);
+                            draw(R.layout.state_loading_text);
                             TextView loading_message = findViewById(R.id.loading_message);
                             if (loading_message != null) {
                                 switch (state) {
@@ -222,7 +222,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
         Static.T.runOnUiThread(() -> {
             Log.v(TAG, "loadFailed");
             try {
-                draw(R.layout.state_try_again);
+                draw(R.layout.state_failed_button);
                 TextView try_again_message = findViewById(R.id.try_again_message);
                 if (try_again_message != null) try_again_message.setText(R.string.load_failed);
                 View try_again_reload = findViewById(R.id.try_again_reload);
@@ -238,7 +238,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
         Static.T.runOnUiThread(() -> {
             Log.v(TAG, "loadNotFound");
             try {
-                draw(R.layout.nothing_to_display_center_person);
+                draw(R.layout.state_nothing_to_display_person);
                 findViewById(R.id.web).setOnClickListener(view -> activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ifmo.ru/ru/viewperson/" + pid + "/"))));
             } catch (Exception e) {
                 Static.error(e);

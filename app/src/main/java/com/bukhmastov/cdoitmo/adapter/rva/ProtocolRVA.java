@@ -47,8 +47,8 @@ public class ProtocolRVA extends RVA {
             case TYPE_HEADER: layout = R.layout.layout_protocol_item_advanced_header; break;
             case TYPE_CHANGE: layout = R.layout.layout_protocol_item_advanced; break;
             case TYPE_CHANGE_SIMPLE: layout = R.layout.layout_protocol_item_simple; break;
-            case TYPE_SEPARATOR: layout = R.layout.layout_separator_with_padding; break;
-            case TYPE_NO_CHANGES: layout = R.layout.nothing_to_display; break;
+            case TYPE_SEPARATOR: layout = R.layout.separator_padding; break;
+            case TYPE_NO_CHANGES: layout = R.layout.state_nothing_to_display_compact; break;
             default: throw new NullPointerException("Invalid type provided");
         }
         return layout;

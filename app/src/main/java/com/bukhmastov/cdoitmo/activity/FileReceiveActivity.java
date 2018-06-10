@@ -225,7 +225,7 @@ public class FileReceiveActivity extends ConnectedActivity {
     private void failure(final String message) {
         Static.T.runOnUiThread(() -> {
             Log.v(TAG, "failure | message=" + message);
-            View state_failed_without_align = inflate(R.layout.state_failed_without_align);
+            View state_failed_without_align = inflate(R.layout.state_failed_text_compact);
             ((TextView) state_failed_without_align.findViewById(R.id.text)).setText(message);
             ViewGroup container = activity.findViewById(getRootViewId());
             container.removeAllViews();

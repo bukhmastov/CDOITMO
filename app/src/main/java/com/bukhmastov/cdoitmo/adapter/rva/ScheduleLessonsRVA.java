@@ -91,10 +91,10 @@ public class ScheduleLessonsRVA extends RVA {
             case TYPE_LESSON_SINGLE: layout = R.layout.layout_schedule_lessons_item_single; break;
             case TYPE_NOTIFICATION: layout = R.layout.layout_schedule_lessons_notification; break;
             case TYPE_UPDATE_TIME: layout = R.layout.layout_schedule_both_update_time; break;
-            case TYPE_NO_LESSONS: layout = R.layout.nothing_to_display; break;
+            case TYPE_NO_LESSONS: layout = R.layout.state_nothing_to_display_compact; break;
             case TYPE_PICKER_HEADER: layout = R.layout.layout_schedule_teacher_picker_header; break;
             case TYPE_PICKER_ITEM: layout = R.layout.layout_schedule_teacher_picker_item; break;
-            case TYPE_PICKER_NO_TEACHERS: layout = R.layout.nothing_to_display; break;
+            case TYPE_PICKER_NO_TEACHERS: layout = R.layout.state_nothing_to_display_compact; break;
             default: throw new NullPointerException("Invalid type provided");
         }
         return layout;
@@ -219,7 +219,7 @@ public class ScheduleLessonsRVA extends RVA {
                                 case R.id.add_military_day: {
                                     Static.T.runOnUiThread(() -> {
                                         final List<String> days = new ArrayList<>(Arrays.asList(activity.getString(R.string.monday), activity.getString(R.string.tuesday), activity.getString(R.string.wednesday), activity.getString(R.string.thursday), activity.getString(R.string.friday), activity.getString(R.string.saturday), activity.getString(R.string.sunday)));
-                                        final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(activity, R.layout.spinner_layout);
+                                        final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(activity, R.layout.spinner_center);
                                         arrayAdapter.addAll(days);
                                         new AlertDialog.Builder(activity)
                                                 .setAdapter(arrayAdapter, (dialogInterface, position) -> Static.T.runThread(() -> {

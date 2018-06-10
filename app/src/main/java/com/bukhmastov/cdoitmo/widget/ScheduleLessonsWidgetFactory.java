@@ -87,7 +87,7 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
             }
             final JSONObject lesson = this.lessons.getJSONObject(position);
             if (lesson == null) throw new NullPointerException("lesson cannot be null");
-            final RemoteViews layout = new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget_item);
+            final RemoteViews layout = new RemoteViews(context.getPackageName(), R.layout.widget_schedule_lessons_item);
             layout.setInt(R.id.slw_item_time_start, "setTextColor", colors.text);
             layout.setInt(R.id.slw_item_time_end, "setTextColor", colors.text);
             layout.setTextViewText(R.id.slw_item_time_start, lesson.getString("timeStart"));
@@ -183,7 +183,7 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
     @Override
     public RemoteViews getLoadingView() {
         try {
-            return new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget_item_loading);
+            return new RemoteViews(context.getPackageName(), R.layout.widget_schedule_lessons_item_loading);
         } catch (Exception e) {
             return null;
         }

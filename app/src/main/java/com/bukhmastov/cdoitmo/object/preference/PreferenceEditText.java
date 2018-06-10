@@ -38,7 +38,7 @@ public class PreferenceEditText extends Preference {
         this.callback = callback;
     }
     public static View getView(final ConnectedActivity activity, final PreferenceEditText preference) {
-        final View preference_layout = inflate(activity, R.layout.layout_preference_basic);
+        final View preference_layout = inflate(activity, R.layout.preference_basic);
         final View preference_basic = preference_layout.findViewById(R.id.preference_basic);
         final TextView preference_basic_title = preference_layout.findViewById(R.id.preference_basic_title);
         final TextView preference_basic_summary = preference_layout.findViewById(R.id.preference_basic_summary);
@@ -60,7 +60,7 @@ public class PreferenceEditText extends Preference {
         }
         preference_basic.setOnClickListener(v -> {
             if (preference.isDisabled()) return;
-            final View view = inflate(activity, R.layout.layout_preference_alert_edittext);
+            final View view = inflate(activity, R.layout.preference_dialog_input);
             final TextView message = view.findViewById(R.id.message);
             final EditText edittext = view.findViewById(R.id.edittext);
             String value = Storage.pref.get(activity, preference.key, preference.defaultValue == null ? "" : (String) preference.defaultValue);

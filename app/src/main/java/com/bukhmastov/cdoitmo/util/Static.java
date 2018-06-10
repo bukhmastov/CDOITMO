@@ -702,7 +702,7 @@ public class Static {
                 if (user_info_expand != null) {
                     if (groups.size() > 1) {
                         user_info_expand.setOnClickListener(v -> Static.T.runOnUiThread(() -> {
-                            final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(context, R.layout.spinner_layout);
+                            final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(context, R.layout.spinner_center);
                             arrayAdapter.addAll(groups);
                             new AlertDialog.Builder(context)
                                     .setTitle(R.string.set_main_group)
@@ -957,7 +957,7 @@ public class Static {
                 this.callback = callback;
                 Static.T.runOnUiThread(() -> {
                     try {
-                        ViewGroup layout = (ViewGroup) inflate(context, R.layout.layout_color_picker_dialog);
+                        ViewGroup layout = (ViewGroup) inflate(context, R.layout.dialog_color_picker);
                         container = layout.findViewById(R.id.colorPickerContainer);
                         selectedColorInput = layout.findViewById(R.id.selectedColorInput);
                         alertDialog = new AlertDialog.Builder(context)
@@ -1112,7 +1112,7 @@ public class Static {
                     try {
                         if (convertView == null) {
                             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                            convertView = inflater.inflate(R.layout.layout_color_picker_dialog_item, parent, false);
+                            convertView = inflater.inflate(R.layout.dialog_color_picker_item, parent, false);
                         }
                         String color = getItem(position);
                         if ("back".equals(color)) {
@@ -1165,11 +1165,11 @@ public class Static {
             switch (type) {
                 case 0:
                 default: {
-                    layoutId = R.layout.layout_remote_message_info;
+                    layoutId = R.layout.message_remote_info;
                     break;
                 }
                 case 1: {
-                    layoutId = R.layout.layout_remote_message_warn;
+                    layoutId = R.layout.message_remote_warn;
                     break;
                 }
             }

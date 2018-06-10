@@ -4,10 +4,6 @@
     android:layout_height="match_parent"
     android:id="@+id/person_common_container">
 
-    <ProgressBar
-        style="?android:attr/progressBarStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center" />
+    <include layout="@layout/state_loading"/>
 
 </FrameLayout>

@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:configure="com.bukhmastov.cdoitmo.activity.ScheduleLessonsWidgetConfigureActivity"
-    android:initialKeyguardLayout="@layout/schedule_lessons_widget"
-    android:initialLayout="@layout/schedule_lessons_widget"
+    android:initialKeyguardLayout="@layout/widget_schedule_lessons_layout"
+    android:initialLayout="@layout/widget_schedule_lessons_layout"
     android:minHeight="40dp"
     android:minWidth="110dp"
     android:previewImage="@drawable/schedule_lessons_widget_preview"
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="5400000"
-    android:widgetCategory="home_screen">
-
-</appwidget-provider>
+    android:widgetCategory="home_screen"/>

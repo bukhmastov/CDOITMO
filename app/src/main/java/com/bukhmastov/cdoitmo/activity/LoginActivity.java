@@ -318,7 +318,7 @@ public class LoginActivity extends ConnectedActivity {
                                         case R.id.change_password: {
                                             Static.T.runOnUiThread(() -> {
                                                 try {
-                                                    final View layout = inflate(R.layout.layout_preference_alert_edittext);
+                                                    final View layout = inflate(R.layout.preference_dialog_input);
                                                     final EditText editText = layout.findViewById(R.id.edittext);
                                                     final TextView message = layout.findViewById(R.id.message);
                                                     editText.setHint(R.string.new_password);

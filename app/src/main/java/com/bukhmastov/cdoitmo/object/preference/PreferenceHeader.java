@@ -22,7 +22,7 @@ public class PreferenceHeader {
         this.fragment = fragment;
     }
     public static View getView(final ConnectedActivity activity, final PreferenceHeader preference) {
-        View header = inflate(activity, R.layout.layout_preference_header);
+        View header = inflate(activity, R.layout.preference_header);
         ((ImageView) header.findViewById(R.id.preference_header_icon)).setImageResource(preference.icon);
         ((TextView) header.findViewById(R.id.preference_header_title)).setText(preference.title);
         header.findViewById(R.id.preference_header).setOnClickListener(v -> activity.openFragment(ConnectedActivity.TYPE.STACKABLE, preference.fragment, null));

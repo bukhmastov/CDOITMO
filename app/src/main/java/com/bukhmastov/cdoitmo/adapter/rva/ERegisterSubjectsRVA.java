@@ -33,7 +33,7 @@ public class ERegisterSubjectsRVA extends RVA {
         switch (type) {
             case TYPE_SUBJECT: layout = R.layout.layout_eregister_subject_item; break;
             case TYPE_SUBJECT_PASSED: layout = R.layout.layout_eregister_subject_item_passed; break;
-            case TYPE_NO_SUBJECTS: layout = R.layout.nothing_to_display; break;
+            case TYPE_NO_SUBJECTS: layout = R.layout.state_nothing_to_display_compact; break;
             default: throw new NullPointerException("Invalid type provided");
         }
         return layout;

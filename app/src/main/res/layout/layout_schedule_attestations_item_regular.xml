@@ -38,12 +38,12 @@
 
         </LinearLayout>
 
-        <View
+        <include
             android:layout_width="match_parent"
             android:layout_height="@dimen/separator"
             android:layout_marginStart="@dimen/schedule_exams_padding_horizontal"
             android:layout_marginEnd="@dimen/schedule_exams_padding_horizontal"
-            android:background="?attr/colorSeparator" />
+            layout="@layout/separator"/>
 
     </LinearLayout>
 

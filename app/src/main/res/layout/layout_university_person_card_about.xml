@@ -4,11 +4,11 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <View
+    <include
         android:layout_width="match_parent"
         android:layout_height="@dimen/separator"
         android:layout_gravity="bottom"
-        android:background="?attr/colorSeparator"/>
+        layout="@layout/separator"/>
 
     <TextView
         android:id="@+id/title"

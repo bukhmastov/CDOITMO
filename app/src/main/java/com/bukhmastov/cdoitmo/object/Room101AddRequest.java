@@ -549,12 +549,12 @@ public class Room101AddRequest {
     }
 
     private View getLoadingLayout(String text) {
-        View view = inflate(R.layout.state_loading_without_align);
+        View view = inflate(R.layout.state_loading_text_compact);
         ((TextView) view.findViewById(R.id.loading_message)).setText(text);
         return view;
     }
     private View getEmptyLayout(String text) throws InflateException {
-        View view = inflate(R.layout.nothing_to_display);
+        View view = inflate(R.layout.state_nothing_to_display_compact);
         ((TextView) view.findViewById(R.id.ntd_text)).setText(text);
         return view;
     }

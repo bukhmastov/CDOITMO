@@ -168,7 +168,7 @@ public class SubjectShowFragment extends ConnectedFragment {
                                     for (ShareEntity shareEntity : shareEntities) {
                                         labels.add(shareEntity.attestation != null && !shareEntity.attestation.isEmpty() ? shareEntity.attestation : sbj);
                                     }
-                                    final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(activity, R.layout.spinner_layout);
+                                    final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(activity, R.layout.spinner_center);
                                     arrayAdapter.addAll(labels);
                                     new AlertDialog.Builder(activity)
                                             .setAdapter(arrayAdapter, (dialogInterface, position) -> {

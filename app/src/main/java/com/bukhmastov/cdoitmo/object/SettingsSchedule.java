@@ -54,7 +54,7 @@ public abstract class SettingsSchedule {
         Static.T.runOnUiThread(() -> {
             try {
                 final String value = Storage.pref.get(activity, preference.key, (String) preference.defaultValue);
-                final ViewGroup layout = (ViewGroup) inflate(R.layout.layout_schedule_preference);
+                final ViewGroup layout = (ViewGroup) inflate(R.layout.preference_schedule);
                 final RadioGroup lsp_radio_group = layout.findViewById(R.id.lsp_radio_group);
                 final ViewGroup lsp_schedule_chooser = layout.findViewById(R.id.lsp_schedule_chooser);
                 lsp_search = layout.findViewById(R.id.lsp_search);

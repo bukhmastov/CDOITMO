@@ -6,7 +6,6 @@
     android:orientation="vertical">
 
     <ProgressBar
-        android:id="@+id/loading_bar"
         style="?android:attr/progressBarStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -35,7 +34,7 @@
             android:id="@+id/interrupt_auth"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="?attr/selectableItemBackground"
+            android:background="?android:attr/selectableItemBackground"
             android:orientation="horizontal"
             android:padding="@dimen/item_padding_quarter">
 

@@ -12,7 +12,7 @@
         android:layout_width="@dimen/search_height"
         android:layout_height="@dimen/search_height"
         android:layout_margin="@dimen/search_padding"
-        android:background="?attr/selectableItemBackgroundBorderless">
+        android:background="?android:attr/selectableItemBackgroundBorderless">
 
         <ImageView
             android:layout_width="match_parent"
@@ -22,15 +22,14 @@
 
     </FrameLayout>
 
-    <View
+    <include
         android:id="@+id/separator"
         android:layout_width="match_parent"
         android:layout_height="@dimen/separator"
         android:layout_gravity="bottom"
-        android:background="?attr/colorSeparator" />
+        layout="@layout/separator"/>
 
     <ScrollView
-        android:id="@+id/list_scroll"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 

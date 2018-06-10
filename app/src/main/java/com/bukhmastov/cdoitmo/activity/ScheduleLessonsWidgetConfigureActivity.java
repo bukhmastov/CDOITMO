@@ -94,7 +94,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
         FirebaseAnalyticsProvider.logCurrentScreen(this);
         Static.init(this);
         setResult(RESULT_CANCELED);
-        setContentView(R.layout.schedule_lessons_widget_configure);
+        setContentView(R.layout.widget_configure_schedule_lessons);
         Toolbar toolbar = findViewById(R.id.toolbar_widget);
         if (toolbar != null) {
             Static.applyToolbarTheme(this, toolbar);
@@ -256,7 +256,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
         Log.v(TAG, "activatePartSchedule | scope=" + title);
         Static.T.runThread(() -> {
             try {
-                final ViewGroup layout = (ViewGroup) inflate(R.layout.layout_widget_schedule_lessons_create_search);
+                final ViewGroup layout = (ViewGroup) inflate(R.layout.widget_configure_schedule_lessons_create_search);
                 final AlertDialog alertDialog = new AlertDialog.Builder(activity)
                         .setView(layout)
                         .setNegativeButton(R.string.do_cancel, null)
@@ -437,7 +437,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
         Static.T.runThread(() -> {
             try {
                 // define variables
-                final ViewGroup layout = (ViewGroup) inflate(R.layout.layout_widget_schedule_lessons_create_theme);
+                final ViewGroup layout = (ViewGroup) inflate(R.layout.widget_configure_schedule_lessons_create_theme);
 
                 final ViewGroup default_theme_light = layout.findViewById(R.id.default_theme_light);
                 final TextView default_theme_light_background = layout.findViewById(R.id.default_theme_light_background);

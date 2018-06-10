@@ -82,7 +82,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_rating, container, false);
+        return inflater.inflate(R.layout.fragment_container, container, false);
     }
 
     @Override
@@ -187,7 +187,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
     }
     private void load(final @TYPE String type, final boolean force, final String cache) {
         Static.T.runOnUiThread(() -> {
-            draw(R.layout.state_loading);
+            draw(R.layout.state_loading_text);
             if (activity != null) {
                 TextView loading_message = activity.findViewById(R.id.loading_message);
                 if (loading_message != null) {
@@ -408,7 +408,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
         Static.T.runOnUiThread(() -> {
             Log.v(TAG, "loadFailed");
             try {
-                draw(R.layout.state_try_again);
+                draw(R.layout.state_failed_button);
                 View try_again_reload = activity.findViewById(R.id.try_again_reload);
                 if (try_again_reload != null) {
                     try_again_reload.setOnClickListener(v -> load());
@@ -481,7 +481,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                 }));
                 Static.T.runOnUiThread(() -> {
                     try {
-                        draw(R.layout.layout_rating);
+                        draw(R.layout.layout_rating_list);
                         // set adapter to recycler view
                         final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
                         final RecyclerView rating_list = activity.findViewById(R.id.rating_list);
@@ -525,7 +525,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
 
     private void draw(int layoutId) {
         try {
-            ViewGroup vg = activity.findViewById(R.id.container_rating);
+            ViewGroup vg = activity.findViewById(R.id.container);
             if (vg != null) {
                 vg.removeAllViews();
                 vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));

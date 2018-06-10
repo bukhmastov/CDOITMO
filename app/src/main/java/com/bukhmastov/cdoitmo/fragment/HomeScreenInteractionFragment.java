@@ -394,7 +394,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                             "news",
                                             "events",
                                             "ubuildings"));
-                                    final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(activity, R.layout.spinner_layout);
+                                    final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(activity, R.layout.spinner_center);
                                     arrayAdapter.addAll(labels);
                                     new AlertDialog.Builder(activity)
                                             .setAdapter(arrayAdapter, (dialogInterface, position) -> {
@@ -540,7 +540,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
         Static.T.runThread(() -> {
             try {
                 Log.v(TAG, "getSchedule | scope=" + scope);
-                final ViewGroup layout = (ViewGroup) inflate(R.layout.layout_widget_schedule_lessons_create_search);
+                final ViewGroup layout = (ViewGroup) inflate(R.layout.widget_configure_schedule_lessons_create_search);
                 final AlertDialog alertDialog = new AlertDialog.Builder(activity)
                         .setView(layout)
                         .setNegativeButton(R.string.do_cancel, null)

@@ -6,7 +6,6 @@
     android:layout_height="match_parent">
 
     <LinearLayout
-        android:id="@+id/about_content"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
@@ -31,12 +30,11 @@
                     android:id="@+id/block_pika"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackground"
+                    android:background="?android:attr/selectableItemBackground"
                     android:orientation="horizontal"
                     android:padding="@dimen/item_padding_half">
 
                     <ImageView
-                        android:id="@+id/app_icon"
                         android:layout_width="@dimen/about_icon_width"
                         android:layout_height="@dimen/about_icon_width"
                         android:layout_marginStart="0dp"
@@ -90,7 +88,7 @@
                     android:id="@+id/open_log"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackground"
+                    android:background="?android:attr/selectableItemBackground"
                     android:orientation="horizontal"
                     android:padding="@dimen/item_padding_half">
 
@@ -118,7 +116,7 @@
                 android:id="@+id/block_send_mail"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="?attr/selectableItemBackground"
+                android:background="?android:attr/selectableItemBackground"
                 android:orientation="horizontal"
                 android:padding="@dimen/item_padding_half">
 
@@ -171,7 +169,7 @@
                 android:id="@+id/block_send_vk"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="?attr/selectableItemBackground"
+                android:background="?android:attr/selectableItemBackground"
                 android:orientation="horizontal"
                 android:padding="@dimen/item_padding_half">
 
@@ -224,7 +222,7 @@
                 android:id="@+id/block_rate"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="?attr/selectableItemBackground"
+                android:background="?android:attr/selectableItemBackground"
                 android:orientation="horizontal"
                 android:padding="@dimen/item_padding_half">
 
@@ -277,7 +275,7 @@
                 android:id="@+id/block_github"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="?attr/selectableItemBackground"
+                android:background="?android:attr/selectableItemBackground"
                 android:orientation="horizontal"
                 android:padding="@dimen/item_padding_half">
 
@@ -330,7 +328,7 @@
                 android:id="@+id/block_donate"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="?attr/selectableItemBackground"
+                android:background="?android:attr/selectableItemBackground"
                 android:orientation="horizontal"
                 android:padding="@dimen/item_padding_half">
 

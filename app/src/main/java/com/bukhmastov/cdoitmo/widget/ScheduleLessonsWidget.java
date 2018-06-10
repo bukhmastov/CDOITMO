@@ -213,7 +213,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
             layout.setViewVisibility(R.id.widget_controls, View.GONE);
             // контент
             layout.removeAllViews(R.id.widget_container);
-            layout.addView(R.id.widget_container, new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget_loading));
+            layout.addView(R.id.widget_container, new RemoteViews(context.getPackageName(), R.layout.widget_schedule_lessons_loading));
             layout.setInt(R.id.slw_loading_text, "setTextColor", colors.text);
             // установки
             bindOpen(context, appWidgetId, layout);
@@ -341,7 +341,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 }
                 // контент
                 layout.removeAllViews(R.id.widget_container);
-                layout.addView(R.id.widget_container, new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget_list));
+                layout.addView(R.id.widget_container, new RemoteViews(context.getPackageName(), R.layout.widget_schedule_lessons_list));
                 // установки
                 bindOpen(context, appWidgetId, layout);
                 // список расписания
@@ -398,7 +398,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
             layout.setViewVisibility(R.id.widget_controls, View.GONE);
             // контент
             layout.removeAllViews(R.id.widget_container);
-            layout.addView(R.id.widget_container, new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget_message));
+            layout.addView(R.id.widget_container, new RemoteViews(context.getPackageName(), R.layout.widget_schedule_lessons_message));
             layout.setInt(R.id.slw_message_text, "setTextColor", colors.text);
             layout.setTextViewText(R.id.slw_message_text, text);
             layout.setImageViewBitmap(R.id.slw_message_icon, getBitmap(context, R.drawable.ic_widget_error_outline, colors.text));
@@ -446,7 +446,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
             layout.setViewVisibility(R.id.widget_controls, View.GONE);
             // контент
             layout.removeAllViews(R.id.widget_container);
-            layout.addView(R.id.widget_container, new RemoteViews(context.getPackageName(), R.layout.schedule_lessons_widget_message));
+            layout.addView(R.id.widget_container, new RemoteViews(context.getPackageName(), R.layout.widget_schedule_lessons_message));
             layout.setInt(R.id.slw_message_text, "setTextColor", colors.text);
             layout.setImageViewBitmap(R.id.slw_message_icon, getBitmap(context, R.drawable.ic_widget_info_outline, colors.text));
             // установки
@@ -777,10 +777,10 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     }
     private static @LayoutRes int getViewLayout(final @SIZE int size) {
         switch (size) {
-            case WIDE:      return R.layout.schedule_lessons_widget_wide;
-            case NARROW:    return R.layout.schedule_lessons_widget_small;
+            case WIDE:      return R.layout.widget_schedule_lessons_layout_wide;
+            case NARROW:    return R.layout.widget_schedule_lessons_layout_small;
             case REGULAR:
-            default:        return R.layout.schedule_lessons_widget;
+            default:        return R.layout.widget_schedule_lessons_layout;
         }
     }
     private static @SIZE int getSize(final Bundle options) {

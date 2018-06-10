@@ -143,10 +143,7 @@
 
     </HorizontalScrollView>
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/separator"
-        android:background="?attr/colorSeparator"/>
+    <include layout="@layout/separator"/>
 
     <ScrollView
         android:layout_width="match_parent"
@@ -166,7 +163,7 @@
                 android:paddingBottom="@dimen/item_vertical_padding"
                 android:paddingStart="@dimen/item_horizontal_padding"
                 android:paddingEnd="@dimen/item_horizontal_padding"
-                android:background="?attr/selectableItemBackground"
+                android:background="?android:attr/selectableItemBackground"
                 android:focusable="true"
                 android:clickable="true">
 
@@ -210,10 +207,7 @@
 
             </RelativeLayout>
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/separator"
-                android:background="?attr/colorSeparator"/>
+            <include layout="@layout/separator"/>
 
             <RelativeLayout
                 android:id="@+id/generic_logs"
@@ -224,7 +218,7 @@
                 android:paddingBottom="@dimen/item_vertical_padding"
                 android:paddingStart="@dimen/item_horizontal_padding"
                 android:paddingEnd="@dimen/item_horizontal_padding"
-                android:background="?attr/selectableItemBackground"
+                android:background="?android:attr/selectableItemBackground"
                 android:focusable="true"
                 android:clickable="true">
 
@@ -268,10 +262,7 @@
 
             </RelativeLayout>
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/separator"
-                android:background="?attr/colorSeparator"/>
+            <include layout="@layout/separator"/>
 
             <LinearLayout
                 android:id="@+id/generic"

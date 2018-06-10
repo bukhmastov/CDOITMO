@@ -6,14 +6,12 @@
     android:orientation="vertical">
 
     <RelativeLayout
-        android:id="@+id/header_schedule_lessons"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?attr/colorBackgroundSection"
         android:padding="@dimen/item_padding">
 
         <LinearLayout
-            android:id="@+id/schedule_lessons_titles"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
@@ -44,7 +42,7 @@
             android:layout_height="@dimen/schedule_cache_button"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
             android:focusable="true"
             android:clickable="true" >
 
@@ -57,9 +55,6 @@
 
     </RelativeLayout>
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/separator"
-        android:background="?attr/colorSeparator" />
+    <include layout="@layout/separator"/>
 
 </LinearLayout>

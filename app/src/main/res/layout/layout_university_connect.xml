@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/connect"
     android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:minHeight="@dimen/university_person_card_contact_info"
-    android:background="?attr/selectableItemBackground">
+    android:background="?android:attr/selectableItemBackground">
 
     <FrameLayout
         android:layout_width="@dimen/university_person_card_contact_info"
@@ -29,12 +28,12 @@
         android:layout_height="wrap_content"
         android:minHeight="@dimen/university_person_card_contact_info">
 
-        <View
+        <include
             android:id="@+id/separator"
             android:layout_width="match_parent"
             android:layout_height="@dimen/separator"
             android:layout_gravity="bottom"
-            android:background="?attr/colorSeparator"/>
+            layout="@layout/separator"/>
 
         <TextView
             android:id="@+id/connect_text"

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <FrameLayout
+        android:layout_width="@dimen/dp16"
+        android:layout_height="@dimen/dp16"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="@dimen/item_padding_half"
+        android:layout_marginEnd="@dimen/item_padding_quarter"
+        android:layout_marginTop="@dimen/item_padding_half"
+        android:layout_marginBottom="@dimen/item_padding_half">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:tint="?android:attr/textColorSecondary"
+            app:srcCompat="@drawable/ic_access_time"/>
+
+    </FrameLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:paddingTop="@dimen/item_padding_half"
+        android:paddingBottom="@dimen/item_padding_half"
+        android:paddingStart="@dimen/item_padding_quarter"
+        android:paddingEnd="0dp">
+
+        <TextView
+            android:id="@+id/update_time"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="@dimen/font_size_14"
+            android:text="@string/lorem_ipsum"/>
+
+    </FrameLayout>
+
+</LinearLayout>

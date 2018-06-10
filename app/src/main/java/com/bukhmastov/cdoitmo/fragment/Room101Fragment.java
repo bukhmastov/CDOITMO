@@ -75,7 +75,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_room101, container, false);
+        return inflater.inflate(R.layout.fragment_container, container, false);
     }
 
     @Override
@@ -158,7 +158,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                             );
                         } else {
                             Log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status + " | success(not really) | statusCode=" + statusCode);
-                            draw(R.layout.state_try_again);
+                            draw(R.layout.state_failed_button);
                             TextView try_again_message = activity.findViewById(R.id.try_again_message);
                             if (try_again_message != null) try_again_message.setText(R.string.wrong_response_from_server);
                             View try_again_reload = activity.findViewById(R.id.try_again_reload);
@@ -173,7 +173,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                 public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                     Static.T.runOnUiThread(() -> {
                         Log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status + " | failure | statusCode=" + statusCode);
-                        draw(R.layout.state_try_again);
+                        draw(R.layout.state_failed_button);
                         TextView try_again_message = activity.findViewById(R.id.try_again_message);
                         if (try_again_message != null) {
                             if (state == Room101Client.FAILED_SERVER_ERROR) {
@@ -193,7 +193,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                 public void onProgress(final int state) {
                     Static.T.runOnUiThread(() -> {
                         Log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status + " | progress " + state);
-                        draw(R.layout.state_loading);
+                        draw(R.layout.state_loading_text);
                         TextView loading_message = activity.findViewById(R.id.loading_message);
                         if (loading_message != null) {
                             switch (state) {
@@ -498,7 +498,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                                     if (getData() != null) {
                                         display();
                                     } else {
-                                        draw(R.layout.state_offline);
+                                        draw(R.layout.state_offline_text);
                                         if (activity != null) {
                                             View offline_reload = activity.findViewById(R.id.offline_reload);
                                             if (offline_reload != null) {
@@ -510,7 +510,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                                 case Room101Client.FAILED_SERVER_ERROR:
                                 case Room101Client.FAILED_TRY_AGAIN:
                                 case Room101Client.FAILED_EXPECTED_REDIRECTION:
-                                    draw(R.layout.state_try_again);
+                                    draw(R.layout.state_failed_button);
                                     if (activity != null) {
                                         if (state == Room101Client.FAILED_EXPECTED_REDIRECTION) {
                                             TextView try_again_message = activity.findViewById(R.id.try_again_message);
@@ -527,7 +527,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                                     }
                                     break;
                                 case Room101Client.FAILED_AUTH:
-                                    draw(R.layout.state_try_again);
+                                    draw(R.layout.state_failed_button);
                                     if (activity != null) {
                                         View try_again_reload = activity.findViewById(R.id.try_again_reload);
                                         if (try_again_reload != null) {
@@ -544,7 +544,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                     public void onProgress(final int state) {
                         Static.T.runOnUiThread(() -> {
                             Log.v(TAG, "load | progress " + state);
-                            draw(R.layout.state_loading);
+                            draw(R.layout.state_loading_text);
                             if (activity != null) {
                                 TextView loading_message = activity.findViewById(R.id.loading_message);
                                 if (loading_message != null) {
@@ -567,7 +567,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                     if (getData() != null) {
                         display();
                     } else {
-                        draw(R.layout.state_offline);
+                        draw(R.layout.state_offline_text);
                         if (activity != null) {
                             View offline_reload = activity.findViewById(R.id.offline_reload);
                             if (offline_reload != null) {
@@ -583,7 +583,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
         Static.T.runOnUiThread(() -> {
             Log.v(TAG, "loadFailed");
             try {
-                draw(R.layout.state_try_again);
+                draw(R.layout.state_failed_button);
                 View try_again_reload = activity.findViewById(R.id.try_again_reload);
                 if (try_again_reload != null) {
                     try_again_reload.setOnClickListener(v -> load(true));
@@ -677,7 +677,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
 
     private void draw(int layoutId) {
         try {
-            ViewGroup vg = activity.findViewById(R.id.container_room101);
+            ViewGroup vg = activity.findViewById(R.id.container);
             if (vg != null) {
                 vg.removeAllViews();
                 vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));

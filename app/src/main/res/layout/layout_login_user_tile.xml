@@ -44,10 +44,7 @@
 
             </LinearLayout>
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/separator"
-                android:background="?attr/colorSeparator" />
+            <include layout="@layout/separator"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -62,7 +59,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_gravity="center_vertical"
-                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
                     android:src="@drawable/ic_expand_more_32dp"
                     android:paddingTop="@dimen/item_padding_half"
                     android:paddingBottom="@dimen/item_padding_half"

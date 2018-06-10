@@ -9,7 +9,6 @@
         android:layout_height="@dimen/rating_list_height">
 
         <FrameLayout
-            android:id="@+id/its_me"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
@@ -103,10 +102,10 @@
 
     </FrameLayout>
 
-    <View
+    <include
         android:layout_width="match_parent"
         android:layout_height="@dimen/separator"
-        android:background="?attr/colorSeparator"
-        android:layout_alignParentBottom="true"/>
+        android:layout_alignParentBottom="true"
+        layout="@layout/separator"/>
 
 </RelativeLayout>

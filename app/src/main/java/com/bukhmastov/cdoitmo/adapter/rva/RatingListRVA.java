@@ -39,7 +39,7 @@ public class RatingListRVA extends RVA {
         switch (type) {
             case TYPE_ENTRY: layout = R.layout.layout_rating_list_item; break;
             case TYPE_ENTRY_MINE: layout = R.layout.layout_rating_list_item_mine; break;
-            case TYPE_NO_RATING: layout = R.layout.nothing_to_display; break;
+            case TYPE_NO_RATING: layout = R.layout.state_nothing_to_display_compact; break;
             default: throw new NullPointerException("Invalid type provided");
         }
         return layout;

@@ -18,12 +18,12 @@
             android:layout_height="@dimen/rating_detailed_height_half"
             android:spinnerMode="dialog" />
 
-        <View
+        <include
             android:layout_width="match_parent"
             android:layout_height="@dimen/separator"
             android:layout_marginStart="@dimen/rating_detailed_separator_margin"
             android:layout_marginEnd="@dimen/rating_detailed_separator_margin"
-            android:background="?attr/colorSeparator" />
+            layout="@layout/separator"/>
 
         <Spinner
             android:id="@+id/course"
@@ -33,14 +33,14 @@
 
     </LinearLayout>
 
-    <View
+    <include
         android:id="@+id/separator"
         android:layout_width="@dimen/separator"
         android:layout_height="match_parent"
         android:layout_marginBottom="@dimen/rating_detailed_separator_margin"
         android:layout_marginTop="@dimen/rating_detailed_separator_margin"
         android:layout_toStartOf="@+id/common_apply"
-        android:background="?attr/colorSeparator" />
+        layout="@layout/separator"/>
 
     <ImageButton
         android:id="@+id/common_apply"
@@ -48,7 +48,7 @@
         android:layout_height="@dimen/rating_detailed_height"
         android:layout_alignParentEnd="true"
         android:layout_alignParentTop="true"
-        android:background="?attr/selectableItemBackgroundBorderless"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
         android:focusable="true"
         android:clickable="true"
         android:contentDescription="@string/lorem_ipsum"

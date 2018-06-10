@@ -103,7 +103,7 @@ public class ThemeUtil {
     public void show() {
         Log.v(TAG, "show");
         Static.T.runOnUiThread(() -> {
-            final ViewGroup theme_layout = (ViewGroup) inflate(R.layout.layout_theme_picker);
+            final ViewGroup theme_layout = (ViewGroup) inflate(R.layout.dialog_theme_picker);
             Static.T.runThread(() -> {
                 try {
                     final ViewGroup theme_container_static = theme_layout.findViewById(R.id.theme_container_static);
@@ -141,7 +141,7 @@ public class ThemeUtil {
                     // setup static theme selector
                     Static.T.runOnUiThread(() -> {
                         for (int i = 0; i < pref_theme_titles.size(); i++) {
-                            final RadioButton radioButton = (RadioButton) inflate(R.layout.layout_theme_picker_static_item);
+                            final RadioButton radioButton = (RadioButton) inflate(R.layout.dialog_theme_picker_static_item);
                             radioButton.setText(pref_theme_titles.get(i));
                             radioButton.setOnCheckedChangeListener((buttonView, isChecked) -> {
                                 if (isChecked) {

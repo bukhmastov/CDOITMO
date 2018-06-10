@@ -58,7 +58,7 @@ public class ScheduleAttestationsRVA extends RVA {
             case TYPE_ATTESTATION_REGULAR: layout = R.layout.layout_schedule_attestations_item_regular; break;
             case TYPE_ATTESTATION_BOTTOM: layout = R.layout.layout_schedule_attestations_item_bottom; break;
             case TYPE_UPDATE_TIME: layout = R.layout.layout_schedule_both_update_time; break;
-            case TYPE_NO_ATTESTATIONS: layout = R.layout.nothing_to_display; break;
+            case TYPE_NO_ATTESTATIONS: layout = R.layout.state_nothing_to_display_compact; break;
             default: throw new NullPointerException("Invalid type provided");
         }
         return layout;

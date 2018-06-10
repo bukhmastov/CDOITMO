@@ -50,7 +50,7 @@ public class RatingRVA extends RVA {
             case TYPE_COMMON: layout = R.layout.layout_rating_common; break;
             case TYPE_OWN: layout = R.layout.layout_rating_own; break;
             case TYPE_COMMON_EMPTY:
-            case TYPE_OWN_EMPTY: layout = R.layout.nothing_to_display; break;
+            case TYPE_OWN_EMPTY: layout = R.layout.state_nothing_to_display_compact; break;
             case TYPE_FAILED: layout = R.layout.state_failed_compact; break;
             case TYPE_OFFLINE: layout = R.layout.state_offline_compact; break;
             default: throw new NullPointerException("Invalid type provided");
@@ -185,8 +185,8 @@ public class RatingRVA extends RVA {
                         // faculty spinner
                         final Spinner faculty_spinner = container.findViewById(R.id.faculty);
                         if (faculty_spinner != null) {
-                            ArrayAdapter<String> adapter = new ArrayAdapter<>(context, R.layout.spinner_rating_layout, facultiesAdapterArr);
-                            adapter.setDropDownViewResource(R.layout.spinner_layout_normal_case);
+                            ArrayAdapter<String> adapter = new ArrayAdapter<>(context, R.layout.spinner_rating, facultiesAdapterArr);
+                            adapter.setDropDownViewResource(R.layout.spinner_center_normal_case);
                             faculty_spinner.setAdapter(adapter);
                             faculty_spinner.setSelection(selected.get(0));
                             faculty_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -207,8 +207,8 @@ public class RatingRVA extends RVA {
                         // course spinner
                         final Spinner course_spinner = container.findViewById(R.id.course);
                         if (course_spinner != null) {
-                            ArrayAdapter<String> adapter = new ArrayAdapter<>(context, R.layout.spinner_rating_layout, coursesAdapterArr);
-                            adapter.setDropDownViewResource(R.layout.spinner_layout_normal_case);
+                            ArrayAdapter<String> adapter = new ArrayAdapter<>(context, R.layout.spinner_rating, coursesAdapterArr);
+                            adapter.setDropDownViewResource(R.layout.spinner_center_normal_case);
                             course_spinner.setAdapter(adapter);
                             course_spinner.setSelection(selected.get(1));
                             course_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {

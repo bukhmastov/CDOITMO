@@ -23,7 +23,7 @@ public class TeacherPickerAdapter extends ArrayAdapter<JSONObject> {
     private ArrayList<JSONObject> teachers;
 
     public TeacherPickerAdapter(Context context, ArrayList<JSONObject> teachers) {
-        super(context, R.layout.listview_teacher_picker, teachers);
+        super(context, R.layout.spinner_teacher_picker, teachers);
         this.context = context;
         this.teachers = teachers;
     }
@@ -53,7 +53,7 @@ public class TeacherPickerAdapter extends ArrayAdapter<JSONObject> {
         try {
             if (convertView == null) {
                 LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                convertView = inflater.inflate(R.layout.layout_teachers_auto_complete_list, parent, false);
+                convertView = inflater.inflate(R.layout.spinner_teacher_picker, parent, false);
             }
             final JSONObject teacher = getItem(position);
             if (teacher != null) {

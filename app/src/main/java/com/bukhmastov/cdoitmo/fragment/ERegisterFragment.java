@@ -66,7 +66,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_eregister, container, false);
+        return inflater.inflate(R.layout.fragment_container, container, false);
     }
 
     @Override
@@ -183,7 +183,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                                     if (getData() != null) {
                                         display();
                                     } else {
-                                        draw(R.layout.state_offline);
+                                        draw(R.layout.state_offline_text);
                                         if (activity != null) {
                                             View offline_reload = activity.findViewById(R.id.offline_reload);
                                             if (offline_reload != null) {
@@ -195,7 +195,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                                 case DeIfmoRestClient.FAILED_TRY_AGAIN:
                                 case DeIfmoRestClient.FAILED_SERVER_ERROR:
                                 case DeIfmoRestClient.FAILED_CORRUPTED_JSON:
-                                    draw(R.layout.state_try_again);
+                                    draw(R.layout.state_failed_button);
                                     if (activity != null) {
                                         TextView try_again_message = activity.findViewById(R.id.try_again_message);
                                         if (try_again_message != null) {
@@ -217,7 +217,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                     public void onProgress(final int state) {
                         Static.T.runOnUiThread(() -> {
                             Log.v(TAG, "load | progress " + state);
-                            draw(R.layout.state_loading);
+                            draw(R.layout.state_loading_text);
                             if (activity != null) {
                                 TextView loading_message = activity.findViewById(R.id.loading_message);
                                 if (loading_message != null) {
@@ -238,7 +238,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                     if (getData() != null) {
                         display();
                     } else {
-                        draw(R.layout.state_offline);
+                        draw(R.layout.state_offline_text);
                         if (activity != null) {
                             View offline_reload = activity.findViewById(R.id.offline_reload);
                             if (offline_reload != null) {
@@ -254,7 +254,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
         Static.T.runOnUiThread(() -> {
             Log.v(TAG, "loadFailed");
             try {
-                draw(R.layout.state_try_again);
+                draw(R.layout.state_failed_button);
                 TextView try_again_message = activity.findViewById(R.id.try_again_message);
                 if (try_again_message != null) try_again_message.setText(R.string.eregister_load_failed_retry_in_minute);
                 View try_again_reload = activity.findViewById(R.id.try_again_reload);
@@ -340,7 +340,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                                 if (group.getString("name").equals(this.group)) selection = counter;
                                 counter++;
                             }
-                            spinner_group.setAdapter(new ArrayAdapter<>(activity, R.layout.spinner_layout_single_line, spinner_group_arr));
+                            spinner_group.setAdapter(new ArrayAdapter<>(activity, R.layout.spinner_center_single_line, spinner_group_arr));
                             spinner_group.setSelection(selection);
                             spinner_group_blocker = true;
                             spinner_group.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -381,7 +381,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                                     break;
                                 }
                             }
-                            spinner_period.setAdapter(new ArrayAdapter<>(activity, R.layout.spinner_layout_single_line, spinner_period_arr));
+                            spinner_period.setAdapter(new ArrayAdapter<>(activity, R.layout.spinner_center_single_line, spinner_period_arr));
                             spinner_period.setSelection(selection);
                             spinner_period_blocker = true;
                             spinner_period.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -510,7 +510,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
 
     private void draw(int layoutId) {
         try {
-            ViewGroup vg = activity.findViewById(R.id.container_eregister);
+            ViewGroup vg = activity.findViewById(R.id.container);
             if (vg != null) {
                 vg.removeAllViews();
                 vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));

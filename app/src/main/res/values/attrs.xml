@@ -4,6 +4,9 @@
     <declare-styleable name="dynamic_style_attrs">
 
         <attr name="colorPrimaryLight" format="color" />
+        <attr name="colorPrimary" format="color" />
+        <attr name="colorPrimaryDark" format="color" />
+        <attr name="colorAccent" format="color" />
 
         <attr name="colorBackground" format="color" />
         <attr name="colorBackgroundCards" format="color" />

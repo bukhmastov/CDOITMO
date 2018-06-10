@@ -97,7 +97,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate("handle".equals(action) ? R.layout.fragment_schedule_lessons_share_receive : R.layout.fragment_schedule_lessons_share, container, false);
+        return inflater.inflate("handle".equals(action) ? R.layout.fragment_schedule_lessons_share_receive : R.layout.fragment_schedule_lessons_share_send, container, false);
     }
 
     @Override
@@ -348,15 +348,15 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                             switch (state) {
                                 case Client.FAILED_OFFLINE:
                                 case ScheduleLessons.FAILED_OFFLINE:
-                                    share_content.addView(inflate(R.layout.state_offline_without_align));
+                                    share_content.addView(inflate(R.layout.state_offline_text_compact));
                                     break;
                                 case Client.FAILED_SERVER_ERROR:
-                                    view = inflate(R.layout.state_failed_without_align);
+                                    view = inflate(R.layout.state_failed_text_compact);
                                     ((TextView) view.findViewById(R.id.text)).setText(Client.getFailureMessage(activity, statusCode));
                                     share_content.addView(view);
                                     break;
                                 case Client.FAILED_CORRUPTED_JSON:
-                                    view = inflate(R.layout.state_failed_without_align);
+                                    view = inflate(R.layout.state_failed_text_compact);
                                     ((TextView) view.findViewById(R.id.text)).setText(R.string.server_provided_corrupted_json);
                                     share_content.addView(view);
                                     break;
@@ -367,7 +367,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                                 case ScheduleLessons.FAILED_INVALID_QUERY:
                                 case ScheduleLessons.FAILED_MINE_NEED_ISU:
                                 default:
-                                    share_content.addView(inflate(R.layout.state_failed_without_align));
+                                    share_content.addView(inflate(R.layout.state_failed_text_compact));
                                     break;
                             }
                         }
@@ -384,7 +384,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                         ViewGroup share_content = activity.findViewById(R.id.share_content);
                         if (share_content != null) {
                             share_content.removeAllViews();
-                            share_content.addView(inflate(R.layout.state_loading_without_align));
+                            share_content.addView(inflate(R.layout.state_loading_text_compact));
                         }
                     } catch (Exception e) {
                         Static.error(e);
@@ -423,7 +423,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                     share_content.addView(layout_notification_warning);
                 }
                 if (changes.size() == 0) {
-                    ViewGroup nothing_to_display = (ViewGroup) inflate(R.layout.nothing_to_display);
+                    ViewGroup nothing_to_display = (ViewGroup) inflate(R.layout.state_nothing_to_display_compact);
                     ((TextView) nothing_to_display.findViewById(R.id.ntd_text)).setText(R.string.nothing_to_share);
                     share_content.addView(nothing_to_display);
                     return;
@@ -434,17 +434,17 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                     try {
                         if (headerAdded && change.type.equals(ADDED)) {
                             headerAdded = false;
-                            final View header = inflate(R.layout.fragment_schedule_lessons_share_header);
+                            final View header = inflate(R.layout.layout_schedule_lessons_share_header);
                             ((TextView) header.findViewById(R.id.text)).setText("handle".equals(action) ? R.string.add_lessons : R.string.added_lessons);
                             share_content.addView(header);
                         }
                         if (headerReduced && change.type.equals(REDUCED)) {
                             headerReduced = false;
-                            final View header = inflate(R.layout.fragment_schedule_lessons_share_header);
+                            final View header = inflate(R.layout.layout_schedule_lessons_share_header);
                             ((TextView) header.findViewById(R.id.text)).setText("handle".equals(action) ? R.string.reduce_lessons : R.string.reduced_lessons);
                             share_content.addView(header);
                         }
-                        final View item = inflate(R.layout.fragment_schedule_lessons_share_item);
+                        final View item = inflate(R.layout.layout_schedule_lessons_share_item);
                         final ViewGroup lesson = (ViewGroup) inflate(R.layout.layout_schedule_lessons_item);
                         final CheckBox checkbox = item.findViewById(R.id.checkbox);
                         final ViewGroup content = item.findViewById(R.id.content);

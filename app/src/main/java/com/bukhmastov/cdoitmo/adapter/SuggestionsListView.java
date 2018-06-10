@@ -31,7 +31,7 @@ public class SuggestionsListView extends ArrayAdapter<Suggestion> {
         this(context, suggestions, null);
     }
     public SuggestionsListView(@NonNull Context context, @NonNull List<Suggestion> suggestions, @Nullable OnClickCallback onClickCallback) {
-        super(context, R.layout.layout_search_suggestion, suggestions);
+        super(context, R.layout.search_suggestion, suggestions);
         this.context = context;
         this.suggestions = suggestions;
         this.onClickCallback = onClickCallback;
@@ -43,7 +43,7 @@ public class SuggestionsListView extends ArrayAdapter<Suggestion> {
         try {
             if (convertView == null) {
                 LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                convertView = inflater.inflate(R.layout.layout_search_suggestion, parent, false);
+                convertView = inflater.inflate(R.layout.search_suggestion, parent, false);
             }
             Suggestion suggestion = suggestions.get(position);
             ((ImageView) convertView.findViewById(R.id.typeIcon)).setImageDrawable(context.getDrawable(suggestion.icon));

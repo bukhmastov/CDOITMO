@@ -55,7 +55,7 @@ public class BottomSheetDialog extends android.support.design.widget.BottomSheet
             if (entry == null || entry.title == null) {
                 continue;
             }
-            ViewGroup layout_entry = (ViewGroup) inflate(R.layout.dialog_bottom_sheet_entry);
+            ViewGroup layout_entry = (ViewGroup) inflate(R.layout.dialog_bottom_sheet_item);
             TextView text = layout_entry.findViewById(R.id.text);
             text.setText(entry.title);
             text.setTag(entry.tag);

@@ -49,7 +49,7 @@ public class PreferenceList extends Preference {
         final List<String> titles = preference.arrayTitles != 0 ? Arrays.asList(activity.getResources().getStringArray(preference.arrayTitles)) : new ArrayList<>();
         final List<String> values = preference.arrayValues != 0 ? Arrays.asList(activity.getResources().getStringArray(preference.arrayValues)) : new ArrayList<>();
         final List<String> descs = preference.arrayDesc != 0 ? Arrays.asList(activity.getResources().getStringArray(preference.arrayDesc)) : new ArrayList<>();
-        final View preference_layout = inflate(activity, R.layout.layout_preference_list);
+        final View preference_layout = inflate(activity, R.layout.preference_list);
         final View preference_list = preference_layout.findViewById(R.id.preference_list);
         final TextView preference_list_title = preference_layout.findViewById(R.id.preference_list_title);
         final TextView preference_list_summary = preference_layout.findViewById(R.id.preference_list_summary);
@@ -66,7 +66,7 @@ public class PreferenceList extends Preference {
             if (preference.defaultValue != null) {
                 checked = values.indexOf(Storage.pref.get(activity, preference.key, (String) preference.defaultValue));
             }
-            final View view = inflate(activity, R.layout.layout_preference_list_single_choice);
+            final View view = inflate(activity, R.layout.preference_list_single_choice);
             final AlertDialog dialog = new AlertDialog.Builder(activity)
                     .setTitle(preference.title)
                     .setView(view)
@@ -86,7 +86,7 @@ public class PreferenceList extends Preference {
             };
             for (int i = 0; i < titles.size(); i++) {
                 final int index = i;
-                final View item = inflate(activity, R.layout.layout_preference_list_single_choice_item);
+                final View item = inflate(activity, R.layout.preference_list_single_choice_item);
                 final ViewGroup content = item.findViewById(R.id.content);
                 final RadioButton button = item.findViewById(R.id.button);
                 final TextView desc = item.findViewById(R.id.desc);

@@ -8,7 +8,6 @@
     android:theme="@style/ThemeOverlay.AppCompat.Dark">
 
     <LinearLayout
-        android:id="@+id/user_info"
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -19,7 +18,6 @@
         android:paddingBottom="@dimen/activity_horizontal_margin">
 
         <FrameLayout
-            android:id="@+id/user_icon"
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:background="@drawable/shape_user_icon">
@@ -97,11 +95,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <View
+    <include
         android:id="@+id/message_menu_separator"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/separator"
-        android:background="?attr/colorSeparator"
-        android:visibility="gone"/>
+        android:visibility="gone"
+        layout="@layout/separator"/>
 
 </LinearLayout>

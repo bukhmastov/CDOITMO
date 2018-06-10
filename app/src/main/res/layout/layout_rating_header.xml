@@ -4,10 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/separator"
-        android:background="?attr/colorSeparator"/>
+    <include layout="@layout/separator"/>
 
     <TextView
         android:id="@+id/title"
@@ -20,9 +17,6 @@
         android:textColor="?android:attr/textColorSecondary"
         android:textSize="@dimen/font_size_14" />
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/separator"
-        android:background="?attr/colorSeparator"/>
+    <include layout="@layout/separator"/>
 
 </LinearLayout>

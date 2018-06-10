@@ -74,7 +74,7 @@ public abstract class UniversityRVA extends RecyclerView.Adapter<RecyclerView.Vi
             ViewHolder viewHolder = (ViewHolder) holder;
             String title = getString(item.data, "title");
             if (title != null) {
-                ((TextView) viewHolder.container.findViewById(R.id.text)).setText(title);
+                ((TextView) viewHolder.container.findViewById(R.id.update_time)).setText(title);
             }
         } catch (Exception e) {
             Static.error(e);

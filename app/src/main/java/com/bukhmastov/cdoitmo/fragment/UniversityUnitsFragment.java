@@ -86,9 +86,9 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup cont, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_university_tab, cont, false);
-        container = view.findViewById(R.id.university_tab_container);
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup c, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_container, c, false);
+        container = view.findViewById(R.id.container);
         return view;
     }
 
@@ -197,7 +197,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                             Log.v(TAG, "forceLoad | failure " + state);
                             switch (state) {
                                 case IfmoRestClient.FAILED_OFFLINE:
-                                    draw(R.layout.state_offline);
+                                    draw(R.layout.state_offline_text);
                                     if (activity != null) {
                                         View offline_reload = container.findViewById(R.id.offline_reload);
                                         if (offline_reload != null) {
@@ -208,7 +208,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                                 case IfmoRestClient.FAILED_CORRUPTED_JSON:
                                 case IfmoRestClient.FAILED_SERVER_ERROR:
                                 case IfmoRestClient.FAILED_TRY_AGAIN:
-                                    draw(R.layout.state_try_again);
+                                    draw(R.layout.state_failed_button);
                                     if (activity != null) {
                                         TextView try_again_message = activity.findViewById(R.id.try_again_message);
                                         if (try_again_message != null) {
@@ -230,7 +230,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                     public void onProgress(final int state) {
                         Static.T.runOnUiThread(() -> {
                             Log.v(TAG, "forceLoad | progress " + state);
-                            draw(R.layout.state_loading);
+                            draw(R.layout.state_loading_text);
                             if (activity != null) {
                                 TextView loading_message = container.findViewById(R.id.loading_message);
                                 if (loading_message != null) {
@@ -248,7 +248,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                 });
             } else {
                 Static.T.runOnUiThread(() -> {
-                    draw(R.layout.state_offline);
+                    draw(R.layout.state_offline_text);
                     if (activity != null) {
                         View offline_reload = activity.findViewById(R.id.offline_reload);
                         if (offline_reload != null) {
@@ -271,7 +271,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
         Static.T.runOnUiThread(() -> {
             Log.v(TAG, "loadFailed");
             try {
-                draw(R.layout.state_try_again);
+                draw(R.layout.state_failed_button);
                 TextView try_again_message = container.findViewById(R.id.try_again_message);
                 if (try_again_message != null) try_again_message.setText(R.string.load_failed);
                 View try_again_reload = container.findViewById(R.id.try_again_reload);
@@ -288,7 +288,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
             try {
                 JSONObject unit = getJsonObject(json, "unit");
                 JSONArray divisions = getJsonArray(json, "divisions");
-                draw(R.layout.layout_university_faculties);
+                draw(R.layout.layout_university_list_finite);
                 // заголовок
                 if (stack.size() == 0 || unit == null) {
                     ((ImageView) ((ViewGroup) container.findViewById(R.id.back)).getChildAt(0)).setImageResource(R.drawable.ic_refresh);
@@ -316,11 +316,11 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                 }
                 // список
                 facultiesRecyclerViewAdapter = new UniversityFacultiesRVA(activity);
-                final RecyclerView list = container.findViewById(R.id.list);
-                if (list != null) {
-                    list.setLayoutManager(new LinearLayoutManager(activity));
-                    list.setAdapter(facultiesRecyclerViewAdapter);
-                    list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
+                final RecyclerView finite_list = container.findViewById(R.id.finite_list);
+                if (finite_list != null) {
+                    finite_list.setLayoutManager(new LinearLayoutManager(activity));
+                    finite_list.setAdapter(facultiesRecyclerViewAdapter);
+                    finite_list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
                 }
                 displayContent(unit, divisions);
                 if (timestamp > 0 && timestamp + 5000 < Static.getCalendar().getTimeInMillis()) {
@@ -333,20 +333,20 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                 container.findViewById(R.id.top_panel).post(() -> {
                     try {
                         int height = container.findViewById(R.id.top_panel).getHeight();
-                        if (list != null) {
-                            list.setPadding(0, height, 0, 0);
-                            list.scrollToPosition(0);
+                        if (finite_list != null) {
+                            finite_list.setPadding(0, height, 0, 0);
+                            finite_list.scrollToPosition(0);
                         }
-                        LinearLayout list_info = container.findViewById(R.id.list_info);
-                        if (list_info != null && list_info.getChildCount() > 0) {
-                            list_info.setPadding(0, height, 0, 0);
+                        LinearLayout finite_list_info = container.findViewById(R.id.finite_list_info);
+                        if (finite_list_info != null && finite_list_info.getChildCount() > 0) {
+                            finite_list_info.setPadding(0, height, 0, 0);
                         }
                     } catch (Exception ignore) {
                         // ignore
                     }
                 });
                 // работаем со свайпом
-                SwipeRefreshLayout mSwipeRefreshLayout = container.findViewById(R.id.list_swipe);
+                SwipeRefreshLayout mSwipeRefreshLayout = container.findViewById(R.id.finite_list_swipe);
                 if (mSwipeRefreshLayout != null) {
                     mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
                     mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);

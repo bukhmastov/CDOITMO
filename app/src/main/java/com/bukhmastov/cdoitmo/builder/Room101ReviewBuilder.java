@@ -80,7 +80,7 @@ public class Room101ReviewBuilder implements Runnable {
                 delegate.state(STATE_DONE, container);
             } else {
                 Log.v(TAG, "sessions.length() == 0");
-                View view = inflate(R.layout.nothing_to_display);
+                View view = inflate(R.layout.state_nothing_to_display_compact);
                 ((TextView) view.findViewById(R.id.ntd_text)).setText(activity.getString(R.string.no_requests));
                 delegate.state(STATE_DONE, view);
             }

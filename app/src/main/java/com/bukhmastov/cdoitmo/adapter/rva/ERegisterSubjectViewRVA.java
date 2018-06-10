@@ -37,7 +37,7 @@ public class ERegisterSubjectViewRVA extends RVA {
             case TYPE_ATTESTATION: layout = R.layout.layout_subject_show_mark; break;
             case TYPE_POINT_HIGHLIGHT: layout = R.layout.layout_subject_show_item_highlight; break;
             case TYPE_POINT: layout = R.layout.layout_subject_show_item; break;
-            case TYPE_NO_POINTS: layout = R.layout.nothing_to_display; break;
+            case TYPE_NO_POINTS: layout = R.layout.state_nothing_to_display_compact; break;
             default: throw new NullPointerException("Invalid type provided");
         }
         return layout;

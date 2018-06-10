@@ -51,7 +51,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
         FirebaseAnalyticsProvider.logCurrentScreen(this);
-        setContentView(R.layout.activity_time_remaining_widget);
+        setContentView(R.layout.activity_widget_remaining);
         try {
             String shortcut_data = getIntent().getStringExtra("shortcut_data");
             if (shortcut_data == null) throw new Exception("shortcut_data cannot be null");
@@ -62,10 +62,10 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
             Static.error(e);
             close();
         }
-        View trw_container = findViewById(R.id.trw_container);
-        if (trw_container != null) {
-            trw_container.setOnClickListener(v -> {
-                Log.v(TAG, "trw_container clicked");
+        View wr_container = findViewById(R.id.wr_container);
+        if (wr_container != null) {
+            wr_container.setOnClickListener(v -> {
+                Log.v(TAG, "wr_container clicked");
                 Intent intent = new Intent(getBaseContext(), MainActivity.class);
                 intent.addFlags(Static.intentFlagRestart);
                 intent.putExtra("action", "schedule_lessons");
@@ -74,17 +74,17 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
                 close();
             });
         }
-        View trw_share = findViewById(R.id.trw_share);
-        if (trw_share != null) {
-            trw_share.setOnClickListener(v -> Static.T.runOnUiThread(() -> {
-                Log.v(TAG, "trw_share clicked");
+        View wr_share = findViewById(R.id.wr_share);
+        if (wr_share != null) {
+            wr_share.setOnClickListener(v -> Static.T.runOnUiThread(() -> {
+                Log.v(TAG, "wr_share clicked");
                 share();
             }));
         }
-        View time_remaining_widget = findViewById(R.id.time_remaining_widget);
-        if (time_remaining_widget != null) {
-            time_remaining_widget.setOnClickListener(v -> {
-                Log.v(TAG, "time_remaining_widget clicked");
+        View widget_remaining = findViewById(R.id.widget_remaining);
+        if (widget_remaining != null) {
+            widget_remaining.setOnClickListener(v -> {
+                Log.v(TAG, "widget_remaining clicked");
                 close();
             });
         }
@@ -217,7 +217,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
         } else {
             Static.T.runOnUiThread(() -> {
                 if (is_message_displaying) {
-                    draw(R.layout.layout_time_remaining_widget);
+                    draw(R.layout.widget_remaining_time);
                     is_message_displaying = false;
                 }
                 if (data.current != null) {
@@ -292,11 +292,11 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
     }
     private void message(final String text) {
         Static.T.runOnUiThread(() -> {
-            draw(R.layout.layout_time_remaining_widget_message);
+            draw(R.layout.widget_remaining_message);
             is_message_displaying = true;
-            TextView trw_message = activity.findViewById(R.id.trw_message);
-            if (trw_message != null) {
-                trw_message.setText(text);
+            TextView message = activity.findViewById(R.id.message);
+            if (message != null) {
+                message.setText(text);
             }
         });
     }
@@ -393,7 +393,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
 
     private void draw(final int layoutId) {
         try {
-            ViewGroup vg = activity.findViewById(R.id.trw_container);
+            ViewGroup vg = activity.findViewById(R.id.wr_container);
             if (vg != null) {
                 vg.removeAllViews();
                 vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));

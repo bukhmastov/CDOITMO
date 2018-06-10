@@ -52,7 +52,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
         FirebaseAnalyticsProvider.logCurrentScreen(this);
-        setContentView(R.layout.activity_days_remaining_widget);
+        setContentView(R.layout.activity_widget_remaining);
         try {
             String shortcut_data = getIntent().getStringExtra("shortcut_data");
             if (shortcut_data == null) throw new Exception("shortcut_data cannot be null");
@@ -63,10 +63,10 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
             Static.error(e);
             close();
         }
-        View drw_container = findViewById(R.id.drw_container);
-        if (drw_container != null) {
-            drw_container.setOnClickListener(v -> {
-                Log.v(TAG, "drw_container clicked");
+        View wr_container = findViewById(R.id.wr_container);
+        if (wr_container != null) {
+            wr_container.setOnClickListener(v -> {
+                Log.v(TAG, "wr_container clicked");
                 Intent intent = new Intent(getBaseContext(), MainActivity.class);
                 intent.addFlags(Static.intentFlagRestart);
                 intent.putExtra("action", "schedule_exams");
@@ -75,17 +75,17 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
                 close();
             });
         }
-        View trw_share = findViewById(R.id.drw_share);
-        if (trw_share != null) {
-            trw_share.setOnClickListener(v -> Static.T.runOnUiThread(() -> {
-                Log.v(TAG, "drw_share clicked");
+        View wr_share = findViewById(R.id.wr_share);
+        if (wr_share != null) {
+            wr_share.setOnClickListener(v -> Static.T.runOnUiThread(() -> {
+                Log.v(TAG, "wr_share clicked");
                 share();
             }));
         }
-        View days_remaining_widget = findViewById(R.id.days_remaining_widget);
-        if (days_remaining_widget != null) {
-            days_remaining_widget.setOnClickListener(v -> {
-                Log.v(TAG, "days_remaining_widget clicked");
+        View widget_remaining = findViewById(R.id.widget_remaining);
+        if (widget_remaining != null) {
+            widget_remaining.setOnClickListener(v -> {
+                Log.v(TAG, "widget_remaining clicked");
                 close();
             });
         }
@@ -213,7 +213,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
             message(activity.getString(R.string.exams_gone));
         } else {
             if (is_message_displaying) {
-                draw(R.layout.layout_days_remaining_widget);
+                draw(R.layout.widget_remaining_days);
                 is_message_displaying = false;
             }
             DaysRemainingWidget.Data currentData = data.get(0);
@@ -295,11 +295,11 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
     }
     private void message(final String text) {
         Static.T.runOnUiThread(() -> {
-            draw(R.layout.layout_days_remaining_widget_message);
+            draw(R.layout.widget_remaining_message);
             is_message_displaying = true;
-            TextView drw_message = findViewById(R.id.drw_message);
-            if (drw_message != null) {
-                drw_message.setText(text);
+            TextView message = findViewById(R.id.message);
+            if (message != null) {
+                message.setText(text);
             }
         });
     }
@@ -402,7 +402,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
     private void draw(final int layoutId) {
         Static.T.runOnUiThread(() -> {
             try {
-                ViewGroup vg = activity.findViewById(R.id.drw_container);
+                ViewGroup vg = activity.findViewById(R.id.wr_container);
                 if (vg != null) {
                     vg.removeAllViews();
                     vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));

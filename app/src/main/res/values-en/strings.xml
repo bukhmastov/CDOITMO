@@ -6,7 +6,6 @@
     <string name="login">Login</string>
     <string name="password">Password</string>
     <string name="enter">Log in</string>
-    <string name="fill_fields">Fill in the fields</string>
     <string name="cdo">CDE</string>
     <string name="invalid_login_password">Invalid login or password</string>
     <string name="required_login_password">Login and password are required</string>
@@ -154,7 +153,6 @@
     <string name="configure_schedule_widget">Configure widget of the schedule</string>
     <string name="add_widget">Add widget</string>
     <string name="schedule_not_found">Schedule not found</string>
-    <string name="schedule_not_found_2">schedule not found</string>
     <string name="failed_to_create_widget">Failed to create widget</string>
     <string name="failed_to_load_schedule">Failed to load the schedule</string>
     <string name="need_to_config_widget">Widget configuration is required</string>
@@ -194,9 +192,6 @@
     <string name="shortcut_room101_long">Submit request</string>
     <string name="cache_and_refresh">Caching and updating</string>
     <string name="extended_prefs">Advanced settings</string>
-    <string name="schedule_teacher_set">Teacher\'s schedule set</string>
-    <string name="schedule_group_set">Group schedule set</string>
-    <string name="schedule_room_set">Audience schedule set</string>
     <string name="automatically">Automatically</string>
     <string name="both_terms">Both terms</string>
     <string name="cache_cleared">Cache cleared</string>
@@ -287,7 +282,6 @@
     <string name="show_fully">Show fully</string>
     <string name="show_compactly">Show compactly</string>
     <string name="hide_fully">Completely hide</string>
-    <string name="on_demand">On demand</string>
     <string name="interrupt_auth">Go to offline mode</string>
     <string name="speech_recognition_is_not_supported">Speech recognition not supported</string>
     <string name="lesson_title_required">You must specify the title of the lesson</string>
@@ -365,7 +359,6 @@
     <string name="need_to_choose_schedule">You must select a schedule</string>
     <string name="schedule_to_display">Schedule to display</string>
     <string name="theme">Theme</string>
-    <string name="color_hex">Color in hex format</string>
     <string name="background_color">Background color</string>
     <string name="text_color">Text color</string>
     <string name="background_opacity">Background transparency</string>
@@ -387,8 +380,6 @@
     <string name="download_logs">Download logs</string>
     <string name="schedule_lessons_unstable_warning">The schedule may actively change in the near future</string>
     <string name="schedule_empty_query_title">The system could not determine your group or an empty query was specified</string>
-    <string name="schedule_empty_query_use_seqrch">Select the desired schedule using the search in the upper right corner</string>
-    <string name="schedule_empty_query_settings">You can configure the default schedule display by following the steps:</string>
     <string name="pref_group_force_override">Override group</string>
     <string name="pref_group_force_override_summary">If your group is determined incorrectly</string>
     <string name="pref_group_force_override_message">Leave the field blank to allow the system to automatically define a group. You must restart the application to accept the changes. Please note that You will have to change the group once a year.</string>
@@ -455,10 +446,6 @@
     <string name="share_schedule_notification1_1_plural">reduced lessons were skipped</string>
     <string name="share_schedule_notification1_1_plural2">reduced lessons were skipped</string>
     <string name="share_schedule_notification1_2">because the file was created in older versions of the app</string>
-    <string name="social_vk">VK</string>
-    <string name="social_tg">Telegram</string>
-    <string name="social_tw">Twitter</string>
-    <string name="social_fb">Facebook</string>
     <string name="changes_will_take_effect_next_startup">The changes will take effect the next time the application starts</string>
     <string name="incorrect_query">Incorrect query</string>
     <string name="no_schedule">Schedule not found</string>

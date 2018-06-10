@@ -3,40 +3,26 @@ package com.bukhmastov.cdoitmo.fragment;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
-import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.activity.search.ScheduleExamsSearchActivity;
 import com.bukhmastov.cdoitmo.adapter.PagerExamsAdapter;
-import com.bukhmastov.cdoitmo.adapter.rva.ScheduleExamsRVA;
-import com.bukhmastov.cdoitmo.exception.SilentException;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleExamsFragment;
-import com.bukhmastov.cdoitmo.network.model.Client;
-import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleExams;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 public class ScheduleExamsFragment extends ConnectedFragment implements ViewPager.OnPageChangeListener {
 
@@ -89,7 +75,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements ViewPage
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_schedule_exams, container, false);
+        return inflater.inflate(R.layout.fragment_container, container, false);
     }
 
     @Override
@@ -159,12 +145,12 @@ public class ScheduleExamsFragment extends ConnectedFragment implements ViewPage
                         return;
                     }
                     fixed_tabs.setVisibility(View.VISIBLE);
-                    draw(activity, R.layout.layout_schedule_exams_tabs);
-                    final ViewPager schedule_view = activity.findViewById(R.id.schedule_pager);
-                    if (schedule_view != null) {
-                        schedule_view.setAdapter(new PagerExamsAdapter(fragmentManager, activity));
-                        schedule_view.addOnPageChangeListener(ScheduleExamsFragment.this);
-                        fixed_tabs.setupWithViewPager(schedule_view);
+                    draw(activity, R.layout.fragment_pager);
+                    final ViewPager pager = activity.findViewById(R.id.pager);
+                    if (pager != null) {
+                        pager.setAdapter(new PagerExamsAdapter(fragmentManager, activity));
+                        pager.addOnPageChangeListener(ScheduleExamsFragment.this);
+                        fixed_tabs.setupWithViewPager(pager);
                     }
                     // select tab
                     TabLayout.Tab tab = null;
@@ -198,7 +184,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements ViewPage
                 Log.w(TAG, "failed | activity is null");
                 return;
             }
-            View state_try_again = inflate(activity, R.layout.state_try_again);
+            View state_try_again = inflate(activity, R.layout.state_failed_button);
             state_try_again.findViewById(R.id.try_again_reload).setOnClickListener(view -> load());
             draw(activity, state_try_again);
         } catch (Exception e) {
@@ -208,7 +194,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements ViewPage
 
     private void draw(Activity activity, View view) {
         try {
-            ViewGroup vg = activity.findViewById(R.id.container_schedule);
+            ViewGroup vg = activity.findViewById(R.id.container);
             if (vg != null) {
                 vg.removeAllViews();
                 vg.addView(view, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));

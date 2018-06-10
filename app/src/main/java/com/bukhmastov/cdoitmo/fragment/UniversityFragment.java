@@ -53,19 +53,19 @@ public class UniversityFragment extends ConnectedFragment implements ViewPager.O
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_university, container, false);
+        return inflater.inflate(R.layout.fragment_pager, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         TabLayout main_tabs = activity.findViewById(R.id.scrollable_tabs);
-        ViewPager university_pager = activity.findViewById(R.id.university_pager);
+        ViewPager pager = activity.findViewById(R.id.pager);
         FragmentManager fragmentManager = getChildFragmentManager();
-        if (university_pager != null) {
-            university_pager.setAdapter(new PagerUniversityAdapter(fragmentManager, activity));
-            university_pager.addOnPageChangeListener(this);
-            main_tabs.setupWithViewPager(university_pager);
+        if (pager != null) {
+            pager.setAdapter(new PagerUniversityAdapter(fragmentManager, activity));
+            pager.addOnPageChangeListener(this);
+            main_tabs.setupWithViewPager(pager);
         }
         TabLayout.Tab tab = null;
         try {

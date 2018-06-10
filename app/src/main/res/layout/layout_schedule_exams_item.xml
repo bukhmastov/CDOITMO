@@ -70,10 +70,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/separator"
-                android:background="?attr/colorSeparator" />
+            <include layout="@layout/separator"/>
 
             <LinearLayout
                 android:id="@+id/exam_info_advice"
@@ -86,7 +83,6 @@
                 android:paddingEnd="@dimen/schedule_exams_padding_horizontal">
 
                 <TextView
-                    android:id="@+id/exam_info_advice_title"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/consult"
@@ -124,13 +120,13 @@
 
             </LinearLayout>
 
-            <View
+            <include
                 android:id="@+id/separator_small"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/separator"
                 android:layout_marginStart="@dimen/schedule_exams_padding_horizontal"
                 android:layout_marginEnd="@dimen/schedule_exams_padding_horizontal"
-                android:background="?attr/colorSeparator" />
+                layout="@layout/separator"/>
 
             <LinearLayout
                 android:id="@+id/exam_info_exam"

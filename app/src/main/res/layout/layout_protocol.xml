@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:id="@+id/protocol_layout">
+    android:layout_height="match_parent">
 
     <android.support.v4.widget.SwipeRefreshLayout
         android:id="@+id/swipe_container"
@@ -22,12 +21,12 @@
 
     </android.support.v4.widget.SwipeRefreshLayout>
 
-    <View
+    <include
         android:id="@+id/separator"
-        android:layout_above="@+id/spinners_layout"
         android:layout_width="match_parent"
         android:layout_height="@dimen/separator"
-        android:background="?attr/colorSeparator"/>
+        android:layout_above="@+id/spinners_layout"
+        layout="@layout/separator"/>
 
     <LinearLayout
         android:id="@+id/spinners_layout"

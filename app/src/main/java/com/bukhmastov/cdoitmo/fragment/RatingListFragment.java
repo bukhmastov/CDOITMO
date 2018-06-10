@@ -60,7 +60,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_rating_list, container, false);
+        return inflater.inflate(R.layout.fragment_container, container, false);
     }
 
     @Override
@@ -162,7 +162,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                             Log.v(TAG, "load | failure " + state);
                             switch (state) {
                                 case DeIfmoClient.FAILED_OFFLINE:
-                                    draw(R.layout.state_offline);
+                                    draw(R.layout.state_offline_text);
                                     View offline_reload = activity.findViewById(R.id.offline_reload);
                                     if (offline_reload != null) {
                                         offline_reload.setOnClickListener(v -> load());
@@ -170,7 +170,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                                     break;
                                 case DeIfmoClient.FAILED_TRY_AGAIN:
                                 case DeIfmoClient.FAILED_SERVER_ERROR:
-                                    draw(R.layout.state_try_again);
+                                    draw(R.layout.state_failed_button);
                                     if (state == DeIfmoClient.FAILED_SERVER_ERROR) {
                                         TextView try_again_message = activity.findViewById(R.id.try_again_message);
                                         if (try_again_message != null) {
@@ -189,7 +189,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                     public void onProgress(final int state) {
                         Static.T.runOnUiThread(() -> {
                             Log.v(TAG, "load | progress " + state);
-                            draw(R.layout.state_loading);
+                            draw(R.layout.state_loading_text);
                             TextView loading_message = activity.findViewById(R.id.loading_message);
                             if (loading_message != null) {
                                 switch (state) {
@@ -209,7 +209,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                 Static.T.runOnUiThread(() -> {
                     try {
                         Static.snackBar(activity, activity.getString(R.string.offline_mode_on));
-                        draw(R.layout.state_offline);
+                        draw(R.layout.state_offline_text);
                         View offline_reload = activity.findViewById(R.id.offline_reload);
                         if (offline_reload != null) {
                             offline_reload.setOnClickListener(v -> load());
@@ -225,7 +225,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
         Static.T.runOnUiThread(() -> {
             Log.v(TAG, "loadFailed");
             try {
-                draw(R.layout.state_try_again);
+                draw(R.layout.state_failed_button);
                 View try_again_reload = activity.findViewById(R.id.try_again_reload);
                 if (try_again_reload != null) {
                     try_again_reload.setOnClickListener(v -> load());
@@ -364,7 +364,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
 
     private void draw(int layoutId) {
         try {
-            ViewGroup vg = activity.findViewById(R.id.rating_list_container);
+            ViewGroup vg = activity.findViewById(R.id.container);
             if (vg != null) {
                 vg.removeAllViews();
                 vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));

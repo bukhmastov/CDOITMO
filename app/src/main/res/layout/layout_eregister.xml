@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:id="@+id/eregister_layout">
+    android:layout_height="match_parent">
 
     <android.support.v4.widget.SwipeRefreshLayout
         android:id="@+id/swipe_container"
@@ -22,12 +21,11 @@
 
     </android.support.v4.widget.SwipeRefreshLayout>
 
-    <View
-        android:id="@+id/erl_separator"
-        android:layout_above="@+id/spinners_layout"
+    <include
         android:layout_width="match_parent"
         android:layout_height="@dimen/separator"
-        android:background="?attr/colorSeparator"/>
+        android:layout_above="@+id/spinners_layout"
+        layout="@layout/separator"/>
 
     <LinearLayout
         android:id="@+id/spinners_layout"
@@ -44,12 +42,12 @@
             android:layout_weight="1"
             android:spinnerMode="dialog" />
 
-        <View
+        <include
             android:layout_width="@dimen/separator"
             android:layout_height="match_parent"
             android:layout_marginTop="5dp"
             android:layout_marginBottom="5dp"
-            android:background="?attr/colorSeparator"/>
+            layout="@layout/separator"/>
 
         <Spinner
             android:layout_width="match_parent"
@@ -57,6 +55,7 @@
             android:id="@+id/erl_period_spinner"
             android:layout_weight="1"
             android:spinnerMode="dialog" />
+
     </LinearLayout>
 
 </RelativeLayout>

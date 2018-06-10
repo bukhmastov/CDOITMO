@@ -30,7 +30,7 @@ public class PreferenceBasic extends Preference {
         this.callback = callback;
     }
     public static View getView(final ConnectedActivity activity, final PreferenceBasic preference) {
-        final View preference_layout = inflate(activity, R.layout.layout_preference_basic);
+        final View preference_layout = inflate(activity, R.layout.preference_basic);
         final View preference_basic = preference_layout.findViewById(R.id.preference_basic);
         final TextView preference_basic_title = preference_layout.findViewById(R.id.preference_basic_title);
         final TextView preference_basic_summary = preference_layout.findViewById(R.id.preference_basic_summary);

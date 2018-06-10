@@ -47,7 +47,7 @@ public class PreferenceSwitch extends Preference {
         return dependencies;
     }
     public static View getView(final ConnectedActivity activity, final PreferenceSwitch preference) {
-        final View preference_layout = inflate(activity, R.layout.layout_preference_switcher);
+        final View preference_layout = inflate(activity, R.layout.preference_switcher);
         final ViewGroup preference_switcher = preference_layout.findViewById(R.id.preference_switcher);
         final Switch preference_switcher_switch = preference_layout.findViewById(R.id.preference_switcher_switch);
         final TextView preference_switcher_title = preference_layout.findViewById(R.id.preference_switcher_title);

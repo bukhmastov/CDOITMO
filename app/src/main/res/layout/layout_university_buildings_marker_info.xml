@@ -86,7 +86,7 @@
             android:layout_height="@dimen/schedule_cache_button"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:background="?attr/selectableItemBackgroundBorderless">
+            android:background="?android:attr/selectableItemBackgroundBorderless">
 
             <ImageView
                 android:layout_width="match_parent"

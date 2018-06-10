@@ -76,7 +76,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_protocol, container, false);
+        return inflater.inflate(R.layout.fragment_container, container, false);
     }
 
     @Override
@@ -239,7 +239,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                                         if (getData() != null) {
                                             display();
                                         } else {
-                                            draw(R.layout.state_offline);
+                                            draw(R.layout.state_offline_text);
                                             if (activity != null) {
                                                 View offline_reload = activity.findViewById(R.id.offline_reload);
                                                 if (offline_reload != null) {
@@ -251,7 +251,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                                     case DeIfmoRestClient.FAILED_TRY_AGAIN:
                                     case DeIfmoRestClient.FAILED_SERVER_ERROR:
                                     case DeIfmoRestClient.FAILED_CORRUPTED_JSON:
-                                        draw(R.layout.state_try_again);
+                                        draw(R.layout.state_failed_button);
                                         if (activity != null) {
                                             TextView try_again_message = activity.findViewById(R.id.try_again_message);
                                             if (try_again_message != null) {
@@ -273,7 +273,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                         public void onProgress(final int state) {
                             Static.T.runOnUiThread(() -> {
                                 Log.v(TAG, "load | progress " + state);
-                                draw(R.layout.state_loading);
+                                draw(R.layout.state_loading_text);
                                 if (activity != null) {
                                     TextView loading_message = activity.findViewById(R.id.loading_message);
                                     if (loading_message != null) {
@@ -297,7 +297,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                     if (getData() != null) {
                         display();
                     } else {
-                        draw(R.layout.state_offline);
+                        draw(R.layout.state_offline_text);
                         if (activity != null) {
                             View offline_reload = activity.findViewById(R.id.offline_reload);
                             if (offline_reload != null) {
@@ -313,7 +313,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
         Static.T.runOnUiThread(() -> {
             Log.v(TAG, "loadFailed");
             try {
-                draw(R.layout.state_try_again);
+                draw(R.layout.state_failed_button);
                 TextView try_again_message = activity.findViewById(R.id.try_again_message);
                 if (try_again_message != null) try_again_message.setText(R.string.load_failed_retry_in_minute);
                 View try_again_reload = activity.findViewById(R.id.try_again_reload);
@@ -365,7 +365,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                                 spinner_weeks_arr.add(value);
                                 spinner_weeks_arr_values.add(i);
                             }
-                            spinner_weeks.setAdapter(new ArrayAdapter<>(activity, R.layout.spinner_layout_single_line, spinner_weeks_arr));
+                            spinner_weeks.setAdapter(new ArrayAdapter<>(activity, R.layout.spinner_center_single_line, spinner_weeks_arr));
                             spinner_weeks.setSelection(getData().getInt("number_of_weeks") - 1);
                             spinner_weeks_blocker = true;
                             spinner_weeks.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -419,7 +419,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
 
     private void draw(final int layoutId) {
         try {
-            ViewGroup vg = activity.findViewById(R.id.container_protocol);
+            ViewGroup vg = activity.findViewById(R.id.container);
             if (vg != null) {
                 vg.removeAllViews();
                 vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));

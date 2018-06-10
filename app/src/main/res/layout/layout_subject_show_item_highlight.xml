@@ -6,11 +6,9 @@
     android:orientation="vertical"
     android:background="?attr/colorBackgroundSection" >
 
-    <View
+    <include
         android:id="@+id/separator_top"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/separator"
-        android:background="?attr/colorSeparator"/>
+        layout="@layout/separator"/>
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -70,10 +68,8 @@
 
     </RelativeLayout>
 
-    <View
+    <include
         android:id="@+id/separator_bottom"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/separator"
-        android:background="?attr/colorSeparator"/>
+        layout="@layout/separator"/>
 
 </LinearLayout>
