@@ -166,7 +166,7 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
                         }
                         jsonConverted.put("schedule", examsConverted);
                         // get rva adapter
-                        final ScheduleExamsRVA adapter = new ScheduleExamsRVA(activity, jsonConverted, data -> {
+                        final ScheduleExamsRVA adapter = new ScheduleExamsRVA(activity, jsonConverted, TYPE, data -> {
                             setQuery(data);
                             invalidate(false);
                         });

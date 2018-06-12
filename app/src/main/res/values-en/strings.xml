@@ -95,6 +95,7 @@
     <string name="load_failed_retry_in_minute">Download failed\nPlease try again in a minute</string>
     <string name="schedule_exams">Schedule of exams</string>
     <string name="no_exams">No exams</string>
+    <string name="no_credits">No credits</string>
     <string name="no_lessons">No lessons</string>
     <string name="exam">Exam</string>
     <string name="credit">Credit</string>

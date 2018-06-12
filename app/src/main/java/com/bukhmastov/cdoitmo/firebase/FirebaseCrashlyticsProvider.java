@@ -112,10 +112,21 @@ public class FirebaseCrashlyticsProvider {
         Static.T.runThread(Static.T.BACKGROUND, () -> {
             try {
                 if (!enabled) return;
-                Crashlytics.log(level + "/" + TAG + " " + log);
+                Crashlytics.log(level2priority(level), TAG, log);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         });
+    }
+
+    private static int level2priority(final @LEVEL String level) {
+        switch(level) {
+            default:
+            case VERBOSE: return 2;
+            case DEBUG: return 3;
+            case INFO: return 4;
+            case WARN: return 5;
+            case ERROR: return 6;
+        }
     }
 }

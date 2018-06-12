@@ -99,6 +99,7 @@
     <string name="load_failed_retry_in_minute">Загрузка не удалась\nПовторите попытку через минуту</string>
     <string name="schedule_exams">Расписание сессии</string>
     <string name="no_exams">Экзаменов нет</string>
+    <string name="no_credits">Зачетов нет</string>
     <string name="no_lessons">Занятий нет</string>
     <string name="exam">Экзамен</string>
     <string name="credit">Зачет</string>

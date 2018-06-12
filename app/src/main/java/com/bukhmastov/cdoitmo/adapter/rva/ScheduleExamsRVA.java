@@ -43,13 +43,15 @@ public class ScheduleExamsRVA extends RVA {
 
     private final ConnectedActivity activity;
     private final JSONObject data;
+    private final int mode; // 0 - exam, 1 - credit
     private final Static.StringCallback callback;
     private String type = "";
     private String query = null;
 
-    public ScheduleExamsRVA(final ConnectedActivity activity, JSONObject data, final Static.StringCallback callback) {
+    public ScheduleExamsRVA(final ConnectedActivity activity, JSONObject data, int mode, final Static.StringCallback callback) {
         this.activity = activity;
         this.data = data;
+        this.mode = mode;
         this.callback = callback;
         try {
             type = data.getString("type");
@@ -363,7 +365,7 @@ public class ScheduleExamsRVA extends RVA {
     }
     private void bindNoExams(View container, Item item) {
         try {
-            ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_exams);
+            ((TextView) container.findViewById(R.id.ntd_text)).setText(mode == 0 ? R.string.no_exams : R.string.no_credits);
         } catch (Exception e) {
             Static.error(e);
         }
