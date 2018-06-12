@@ -1,11 +1,7 @@
 package com.bukhmastov.cdoitmo.fragment.settings;
 
-import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
-import android.view.InflateException;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -54,13 +50,18 @@ public abstract class SettingsTemplateHeadersFragment extends ConnectedFragment 
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_settings, container, false);
+    protected int getLayoutId() {
+        return R.layout.fragment_settings;
+    }
+
+    @Override
+    protected int getRootId() {
+        return R.id.settings_container;
     }
 
     private void load() {
         try {
-            ViewGroup settings_container = activity.findViewById(R.id.settings_container);
+            ViewGroup settings_container = activity.findViewById(getRootId());
             if (settings_container != null) {
                 settings_container.removeAllViews();
                 for (PreferenceHeader preferenceHeader : getPreferenceHeaders()) {
@@ -81,7 +82,7 @@ public abstract class SettingsTemplateHeadersFragment extends ConnectedFragment 
                 try {
                     ViewGroup content = activity.findViewById(android.R.id.content);
                     if (content != null) {
-                        content.addView(inflate(R.layout.fragment_settings));
+                        content.addView(inflate(getLayoutId()));
                         loaded = false;
                         load();
                     }
@@ -92,10 +93,6 @@ public abstract class SettingsTemplateHeadersFragment extends ConnectedFragment 
         } catch (Exception e) {
             Static.error(e);
         }
-    }
-
-    private View inflate(int layoutId) throws InflateException {
-        return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
 
     protected abstract List<PreferenceHeader> getPreferenceHeaders();

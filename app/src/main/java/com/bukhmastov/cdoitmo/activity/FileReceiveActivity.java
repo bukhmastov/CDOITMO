@@ -1,6 +1,5 @@
 package com.bukhmastov.cdoitmo.activity;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -11,8 +10,6 @@ import android.provider.OpenableColumns;
 import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
-import android.view.InflateException;
-import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -44,7 +41,6 @@ import okhttp3.ResponseBody;
 public class FileReceiveActivity extends ConnectedActivity {
 
     private static final String TAG = "FileReceiveActivity";
-    private final Activity activity = this;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -251,10 +247,6 @@ public class FileReceiveActivity extends ConnectedActivity {
     @Override
     protected int getRootViewId() {
         return R.id.activity_file_receive;
-    }
-
-    private View inflate(int layoutId) throws InflateException {
-        return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
 
     private class MessageException extends Exception {

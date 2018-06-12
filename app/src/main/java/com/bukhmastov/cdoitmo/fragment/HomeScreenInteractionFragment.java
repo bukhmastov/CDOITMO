@@ -5,20 +5,16 @@ import android.animation.AnimatorListenerAdapter;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProviderInfo;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.annotation.DrawableRes;
-import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringDef;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.InflateException;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -132,11 +128,6 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_homescreen_interaction, container, false);
-    }
-
-    @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         initPicker(true);
@@ -161,6 +152,16 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
         }
     }
 
+    @Override
+    protected int getLayoutId() {
+        return R.layout.fragment_homescreen_interaction;
+    }
+
+    @Override
+    protected int getRootId() {
+        return 0;
+    }
+
     private void route(final @MODE String mode) {
         Static.T.runThread(() -> {
             Log.v(TAG, "route | mode=" + mode);
@@ -180,9 +181,9 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                 // Переключаем режим отображения
                 toggleMode(false, !first_launch);
                 // Инициализируем кнопки
-                ViewGroup menu_widgets = activity.findViewById(R.id.menu_widgets);
-                ViewGroup menu_apps = activity.findViewById(R.id.menu_apps);
-                ViewGroup menu_shortcuts = activity.findViewById(R.id.menu_shortcuts);
+                ViewGroup menu_widgets = container.findViewById(R.id.menu_widgets);
+                ViewGroup menu_apps = container.findViewById(R.id.menu_apps);
+                ViewGroup menu_shortcuts = container.findViewById(R.id.menu_shortcuts);
                 if (menu_widgets != null) {
                     menu_widgets.setOnClickListener(view -> route(WIDGETS));
                 }
@@ -229,9 +230,9 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                 // Переключаем режим отображения
                 toggleMode(true);
                 // Устанавливаем заголовок
-                ImageView header_icon = activity.findViewById(R.id.header_icon);
-                TextView header_text = activity.findViewById(R.id.header_text);
-                ImageView header_close = activity.findViewById(R.id.header_close);
+                ImageView header_icon = container.findViewById(R.id.header_icon);
+                TextView header_text = container.findViewById(R.id.header_text);
+                ImageView header_close = container.findViewById(R.id.header_close);
                 if (header_icon != null) {
                     header_icon.setImageResource(R.drawable.ic_extension);
                 }
@@ -242,7 +243,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                     header_close.setOnClickListener(view -> route(PICK));
                 }
                 // Отображаем приложения
-                ViewGroup content = activity.findViewById(R.id.content);
+                ViewGroup content = container.findViewById(R.id.content);
                 if (content != null) {
                     content.removeAllViews();
                     for (final App app : apps) {
@@ -300,9 +301,9 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                 // Переключаем режим отображения
                 toggleMode(true);
                 // Устанавливаем заголовок
-                ImageView header_icon = activity.findViewById(R.id.header_icon);
-                TextView header_text = activity.findViewById(R.id.header_text);
-                ImageView header_close = activity.findViewById(R.id.header_close);
+                ImageView header_icon = container.findViewById(R.id.header_icon);
+                TextView header_text = container.findViewById(R.id.header_text);
+                ImageView header_close = container.findViewById(R.id.header_close);
                 if (header_icon != null) {
                     header_icon.setImageResource(R.drawable.ic_shortcut);
                 }
@@ -313,7 +314,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                     header_close.setOnClickListener(view -> route(PICK));
                 }
                 // Отображаем ярлыки
-                ViewGroup content = activity.findViewById(R.id.content);
+                ViewGroup content = container.findViewById(R.id.content);
                 if (content != null) {
                     content.removeAllViews();
                     for (final Shortcut shortcut : shortcuts) {
@@ -434,8 +435,8 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
             public void run() {
                 Log.v(TAG, "toggleMode | hide=" + (hide ? "true" : "false") + " | animate=" + (animate ? "true" : "false"));
                 try {
-                    final ViewGroup initial_picker = activity.findViewById(R.id.initial_picker);
-                    final ViewGroup content_area = activity.findViewById(R.id.content_area);
+                    final ViewGroup initial_picker = container.findViewById(R.id.initial_picker);
+                    final ViewGroup content_area = container.findViewById(R.id.content_area);
                     if (initial_picker != null && content_area != null) {
                         int height = initial_picker.getHeight();
                         if (hide) {
@@ -722,9 +723,5 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                 activity.sendBroadcast(intent);
             }
         });
-    }
-
-    private View inflate(@LayoutRes int layout) throws InflateException {
-        return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layout, null);
     }
 }

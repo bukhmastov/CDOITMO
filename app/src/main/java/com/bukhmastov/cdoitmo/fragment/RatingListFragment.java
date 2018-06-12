@@ -1,6 +1,5 @@
 package com.bukhmastov.cdoitmo.fragment;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -8,11 +7,8 @@ import android.support.annotation.Nullable;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.view.InflateException;
-import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
@@ -56,11 +52,6 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
     public void onDestroy() {
         super.onDestroy();
         hideShareButton();
-    }
-
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_container, container, false);
     }
 
     @Override
@@ -126,6 +117,16 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
         load();
     }
 
+    @Override
+    protected int getLayoutId() {
+        return R.layout.fragment_container;
+    }
+
+    @Override
+    protected int getRootId() {
+        return R.id.container;
+    }
+
     private void load() {
         Static.T.runThread(() -> {
             Log.v(TAG, "load");
@@ -163,7 +164,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                             switch (state) {
                                 case DeIfmoClient.FAILED_OFFLINE:
                                     draw(R.layout.state_offline_text);
-                                    View offline_reload = activity.findViewById(R.id.offline_reload);
+                                    View offline_reload = container.findViewById(R.id.offline_reload);
                                     if (offline_reload != null) {
                                         offline_reload.setOnClickListener(v -> load());
                                     }
@@ -172,12 +173,12 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                                 case DeIfmoClient.FAILED_SERVER_ERROR:
                                     draw(R.layout.state_failed_button);
                                     if (state == DeIfmoClient.FAILED_SERVER_ERROR) {
-                                        TextView try_again_message = activity.findViewById(R.id.try_again_message);
+                                        TextView try_again_message = container.findViewById(R.id.try_again_message);
                                         if (try_again_message != null) {
                                             try_again_message.setText(DeIfmoClient.getFailureMessage(activity, statusCode));
                                         }
                                     }
-                                    View try_again_reload = activity.findViewById(R.id.try_again_reload);
+                                    View try_again_reload = container.findViewById(R.id.try_again_reload);
                                     if (try_again_reload != null) {
                                         try_again_reload.setOnClickListener(v -> load());
                                     }
@@ -190,7 +191,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                         Static.T.runOnUiThread(() -> {
                             Log.v(TAG, "load | progress " + state);
                             draw(R.layout.state_loading_text);
-                            TextView loading_message = activity.findViewById(R.id.loading_message);
+                            TextView loading_message = container.findViewById(R.id.loading_message);
                             if (loading_message != null) {
                                 switch (state) {
                                     case DeIfmoClient.STATE_HANDLING:
@@ -210,7 +211,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                     try {
                         Static.snackBar(activity, activity.getString(R.string.offline_mode_on));
                         draw(R.layout.state_offline_text);
-                        View offline_reload = activity.findViewById(R.id.offline_reload);
+                        View offline_reload = container.findViewById(R.id.offline_reload);
                         if (offline_reload != null) {
                             offline_reload.setOnClickListener(v -> load());
                         }
@@ -226,7 +227,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
             Log.v(TAG, "loadFailed");
             try {
                 draw(R.layout.state_failed_button);
-                View try_again_reload = activity.findViewById(R.id.try_again_reload);
+                View try_again_reload = container.findViewById(R.id.try_again_reload);
                 if (try_again_reload != null) {
                     try_again_reload.setOnClickListener(v -> load());
                 }
@@ -282,14 +283,14 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                         draw(R.layout.layout_rating_list);
                         // set adapter to recycler view
                         final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
-                        final RecyclerView rating_list = activity.findViewById(R.id.rating_list);
+                        final RecyclerView rating_list = container.findViewById(R.id.rating_list);
                         if (rating_list != null) {
                             rating_list.setLayoutManager(layoutManager);
                             rating_list.setAdapter(adapter);
                             rating_list.setHasFixedSize(true);
                         }
                         // setup swipe
-                        final SwipeRefreshLayout swipe_container = activity.findViewById(R.id.swipe_container);
+                        final SwipeRefreshLayout swipe_container = container.findViewById(R.id.swipe_container);
                         if (swipe_container != null) {
                             swipe_container.setColorSchemeColors(Static.colorAccent);
                             swipe_container.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
@@ -360,20 +361,5 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                     FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "rating")
             );
         });
-    }
-
-    private void draw(int layoutId) {
-        try {
-            ViewGroup vg = activity.findViewById(R.id.container);
-            if (vg != null) {
-                vg.removeAllViews();
-                vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-            }
-        } catch (Exception e) {
-            Static.error(e);
-        }
-    }
-    private View inflate(int layoutId) throws InflateException {
-        return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
 }

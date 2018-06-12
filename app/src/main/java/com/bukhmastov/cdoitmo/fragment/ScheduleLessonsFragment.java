@@ -1,19 +1,14 @@
 package com.bukhmastov.cdoitmo.fragment;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
-import android.view.InflateException;
-import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.search.ScheduleLessonsSearchActivity;
@@ -74,11 +69,6 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_container, container, false);
-    }
-
-    @Override
     public void onResume() {
         super.onResume();
         Log.v(TAG, "resumed");
@@ -109,6 +99,16 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
     public void onPause() {
         super.onPause();
         Log.v(TAG, "paused");
+    }
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.fragment_container;
+    }
+
+    @Override
+    protected int getRootId() {
+        return R.id.container;
     }
 
     @Override
@@ -146,8 +146,8 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
                         return;
                     }
                     fixed_tabs.setVisibility(View.VISIBLE);
-                    draw(activity, R.layout.fragment_pager);
-                    final ViewPager pager = activity.findViewById(R.id.pager);
+                    draw(R.layout.fragment_pager);
+                    final ViewPager pager = container.findViewById(R.id.pager);
                     if (pager != null) {
                         pager.setAdapter(new PagerLessonsAdapter(fragmentManager, activity));
                         pager.addOnPageChangeListener(ScheduleLessonsFragment.this);
@@ -189,33 +189,11 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
                 Log.w(TAG, "failed | activity is null");
                 return;
             }
-            View state_try_again = inflate(activity, R.layout.state_failed_button);
+            View state_try_again = inflate(R.layout.state_failed_button);
             state_try_again.findViewById(R.id.try_again_reload).setOnClickListener(view -> load());
-            draw(activity, state_try_again);
+            draw(state_try_again);
         } catch (Exception e) {
             Static.error(e);
         }
-    }
-
-    private void draw(Activity activity, View view) {
-        try {
-            ViewGroup vg = activity.findViewById(R.id.container);
-            if (vg != null) {
-                vg.removeAllViews();
-                vg.addView(view, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-            }
-        } catch (Exception e){
-            Static.error(e);
-        }
-    }
-    private void draw(Activity activity, int layoutId) {
-        try {
-            draw(activity, inflate(activity, layoutId));
-        } catch (Exception e){
-            Static.error(e);
-        }
-    }
-    private View inflate(Context context, int layoutId) throws InflateException {
-        return ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
 }

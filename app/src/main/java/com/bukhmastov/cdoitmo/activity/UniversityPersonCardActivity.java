@@ -1,15 +1,11 @@
 package com.bukhmastov.cdoitmo.activity;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.DrawableRes;
-import android.support.annotation.LayoutRes;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.view.InflateException;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -114,6 +110,11 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
         Log.v(TAG, "refreshing");
         person = null;
         load();
+    }
+
+    @Override
+    protected int getRootViewId() {
+        return R.id.person_common_container;
     }
 
     private void load() {
@@ -362,22 +363,6 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
         }
         return activity_university_person_card_about;
     }
-
-    private void draw(@LayoutRes final int layoutId) {
-        try {
-            ViewGroup vg = findViewById(R.id.person_common_container);
-            if (vg != null) {
-                vg.removeAllViews();
-                vg.addView(inflate(layoutId));
-            }
-        } catch (Exception e){
-            Static.error(e);
-        }
-    }
-    private View inflate(@LayoutRes int layoutId) throws InflateException {
-        return ((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
-    }
-
     public int getStatusBarHeight() {
         int result = 0;
         int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
@@ -385,10 +370,5 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
             result = getResources().getDimensionPixelSize(resourceId);
         }
         return result;
-    }
-
-    @Override
-    protected int getRootViewId() {
-        return R.id.person_common_container;
     }
 }

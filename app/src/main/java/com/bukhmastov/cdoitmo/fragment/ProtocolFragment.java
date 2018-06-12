@@ -75,11 +75,6 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_container, container, false);
-    }
-
-    @Override
     public void onResume() {
         super.onResume();
         Log.v(TAG, "resumed");
@@ -138,6 +133,16 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
     public void onRefresh() {
         Log.v(TAG, "refreshing");
         load(true);
+    }
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.fragment_container;
+    }
+
+    @Override
+    protected int getRootId() {
+        return R.id.container;
     }
 
     private void load() {
@@ -241,7 +246,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                                         } else {
                                             draw(R.layout.state_offline_text);
                                             if (activity != null) {
-                                                View offline_reload = activity.findViewById(R.id.offline_reload);
+                                                View offline_reload = container.findViewById(R.id.offline_reload);
                                                 if (offline_reload != null) {
                                                     offline_reload.setOnClickListener(v -> load());
                                                 }
@@ -253,14 +258,14 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                                     case DeIfmoRestClient.FAILED_CORRUPTED_JSON:
                                         draw(R.layout.state_failed_button);
                                         if (activity != null) {
-                                            TextView try_again_message = activity.findViewById(R.id.try_again_message);
+                                            TextView try_again_message = container.findViewById(R.id.try_again_message);
                                             if (try_again_message != null) {
                                                 switch (state) {
                                                     case DeIfmoRestClient.FAILED_SERVER_ERROR:   try_again_message.setText(DeIfmoRestClient.getFailureMessage(activity, statusCode)); break;
                                                     case DeIfmoRestClient.FAILED_CORRUPTED_JSON: try_again_message.setText(R.string.server_provided_corrupted_json); break;
                                                 }
                                             }
-                                            View try_again_reload = activity.findViewById(R.id.try_again_reload);
+                                            View try_again_reload = container.findViewById(R.id.try_again_reload);
                                             if (try_again_reload != null) {
                                                 try_again_reload.setOnClickListener(v -> load());
                                             }
@@ -275,7 +280,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                                 Log.v(TAG, "load | progress " + state);
                                 draw(R.layout.state_loading_text);
                                 if (activity != null) {
-                                    TextView loading_message = activity.findViewById(R.id.loading_message);
+                                    TextView loading_message = container.findViewById(R.id.loading_message);
                                     if (loading_message != null) {
                                         switch (state) {
                                             case DeIfmoRestClient.STATE_HANDLING:
@@ -299,7 +304,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                     } else {
                         draw(R.layout.state_offline_text);
                         if (activity != null) {
-                            View offline_reload = activity.findViewById(R.id.offline_reload);
+                            View offline_reload = container.findViewById(R.id.offline_reload);
                             if (offline_reload != null) {
                                 offline_reload.setOnClickListener(v -> load());
                             }
@@ -314,9 +319,9 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
             Log.v(TAG, "loadFailed");
             try {
                 draw(R.layout.state_failed_button);
-                TextView try_again_message = activity.findViewById(R.id.try_again_message);
+                TextView try_again_message = container.findViewById(R.id.try_again_message);
                 if (try_again_message != null) try_again_message.setText(R.string.load_failed_retry_in_minute);
-                View try_again_reload = activity.findViewById(R.id.try_again_reload);
+                View try_again_reload = container.findViewById(R.id.try_again_reload);
                 if (try_again_reload != null) {
                     try_again_reload.setOnClickListener(v -> load());
                 }
@@ -336,21 +341,21 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                         draw(R.layout.layout_protocol);
                         // set adapter to recycler view
                         final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
-                        final RecyclerView protocol_list = activity.findViewById(R.id.protocol_list);
+                        final RecyclerView protocol_list = container.findViewById(R.id.protocol_list);
                         if (protocol_list != null) {
                             protocol_list.setLayoutManager(layoutManager);
                             protocol_list.setAdapter(adapter);
                             protocol_list.setHasFixedSize(true);
                         }
                         // setup swipe
-                        final SwipeRefreshLayout swipe_container = activity.findViewById(R.id.swipe_container);
+                        final SwipeRefreshLayout swipe_container = container.findViewById(R.id.swipe_container);
                         if (swipe_container != null) {
                             swipe_container.setColorSchemeColors(Static.colorAccent);
                             swipe_container.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
                             swipe_container.setOnRefreshListener(this);
                         }
                         // setup spinner: weeks
-                        final Spinner spinner_weeks = activity.findViewById(R.id.pl_weeks_spinner);
+                        final Spinner spinner_weeks = container.findViewById(R.id.pl_weeks_spinner);
                         if (spinner_weeks != null) {
                             final ArrayList<String> spinner_weeks_arr = new ArrayList<>();
                             final ArrayList<Integer> spinner_weeks_arr_values = new ArrayList<>();
@@ -415,20 +420,5 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
             Static.error(e);
         }
         return null;
-    }
-
-    private void draw(final int layoutId) {
-        try {
-            ViewGroup vg = activity.findViewById(R.id.container);
-            if (vg != null) {
-                vg.removeAllViews();
-                vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-            }
-        } catch (Exception e){
-            Static.error(e);
-        }
-    }
-    private View inflate(int layoutId) throws InflateException {
-        return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
 }

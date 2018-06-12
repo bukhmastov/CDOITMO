@@ -1,16 +1,12 @@
 package com.bukhmastov.cdoitmo.fragment;
 
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringDef;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
-import android.view.InflateException;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -96,11 +92,6 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate("handle".equals(action) ? R.layout.fragment_schedule_lessons_share_receive : R.layout.fragment_schedule_lessons_share_send, container, false);
-    }
-
-    @Override
     public void onResume() {
         super.onResume();
         if (!keepGoing) {
@@ -128,6 +119,16 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
         if (requestHandle != null && requestHandle.cancel()) {
             loaded = false;
         }
+    }
+
+    @Override
+    protected int getLayoutId() {
+        return "handle".equals(action) ? R.layout.fragment_schedule_lessons_share_receive : R.layout.fragment_schedule_lessons_share_send;
+    }
+
+    @Override
+    protected int getRootId() {
+        return 0;
     }
 
     private void load(final Bundle extras) {
@@ -188,7 +189,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
         }
         Static.T.runOnUiThread(() -> {
             try {
-                TextView share_title = activity.findViewById(R.id.share_title);
+                TextView share_title = container.findViewById(R.id.share_title);
                 if (share_title != null) {
                     share_title.setText(ScheduleLessons.getScheduleHeader(activity, content.getString("title"), content.getString("type")));
                 }
@@ -238,11 +239,11 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
         }
         Static.T.runOnUiThread(() -> {
             try {
-                TextView share_title = activity.findViewById(R.id.share_title);
+                TextView share_title = container.findViewById(R.id.share_title);
                 if (share_title != null) {
                     share_title.setText(ScheduleLessons.getScheduleHeader(activity, title, type));
                 }
-                ViewGroup share_info = activity.findViewById(R.id.share_info);
+                ViewGroup share_info = container.findViewById(R.id.share_info);
                 if (share_info != null) {
                     share_info.setOnClickListener(view -> Static.T.runThread(() -> {
                         if (activity != null) {
@@ -341,7 +342,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                 Static.T.runOnUiThread(() -> {
                     try {
                         Log.v(TAG, "loadShare | failure " + state);
-                        ViewGroup share_content = activity.findViewById(R.id.share_content);
+                        ViewGroup share_content = container.findViewById(R.id.share_content);
                         if (share_content != null) {
                             share_content.removeAllViews();
                             View view;
@@ -381,7 +382,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                 Static.T.runOnUiThread(() -> {
                     Log.v(TAG, "loadShare | progress " + state);
                     try {
-                        ViewGroup share_content = activity.findViewById(R.id.share_content);
+                        ViewGroup share_content = container.findViewById(R.id.share_content);
                         if (share_content != null) {
                             share_content.removeAllViews();
                             share_content.addView(inflate(R.layout.state_loading_text_compact));
@@ -412,7 +413,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
         Static.T.runOnUiThread(() -> {
             try {
                 Log.v(TAG, "display | action=" + action);
-                ViewGroup share_content = activity.findViewById(R.id.share_content);
+                ViewGroup share_content = container.findViewById(R.id.share_content);
                 if (share_content == null) {
                     return;
                 }
@@ -469,7 +470,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                 switch (action) {
                     case "share":
                     default: {
-                        Button share_execute = activity.findViewById(R.id.share_execute);
+                        Button share_execute = container.findViewById(R.id.share_execute);
                         if (share_execute != null) {
                             share_execute.setVisibility(View.VISIBLE);
                             share_execute.setOnClickListener(view -> execute());
@@ -477,8 +478,8 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                         break;
                     }
                     case "handle": {
-                        Button action_deny = activity.findViewById(R.id.action_deny);
-                        Button action_accept = activity.findViewById(R.id.action_accept);
+                        Button action_deny = container.findViewById(R.id.action_deny);
+                        Button action_accept = container.findViewById(R.id.action_accept);
                         if (action_deny != null) {
                             action_deny.setOnClickListener(view -> finish());
                         }
@@ -743,8 +744,5 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
             json = new JSONArray(text);
         }
         return json;
-    }
-    private View inflate(int layoutId) throws InflateException {
-        return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
 }

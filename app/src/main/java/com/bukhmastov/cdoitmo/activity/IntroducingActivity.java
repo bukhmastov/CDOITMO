@@ -2,16 +2,12 @@ package com.bukhmastov.cdoitmo.activity;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
-import android.app.Activity;
-import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
-import android.view.InflateException;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -28,7 +24,6 @@ import java.util.ArrayList;
 public class IntroducingActivity extends ConnectedActivity {
 
     private static final String TAG = "IntroducingActivity";
-    private final Activity activity = this;
     private final ArrayList<Screen> screens = new ArrayList<>();
     private int position = -1;
     private static final String colorIndicatorActive = "#FFFFFFFF";
@@ -176,8 +171,5 @@ public class IntroducingActivity extends ConnectedActivity {
     }
     private int getColor(String color) {
         return Color.parseColor(color);
-    }
-    private View inflate(int layout) throws InflateException {
-        return ((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layout, null);
     }
 }

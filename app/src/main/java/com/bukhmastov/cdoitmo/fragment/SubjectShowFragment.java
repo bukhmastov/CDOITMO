@@ -7,11 +7,9 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 
 import com.bukhmastov.cdoitmo.R;
@@ -75,11 +73,6 @@ public class SubjectShowFragment extends ConnectedFragment {
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_subject_show, container, false);
-    }
-
-    @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         if (data == null) return;
@@ -99,6 +92,16 @@ public class SubjectShowFragment extends ConnectedFragment {
         toggleShare();
     }
 
+    @Override
+    protected int getLayoutId() {
+        return R.layout.fragment_subject_show;
+    }
+
+    @Override
+    protected int getRootId() {
+        return 0;
+    }
+
     private void display() {
         if (data == null) return;
         Static.T.runThread(() -> {
@@ -113,7 +116,7 @@ public class SubjectShowFragment extends ConnectedFragment {
                         activity.updateToolbar(activity, subject.getString("name"), R.drawable.ic_e_journal);
                         // отображаем список
                         final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
-                        final RecyclerView points_list = activity.findViewById(R.id.points_list);
+                        final RecyclerView points_list = container.findViewById(R.id.points_list);
                         if (points_list == null) throw new SilentException();
                         points_list.setLayoutManager(layoutManager);
                         points_list.setAdapter(adapter);

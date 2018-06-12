@@ -3,11 +3,8 @@ package com.bukhmastov.cdoitmo.fragment;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
@@ -47,18 +44,13 @@ public class AboutFragment extends ConnectedFragment {
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_about, container, false);
-    }
-
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        TextView app_version = view.findViewById(R.id.app_version);
+    public void onViewCreated() {
+        TextView app_version = container.findViewById(R.id.app_version);
         if (app_version != null) {
             app_version.setText(activity.getString(R.string.version) + " " + Static.versionName + " (" + Static.versionCode + " " + activity.getString(R.string.build) + ")");
         }
         // ----------
-        View block_pika = view.findViewById(R.id.block_pika);
+        View block_pika = container.findViewById(R.id.block_pika);
         if (block_pika != null) {
             block_pika.setOnClickListener(v -> {
                 if (counterToPika >= tapsToPika) {
@@ -71,12 +63,12 @@ public class AboutFragment extends ConnectedFragment {
             });
         }
         // ----------
-        View open_log = view.findViewById(R.id.open_log);
+        View open_log = container.findViewById(R.id.open_log);
         if (open_log != null) {
             open_log.setOnClickListener(v -> activity.openFragment(ConnectedActivity.TYPE.STACKABLE, LogFragment.class, null));
         }
         // ----------
-        View block_send_mail = view.findViewById(R.id.block_send_mail);
+        View block_send_mail = container.findViewById(R.id.block_send_mail);
         if (block_send_mail != null) {
             block_send_mail.setOnClickListener(v -> {
                 Log.v(TAG, "send_mail clicked");
@@ -92,7 +84,7 @@ public class AboutFragment extends ConnectedFragment {
             });
         }
         // ----------
-        View block_send_vk = view.findViewById(R.id.block_send_vk);
+        View block_send_vk = container.findViewById(R.id.block_send_vk);
         if (block_send_vk != null) {
             block_send_vk.setOnClickListener(v -> {
                 Log.v(TAG, "send_vk clicked");
@@ -105,7 +97,7 @@ public class AboutFragment extends ConnectedFragment {
             });
         }
         // ----------
-        View block_rate = view.findViewById(R.id.block_rate);
+        View block_rate = container.findViewById(R.id.block_rate);
         if (block_rate != null) {
             block_rate.setOnClickListener(v -> {
                 Log.v(TAG, "block_rate clicked");
@@ -122,7 +114,7 @@ public class AboutFragment extends ConnectedFragment {
             });
         }
         // ----------
-        View block_github = view.findViewById(R.id.block_github);
+        View block_github = container.findViewById(R.id.block_github);
         if (block_github != null) {
             block_github.setOnClickListener(v -> {
                 Log.v(TAG, "block_github clicked");
@@ -135,7 +127,7 @@ public class AboutFragment extends ConnectedFragment {
             });
         }
         // ----------
-        View block_donate = view.findViewById(R.id.block_donate);
+        View block_donate = container.findViewById(R.id.block_donate);
         if (block_donate != null) {
             block_donate.setOnClickListener(v -> {
                 Log.v(TAG, "block_donate clicked  ┬─┬ ノ( ゜-゜ノ)");
@@ -147,5 +139,15 @@ public class AboutFragment extends ConnectedFragment {
                 }
             });
         }
+    }
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.fragment_about;
+    }
+
+    @Override
+    protected int getRootId() {
+        return 0;
     }
 }

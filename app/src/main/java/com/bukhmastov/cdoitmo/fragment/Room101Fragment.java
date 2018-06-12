@@ -4,13 +4,10 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
-import android.view.InflateException;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -74,11 +71,6 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_container, container, false);
-    }
-
-    @Override
     public void onResume() {
         super.onResume();
         Log.v(TAG, "resumed");
@@ -109,6 +101,16 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
     public void onRefresh() {
         Log.v(TAG, "refreshing");
         load(true);
+    }
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.fragment_container;
+    }
+
+    @Override
+    protected int getRootId() {
+        return R.id.container;
     }
 
     @Override
@@ -159,9 +161,9 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                         } else {
                             Log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status + " | success(not really) | statusCode=" + statusCode);
                             draw(R.layout.state_failed_button);
-                            TextView try_again_message = activity.findViewById(R.id.try_again_message);
+                            TextView try_again_message = container.findViewById(R.id.try_again_message);
                             if (try_again_message != null) try_again_message.setText(R.string.wrong_response_from_server);
-                            View try_again_reload = activity.findViewById(R.id.try_again_reload);
+                            View try_again_reload = container.findViewById(R.id.try_again_reload);
                             if (try_again_reload != null) {
                                 try_again_reload.setOnClickListener(v -> denyRequest(reid, status));
                             }
@@ -174,7 +176,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                     Static.T.runOnUiThread(() -> {
                         Log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status + " | failure | statusCode=" + statusCode);
                         draw(R.layout.state_failed_button);
-                        TextView try_again_message = activity.findViewById(R.id.try_again_message);
+                        TextView try_again_message = container.findViewById(R.id.try_again_message);
                         if (try_again_message != null) {
                             if (state == Room101Client.FAILED_SERVER_ERROR) {
                                 try_again_message.setText(Room101Client.getFailureMessage(activity, statusCode));
@@ -182,7 +184,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                                 try_again_message.setText(R.string.wrong_response_from_server);
                             }
                         }
-                        View try_again_reload = activity.findViewById(R.id.try_again_reload);
+                        View try_again_reload = container.findViewById(R.id.try_again_reload);
                         if (try_again_reload != null) {
                             try_again_reload.setOnClickListener(v -> denyRequest(reid, status));
                         }
@@ -194,7 +196,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                     Static.T.runOnUiThread(() -> {
                         Log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status + " | progress " + state);
                         draw(R.layout.state_loading_text);
-                        TextView loading_message = activity.findViewById(R.id.loading_message);
+                        TextView loading_message = container.findViewById(R.id.loading_message);
                         if (loading_message != null) {
                             switch (state) {
                                 case Room101Client.STATE_HANDLING: loading_message.setText(R.string.deny_request); break;
@@ -219,12 +221,12 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
             } else {
                 draw(R.layout.layout_room101_add_request);
                 Static.lockOrientation(activity, true);
-                final View room101_close_add_request = activity.findViewById(R.id.room101_close_add_request);
-                final LinearLayout room101_back = activity.findViewById(R.id.room101_back);
-                final LinearLayout room101_forward = activity.findViewById(R.id.room101_forward);
-                final TextView room101_back_text = activity.findViewById(R.id.room101_back_text);
-                final TextView room101_forward_text = activity.findViewById(R.id.room101_forward_text);
-                final ProgressBar progressBar = activity.findViewById(R.id.room101_progress_bar);
+                final View room101_close_add_request = container.findViewById(R.id.room101_close_add_request);
+                final LinearLayout room101_back = container.findViewById(R.id.room101_back);
+                final LinearLayout room101_forward = container.findViewById(R.id.room101_forward);
+                final TextView room101_back_text = container.findViewById(R.id.room101_back_text);
+                final TextView room101_forward_text = container.findViewById(R.id.room101_forward_text);
+                final ProgressBar progressBar = container.findViewById(R.id.room101_progress_bar);
                 final Room101AddRequest room101AddRequest = new Room101AddRequest(activity, new Room101AddRequest.callback() {
                     @Override
                     public void onProgress(final int stage) {
@@ -284,7 +286,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                                     load(false);
                                     return;
                                 }
-                                ViewGroup vg = activity.findViewById(R.id.room101_add_request_container);
+                                ViewGroup vg = container.findViewById(R.id.room101_add_request_container);
                                 if (vg != null) {
                                     vg.removeAllViews();
                                     vg.addView(view);
@@ -500,7 +502,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                                     } else {
                                         draw(R.layout.state_offline_text);
                                         if (activity != null) {
-                                            View offline_reload = activity.findViewById(R.id.offline_reload);
+                                            View offline_reload = container.findViewById(R.id.offline_reload);
                                             if (offline_reload != null) {
                                                 offline_reload.setOnClickListener(v -> load(true));
                                             }
@@ -513,14 +515,14 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                                     draw(R.layout.state_failed_button);
                                     if (activity != null) {
                                         if (state == Room101Client.FAILED_EXPECTED_REDIRECTION) {
-                                            TextView try_again_message = activity.findViewById(R.id.try_again_message);
+                                            TextView try_again_message = container.findViewById(R.id.try_again_message);
                                             if (try_again_message != null) try_again_message.setText(R.string.wrong_response_from_server);
                                         }
                                         if (state == Room101Client.FAILED_SERVER_ERROR) {
-                                            TextView try_again_message = activity.findViewById(R.id.try_again_message);
+                                            TextView try_again_message = container.findViewById(R.id.try_again_message);
                                             if (try_again_message != null) try_again_message.setText(Room101Client.getFailureMessage(activity, statusCode));
                                         }
-                                        View try_again_reload = activity.findViewById(R.id.try_again_reload);
+                                        View try_again_reload = container.findViewById(R.id.try_again_reload);
                                         if (try_again_reload != null) {
                                             try_again_reload.setOnClickListener(v -> load(true));
                                         }
@@ -529,10 +531,10 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                                 case Room101Client.FAILED_AUTH:
                                     draw(R.layout.state_failed_button);
                                     if (activity != null) {
-                                        View try_again_reload = activity.findViewById(R.id.try_again_reload);
+                                        View try_again_reload = container.findViewById(R.id.try_again_reload);
                                         if (try_again_reload != null) {
                                             ((ViewGroup) try_again_reload.getParent()).removeView(try_again_reload);
-                                            TextView try_again_message = activity.findViewById(R.id.try_again_message);
+                                            TextView try_again_message = container.findViewById(R.id.try_again_message);
                                             if (try_again_message != null) try_again_message.setText(R.string.room101_auth_failed);
                                         }
                                     }
@@ -546,7 +548,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                             Log.v(TAG, "load | progress " + state);
                             draw(R.layout.state_loading_text);
                             if (activity != null) {
-                                TextView loading_message = activity.findViewById(R.id.loading_message);
+                                TextView loading_message = container.findViewById(R.id.loading_message);
                                 if (loading_message != null) {
                                     switch (state) {
                                         case Room101Client.STATE_HANDLING:
@@ -569,7 +571,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                     } else {
                         draw(R.layout.state_offline_text);
                         if (activity != null) {
-                            View offline_reload = activity.findViewById(R.id.offline_reload);
+                            View offline_reload = container.findViewById(R.id.offline_reload);
                             if (offline_reload != null) {
                                 offline_reload.setOnClickListener(v -> load());
                             }
@@ -584,7 +586,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
             Log.v(TAG, "loadFailed");
             try {
                 draw(R.layout.state_failed_button);
-                View try_again_reload = activity.findViewById(R.id.try_again_reload);
+                View try_again_reload = container.findViewById(R.id.try_again_reload);
                 if (try_again_reload != null) {
                     try_again_reload.setOnClickListener(v -> load(true));
                 }
@@ -610,13 +612,13 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                     action_extra = null;
                 }
                 draw(R.layout.layout_room101_review);
-                TextView room101_limit = activity.findViewById(R.id.room101_limit);
-                TextView room101_last = activity.findViewById(R.id.room101_last);
-                TextView room101_penalty = activity.findViewById(R.id.room101_penalty);
+                TextView room101_limit = container.findViewById(R.id.room101_limit);
+                TextView room101_last = container.findViewById(R.id.room101_last);
+                TextView room101_penalty = container.findViewById(R.id.room101_penalty);
                 if (room101_limit != null) room101_limit.setText(viewRequest.getString("limit"));
                 if (room101_last != null) room101_last.setText(viewRequest.getString("left"));
                 if (room101_penalty != null) room101_penalty.setText(viewRequest.getString("penalty"));
-                final LinearLayout room101_review_container = activity.findViewById(R.id.room101_review_container);
+                final LinearLayout room101_review_container = container.findViewById(R.id.room101_review_container);
                 Static.T.runThread(new Room101ReviewBuilder(activity, this, viewRequest.getJSONArray("sessions"), (state, layout) -> Static.T.runOnUiThread(() -> {
                     try {
                         if (room101_review_container != null) {
@@ -633,14 +635,14 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                     }
                 })));
                 // работаем со свайпом
-                SwipeRefreshLayout mSwipeRefreshLayout = activity.findViewById(R.id.room101_review_swipe);
+                SwipeRefreshLayout mSwipeRefreshLayout = container.findViewById(R.id.room101_review_swipe);
                 if (mSwipeRefreshLayout != null) {
                     mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
                     mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
                     mSwipeRefreshLayout.setOnRefreshListener(this);
                 }
                 // плавающая кнопка
-                FloatingActionButton fab = activity.findViewById(R.id.fab);
+                FloatingActionButton fab = container.findViewById(R.id.fab);
                 if (fab != null) {
                     fab.setOnClickListener(v -> {
                         Log.v(TAG, "fab button clicked");
@@ -673,20 +675,5 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
             Static.error(e);
         }
         return null;
-    }
-
-    private void draw(int layoutId) {
-        try {
-            ViewGroup vg = activity.findViewById(R.id.container);
-            if (vg != null) {
-                vg.removeAllViews();
-                vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-            }
-        } catch (Exception e){
-            Static.error(e);
-        }
-    }
-    private View inflate(int layoutId) throws InflateException {
-        return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
 }

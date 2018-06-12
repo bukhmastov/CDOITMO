@@ -5,12 +5,16 @@ import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.IdRes;
+import android.support.annotation.LayoutRes;
 import android.support.annotation.StringDef;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.view.InflateException;
+import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.View;
 import android.view.ViewGroup;
 
 import com.bukhmastov.cdoitmo.R;
@@ -36,6 +40,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     public String storedFragmentName = null;
     public String storedFragmentData = null;
     public String storedFragmentExtra = null;
+    protected final ConnectedActivity activity = this;
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({TYPE.ROOT, TYPE.STACKABLE})
@@ -221,6 +226,37 @@ public abstract class ConnectedActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    protected View inflate(@LayoutRes int layout) throws InflateException {
+        if (activity == null) {
+            Log.e(TAG, "Failed to inflate layout, activity is null");
+            return null;
+        }
+        LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        if (inflater == null) {
+            Log.e(TAG, "Failed to inflate layout, inflater is null");
+            return null;
+        }
+        return inflater.inflate(layout, null);
+    }
+    protected void draw(int layoutId) {
+        try {
+            draw(inflate(layoutId));
+        } catch (Exception e){
+            Static.error(e);
+        }
+    }
+    protected void draw(View view) {
+        try {
+            ViewGroup vg = findViewById(getRootViewId());
+            if (vg != null) {
+                vg.removeAllViews();
+                vg.addView(view);
+            }
+        } catch (Exception e){
+            Static.error(e);
+        }
     }
 
     @Override

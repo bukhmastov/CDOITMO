@@ -39,7 +39,6 @@ import com.bukhmastov.cdoitmo.util.Migration;
 public class MainActivity extends ConnectedActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "MainActivity";
-    private final Activity activity = this;
     private static final String STATE_SELECTED_SELECTION = "selectedSection";
     private static boolean initialized = false;
     public static boolean loaded = false;
@@ -248,6 +247,11 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
         super.onSaveInstanceState(savedInstanceState);
     }
 
+    @Override
+    protected int getRootViewId() {
+        return R.id.activity_main;
+    }
+
     private void authorize(final int state) {
         Static.T.runThread(() -> {
             try {
@@ -363,10 +367,5 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                 }
             }
         });
-    }
-
-    @Override
-    protected int getRootViewId() {
-        return R.id.activity_main;
     }
 }

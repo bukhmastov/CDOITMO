@@ -1,18 +1,13 @@
 package com.bukhmastov.cdoitmo.fragment;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.StringDef;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.ArrayMap;
-import android.view.InflateException;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
@@ -81,11 +76,6 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_container, container, false);
-    }
-
-    @Override
     public void onResume() {
         super.onResume();
         Log.v(TAG, "resumed");
@@ -128,6 +118,16 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
     public void onRefresh() {
         Log.v(TAG, "refreshing");
         load(COMMON, true);
+    }
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.fragment_container;
+    }
+
+    @Override
+    protected int getRootId() {
+        return R.id.container;
     }
 
     private void load() {
@@ -189,7 +189,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
         Static.T.runOnUiThread(() -> {
             draw(R.layout.state_loading_text);
             if (activity != null) {
-                TextView loading_message = activity.findViewById(R.id.loading_message);
+                TextView loading_message = container.findViewById(R.id.loading_message);
                 if (loading_message != null) {
                     loading_message.setText(R.string.loading);
                 }
@@ -409,7 +409,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
             Log.v(TAG, "loadFailed");
             try {
                 draw(R.layout.state_failed_button);
-                View try_again_reload = activity.findViewById(R.id.try_again_reload);
+                View try_again_reload = container.findViewById(R.id.try_again_reload);
                 if (try_again_reload != null) {
                     try_again_reload.setOnClickListener(v -> load());
                 }
@@ -484,14 +484,14 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                         draw(R.layout.layout_rating_list);
                         // set adapter to recycler view
                         final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
-                        final RecyclerView rating_list = activity.findViewById(R.id.rating_list);
+                        final RecyclerView rating_list = container.findViewById(R.id.rating_list);
                         if (rating_list != null) {
                             rating_list.setLayoutManager(layoutManager);
                             rating_list.setAdapter(adapter);
                             rating_list.setHasFixedSize(true);
                         }
                         // setup swipe
-                        final SwipeRefreshLayout swipe_container = activity.findViewById(R.id.swipe_container);
+                        final SwipeRefreshLayout swipe_container = container.findViewById(R.id.swipe_container);
                         if (swipe_container != null) {
                             swipe_container.setColorSchemeColors(Static.colorAccent);
                             swipe_container.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
@@ -521,20 +521,5 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                 loadFailed();
             }
         });
-    }
-
-    private void draw(int layoutId) {
-        try {
-            ViewGroup vg = activity.findViewById(R.id.container);
-            if (vg != null) {
-                vg.removeAllViews();
-                vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-            }
-        } catch (Exception e){
-            Static.error(e);
-        }
-    }
-    private View inflate(int layoutId) throws InflateException {
-        return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
 }

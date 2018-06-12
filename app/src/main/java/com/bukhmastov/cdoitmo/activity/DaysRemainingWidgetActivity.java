@@ -1,6 +1,5 @@
 package com.bukhmastov.cdoitmo.activity;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -28,7 +27,7 @@ import java.util.ArrayList;
 public class DaysRemainingWidgetActivity extends AppCompatActivity implements ScheduleExams.Handler, DaysRemainingWidget.response {
 
     private static final String TAG = "DRWidgetActivity";
-    private final Activity activity = this;
+    private final AppCompatActivity activity = this;
     private DaysRemainingWidget daysRemainingWidget = null;
     private ScheduleExams scheduleExams = null;
     private String query = null;

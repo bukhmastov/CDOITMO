@@ -3,14 +3,11 @@ package com.bukhmastov.cdoitmo.fragment;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapter.PagerUniversityAdapter;
@@ -52,15 +49,9 @@ public class UniversityFragment extends ConnectedFragment implements ViewPager.O
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_pager, container, false);
-    }
-
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
+    public void onViewCreated() {
         TabLayout main_tabs = activity.findViewById(R.id.scrollable_tabs);
-        ViewPager pager = activity.findViewById(R.id.pager);
+        ViewPager pager = container.findViewById(R.id.pager);
         FragmentManager fragmentManager = getChildFragmentManager();
         if (pager != null) {
             pager.setAdapter(new PagerUniversityAdapter(fragmentManager, activity));
@@ -111,6 +102,16 @@ public class UniversityFragment extends ConnectedFragment implements ViewPager.O
     public void onPause() {
         super.onPause();
         Log.v(TAG, "paused");
+    }
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.fragment_pager;
+    }
+
+    @Override
+    protected int getRootId() {
+        return 0;
     }
 
     @Override

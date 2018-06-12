@@ -65,11 +65,6 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_container, container, false);
-    }
-
-    @Override
     public void onResume() {
         super.onResume();
         Log.v(TAG, "resumed");
@@ -100,6 +95,16 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
     public void onRefresh() {
         Log.v(TAG, "refreshing");
         load(true);
+    }
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.fragment_container;
+    }
+
+    @Override
+    protected int getRootId() {
+        return R.id.container;
     }
 
     private void load() {
@@ -185,7 +190,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                                     } else {
                                         draw(R.layout.state_offline_text);
                                         if (activity != null) {
-                                            View offline_reload = activity.findViewById(R.id.offline_reload);
+                                            View offline_reload = container.findViewById(R.id.offline_reload);
                                             if (offline_reload != null) {
                                                 offline_reload.setOnClickListener(v -> load());
                                             }
@@ -197,14 +202,14 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                                 case DeIfmoRestClient.FAILED_CORRUPTED_JSON:
                                     draw(R.layout.state_failed_button);
                                     if (activity != null) {
-                                        TextView try_again_message = activity.findViewById(R.id.try_again_message);
+                                        TextView try_again_message = container.findViewById(R.id.try_again_message);
                                         if (try_again_message != null) {
                                             switch (state) {
                                                 case DeIfmoRestClient.FAILED_SERVER_ERROR:   try_again_message.setText(DeIfmoRestClient.getFailureMessage(activity, statusCode)); break;
                                                 case DeIfmoRestClient.FAILED_CORRUPTED_JSON: try_again_message.setText(R.string.server_provided_corrupted_json); break;
                                             }
                                         }
-                                        View try_again_reload = activity.findViewById(R.id.try_again_reload);
+                                        View try_again_reload = container.findViewById(R.id.try_again_reload);
                                         if (try_again_reload != null) {
                                             try_again_reload.setOnClickListener(v -> load());
                                         }
@@ -219,7 +224,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                             Log.v(TAG, "load | progress " + state);
                             draw(R.layout.state_loading_text);
                             if (activity != null) {
-                                TextView loading_message = activity.findViewById(R.id.loading_message);
+                                TextView loading_message = container.findViewById(R.id.loading_message);
                                 if (loading_message != null) {
                                     switch (state) {
                                         case DeIfmoRestClient.STATE_HANDLING: loading_message.setText(R.string.loading); break;
@@ -240,7 +245,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                     } else {
                         draw(R.layout.state_offline_text);
                         if (activity != null) {
-                            View offline_reload = activity.findViewById(R.id.offline_reload);
+                            View offline_reload = container.findViewById(R.id.offline_reload);
                             if (offline_reload != null) {
                                 offline_reload.setOnClickListener(v -> load());
                             }
@@ -255,9 +260,9 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
             Log.v(TAG, "loadFailed");
             try {
                 draw(R.layout.state_failed_button);
-                TextView try_again_message = activity.findViewById(R.id.try_again_message);
+                TextView try_again_message = container.findViewById(R.id.try_again_message);
                 if (try_again_message != null) try_again_message.setText(R.string.eregister_load_failed_retry_in_minute);
-                View try_again_reload = activity.findViewById(R.id.try_again_reload);
+                View try_again_reload = container.findViewById(R.id.try_again_reload);
                 if (try_again_reload != null) {
                     try_again_reload.setOnClickListener(v -> load());
                 }
@@ -313,14 +318,14 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                         draw(R.layout.layout_eregister);
                         // set adapter to recycler view
                         final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
-                        final RecyclerView erl_list_view = activity.findViewById(R.id.erl_list_view);
+                        final RecyclerView erl_list_view = container.findViewById(R.id.erl_list_view);
                         if (erl_list_view != null) {
                             erl_list_view.setLayoutManager(layoutManager);
                             erl_list_view.setAdapter(adapter);
                             erl_list_view.setHasFixedSize(true);
                         }
                         // setup swipe
-                        final SwipeRefreshLayout swipe_container = activity.findViewById(R.id.swipe_container);
+                        final SwipeRefreshLayout swipe_container = container.findViewById(R.id.swipe_container);
                         if (swipe_container != null) {
                             swipe_container.setColorSchemeColors(Static.colorAccent);
                             swipe_container.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
@@ -329,7 +334,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                         // setup spinners
                         int selection = 0, counter = 0;
                         // spinner: groups
-                        final Spinner spinner_group = activity.findViewById(R.id.erl_group_spinner);
+                        final Spinner spinner_group = container.findViewById(R.id.erl_group_spinner);
                         if (spinner_group != null) {
                             final ArrayList<String> spinner_group_arr = new ArrayList<>();
                             final ArrayList<String> spinner_group_arr_names = new ArrayList<>();
@@ -360,7 +365,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                             });
                         }
                         // spinner: terms
-                        final Spinner spinner_period = activity.findViewById(R.id.erl_period_spinner);
+                        final Spinner spinner_period = container.findViewById(R.id.erl_period_spinner);
                         if (spinner_period != null) {
                             final ArrayList<String> spinner_period_arr = new ArrayList<>();
                             final ArrayList<Integer> spinner_period_arr_values = new ArrayList<>();
@@ -506,20 +511,5 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
             Static.error(e);
         }
         return null;
-    }
-
-    private void draw(int layoutId) {
-        try {
-            ViewGroup vg = activity.findViewById(R.id.container);
-            if (vg != null) {
-                vg.removeAllViews();
-                vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-            }
-        } catch (Exception e){
-            Static.error(e);
-        }
-    }
-    private View inflate(int layoutId) throws InflateException {
-        return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
 }

@@ -3,11 +3,8 @@ package com.bukhmastov.cdoitmo.fragment;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.FileProvider;
-import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -47,17 +44,12 @@ public class LogFragment extends ConnectedFragment {
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_log, container, false);
-    }
-
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated() {
         try {
-            ((TextView) view.findViewById(R.id.warn)).setText(String.valueOf(Log.Metrics.warn));
-            ((TextView) view.findViewById(R.id.error)).setText(String.valueOf(Log.Metrics.error));
-            ((TextView) view.findViewById(R.id.exception)).setText(String.valueOf(Log.Metrics.exception));
-            ((TextView) view.findViewById(R.id.wtf)).setText(String.valueOf(Log.Metrics.wtf));
+            ((TextView) container.findViewById(R.id.warn)).setText(String.valueOf(Log.Metrics.warn));
+            ((TextView) container.findViewById(R.id.error)).setText(String.valueOf(Log.Metrics.error));
+            ((TextView) container.findViewById(R.id.exception)).setText(String.valueOf(Log.Metrics.exception));
+            ((TextView) container.findViewById(R.id.wtf)).setText(String.valueOf(Log.Metrics.wtf));
             // init firebase logs enabler
             final ViewGroup firebase_logs = activity.findViewById(R.id.firebase_logs);
             final Switch firebase_logs_switch = activity.findViewById(R.id.firebase_logs_switch);
@@ -106,9 +98,20 @@ public class LogFragment extends ConnectedFragment {
         }
     }
 
+    @Override
+    protected int getLayoutId() {
+        return R.layout.fragment_log;
+    }
+
+    @Override
+    protected int getRootId() {
+        return 0;
+    }
+
     private void firebaseToggled(final boolean allowed) {
         Static.T.runThread(() -> FirebaseCrashlyticsProvider.setEnabled(activity, allowed));
     }
+
     private void genericToggled(final boolean allowed) {
         Static.T.runThread(() -> {
             Log.setEnabled(allowed);

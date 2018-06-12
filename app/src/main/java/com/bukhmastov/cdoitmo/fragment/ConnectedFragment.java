@@ -2,8 +2,15 @@ package com.bukhmastov.cdoitmo.fragment;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.IdRes;
+import android.support.annotation.LayoutRes;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.view.InflateException;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
@@ -19,12 +26,17 @@ import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleExamsFragment;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsSystemsFragment;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.Static;
 
 public abstract class ConnectedFragment extends Fragment {
 
     private static final String TAG = "ConnectedFragment";
     protected ConnectedActivity activity = null;
+    protected View container = null;
     protected Bundle extras = null;
+
+    protected abstract @LayoutRes int getLayoutId();
+    protected abstract @IdRes int getRootId();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -42,9 +54,23 @@ public abstract class ConnectedFragment extends Fragment {
         }
     }
 
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        return inflater.inflate(getLayoutId(), container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        container = view;
+        onViewCreated();
+    }
+
+    public void onViewCreated() {}
+
     public void storeData(ConnectedFragment fragment, String data) {
         storeData(fragment, data, null);
     }
+
     public void storeData(ConnectedFragment fragment, String data, String extra) {
         Log.v(TAG, "storeData | activity=", activity, " | fragment=", fragment, " | data=", Log.lNull(data), " | extra=", Log.lNull(extra));
         if (activity != null && fragment != null) {
@@ -53,6 +79,7 @@ public abstract class ConnectedFragment extends Fragment {
             activity.storedFragmentExtra = extra;
         }
     }
+
     public String restoreData(ConnectedFragment fragment) {
         Log.v(TAG, "restoreData | activity=", activity, " | fragment=", fragment);
         if (activity != null && fragment != null && activity.storedFragmentName != null && fragment.getClass().getCanonicalName().equals(activity.storedFragmentName)) {
@@ -61,12 +88,72 @@ public abstract class ConnectedFragment extends Fragment {
             return null;
         }
     }
+
     public String restoreDataExtra(ConnectedFragment fragment) {
         Log.v(TAG, "restoreDataExtra | activity=", activity, " | fragment=", fragment);
         if (activity != null && fragment != null && activity.storedFragmentName != null && fragment.getClass().getCanonicalName().equals(activity.storedFragmentName)) {
             return activity.storedFragmentExtra;
         } else {
             return null;
+        }
+    }
+
+    protected void close() {
+        if (activity != null && activity.back()) {
+            activity.finish();
+        }
+    }
+
+    protected void draw(@LayoutRes int layout) {
+        try {
+            View view = inflate(layout);
+            if (view == null) {
+                Log.e(TAG, "Failed to draw layout, view is null");
+                return;
+            }
+            draw(view);
+        } catch (Exception e){
+            Static.error(e);
+        }
+    }
+
+    protected void draw(View view) {
+        try {
+            if (activity == null) {
+                Log.e(TAG, "Failed to draw layout, activity is null");
+                return;
+            }
+            ViewGroup vg = activity.findViewById(getRootId());
+            if (vg != null) {
+                vg.removeAllViews();
+                vg.addView(view, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            }
+        } catch (Exception e){
+            Static.error(e);
+        }
+    }
+
+    protected View inflate(@LayoutRes int layout) throws InflateException {
+        if (activity == null) {
+            Log.e(TAG, "Failed to inflate layout, activity is null");
+            return null;
+        }
+        LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        if (inflater == null) {
+            Log.e(TAG, "Failed to inflate layout, inflater is null");
+            return null;
+        }
+        return inflater.inflate(layout, null);
+    }
+
+    public static class Data {
+        public final Class connectedFragmentClass;
+        public final String title;
+        public final Integer image;
+        public Data(Class connectedFragmentClass, String title, Integer image) {
+            this.connectedFragmentClass = connectedFragmentClass;
+            this.title = title;
+            this.image = image;
         }
     }
 
@@ -100,22 +187,5 @@ public abstract class ConnectedFragment extends Fragment {
         if (connectedFragment == LinkedAccountsFragment.class) return new Data(connectedFragment, context.getString(R.string.linked_accounts), R.drawable.ic_account_box);
         Log.wtf(TAG, "getData | fragment class (", connectedFragment.toString(), ") does not supported!");
         return null;
-    }
-
-    protected void close() {
-        if (activity != null && activity.back()) {
-            activity.finish();
-        }
-    }
-
-    public static class Data {
-        public final Class connectedFragmentClass;
-        public final String title;
-        public final Integer image;
-        public Data(Class connectedFragmentClass, String title, Integer image){
-            this.connectedFragmentClass = connectedFragmentClass;
-            this.title = title;
-            this.image = image;
-        }
     }
 }

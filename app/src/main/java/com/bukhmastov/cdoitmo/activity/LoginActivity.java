@@ -8,7 +8,6 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -44,7 +43,6 @@ public class LoginActivity extends ConnectedActivity {
     public static final int SIGNAL_CREDENTIALS_REQUIRED = 6;
     public static final int SIGNAL_CREDENTIALS_FAILED = 7;
 
-    private final ConnectedActivity activity = this;
     private Client.Request requestHandle = null;
     public static boolean auto_logout = false;
 
@@ -540,7 +538,6 @@ public class LoginActivity extends ConnectedActivity {
             }
         });
     }
-
     private void displayRemoteMessage() {
         Static.T.runThread(() -> FirebaseConfigProvider.getJson(FirebaseConfigProvider.MESSAGE_LOGIN, value -> Static.T.runThread(() -> {
             try {
@@ -585,27 +582,5 @@ public class LoginActivity extends ConnectedActivity {
                 // ignore
             }
         })));
-    }
-
-    private void draw(int layoutId) {
-        try {
-            draw(inflate(layoutId));
-        } catch (Exception e){
-            Static.error(e);
-        }
-    }
-    private void draw(View view) {
-        try {
-            ViewGroup vg = findViewById(R.id.login_content);
-            if (vg != null) {
-                vg.removeAllViews();
-                vg.addView(view);
-            }
-        } catch (Exception e){
-            Static.error(e);
-        }
-    }
-    private View inflate(int layout) throws Exception {
-        return ((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layout, null);
     }
 }
