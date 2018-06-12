@@ -264,7 +264,7 @@ public class SubjectShowFragment extends ConnectedFragment {
             Log.v(TAG, "share | " + title);
             Intent intent = new Intent(Intent.ACTION_SEND);
             intent.setType("text/plain");
-            intent.putExtra(Intent.EXTRA_TEXT, title + " " + "https://goo.gl/cCp2SP");
+            intent.putExtra(Intent.EXTRA_TEXT, title);
             activity.startActivity(Intent.createChooser(intent, activity.getString(R.string.share)));
             // track statistics
             FirebaseAnalyticsProvider.logEvent(
