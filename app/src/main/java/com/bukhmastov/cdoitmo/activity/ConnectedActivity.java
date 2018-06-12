@@ -259,6 +259,12 @@ public abstract class ConnectedActivity extends AppCompatActivity {
         }
     }
 
+    protected void clearStore() {
+        storedFragmentName = null;
+        storedFragmentData = null;
+        storedFragmentExtra = null;
+    }
+
     @Override
     protected void attachBaseContext(Context context) {
         super.attachBaseContext(CtxWrapper.wrap(context));

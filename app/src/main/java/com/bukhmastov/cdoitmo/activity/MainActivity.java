@@ -357,6 +357,12 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                 case R.id.nav_logout: {
                     loaded = false;
                     switch (section) {
+                        case R.id.nav_change_account:
+                        case R.id.nav_logout:
+                            clearStore();
+                            break;
+                    }
+                    switch (section) {
                         case R.id.nav_enable_offline_mode: authorize(LoginActivity.SIGNAL_GO_OFFLINE); break;
                         case R.id.nav_disable_offline_mode: authorize(LoginActivity.SIGNAL_RECONNECT); break;
                         case R.id.nav_change_account: authorize(LoginActivity.SIGNAL_CHANGE_ACCOUNT); break;
