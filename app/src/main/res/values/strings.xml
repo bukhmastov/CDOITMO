@@ -514,5 +514,7 @@
     <string name="cache_all_desc">Кэш, включающий все последующие разделы</string>
     <string name="cache_clear">Очистка кэша</string>
     <string name="empty">Пусто</string>
+    <string name="help">Помощь</string>
+    <string name="e_journal_help">Обновление электронного журнала доступно не чаще раза в минуту</string>
 
 </resources>

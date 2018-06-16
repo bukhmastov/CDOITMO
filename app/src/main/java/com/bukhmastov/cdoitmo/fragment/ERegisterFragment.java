@@ -1,15 +1,12 @@
 package com.bukhmastov.cdoitmo.fragment;
 
-import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.view.InflateException;
-import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
@@ -61,6 +58,16 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
     public void onDestroy() {
         super.onDestroy();
         Log.v(TAG, "Fragment destroyed");
+        try {
+            if (activity.toolbar != null) {
+                MenuItem action_info = activity.toolbar.findItem(R.id.action_info);
+                if (action_info != null) {
+                    action_info.setVisible(false);
+                }
+            }
+        } catch (Exception e){
+            Static.error(e);
+        }
     }
 
     @Override
@@ -71,6 +78,25 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
             return;
         }
         FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
+        try {
+            if (activity.toolbar != null) {
+                MenuItem action_info = activity.toolbar.findItem(R.id.action_info);
+                if (action_info != null) {
+                    action_info.setVisible(true);
+                    action_info.setOnMenuItemClickListener(item -> {
+                        new AlertDialog.Builder(activity)
+                                .setIcon(R.drawable.ic_info_outline)
+                                .setTitle(R.string.e_journal)
+                                .setMessage(R.string.e_journal_help)
+                                .setNegativeButton(R.string.close, null)
+                                .create().show();
+                        return false;
+                    });
+                }
+            }
+        } catch (Exception e){
+            Static.error(e);
+        }
         if (!loaded) {
             loaded = true;
             if (getData() == null) {

@@ -56,11 +56,11 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
                 fixed_tabs.setVisibility(View.GONE);
             }
             if (activity.toolbar != null) {
-                MenuItem action_schedule_lessons_search = activity.toolbar.findItem(R.id.action_schedule_lessons_search);
-                if (action_schedule_lessons_search != null && action_schedule_lessons_search.isVisible()) {
-                    Log.v(TAG, "Hiding action_schedule_lessons_search");
-                    action_schedule_lessons_search.setVisible(false);
-                    action_schedule_lessons_search.setOnMenuItemClickListener(null);
+                MenuItem action_search = activity.toolbar.findItem(R.id.action_search);
+                if (action_search != null && action_search.isVisible()) {
+                    Log.v(TAG, "Hiding action_search");
+                    action_search.setVisible(false);
+                    action_search.setOnMenuItemClickListener(null);
                 }
             }
         } catch (Exception e){
@@ -75,12 +75,12 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
         FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
         try {
             if (activity.toolbar != null) {
-                MenuItem action_schedule_lessons_search = activity.toolbar.findItem(R.id.action_schedule_lessons_search);
-                if (action_schedule_lessons_search != null && !action_schedule_lessons_search.isVisible()) {
-                    Log.v(TAG, "Revealing action_schedule_lessons_search");
-                    action_schedule_lessons_search.setVisible(true);
-                    action_schedule_lessons_search.setOnMenuItemClickListener(item -> {
-                        Log.v(TAG, "action_schedule_lessons_search clicked");
+                MenuItem action_search = activity.toolbar.findItem(R.id.action_search);
+                if (action_search != null && !action_search.isVisible()) {
+                    Log.v(TAG, "Revealing action_search");
+                    action_search.setVisible(true);
+                    action_search.setOnMenuItemClickListener(item -> {
+                        Log.v(TAG, "action_search clicked");
                         activity.startActivity(new Intent(activity, ScheduleLessonsSearchActivity.class));
                         return false;
                     });

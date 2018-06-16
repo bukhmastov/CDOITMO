@@ -10,21 +10,7 @@
         android:visible="false"/>
 
     <item
-        android:id="@+id/action_schedule_lessons_search"
-        android:title="@string/search"
-        android:icon="@drawable/ic_toolbar_search"
-        app:showAsAction="ifRoom"
-        android:visible="false" />
-
-    <item
-        android:id="@+id/action_schedule_exams_search"
-        android:title="@string/search"
-        android:icon="@drawable/ic_toolbar_search"
-        app:showAsAction="ifRoom"
-        android:visible="false" />
-
-    <item
-        android:id="@+id/action_schedule_attestations_search"
+        android:id="@+id/action_search"
         android:title="@string/search"
         android:icon="@drawable/ic_toolbar_search"
         app:showAsAction="ifRoom"
@@ -48,6 +34,13 @@
         android:id="@+id/action_share"
         android:title="@string/share"
         android:icon="@drawable/ic_toolbar_share"
+        app:showAsAction="ifRoom"
+        android:visible="false" />
+
+    <item
+        android:id="@+id/action_info"
+        android:title="@string/help"
+        android:icon="@drawable/ic_toolbar_info"
         app:showAsAction="ifRoom"
         android:visible="false" />
 
