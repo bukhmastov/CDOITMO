@@ -365,7 +365,14 @@ public class ScheduleExamsRVA extends RVA {
     }
     private void bindNoExams(View container, Item item) {
         try {
-            ((TextView) container.findViewById(R.id.ntd_text)).setText(mode == 0 ? R.string.no_exams : R.string.no_credits);
+            String info = "";
+            Calendar calendar = Static.getCalendar();
+            int month = calendar.get(Calendar.MONTH);
+            int day = calendar.get(Calendar.DAY_OF_MONTH);
+            if ((month >= Calendar.SEPTEMBER && (month <= Calendar.DECEMBER && day < 20)) || (month >= Calendar.FEBRUARY && (month <= Calendar.MAY && day < 20))) {
+                info = "\n" + activity.getString(R.string.no_exams_info);
+            }
+            ((TextView) container.findViewById(R.id.ntd_text)).setText((mode == 0 ? activity.getText(R.string.no_exams) : activity.getText(R.string.no_credits)) + info);
         } catch (Exception e) {
             Static.error(e);
         }

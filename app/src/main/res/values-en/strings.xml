@@ -508,5 +508,6 @@
     <string name="empty">Empty</string>
     <string name="help">Help</string>
     <string name="e_journal_help">Update of the e-journal is available no more than once a minute</string>
+    <string name="no_exams_info">Schedule may appear closer to the session</string>
 
 </resources>

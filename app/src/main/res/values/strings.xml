@@ -516,5 +516,6 @@
     <string name="empty">Пусто</string>
     <string name="help">Помощь</string>
     <string name="e_journal_help">Обновление электронного журнала доступно не чаще раза в минуту</string>
+    <string name="no_exams_info">Расписание может появиться ближе к сессии</string>
 
 </resources>
