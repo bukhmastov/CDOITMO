@@ -37,9 +37,9 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     public final static String ACTIVITY_WITH_MENU = "connected_activity_with_align";
     protected boolean layout_with_menu = true;
     public Menu toolbar = null;
-    public String storedFragmentName = null;
-    public String storedFragmentData = null;
-    public String storedFragmentExtra = null;
+    public static String storedFragmentName = null;
+    public static String storedFragmentData = null;
+    public static String storedFragmentExtra = null;
     protected final ConnectedActivity activity = this;
 
     @Retention(RetentionPolicy.SOURCE)
@@ -259,7 +259,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
         }
     }
 
-    protected void clearStore() {
+    public static void clearStore() {
         storedFragmentName = null;
         storedFragmentData = null;
         storedFragmentExtra = null;

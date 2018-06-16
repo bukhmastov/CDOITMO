@@ -359,7 +359,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                     switch (section) {
                         case R.id.nav_change_account:
                         case R.id.nav_logout:
-                            clearStore();
+                            ConnectedActivity.clearStore();
                             break;
                     }
                     switch (section) {

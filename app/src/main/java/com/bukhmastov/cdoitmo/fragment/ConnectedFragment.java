@@ -73,17 +73,17 @@ public abstract class ConnectedFragment extends Fragment {
 
     public void storeData(ConnectedFragment fragment, String data, String extra) {
         Log.v(TAG, "storeData | activity=", activity, " | fragment=", fragment, " | data=", Log.lNull(data), " | extra=", Log.lNull(extra));
-        if (activity != null && fragment != null) {
-            activity.storedFragmentName = fragment.getClass().getCanonicalName();
-            activity.storedFragmentData = data;
-            activity.storedFragmentExtra = extra;
+        if (fragment != null) {
+            ConnectedActivity.storedFragmentName = fragment.getClass().getCanonicalName();
+            ConnectedActivity.storedFragmentData = data;
+            ConnectedActivity.storedFragmentExtra = extra;
         }
     }
 
     public String restoreData(ConnectedFragment fragment) {
         Log.v(TAG, "restoreData | activity=", activity, " | fragment=", fragment);
-        if (activity != null && fragment != null && activity.storedFragmentName != null && fragment.getClass().getCanonicalName().equals(activity.storedFragmentName)) {
-            return activity.storedFragmentData;
+        if (fragment != null && ConnectedActivity.storedFragmentName != null && fragment.getClass().getCanonicalName().equals(ConnectedActivity.storedFragmentName)) {
+            return ConnectedActivity.storedFragmentData;
         } else {
             return null;
         }
@@ -91,8 +91,8 @@ public abstract class ConnectedFragment extends Fragment {
 
     public String restoreDataExtra(ConnectedFragment fragment) {
         Log.v(TAG, "restoreDataExtra | activity=", activity, " | fragment=", fragment);
-        if (activity != null && fragment != null && activity.storedFragmentName != null && fragment.getClass().getCanonicalName().equals(activity.storedFragmentName)) {
-            return activity.storedFragmentExtra;
+        if (fragment != null && ConnectedActivity.storedFragmentName != null && fragment.getClass().getCanonicalName().equals(ConnectedActivity.storedFragmentName)) {
+            return ConnectedActivity.storedFragmentExtra;
         } else {
             return null;
         }

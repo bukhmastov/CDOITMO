@@ -508,5 +508,11 @@
     <string name="automatic_shift">Автоматический сдвиг дня</string>
     <string name="automatic_shift_summary">Сдвигать к ближайшему дню, содержащему следующую пару</string>
     <string name="default_tab">Вкладка по умолчанию</string>
+    <string name="cache_all">Весь кэш на диске</string>
+    <string name="cache_mem">Весь кэш в памяти</string>
+    <string name="cache_mem_desc">Динамический кэш в оперативной памяти</string>
+    <string name="cache_all_desc">Кэш, включающий все последующие разделы</string>
+    <string name="cache_clear">Очистка кэша</string>
+    <string name="empty">Пусто</string>
 
 </resources>

@@ -500,5 +500,11 @@
     <string name="automatic_shift">Automatic day shift</string>
     <string name="automatic_shift_summary">Shift to the nearest day containing the following lessons</string>
     <string name="default_tab">Default tab</string>
+    <string name="cache_all">All disk cache</string>
+    <string name="cache_mem">All memory cache</string>
+    <string name="cache_mem_desc">Dynamic RAM cache</string>
+    <string name="cache_all_desc">Cache that includes all subsequent sections</string>
+    <string name="cache_clear">Clear cache</string>
+    <string name="empty">Empty</string>
 
 </resources>

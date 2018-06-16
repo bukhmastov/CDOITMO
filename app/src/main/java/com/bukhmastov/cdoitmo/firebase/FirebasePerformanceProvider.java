@@ -22,7 +22,7 @@ public class FirebasePerformanceProvider {
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({
             Trace.UNKNOWN, Trace.LOGIN, Trace.LOGOUT, Trace.PROTOCOL_TRACKER,
-            Trace.Storage.PUT, Trace.Storage.GET, Trace.Storage.DELETE, Trace.Storage.CLEAR, Trace.Storage.EXISTS, Trace.Storage.RESET, Trace.Storage.LIST,
+            Trace.Storage.PUT, Trace.Storage.GET, Trace.Storage.DELETE, Trace.Storage.CLEAR, Trace.Storage.EXISTS, Trace.Storage.RESET, Trace.Storage.LIST, Trace.Storage.SIZE,
             Trace.Schedule.LESSONS, Trace.Schedule.EXAMS, Trace.Schedule.ATTESTATIONS,
             Trace.Parse.RATING, Trace.Parse.RATING_LIST, Trace.Parse.RATING_TOP_LIST, Trace.Parse.ROOM_101_DATE_PICK, Trace.Parse.ROOM_101_TIME_END_PICK,
             Trace.Parse.ROOM_101_TIME_START_PICK, Trace.Parse.ROOM_101_VIEW_REQUEST, Trace.Parse.SCHEDULE_ATTESTATIONS, Trace.Parse.SCHEDULE_EXAMS_GROUP,
@@ -43,6 +43,7 @@ public class FirebasePerformanceProvider {
             public static final String EXISTS = "storage_exists";
             public static final String RESET = "storage_reset";
             public static final String LIST = "storage_list";
+            public static final String SIZE = "storage_size";
         }
         public static class Schedule {
             public static final String LESSONS = "schedule_lessons";

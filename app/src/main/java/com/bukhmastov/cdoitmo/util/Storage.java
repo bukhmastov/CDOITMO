@@ -15,6 +15,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -26,15 +27,15 @@ public class Storage {
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({CACHE, PERMANENT})
-    private @interface STORAGE {}
-    private static final String CACHE = "cache";
-    private static final String PERMANENT = "permanent";
+    public @interface STORAGE {}
+    public static final String CACHE = "cache";
+    public static final String PERMANENT = "permanent";
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({USER, GENERAL})
-    private @interface TYPE {}
-    private static final String USER = "user";
-    private static final String GENERAL = "general";
+    public @interface TYPE {}
+    public static final String USER = "user";
+    public static final String GENERAL = "general";
 
     public static class file {
         public static class cache {
@@ -61,6 +62,9 @@ public class Storage {
             }
             public static ArrayList<String> list(Context context, String path) {
                 return Storage.file.list(context, CACHE, USER, path);
+            }
+            public static long getDirSize(Context context, String path) {
+                return Storage.file.getDirSize(context, CACHE, USER, path);
             }
         }
         public static class perm {
@@ -114,6 +118,9 @@ public class Storage {
                 }
                 public static ArrayList<String> list(Context context, String path) {
                     return Storage.file.list(context, CACHE, GENERAL, path);
+                }
+                public static long getDirSize(Context context, String path) {
+                    return Storage.file.getDirSize(context, CACHE, GENERAL, path);
                 }
             }
             public static class perm {
@@ -343,6 +350,47 @@ public class Storage {
                 FirebasePerformanceProvider.stopTrace(trace);
             }
             return response;
+        }
+        private static long getDirSize(Context context, @STORAGE String storage, @TYPE String type, String path) {
+            String trace = FirebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.Storage.SIZE);
+            try {
+                Log.v(TAG, "file | size | storage=", storage, " | type=", type, " | path=", path);
+                FirebasePerformanceProvider.putAttribute(trace, "path", storage, "#", type, "#", path);
+                if (context == null) {
+                    Log.w(TAG, "file | size | context is null");
+                    return 0L;
+                }
+                File file = new File(getFileLocation(context, storage, type, path, false));
+                if (!file.exists() || !file.isDirectory()) {
+                    throw new Exception("Dir does not exist: " + file.getPath());
+                }
+                // calculate dir tree size
+                final List<File> dirs = new LinkedList<>();
+                dirs.add(file);
+                long size = 0; // bytes
+                while (!dirs.isEmpty()) {
+                    final File dir = dirs.remove(0);
+                    if (!dir.exists()) {
+                        continue;
+                    }
+                    final File[] subFiles = dir.listFiles();
+                    if (subFiles == null || subFiles.length == 0) {
+                        continue;
+                    }
+                    for (final File subFile : subFiles) {
+                        size += subFile.length();
+                        if (subFile.isDirectory()) {
+                            dirs.add(subFile);
+                        }
+                    }
+                }
+                return size;
+            } catch (Exception e) {
+                FirebasePerformanceProvider.putAttribute(trace, "exception", e.getMessage());
+            } finally {
+                FirebasePerformanceProvider.stopTrace(trace);
+            }
+            return 0L;
         }
 
         private static boolean deleteRecursive(File fileOrDirectory) {

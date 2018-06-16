@@ -9,9 +9,9 @@ import com.bukhmastov.cdoitmo.object.preference.Preference;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceBasic;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceList;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
+import com.bukhmastov.cdoitmo.util.CacheClearUtil;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
-import com.bukhmastov.cdoitmo.util.Storage;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,79 +45,12 @@ public class SettingsCacheFragment extends SettingsTemplatePreferencesFragment {
         preferences.add(new PreferenceList("pref_dynamic_refresh", "0", R.string.pref_dynamic_refresh, R.array.pref_refresh_titles, R.array.pref_refresh_values, true));
         preferences.add(new PreferenceList("pref_static_refresh", "168", R.string.pref_static_refresh, R.array.pref_refresh_titles, R.array.pref_refresh_values, true));
         preferences.add(new PreferenceSwitch("pref_use_university_cache", false, R.string.pref_use_university_cache, R.string.pref_use_university_cache_summary, null, null));
-        preferences.add(new PreferenceBasic("pref_clear_cache", null, R.string.clear_cache, false, new PreferenceBasic.Callback() {
+        preferences.add(new PreferenceBasic("pref_clear_cache", null, R.string.cache_clear, false, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final PreferenceBasic.OnPreferenceClickedCallback callback) {
                 Static.T.runThread(() -> {
                     Log.v(TAG, "pref_clear_cache clicked");
-                    if (activity != null) {
-                        boolean success = Storage.file.cache.clear(activity);
-                        Static.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
-                    }
-                });
-            }
-            @Override
-            public String onGetSummary(ConnectedActivity activity, String value) {
-                return null;
-            }
-        }));
-        preferences.add(new PreferenceBasic("pref_schedule_lessons_clear_cache", null, R.string.clear_schedule_lessons_cache, false, new PreferenceBasic.Callback() {
-            @Override
-            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                Static.T.runThread(() -> {
-                    Log.v(TAG, "pref_schedule_lessons_clear_cache clicked");
-                    if (activity != null) {
-                        boolean success = Storage.file.general.cache.clear(activity, "schedule_lessons");
-                        Static.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
-                    }
-                });
-            }
-            @Override
-            public String onGetSummary(ConnectedActivity activity, String value) {
-                return null;
-            }
-        }));
-        preferences.add(new PreferenceBasic("pref_schedule_exams_clear_cache", null, R.string.clear_schedule_exams_cache, false, new PreferenceBasic.Callback() {
-            @Override
-            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                Static.T.runThread(() -> {
-                    Log.v(TAG, "pref_schedule_exams_clear_cache clicked");
-                    if (activity != null) {
-                        boolean success = Storage.file.general.cache.clear(activity, "schedule_exams");
-                        Static.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
-                    }
-                });
-            }
-            @Override
-            public String onGetSummary(ConnectedActivity activity, String value) {
-                return null;
-            }
-        }));
-        preferences.add(new PreferenceBasic("pref_schedule_attestations_clear_cache", null, R.string.clear_schedule_attestations_cache, false, new PreferenceBasic.Callback() {
-            @Override
-            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                Static.T.runThread(() -> {
-                    Log.v(TAG, "pref_schedule_attestations_clear_cache clicked");
-                    if (activity != null) {
-                        boolean success = Storage.file.general.cache.clear(activity, "schedule_attestations");
-                        Static.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
-                    }
-                });
-            }
-            @Override
-            public String onGetSummary(ConnectedActivity activity, String value) {
-                return null;
-            }
-        }));
-        preferences.add(new PreferenceBasic("pref_university_clear_cache", null, R.string.clear_university_cache, false, new PreferenceBasic.Callback() {
-            @Override
-            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                Static.T.runThread(() -> {
-                    Log.v(TAG, "pref_university_clear_cache clicked");
-                    if (activity != null) {
-                        boolean success = Storage.file.general.cache.clear(activity, "university");
-                        Static.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
-                    }
+                    new CacheClearUtil(activity).show();
                 });
             }
             @Override

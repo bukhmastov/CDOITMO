@@ -35,7 +35,6 @@ import java.util.Calendar;
 public class ERegisterFragment extends ConnectedFragment implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "ERegisterFragment";
-    private JSONObject data = null;
     private String group;
     private int term;
     private boolean spinner_group_blocker = true, spinner_period_blocker = true;
@@ -494,18 +493,13 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
     }
 
     private void setData(JSONObject data) {
-        this.data = data;
         storeData(this, data.toString());
     }
     private JSONObject getData() {
-        if (data != null) {
-            return data;
-        }
         try {
             String stored = restoreData(this);
             if (stored != null && !stored.isEmpty()) {
-                data = Static.string2json(stored);
-                return data;
+                return Static.string2json(stored);
             }
         } catch (Exception e) {
             Static.error(e);

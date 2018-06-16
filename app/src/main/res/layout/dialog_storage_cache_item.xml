@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <RelativeLayout
+        android:id="@+id/cache_item"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/pref_horizontal_padding"
+        android:paddingEnd="@dimen/pref_horizontal_padding"
+        android:paddingTop="@dimen/pref_vertical_padding"
+        android:paddingBottom="@dimen/pref_vertical_padding"
+        android:focusable="true"
+        android:clickable="true"
+        android:background="?android:attr/selectableItemBackground">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toStartOf="@+id/cache_item_size_container"
+            android:layout_centerVertical="true">
+
+            <TextView
+                android:id="@+id/cache_item_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/lorem_ipsum"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="@dimen/font_size_15"
+                android:visibility="visible" />
+
+            <TextView
+                android:id="@+id/cache_item_summary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/lorem_ipsum"
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="@dimen/font_size_14"
+                android:visibility="visible" />
+
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/cache_item_size_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toStartOf="@+id/cache_item_type_container"
+            android:paddingTop="@dimen/item_vertical_padding_half"
+            android:paddingBottom="@dimen/item_vertical_padding_half"
+            android:paddingStart="@dimen/item_horizontal_padding_half"
+            android:paddingEnd="@dimen/item_horizontal_padding_half">
+
+            <TextView
+                android:id="@+id/cache_item_size"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/lorem_number"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="@dimen/font_size_16"
+                android:textStyle="bold"
+                android:textAlignment="viewEnd"/>
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/cache_item_type_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_alignParentEnd="true"
+            android:paddingTop="@dimen/item_padding_half"
+            android:paddingBottom="@dimen/item_padding_half"
+            android:paddingStart="@dimen/item_padding_half"
+            android:paddingEnd="0dp">
+
+            <ImageView
+                android:id="@+id/cache_item_type"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_group"/>
+
+        </FrameLayout>
+
+    </RelativeLayout>
+
+    <include layout="@layout/separator"/>
+
+</LinearLayout>
