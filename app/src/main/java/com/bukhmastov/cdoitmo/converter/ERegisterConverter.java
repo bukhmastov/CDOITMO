@@ -1,7 +1,7 @@
 package com.bukhmastov.cdoitmo.converter;
 
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Time;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -142,7 +142,7 @@ public class ERegisterConverter extends Converter {
         }
         return new JSONObject()
                 .put("groups", groups)
-                .put("timestamp", Static.getCalendar().getTimeInMillis());
+                .put("timestamp", Time.getCalendar().getTimeInMillis());
     }
 
     @Override

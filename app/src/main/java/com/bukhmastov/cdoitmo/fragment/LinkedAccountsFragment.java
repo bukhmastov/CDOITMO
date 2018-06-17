@@ -9,9 +9,10 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
+import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 public class LinkedAccountsFragment extends ConnectedFragment {
 
@@ -54,20 +55,20 @@ public class LinkedAccountsFragment extends ConnectedFragment {
                     try {
                         activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://de.ifmo.ru")));
                     } catch (Exception e) {
-                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 });
             }
-            Static.T.runThread(() -> {
+            Thread.run(() -> {
                 final String cdo_user_info = Storage.file.perm.get(activity, "user#deifmo#login", "").trim() + " (" + Storage.file.perm.get(activity, "user#name", "").trim() + ")";
-                Static.T.runOnUiThread(() -> {
+                Thread.runOnUI(() -> {
                     if (account_cdo_info != null) {
                         ((TextView) account_cdo_info).setText(cdo_user_info);
                     }
                 });
             });
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
 

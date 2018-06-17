@@ -16,16 +16,21 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
 import com.bukhmastov.cdoitmo.fragment.AboutFragment;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Account;
+import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.CtxWrapper;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.Theme;
+import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.view.Message;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -48,20 +53,20 @@ public class LoginActivity extends ConnectedActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Static.applyActivityTheme(this);
+        Theme.applyActivityTheme(this);
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
         FirebaseAnalyticsProvider.logCurrentScreen(this);
         setContentView(R.layout.activity_login);
         // Show introducing activity
-        if (Static.showIntroducingActivity) {
-            Static.showIntroducingActivity = false;
+        if (App.showIntroducingActivity) {
+            App.showIntroducingActivity = false;
             activity.startActivity(new Intent(activity, IntroducingActivity.class));
         }
         // setup toolbar
         Toolbar toolbar = findViewById(R.id.toolbar_login);
         if (toolbar != null) {
-            Static.applyToolbarTheme(activity, toolbar);
+            Theme.applyToolbarTheme(activity, toolbar);
             setSupportActionBar(toolbar);
         }
         ActionBar actionBar = getSupportActionBar();
@@ -117,10 +122,10 @@ public class LoginActivity extends ConnectedActivity {
     }
 
     private void route(final int signal) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.i(TAG, "route | signal=", signal);
-            Static.OFFLINE_MODE = false;
-            Static.UNAUTHORIZED_MODE = false;
+            App.OFFLINE_MODE = false;
+            App.UNAUTHORIZED_MODE = false;
             switch (signal) {
                 case SIGNAL_LOGIN: {
                     show();
@@ -132,7 +137,7 @@ public class LoginActivity extends ConnectedActivity {
                     break;
                 }
                 case SIGNAL_GO_OFFLINE: {
-                    Static.OFFLINE_MODE = true;
+                    App.OFFLINE_MODE = true;
                     show();
                     break;
                 }
@@ -167,7 +172,7 @@ public class LoginActivity extends ConnectedActivity {
                     if (!current_login.isEmpty()) {
                         Storage.file.perm.delete(activity, "user#deifmo#cookies");
                         Account.logoutTemporarily(activity, () -> {
-                            Static.snackBar(activity, activity.getString(R.string.required_login_password));
+                            BottomBar.snackBar(activity, activity.getString(R.string.required_login_password));
                             show();
                         });
                     }
@@ -180,7 +185,7 @@ public class LoginActivity extends ConnectedActivity {
                         Storage.file.perm.delete(activity, "user#deifmo#cookies");
                         Storage.file.perm.delete(activity, "user#deifmo#password");
                         Account.logoutTemporarily(activity, () -> {
-                            Static.snackBar(activity, activity.getString(R.string.invalid_login_password));
+                            BottomBar.snackBar(activity, activity.getString(R.string.invalid_login_password));
                             show();
                         });
                     }
@@ -196,7 +201,7 @@ public class LoginActivity extends ConnectedActivity {
         });
     }
     private void show() {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             try {
                 Log.v(TAG, "show");
                 FirebaseAnalyticsProvider.logEvent(activity, FirebaseAnalyticsProvider.Event.LOGIN_REQUIRED);
@@ -314,7 +319,7 @@ public class LoginActivity extends ConnectedActivity {
                                             break;
                                         }
                                         case R.id.change_password: {
-                                            Static.T.runOnUiThread(() -> {
+                                            Thread.runOnUI(() -> {
                                                 try {
                                                     final View layout = inflate(R.layout.preference_dialog_input);
                                                     final EditText editText = layout.findViewById(R.id.edittext);
@@ -328,21 +333,21 @@ public class LoginActivity extends ConnectedActivity {
                                                                 try {
                                                                     final String value = editText.getText().toString().trim();
                                                                     if (!value.isEmpty()) {
-                                                                        Static.T.runThread(() -> {
+                                                                        Thread.run(() -> {
                                                                             Storage.file.general.perm.put(activity, "users#current_login", acLogin);
                                                                             Storage.file.perm.put(activity, "user#deifmo#password", value);
                                                                             Storage.file.general.perm.delete(activity, "users#current_login");
-                                                                            Static.snackBar(activity, activity.getString(R.string.password_changed));
+                                                                            BottomBar.snackBar(activity, activity.getString(R.string.password_changed));
                                                                         });
                                                                     }
                                                                 } catch (Exception e) {
-                                                                    Static.error(e);
+                                                                    Log.exception(e);
                                                                 }
                                                             })
                                                             .setNegativeButton(R.string.cancel, null)
                                                             .create().show();
                                                 } catch (Exception e) {
-                                                    Static.error(e);
+                                                    Log.exception(e);
                                                 }
                                             });
                                             break;
@@ -354,7 +359,7 @@ public class LoginActivity extends ConnectedActivity {
                             });
                             login_tiles_container.addView(user_tile);
                         } catch (JSONException e) {
-                            Static.error(e);
+                            Log.exception(e);
                         }
                     }
                     // show UI: anonymous login
@@ -364,7 +369,7 @@ public class LoginActivity extends ConnectedActivity {
                         Log.v(TAG, "anonymous_user_tile login clicked");
                         String group = "";
                         if (input_group != null) {
-                            group = Static.prettifyGroupNumber(input_group.getText().toString());
+                            group = com.bukhmastov.cdoitmo.util.TextUtils.prettifyGroupNumber(input_group.getText().toString());
                         }
                         String[] groups = group.split(",\\s|\\s|,");
                         Storage.file.general.perm.put(activity, "users#current_login", Account.USER_UNAUTHORIZED);
@@ -423,18 +428,18 @@ public class LoginActivity extends ConnectedActivity {
                     input_group.setText(Storage.file.perm.get(activity, "user#groups", ""));
                     Storage.file.general.perm.delete(activity, "users#current_login");
                     // draw UI
-                    Static.T.runOnUiThread(() -> {
+                    Thread.runOnUI(() -> {
                         try {
                             draw(login_tiles_container);
                         } catch (Exception e) {
-                            Static.error(e);
-                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                            Log.exception(e);
+                            BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                         }
                     });
                 }
             } catch (Exception e) {
-                Static.error(e);
-                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                Log.exception(e);
+                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
@@ -465,7 +470,7 @@ public class LoginActivity extends ConnectedActivity {
             @Override
             public void onFailure(String text) {
                 Log.v(TAG, "login | onFailure | text=", text);
-                Static.snackBar(activity, text);
+                BottomBar.snackBar(activity, text);
                 show();
                 Static.lockOrientation(activity, false);
             }
@@ -508,14 +513,14 @@ public class LoginActivity extends ConnectedActivity {
             @Override
             public void onSuccess() {
                 Log.v(TAG, "logout | onSuccess");
-                Static.snackBar(activity, activity.getString(R.string.logged_out));
+                BottomBar.snackBar(activity, activity.getString(R.string.logged_out));
                 show();
                 Static.lockOrientation(activity, false);
             }
             @Override
             public void onFailure(String text) {
                 Log.v(TAG, "logout | onFailure | text=", text);
-                Static.snackBar(activity, text);
+                BottomBar.snackBar(activity, text);
                 show();
                 Static.lockOrientation(activity, false);
             }
@@ -539,30 +544,30 @@ public class LoginActivity extends ConnectedActivity {
         });
     }
     private void displayRemoteMessage() {
-        Static.T.runThread(() -> FirebaseConfigProvider.getJson(FirebaseConfigProvider.MESSAGE_LOGIN, value -> Static.T.runThread(() -> {
+        Thread.run(() -> FirebaseConfigProvider.getJson(FirebaseConfigProvider.MESSAGE_LOGIN, value -> Thread.run(() -> {
             try {
                 if (value == null) return;
                 final int type = value.getInt("type");
                 final String message = value.getString("message");
                 if (message == null || message.trim().isEmpty()) return;
-                final String hash = Static.crypt(message);
+                final String hash = com.bukhmastov.cdoitmo.util.TextUtils.crypt(message);
                 if (hash != null && hash.equals(Storage.file.general.perm.get(activity, "firebase#remote_message#login", ""))) {
                     return;
                 }
-                Static.T.runOnUiThread(() -> {
+                Thread.runOnUI(() -> {
                     final ViewGroup message_login = activity.findViewById(R.id.message_login);
-                    final View layout = Static.getRemoteMessage(activity, type, message, (context, view) -> {
+                    final View layout = Message.getRemoteMessage(activity, type, message, (context, view) -> {
                         if (hash != null) {
-                            Static.T.runThread(() -> {
+                            Thread.run(() -> {
                                 if (Storage.file.general.perm.put(activity, "firebase#remote_message#login", hash)) {
-                                    Static.T.runOnUiThread(() -> {
+                                    Thread.runOnUI(() -> {
                                         if (message_login != null && view != null) {
                                             message_login.removeView(view);
                                         }
                                     });
-                                    Static.snackBar(activity, activity.getString(R.string.notification_dismissed), activity.getString(R.string.undo), v -> Static.T.runThread(() -> {
+                                    BottomBar.snackBar(activity, activity.getString(R.string.notification_dismissed), activity.getString(R.string.undo), v -> Thread.run(() -> {
                                         if (Storage.file.general.perm.delete(activity, "firebase#remote_message#login")) {
-                                            Static.T.runOnUiThread(() -> {
+                                            Thread.runOnUI(() -> {
                                                 if (message_login != null && view != null) {
                                                     message_login.addView(view);
                                                 }

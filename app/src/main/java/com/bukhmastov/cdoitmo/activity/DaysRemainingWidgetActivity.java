@@ -11,14 +11,17 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.DaysRemainingWidget;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleExams;
+import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.CtxWrapper;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Theme;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import org.json.JSONObject;
 
@@ -41,7 +44,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        switch (Static.getAppTheme(activity)) {
+        switch (Theme.getAppTheme(activity)) {
             case "light":
             default: setTheme(R.style.AppTheme_Popup); break;
             case "dark": setTheme(R.style.AppTheme_Popup_Dark); break;
@@ -59,7 +62,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
             query = json.getString("query");
             Log.v(TAG, "query=" + query);
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             close();
         }
         View wr_container = findViewById(R.id.wr_container);
@@ -67,7 +70,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
             wr_container.setOnClickListener(v -> {
                 Log.v(TAG, "wr_container clicked");
                 Intent intent = new Intent(getBaseContext(), MainActivity.class);
-                intent.addFlags(Static.intentFlagRestart);
+                intent.addFlags(App.intentFlagRestart);
                 intent.putExtra("action", "schedule_exams");
                 intent.putExtra("action_extra", query);
                 activity.startActivity(intent);
@@ -76,7 +79,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
         }
         View wr_share = findViewById(R.id.wr_share);
         if (wr_share != null) {
-            wr_share.setOnClickListener(v -> Static.T.runOnUiThread(() -> {
+            wr_share.setOnClickListener(v -> Thread.runOnUI(() -> {
                 Log.v(TAG, "wr_share clicked");
                 share();
             }));
@@ -170,7 +173,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
                     break;
             }
         } catch (Exception e){
-            Static.error(e);
+            Log.exception(e);
         }
     }
 
@@ -188,7 +191,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
             schedule = json;
             begin();
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             onFailure(ScheduleExams.FAILED_LOAD);
         }
     }
@@ -232,7 +235,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
     }
 
     private void begin() {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.v(TAG, "begin");
             message(activity.getString(R.string.loaded));
             if (daysRemainingWidget != null) {
@@ -244,7 +247,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
         });
     }
     private void close() {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.v(TAG, "close");
             if (requestHandle != null) {
                 requestHandle.cancel();
@@ -253,7 +256,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
         });
     }
     private void setText(final int layout, final String text) {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             TextView textView = findViewById(layout);
             if (textView != null) {
                 if (text == null || text.isEmpty()) {
@@ -270,7 +273,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
         });
     }
     private void setText(final int container, final int layout, final String text) {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             try {
                 if (text == null) {
                     View view = findViewById(container);
@@ -288,12 +291,12 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
                     }
                 }
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }
     private void message(final String text) {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             draw(R.layout.widget_remaining_message);
             is_message_displaying = true;
             TextView message = findViewById(R.id.message);
@@ -303,9 +306,9 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
         });
     }
     private void share() {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             if (data == null) {
-                Static.snackBar(activity, activity.getString(R.string.share_unable));
+                BottomBar.snackBar(activity, activity.getString(R.string.share_unable));
                 return;
             }
             if (data.size() == 0) {
@@ -314,7 +317,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
             }
             DaysRemainingWidget.Data currentData = data.get(0);
             if (currentData.subject == null || currentData.time == null || (currentData.time.day == null && currentData.time.hour == null && currentData.time.min == null && currentData.time.sec == null)) {
-                Static.snackBar(activity, activity.getString(R.string.share_unable));
+                BottomBar.snackBar(activity, activity.getString(R.string.share_unable));
                 return;
             }
             String time = "";
@@ -399,7 +402,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
     }
 
     private void draw(final int layoutId) {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             try {
                 ViewGroup vg = activity.findViewById(R.id.wr_container);
                 if (vg != null) {
@@ -407,7 +410,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
                     vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
                 }
             } catch (Exception e){
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }

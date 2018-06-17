@@ -18,8 +18,10 @@ import android.widget.ProgressBar;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
+import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.Color;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Theme;
 
 public class WebViewActivity extends AppCompatActivity {
 
@@ -33,7 +35,7 @@ public class WebViewActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Static.applyActivityTheme(this);
+        Theme.applyActivityTheme(this);
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
         try {
@@ -51,7 +53,7 @@ public class WebViewActivity extends AppCompatActivity {
         setContentView(R.layout.activity_webview);
         Toolbar toolbar = findViewById(R.id.toolbar_webview);
         if (toolbar != null) {
-            Static.applyToolbarTheme(activity, toolbar);
+            Theme.applyToolbarTheme(activity, toolbar);
             setSupportActionBar(toolbar);
         }
         ActionBar actionBar = getSupportActionBar();
@@ -66,8 +68,8 @@ public class WebViewActivity extends AppCompatActivity {
         swipe = findViewById(R.id.swipe);
         // работаем со свайпом
         if (swipe != null) {
-            swipe.setColorSchemeColors(Static.colorAccent);
-            swipe.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
+            swipe.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
+            swipe.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));
             swipe.setOnRefreshListener(() -> {
                 if (swipe != null && swipe.isRefreshing()) {
                     swipe.setRefreshing(false);
@@ -86,7 +88,7 @@ public class WebViewActivity extends AppCompatActivity {
                     try {
                         activity.startActivity(new Intent(Intent.ACTION_VIEW, request.getUrl()));
                     } catch (Exception e) {
-                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                     return true;
                 }

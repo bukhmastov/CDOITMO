@@ -16,9 +16,13 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
-import com.bukhmastov.cdoitmo.util.CircularTransformation;
+import com.bukhmastov.cdoitmo.util.Color;
+import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.Theme;
+import com.bukhmastov.cdoitmo.view.CircularTransformation;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Thread;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
@@ -36,7 +40,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        switch (Static.getAppTheme(activity)) {
+        switch (Theme.getAppTheme(activity)) {
             case "light":
             default: setTheme(R.style.AppTheme_TransparentStatusBar); break;
             case "dark": setTheme(R.style.AppTheme_Dark_TransparentStatusBar); break;
@@ -118,7 +122,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
     }
 
     private void load() {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             if (person != null) {
                 display();
                 return;
@@ -126,13 +130,13 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
             loadProvider(new RestResponseHandler() {
                 @Override
                 public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject json, final JSONArray responseArr) {
-                    Static.T.runOnUiThread(() -> {
+                    Thread.runOnUI(() -> {
                         SwipeRefreshLayout mSwipeRefreshLayout = findViewById(R.id.person_swipe);
                         if (mSwipeRefreshLayout != null) {
                             mSwipeRefreshLayout.setRefreshing(false);
                         }
                     });
-                    Static.T.runThread(() -> {
+                    Thread.run(() -> {
                         if (statusCode == 200 && json != null) {
                             try {
                                 String post = json.getString("post");
@@ -154,7 +158,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                 }
                 @Override
                 public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                    Static.T.runOnUiThread(() -> {
+                    Thread.runOnUI(() -> {
                         Log.v(TAG, "load | statusCode = " + statusCode + " | failure " + state);
                         SwipeRefreshLayout mSwipeRefreshLayout = findViewById(R.id.person_swipe);
                         if (mSwipeRefreshLayout != null) {
@@ -193,7 +197,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                 }
                 @Override
                 public void onProgress(final int state) {
-                    Static.T.runOnUiThread(() -> {
+                    Thread.runOnUI(() -> {
                         Log.v(TAG, "load | progress " + state);
                         if (first_load) {
                             draw(R.layout.state_loading_text);
@@ -220,7 +224,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
         IfmoRestClient.get(activity, "person/" + pid, null, handler);
     }
     private void loadFailed() {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             Log.v(TAG, "loadFailed");
             try {
                 draw(R.layout.state_failed_button);
@@ -231,24 +235,24 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                     try_again_reload.setOnClickListener(v -> load());
                 }
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }
     private void loadNotFound() {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             Log.v(TAG, "loadNotFound");
             try {
                 draw(R.layout.state_nothing_to_display_person);
                 findViewById(R.id.web).setOnClickListener(view -> activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ifmo.ru/ru/viewperson/" + pid + "/"))));
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }
 
     private void display() {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             try {
                 first_load = false;
                 draw(R.layout.layout_university_person_card);
@@ -268,7 +272,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                 final String image = person.getString("image");
                 ((TextView) findViewById(R.id.name)).setText(name);
                 if (!degree.isEmpty()) {
-                    ((TextView) findViewById(R.id.degree)).setText(Static.capitalizeFirstLetter(degree));
+                    ((TextView) findViewById(R.id.degree)).setText(TextUtils.capitalizeFirstLetter(degree));
                 } else {
                     Static.removeView(findViewById(R.id.degree));
                 }
@@ -318,10 +322,10 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                     final String post = person.getString("post").trim();
                     final String bio = person.getString("text").trim();
                     if (!rank.isEmpty()) {
-                        info_about_container.addView(getAboutContainer(activity.getString(R.string.person_rank), Static.capitalizeFirstLetter(rank)));
+                        info_about_container.addView(getAboutContainer(activity.getString(R.string.person_rank), TextUtils.capitalizeFirstLetter(rank)));
                     }
                     if (!post.isEmpty()) {
-                        info_about_container.addView(getAboutContainer(activity.getString(R.string.person_post), Static.capitalizeFirstLetter(post)));
+                        info_about_container.addView(getAboutContainer(activity.getString(R.string.person_post), TextUtils.capitalizeFirstLetter(post)));
                     }
                     if (!bio.isEmpty()) {
                         info_about_container.addView(getAboutContainer(activity.getString(R.string.person_bio), bio));
@@ -330,12 +334,12 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                 // работаем со свайпом
                 SwipeRefreshLayout mSwipeRefreshLayout = findViewById(R.id.person_swipe);
                 if (mSwipeRefreshLayout != null) {
-                    mSwipeRefreshLayout.setColorSchemeColors(Static.colorAccent);
-                    mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
+                    mSwipeRefreshLayout.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
+                    mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));
                     mSwipeRefreshLayout.setOnRefreshListener(this);
                 }
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }

@@ -12,10 +12,14 @@ import com.bukhmastov.cdoitmo.object.preference.PreferenceBasic;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceEditText;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceList;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
+import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
-import com.bukhmastov.cdoitmo.util.ThemeUtil;
+import com.bukhmastov.cdoitmo.dialog.ThemeDialog;
+import com.bukhmastov.cdoitmo.util.Theme;
+import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.Time;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -32,14 +36,14 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
         preferences.add(new PreferenceBasic("pref_theme", "light", R.string.theme, true, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                Static.T.runThread(() -> {
+                Thread.run(() -> {
                     Log.v(TAG, "pref_theme clicked");
                     final String theme = Storage.pref.get(activity, "pref_theme", "light");
-                    new ThemeUtil(activity, theme, (theme1, desc) -> Static.T.runThread(() -> {
+                    new ThemeDialog(activity, theme, (theme1, desc) -> Thread.run(() -> {
                         Storage.pref.put(activity, "pref_theme", theme1);
                         callback.onSetSummary(activity, desc);
-                        Static.snackBar(activity, activity.getString(R.string.restart_required), activity.getString(R.string.restart), view -> {
-                            Static.updateAppTheme(activity);
+                        BottomBar.snackBar(activity, activity.getString(R.string.restart_required), activity.getString(R.string.restart), view -> {
+                            Theme.updateAppTheme(activity);
                             Static.reLaunch(activity);
                         });
                     })).show();
@@ -47,7 +51,7 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
             }
             @Override
             public String onGetSummary(final ConnectedActivity activity, final String value) {
-                return ThemeUtil.getThemeDesc(activity, value);
+                return ThemeDialog.getThemeDesc(activity, value);
             }
         }));
         preferences.add(new PreferenceSwitch("pref_auto_logout", false, R.string.pref_auto_logout, R.string.pref_auto_logout_summary, null, null));
@@ -64,7 +68,7 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
                     if (v.length == 2) {
                         final int week = Integer.parseInt(v[0]);
                         final long ts = Long.parseLong(v[1]);
-                        final Calendar today = Static.getCalendar();
+                        final Calendar today = Time.getCalendar();
                         final Calendar past = (Calendar) today.clone();
                         past.setTimeInMillis(ts);
                         value = String.valueOf(week + (today.get(Calendar.WEEK_OF_YEAR) - past.get(Calendar.WEEK_OF_YEAR)));
@@ -83,7 +87,7 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
                         return value;
                     }
                     final int week = Integer.parseInt(value);
-                    final long ts = Static.getCalendar().getTimeInMillis();
+                    final long ts = Time.getCalendar().getTimeInMillis();
                     if (week > 0) {
                         value = String.valueOf(week) + "#" + String.valueOf(ts);
                     }
@@ -96,7 +100,7 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
         preferences.add(new PreferenceBasic("pref_open_system_settings", null, R.string.pref_open_system_settings, false, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                Static.T.runOnUiThread(() -> {
+                Thread.runOnUI(() -> {
                     try {
                         Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
                         intent.setData(android.net.Uri.parse("package:" + activity.getPackageName()));
@@ -109,7 +113,7 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
                             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                             activity.startActivity(intent);
                         } catch (Exception ignore) {
-                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                            BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                         }
                     }
                 });
@@ -122,7 +126,7 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
         preferences.add(new PreferenceBasic("pref_reset_application", null, R.string.pref_reset_application_summary, false, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                Static.T.runOnUiThread(() -> {
+                Thread.runOnUI(() -> {
                     Log.v(TAG, "pref_reset_application clicked");
                     new AlertDialog.Builder(activity)
                             .setTitle(R.string.pref_reset_application_summary)

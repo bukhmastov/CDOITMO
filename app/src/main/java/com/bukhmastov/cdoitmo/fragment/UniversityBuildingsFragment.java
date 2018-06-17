@@ -24,15 +24,20 @@ import android.widget.ImageView;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
-import com.bukhmastov.cdoitmo.util.CircularTransformation;
+import com.bukhmastov.cdoitmo.util.Color;
+import com.bukhmastov.cdoitmo.util.Theme;
+import com.bukhmastov.cdoitmo.view.CircularTransformation;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.Time;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -83,7 +88,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
             SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.buildings_map);
             mapFragment.getMapAsync(this);
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             failed();
             load();
         }
@@ -135,12 +140,12 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     }
 
     private void load() {
-        Static.T.runThread(() -> load(Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)
+        Thread.run(() -> load(Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)
                 ? Integer.parseInt(Storage.pref.get(activity, "pref_static_refresh", "168"))
                 : 0));
     }
     private void load(final int refresh_rate) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.v(TAG, "load | refresh_rate=" + refresh_rate);
             if (Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
                 String cache = Storage.file.general.cache.get(activity, "university#buildings").trim();
@@ -149,13 +154,13 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                         JSONObject cacheJson = new JSONObject(cache);
                         building_map = cacheJson.getJSONObject("data");
                         timestamp = cacheJson.getLong("timestamp");
-                        if (timestamp + refresh_rate * 3600000L < Static.getCalendar().getTimeInMillis()) {
+                        if (timestamp + refresh_rate * 3600000L < Time.getCalendar().getTimeInMillis()) {
                             load(true);
                         } else {
                             load(false);
                         }
                     } catch (JSONException e) {
-                        Static.error(e);
+                        Log.exception(e);
                         load(true);
                     }
                 } else {
@@ -167,19 +172,19 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         });
     }
     private void load(final boolean force) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.v(TAG, "load | force=" + (force ? "true" : "false"));
-            if ((!force || !Static.isOnline(activity)) && building_map != null) {
+            if ((!force || !Client.isOnline(activity)) && building_map != null) {
                 display();
                 return;
             }
-            if (!Static.OFFLINE_MODE) {
+            if (!App.OFFLINE_MODE) {
                 loadProvider(new RestResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject json, final JSONArray responseArr) {
-                        Static.T.runThread(() -> {
+                        Thread.run(() -> {
                             if (statusCode == 200) {
-                                long now = Static.getCalendar().getTimeInMillis();
+                                long now = Time.getCalendar().getTimeInMillis();
                                 if (json != null && Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
                                     try {
                                         Storage.file.general.cache.put(activity, "university#buildings", new JSONObject()
@@ -188,7 +193,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                                                 .toString()
                                         );
                                     } catch (JSONException e) {
-                                        Static.error(e);
+                                        Log.exception(e);
                                     }
                                 }
                                 building_map = json;
@@ -201,7 +206,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                     }
                     @Override
                     public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                        Static.T.runThread(() -> {
+                        Thread.run(() -> {
                             Log.v(TAG, "forceLoad | failure " + state);
                             switch (state) {
                                 case IfmoRestClient.FAILED_OFFLINE:
@@ -217,7 +222,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                     }
                     @Override
                     public void onProgress(final int state) {
-                        Static.T.runThread(() -> {
+                        Thread.run(() -> {
                             Log.v(TAG, "forceLoad | progress " + state);
                             loading();
                         });
@@ -247,16 +252,16 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
 
     @Override
     public void onMapReady(final GoogleMap gMap) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             final MapStyleOptions mapStyleOptions;
-            switch (Static.getAppTheme(activity)) {
+            switch (Theme.getAppTheme(activity)) {
                 case "light":
                 default: mapStyleOptions = MapStyleOptions.loadRawResourceStyle(activity, R.raw.google_map_light); break;
                 case "dark": mapStyleOptions = MapStyleOptions.loadRawResourceStyle(activity, R.raw.google_map_dark); break;
                 case "black": mapStyleOptions = MapStyleOptions.loadRawResourceStyle(activity, R.raw.google_map_black); break;
                 case "white": mapStyleOptions = MapStyleOptions.loadRawResourceStyle(activity, R.raw.google_map_white); break;
             }
-            Static.T.runOnUiThread(() -> {
+            Thread.runOnUI(() -> {
                 googleMap = gMap;
                 googleMap.setMapStyle(mapStyleOptions);
                 googleMap.setOnMarkerClickListener(this);
@@ -279,12 +284,12 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
             zoomToMarker(marker);
             return openMarkerInfo(building);
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             return false;
         }
     }
     private void displayMarkers() {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             try {
                 if (building_map == null) return;
                 if (googleMap == null) return;
@@ -325,27 +330,27 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                             if (icon != -1) {
                                 markerOptions.icon(tintMarker(activity, icon));
                             }
-                            Static.T.runOnUiThread(() -> {
+                            Thread.runOnUI(() -> {
                                 try {
                                     Marker marker = googleMap.addMarker(markerOptions);
                                     marker.setTag(building);
                                     markers.add(marker);
                                 } catch (Exception e) {
-                                    Static.error(e);
+                                    Log.exception(e);
                                 }
                             });
                         } catch (Exception e) {
-                            Static.error(e);
+                            Log.exception(e);
                         }
                     }
                 }
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }
     private void removeAllMarkers() {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             for (Marker marker : markers) {
                 marker.remove();
             }
@@ -374,12 +379,12 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
             }
             return true;
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             return false;
         }
     }
     private void closeMarkerInfo() {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             try {
                 View marker_info_container = container.findViewById(R.id.marker_info_container);
                 if (marker_info_container != null) {
@@ -389,12 +394,12 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                     }
                 }
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }
     private void openList() {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             try {
                 closeMarkerInfo();
                 closeList();
@@ -433,18 +438,18 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                             });
                             list_container.addView(item);
                         } catch (Exception e) {
-                            Static.error(e);
+                            Log.exception(e);
                         }
                     }
                     marker_info_container.addView(layout_university_buildings_list);
                 }
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }
     private void closeList() {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             try {
                 View marker_info_container = container.findViewById(R.id.marker_info_container);
                 if (marker_info_container != null) {
@@ -454,12 +459,12 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                     }
                 }
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }
     private void zoomToMarker(final Marker marker) {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             CameraPosition cameraPosition = new CameraPosition.Builder().target(marker.getPosition()).zoom(15).build();
             googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 1000, null);
         });
@@ -469,7 +474,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
             Paint markerPaint = new Paint();
             Bitmap markerBitmap = BitmapFactory.decodeResource(context.getResources(), icon);
             Bitmap resultBitmap = Bitmap.createBitmap(markerBitmap, 0, 0, markerBitmap.getWidth() - 1, markerBitmap.getHeight() - 1);
-            markerPaint.setColorFilter(new PorterDuffColorFilter(Static.resolveColor(activity, R.attr.colorImageMultiply), PorterDuff.Mode.MULTIPLY));
+            markerPaint.setColorFilter(new PorterDuffColorFilter(Color.resolve(activity, R.attr.colorImageMultiply), PorterDuff.Mode.MULTIPLY));
             Canvas canvas = new Canvas(resultBitmap);
             canvas.drawBitmap(resultBitmap, 0, 0, markerPaint);
             return BitmapDescriptorFactory.fromBitmap(resultBitmap);
@@ -487,13 +492,13 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                 text = android.text.Html.fromHtml(text).toString();
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
         return text.trim();
     }
 
     private void loading() {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             try {
                 ViewGroup vg = container.findViewById(R.id.status);
                 if (vg != null) {
@@ -501,12 +506,12 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                     vg.addView(inflate(R.layout.layout_university_buildings_status_loading));
                 }
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }
     private void loadFailed() {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             try {
                 View view = inflate(R.layout.layout_university_buildings_status_image);
                 ImageView imageView = view.findViewById(R.id.image);
@@ -518,12 +523,12 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                     vg.addView(view);
                 }
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }
     private void loadOffline() {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             try {
                 View view = inflate(R.layout.layout_university_buildings_status_image);
                 ImageView imageView = view.findViewById(R.id.image);
@@ -534,24 +539,24 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                     vg.addView(view);
                 }
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }
     private void loaded() {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             try {
                 ViewGroup vg = container.findViewById(R.id.status);
                 if (vg != null) {
                     vg.removeAllViews();
                 }
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }
     private void failed() {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             try {
                 View view = inflate(R.layout.layout_university_buildings_status_image);
                 ImageView imageView = view.findViewById(R.id.image);
@@ -562,7 +567,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                     vg.addView(view);
                 }
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }

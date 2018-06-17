@@ -1,4 +1,4 @@
-package com.bukhmastov.cdoitmo.util;
+package com.bukhmastov.cdoitmo.dialog;
 
 import android.content.Context;
 import android.support.annotation.LayoutRes;
@@ -12,13 +12,18 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
+import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class CacheClearUtil {
+public class CacheClearDialog {
 
-    private static final String TAG = "CacheClearUtil";
+    private static final String TAG = "CacheClearDialog";
     private static final String TAG_PREFIX = "cache_clear_";
     private final ConnectedActivity activity;
 
@@ -26,7 +31,8 @@ public class CacheClearUtil {
         String title;
         String desc;
         String path;
-        @Storage.TYPE String type;
+        @Storage.TYPE
+        String type;
         long bytes;
         Entry(String title, String path, @Storage.TYPE String type) {
             this(title, null, path, type);
@@ -41,7 +47,7 @@ public class CacheClearUtil {
     }
     private List<Entry> items = new ArrayList<>();
 
-    public CacheClearUtil(ConnectedActivity activity) {
+    public CacheClearDialog(ConnectedActivity activity) {
         this.activity = activity;
         items.clear();
         items.add(new Entry(activity.getString(R.string.cache_mem), activity.getString(R.string.cache_mem_desc), "_mem_", Storage.USER));
@@ -58,12 +64,12 @@ public class CacheClearUtil {
 
     public void show() {
         Log.v(TAG, "show");
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             final ViewGroup layout = (ViewGroup) inflate(R.layout.dialog_storage_cache);
             if (layout == null) {
                 return;
             }
-            Static.T.runThread(() -> {
+            Thread.run(() -> {
                 try {
                     final ViewGroup cache_list = layout.findViewById(R.id.cache_list);
                     for (Entry item : items) {
@@ -90,11 +96,11 @@ public class CacheClearUtil {
                         }
                         cache_item_size_container.setVisibility(View.INVISIBLE);
                         cache_item_size.setText("...");
-                        cache_item.setOnClickListener((v) -> Static.T.runThread(Static.T.BACKGROUND, () -> {
+                        cache_item.setOnClickListener((v) -> Thread.run(Thread.BACKGROUND, () -> {
                             if ("_mem_".equals(item.path)) {
                                 Storage.cache.reset();
                                 ConnectedActivity.clearStore();
-                                Static.snackBar(activity, activity.getString(R.string.cache_cleared));
+                                BottomBar.snackBar(activity, activity.getString(R.string.cache_cleared));
                                 return;
                             } else {
                                 if (item.bytes <= 0L) {
@@ -110,13 +116,13 @@ public class CacheClearUtil {
                                     }
                                 }
                             }
-                            Static.snackBar(activity, activity.getString(R.string.cache_cleared));
+                            BottomBar.snackBar(activity, activity.getString(R.string.cache_cleared));
                             calculateCacheSize(cache_list);
                         }));
                         cache_list.addView(layout_item);
                     }
                     // show dialog
-                    Static.T.runOnUiThread(() -> new AlertDialog.Builder(activity)
+                    Thread.runOnUI(() -> new AlertDialog.Builder(activity)
                             .setTitle(R.string.cache_clear)
                             .setView(layout)
                             .setNegativeButton(R.string.close, null)
@@ -124,15 +130,16 @@ public class CacheClearUtil {
                     // calculate size
                     calculateCacheSize(cache_list);
                 } catch (Exception e) {
-                    Static.error(e);
+                    Log.exception(e);
                 }
             });
         });
     }
+
     private void calculateCacheSize(final ViewGroup cache_list) {
-        Static.T.runThread(Static.T.BACKGROUND, () -> {
+        Thread.run(Thread.BACKGROUND, () -> {
             for (final Entry item : items) {
-                Static.T.runOnUiThread(() -> {
+                Thread.runOnUI(() -> {
                     final ViewGroup layout_item = cache_list.findViewWithTag(TAG_PREFIX + item.path);
                     if (layout_item == null) {
                         return;
@@ -156,7 +163,7 @@ public class CacheClearUtil {
                         default: size = -1L; break;
                     }
                 }
-                Static.T.runOnUiThread(() -> {
+                Thread.runOnUI(() -> {
                     final ViewGroup layout_item = cache_list.findViewWithTag(TAG_PREFIX + item.path);
                     if (layout_item == null) {
                         return;
@@ -170,7 +177,7 @@ public class CacheClearUtil {
                         cache_item_size.setText(R.string.empty);
                         cache_item_size_container.setVisibility(View.VISIBLE);
                     } else {
-                        cache_item_size.setText(Static.bytes2readable(activity, size));
+                        cache_item_size.setText(TextUtils.bytes2readable(activity, size));
                         cache_item_size_container.setVisibility(View.VISIBLE);
                     }
                     cache_item_size_container.invalidate();

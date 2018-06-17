@@ -1,7 +1,8 @@
-package com.bukhmastov.cdoitmo.util;
+package com.bukhmastov.cdoitmo.dialog;
 
 import android.app.TimePickerDialog;
 import android.content.Context;
+import android.support.annotation.LayoutRes;
 import android.support.v7.app.AlertDialog;
 import android.view.InflateException;
 import android.view.LayoutInflater;
@@ -13,14 +14,20 @@ import android.widget.Switch;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.Time;
 
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 
-public class ThemeUtil {
+public class ThemeDialog {
 
-    private static final String TAG = "ThemeUtil";
+    private static final String TAG = "ThemeDialog";
     public interface Callback {
         void onDone(String theme, String desc);
     }
@@ -54,7 +61,7 @@ public class ThemeUtil {
     private int t2_hour = 23;
     private int t2_minutes = 0;
 
-    public ThemeUtil(Context context, String value, Callback cb) {
+    public ThemeDialog(Context context, String value, Callback cb) {
         this.pref_theme_titles = Arrays.asList(context.getResources().getStringArray(R.array.pref_theme_titles));
         this.pref_theme_values = Arrays.asList(context.getResources().getStringArray(R.array.pref_theme_values));
         this.context = context;
@@ -102,9 +109,9 @@ public class ThemeUtil {
 
     public void show() {
         Log.v(TAG, "show");
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             final ViewGroup theme_layout = (ViewGroup) inflate(R.layout.dialog_theme_picker);
-            Static.T.runThread(() -> {
+            Thread.run(() -> {
                 try {
                     final ViewGroup theme_container_static = theme_layout.findViewById(R.id.theme_container_static);
                     final ViewGroup theme_container_auto = theme_layout.findViewById(R.id.theme_container_auto);
@@ -139,7 +146,7 @@ public class ThemeUtil {
                         theme_container_auto.setVisibility(View.GONE);
                     }
                     // setup static theme selector
-                    Static.T.runOnUiThread(() -> {
+                    Thread.runOnUI(() -> {
                         for (int i = 0; i < pref_theme_titles.size(); i++) {
                             final RadioButton radioButton = (RadioButton) inflate(R.layout.dialog_theme_picker_static_item);
                             radioButton.setText(pref_theme_titles.get(i));
@@ -155,22 +162,22 @@ public class ThemeUtil {
                         }
                     });
                     // setup automatic theme selector
-                    t1_time.setText(t1_hour + ":" + Static.ldgZero(t1_minutes));
+                    t1_time.setText(t1_hour + ":" + TextUtils.ldgZero(t1_minutes));
                     t1_time.setOnClickListener(view -> {
                         Log.v(TAG, "t1_time clicked");
                         showTimePicker(t1_hour, t1_minutes, (hours, minutes) -> {
                             Log.v(TAG, "t1_time showTimePicker done | " + hours + " | " + minutes);
                             t1_hour = hours;
                             t1_minutes = minutes;
-                            t1_time.setText(t1_hour + ":" + Static.ldgZero(t1_minutes));
+                            t1_time.setText(t1_hour + ":" + TextUtils.ldgZero(t1_minutes));
                         });
                     });
-                    t2_time.setText(t2_hour + ":" + Static.ldgZero(t2_minutes));
+                    t2_time.setText(t2_hour + ":" + TextUtils.ldgZero(t2_minutes));
                     t2_time.setOnClickListener(view -> showTimePicker(t2_hour, t2_minutes, (hours, minutes) -> {
                         Log.v(TAG, "t2_time showTimePicker done | " + hours + " | " + minutes);
                         t2_hour = hours;
                         t2_minutes = minutes;
-                        t2_time.setText(t2_hour + ":" + Static.ldgZero(t2_minutes));
+                        t2_time.setText(t2_hour + ":" + TextUtils.ldgZero(t2_minutes));
                     }));
                     t1_spinner.setText(pref_theme_titles.get(pref_theme_values.indexOf(t1_value)));
                     t1_spinner.setOnClickListener(view -> showThemePicker(t1_value, theme -> {
@@ -185,14 +192,14 @@ public class ThemeUtil {
                         t2_spinner.setText(pref_theme_titles.get(pref_theme_values.indexOf(t2_value)));
                     }));
                     // show picker
-                    Static.T.runOnUiThread(() -> new AlertDialog.Builder(context)
+                    Thread.runOnUI(() -> new AlertDialog.Builder(context)
                             .setTitle(R.string.theme)
                             .setView(theme_layout)
-                            .setPositiveButton(R.string.accept, (dialog, which) -> Static.T.runThread(() -> {
+                            .setPositiveButton(R.string.accept, (dialog, which) -> Thread.run(() -> {
                                 Log.v(TAG, "show picker accepted");
                                 String theme;
                                 if (auto_enabled) {
-                                    theme = t1_hour + ":" + Static.ldgZero(t1_minutes) + "#" + t1_value + "#" + t2_hour + ":" + Static.ldgZero(t2_minutes) + "#" + t2_value;
+                                    theme = t1_hour + ":" + TextUtils.ldgZero(t1_minutes) + "#" + t1_value + "#" + t2_hour + ":" + TextUtils.ldgZero(t2_minutes) + "#" + t2_value;
                                 } else {
                                     theme = static_value;
                                 }
@@ -200,13 +207,14 @@ public class ThemeUtil {
                             }))
                             .create().show());
                 } catch (Exception e) {
-                    Static.error(e);
+                    Log.exception(e);
                 }
             });
         });
     }
+
     private void showThemePicker(final String value, final ThemePickerCallback callback) {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             Log.v(TAG, "showThemePicker | " + value);
             new AlertDialog.Builder(context)
                     .setTitle(R.string.theme)
@@ -218,8 +226,9 @@ public class ThemeUtil {
                     .create().show();
         });
     }
+
     private void showTimePicker(final int hours, final int minutes, final TimePickerCallback callback) {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             Log.v(TAG, "showTimePicker | " + hours + " | " + minutes);
             new TimePickerDialog(context, (timePicker, hourOfDay, minute) -> callback.onDone(hourOfDay, minute), hours, minutes, true).show();
         });
@@ -246,7 +255,7 @@ public class ThemeUtil {
                 final int t2_hour = Integer.parseInt(t2_values[0]);
                 final int t2_minutes = Integer.parseInt(t2_values[1]);
                 if (t1_hour < 0 || t1_hour > 23 || t1_minutes < 0 || t1_minutes > 59 || t2_hour < 0 || t2_hour > 23 || t2_minutes < 0 || t2_minutes > 59) throw new Exception("Invalid value");
-                final Calendar calendar = Static.getCalendar();
+                final Calendar calendar = Time.getCalendar();
                 final int now_hours = calendar.get(Calendar.HOUR_OF_DAY);
                 final int now_minutes = calendar.get(Calendar.MINUTE);
                 if (t1_hour == t2_hour) {
@@ -283,6 +292,7 @@ public class ThemeUtil {
             return theme;
         }
     }
+
     public static String getThemeDesc(final Context context, final String value) {
         Log.v(TAG, "getThemeDesc | " + value);
         final List<String> pref_theme_titles = Arrays.asList(context.getResources().getStringArray(R.array.pref_theme_titles));
@@ -315,7 +325,16 @@ public class ThemeUtil {
         }
     }
 
-    private View inflate(final int layout) throws InflateException {
-        return ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layout, null);
+    private View inflate(@LayoutRes int layout) throws InflateException {
+        if (context == null) {
+            Log.e(TAG, "Failed to inflate layout, context is null");
+            return null;
+        }
+        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        if (inflater == null) {
+            Log.e(TAG, "Failed to inflate layout, inflater is null");
+            return null;
+        }
+        return inflater.inflate(layout, null);
     }
 }

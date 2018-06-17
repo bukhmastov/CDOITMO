@@ -9,9 +9,10 @@ import com.bukhmastov.cdoitmo.object.preference.Preference;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceBasic;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceList;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
+import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import org.json.JSONObject;
 
@@ -27,7 +28,7 @@ public class SettingsScheduleAttestationsFragment extends SettingsTemplatePrefer
         preferences.add(new PreferenceBasic("pref_schedule_attestations_default", "{\"query\":\"auto\",\"title\":\"\"}", R.string.default_schedule, true, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                new SettingsScheduleAttestations(activity, preference, value -> Static.T.runThread(() -> {
+                new SettingsScheduleAttestations(activity, preference, value -> Thread.run(() -> {
                     Storage.pref.put(activity, "pref_schedule_attestations_default", value);
                     callback.onSetSummary(activity, value);
                 })).show();
@@ -42,7 +43,7 @@ public class SettingsScheduleAttestationsFragment extends SettingsTemplatePrefer
                         default: return json.getString("title");
                     }
                 } catch (Exception e) {
-                    Static.error(e);
+                    Log.exception(e);
                     return null;
                 }
             }
@@ -52,11 +53,11 @@ public class SettingsScheduleAttestationsFragment extends SettingsTemplatePrefer
         preferences.add(new PreferenceBasic("pref_schedule_attestations_clear_cache", null, R.string.clear_schedule_cache, false, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                Static.T.runThread(() -> {
+                Thread.run(() -> {
                     Log.v(TAG, "pref_schedule_attestations_clear_cache clicked");
                     if (activity != null) {
                         boolean success = Storage.file.general.cache.clear(activity, "schedule_attestations");
-                        Static.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
+                        BottomBar.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
                     }
                 });
             }

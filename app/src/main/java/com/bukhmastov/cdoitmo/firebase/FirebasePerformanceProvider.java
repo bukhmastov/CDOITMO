@@ -5,6 +5,8 @@ import android.support.annotation.StringDef;
 
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.Thread;
 import com.google.firebase.perf.FirebasePerformance;
 
 import java.lang.annotation.Retention;
@@ -83,9 +85,9 @@ public class FirebasePerformanceProvider {
     }
 
     public static void setEnabled(Context context) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.i(TAG, "Firebase Performance fetching status");
-            FirebaseConfigProvider.getString(FirebaseConfigProvider.PERFORMANCE_ENABLED, value -> Static.T.runThread(() -> setEnabled(context, "1".equals(value))));
+            FirebaseConfigProvider.getString(FirebaseConfigProvider.PERFORMANCE_ENABLED, value -> Thread.run(() -> setEnabled(context, "1".equals(value))));
         });
     }
     public static void setEnabled(Context context, boolean enabled) {
@@ -98,7 +100,7 @@ public class FirebasePerformanceProvider {
             getFirebasePerformance().setPerformanceCollectionEnabled(FirebasePerformanceProvider.enabled);
             Log.i(TAG, "Firebase Performance ", (FirebasePerformanceProvider.enabled ? "enabled" : "disabled"));
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
 
@@ -112,7 +114,7 @@ public class FirebasePerformanceProvider {
             name = name != null ? name : Trace.UNKNOWN;
             String key;
             do {
-                key = name + "_" + Static.getRandomString(8);
+                key = name + "_" + TextUtils.getRandomString(8);
             } while (traceMap.containsKey(key));
             com.google.firebase.perf.metrics.Trace trace = getFirebasePerformance().newTrace(name);
             traceMap.put(key, trace);
@@ -120,7 +122,7 @@ public class FirebasePerformanceProvider {
             trace.start();
             return key;
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             return null;
         }
     }
@@ -138,7 +140,7 @@ public class FirebasePerformanceProvider {
                 return false;
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             return false;
         }
     }
@@ -175,7 +177,7 @@ public class FirebasePerformanceProvider {
             }
             putAttribute(key, attr, sb.toString());
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     public static void putAttribute(String key, String attr, String value) {
@@ -196,7 +198,7 @@ public class FirebasePerformanceProvider {
                 trace.putAttribute(attr, value);
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
 

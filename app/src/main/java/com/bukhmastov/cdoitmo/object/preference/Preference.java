@@ -10,9 +10,12 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
-import com.bukhmastov.cdoitmo.util.ProtocolTracker;
+import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.object.ProtocolTracker;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.util.ArrayList;
 
@@ -66,11 +69,11 @@ public abstract class Preference {
             case "pref_use_notifications":
             case "pref_notify_frequency":
             case "pref_notify_network_unmetered":
-                Static.T.runThread(Static.T.BACKGROUND, () -> new ProtocolTracker(activity).restart());
+                Thread.run(Thread.BACKGROUND, () -> new ProtocolTracker(activity).restart());
                 break;
             case "pref_protocol_changes_track":
                 if (Storage.pref.get(activity, "pref_protocol_changes_track", true)) {
-                    Static.protocolChangesTrackSetup(activity, 0);
+                    ProtocolTracker.setup(activity, 0);
                 } else {
                     Storage.file.cache.clear(activity, "protocol#log");
                 }
@@ -92,10 +95,10 @@ public abstract class Preference {
                 }
                 break;
             case "pref_group_force_override":
-                Storage.pref.put(activity, "pref_group_force_override", Static.prettifyGroupNumber(Storage.pref.get(activity, "pref_group_force_override", "")));
+                Storage.pref.put(activity, "pref_group_force_override", TextUtils.prettifyGroupNumber(Storage.pref.get(activity, "pref_group_force_override", "")));
                 break;
             case "pref_lang":
-                Static.snackBar(activity, activity.getString(R.string.restart_required), activity.getString(R.string.restart), v -> Static.reLaunch(activity));
+                BottomBar.snackBar(activity, activity.getString(R.string.restart_required), activity.getString(R.string.restart), v -> Static.reLaunch(activity));
                 break;
         }
     }

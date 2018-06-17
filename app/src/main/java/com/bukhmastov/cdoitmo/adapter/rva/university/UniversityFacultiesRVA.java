@@ -17,7 +17,9 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.UniversityPersonCardActivity;
-import com.bukhmastov.cdoitmo.util.CircularTransformation;
+import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.view.CircularTransformation;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.squareup.picasso.Picasso;
 
@@ -82,7 +84,7 @@ public class UniversityFacultiesRVA extends UniversityRVA {
             removeFirstSeparator(viewHolder.container);
             String header = item.data.getString("header");
             if (header != null) {
-                ((TextView) viewHolder.container.findViewById(R.id.structure_header)).setText(Static.capitalizeFirstLetter(header.trim()));
+                ((TextView) viewHolder.container.findViewById(R.id.structure_header)).setText(com.bukhmastov.cdoitmo.util.TextUtils.capitalizeFirstLetter(header.trim()));
             } else {
                 Static.removeView(viewHolder.container.findViewById(R.id.structure_header));
             }
@@ -102,7 +104,7 @@ public class UniversityFacultiesRVA extends UniversityRVA {
                         try {
                             context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + address)));
                         } catch (ActivityNotFoundException e) {
-                            Static.toast(context, context.getString(R.string.failed_to_start_geo_activity));
+                            BottomBar.toast(context, context.getString(R.string.failed_to_start_geo_activity));
                         }
                     }));
                     is_first_container = false;
@@ -172,7 +174,7 @@ public class UniversityFacultiesRVA extends UniversityRVA {
                         try {
                             context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + deanery_address)));
                         } catch (ActivityNotFoundException e) {
-                            Static.toast(context, context.getString(R.string.failed_to_start_geo_activity));
+                            BottomBar.toast(context, context.getString(R.string.failed_to_start_geo_activity));
                         }
                     }));
                     is_first_container = false;
@@ -244,7 +246,7 @@ public class UniversityFacultiesRVA extends UniversityRVA {
                 }
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void bindDivisions(RecyclerView.ViewHolder holder, Item item) {
@@ -253,7 +255,7 @@ public class UniversityFacultiesRVA extends UniversityRVA {
             removeFirstSeparator(viewHolder.container);
             String header = getString(item.data, "header");
             if (header != null) {
-                ((TextView) viewHolder.container.findViewById(R.id.structure_header)).setText(Static.capitalizeFirstLetter(header.trim()));
+                ((TextView) viewHolder.container.findViewById(R.id.structure_header)).setText(com.bukhmastov.cdoitmo.util.TextUtils.capitalizeFirstLetter(header.trim()));
             } else {
                 Static.removeView(viewHolder.container.findViewById(R.id.structure_header));
             }
@@ -280,7 +282,7 @@ public class UniversityFacultiesRVA extends UniversityRVA {
                 }
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
 

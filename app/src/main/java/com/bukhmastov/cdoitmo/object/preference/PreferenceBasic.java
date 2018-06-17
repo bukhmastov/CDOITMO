@@ -6,8 +6,8 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
-import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 public class PreferenceBasic extends Preference {
     public interface OnPreferenceClickedCallback {
@@ -48,7 +48,7 @@ public class PreferenceBasic extends Preference {
         }
         preference_basic.setOnClickListener(view -> {
             if (preference.isDisabled()) return;
-            preference.callback.onPreferenceClicked(activity, preference, (a, v) -> Static.T.runOnUiThread(() -> {
+            preference.callback.onPreferenceClicked(activity, preference, (a, v) -> Thread.runOnUI(() -> {
                 if (preference.changeSummary && v != null) {
                     final String summary = preference.callback.onGetSummary(a, v);
                     if (summary != null) {

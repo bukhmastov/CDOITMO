@@ -113,7 +113,7 @@ public abstract class ConnectedFragment extends Fragment {
             }
             draw(view);
         } catch (Exception e){
-            Static.error(e);
+            Log.exception(e);
         }
     }
 
@@ -129,7 +129,7 @@ public abstract class ConnectedFragment extends Fragment {
                 vg.addView(view, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             }
         } catch (Exception e){
-            Static.error(e);
+            Log.exception(e);
         }
     }
 

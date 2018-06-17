@@ -3,6 +3,7 @@ package com.bukhmastov.cdoitmo.object.schedule;
 import android.content.Context;
 import android.support.annotation.StringDef;
 
+import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.converter.schedule.ScheduleTeachersConverter;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
@@ -10,8 +11,10 @@ import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.Time;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -86,22 +89,22 @@ public abstract class Schedule {
     // -->- Search schedule ->--
     // Search functions to be invoked.
     public void search(final Context context, final String query) {
-        Static.T.runThread(() -> search(context, query, getRefreshRate(context)));
+        Thread.run(() -> search(context, query, getRefreshRate(context)));
     }
     public void search(final Context context, final String query, final int refreshRate) {
-        Static.T.runThread(() -> search(context, query, refreshRate, Storage.pref.get(context, "pref_schedule_" + getType() + "_use_cache", false)));
+        Thread.run(() -> search(context, query, refreshRate, Storage.pref.get(context, "pref_schedule_" + getType() + "_use_cache", false)));
     }
     public void search(final Context context, final String query, final boolean forceToCache) {
-        Static.T.runThread(() -> search(context, query, getRefreshRate(context), forceToCache));
+        Thread.run(() -> search(context, query, getRefreshRate(context), forceToCache));
     }
     public void search(final Context context, final String query, final boolean forceToCache, final boolean withUserChanges) {
-        Static.T.runThread(() -> search(context, query, getRefreshRate(context), forceToCache, withUserChanges));
+        Thread.run(() -> search(context, query, getRefreshRate(context), forceToCache, withUserChanges));
     }
     public void search(final Context context, final String query, final int refreshRate, final boolean forceToCache) {
-        Static.T.runThread(() -> search(context, query, refreshRate, forceToCache, true));
+        Thread.run(() -> search(context, query, refreshRate, forceToCache, true));
     }
     public void search(final Context context, final String query, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             String q = query.trim();
             Log.v(TAG, "search | query=", q, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges);
             if (q.isEmpty()) {
@@ -199,7 +202,7 @@ public abstract class Schedule {
             invokePending(teacherName, withUserChanges, true, handler -> handler.onFailure(FAILED_INVALID_QUERY));
             return;
         }
-        Static.T.runThread(() -> searchByQuery(context, "teachers", teacherName, refreshRate, withUserChanges, new SearchByQuery() {
+        Thread.run(() -> searchByQuery(context, "teachers", teacherName, refreshRate, withUserChanges, new SearchByQuery() {
             @Override
             public boolean isWebAvailable() {
                 return true;
@@ -211,7 +214,7 @@ public abstract class Schedule {
             @Override
             public void onWebRequestSuccess(final String query, final JSONObject data, final JSONObject template) {
                 final SearchByQuery self = this;
-                Static.T.runThread(new ScheduleTeachersConverter(data, template, json -> self.onFound(query, json, false, false)));
+                Thread.run(new ScheduleTeachersConverter(data, template, json -> self.onFound(query, json, false, false)));
             }
             @Override
             public void onWebRequestFailed(final int statusCode, final Client.Headers headers, final int state) {
@@ -236,15 +239,15 @@ public abstract class Schedule {
     }
     // Private functions to proceed search and get schedule from cache
     protected void searchByQuery(final Context context, final String type, final String query, final int refreshRate, final boolean withUserChanges, final SearchByQuery search) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.v(TAG, "searchByQuery | type=", type, " | query=", query, " | refreshRate=", refreshRate);
             final String cache = getCache(context, query);
-            if (!Static.OFFLINE_MODE) {
+            if (!App.OFFLINE_MODE) {
                 if (search.isWebAvailable()) {
                     final RestResponseHandler restResponseHandler = new RestResponseHandler() {
                         @Override
                         public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject data, final JSONArray responseArr) {
-                            Static.T.runThread(() -> {
+                            Thread.run(() -> {
                                 Log.v(TAG, "searchByQuery | type=", type, " | query=", query, " || onSuccess | statusCode=", statusCode, " | data=", data);
                                 if (statusCode == 200 && data != null) {
                                     final JSONObject template = getTemplate(query, type);
@@ -431,12 +434,12 @@ public abstract class Schedule {
             // Заголовок расписания: "K3320", "336", "Зинчик Александр Адольфович"
             template.put("title", "");
             // Текущее время
-            template.put("timestamp", Static.getCalendar().getTimeInMillis());
+            template.put("timestamp", Time.getCalendar().getTimeInMillis());
             // Расписание собственной персоной
             template.put("schedule", new JSONArray());
             return template;
         } catch (JSONException e) {
-            Static.error(e);
+            Log.exception(e);
             return null;
         }
     }
@@ -458,7 +461,7 @@ public abstract class Schedule {
             return true;
         } else if (refreshRate > 0) {
             try {
-                return new JSONObject(cache).getLong("timestamp") + refreshRate * 3600000L < Static.getCalendar().getTimeInMillis();
+                return new JSONObject(cache).getLong("timestamp") + refreshRate * 3600000L < Time.getCalendar().getTimeInMillis();
             } catch (JSONException e) {
                 return true;
             }
@@ -509,7 +512,7 @@ public abstract class Schedule {
 
     // Returns the hash of the lesson
     public static String getLessonHash(JSONObject lesson) throws JSONException {
-        return Static.crypt(getLessonSignature(lesson));
+        return TextUtils.crypt(getLessonSignature(lesson));
     }
 
     // Returns main title for schedules
@@ -530,9 +533,9 @@ public abstract class Schedule {
             return week + " " + context.getString(R.string.school_week);
         } else {
             String pattern = "dd.MM.yyyy";
-            String date = new SimpleDateFormat(pattern, Locale.ROOT).format(new Date(Static.getCalendar().getTimeInMillis()));
+            String date = new SimpleDateFormat(pattern, Locale.ROOT).format(new Date(Time.getCalendar().getTimeInMillis()));
             try {
-                return Static.cuteDateWithoutTime(context, pattern, date);
+                return TextUtils.cuteDateWithoutTime(context, pattern, date);
             } catch (ParseException e) {
                 return date;
             }

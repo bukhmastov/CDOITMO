@@ -12,9 +12,10 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
+import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -53,34 +54,34 @@ public class LogFragment extends ConnectedFragment {
             // init firebase logs enabler
             final ViewGroup firebase_logs = activity.findViewById(R.id.firebase_logs);
             final Switch firebase_logs_switch = activity.findViewById(R.id.firebase_logs_switch);
-            firebase_logs.setOnClickListener(v -> Static.T.runOnUiThread(() -> {
+            firebase_logs.setOnClickListener(v -> Thread.runOnUI(() -> {
                 try {
                     firebase_logs_switch.setChecked(!Storage.pref.get(activity, "pref_allow_send_reports", true));
                 } catch (Exception e) {
-                    Static.error(e);
+                    Log.exception(e);
                 }
             }));
             firebase_logs_switch.setChecked(Storage.pref.get(activity, "pref_allow_send_reports", true));
-            firebase_logs_switch.setOnCheckedChangeListener((compoundButton, allowed) -> Static.T.runThread(() -> {
+            firebase_logs_switch.setOnCheckedChangeListener((compoundButton, allowed) -> Thread.run(() -> {
                 try {
                     Storage.pref.put(activity, "pref_allow_send_reports", allowed);
                     firebaseToggled(allowed);
                 } catch (Exception e) {
-                    Static.error(e);
+                    Log.exception(e);
                 }
             }));
             // init generic logs enabler
             final ViewGroup generic_logs = activity.findViewById(R.id.generic_logs);
             final Switch generic_logs_switch = activity.findViewById(R.id.generic_logs_switch);
-            generic_logs.setOnClickListener(v -> Static.T.runOnUiThread(() -> {
+            generic_logs.setOnClickListener(v -> Thread.runOnUI(() -> {
                 try {
                     generic_logs_switch.setChecked(!Storage.pref.get(activity, "pref_allow_collect_logs", false));
                 } catch (Exception e) {
-                    Static.error(e);
+                    Log.exception(e);
                 }
             }));
             generic_logs_switch.setChecked(Storage.pref.get(activity, "pref_allow_collect_logs", false));
-            generic_logs_switch.setOnCheckedChangeListener((compoundButton, allowed) -> Static.T.runThread(() -> {
+            generic_logs_switch.setOnCheckedChangeListener((compoundButton, allowed) -> Thread.run(() -> {
                 try {
                     Storage.pref.put(activity, "pref_allow_collect_logs", allowed);
                     genericToggled(allowed);
@@ -89,12 +90,12 @@ public class LogFragment extends ConnectedFragment {
                         Log.i(TAG, "Logging has been enabled");
                     }
                 } catch (Exception e) {
-                    Static.error(e);
+                    Log.exception(e);
                 }
             }));
             genericToggled(generic_logs_switch.isChecked());
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
 
@@ -109,11 +110,11 @@ public class LogFragment extends ConnectedFragment {
     }
 
     private void firebaseToggled(final boolean allowed) {
-        Static.T.runThread(() -> FirebaseCrashlyticsProvider.setEnabled(activity, allowed));
+        Thread.run(() -> FirebaseCrashlyticsProvider.setEnabled(activity, allowed));
     }
 
     private void genericToggled(final boolean allowed) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.setEnabled(allowed);
             final ViewGroup generic = activity.findViewById(R.id.generic);
             final ViewGroup generic_send_logs = activity.findViewById(R.id.generic_send_logs);
@@ -121,7 +122,7 @@ public class LogFragment extends ConnectedFragment {
             final TextView log_container = activity.findViewById(R.id.log_container);
             if (allowed) {
                 if (generic_send_logs != null) {
-                    generic_send_logs.setOnClickListener(v -> Static.T.runThread(() -> {
+                    generic_send_logs.setOnClickListener(v -> Thread.run(() -> {
                         try {
                             File logFile = getLogFile(Log.getLog(false));
                             if (logFile != null) {
@@ -135,13 +136,13 @@ public class LogFragment extends ConnectedFragment {
                                 activity.startActivity(Intent.createChooser(intent, activity.getString(R.string.send_mail) + "..."));
                             }
                         } catch (Exception e) {
-                            Static.error(e);
-                            Static.toast(activity, activity.getString(R.string.something_went_wrong));
+                            Log.exception(e);
+                            BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
                         }
                     }));
                 }
                 if (generic_download_logs != null) {
-                    generic_download_logs.setOnClickListener(v -> Static.T.runThread(() -> {
+                    generic_download_logs.setOnClickListener(v -> Thread.run(() -> {
                         try {
                             File logFile = getLogFile(Log.getLog(false));
                             if (logFile != null) {
@@ -153,12 +154,12 @@ public class LogFragment extends ConnectedFragment {
                                 activity.startActivity(Intent.createChooser(intent, activity.getString(R.string.share) + "..."));
                             }
                         } catch (Exception e) {
-                            Static.error(e);
-                            Static.toast(activity, activity.getString(R.string.something_went_wrong));
+                            Log.exception(e);
+                            BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
                         }
                     }));
                 }
-                Static.T.runOnUiThread(() -> {
+                Thread.runOnUI(() -> {
                     if (generic != null) {
                         generic.setAlpha(1F);
                     }
@@ -169,7 +170,7 @@ public class LogFragment extends ConnectedFragment {
             } else {
                 if (generic_send_logs != null) generic_send_logs.setOnClickListener(null);
                 if (generic_download_logs != null) generic_download_logs.setOnClickListener(null);
-                Static.T.runOnUiThread(() -> {
+                Thread.runOnUI(() -> {
                     if (generic != null) {
                         generic.setAlpha(0.3F);
                     }
@@ -194,8 +195,8 @@ public class LogFragment extends ConnectedFragment {
             fileWriter.close();
             return temp;
         } catch (Exception e) {
-            Static.error(e);
-            Static.toast(activity, activity.getString(R.string.something_went_wrong));
+            Log.exception(e);
+            BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
             return null;
         }
     }

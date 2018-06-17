@@ -2,7 +2,7 @@ package com.bukhmastov.cdoitmo.converter.schedule.exams;
 
 import com.bukhmastov.cdoitmo.converter.Converter;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Time;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -44,14 +44,14 @@ public abstract class ScheduleExamsConverter extends Converter {
                 final String[] timeStartA = examA.getString("time").split(":");
                 final String[] dateB = examB.getString("date").split(".");
                 final String[] timeStartB = examB.getString("time").split(":");
-                final Calendar calendarA = Static.getCalendar();
+                final Calendar calendarA = Time.getCalendar();
                 calendarA.set(Calendar.DAY_OF_MONTH, Integer.parseInt(dateA[0]));
                 calendarA.set(Calendar.MONTH, Integer.parseInt(dateA[1]));
                 calendarA.set(Calendar.YEAR, Integer.parseInt(dateA[2]));
                 calendarA.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeStartA[0]));
                 calendarA.set(Calendar.MINUTE, Integer.parseInt(timeStartA[1]));
                 calendarA.set(Calendar.SECOND, 0);
-                final Calendar calendarB = Static.getCalendar();
+                final Calendar calendarB = Time.getCalendar();
                 calendarB.set(Calendar.DAY_OF_MONTH, Integer.parseInt(dateB[0]));
                 calendarB.set(Calendar.MONTH, Integer.parseInt(dateB[1]));
                 calendarB.set(Calendar.YEAR, Integer.parseInt(dateB[2]));

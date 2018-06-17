@@ -2,7 +2,7 @@ package com.bukhmastov.cdoitmo.converter;
 
 import com.bukhmastov.cdoitmo.exception.SilentException;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,7 +32,7 @@ public abstract class Converter implements Runnable {
         } catch (Throwable e) {
             FirebasePerformanceProvider.putAttribute(trace, "state", "failed");
             FirebasePerformanceProvider.putAttribute(trace, "exception", e.getMessage());
-            Static.error(e);
+            Log.exception(e);
             delegate.finish(null);
         } finally {
             FirebasePerformanceProvider.stopTrace(trace);

@@ -1,4 +1,4 @@
-package com.bukhmastov.cdoitmo.util;
+package com.bukhmastov.cdoitmo.view;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapShader;
@@ -8,6 +8,7 @@ import android.graphics.Paint;
 import com.squareup.picasso.Transformation;
 
 public class CircularTransformation implements Transformation {
+
     @Override
     public Bitmap transform(Bitmap source) {
         try {
@@ -32,6 +33,7 @@ public class CircularTransformation implements Transformation {
             return null;
         }
     }
+
     @Override
     public String key() {
         return "circular";

@@ -3,7 +3,8 @@ package com.bukhmastov.cdoitmo.object;
 import android.content.Context;
 
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.Time;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -71,8 +72,8 @@ public class TimeRemainingWidget {
                     if (ts % 3600000L <= 1000 || first_init) {
                         Log.v(TAG, "update data");
                         first_init = false;
-                        week = Static.getWeek(context) % 2;
-                        weekday = Static.getWeekDay();
+                        week = Time.getWeek(context) % 2;
+                        weekday = Time.getWeekDay();
                         lessons = null;
                         JSONArray schedule = full_schedule.getJSONArray("schedule");
                         for (int i = 0; i < schedule.length(); i++) {
@@ -96,11 +97,11 @@ public class TimeRemainingWidget {
                         Matcher timeStart = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(lesson.getString("timeStart"));
                         Matcher timeEnd = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(lesson.getString("timeEnd"));
                         if (timeStart.find() && timeEnd.find()) {
-                            Calendar calendarTS = Static.getCalendar();
+                            Calendar calendarTS = Time.getCalendar();
                             calendarTS.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeStart.group(1)));
                             calendarTS.set(Calendar.MINUTE, Integer.parseInt(timeStart.group(2)));
                             calendarTS.set(Calendar.SECOND, 0);
-                            Calendar calendarTE = Static.getCalendar();
+                            Calendar calendarTE = Time.getCalendar();
                             calendarTE.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeEnd.group(1)));
                             calendarTE.set(Calendar.MINUTE, Integer.parseInt(timeEnd.group(2)));
                             calendarTE.set(Calendar.SECOND, 0);
@@ -133,7 +134,7 @@ public class TimeRemainingWidget {
                         break;
                     }
                 } catch (Exception e) {
-                    Static.error(e);
+                    Log.exception(e);
                     this.cancel();
                 }
             }
@@ -152,12 +153,12 @@ public class TimeRemainingWidget {
             int seconds = (time - hours * 3600 - minutes * 60) % 60;
             String response;
             if (minutes > 0 || hours > 0) {
-                response = Static.ldgZero(seconds);
+                response = TextUtils.ldgZero(seconds);
             } else {
                 response = String.valueOf(seconds);
             }
             if (hours > 0) {
-                response = Static.ldgZero(minutes) + ":" + response;
+                response = TextUtils.ldgZero(minutes) + ":" + response;
             } else {
                 if (minutes > 0) {
                     response = String.valueOf(minutes) + ":" + response;

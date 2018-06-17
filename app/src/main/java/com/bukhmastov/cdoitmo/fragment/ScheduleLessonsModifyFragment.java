@@ -22,8 +22,11 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
+import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.Time;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -76,7 +79,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
             }
             display();
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             close();
         }
     }
@@ -98,16 +101,16 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
     }
 
     private void display() {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             try {
-                final int week = Static.getWeek(activity);
+                final int week = Time.getWeek(activity);
                 final String query = getStringExtra(extras, "query", true);
                 final String type_lesson = getStringExtra(extras, "type", true);
                 final String title = getStringExtra(extras, "title", true);
                 final int weekday = getIntExtra(extras, "weekday", true);
-                final JSONObject lessonOriginal = Static.string2json(getStringExtra(extras, "lesson", true));
+                final JSONObject lessonOriginal = TextUtils.string2json(getStringExtra(extras, "lesson", true));
                 final LessonUnit lesson = convertJson2LessonUnit(lessonOriginal);
-                Static.T.runOnUiThread(() -> {
+                Thread.runOnUI(() -> {
                     try {
                         if (lesson == null) {
                             throw new NullPointerException("lesson cannot be null");
@@ -154,16 +157,16 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                 String st = s.toString().trim();
                                 Matcher time = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(st);
                                 if (time.find()) {
-                                    Calendar st_calendar = Static.getCalendar();
+                                    Calendar st_calendar = Time.getCalendar();
                                     st_calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(time.group(1)));
                                     st_calendar.set(Calendar.MINUTE, Integer.parseInt(time.group(2)));
                                     st_calendar.set(Calendar.SECOND, 0);
-                                    st = st_calendar.get(Calendar.HOUR_OF_DAY) + ":" + Static.ldgZero(st_calendar.get(Calendar.MINUTE));
+                                    st = st_calendar.get(Calendar.HOUR_OF_DAY) + ":" + TextUtils.ldgZero(st_calendar.get(Calendar.MINUTE));
                                     if (lesson_time_end.getText().toString().isEmpty()) {
-                                        Calendar nt_calendar = Static.getCalendar();
+                                        Calendar nt_calendar = Time.getCalendar();
                                         nt_calendar.setTime(new Date(st_calendar.getTimeInMillis() + 5400000));
                                         block_time_end = true;
-                                        String insert = nt_calendar.get(Calendar.HOUR_OF_DAY) + ":" + Static.ldgZero(nt_calendar.get(Calendar.MINUTE));
+                                        String insert = nt_calendar.get(Calendar.HOUR_OF_DAY) + ":" + TextUtils.ldgZero(nt_calendar.get(Calendar.MINUTE));
                                         lesson.timeEnd = insert;
                                         int selection = lesson_time_end.getSelectionStart();
                                         lesson_time_end.setText(insert);
@@ -176,14 +179,14 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                         String nt = lesson_time_end.getText().toString();
                                         Matcher next_time = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(nt);
                                         if (next_time.find()) {
-                                            Calendar nt_calendar = Static.getCalendar();
+                                            Calendar nt_calendar = Time.getCalendar();
                                             nt_calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(next_time.group(1)));
                                             nt_calendar.set(Calendar.MINUTE, Integer.parseInt(next_time.group(2)));
                                             nt_calendar.set(Calendar.SECOND, 0);
                                             if (nt_calendar.getTimeInMillis() <= st_calendar.getTimeInMillis()) {
                                                 nt_calendar.setTime(new Date(st_calendar.getTimeInMillis() + 5400000));
                                                 block_time_end = true;
-                                                String insert = nt_calendar.get(Calendar.HOUR_OF_DAY) + ":" + Static.ldgZero(nt_calendar.get(Calendar.MINUTE));
+                                                String insert = nt_calendar.get(Calendar.HOUR_OF_DAY) + ":" + TextUtils.ldgZero(nt_calendar.get(Calendar.MINUTE));
                                                 lesson.timeEnd = insert;
                                                 int selection = lesson_time_end.getSelectionStart();
                                                 lesson_time_end.setText(insert);
@@ -223,16 +226,16 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                 String et = s.toString().trim();
                                 Matcher time = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(et);
                                 if (time.find()) {
-                                    Calendar et_calendar = Static.getCalendar();
+                                    Calendar et_calendar = Time.getCalendar();
                                     et_calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(time.group(1)));
                                     et_calendar.set(Calendar.MINUTE, Integer.parseInt(time.group(2)));
                                     et_calendar.set(Calendar.SECOND, 0);
-                                    et = et_calendar.get(Calendar.HOUR_OF_DAY) + ":" + Static.ldgZero(et_calendar.get(Calendar.MINUTE));
+                                    et = et_calendar.get(Calendar.HOUR_OF_DAY) + ":" + TextUtils.ldgZero(et_calendar.get(Calendar.MINUTE));
                                     if (lesson_time_start.getText().toString().isEmpty()) {
-                                        Calendar st_calendar = Static.getCalendar();
+                                        Calendar st_calendar = Time.getCalendar();
                                         st_calendar.setTime(new Date(et_calendar.getTimeInMillis() - 5400000));
                                         block_time_start = true;
-                                        String insert = st_calendar.get(Calendar.HOUR_OF_DAY) + ":" + Static.ldgZero(st_calendar.get(Calendar.MINUTE));
+                                        String insert = st_calendar.get(Calendar.HOUR_OF_DAY) + ":" + TextUtils.ldgZero(st_calendar.get(Calendar.MINUTE));
                                         lesson.timeStart = insert;
                                         int selection = lesson_time_start.getSelectionStart();
                                         lesson_time_start.setText(insert);
@@ -245,14 +248,14 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                         String st = lesson_time_start.getText().toString();
                                         Matcher previous_time = Pattern.compile("^(\\d{1,2}):(\\d{2})$").matcher(st);
                                         if (previous_time.find()) {
-                                            Calendar st_calendar = Static.getCalendar();
+                                            Calendar st_calendar = Time.getCalendar();
                                             st_calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(previous_time.group(1)));
                                             st_calendar.set(Calendar.MINUTE, Integer.parseInt(previous_time.group(2)));
                                             st_calendar.set(Calendar.SECOND, 0);
                                             if (st_calendar.getTimeInMillis() >= et_calendar.getTimeInMillis()) {
                                                 st_calendar.setTime(new Date(et_calendar.getTimeInMillis() - 5400000));
                                                 block_time_start = true;
-                                                String insert = st_calendar.get(Calendar.HOUR_OF_DAY) + ":" + Static.ldgZero(st_calendar.get(Calendar.MINUTE));
+                                                String insert = st_calendar.get(Calendar.HOUR_OF_DAY) + ":" + TextUtils.ldgZero(st_calendar.get(Calendar.MINUTE));
                                                 lesson.timeStart = insert;
                                                 int selection = lesson_time_start.getSelectionStart();
                                                 lesson_time_start.setText(insert);
@@ -362,7 +365,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                         }
                                         @Override
                                         public void onSuccess(final JSONObject json) {
-                                            Static.T.runOnUiThread(() -> {
+                                            Thread.runOnUI(() -> {
                                                 try {
                                                     teacherPickerAdapter.clear();
                                                     if (json.getString("type").equals("teachers")) {
@@ -397,8 +400,8 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                 lesson_teacher.setText(lesson.teacher);
                                 lesson_teacher.dismissDropDown();
                             } catch (Exception e) {
-                                Static.error(e);
-                                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                Log.exception(e);
+                                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                             }
                         });
                         // ---------
@@ -435,17 +438,17 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                             case CREATE: lesson_create_button.setText(activity.getString(R.string.create)); break;
                             case EDIT: lesson_create_button.setText(activity.getString(R.string.save)); break;
                         }
-                        lesson_create_button.setOnClickListener(v -> Static.T.runThread(() -> {
+                        lesson_create_button.setOnClickListener(v -> Thread.run(() -> {
                             try {
                                 Log.v(TAG, "create_button clicked");
                                 if (lesson.subject == null || lesson.subject.isEmpty()) {
                                     Log.v(TAG, "lessonUnit.title required");
-                                    Static.snackBar(activity, activity.getString(R.string.lesson_title_required));
+                                    BottomBar.snackBar(activity, activity.getString(R.string.lesson_title_required));
                                     return;
                                 }
                                 if (lesson.timeStart == null || lesson.timeStart.isEmpty()) {
                                     Log.v(TAG, "lessonUnit.timeStart required");
-                                    Static.snackBar(activity, activity.getString(R.string.lesson_time_start_required));
+                                    BottomBar.snackBar(activity, activity.getString(R.string.lesson_time_start_required));
                                     return;
                                 }
                                 if (lesson.type != null) {
@@ -461,7 +464,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                             close();
                                         } else {
                                             Log.w(TAG, "failed to create lesson");
-                                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                            BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                         }
                                         break;
                                     }
@@ -471,26 +474,26 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                             close();
                                         } else {
                                             Log.w(TAG, "failed to create lesson");
-                                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                            BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                         }
                                         break;
                                     }
                                 }
                             } catch (Exception e) {
-                                Static.error(e);
-                                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                Log.exception(e);
+                                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                 close();
                             }
                         }));
                     } catch (Exception e) {
-                        Static.error(e);
-                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        Log.exception(e);
+                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                         close();
                     }
                 });
             } catch (Exception e) {
-                Static.error(e);
-                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                Log.exception(e);
+                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 close();
             }
         });
@@ -629,7 +632,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
         private static String lastQuery = "";
 
         public static void search(final Context context, final String query, final ProgressBar progressBar, final response delegate) {
-            Static.T.runThread(() -> {
+            Thread.run(() -> {
                 if (requestHandle != null) {
                     requestHandle.cancel();
                 }
@@ -644,17 +647,17 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                 }
                 if (blocked || !allowed) {
                     blocked = false;
-                    Static.T.runOnUiThread(() -> progressBar.setVisibility(View.GONE));
+                    Thread.runOnUI(() -> progressBar.setVisibility(View.GONE));
                     return;
                 }
                 Log.v(TAG, "search | query=" + query);
                 delegate.onPermitted();
-                Static.T.runOnUiThread(() -> progressBar.setVisibility(View.VISIBLE));
+                Thread.runOnUI(() -> progressBar.setVisibility(View.VISIBLE));
                 new ScheduleLessons(new Schedule.Handler() {
                     @Override
                     public void onSuccess(JSONObject json, boolean fromCache) {
                         Log.v(TAG, "search | onSuccess");
-                        Static.T.runOnUiThread(() -> progressBar.setVisibility(View.GONE));
+                        Thread.runOnUI(() -> progressBar.setVisibility(View.GONE));
                         delegate.onSuccess(json);
                     }
                     @Override
@@ -664,7 +667,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                     @Override
                     public void onFailure(int statusCode, Client.Headers headers, int state) {
                         Log.v(TAG, "search | onFailure | statusCode=" + statusCode + " | state=" + state);
-                        Static.T.runOnUiThread(() -> progressBar.setVisibility(View.GONE));
+                        Thread.runOnUI(() -> progressBar.setVisibility(View.GONE));
                     }
                     @Override
                     public void onProgress(int state) {

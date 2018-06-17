@@ -16,8 +16,8 @@ import com.bukhmastov.cdoitmo.adapter.PagerExamsAdapter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleExams;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 public class ScheduleExamsFragment extends ConnectedFragment implements ViewPager.OnPageChangeListener {
 
@@ -64,7 +64,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements ViewPage
                 }
             }
         } catch (Exception e){
-            Static.error(e);
+            Log.exception(e);
         }
     }
 
@@ -87,7 +87,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements ViewPage
                 }
             }
         } catch (Exception e){
-            Static.error(e);
+            Log.exception(e);
         }
         if (!loaded) {
             loaded = true;
@@ -124,7 +124,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements ViewPage
 
     private void load() {
         final FragmentManager fragmentManager = getChildFragmentManager();
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             if (activity == null) {
                 Log.w(TAG, "load | activity is null");
                 return;
@@ -132,7 +132,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements ViewPage
             if (ScheduleLessonsTabHostFragment.getQuery() == null) {
                 ScheduleLessonsTabHostFragment.setQuery(ScheduleExams.getDefaultScope(activity, ScheduleExams.TYPE));
             }
-            Static.T.runOnUiThread(() -> {
+            Thread.runOnUI(() -> {
                 try {
                     if (activity == null) {
                         Log.w(TAG, "load | activity is null");
@@ -167,12 +167,12 @@ public class ScheduleExamsFragment extends ConnectedFragment implements ViewPage
                     }
                     if (tab != null) tab.select();
                 } catch (Exception e) {
-                    Static.error(e);
+                    Log.exception(e);
                     try {
                         failed(activity);
                     } catch (Exception e1) {
                         loaded = false;
-                        Static.error(e1);
+                        Log.exception(e1);
                     }
                 }
             });
@@ -188,7 +188,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements ViewPage
             state_try_again.findViewById(R.id.try_again_reload).setOnClickListener(view -> load());
             draw(state_try_again);
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
 }

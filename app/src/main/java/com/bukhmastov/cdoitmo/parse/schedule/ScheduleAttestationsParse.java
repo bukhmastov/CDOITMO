@@ -3,7 +3,7 @@ package com.bukhmastov.cdoitmo.parse.schedule;
 import com.bukhmastov.cdoitmo.exception.SilentException;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.parse.Parse;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Log;
 
 import org.htmlcleaner.TagNode;
 import org.json.JSONArray;
@@ -52,7 +52,7 @@ public class ScheduleAttestationsParse extends Parse {
                     );
                 }
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         }
         return new JSONObject().put("schedule", schedule);

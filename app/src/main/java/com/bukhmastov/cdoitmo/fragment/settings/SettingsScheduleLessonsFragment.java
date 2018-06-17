@@ -10,9 +10,10 @@ import com.bukhmastov.cdoitmo.object.preference.Preference;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceBasic;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceList;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
+import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import org.json.JSONObject;
 
@@ -28,7 +29,7 @@ public class SettingsScheduleLessonsFragment extends SettingsTemplatePreferences
         preferences.add(new PreferenceBasic("pref_schedule_lessons_default", "{\"query\":\"auto\",\"title\":\"\"}", R.string.default_schedule, true, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                new SettingsScheduleLessons(activity, preference, value -> Static.T.runThread(() -> {
+                new SettingsScheduleLessons(activity, preference, value -> Thread.run(() -> {
                     Storage.pref.put(activity, "pref_schedule_lessons_default", value);
                     callback.onSetSummary(activity, value);
                 })).show();
@@ -43,7 +44,7 @@ public class SettingsScheduleLessonsFragment extends SettingsTemplatePreferences
                         default: return json.getString("title");
                     }
                 } catch (Exception e) {
-                    Static.error(e);
+                    Log.exception(e);
                     return null;
                 }
             }
@@ -57,11 +58,11 @@ public class SettingsScheduleLessonsFragment extends SettingsTemplatePreferences
         preferences.add(new PreferenceBasic("pref_schedule_lessons_clear_cache", null, R.string.clear_schedule_cache, false, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                Static.T.runThread(() -> {
+                Thread.run(() -> {
                     Log.v(TAG, "pref_schedule_lessons_clear_cache clicked");
                     if (activity != null) {
                         boolean success = Storage.file.general.cache.clear(activity, "schedule_lessons");
-                        Static.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
+                        BottomBar.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
                     }
                 });
             }
@@ -73,17 +74,17 @@ public class SettingsScheduleLessonsFragment extends SettingsTemplatePreferences
         preferences.add(new PreferenceBasic("pref_schedule_lessons_clear_additional", null, R.string.pref_schedule_lessons_clear_additional_title, false, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, Preference preference, PreferenceBasic.OnPreferenceClickedCallback callback) {
-                Static.T.runOnUiThread(() -> {
+                Thread.runOnUI(() -> {
                     Log.v(TAG, "pref_schedule_lessons_clear_additional clicked");
                     if (activity != null) {
                         new AlertDialog.Builder(activity)
                                 .setTitle(R.string.pref_schedule_lessons_clear_additional_title)
                                 .setMessage(R.string.pref_schedule_lessons_clear_additional_warning)
                                 .setIcon(R.drawable.ic_warning)
-                                .setPositiveButton(R.string.proceed, (dialog, which) -> Static.T.runThread(() -> {
+                                .setPositiveButton(R.string.proceed, (dialog, which) -> Thread.run(() -> {
                                     Log.v(TAG, "pref_schedule_lessons_clear_additional dialog accepted");
                                     boolean success = Storage.file.perm.clear(activity, "schedule_lessons");
-                                    Static.snackBar(activity, activity.getString(success ? R.string.changes_cleared : R.string.something_went_wrong));
+                                    BottomBar.snackBar(activity, activity.getString(success ? R.string.changes_cleared : R.string.something_went_wrong));
                                 }))
                                 .setNegativeButton(R.string.cancel, null)
                                 .create().show();

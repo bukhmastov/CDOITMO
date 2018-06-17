@@ -16,7 +16,7 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.view.OnSwipeTouchListener;
 
 import java.util.ArrayList;
@@ -47,7 +47,7 @@ public class IntroducingActivity extends ConnectedActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        switch (Static.getAppTheme(activity)) {
+        switch (Theme.getAppTheme(activity)) {
             case "light":
             default: setTheme(R.style.AppTheme_TransparentStatusBar); break;
             case "dark": setTheme(R.style.AppTheme_Dark_TransparentStatusBar); break;
@@ -85,7 +85,7 @@ public class IntroducingActivity extends ConnectedActivity {
             screens.add(new Screen(R.string.intro_title_4, R.string.intro_desc_4, R.drawable.image_intro_4, "#00bcd4", "#cddc39"));
             screens.add(new Screen(R.string.intro_title_5, R.string.intro_desc_5, R.drawable.image_intro_5, "#1946ba", "#ff5722"));
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             close();
         }
     }
@@ -99,7 +99,7 @@ public class IntroducingActivity extends ConnectedActivity {
                 indicators.addView(indicator);
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             close();
         }
     }
@@ -114,7 +114,7 @@ public class IntroducingActivity extends ConnectedActivity {
                 }
             });
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             close();
         }
     }
@@ -142,7 +142,7 @@ public class IntroducingActivity extends ConnectedActivity {
                 close();
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             close();
         }
     }
@@ -157,7 +157,7 @@ public class IntroducingActivity extends ConnectedActivity {
             colorAnimation.addUpdateListener(animatorUpdateListener);
             colorAnimation.start();
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             close();
         }
     }

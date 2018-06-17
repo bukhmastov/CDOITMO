@@ -20,10 +20,14 @@ import android.widget.ListView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapter.SuggestionsListView;
 import com.bukhmastov.cdoitmo.object.entity.Suggestion;
+import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.CtxWrapper;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.Theme;
+import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.Transliterate;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -64,7 +68,7 @@ public abstract class SearchActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        switch (Static.getAppTheme(this)) {
+        switch (Theme.getAppTheme(this)) {
             case "light":
             default: setTheme(R.style.AppTheme_Search); break;
             case "dark": setTheme(R.style.AppTheme_Search_Dark); break;
@@ -104,7 +108,7 @@ public abstract class SearchActivity extends AppCompatActivity {
     }
 
     private void setMode(final @EXTRA_ACTION_MODE String mode) {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             Log.v(TAG, "setMode | type=", getType(), " | mode=", mode);
             final ViewGroup search_extra_action = findViewById(R.id.search_extra_action);
             final ImageView search_extra_action_image = findViewById(R.id.search_extra_action_image);
@@ -148,7 +152,7 @@ public abstract class SearchActivity extends AppCompatActivity {
         });
     }
     private void setSuggestions(final List<Suggestion> suggestions) {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             Log.v(TAG, "setSuggestions | type=", getType());
             try {
                 ListView search_suggestions = findViewById(R.id.search_suggestions);
@@ -164,7 +168,7 @@ public abstract class SearchActivity extends AppCompatActivity {
                         public void onRemove(Suggestion suggestion) {
                             try {
                                 if (suggestion.removable) {
-                                    JSONArray recent = Static.string2jsonArray(Storage.file.perm.get(context, "schedule_" + getType() + "#recent", ""));
+                                    JSONArray recent = TextUtils.string2jsonArray(Storage.file.perm.get(context, "schedule_" + getType() + "#recent", ""));
                                     for (int i = 0; i < recent.length(); i++) {
                                         String item = recent.getString(i);
                                         if (SearchActivity.equals(item, suggestion.query) || SearchActivity.equals(item, suggestion.title)) {
@@ -183,7 +187,7 @@ public abstract class SearchActivity extends AppCompatActivity {
                     search_suggestions.setOnItemClickListener((parent, view, position, id) -> done(suggestions.get(position).query, suggestions.get(position).title));
                 }
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }
@@ -207,15 +211,15 @@ public abstract class SearchActivity extends AppCompatActivity {
             });
             return suggestions;
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             return null;
         }
     }
     private void done(String query, String title) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.v(TAG, "done | type=", getType(), " | query=", query, " | title=", title);
             try {
-                JSONArray recent = Static.string2jsonArray(Storage.file.perm.get(this, "schedule_" + getType() + "#recent", ""));
+                JSONArray recent = TextUtils.string2jsonArray(Storage.file.perm.get(this, "schedule_" + getType() + "#recent", ""));
                 for (int i = 0; i < recent.length(); i++) {
                     String item = recent.getString(i);
                     if (equals(item, query) || equals(item, title)) {
@@ -244,18 +248,18 @@ public abstract class SearchActivity extends AppCompatActivity {
                 }
                 Storage.file.perm.put(this, "schedule_" + getType() + "#recent", recent.toString());
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
                 Storage.file.perm.delete(this, "schedule_" + getType() + "#recent");
             }
             onDone(query);
-            Static.T.runOnUiThread(this::finish);
+            Thread.runOnUI(this::finish);
         });
     }
     private static boolean contains(String first, String second) {
-        return first != null && second != null && (first.toLowerCase().contains(second.toLowerCase()) || Static.Translit.cyr2lat(first).toLowerCase().contains(Static.Translit.cyr2lat(second).toLowerCase()));
+        return first != null && second != null && (first.toLowerCase().contains(second.toLowerCase()) || Transliterate.cyr2lat(first).toLowerCase().contains(Transliterate.cyr2lat(second).toLowerCase()));
     }
     private static boolean equals(String first, String second) {
-        return first != null && second != null && (first.equalsIgnoreCase(second) || Static.Translit.cyr2lat(first).equalsIgnoreCase(Static.Translit.cyr2lat(second)));
+        return first != null && second != null && (first.equalsIgnoreCase(second) || Transliterate.cyr2lat(first).equalsIgnoreCase(Transliterate.cyr2lat(second)));
     }
 
     private boolean checkVoiceRecognition() {
@@ -276,13 +280,13 @@ public abstract class SearchActivity extends AppCompatActivity {
             startActivityForResult(intent, REQ_CODE_SPEECH_INPUT);
         } catch (ActivityNotFoundException a) {
             Log.v(TAG, "voice recognition not supported");
-            Static.toast(context, R.string.speech_recognition_is_not_supported);
+            BottomBar.toast(context, R.string.speech_recognition_is_not_supported);
         }
     }
     @Override
     protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             switch (requestCode) {
                 case REQ_CODE_SPEECH_INPUT: {
                     Log.v(TAG, "doneRecognition");
@@ -306,7 +310,7 @@ public abstract class SearchActivity extends AppCompatActivity {
         boolean onIterate(String query, String title);
     }
     protected void recentSchedulesIterator(String type, RecentSchedulesIterator recentSchedulesIterator) throws JSONException {
-        JSONArray recent = Static.string2jsonArray(Storage.file.perm.get(this, "schedule_" + type + "#recent", ""));
+        JSONArray recent = TextUtils.string2jsonArray(Storage.file.perm.get(this, "schedule_" + type + "#recent", ""));
         for (int i = 0; i < recent.length(); i++) {
             if (recentSchedulesIterator.onIterate(recent.getString(i))) {
                 break;
@@ -328,7 +332,7 @@ public abstract class SearchActivity extends AppCompatActivity {
                         }
                     }
                 } catch (Exception e) {
-                    Static.error(e);
+                    Log.exception(e);
                 }
             }
         }
@@ -341,7 +345,7 @@ public abstract class SearchActivity extends AppCompatActivity {
         public void onTextChanged(CharSequence s, int start, int before, int count) {}
         @Override
         public void afterTextChanged(final Editable s) {
-            Static.T.runThread(() -> {
+            Thread.run(() -> {
                 String query = s.toString().trim();
                 if (query.isEmpty()) {
                     setMode(SPEECH_RECOGNITION);
@@ -355,7 +359,7 @@ public abstract class SearchActivity extends AppCompatActivity {
     private final View.OnKeyListener onKeyListener = new View.OnKeyListener() {
         public boolean onKey(View v, int keyCode, KeyEvent event) {
             if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
-                String query = Static.prettifyGroupNumber(search_edit_text.getText().toString().trim());
+                String query = TextUtils.prettifyGroupNumber(search_edit_text.getText().toString().trim());
                 if (!query.isEmpty()) {
                     done(query, query);
                     return true;

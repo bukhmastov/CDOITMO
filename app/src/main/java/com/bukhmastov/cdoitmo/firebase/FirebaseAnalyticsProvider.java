@@ -8,6 +8,7 @@ import android.support.v4.app.Fragment;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.Thread;
 import com.google.firebase.analytics.FirebaseAnalytics;
 
 import java.util.regex.Matcher;
@@ -85,7 +86,7 @@ public class FirebaseAnalyticsProvider {
             firebaseAnalytics.setUserId(Static.getUUID(context));
             Log.i(TAG, "Firebase Analytics ", (FirebaseAnalyticsProvider.enabled ? "enabled" : "disabled"));
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
         return FirebaseAnalyticsProvider.enabled;
     }
@@ -100,7 +101,7 @@ public class FirebaseAnalyticsProvider {
         logCurrentScreen(activity, fragment, null);
     }
     public static void setCurrentScreen(final Activity activity, final Fragment fragment, final String view_screen) {
-        Static.T.runThread(Static.T.BACKGROUND, () -> {
+        Thread.run(Thread.BACKGROUND, () -> {
             try {
                 if (!enabled) return;
                 if (activity == null) return;
@@ -114,7 +115,7 @@ public class FirebaseAnalyticsProvider {
                 }
                 getFirebaseAnalytics(activity).setCurrentScreen(activity, vs, null);
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }
@@ -145,7 +146,7 @@ public class FirebaseAnalyticsProvider {
                     FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.APP_VIEW_SCREEN, view_screen)
             );
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
 
@@ -193,16 +194,16 @@ public class FirebaseAnalyticsProvider {
             }
             setUserProperty(context, Property.GROUP, group);
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     public static void setUserProperty(final Context context, final String property, final String value) {
-        Static.T.runThread(Static.T.BACKGROUND, () -> {
+        Thread.run(Thread.BACKGROUND, () -> {
             try {
                 if (!enabled) return;
                 getFirebaseAnalytics(context).setUserProperty(property, value);
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }
@@ -211,17 +212,17 @@ public class FirebaseAnalyticsProvider {
         logEvent(context, name, null);
     }
     public static void logEvent(final Context context, final String name, final Bundle params) {
-        Static.T.runThread(Static.T.BACKGROUND, () -> {
+        Thread.run(Thread.BACKGROUND, () -> {
             try {
                 if (!enabled) return;
                 getFirebaseAnalytics(context).logEvent(name, params);
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }
     public static void logBasicEvent(final Context context, final String content) {
-        Static.T.runThread(Static.T.BACKGROUND, () -> {
+        Thread.run(Thread.BACKGROUND, () -> {
             try {
                 if (!enabled) return;
                 getFirebaseAnalytics(context).logEvent(
@@ -229,7 +230,7 @@ public class FirebaseAnalyticsProvider {
                         FirebaseAnalyticsProvider.getBundle(Param.EVENT_EXTRA, content)
                 );
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }

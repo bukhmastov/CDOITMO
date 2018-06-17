@@ -9,9 +9,9 @@ import com.bukhmastov.cdoitmo.object.preference.Preference;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceBasic;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceList;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
-import com.bukhmastov.cdoitmo.util.CacheClearUtil;
+import com.bukhmastov.cdoitmo.dialog.CacheClearDialog;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,9 +48,9 @@ public class SettingsCacheFragment extends SettingsTemplatePreferencesFragment {
         preferences.add(new PreferenceBasic("pref_clear_cache", null, R.string.cache_clear, false, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                Static.T.runThread(() -> {
+                Thread.run(() -> {
                     Log.v(TAG, "pref_clear_cache clicked");
-                    new CacheClearUtil(activity).show();
+                    new CacheClearDialog(activity).show();
                 });
             }
             @Override

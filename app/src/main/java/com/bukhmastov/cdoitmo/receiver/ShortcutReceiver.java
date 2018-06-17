@@ -11,14 +11,17 @@ import android.graphics.drawable.Icon;
 import android.os.Bundle;
 import android.support.annotation.DrawableRes;
 
+import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.DaysRemainingWidgetActivity;
 import com.bukhmastov.cdoitmo.activity.MainActivity;
 import com.bukhmastov.cdoitmo.activity.ShortcutReceiverActivity;
 import com.bukhmastov.cdoitmo.activity.TimeRemainingWidgetActivity;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
+import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.Time;
 
 import org.json.JSONObject;
 
@@ -36,7 +39,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
     public static final String EXTRA_DATA = "shortcut_data";
 
     public void onReceive(final Context context, final Intent intent) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             try {
                 String action = intent.getAction();
                 Log.i(TAG, "onReceive | action=" + action);
@@ -66,7 +69,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
                     }
                     case ACTION_INSTALL_SHORTCUT:
                     case ACTION_SHORTCUT_INSTALLED: {
-                        Static.toast(context, context.getString(R.string.shortcut_created));
+                        BottomBar.toast(context, context.getString(R.string.shortcut_created));
                         break;
                     }
                     default: {
@@ -75,13 +78,13 @@ public class ShortcutReceiver extends BroadcastReceiver {
                     }
                 }
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }
 
     private void resolve(final Context context, final String shortcut_type, final String shortcut_data) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.v(TAG, "resolve | shortcut_type=" + shortcut_type + " | shortcut_data=" + shortcut_data);
             try {
                 FirebaseAnalyticsProvider.logEvent(
@@ -92,14 +95,14 @@ public class ShortcutReceiver extends BroadcastReceiver {
                 switch (shortcut_type) {
                     case "offline": {
                         Intent intent = new Intent(context, MainActivity.class);
-                        intent.addFlags(Static.intentFlagRestart);
+                        intent.addFlags(App.intentFlagRestart);
                         intent.putExtra("mode", "offline");
                         context.startActivity(intent);
                         break;
                     }
                     case "tab": {
                         Intent intent = new Intent(context, MainActivity.class);
-                        intent.addFlags(Static.intentFlagRestart);
+                        intent.addFlags(App.intentFlagRestart);
                         intent.putExtra("action", shortcut_data);
                         context.startActivity(intent);
                         break;
@@ -107,7 +110,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
                     case "room101":
                     case "university": {
                         Intent intent = new Intent(context, MainActivity.class);
-                        intent.addFlags(Static.intentFlagRestart);
+                        intent.addFlags(App.intentFlagRestart);
                         intent.putExtra("action", shortcut_type);
                         intent.putExtra("action_extra", shortcut_data);
                         context.startActivity(intent);
@@ -117,7 +120,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
                     case "schedule_exams":
                     case "schedule_attestations": {
                         Intent intent = new Intent(context, MainActivity.class);
-                        intent.addFlags(Static.intentFlagRestart);
+                        intent.addFlags(App.intentFlagRestart);
                         intent.putExtra("action", shortcut_type);
                         intent.putExtra("action_extra", (new JSONObject(shortcut_data)).getString("query"));
                         context.startActivity(intent);
@@ -125,27 +128,27 @@ public class ShortcutReceiver extends BroadcastReceiver {
                     }
                     case "time_remaining_widget": {
                         Intent intent = new Intent(context, TimeRemainingWidgetActivity.class);
-                        intent.addFlags(Static.intentFlagRestart);
+                        intent.addFlags(App.intentFlagRestart);
                         intent.putExtra("shortcut_data", shortcut_data);
                         context.startActivity(intent);
                         break;
                     }
                     case "days_remaining_widget": {
                         Intent intent = new Intent(context, DaysRemainingWidgetActivity.class);
-                        intent.addFlags(Static.intentFlagRestart);
+                        intent.addFlags(App.intentFlagRestart);
                         intent.putExtra("shortcut_data", shortcut_data);
                         context.startActivity(intent);
                         break;
                     }
                 }
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }
 
     private void addShortcut(final Context context, final String type, final String data) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.v(TAG, "addShortcut | type=" + type + " | data=" + data);
             try {
                 switch (type) {
@@ -206,14 +209,14 @@ public class ShortcutReceiver extends BroadcastReceiver {
                     }
                 }
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }
 
     @SuppressWarnings("deprecation")
     private void installShortcut(final Context context, final String type, final String data, final String label, @DrawableRes final int icon) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.v(TAG, "installShortcut | type=" + type + " | data=" + data);
             try {
                 Intent shortcutIntent = new Intent(context, ShortcutReceiverActivity.class);
@@ -223,7 +226,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     ShortcutManager shortcutManager = context.getSystemService(ShortcutManager.class);
                     if (shortcutManager != null && shortcutManager.isRequestPinShortcutSupported()) {
-                        ShortcutInfo pinShortcutInfo = new ShortcutInfo.Builder(context, "synthetic-" + Static.getCalendar().getTimeInMillis())
+                        ShortcutInfo pinShortcutInfo = new ShortcutInfo.Builder(context, "synthetic-" + Time.getCalendar().getTimeInMillis())
                             .setIcon(Icon.createWithResource(context, icon))
                             .setShortLabel(label)
                             .setIntent(shortcutIntent)
@@ -233,7 +236,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
                         IntentSender pinnedShortcutCallbackPendingIntentSender = PendingIntent.getBroadcast(context, 0, pinnedShortcutCallbackIntent, 0).getIntentSender();
                         shortcutManager.requestPinShortcut(pinShortcutInfo, pinnedShortcutCallbackPendingIntentSender);
                     } else {
-                        Static.toast(context, context.getString(R.string.pin_shortcut_not_supported));
+                        BottomBar.toast(context, context.getString(R.string.pin_shortcut_not_supported));
                     }
                 } else {
                     Intent addIntent = new Intent(ShortcutReceiver.ACTION_INSTALL_SHORTCUT);
@@ -249,7 +252,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
                         FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.SHORTCUT_TYPE, type)
                 );
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }

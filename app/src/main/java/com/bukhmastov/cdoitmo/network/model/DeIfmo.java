@@ -6,8 +6,9 @@ import android.text.TextUtils;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.network.interfaces.RawHandler;
 import com.bukhmastov.cdoitmo.network.interfaces.RawJsonHandler;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -62,7 +63,7 @@ public abstract class DeIfmo extends Client {
         return !legit;
     }
     protected static void g(final Context context, final String url, final Map<String, String> query, final RawHandler rawHandler) {
-        Static.T.runThread(Static.T.BACKGROUND, () -> {
+        Thread.run(Thread.BACKGROUND, () -> {
             try {
                 _g(url, getHeaders(context), query, rawHandler);
             } catch (Throwable throwable) {
@@ -71,7 +72,7 @@ public abstract class DeIfmo extends Client {
         });
     }
     protected static void p(final Context context, final String url, final Map<String, String> params, final RawHandler rawHandler) {
-        Static.T.runThread(Static.T.BACKGROUND, () -> {
+        Thread.run(Thread.BACKGROUND, () -> {
             try {
                 _p(url, getHeaders(context), null, params, rawHandler);
             } catch (Throwable throwable) {
@@ -80,7 +81,7 @@ public abstract class DeIfmo extends Client {
         });
     }
     protected static void gJson(final Context context, final String url, final Map<String, String> query, final RawJsonHandler rawJsonHandler) {
-        Static.T.runThread(Static.T.BACKGROUND, () -> {
+        Thread.run(Thread.BACKGROUND, () -> {
             try {
                 _gJson(url, getHeaders(context), query, rawJsonHandler);
             } catch (Throwable throwable) {
@@ -141,7 +142,7 @@ public abstract class DeIfmo extends Client {
             }
             return parsed;
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             return new JSONArray();
         }
     }
@@ -199,14 +200,14 @@ public abstract class DeIfmo extends Client {
             }
             return storedCookies;
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             return newCookies;
         }
     }
 
     protected static okhttp3.Headers getHeaders(final Context context) throws Throwable {
         HashMap<String, String> headers = new HashMap<>();
-        headers.put("User-Agent", Static.getUserAgent(context));
+        headers.put("User-Agent", Client.getUserAgent(context));
         JSONArray storedCookies;
         try {
             storedCookies = new JSONArray(Storage.file.perm.get(context, "user#deifmo#cookies", ""));

@@ -117,7 +117,7 @@ public class Notifications extends ContextWrapper {
                 getManager().createNotificationChannel(channel);
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private NotificationManager getManager() {

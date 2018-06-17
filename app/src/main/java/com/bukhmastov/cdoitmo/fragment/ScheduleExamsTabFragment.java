@@ -22,8 +22,9 @@ import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleExamsFragment;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleExams;
+import com.bukhmastov.cdoitmo.util.Color;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -106,14 +107,14 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
     }
 
     private void load(final boolean refresh) {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             if (activity == null) {
                 Log.w(TAG, "load | activity is null");
                 failed(getContext());
                 return;
             }
             draw(activity, R.layout.state_loading_text);
-            Static.T.runThread(() -> {
+            Thread.run(() -> {
                 try {
                     if (activity == null || getQuery() == null) {
                         Log.w(TAG, "load | some values are null | activity=", activity, " | getQuery()=", getQuery());
@@ -129,7 +130,7 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
                         getScheduleExams(activity).search(activity, getQuery());
                     }
                 } catch (Exception e) {
-                    Static.error(e);
+                    Log.exception(e);
                     failed(activity);
                 }
             });
@@ -139,7 +140,7 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
         if (scheduleExams == null) scheduleExams = new ScheduleExams(new Schedule.Handler() {
             @Override
             public void onSuccess(final JSONObject json, final boolean fromCache) {
-                Static.T.runThread(() -> {
+                Thread.run(() -> {
                     try {
                         try {
                             if (json.getString("type").equals("teachers")) {
@@ -170,7 +171,7 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
                             setQuery(data);
                             invalidate(false);
                         });
-                        Static.T.runOnUiThread(() -> {
+                        Thread.runOnUI(() -> {
                             try {
                                 draw(activity, R.layout.layout_schedule_both_recycle_list);
                                 // prepare
@@ -179,8 +180,8 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
                                 if (swipe_container == null || schedule_list == null) throw new SilentException();
                                 final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
                                 // swipe
-                                swipe_container.setColorSchemeColors(Static.colorAccent);
-                                swipe_container.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
+                                swipe_container.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
+                                swipe_container.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));
                                 swipe_container.setOnRefreshListener(() -> {
                                     swipe_container.setRefreshing(false);
                                     invalidate(true);
@@ -211,12 +212,12 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
                             } catch (SilentException ignore) {
                                 failed(activity);
                             } catch (Exception e) {
-                                Static.error(e);
+                                Log.exception(e);
                                 failed(activity);
                             }
                         });
                     } catch (Exception e) {
-                        Static.error(e);
+                        Log.exception(e);
                         failed(activity);
                     }
                 });
@@ -227,7 +228,7 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
             }
             @Override
             public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                Static.T.runOnUiThread(() -> {
+                Thread.runOnUI(() -> {
                     try {
                         Log.v(TAG, "onFailure | statusCode=", statusCode, " | state=", state);
                         switch (state) {
@@ -278,20 +279,20 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
                             }
                         }
                     } catch (Exception e) {
-                        Static.error(e);
+                        Log.exception(e);
                     }
                 });
             }
             @Override
             public void onProgress(final int state) {
-                Static.T.runOnUiThread(() -> {
+                Thread.runOnUI(() -> {
                     try {
                         Log.v(TAG, "onProgress | state=", state);
                         final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_loading_text);
                         ((TextView) view.findViewById(R.id.loading_message)).setText(R.string.loading);
                         draw(view);
                     } catch (Exception e) {
-                        Static.error(e);
+                        Log.exception(e);
                     }
                 });
             }
@@ -318,7 +319,7 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
             state_try_again.findViewById(R.id.try_again_reload).setOnClickListener(view -> load(false));
             draw(state_try_again);
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
 
@@ -330,14 +331,14 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
                 vg.addView(view, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             }
         } catch (Exception e){
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void draw(Context context, int layoutId) {
         try {
             draw(inflate(context, layoutId));
         } catch (Exception e){
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private View inflate(Context context, int layoutId) throws InflateException {

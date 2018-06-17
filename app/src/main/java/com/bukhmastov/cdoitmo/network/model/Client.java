@@ -1,6 +1,10 @@
 package com.bukhmastov.cdoitmo.network.model;
 
 import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringDef;
 
@@ -9,6 +13,7 @@ import com.bukhmastov.cdoitmo.network.interfaces.RawHandler;
 import com.bukhmastov.cdoitmo.network.interfaces.RawJsonHandler;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -52,6 +57,9 @@ import okio.Buffer;
 public abstract class Client {
 
     private static final String TAG = "Client";
+    public static final String USER_AGENT_TEMPLATE = "CDOITMO/{versionName}/{versionCode} Java/Android/{sdkInt}";
+    public static String USER_AGENT = null;
+
     private static class client {
         private static OkHttpClient client = null;
         private static class timeout {
@@ -78,7 +86,7 @@ public abstract class Client {
                 SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
                 builder.sslSocketFactory(sslSocketFactory, trustManager);
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         }
         private static InputStream trustedCertificatesInputStream() {
@@ -182,7 +190,7 @@ public abstract class Client {
     public static final int FAILED_CORRUPTED_JSON = 4;
 
     protected static void _g(final String url, final okhttp3.Headers headers, final Map<String, String> query, final RawHandler rawHandler) {
-        Static.T.runThread(Static.T.BACKGROUND, () -> {
+        Thread.run(Thread.BACKGROUND, () -> {
             try {
                 HttpUrl httpUrl = HttpUrl.parse(url);
                 if (httpUrl == null) {
@@ -202,7 +210,7 @@ public abstract class Client {
         });
     }
     protected static void _p(final String url, final okhttp3.Headers headers, final Map<String, String> query, final Map<String, String> params, final RawHandler rawHandler) {
-        Static.T.runThread(Static.T.BACKGROUND, () -> {
+        Thread.run(Thread.BACKGROUND, () -> {
             try {
                 HttpUrl httpUrl = HttpUrl.parse(url);
                 if (httpUrl == null) {
@@ -229,7 +237,7 @@ public abstract class Client {
         });
     }
     protected static void _gJson(final String url, final okhttp3.Headers headers, final Map<String, String> query, final RawJsonHandler rawJsonHandler) {
-        Static.T.runThread(Static.T.BACKGROUND, () -> {
+        Thread.run(Thread.BACKGROUND, () -> {
             try {
                 HttpUrl httpUrl = HttpUrl.parse(url);
                 if (httpUrl == null) {
@@ -238,7 +246,7 @@ public abstract class Client {
                 RawHandler rawHandler = new RawHandler() {
                     @Override
                     public void onDone(final int code, final okhttp3.Headers responseHeaders, final String response) {
-                        Static.T.runThread(Static.T.BACKGROUND, () -> {
+                        Thread.run(Thread.BACKGROUND, () -> {
                             try {
                                 if (code >= 400) {
                                     rawJsonHandler.onDone(code, headers, response, null, null);
@@ -314,7 +322,7 @@ public abstract class Client {
         });
     }
     private static void execute(final HttpUrl url, final okhttp3.Headers headers, final RequestBody requestBody, final RawHandler rawHandler) {
-        Static.T.runThread(Static.T.BACKGROUND, () -> {
+        Thread.run(Thread.BACKGROUND, () -> {
             try {
                 Log.v(TAG,
                         "execute | load | " +
@@ -422,7 +430,7 @@ public abstract class Client {
             }
             return parsed;
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             return new JSONArray();
         }
     }
@@ -483,6 +491,37 @@ public abstract class Client {
     }
     public static String getFailureMessage(final Context context, final int statusCode) {
         return context.getString(R.string.server_error) + (statusCode > 0 ? "\n[status code: " + statusCode + "]" : "");
+    }
+    public static String getUserAgent(Context context) {
+        try {
+            if (USER_AGENT == null) {
+                PackageInfo pInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
+                USER_AGENT = USER_AGENT_TEMPLATE
+                        .replace("{versionName}", pInfo.versionName)
+                        .replace("{versionCode}", String.valueOf(pInfo.versionCode))
+                        .replace("{sdkInt}", String.valueOf(Build.VERSION.SDK_INT));
+            }
+            return USER_AGENT;
+        } catch (Exception e) {
+            return USER_AGENT_TEMPLATE
+                    .replace("{versionName}", "-")
+                    .replace("{versionCode}", "-")
+                    .replace("{sdkInt}", "-");
+        }
+    }
+    public static boolean isOnline(Context context) {
+        Log.v(TAG, "isOnline");
+        if (context != null) {
+            ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (connectivityManager != null) {
+                NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+                return (networkInfo != null && networkInfo.isConnected());
+            } else {
+                return true;
+            }
+        } else {
+            return true;
+        }
     }
 
     public static class Request {

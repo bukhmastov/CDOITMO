@@ -1,21 +1,17 @@
 package com.bukhmastov.cdoitmo.fragment;
 
-import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.view.InflateException;
-import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapter.rva.ProtocolRVA;
 import com.bukhmastov.cdoitmo.converter.ProtocolConverter;
@@ -23,9 +19,13 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
+import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.Color;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.Time;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -48,7 +48,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.v(TAG, "Fragment created");
-        if (Static.UNAUTHORIZED_MODE) {
+        if (App.UNAUTHORIZED_MODE) {
             forbidden = true;
             Log.w(TAG, "Fragment created | UNAUTHORIZED_MODE not allowed, closing fragment...");
             close();
@@ -70,7 +70,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                 if (advanced != null) advanced.setVisible(false);
             }
         } catch (Exception e){
-            Static.error(e);
+            Log.exception(e);
         }
     }
 
@@ -108,7 +108,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                 }
             }
         } catch (Exception e){
-            Static.error(e);
+            Log.exception(e);
         }
         if (!loaded) {
             loaded = true;
@@ -146,10 +146,10 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
     }
 
     private void load() {
-        Static.T.runThread(() -> load(Storage.pref.get(activity, "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(activity, "pref_dynamic_refresh", "0")) : 0));
+        Thread.run(() -> load(Storage.pref.get(activity, "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(activity, "pref_dynamic_refresh", "0")) : 0));
     }
     private void load(final int refresh_rate) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.v(TAG, "load | refresh_rate=" + refresh_rate);
             if (Storage.pref.get(activity, "pref_use_cache", true)) {
                 String cache = Storage.file.cache.get(activity, "protocol#core").trim();
@@ -157,7 +157,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                     try {
                         JSONObject data = new JSONObject(cache);
                         setData(data);
-                        if (data.getLong("timestamp") + refresh_rate * 3600000L < Static.getCalendar().getTimeInMillis()) {
+                        if (data.getLong("timestamp") + refresh_rate * 3600000L < Time.getCalendar().getTimeInMillis()) {
                             load(true, cache);
                         } else {
                             load(false, cache);
@@ -175,21 +175,21 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
         });
     }
     private void load(final boolean force) {
-        Static.T.runThread(() -> load(force, "", 0));
+        Thread.run(() -> load(force, "", 0));
     }
     private void load(final boolean force, final String cache) {
-        Static.T.runThread(() -> load(force, cache, 0));
+        Thread.run(() -> load(force, cache, 0));
     }
     private void load(final boolean force, final String cache, final int attempt) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.v(TAG, "load | force=" + (force ? "true" : "false") + " | attempt=" + attempt);
-            if ((!force || !Static.isOnline(activity)) && Storage.pref.get(activity, "pref_use_cache", true)) {
+            if ((!force || !Client.isOnline(activity)) && Storage.pref.get(activity, "pref_use_cache", true)) {
                 try {
                     String c = cache.isEmpty() ? Storage.file.cache.get(activity, "protocol#core").trim() : cache;
                     if (!c.isEmpty()) {
                         Log.v(TAG, "load | from cache");
                         JSONObject d = new JSONObject(c);
-                        if (d.getInt("number_of_weeks") == number_of_weeks || !Static.isOnline(activity) || attempt >= maxAttempts) {
+                        if (d.getInt("number_of_weeks") == number_of_weeks || !Client.isOnline(activity) || attempt >= maxAttempts) {
                             setData(new JSONObject(c));
                             display();
                             return;
@@ -200,7 +200,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                     Storage.file.cache.delete(activity, "protocol#core");
                 }
             }
-            if (!Static.OFFLINE_MODE) {
+            if (!App.OFFLINE_MODE) {
                 if (attempt >= maxAttempts) {
                     if (force) {
                         load(false, cache, attempt + 1);
@@ -215,7 +215,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                     DeIfmoRestClient.get(activity, "eregisterlog?days=" + String.valueOf(number_of_weeks * 7), null, new RestResponseHandler() {
                         @Override
                         public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject responseObj, final JSONArray responseArr) {
-                            Static.T.runThread(() -> {
+                            Thread.run(() -> {
                                 Log.v(TAG, "load | success | statusCode=" + statusCode + " | responseArr=" + (responseArr == null ? "null" : "notnull"));
                                 if (statusCode == 200 && responseArr != null) {
                                     new ProtocolConverter(activity, responseArr, number_of_weeks, json -> {
@@ -225,7 +225,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                                                 Storage.file.perm.put(activity, "protocol_tracker#protocol", json.getJSONArray("protocol").toString());
                                             }
                                         } catch (JSONException e) {
-                                            Static.error(e);
+                                            Log.exception(e);
                                         }
                                         setData(json);
                                         display();
@@ -237,7 +237,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                         }
                         @Override
                         public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                            Static.T.runOnUiThread(() -> {
+                            Thread.runOnUI(() -> {
                                 Log.v(TAG, "load | failure " + state);
                                 switch (state) {
                                     case DeIfmoRestClient.FAILED_OFFLINE:
@@ -276,7 +276,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                         }
                         @Override
                         public void onProgress(final int state) {
-                            Static.T.runOnUiThread(() -> {
+                            Thread.runOnUI(() -> {
                                 Log.v(TAG, "load | progress " + state);
                                 draw(R.layout.state_loading_text);
                                 if (activity != null) {
@@ -298,7 +298,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                     });
                 }
             } else {
-                Static.T.runOnUiThread(() -> {
+                Thread.runOnUI(() -> {
                     if (getData() != null) {
                         display();
                     } else {
@@ -315,7 +315,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
         });
     }
     private void loadFailed() {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             Log.v(TAG, "loadFailed");
             try {
                 draw(R.layout.state_failed_button);
@@ -326,17 +326,17 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                     try_again_reload.setOnClickListener(v -> load());
                 }
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }
     private void display() {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.v(TAG, "display");
             try {
                 if (getData() == null) throw new NullPointerException("data cannot be null");
                 final ProtocolRVA adapter = new ProtocolRVA(activity, getData().getJSONArray("protocol"), "advanced".equals(Storage.pref.get(activity, "pref_protocol_changes_mode", "advanced")));
-                Static.T.runOnUiThread(() -> {
+                Thread.runOnUI(() -> {
                     try {
                         draw(R.layout.layout_protocol);
                         // set adapter to recycler view
@@ -350,8 +350,8 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                         // setup swipe
                         final SwipeRefreshLayout swipe_container = container.findViewById(R.id.swipe_container);
                         if (swipe_container != null) {
-                            swipe_container.setColorSchemeColors(Static.colorAccent);
-                            swipe_container.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
+                            swipe_container.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
+                            swipe_container.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));
                             swipe_container.setOnRefreshListener(this);
                         }
                         // setup spinner: weeks
@@ -375,7 +375,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                             spinner_weeks_blocker = true;
                             spinner_weeks.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                                 public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
-                                    Static.T.runThread(() -> {
+                                    Thread.run(() -> {
                                         if (spinner_weeks_blocker) {
                                             spinner_weeks_blocker = false;
                                             return;
@@ -389,14 +389,14 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                             });
                         }
                         // show update time
-                        Static.showUpdateTime(activity, getData().getLong("timestamp"));
+                        BottomBar.showUpdateTime(activity, getData().getLong("timestamp"));
                     } catch (Exception e) {
-                        Static.error(e);
+                        Log.exception(e);
                         loadFailed();
                     }
                 });
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
                 loadFailed();
             }
         });
@@ -413,11 +413,11 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
         try {
             String stored = restoreData(this);
             if (stored != null && !stored.isEmpty()) {
-                data = Static.string2json(stored);
+                data = TextUtils.string2json(stored);
                 return data;
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
         return null;
     }

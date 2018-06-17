@@ -17,11 +17,13 @@ import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
+import com.bukhmastov.cdoitmo.util.Color;
 import com.bukhmastov.cdoitmo.util.CtxWrapper;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -87,7 +89,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     }
     public boolean openActivityOrFragment(StackElement stackElement) {
         Log.v(TAG, "openActivityOrFragment | type=" + stackElement.type + " | class=" + stackElement.connectedFragmentClass.toString());
-        if (Static.tablet) {
+        if (App.tablet) {
             return openFragment(stackElement);
         } else {
             return openActivity(stackElement);
@@ -131,7 +133,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
                 return false;
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             return false;
         }
     }
@@ -154,7 +156,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
             startActivity(intent);
             return true;
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             return false;
         }
     }
@@ -205,11 +207,11 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     }
 
     public void updateToolbar(final Context context, final String title, final Integer image) {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             ActionBar actionBar = getSupportActionBar();
             if (actionBar != null) {
                 actionBar.setTitle(title);
-                if (image == null || !Static.tablet) {
+                if (image == null || !App.tablet) {
                     actionBar.setHomeButtonEnabled(true);
                     actionBar.setLogo(null);
                 } else {
@@ -217,7 +219,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
                     Drawable drawable = getDrawable(image);
                     if (drawable != null) {
                         try {
-                            drawable.setTint(Static.resolveColor(context, R.attr.colorToolbarContent));
+                            drawable.setTint(Color.resolve(context, R.attr.colorToolbarContent));
                         } catch (Exception ignore) {
                             // ignore
                         }
@@ -244,7 +246,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
         try {
             draw(inflate(layoutId));
         } catch (Exception e){
-            Static.error(e);
+            Log.exception(e);
         }
     }
     protected void draw(View view) {
@@ -255,7 +257,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
                 vg.addView(view);
             }
         } catch (Exception e){
-            Static.error(e);
+            Log.exception(e);
         }
     }
 

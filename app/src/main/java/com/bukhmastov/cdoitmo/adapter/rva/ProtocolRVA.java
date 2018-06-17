@@ -8,7 +8,8 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Color;
+import com.bukhmastov.cdoitmo.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -29,12 +30,12 @@ public class ProtocolRVA extends RVA {
     public ProtocolRVA(@NonNull Context context, @NonNull JSONArray protocol, boolean advancedMode) {
         addItems(json2dataset(context, protocol, advancedMode));
         try {
-            colorPositiveTrend = Static.resolveColor(context, R.attr.colorPositiveTrend);
+            colorPositiveTrend = Color.resolve(context, R.attr.colorPositiveTrend);
         } catch (Exception e) {
             colorPositiveTrend = -1;
         }
         try {
-            colorNegativeTrend = Static.resolveColor(context, R.attr.colorNegativeTrend);
+            colorNegativeTrend = Color.resolve(context, R.attr.colorNegativeTrend);
         } catch (Exception e) {
             colorNegativeTrend = -1;
         }
@@ -159,7 +160,7 @@ public class ProtocolRVA extends RVA {
                 }
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
         return dataset;
     }
@@ -168,7 +169,7 @@ public class ProtocolRVA extends RVA {
         try {
             ((TextView) container.findViewById(R.id.name)).setText(item.data.getString("name"));
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void bindChange(View container, Item item) {
@@ -188,7 +189,7 @@ public class ProtocolRVA extends RVA {
                 delta.setVisibility(View.GONE);
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void bindChangeSimple(View container, Item item) {
@@ -209,14 +210,14 @@ public class ProtocolRVA extends RVA {
                 delta.setVisibility(View.GONE);
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void bindNoChanges(View container, Item item) {
         try {
             ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_changes_for_period);
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
 }

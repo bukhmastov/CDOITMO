@@ -1,4 +1,4 @@
-package com.bukhmastov.cdoitmo.util;
+package com.bukhmastov.cdoitmo.object;
 
 import android.app.PendingIntent;
 import android.app.job.JobParameters;
@@ -6,6 +6,7 @@ import android.app.job.JobService;
 import android.content.Intent;
 import android.os.Build;
 
+import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.MainActivity;
 import com.bukhmastov.cdoitmo.converter.ProtocolConverter;
@@ -13,6 +14,10 @@ import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
+import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.Notifications;
+import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -50,7 +55,7 @@ public class ProtocolTrackerJobService extends JobService {
 
     private void request() {
         trace = FirebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.PROTOCOL_TRACKER);
-        Static.T.runThread(Static.T.BACKGROUND, () -> {
+        Thread.run(Thread.BACKGROUND, () -> {
             try {
                 attempt++;
                 if (attempt > maxAttempts) throw new Exception("Number of attempts exceeded the limit");
@@ -59,7 +64,7 @@ public class ProtocolTrackerJobService extends JobService {
                     @Override
                     public void onSuccess(final int statusCode, Client.Headers headers, JSONObject responseObj, final JSONArray responseArr) {
                         try {
-                            Static.T.runThread(Static.T.BACKGROUND, () -> {
+                            Thread.run(Thread.BACKGROUND, () -> {
                                 try {
                                     if (statusCode == 200 && responseArr != null) {
                                         new ProtocolConverter(getBaseContext(), responseArr, 0, json -> {
@@ -107,7 +112,7 @@ public class ProtocolTrackerJobService extends JobService {
     private void w8andRequest() {
         try {
             FirebasePerformanceProvider.stopTrace(trace);
-            Static.T.runThread(Static.T.BACKGROUND, () -> {
+            Thread.run(Thread.BACKGROUND, () -> {
                 try {
                     Log.v(TAG, "w8andRequest");
                     try {
@@ -128,7 +133,7 @@ public class ProtocolTrackerJobService extends JobService {
     }
     private void handle(final JSONArray protocol) {
         try {
-            Static.T.runThread(Static.T.BACKGROUND, () -> {
+            Thread.run(Thread.BACKGROUND, () -> {
                 try {
                     Log.v(TAG, "handle");
                     if (protocol == null) throw new NullPointerException("json can't be null");
@@ -234,13 +239,13 @@ public class ProtocolTrackerJobService extends JobService {
     }
     private void addNotification(final String title, final String text, final long timestamp, final int group, final boolean isSummary) {
         try {
-            Static.T.runThread(() -> {
+            Thread.run(() -> {
                 try {
                     Log.v(TAG, "addNotification | title=" + title + " | text=" + text.replaceAll("\n", "\\n") + " | timestamp=" + timestamp + " | isSummary=" + (isSummary ? "true" : "false"));
                     if (notificationId > Integer.MAX_VALUE - 10) notificationId = 0;
                     // prepare intent
                     Intent intent = new Intent(getBaseContext(), MainActivity.class);
-                    intent.addFlags(Static.intentFlagRestart);
+                    intent.addFlags(App.intentFlagRestart);
                     intent.putExtra("action", "protocol_changes");
                     PendingIntent pIntent = PendingIntent.getActivity(getBaseContext(), (int) System.currentTimeMillis(), intent, 0);
                     // prepare and send notification
@@ -257,7 +262,7 @@ public class ProtocolTrackerJobService extends JobService {
     private void finish() {
         try {
             FirebasePerformanceProvider.stopTrace(trace);
-            Static.T.runThread(Static.T.BACKGROUND, () -> {
+            Thread.run(Thread.BACKGROUND, () -> {
                 try {
                     Log.i(TAG, "Executed");
                     if (requestHandle != null) requestHandle.cancel();

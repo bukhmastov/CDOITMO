@@ -8,8 +8,10 @@ import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.parse.schedule.ScheduleAttestationsParse;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.Time;
 
 import org.json.JSONObject;
 
@@ -27,7 +29,7 @@ public class ScheduleAttestations extends Schedule {
     @Override
     protected void searchGroup(Context context, String group, int refreshRate, boolean forceToCache, boolean withUserChanges) {
         Log.v(TAG, "searchGroup | group=", group, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges);
-        Static.T.runThread(() -> searchByQuery(context, "group", group, refreshRate, withUserChanges, new SearchByQuery() {
+        Thread.run(() -> searchByQuery(context, "group", group, refreshRate, withUserChanges, new SearchByQuery() {
             @Override
             public boolean isWebAvailable() {
                 return true;
@@ -35,10 +37,10 @@ public class ScheduleAttestations extends Schedule {
             @Override
             public void onWebRequest(final String query, final String cache, final RestResponseHandler restResponseHandler) {
                 final int term = getTerm(context);
-                DeIfmoClient.get(context, "index.php?node=schedule&index=sched&semiId=" + String.valueOf(term) + "&group=" + Static.prettifyGroupNumber(group), null, new ResponseHandler() {
+                DeIfmoClient.get(context, "index.php?node=schedule&index=sched&semiId=" + String.valueOf(term) + "&group=" + TextUtils.prettifyGroupNumber(group), null, new ResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                        Static.T.runThread(new ScheduleAttestationsParse(response, term, json -> restResponseHandler.onSuccess(statusCode, headers, json, null)));
+                        Thread.run(new ScheduleAttestationsParse(response, term, json -> restResponseHandler.onSuccess(statusCode, headers, json, null)));
                     }
                     @Override
                     public void onFailure(int statusCode, Client.Headers headers, int state) {
@@ -56,13 +58,13 @@ public class ScheduleAttestations extends Schedule {
             }
             @Override
             public void onWebRequestSuccess(final String query, final JSONObject data, final JSONObject template) {
-                Static.T.runThread(() -> {
+                Thread.run(() -> {
                     try {
-                        template.put("title", Static.prettifyGroupNumber(group));
+                        template.put("title", TextUtils.prettifyGroupNumber(group));
                         template.put("schedule", data.getJSONArray("schedule"));
                         onFound(query, template, true, false);
                     } catch (Exception e) {
-                        Static.error(e);
+                        Log.exception(e);
                         invokePending(query, withUserChanges, true, handler -> handler.onFailure(FAILED_LOAD));
                     }
                 });
@@ -81,7 +83,7 @@ public class ScheduleAttestations extends Schedule {
             }
             @Override
             public void onFound(final String query, final JSONObject data, final boolean putToCache, boolean fromCache) {
-                Static.T.runThread(() -> {
+                Thread.run(() -> {
                     try {
                         if (context == null || query == null || data == null) {
                             Log.w(TAG, "onFound | some values are null | context=", context, " | query=", query, " | data=", data);
@@ -96,7 +98,7 @@ public class ScheduleAttestations extends Schedule {
                         }
                         invokePending(query, withUserChanges, true, handler -> handler.onSuccess(data, fromCache));
                     } catch (Exception e) {
-                        Static.error(e);
+                        Log.exception(e);
                         invokePending(query, withUserChanges, true, handler -> handler.onFailure(FAILED_LOAD));
                     }
                 });
@@ -136,7 +138,7 @@ public class ScheduleAttestations extends Schedule {
         try {
             term = Integer.parseInt(Storage.pref.get(context, "pref_schedule_attestations_term", "0"));
             if (term == 0) {
-                int month = Static.getCalendar().get(Calendar.MONTH);
+                int month = Time.getCalendar().get(Calendar.MONTH);
                 if (month >= Calendar.SEPTEMBER || month == Calendar.JANUARY) {
                     term = 1;
                 } else {

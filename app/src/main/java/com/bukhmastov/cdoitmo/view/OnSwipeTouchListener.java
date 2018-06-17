@@ -5,7 +5,7 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Log;
 
 @SuppressWarnings("EmptyMethod")
 public class OnSwipeTouchListener implements View.OnTouchListener {
@@ -58,7 +58,7 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
                     result = true;
                 }
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
             return result;
         }

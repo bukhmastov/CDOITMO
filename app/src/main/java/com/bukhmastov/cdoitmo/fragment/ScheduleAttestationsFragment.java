@@ -23,8 +23,10 @@ import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleAttestationsFrag
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleAttestations;
+import com.bukhmastov.cdoitmo.util.Color;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.Time;
 
 import org.json.JSONObject;
 
@@ -103,7 +105,7 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
                 }
             }
         } catch (Exception e){
-            Static.error(e);
+            Log.exception(e);
         }
         tab = null;
         scroll = null;
@@ -129,11 +131,11 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
                 }
             }
         } catch (Exception e){
-            Static.error(e);
+            Log.exception(e);
         }
         if (tab == null) {
             tab = refresh -> {
-                Log.v(TAG, "onInvalidate | refresh=" + Log.lBool(refresh));
+                Log.v(TAG, "onInvalidate | refresh=", refresh);
                 storeData(this, getQuery());
                 if (isResumed()) {
                     invalidate = false;
@@ -176,14 +178,14 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
     }
 
     private void load(final boolean refresh) {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             if (activity == null) {
                 Log.w(TAG, "load | activity is null");
                 failed(getContext());
                 return;
             }
             draw(R.layout.state_loading_text);
-            Static.T.runThread(() -> {
+            Thread.run(() -> {
                 try {
                     if (activity == null || getQuery() == null) {
                         Log.w(TAG, "load | some values are null | activity=" + Log.lNull(activity) + " | getQuery()=" + Log.lNull(getQuery()));
@@ -200,7 +202,7 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
                         getScheduleAttestations(activity).search(activity, getQuery());
                     }
                 } catch (Exception e) {
-                    Static.error(e);
+                    Log.exception(e);
                     failed(activity);
                 }
             });
@@ -210,11 +212,11 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
         if (scheduleAttestations == null) scheduleAttestations = new ScheduleAttestations(new Schedule.Handler() {
             @Override
             public void onSuccess(final JSONObject json, final boolean fromCache) {
-                Static.T.runThread(() -> {
+                Thread.run(() -> {
                     try {
-                        final int week = Static.getWeek(activity);
+                        final int week = Time.getWeek(activity);
                         final ScheduleAttestationsRVA adapter = new ScheduleAttestationsRVA(activity, json, week);
-                        Static.T.runOnUiThread(() -> {
+                        Thread.runOnUI(() -> {
                             try {
                                 draw(R.layout.layout_schedule_both_recycle_list);
                                 // prepare
@@ -223,8 +225,8 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
                                 if (swipe_container == null || schedule_list == null) throw new SilentException();
                                 final LinearLayoutManager layoutManager = new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false);
                                 // swipe
-                                swipe_container.setColorSchemeColors(Static.colorAccent);
-                                swipe_container.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
+                                swipe_container.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
+                                swipe_container.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));
                                 swipe_container.setOnRefreshListener(() -> {
                                     swipe_container.setRefreshing(false);
                                     load(true);
@@ -252,12 +254,12 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
                             } catch (SilentException ignore) {
                                 failed(activity);
                             } catch (Exception e) {
-                                Static.error(e);
+                                Log.exception(e);
                                 failed(activity);
                             }
                         });
                     } catch (Exception e) {
-                        Static.error(e);
+                        Log.exception(e);
                         failed(activity);
                     }
                 });
@@ -268,7 +270,7 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
             }
             @Override
             public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                Static.T.runOnUiThread(() -> {
+                Thread.runOnUI(() -> {
                     try {
                         Log.v(TAG, "onFailure | statusCode=" + statusCode + " | state=" + state);
                         switch (state) {
@@ -317,20 +319,20 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
                             }
                         }
                     } catch (Exception e) {
-                        Static.error(e);
+                        Log.exception(e);
                     }
                 });
             }
             @Override
             public void onProgress(final int state) {
-                Static.T.runOnUiThread(() -> {
+                Thread.runOnUI(() -> {
                     try {
                         Log.v(TAG, "onProgress | state=" + state);
                         final ViewGroup view = (ViewGroup) inflate(R.layout.state_loading_text);
                         ((TextView) view.findViewById(R.id.loading_message)).setText(R.string.loading);
                         draw(view);
                     } catch (Exception e) {
-                        Static.error(e);
+                        Log.exception(e);
                     }
                 });
             }
@@ -357,7 +359,7 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
             state_try_again.findViewById(R.id.try_again_reload).setOnClickListener(view -> load(false));
             draw(state_try_again);
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
 }

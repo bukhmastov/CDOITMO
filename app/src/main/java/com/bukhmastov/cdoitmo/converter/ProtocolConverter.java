@@ -3,8 +3,9 @@ package com.bukhmastov.cdoitmo.converter;
 import android.content.Context;
 
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
-import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.Time;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -30,7 +31,7 @@ public class ProtocolConverter extends Converter {
     protected JSONObject convert() throws Throwable {
         for (int i = 0; i < protocol.length(); i++) {
             JSONObject item = markConvert(protocol.getJSONObject(i));
-            String hash = Static.crypt(getCast(item));
+            String hash = TextUtils.crypt(getCast(item));
             Double value, oldValue, delta, oldDelta;
             if (Storage.pref.get(context, "pref_protocol_changes_track_title", true)) {
                 String changeLogItemString = Storage.file.cache.get(context, "protocol#log#" + hash, null);
@@ -70,7 +71,7 @@ public class ProtocolConverter extends Converter {
             protocol.put(i, item);
         }
         return new JSONObject()
-                .put("timestamp", Static.getCalendar().getTimeInMillis())
+                .put("timestamp", Time.getCalendar().getTimeInMillis())
                 .put("number_of_weeks", number_of_weeks)
                 .put("protocol", protocol);
     }

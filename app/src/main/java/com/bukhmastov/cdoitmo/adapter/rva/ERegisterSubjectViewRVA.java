@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 
 import org.json.JSONArray;
@@ -138,7 +139,7 @@ public class ERegisterSubjectViewRVA extends RVA {
                 }
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
         return dataset;
     }
@@ -153,7 +154,7 @@ public class ERegisterSubjectViewRVA extends RVA {
             container.findViewById(R.id.separator_bottom).setVisibility((boolean) item.extras.get("separator_bottom") ? View.VISIBLE : View.GONE);
             container.findViewById(R.id.margin_top).setVisibility((boolean) item.extras.get("margin_top") ? View.VISIBLE : View.GONE);
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void bindPoint(View container, Item item, boolean hightlight) {
@@ -170,14 +171,14 @@ public class ERegisterSubjectViewRVA extends RVA {
             }
             container.findViewById(R.id.separator_bottom).setVisibility((boolean) item.extras.get("separator_bottom") ? View.VISIBLE : View.GONE);
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void bindNoPoints(View container, Item item) {
         try {
             ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_points);
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void setTextToTextView(View container, @IdRes int id, String text) throws Exception {

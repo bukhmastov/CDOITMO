@@ -7,7 +7,8 @@ import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.Time;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -54,26 +55,26 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
                     settings.put("shiftAutomatic", 0);
                 }
                 final int shift = settings.getInt("shift") + settings.getInt("shiftAutomatic");
-                final Calendar calendar = Static.getCalendar();
+                final Calendar calendar = Time.getCalendar();
                 if (shift != 0) {
                     calendar.add(Calendar.HOUR, shift * 24);
                 }
-                this.week = Static.getWeek(context, calendar) % 2;
+                this.week = Time.getWeek(context, calendar) % 2;
                 this.type = content.getString("type");
                 final JSONArray schedule = content.getJSONArray("schedule");
                 if (schedule != null) {
-                    final int weekday = Static.getWeekDay(calendar);
+                    final int weekday = Time.getWeekDay(calendar);
                     this.lessons = ScheduleLessonsWidget.getLessonsForWeekday(schedule, week, weekday);
                 } else {
                     this.lessons = new JSONArray();
                 }
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
                 this.lessons = new JSONArray();
             }
         } catch (Exception e) {
             if (!("settings cannot be null".equals(e.getMessage()) || "content cannot be null".equals(e.getMessage()))) {
-                Static.error(e);
+                Log.exception(e);
             }
             this.lessons = new JSONArray();
         }
@@ -165,7 +166,7 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
             }
             return layout;
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             return null;
         }
     }

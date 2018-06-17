@@ -10,7 +10,7 @@ import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.parse.schedule.ScheduleExamsGroupParse;
 import com.bukhmastov.cdoitmo.parse.schedule.ScheduleExamsTeacherParse;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import org.json.JSONObject;
 
@@ -32,7 +32,7 @@ public class ScheduleExams extends Schedule {
     protected void searchGroup(final Context context, final String group, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
         final @Source String source = getSource(context);
         Log.v(TAG, "searchGroup | group=", group, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=" + source);
-        Static.T.runThread(() -> searchByQuery(context, "group", group, refreshRate, withUserChanges, new SearchByQuery() {
+        Thread.run(() -> searchByQuery(context, "group", group, refreshRate, withUserChanges, new SearchByQuery() {
             @Override
             public boolean isWebAvailable() {
                 return true;
@@ -44,7 +44,7 @@ public class ScheduleExams extends Schedule {
                     case SOURCE.IFMO: IfmoClient.get(context, "ru/exam/0/" + group + "/raspisanie_sessii.htm", null, new ResponseHandler() {
                         @Override
                         public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                            Static.T.runThread(new ScheduleExamsGroupParse(response, query, json -> restResponseHandler.onSuccess(statusCode, headers, json, null)));
+                            Thread.run(new ScheduleExamsGroupParse(response, query, json -> restResponseHandler.onSuccess(statusCode, headers, json, null)));
                         }
                         @Override
                         public void onFailure(int statusCode, Client.Headers headers, int state) {
@@ -95,7 +95,7 @@ public class ScheduleExams extends Schedule {
     protected void searchTeacher(final Context context, final String teacherId, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
         final @Source String source = getSource(context);
         Log.v(TAG, "searchTeacher | teacherId=", teacherId, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=" + source);
-        Static.T.runThread(() -> searchByQuery(context, "teacher", teacherId, refreshRate, withUserChanges, new SearchByQuery() {
+        Thread.run(() -> searchByQuery(context, "teacher", teacherId, refreshRate, withUserChanges, new SearchByQuery() {
             @Override
             public boolean isWebAvailable() {
                 return true;
@@ -107,7 +107,7 @@ public class ScheduleExams extends Schedule {
                     case SOURCE.IFMO: IfmoClient.get(context, "ru/exam/3/" + query + "/raspisanie_sessii.htm", null, new ResponseHandler() {
                         @Override
                         public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                            Static.T.runThread(new ScheduleExamsTeacherParse(response, query, json -> restResponseHandler.onSuccess(statusCode, headers, json, null)));
+                            Thread.run(new ScheduleExamsTeacherParse(response, query, json -> restResponseHandler.onSuccess(statusCode, headers, json, null)));
                         }
                         @Override
                         public void onFailure(int statusCode, Client.Headers headers, int state) {
@@ -163,10 +163,10 @@ public class ScheduleExams extends Schedule {
     }
 
     private void onWebRequestSuccessIfmo(final SearchByQuery searchByQuery, final String query, final JSONObject data, final JSONObject template) {
-        Static.T.runThread(new ScheduleExamsConverterIfmo(data, template, json -> searchByQuery.onFound(query, json, true, false)));
+        Thread.run(new ScheduleExamsConverterIfmo(data, template, json -> searchByQuery.onFound(query, json, true, false)));
     }
     private void onFound(final Context context, final String query, final JSONObject data, final boolean putToCache, final boolean forceToCache, final boolean fromCache, final boolean withUserChanges) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             try {
                 if (context == null || query == null || data == null) {
                     Log.w(TAG, "onFound | some values are null | context=", context, " | query=", query, " | data=", data);
@@ -185,7 +185,7 @@ public class ScheduleExams extends Schedule {
                     invokePending(query, withUserChanges, true, handler -> handler.onSuccess(data, fromCache));
                 }
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
                 invokePending(query, withUserChanges, true, handler -> handler.onFailure(FAILED_LOAD));
             }
         });

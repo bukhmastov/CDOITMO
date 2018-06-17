@@ -12,8 +12,10 @@ import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.interfaces.Callable;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -36,7 +38,7 @@ public class ScheduleLessons extends Schedule {
     protected void searchGroup(final Context context, final String group, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
         final @Source String source = getSource(context);
         Log.v(TAG, "searchGroup | group=", group, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=" + source);
-        Static.T.runThread(() -> searchByQuery(context, "group", group, refreshRate, withUserChanges, new SearchByQuery() {
+        Thread.run(() -> searchByQuery(context, "group", group, refreshRate, withUserChanges, new SearchByQuery() {
             @Override
             public boolean isWebAvailable() {
                 return true;
@@ -76,7 +78,7 @@ public class ScheduleLessons extends Schedule {
     @Override
     protected void searchRoom(final Context context, final String room, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
         Log.v(TAG, "searchRoom | room=", room, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges);
-        Static.T.runThread(() -> searchByQuery(context, "room", room, refreshRate, withUserChanges, new SearchByQuery() {
+        Thread.run(() -> searchByQuery(context, "room", room, refreshRate, withUserChanges, new SearchByQuery() {
             @Override
             public boolean isWebAvailable() {
                 return true;
@@ -111,7 +113,7 @@ public class ScheduleLessons extends Schedule {
     protected void searchTeacher(final Context context, final String teacherId, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
         final @Source String source = getSource(context);
         Log.v(TAG, "searchTeacher | teacherId=", teacherId, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=", source);
-        Static.T.runThread(() -> searchByQuery(context, "teacher", teacherId, refreshRate, withUserChanges, new SearchByQuery() {
+        Thread.run(() -> searchByQuery(context, "teacher", teacherId, refreshRate, withUserChanges, new SearchByQuery() {
             @Override
             public boolean isWebAvailable() {
                 return true;
@@ -162,10 +164,10 @@ public class ScheduleLessons extends Schedule {
     }
 
     private void onWebRequestSuccessIfmo(final SearchByQuery searchByQuery, final String query, final JSONObject data, final JSONObject template) {
-        Static.T.runThread(new ScheduleLessonsConverterIfmo(data, template, json -> searchByQuery.onFound(query, json, true, false)));
+        Thread.run(new ScheduleLessonsConverterIfmo(data, template, json -> searchByQuery.onFound(query, json, true, false)));
     }
     private void onFound(final Context context, final String query, final JSONObject data, final boolean putToCache, final boolean forceToCache, final boolean fromCache, final boolean withUserChanges) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             try {
                 if (context == null || query == null || data == null) {
                     Log.w(TAG, "onFound | some values are null | context=", context, " | query=", query, " | data=", data);
@@ -203,13 +205,13 @@ public class ScheduleLessons extends Schedule {
                     invokePending(query, withUserChanges, true, handler -> handler.onFailure(FAILED_NOT_FOUND));
                 }
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
                 invokePending(query, withUserChanges, true, handler -> handler.onFailure(FAILED_LOAD));
             }
         });
     }
 
-    public static boolean clearChanges(final Context context, final String query, final Static.SimpleCallback callback) {
+    public static boolean clearChanges(final Context context, final String query, final Callable callback) {
         try {
             if (context == null) throw new NullPointerException("context cannot be null");
             if (query == null) throw new NullPointerException("query cannot be null");
@@ -231,15 +233,15 @@ public class ScheduleLessons extends Schedule {
                 }
             }
             if (callback != null && (added || reduced)) {
-                callback.onCall();
+                callback.call();
             }
             return added || reduced;
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             return false;
         }
     }
-    public static boolean reduceLesson(final Context context, final String query, final int weekday, final JSONObject lesson, final Static.SimpleCallback callback) {
+    public static boolean reduceLesson(final Context context, final String query, final int weekday, final JSONObject lesson, final Callable callback) {
         try {
             if (context == null) throw new NullPointerException("context cannot be null");
             if (query == null) throw new NullPointerException("query cannot be null");
@@ -250,7 +252,7 @@ public class ScheduleLessons extends Schedule {
             if (!cdoitmo_type.equals("normal")) throw new Exception("wrong cdoitmo_type type: " + cdoitmo_type);
             final String token = query.toLowerCase();
             final String hash = ScheduleLessons.getLessonHash(lesson);
-            final JSONArray reduced = Static.string2jsonArray(Storage.file.perm.get(context, "schedule_lessons#reduced#" + token, ""));
+            final JSONArray reduced = TextUtils.string2jsonArray(Storage.file.perm.get(context, "schedule_lessons#reduced#" + token, ""));
             boolean found = false;
             for (int i = 0; i < reduced.length(); i++) {
                 final JSONObject day = reduced.getJSONObject(i);
@@ -276,7 +278,7 @@ public class ScheduleLessons extends Schedule {
             }
             Storage.file.perm.put(context, "schedule_lessons#reduced#" + token, reduced.toString());
             if (callback != null) {
-                callback.onCall();
+                callback.call();
             }
             FirebaseAnalyticsProvider.logEvent(
                     context,
@@ -285,11 +287,11 @@ public class ScheduleLessons extends Schedule {
             );
             return true;
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             return false;
         }
     }
-    public static boolean restoreLesson(final Context context, final String query, final int weekday, final JSONObject lesson, final Static.SimpleCallback callback) {
+    public static boolean restoreLesson(final Context context, final String query, final int weekday, final JSONObject lesson, final Callable callback) {
         try {
             if (context == null) throw new NullPointerException("context cannot be null");
             if (query == null) throw new NullPointerException("query cannot be null");
@@ -300,7 +302,7 @@ public class ScheduleLessons extends Schedule {
             if (!cdoitmo_type.equals("reduced")) throw new Exception("wrong cdoitmo_type type: " + cdoitmo_type);
             final String token = query.toLowerCase();
             final String hash = ScheduleLessons.getLessonHash(lesson);
-            final JSONArray reduced = Static.string2jsonArray(Storage.file.perm.get(context, "schedule_lessons#reduced#" + token, ""));
+            final JSONArray reduced = TextUtils.string2jsonArray(Storage.file.perm.get(context, "schedule_lessons#reduced#" + token, ""));
             for (int i = 0; i < reduced.length(); i++) {
                 final JSONObject day = reduced.getJSONObject(i);
                 if (day.getInt("weekday") == weekday) {
@@ -326,15 +328,15 @@ public class ScheduleLessons extends Schedule {
                 Storage.file.perm.put(context, "schedule_lessons#reduced#" + token, reduced.toString());
             }
             if (callback != null) {
-                callback.onCall();
+                callback.call();
             }
             return true;
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             return false;
         }
     }
-    public static boolean createLesson(final ConnectedActivity activity, final String query, final String title, final String type, final int weekday, final JSONObject lesson, final Static.SimpleCallback callback) {
+    public static boolean createLesson(final ConnectedActivity activity, final String query, final String title, final String type, final int weekday, final JSONObject lesson, final Callable callback) {
         try {
             if (activity == null) throw new NullPointerException("activity cannot be null");
             if (query == null) throw new NullPointerException("query cannot be null");
@@ -350,18 +352,18 @@ public class ScheduleLessons extends Schedule {
             extras.putString("title", title);
             extras.putInt("weekday", weekday);
             extras.putString("lesson", lesson.toString());
-            Static.T.runOnUiThread(() -> {
+            Thread.runOnUI(() -> {
                 if (activity.openActivityOrFragment(ScheduleLessonsModifyFragment.class, extras) && callback != null) {
-                    Static.T.runThread(callback::onCall);
+                    Thread.run(callback::call);
                 }
             });
             return true;
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             return false;
         }
     }
-    public static boolean createLesson(final Context context, final String query, final int weekday, final JSONObject lesson, final Static.SimpleCallback callback) {
+    public static boolean createLesson(final Context context, final String query, final int weekday, final JSONObject lesson, final Callable callback) {
         try {
             if (context == null) throw new NullPointerException("context cannot be null");
             if (query == null) throw new NullPointerException("query cannot be null");
@@ -371,7 +373,7 @@ public class ScheduleLessons extends Schedule {
             lesson.put("cdoitmo_type", "synthetic");
             final String subject = lesson.getString("subject");
             final String token = query.toLowerCase();
-            final JSONArray added = Static.string2jsonArray(Storage.file.perm.get(context, "schedule_lessons#added#" + token, ""));
+            final JSONArray added = TextUtils.string2jsonArray(Storage.file.perm.get(context, "schedule_lessons#added#" + token, ""));
             boolean found = false;
             for (int i = 0; i < added.length(); i++) {
                 final JSONObject day = added.getJSONObject(i);
@@ -393,15 +395,15 @@ public class ScheduleLessons extends Schedule {
                     FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LESSON_TITLE, subject)
             );
             if (callback != null) {
-                callback.onCall();
+                callback.call();
             }
             return true;
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             return false;
         }
     }
-    public static boolean deleteLesson(final Context context, final String query, final int weekday, final JSONObject lesson, final Static.SimpleCallback callback) {
+    public static boolean deleteLesson(final Context context, final String query, final int weekday, final JSONObject lesson, final Callable callback) {
         try {
             if (context == null) throw new NullPointerException("context cannot be null");
             if (query == null) throw new NullPointerException("query cannot be null");
@@ -412,7 +414,7 @@ public class ScheduleLessons extends Schedule {
             if (!cdoitmo_type.equals("synthetic")) throw new Exception("wrong cdoitmo_type type: " + cdoitmo_type);
             final String hash = getLessonHash(lesson);
             final String token = query.toLowerCase();
-            final JSONArray added = Static.string2jsonArray(Storage.file.perm.get(context, "schedule_lessons#added#" + token, ""));
+            final JSONArray added = TextUtils.string2jsonArray(Storage.file.perm.get(context, "schedule_lessons#added#" + token, ""));
             for (int i = 0; i < added.length(); i++) {
                 final JSONObject day = added.getJSONObject(i);
                 if (day.getInt("weekday") == weekday) {
@@ -438,15 +440,15 @@ public class ScheduleLessons extends Schedule {
                 Storage.file.perm.put(context, "schedule_lessons#added#" + token, added.toString());
             }
             if (callback != null) {
-                callback.onCall();
+                callback.call();
             }
             return true;
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             return false;
         }
     }
-    public static boolean editLesson(final ConnectedActivity activity, final String query, final String title, final String type, final int weekday, final JSONObject lesson, final Static.SimpleCallback callback) {
+    public static boolean editLesson(final ConnectedActivity activity, final String query, final String title, final String type, final int weekday, final JSONObject lesson, final Callable callback) {
         try {
             if (activity == null) throw new NullPointerException("activity cannot be null");
             if (query == null) throw new NullPointerException("query cannot be null");
@@ -462,14 +464,14 @@ public class ScheduleLessons extends Schedule {
             extras.putString("title", title);
             extras.putInt("weekday", weekday);
             extras.putString("lesson", lesson.toString());
-            Static.T.runOnUiThread(() -> {
+            Thread.runOnUI(() -> {
                 if (activity.openActivityOrFragment(ScheduleLessonsModifyFragment.class, extras) && callback != null) {
-                    Static.T.runThread(callback::onCall);
+                    Thread.run(callback::call);
                 }
             });
             return true;
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             return false;
         }
     }

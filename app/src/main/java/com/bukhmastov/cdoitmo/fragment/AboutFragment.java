@@ -7,12 +7,13 @@ import android.support.annotation.Nullable;
 import android.view.View;
 import android.widget.TextView;
 
+import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.activity.PikaActivity;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
+import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
 
 import java.util.Random;
 
@@ -47,7 +48,7 @@ public class AboutFragment extends ConnectedFragment {
     public void onViewCreated() {
         TextView app_version = container.findViewById(R.id.app_version);
         if (app_version != null) {
-            app_version.setText(activity.getString(R.string.version) + " " + Static.versionName + " (" + Static.versionCode + " " + activity.getString(R.string.build) + ")");
+            app_version.setText(activity.getString(R.string.version) + " " + App.versionName + " (" + App.versionCode + " " + activity.getString(R.string.build) + ")");
         }
         // ----------
         View block_pika = container.findViewById(R.id.block_pika);
@@ -79,7 +80,7 @@ public class AboutFragment extends ConnectedFragment {
                     emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{"bukhmastov-alex@ya.ru"});
                     activity.startActivity(Intent.createChooser(emailIntent, activity.getString(R.string.send_mail) + "..."));
                 } catch (Exception e) {
-                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                    BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 }
             });
         }
@@ -92,7 +93,7 @@ public class AboutFragment extends ConnectedFragment {
                 try {
                     activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://vk.com/write9780714")));
                 } catch (Exception e) {
-                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                    BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 }
             });
         }
@@ -108,7 +109,7 @@ public class AboutFragment extends ConnectedFragment {
                     try {
                         activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.bukhmastov.cdoitmo")));
                     } catch (Exception e2) {
-                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 }
             });
@@ -122,7 +123,7 @@ public class AboutFragment extends ConnectedFragment {
                 try {
                     activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/bukhmastov/cdoitmo")));
                 } catch (Exception e) {
-                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                    BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 }
             });
         }
@@ -135,7 +136,7 @@ public class AboutFragment extends ConnectedFragment {
                 try {
                     activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://yasobe.ru/na/cdoifmo")));
                 } catch (Exception e) {
-                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                    BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 }
             });
         }

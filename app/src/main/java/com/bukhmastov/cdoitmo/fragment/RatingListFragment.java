@@ -11,6 +11,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
+import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapter.rva.RatingListRVA;
 import com.bukhmastov.cdoitmo.exception.SilentException;
@@ -19,9 +20,13 @@ import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.interfaces.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.parse.rating.RatingTopListParse;
+import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.Color;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.Time;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -67,7 +72,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
             course = extras.getString("course");
             years = extras.getString("years");
             if (years == null || years.isEmpty()) {
-                Calendar now = Static.getCalendar();
+                Calendar now = Time.getCalendar();
                 int year = now.get(Calendar.YEAR);
                 int month = now.get(Calendar.MONTH);
                 years = month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year;
@@ -77,7 +82,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                 throw new Exception("wrong extras provided | faculty=" + Log.lString(faculty) + " | course=" + Log.lString(course));
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             activity.back();
         }
     }
@@ -92,12 +97,12 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
             try {
                 String stored = restoreData(this);
                 if (stored != null && !stored.isEmpty()) {
-                    display(Static.string2json(stored));
+                    display(TextUtils.string2json(stored));
                 } else {
                     load();
                 }
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
                 load();
             }
         }
@@ -128,13 +133,13 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
     }
 
     private void load() {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.v(TAG, "load");
             activity.updateToolbar(activity, activity.getString(R.string.top_rating), R.drawable.ic_rating);
             minePosition = -1;
             mineFaculty = "";
             hideShareButton();
-            if (!Static.OFFLINE_MODE) {
+            if (!App.OFFLINE_MODE) {
                 if (faculty == null || faculty.isEmpty() || course == null || course.isEmpty() || years == null || years.isEmpty()) {
                     Log.w(TAG, "load | some data is empty | faculty=", faculty, " | course=", course, " | years=", years);
                     loadFailed();
@@ -143,7 +148,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                 DeIfmoClient.get(activity, "index.php?node=rating&std&depId=" + faculty + "&year=" + course + "&app=" + years, null, new ResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                        Static.T.runThread(() -> {
+                        Thread.run(() -> {
                             Log.v(TAG, "load | success | statusCode=" + statusCode);
                             if (statusCode == 200) {
                                 new RatingTopListParse(response, Storage.file.perm.get(activity, "user#name"), json -> {
@@ -159,7 +164,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                     }
                     @Override
                     public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                        Static.T.runOnUiThread(() -> {
+                        Thread.runOnUI(() -> {
                             Log.v(TAG, "load | failure " + state);
                             switch (state) {
                                 case DeIfmoClient.FAILED_OFFLINE:
@@ -188,7 +193,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                     }
                     @Override
                     public void onProgress(final int state) {
-                        Static.T.runOnUiThread(() -> {
+                        Thread.runOnUI(() -> {
                             Log.v(TAG, "load | progress " + state);
                             draw(R.layout.state_loading_text);
                             TextView loading_message = container.findViewById(R.id.loading_message);
@@ -207,23 +212,23 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                     }
                 });
             } else {
-                Static.T.runOnUiThread(() -> {
+                Thread.runOnUI(() -> {
                     try {
-                        Static.snackBar(activity, activity.getString(R.string.offline_mode_on));
+                        BottomBar.snackBar(activity, activity.getString(R.string.offline_mode_on));
                         draw(R.layout.state_offline_text);
                         View offline_reload = container.findViewById(R.id.offline_reload);
                         if (offline_reload != null) {
                             offline_reload.setOnClickListener(v -> load());
                         }
                     } catch (Exception e) {
-                        Static.error(e);
+                        Log.exception(e);
                     }
                 });
             }
         });
     }
     private void loadFailed() {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             Log.v(TAG, "loadFailed");
             try {
                 draw(R.layout.state_failed_button);
@@ -232,16 +237,16 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                     try_again_reload.setOnClickListener(v -> load());
                 }
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }
     private void display(final JSONObject data) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.v(TAG, "display");
             try {
                 if (data == null) throw new SilentException();
-                final String title = Static.capitalizeFirstLetter(data.getString("header"));
+                final String title = TextUtils.capitalizeFirstLetter(data.getString("header"));
                 activity.updateToolbar(activity, title, R.drawable.ic_rating);
                 minePosition = -1;
                 mineFaculty = "";
@@ -278,7 +283,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                     showShareButton();
                 }
                 final RatingListRVA adapter = new RatingListRVA(activity, rating);
-                Static.T.runOnUiThread(() -> {
+                Thread.runOnUI(() -> {
                     try {
                         draw(R.layout.layout_rating_list);
                         // set adapter to recycler view
@@ -292,25 +297,25 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                         // setup swipe
                         final SwipeRefreshLayout swipe_container = container.findViewById(R.id.swipe_container);
                         if (swipe_container != null) {
-                            swipe_container.setColorSchemeColors(Static.colorAccent);
-                            swipe_container.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
+                            swipe_container.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
+                            swipe_container.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));
                             swipe_container.setOnRefreshListener(this);
                         }
                     } catch (Exception e) {
-                        Static.error(e);
+                        Log.exception(e);
                         loadFailed();
                     }
                 });
             } catch (SilentException ignore) {
                 loadFailed();
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
                 loadFailed();
             }
         });
     }
     private void showShareButton() {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             try {
                 if (activity.toolbar != null) {
                     final MenuItem action_share = activity.toolbar.findItem(R.id.action_share);
@@ -323,32 +328,32 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                                         .replace("%faculty%", mineFaculty.isEmpty() ? "факультета" : mineFaculty)
                                 );
                             } catch (Exception e) {
-                                Static.error(e);
-                                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                Log.exception(e);
+                                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                             }
                             return false;
                         });
                     }
                 }
             } catch (Exception e){
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }
     private void hideShareButton() {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             try {
                 if (activity != null && activity.toolbar != null) {
                     MenuItem action_share = activity.toolbar.findItem(R.id.action_share);
                     if (action_share != null) action_share.setVisible(false);
                 }
             } catch (Exception e){
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }
     private void share(final String title) throws Exception {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             Log.v(TAG, "share | " + title);
             Intent intent = new Intent(Intent.ACTION_SEND);
             intent.setType("text/plain");

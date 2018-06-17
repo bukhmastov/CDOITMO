@@ -114,7 +114,7 @@
         <activity android:name=".activity.search.ScheduleAttestationsSearchActivity" />
 
         <service
-            android:name=".util.ProtocolTrackerJobService"
+            android:name=".object.ProtocolTrackerJobService"
             android:enabled="true"
             android:exported="true"
             android:permission="android.permission.BIND_JOB_SERVICE" />

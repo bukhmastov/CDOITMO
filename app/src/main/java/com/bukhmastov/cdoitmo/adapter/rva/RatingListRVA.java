@@ -12,7 +12,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -66,7 +66,7 @@ public class RatingListRVA extends RVA {
                 }
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
         return dataset;
     }
@@ -144,14 +144,14 @@ public class RatingListRVA extends RVA {
                 }
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void bindNoRating(View container, Item item) {
         try {
             ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_rating);
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private int resolveColor(int reference) throws Exception {
@@ -159,7 +159,7 @@ public class RatingListRVA extends RVA {
         if (saved != -1) {
             return saved;
         }
-        int color = Static.resolveColor(context, reference);
+        int color = com.bukhmastov.cdoitmo.util.Color.resolve(context, reference);
         colors.put(reference, color);
         return color;
     }

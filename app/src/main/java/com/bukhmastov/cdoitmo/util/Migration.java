@@ -7,6 +7,7 @@ import android.os.Build;
 import android.support.annotation.Keep;
 
 import com.bukhmastov.cdoitmo.activity.ScheduleLessonsWidgetConfigureActivity;
+import com.bukhmastov.cdoitmo.object.ProtocolTracker;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleExams;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 
@@ -64,7 +65,7 @@ public class Migration {
                 Storage.pref.put(context, "last_version", versionCode);
             }
         } catch (PackageManager.NameNotFoundException e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
 
@@ -72,6 +73,11 @@ public class Migration {
     // Methods for migrations
     // migrateXX - migration to version XX
     // -----------------------------------
+
+    @Keep
+    private static void migrate115(final Context context) {
+        Thread.run(Thread.BACKGROUND, () -> new ProtocolTracker(context).reset());
+    }
 
     @Keep
     private static void migrate111(final Context context) {
@@ -87,7 +93,7 @@ public class Migration {
                         settingsJson.put("useShiftAutomatic", true);
                         Storage.file.general.perm.put(context, "widget_schedule_lessons#" + appWidgetId + "#settings", settingsJson.toString());
                     } catch (Exception e) {
-                        Static.error(e);
+                        Log.exception(e);
                     }
                 } else {
                     Storage.file.general.perm.clear(context, "widget_schedule_lessons#" + appWidgetId);
@@ -125,7 +131,7 @@ public class Migration {
     @Keep
     private static void migrate106(final Context context) {
         Storage.pref.put(context, "pref_notify_type", Build.VERSION.SDK_INT <= Build.VERSION_CODES.M ? "0" : "1");
-        Static.T.runThread(Static.T.BACKGROUND, () -> new ProtocolTracker(context).reset());
+        Thread.run(Thread.BACKGROUND, () -> new ProtocolTracker(context).reset());
     }
 
     @Keep
@@ -704,7 +710,7 @@ public class Migration {
                         settingsJson.put("shift", 0);
                         Storage.file.general.perm.put(context, "widget_schedule_lessons#" + appWidgetId + "#settings", settingsJson.toString());
                     } catch (Exception e) {
-                        Static.error(e);
+                        Log.exception(e);
                         Storage.file.general.perm.delete(context, "widget_schedule_lessons#" + appWidgetId + "#settings");
                     }
                 }
@@ -740,7 +746,7 @@ public class Migration {
                             Storage.file.general.perm.put(context, "widget_schedule_lessons#" + appWidgetId + "#settings", settingsJson.toString());
                         }
                     } catch (Exception e) {
-                        Static.error(e);
+                        Log.exception(e);
                         Storage.file.general.perm.delete(context, "widget_schedule_lessons#" + appWidgetId + "#settings");
                     }
                 } else {
@@ -761,7 +767,7 @@ public class Migration {
     private static void migrate71(final Context context) {
         Storage.pref.delete(context, "pref_open_drawer_at_startup");
         Storage.pref.put(context, "pref_first_launch", Storage.file.general.perm.get(context, "users#list", "").trim().isEmpty());
-        Static.T.runThread(Static.T.BACKGROUND, () -> new ProtocolTracker(context).reset());
+        Thread.run(Thread.BACKGROUND, () -> new ProtocolTracker(context).reset());
     }
 
     @Keep
@@ -776,7 +782,7 @@ public class Migration {
     private static void migrate51(final Context context) {
         Storage.file.cache.clear(context, "protocol#log");
         if (Storage.pref.get(context, "pref_protocol_changes_track", true)) {
-            Static.protocolChangesTrackSetup(context, 0);
+            ProtocolTracker.setup(context, 0);
         }
     }
 

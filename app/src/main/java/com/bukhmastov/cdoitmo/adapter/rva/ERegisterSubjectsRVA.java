@@ -7,7 +7,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -94,7 +94,7 @@ public class ERegisterSubjectsRVA extends RVA {
                 }
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
         return dataset;
     }
@@ -109,14 +109,14 @@ public class ERegisterSubjectsRVA extends RVA {
                 container.findViewById(R.id.subject).setOnClickListener(v -> onElementClickListeners.get(R.id.subject).onClick(v, getMap("data", data)));
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void bindNoSubjects(View container, Item item) {
         try {
             ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_subjects);
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private String double2string(Double value) {

@@ -2,12 +2,14 @@ package com.bukhmastov.cdoitmo.network;
 
 import android.content.Context;
 
+import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.network.interfaces.RawJsonHandler;
 import com.bukhmastov.cdoitmo.network.interfaces.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
+import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.network.model.DeIfmo;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -24,10 +26,10 @@ public class DeIfmoRestClient extends DeIfmo {
         get(context, DEFAULT_PROTOCOL, url, query, responseHandler);
     }
     public static void get(final Context context, final @Protocol String protocol, final String url, final Map<String, String> query, final RestResponseHandler responseHandler) {
-        Static.T.runThread(Static.T.BACKGROUND, () -> {
+        Thread.run(Thread.BACKGROUND, () -> {
             Log.v(TAG, "get | url=", url);
-            if (Static.isOnline(context)) {
-                if (Static.UNAUTHORIZED_MODE) {
+            if (Client.isOnline(context)) {
+                if (App.UNAUTHORIZED_MODE) {
                     Log.v(TAG, "get | UNAUTHORIZED_MODE | failed");
                     responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_UNAUTHORIZED_MODE);
                     return;
@@ -75,7 +77,7 @@ public class DeIfmoRestClient extends DeIfmo {
                 gJson(context, getAbsoluteUrl(protocol, url), query, new RawJsonHandler() {
                     @Override
                     public void onDone(final int code, final okhttp3.Headers headers, final String response, final JSONObject responseObj, final JSONArray responseArr) {
-                        Static.T.runThread(Static.T.BACKGROUND, () -> {
+                        Thread.run(Thread.BACKGROUND, () -> {
                             Log.v(TAG, "get | url=", url, " | success | statusCode=", code);
                             if (code >= 400) {
                                 responseHandler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
@@ -86,7 +88,7 @@ public class DeIfmoRestClient extends DeIfmo {
                     }
                     @Override
                     public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
-                        Static.T.runThread(Static.T.BACKGROUND, () -> {
+                        Thread.run(Thread.BACKGROUND, () -> {
                             Log.v(TAG, "get | url=", url, " | failure | statusCode=", code, " | throwable=", throwable);
                             responseHandler.onFailure(code, new Headers(headers), isInterrupted(throwable) ? FAILED_INTERRUPTED : (code >= 400 ? FAILED_SERVER_ERROR : (isCorruptedJson(throwable) ? FAILED_CORRUPTED_JSON : FAILED_TRY_AGAIN)));
                         });

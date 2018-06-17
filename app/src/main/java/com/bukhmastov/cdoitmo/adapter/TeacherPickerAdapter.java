@@ -10,7 +10,7 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -74,7 +74,7 @@ public class TeacherPickerAdapter extends ArrayAdapter<JSONObject> {
             }
             return convertView;
         } catch (JSONException e) {
-            Static.error(e);
+            Log.exception(e);
             return super.getView(position, convertView, parent);
         }
     }

@@ -17,9 +17,10 @@ import com.bukhmastov.cdoitmo.adapter.TeacherPickerAdapter;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.preference.Preference;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
+import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -51,7 +52,7 @@ public abstract class SettingsSchedule {
     }
 
     public void show() {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             try {
                 final String value = Storage.pref.get(activity, preference.key, (String) preference.defaultValue);
                 final ViewGroup layout = (ViewGroup) inflate(R.layout.preference_schedule);
@@ -73,18 +74,18 @@ public abstract class SettingsSchedule {
                     @Override
                     public void afterTextChanged(Editable editable) {
                         toggleSearchState("action");
-                        Static.T.runOnUiThread(() -> {
+                        Thread.runOnUI(() -> {
                             teacherPickerAdapter.clear();
                             lsp_search.dismissDropDown();
                         });
-                        Static.T.runThread(() -> {
+                        Thread.run(() -> {
                             if (requestHandle != null) {
                                 requestHandle.cancel();
                             }
                         });
                     }
                 });
-                lsp_search_action.setOnClickListener(view -> Static.T.runThread(() -> {
+                lsp_search_action.setOnClickListener(view -> Thread.run(() -> {
                     final String query = lsp_search.getText().toString().trim();
                     Log.v(TAG, "show | search action | clicked | query=" + query);
                     if (!query.isEmpty()) {
@@ -94,7 +95,7 @@ public abstract class SettingsSchedule {
                         search(query);
                     }
                 }));
-                lsp_search.setOnItemClickListener((parent, view, position, id) -> Static.T.runThread(() -> {
+                lsp_search.setOnItemClickListener((parent, view, position, id) -> Thread.run(() -> {
                     try {
                         Log.v(TAG, "show | search list selected");
                         final JSONObject item = teacherPickerAdapter.getItem(position);
@@ -102,17 +103,17 @@ public abstract class SettingsSchedule {
                             query = item.getString("pid");
                             title = item.getString("person");
                             Log.v(TAG, "show | search list selected | query=" + query + " | title=" + title);
-                            Static.T.runOnUiThread(() -> lsp_search.setText(title));
+                            Thread.runOnUI(() -> lsp_search.setText(title));
                             toggleSearchState("selected");
                         } else {
-                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                            BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                         }
                     } catch (Exception e) {
-                        Static.error(e);
-                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        Log.exception(e);
+                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 }));
-                lsp_radio_group.setOnCheckedChangeListener((group, checkedId) -> Static.T.runOnUiThread(() -> {
+                lsp_radio_group.setOnCheckedChangeListener((group, checkedId) -> Thread.runOnUI(() -> {
                     switch (group.getCheckedRadioButtonId()) {
                         // TODO uncomment, when personal schedule will be ready
                         /*case R.id.lsp_schedule_personal: {
@@ -155,18 +156,18 @@ public abstract class SettingsSchedule {
                         }
                     }
                 } catch (Exception e) {
-                    Static.error(e);
+                    Log.exception(e);
                 }
                 // show dialog
                 new AlertDialog.Builder(activity)
                         .setTitle(R.string.default_schedule)
                         .setView(layout)
-                        .setPositiveButton(R.string.accept, (dialog, which) -> Static.T.runThread(() -> {
+                        .setPositiveButton(R.string.accept, (dialog, which) -> Thread.run(() -> {
                             Log.v(TAG, "show | onPositiveButton | query=" + query + " | title=" + title);
                             try {
                                 if (callback != null && query != null && title != null) {
                                     if (query.isEmpty()) {
-                                        Static.snackBar(activity, activity.getString(R.string.need_to_choose_schedule));
+                                        BottomBar.snackBar(activity, activity.getString(R.string.need_to_choose_schedule));
                                     } else {
                                         callback.onDone(new JSONObject()
                                                 .put("query", query)
@@ -176,26 +177,26 @@ public abstract class SettingsSchedule {
                                     }
                                 }
                             } catch (Exception e) {
-                                Static.error(e);
+                                Log.exception(e);
                             }
                         }))
                         .create().show();
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }
     protected abstract void search(final String query);
     protected abstract String getHint();
     protected void search(final String q, final Schedule.ScheduleSearchProvider scheduleSearchProvider) {
-        Static.T.runThread(() -> scheduleSearchProvider.onSearch(activity, q, new Schedule.Handler() {
+        Thread.run(() -> scheduleSearchProvider.onSearch(activity, q, new Schedule.Handler() {
             @Override
             public void onSuccess(final JSONObject json, final boolean fromCache) {
                 Log.v(TAG, "show | search action | onSuccess | json=" + (json == null ? "null" : "notnull"));
                 toggleSearchState("action");
-                Static.T.runThread(() -> {
+                Thread.run(() -> {
                     if (json == null) {
-                        Static.snackBar(activity, activity.getString(R.string.schedule_not_found));
+                        BottomBar.snackBar(activity, activity.getString(R.string.schedule_not_found));
                     } else {
                         try {
                             String t = json.getString("type");
@@ -226,17 +227,17 @@ public abstract class SettingsSchedule {
                                             query = item.getString("pid");
                                             title = item.getString("person");
                                             Log.v(TAG, "show | search action | onSuccess | done | query=" + query + " | title=" + title);
-                                            Static.T.runOnUiThread(() -> lsp_search.setText(title));
+                                            Thread.runOnUI(() -> lsp_search.setText(title));
                                             toggleSearchState("selected");
                                         } else {
-                                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                            BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                         }
                                     } else {
                                         final ArrayList<JSONObject> arrayList = new ArrayList<>();
                                         for (int i = 0; i < schedule.length(); i++) {
                                             arrayList.add(schedule.getJSONObject(i));
                                         }
-                                        Static.T.runOnUiThread(() -> {
+                                        Thread.runOnUI(() -> {
                                             teacherPickerAdapter.addAll(arrayList);
                                             teacherPickerAdapter.addTeachers(arrayList);
                                             if (arrayList.size() > 0) {
@@ -247,13 +248,13 @@ public abstract class SettingsSchedule {
                                     break;
                                 }
                                 default: {
-                                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                    BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                     break;
                                 }
                             }
                         } catch (Exception e) {
-                            Static.error(e);
-                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                            Log.exception(e);
+                            BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                         }
                     }
                 });
@@ -266,23 +267,23 @@ public abstract class SettingsSchedule {
             public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                 Log.v(TAG, "show | search action | onFailure | state=" + state);
                 toggleSearchState("action");
-                Static.T.runOnUiThread(() -> {
+                Thread.runOnUI(() -> {
                     switch (state) {
                         case Client.FAILED_OFFLINE:
                         case Schedule.FAILED_OFFLINE: {
-                            Static.snackBar(activity, activity.getString(R.string.offline_mode_on));
+                            BottomBar.snackBar(activity, activity.getString(R.string.offline_mode_on));
                             break;
                         }
                         case Client.FAILED_SERVER_ERROR: {
-                            Static.snackBar(activity, Client.getFailureMessage(activity, statusCode));
+                            BottomBar.snackBar(activity, Client.getFailureMessage(activity, statusCode));
                             break;
                         }
                         case Client.FAILED_CORRUPTED_JSON: {
-                            Static.snackBar(activity, activity.getString(R.string.server_provided_corrupted_json));
+                            BottomBar.snackBar(activity, activity.getString(R.string.server_provided_corrupted_json));
                             break;
                         }
                         default: {
-                            Static.snackBar(activity, activity.getString(R.string.schedule_not_found));
+                            BottomBar.snackBar(activity, activity.getString(R.string.schedule_not_found));
                             break;
                         }
                     }
@@ -306,7 +307,7 @@ public abstract class SettingsSchedule {
         }));
     }
     protected void toggleSearchState(final String state) {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             switch (state) {
                 case "action":
                 default: {

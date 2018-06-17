@@ -6,7 +6,7 @@ import android.content.Intent;
 import com.bukhmastov.cdoitmo.activity.MainActivity;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Notifications;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Thread;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
@@ -27,12 +27,12 @@ public class FirebaseMessagingServiceProvider extends FirebaseMessagingService {
             Log.v(TAG, "---------------------");
             handleNotification(title, text, remoteMessage.getSentTime());
         } catch (Throwable e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
 
     private void handleNotification(final String title, final String text, final long timestamp) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             try {
                 if (title.isEmpty() || text.isEmpty()) {
                     Log.w(TAG, "Got FCM message with empty title/text | title=", title, " | text=", text);
@@ -47,7 +47,7 @@ public class FirebaseMessagingServiceProvider extends FirebaseMessagingService {
                 Notifications notifications = new Notifications(getBaseContext());
                 notifications.notify(-1, notifications.getSystem(getBaseContext(), title, text, timestamp, true, pendingIntent));
             } catch (Throwable e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }

@@ -16,14 +16,14 @@ public class CtxWrapper extends ContextWrapper {
     public static ContextWrapper wrap(Context context) {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                Locale locale = Static.getLocale(context);
+                Locale locale = TextUtils.getLocale(context);
                 Locale.setDefault(locale);
                 Configuration config = context.getResources().getConfiguration();
                 config.setLocale(locale);
                 context = context.createConfigurationContext(config);
             }
         } catch (Throwable e) {
-            Static.error(e);
+            Log.exception(e);
         }
         return new CtxWrapper(context);
     }

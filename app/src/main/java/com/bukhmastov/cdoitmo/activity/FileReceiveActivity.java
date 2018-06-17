@@ -18,9 +18,12 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsShareFragment;
+import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.Theme;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -44,15 +47,14 @@ public class FileReceiveActivity extends ConnectedActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        Static.init(activity);
-        Static.applyActivityTheme(this);
+        Theme.applyActivityTheme(this);
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
         FirebaseAnalyticsProvider.logCurrentScreen(this);
         setContentView(R.layout.activity_file_receive);
         Toolbar toolbar = findViewById(R.id.toolbar_file);
         if (toolbar != null) {
-            Static.applyToolbarTheme(activity, toolbar);
+            Theme.applyToolbarTheme(activity, toolbar);
             setSupportActionBar(toolbar);
         }
         ActionBar actionBar = getSupportActionBar();
@@ -64,7 +66,7 @@ public class FileReceiveActivity extends ConnectedActivity {
     }
 
     private void proceed() {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             try {
                 final Intent intent = activity.getIntent();
                 if (intent == null) {
@@ -139,7 +141,7 @@ public class FileReceiveActivity extends ConnectedActivity {
     private String fileFromWeb(final Context context, final Uri uri) throws Throwable {
         Log.v(TAG, "fileFromWeb | uri: " + uri.toString());
         HashMap<String, String> headers = new HashMap<>();
-        headers.put("User-Agent", Static.getUserAgent(context));
+        headers.put("User-Agent", Client.getUserAgent(context));
         Request request = new Request.Builder()
                 .url(uri.toString())
                 .headers(okhttp3.Headers.of(headers))
@@ -181,7 +183,7 @@ public class FileReceiveActivity extends ConnectedActivity {
     }
 
     private void share_schedule_of_lessons(final String file, final JSONObject object) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             try {
                 Log.v(TAG, "share_schedule_of_lessons");
                 if (Storage.file.general.perm.get(activity, "users#current_login", "").trim().isEmpty()) {
@@ -200,7 +202,7 @@ public class FileReceiveActivity extends ConnectedActivity {
                 } else {
                     throw new MessageException(activity.getString(R.string.corrupted_file));
                 }
-                Static.T.runOnUiThread(() -> {
+                Thread.runOnUI(() -> {
                     Bundle extras = new Bundle();
                     extras.putString("action", "handle");
                     extras.putString("data", file);
@@ -219,7 +221,7 @@ public class FileReceiveActivity extends ConnectedActivity {
     }
 
     private void failure(final String message) {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             Log.v(TAG, "failure | message=" + message);
             View state_failed_without_align = inflate(R.layout.state_failed_text_compact);
             ((TextView) state_failed_without_align.findViewById(R.id.text)).setText(message);

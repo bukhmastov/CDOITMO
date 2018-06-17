@@ -15,8 +15,10 @@ import com.bukhmastov.cdoitmo.object.preference.Preference;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceBasic;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceList;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -87,7 +89,7 @@ public class SettingsNotificationsFragment extends SettingsTemplatePreferencesFr
                             }
                         }
                     } catch (Exception e) {
-                        Static.error(e);
+                        Log.exception(e);
                         return null;
                     }
                 }
@@ -97,7 +99,7 @@ public class SettingsNotificationsFragment extends SettingsTemplatePreferencesFr
         preferences.add(new PreferenceBasic("pref_open_system_notifications_settings", null, R.string.pref_open_system_notifications_settings, false, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                Static.T.runOnUiThread(() -> {
+                Thread.runOnUI(() -> {
                     try {
                         Intent intent = new Intent("android.settings.APP_NOTIFICATION_SETTINGS");
                         intent.putExtra("android.provider.extra.APP_PACKAGE", activity.getPackageName());
@@ -106,7 +108,7 @@ public class SettingsNotificationsFragment extends SettingsTemplatePreferencesFr
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         activity.startActivity(intent);
                     } catch (Exception e) {
-                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 });
             }

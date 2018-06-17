@@ -2,7 +2,7 @@ package com.bukhmastov.cdoitmo.firebase;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Thread;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 
@@ -71,12 +71,12 @@ public class FirebaseConfigProvider {
     }
 
     private static void fetch(final Callback callback) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.v(TAG, "fetch");
             getFirebaseRemoteConfig().fetch(DEBUG ? 0 : cacheExpiration)
-                    .addOnCompleteListener(task -> Static.T.runThread(() -> {
+                    .addOnCompleteListener(task -> Thread.run(() -> {
                         boolean successful = task.isSuccessful();
-                        Log.v(TAG, "fetch | onComplete | successful=" + Log.lBool(successful));
+                        Log.v(TAG, "fetch | onComplete | successful=", successful);
                         if (successful) {
                             getFirebaseRemoteConfig().activateFetched();
                         }

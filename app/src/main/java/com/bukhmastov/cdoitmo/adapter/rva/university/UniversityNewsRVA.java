@@ -12,7 +12,9 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.WebViewActivity;
+import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
@@ -118,7 +120,7 @@ public class UniversityNewsRVA extends UniversityRVA {
                 }
             }
             if (titleView != null) {
-                ((TextView) titleView).setText(Static.escapeString(title));
+                ((TextView) titleView).setText(TextUtils.escapeString(title));
             }
             if (categoriesView != null) {
                 boolean category_parent_exists = category_parent != null && !category_parent.trim().isEmpty();
@@ -153,7 +155,7 @@ public class UniversityNewsRVA extends UniversityRVA {
             }
             if (anonsView != null) {
                 if (anons != null && !anons.trim().isEmpty()) {
-                    ((TextView) anonsView).setText(Static.escapeString(anons));
+                    ((TextView) anonsView).setText(TextUtils.escapeString(anons));
                 } else {
                     Static.removeView(anonsView);
                 }
@@ -163,7 +165,7 @@ public class UniversityNewsRVA extends UniversityRVA {
             if (date_exists || count_exists) {
                 if (dateView != null) {
                     if (date_exists) {
-                        ((TextView) dateView).setText(Static.cuteDate(context, "yyyy-MM-dd HH:mm:ss", date));
+                        ((TextView) dateView).setText(TextUtils.cuteDate(context, "yyyy-MM-dd HH:mm:ss", date));
                     } else {
                         Static.removeView(dateView);
                     }
@@ -193,7 +195,7 @@ public class UniversityNewsRVA extends UniversityRVA {
                 });
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void bindMinor(RecyclerView.ViewHolder holder, Item item) {
@@ -242,7 +244,7 @@ public class UniversityNewsRVA extends UniversityRVA {
                 }
             }
             if (titleView != null) {
-                ((TextView) titleView).setText(Static.escapeString(title));
+                ((TextView) titleView).setText(TextUtils.escapeString(title));
             }
             if (categoriesView != null) {
                 boolean category_parent_exists = category_parent != null && !category_parent.trim().isEmpty();
@@ -280,7 +282,7 @@ public class UniversityNewsRVA extends UniversityRVA {
             if (date_exists || count_exists) {
                 if (dateView != null) {
                     if (date_exists) {
-                        ((TextView) dateView).setText(Static.cuteDate(context, "yyyy-MM-dd HH:mm:ss", date));
+                        ((TextView) dateView).setText(TextUtils.cuteDate(context, "yyyy-MM-dd HH:mm:ss", date));
                     } else {
                         Static.removeView(dateView);
                     }
@@ -310,7 +312,7 @@ public class UniversityNewsRVA extends UniversityRVA {
                 });
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void bindState(RecyclerView.ViewHolder holder, Item item) {
@@ -329,7 +331,7 @@ public class UniversityNewsRVA extends UniversityRVA {
                 viewHolder.container.setOnClickListener(onStateClickListener);
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
 }

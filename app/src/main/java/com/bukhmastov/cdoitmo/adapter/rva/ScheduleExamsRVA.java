@@ -12,9 +12,14 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleExamsFragment;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleExams;
+import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.Time;
+import com.bukhmastov.cdoitmo.interfaces.CallableString;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -44,11 +49,11 @@ public class ScheduleExamsRVA extends RVA {
     private final ConnectedActivity activity;
     private final JSONObject data;
     private final int mode; // 0 - exam, 1 - credit
-    private final Static.StringCallback callback;
+    private final CallableString callback;
     private String type = "";
     private String query = null;
 
-    public ScheduleExamsRVA(final ConnectedActivity activity, JSONObject data, int mode, final Static.StringCallback callback) {
+    public ScheduleExamsRVA(final ConnectedActivity activity, JSONObject data, int mode, final CallableString callback) {
         this.activity = activity;
         this.data = data;
         this.mode = mode;
@@ -58,7 +63,7 @@ public class ScheduleExamsRVA extends RVA {
             query = data.getString("query");
             addItems(json2dataset(activity, data));
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
 
@@ -128,10 +133,10 @@ public class ScheduleExamsRVA extends RVA {
             } else {
                 ((ViewGroup) schedule_lessons_week.getParent()).removeView(schedule_lessons_week);
             }
-            container.findViewById(R.id.schedule_lessons_menu).setOnClickListener(view -> Static.T.runThread(() -> {
+            container.findViewById(R.id.schedule_lessons_menu).setOnClickListener(view -> Thread.run(() -> {
                 final String cache_token = query == null ? null : query.toLowerCase();
                 final boolean cached = cache_token != null && !Storage.file.general.cache.get(activity, "schedule_exams#lessons#" + cache_token, "").isEmpty();
-                Static.T.runOnUiThread(() -> {
+                Thread.runOnUI(() -> {
                     try {
                         final PopupMenu popup = new PopupMenu(activity, view);
                         final Menu menu = popup.getMenu();
@@ -144,29 +149,29 @@ public class ScheduleExamsRVA extends RVA {
                                 case R.id.remove_from_cache: {
                                     try {
                                         if (cache_token == null) {
-                                            Static.snackBar(activity, activity.getString(R.string.cache_failed));
+                                            BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
                                         } else {
                                             if (Storage.file.general.cache.exists(activity, "schedule_exams#lessons#" + cache_token)) {
                                                 if (Storage.file.general.cache.delete(activity, "schedule_exams#lessons#" + cache_token)) {
-                                                    Static.snackBar(activity, activity.getString(R.string.cache_false));
+                                                    BottomBar.snackBar(activity, activity.getString(R.string.cache_false));
                                                 } else {
-                                                    Static.snackBar(activity, activity.getString(R.string.cache_failed));
+                                                    BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
                                                 }
                                             } else {
                                                 if (data == null) {
-                                                    Static.snackBar(activity, activity.getString(R.string.cache_failed));
+                                                    BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
                                                 } else {
                                                     if (Storage.file.general.cache.put(activity, "schedule_exams#lessons#" + cache_token, data.toString())) {
-                                                        Static.snackBar(activity, activity.getString(R.string.cache_true));
+                                                        BottomBar.snackBar(activity, activity.getString(R.string.cache_true));
                                                     } else {
-                                                        Static.snackBar(activity, activity.getString(R.string.cache_failed));
+                                                        BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
                                                     }
                                                 }
                                             }
                                         }
                                     } catch (Exception e) {
-                                        Static.error(e);
-                                        Static.snackBar(activity, activity.getString(R.string.cache_failed));
+                                        Log.exception(e);
+                                        BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
                                     }
                                     break;
                                 }
@@ -179,13 +184,13 @@ public class ScheduleExamsRVA extends RVA {
                         });
                         popup.show();
                     } catch (Exception e) {
-                        Static.error(e);
-                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        Log.exception(e);
+                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 });
             }));
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void bindExam(View container, Item item) {
@@ -256,12 +261,12 @@ public class ScheduleExamsRVA extends RVA {
                         popup.setOnMenuItemClickListener(item1 -> {
                             Log.v(TAG, "popup.MenuItem clicked | " + item1.getTitle().toString());
                             switch (item1.getItemId()) {
-                                case R.id.open_group: if (group != null && !group.isEmpty()) callback.onCall(group); break;
+                                case R.id.open_group: if (group != null && !group.isEmpty()) callback.call(group); break;
                                 case R.id.open_teacher: {
                                     if (teacher_id != null && !teacher_id.isEmpty()) {
-                                        callback.onCall(teacher_id);
+                                        callback.call(teacher_id);
                                     } else if (teacher != null && !teacher.isEmpty()) {
-                                        callback.onCall(teacher);
+                                        callback.call(teacher);
                                     }
                                     break;
                                 }
@@ -270,7 +275,7 @@ public class ScheduleExamsRVA extends RVA {
                         });
                         popup.show();
                     } catch (Exception e){
-                        Static.error(e);
+                        Log.exception(e);
                     }
                 });
             }
@@ -352,7 +357,7 @@ public class ScheduleExamsRVA extends RVA {
             container.findViewById(R.id.separator_small).setVisibility((isAdviceExists && !isExamExists) || (!isAdviceExists && isExamExists) ? View.GONE : View.VISIBLE);
             container.findViewById(R.id.exam_info).setVisibility(isAdviceExists || isExamExists ? View.VISIBLE : View.GONE);
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void bindUpdateTime(View container, Item item) {
@@ -360,13 +365,13 @@ public class ScheduleExamsRVA extends RVA {
             final String text = getString(item.data, "text");
             ((TextView) container.findViewById(R.id.update_time)).setText(text != null && !text.isEmpty() ? text : Static.GLITCH);
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void bindNoExams(View container, Item item) {
         try {
             String info = "";
-            Calendar calendar = Static.getCalendar();
+            Calendar calendar = Time.getCalendar();
             int month = calendar.get(Calendar.MONTH);
             int day = calendar.get(Calendar.DAY_OF_MONTH);
             if ((month >= Calendar.SEPTEMBER && (month <= Calendar.DECEMBER && day < 20)) || (month >= Calendar.FEBRUARY && (month <= Calendar.MAY && day < 20))) {
@@ -374,7 +379,7 @@ public class ScheduleExamsRVA extends RVA {
             }
             ((TextView) container.findViewById(R.id.ntd_text)).setText((mode == 0 ? activity.getText(R.string.no_exams) : activity.getText(R.string.no_credits)) + info);
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void bindPickerHeader(View container, Item item) {
@@ -388,7 +393,7 @@ public class ScheduleExamsRVA extends RVA {
             }
             ((TextView) container.findViewById(R.id.teacher_picker_header)).setText(text);
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void bindPickerItem(View container, Item item) {
@@ -402,11 +407,11 @@ public class ScheduleExamsRVA extends RVA {
             ((TextView) container.findViewById(R.id.teacher_picker_title)).setText(teacher);
             container.findViewById(R.id.teacher_picker_item).setOnClickListener(view -> {
                 if (pid != null && !pid.isEmpty()) {
-                    callback.onCall(pid);
+                    callback.call(pid);
                 }
             });
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void bindPickerNoTeachers(View container, Item item) {
@@ -420,7 +425,7 @@ public class ScheduleExamsRVA extends RVA {
             }
             ((TextView) container.findViewById(R.id.ntd_text)).setText(text);
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
 
@@ -461,7 +466,7 @@ public class ScheduleExamsRVA extends RVA {
                 dataset.add(new Item(TYPE_NO_EXAMS, null));
             } else {
                 // update time
-                dataset.add(new Item(TYPE_UPDATE_TIME, new JSONObject().put("text", activity.getString(R.string.update_date) + " " + Static.getUpdateTime(activity, json.getLong("timestamp")))));
+                dataset.add(new Item(TYPE_UPDATE_TIME, new JSONObject().put("text", activity.getString(R.string.update_date) + " " + Time.getUpdateTime(activity, json.getLong("timestamp")))));
             }
         }
         // that's all
@@ -472,7 +477,7 @@ public class ScheduleExamsRVA extends RVA {
         try {
             String date_format = "dd.MM.yyyy" + date_format_append;
             if (isValidFormat(context, date, date_format)) {
-                date = Static.cuteDate(context, date_format, date);
+                date = TextUtils.cuteDate(context, date_format, date);
             } else {
                 Matcher m = patternBrokenDate.matcher(date);
                 if (m.find()) {
@@ -501,22 +506,22 @@ public class ScheduleExamsRVA extends RVA {
         return date;
     }
     protected static String cuteDateWOYear(Context context, String date_format, String date_string) throws Exception {
-        SimpleDateFormat format_input = new SimpleDateFormat(date_format, Static.getLocale(context));
-        Calendar date = Static.getCalendar();
+        SimpleDateFormat format_input = new SimpleDateFormat(date_format, TextUtils.getLocale(context));
+        Calendar date = Time.getCalendar();
         date.setTime(format_input.parse(date_string));
         return (new StringBuilder())
                 .append(date.get(Calendar.DATE))
                 .append(" ")
-                .append(Static.getGenitiveMonth(context, date.get(Calendar.MONTH)))
+                .append(Time.getGenitiveMonth(context, date.get(Calendar.MONTH)))
                 .append(" ")
-                .append(Static.ldgZero(date.get(Calendar.HOUR_OF_DAY)))
+                .append(TextUtils.ldgZero(date.get(Calendar.HOUR_OF_DAY)))
                 .append(":")
-                .append(Static.ldgZero(date.get(Calendar.MINUTE)))
+                .append(TextUtils.ldgZero(date.get(Calendar.MINUTE)))
                 .toString();
     }
     protected static boolean isValidFormat(Context context, String value, String format) {
         try {
-            SimpleDateFormat sdf = new SimpleDateFormat(format, Static.getLocale(context));
+            SimpleDateFormat sdf = new SimpleDateFormat(format, TextUtils.getLocale(context));
             Date date = sdf.parse(value);
             if (!value.equals(sdf.format(date))) {
                 date = null;

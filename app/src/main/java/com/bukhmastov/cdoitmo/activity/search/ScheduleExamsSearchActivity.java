@@ -6,7 +6,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ScheduleExamsTabHostFragment;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 public class ScheduleExamsSearchActivity extends SearchActivity {
 
@@ -34,7 +34,7 @@ public class ScheduleExamsSearchActivity extends SearchActivity {
 
     @Override
     protected void onDone(final String query) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.v(TAG, "onDone | query=", query);
             ScheduleExamsTabHostFragment.setQuery(query);
             ScheduleExamsTabHostFragment.invalidate();

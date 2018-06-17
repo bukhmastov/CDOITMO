@@ -10,6 +10,7 @@ import android.util.ArrayMap;
 import android.view.View;
 import android.widget.TextView;
 
+import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.LoginActivity;
 import com.bukhmastov.cdoitmo.adapter.rva.RatingRVA;
@@ -19,9 +20,13 @@ import com.bukhmastov.cdoitmo.network.interfaces.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.parse.rating.RatingListParse;
 import com.bukhmastov.cdoitmo.parse.rating.RatingParse;
+import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.Color;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.Time;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -85,8 +90,8 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
             try {
                 String storedData = restoreData(this);
                 String storedExtra = restoreDataExtra(this);
-                JSONObject storedCommon = storedData != null && !storedData.isEmpty() ? Static.string2json(storedData) : null;
-                JSONObject storedOwn = storedExtra != null && !storedExtra.isEmpty() ? Static.string2json(storedExtra) : null;
+                JSONObject storedCommon = storedData != null && !storedData.isEmpty() ? TextUtils.string2json(storedData) : null;
+                JSONObject storedOwn = storedExtra != null && !storedExtra.isEmpty() ? TextUtils.string2json(storedExtra) : null;
                 if (storedCommon != null) {
                     data.put(COMMON, new Info(LOADED, storedCommon));
                 }
@@ -99,7 +104,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                     display();
                 }
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
                 load();
             }
         }
@@ -131,10 +136,10 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
     }
 
     private void load() {
-        Static.T.runThread(() -> load(COMMON));
+        Thread.run(() -> load(COMMON));
     }
     private void load(final @TYPE String type) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             switch (type) {
                 case COMMON: {
                     load(type, Storage.pref.get(activity, "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(activity, "pref_static_refresh", "168")) : 0);
@@ -148,7 +153,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
         });
     }
     private void load(final @TYPE String type, final int refresh_rate) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.v(TAG, "load | type=" + type + " | refresh_rate=" + refresh_rate);
             if (Storage.pref.get(activity, "pref_use_cache", true)) {
                 String cache = "";
@@ -165,7 +170,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                 if (!cache.isEmpty()) {
                     try {
                         data.get(type).data = new JSONObject(cache);
-                        if (data.get(type).data.getLong("timestamp") + refresh_rate * 3600000L < Static.getCalendar().getTimeInMillis()) {
+                        if (data.get(type).data.getLong("timestamp") + refresh_rate * 3600000L < Time.getCalendar().getTimeInMillis()) {
                             load(type, true, cache);
                         } else {
                             load(type, false, cache);
@@ -183,10 +188,10 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
         });
     }
     private void load(final @TYPE String type, final boolean force) {
-        Static.T.runThread(() -> load(type, force, ""));
+        Thread.run(() -> load(type, force, ""));
     }
     private void load(final @TYPE String type, final boolean force, final String cache) {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             draw(R.layout.state_loading_text);
             if (activity != null) {
                 TextView loading_message = container.findViewById(R.id.loading_message);
@@ -195,13 +200,13 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                 }
             }
         });
-        Static.T.runThread(() -> {
-            if (Static.UNAUTHORIZED_MODE && type.equals(OWN)) {
+        Thread.run(() -> {
+            if (App.UNAUTHORIZED_MODE && type.equals(OWN)) {
                 loaded(type);
                 return;
             }
             Log.v(TAG, "load | type=" + type + " | force=" + (force ? "true" : "false"));
-            if ((!force || !Static.isOnline(activity)) && Storage.pref.get(activity, "pref_use_cache", true)) {
+            if ((!force || !Client.isOnline(activity)) && Storage.pref.get(activity, "pref_use_cache", true)) {
                 try {
                     String c = "";
                     if (cache.isEmpty()) {
@@ -238,7 +243,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                     }
                 }
             }
-            if (!Static.OFFLINE_MODE) {
+            if (!App.OFFLINE_MODE) {
                 String url = "";
                 switch (type) {
                     case COMMON: {
@@ -253,7 +258,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                 DeIfmoClient.get(activity, url, null, new ResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                        Static.T.runThread(() -> {
+                        Thread.run(() -> {
                             Log.v(TAG, "load | type=" + type + " | success | statusCode=" + statusCode + " | response=" + (response == null ? "null" : "notnull"));
                             if (statusCode == 200) {
                                 switch (type) {
@@ -262,14 +267,14 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                                             if (json != null) {
                                                 try {
                                                     json = new JSONObject()
-                                                            .put("timestamp", Static.getCalendar().getTimeInMillis())
+                                                            .put("timestamp", Time.getCalendar().getTimeInMillis())
                                                             .put("rating", json);
                                                     if (Storage.pref.get(activity, "pref_use_cache", true)) {
                                                         Storage.file.cache.put(activity, "rating#list", json.toString());
                                                     }
                                                     data.put(type, new Info(LOADED, json));
                                                 } catch (JSONException e) {
-                                                    Static.error(e);
+                                                    Log.exception(e);
                                                     if (data.get(type).data != null) {
                                                         data.get(type).status = LOADED;
                                                         loaded(type);
@@ -294,14 +299,14 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                                             if (json != null) {
                                                 try {
                                                     json = new JSONObject()
-                                                            .put("timestamp", Static.getCalendar().getTimeInMillis())
+                                                            .put("timestamp", Time.getCalendar().getTimeInMillis())
                                                             .put("rating", json);
                                                     if (Storage.pref.get(activity, "pref_use_cache", true)) {
                                                         Storage.file.cache.put(activity, "rating#core", json.toString());
                                                     }
                                                     data.put(type, new Info(LOADED, json));
                                                 } catch (JSONException e) {
-                                                    Static.error(e);
+                                                    Log.exception(e);
                                                     if (data.get(type).data != null) {
                                                         data.get(type).status = LOADED;
                                                         loaded(type);
@@ -335,7 +340,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                     }
                     @Override
                     public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                        Static.T.runThread(() -> {
+                        Thread.run(() -> {
                             Log.v(TAG, "load | type=" + type + " | failure " + state);
                             switch (state) {
                                 case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED: {
@@ -387,10 +392,10 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
         });
     }
     private void loaded(final @TYPE String type) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             switch (type) {
                 case COMMON: {
-                    if (!Static.UNAUTHORIZED_MODE) {
+                    if (!App.UNAUTHORIZED_MODE) {
                         load(OWN);
                     } else {
                         display();
@@ -405,7 +410,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
         });
     }
     private void loadFailed() {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             Log.v(TAG, "loadFailed");
             try {
                 draw(R.layout.state_failed_button);
@@ -414,12 +419,12 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                     try_again_reload.setOnClickListener(v -> load());
                 }
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }
     private void display() {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             try {
                 Log.v(TAG, "display");
                 storeData(this,
@@ -427,30 +432,30 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                         data.containsKey(OWN) ? (data.get(OWN).data != null ? data.get(OWN).data.toString() : null) : null
                 );
                 final RatingRVA adapter = new RatingRVA(activity, data);
-                adapter.setOnElementClickListener(R.id.common_apply, (v, data) -> Static.T.runThread(() -> {
+                adapter.setOnElementClickListener(R.id.common_apply, (v, data) -> Thread.run(() -> {
                     try {
                         FirebaseAnalyticsProvider.logBasicEvent(activity, "Detailed rating used");
                         final JSONObject d = (JSONObject) data.get("data");
                         final String faculty = d.getString("faculty");
                         final String course = d.getString("course");
                         Log.v(TAG, "detailed rating used | faculty=" + faculty + " | course=" + course);
-                        Static.T.runOnUiThread(() -> {
+                        Thread.runOnUI(() -> {
                             try {
                                 Bundle extras = new Bundle();
                                 extras.putString("faculty", faculty);
                                 extras.putString("course", course);
                                 activity.openActivityOrFragment(RatingListFragment.class, extras);
                             } catch (Exception e) {
-                                Static.error(e);
-                                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                Log.exception(e);
+                                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                             }
                         });
                     } catch (Exception e) {
-                        Static.error(e);
-                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        Log.exception(e);
+                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 }));
-                adapter.setOnElementClickListener(R.id.own_apply, (v, data) -> Static.T.runThread(() -> {
+                adapter.setOnElementClickListener(R.id.own_apply, (v, data) -> Thread.run(() -> {
                     try {
                         final JSONObject d = (JSONObject) data.get("data");
                         if (d != null) {
@@ -459,7 +464,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                             final String course = d.getString("course");
                             final String years = d.getString("years");
                             Log.v(TAG, "own rating used | faculty=" + faculty + " | course=" + course + " | years=" + years);
-                            Static.T.runOnUiThread(() -> {
+                            Thread.runOnUI(() -> {
                                 try {
                                     Bundle extras = new Bundle();
                                     extras.putString("faculty", faculty);
@@ -467,19 +472,19 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                                     extras.putString("years", years);
                                     activity.openActivityOrFragment(RatingListFragment.class, extras);
                                 } catch (Exception e) {
-                                    Static.error(e);
-                                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                    Log.exception(e);
+                                    BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                 }
                             });
                         } else {
                             Log.v(TAG, "own rating used | not found");
                         }
                     } catch (Exception e) {
-                        Static.error(e);
-                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        Log.exception(e);
+                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 }));
-                Static.T.runOnUiThread(() -> {
+                Thread.runOnUI(() -> {
                     try {
                         draw(R.layout.layout_rating_list);
                         // set adapter to recycler view
@@ -493,31 +498,31 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                         // setup swipe
                         final SwipeRefreshLayout swipe_container = container.findViewById(R.id.swipe_container);
                         if (swipe_container != null) {
-                            swipe_container.setColorSchemeColors(Static.colorAccent);
-                            swipe_container.setProgressBackgroundColorSchemeColor(Static.colorBackgroundRefresh);
+                            swipe_container.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
+                            swipe_container.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));
                             swipe_container.setOnRefreshListener(this);
                         }
                     } catch (Exception e) {
-                        Static.error(e);
+                        Log.exception(e);
                         loadFailed();
                     }
                 });
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
                 loadFailed();
             }
         });
     }
 
     private void gotoLogin(final int state) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             try {
                 Log.v(TAG, "gotoLogin | state=" + state);
                 Intent intent = new Intent(activity, LoginActivity.class);
                 intent.putExtra("state", state);
                 activity.startActivity(intent);
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
                 loadFailed();
             }
         });

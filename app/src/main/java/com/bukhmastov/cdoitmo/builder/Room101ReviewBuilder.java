@@ -11,8 +11,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.util.Color;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -73,7 +73,7 @@ public class Room101ReviewBuilder implements Runnable {
                     if (i > 0) {
                         View separator = new View(activity);
                         separator.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, (int) (1 * destiny)));
-                        separator.setBackgroundColor(Static.colorSeparator);
+                        separator.setBackgroundColor(Color.resolve(activity, R.attr.colorSeparator));
                         review_requests_container.addView(separator);
                     }
                 }
@@ -85,7 +85,7 @@ public class Room101ReviewBuilder implements Runnable {
                 delegate.state(STATE_DONE, view);
             }
         } catch (Exception e){
-            Static.error(e);
+            Log.exception(e);
             delegate.state(STATE_FAILED, null);
         }
         Log.v(TAG, "finished");

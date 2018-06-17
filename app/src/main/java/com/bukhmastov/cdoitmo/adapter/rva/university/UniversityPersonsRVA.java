@@ -11,7 +11,8 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.UniversityPersonCardActivity;
-import com.bukhmastov.cdoitmo.util.CircularTransformation;
+import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.view.CircularTransformation;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.squareup.picasso.Picasso;
 
@@ -97,11 +98,11 @@ public class UniversityPersonsRVA extends UniversityRVA {
                     intent.putExtra("person", item.data.toString());
                     context.startActivity(intent);
                 } catch (Exception e) {
-                    Static.error(e);
+                    Log.exception(e);
                 }
             });
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void bindState(RecyclerView.ViewHolder holder, Item item) {
@@ -120,7 +121,7 @@ public class UniversityPersonsRVA extends UniversityRVA {
                 viewHolder.container.setOnClickListener(onStateClickListener);
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
 

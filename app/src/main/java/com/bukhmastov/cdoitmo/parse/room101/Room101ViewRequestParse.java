@@ -5,7 +5,7 @@ import android.content.Context;
 import com.bukhmastov.cdoitmo.exception.SilentException;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.parse.Parse;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Time;
 
 import org.htmlcleaner.TagNode;
 import org.json.JSONArray;
@@ -40,7 +40,7 @@ public class Room101ViewRequestParse extends Parse {
         if (tds == null || trs == null) {
             throw new SilentException();
         }
-        response.put("timestamp", Static.getCalendar().getTimeInMillis());
+        response.put("timestamp", Time.getCalendar().getTimeInMillis());
         response.put("date", tds[0].getText().toString().trim());
         response.put("limit", tds[1].getText().toString().trim());
         response.put("left", tds[2].getText().toString().trim());
@@ -53,7 +53,7 @@ public class Room101ViewRequestParse extends Parse {
                 String date = tds[1].getText().toString().trim();
                 m = Pattern.compile("(\\d)(\\d).(\\d{2}).(\\d{2,4})").matcher(date);
                 if (m.find()) {
-                    date = ("0".equals(m.group(1)) ? "" : m.group(1)) + m.group(2) + " " + Static.getGenitiveMonth(context, m.group(3)) + " " + m.group(4);
+                    date = ("0".equals(m.group(1)) ? "" : m.group(1)) + m.group(2) + " " + Time.getGenitiveMonth(context, m.group(3)) + " " + m.group(4);
                 }
                 String time = tds[2].getText().toString().trim();
                 String[] times = time.split("-");

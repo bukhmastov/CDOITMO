@@ -87,7 +87,7 @@ public abstract class SettingsTemplatePreferencesFragment extends ConnectedFragm
                 loaded = true;
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             failed();
         }
     }
@@ -104,11 +104,11 @@ public abstract class SettingsTemplatePreferencesFragment extends ConnectedFragm
                         load();
                     }
                 } catch (Exception e) {
-                    Static.error(e);
+                    Log.exception(e);
                 }
             });
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
 

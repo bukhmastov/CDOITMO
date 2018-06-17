@@ -12,7 +12,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.object.entity.Suggestion;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Log;
 
 import java.util.List;
 
@@ -63,7 +63,7 @@ public class SuggestionsListView extends ArrayAdapter<Suggestion> {
             }
             return convertView;
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             return super.getView(position, convertView, parent);
         }
     }

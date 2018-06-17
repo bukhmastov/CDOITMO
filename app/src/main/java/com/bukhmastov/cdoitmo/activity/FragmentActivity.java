@@ -19,7 +19,9 @@ import android.view.ViewGroup;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.NavigationMenu;
+import com.bukhmastov.cdoitmo.util.Theme;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 public class FragmentActivity extends ConnectedActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -27,7 +29,7 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        Static.applyActivityTheme(this);
+        Theme.applyActivityTheme(this);
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
         try {
@@ -57,7 +59,7 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
                 setContentView(layout_with_menu ? R.layout.activity_fragment : R.layout.activity_fragment_without_menu);
                 final Toolbar toolbar = findViewById(R.id.toolbar_fragment);
                 if (toolbar != null) {
-                    Static.applyToolbarTheme(this, toolbar);
+                    Theme.applyToolbarTheme(this, toolbar);
                     setSupportActionBar(toolbar);
                 }
                 final ActionBar actionBar = getSupportActionBar();
@@ -73,7 +75,7 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
                 throw new NullPointerException("Intent cannot be null");
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             finish();
         }
     }
@@ -83,10 +85,10 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
         super.onResume();
         if (layout_with_menu) {
             NavigationView navigationView = findViewById(R.id.nav_view);
-            Static.NavigationMenu.displayEnableDisableOfflineButton(navigationView);
-            Static.NavigationMenu.hideIfUnauthorizedMode(navigationView);
-            Static.NavigationMenu.displayUserData(this, navigationView);
-            Static.NavigationMenu.displayRemoteMessage(this);
+            NavigationMenu.displayEnableDisableOfflineButton(navigationView);
+            NavigationMenu.hideIfUnauthorizedMode(navigationView);
+            NavigationMenu.displayUserData(this, navigationView);
+            NavigationMenu.displayRemoteMessage(this);
         }
     }
 
@@ -113,7 +115,7 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.toolbar, menu);
         toolbar = menu;
-        Static.NavigationMenu.toggleOfflineIcon(toolbar);
+        NavigationMenu.toggleOfflineIcon(toolbar);
         return true;
     }
 
@@ -152,7 +154,7 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
     public void invoke(final Class connectedFragmentClass, final Bundle extras) {
         final FragmentActivity self = this;
         final FragmentManager fragmentManager = getSupportFragmentManager();
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             Log.v(TAG, "invoke | " + connectedFragmentClass.toString());
             try {
                 ConnectedFragment.Data data = ConnectedFragment.getData(self, connectedFragmentClass);
@@ -177,7 +179,7 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
                     }
                 }
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
                 finish();
             }
         });

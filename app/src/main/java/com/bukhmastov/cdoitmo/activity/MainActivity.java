@@ -1,6 +1,5 @@
 package com.bukhmastov.cdoitmo.activity;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.os.Build;
@@ -15,6 +14,7 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
@@ -29,12 +29,17 @@ import com.bukhmastov.cdoitmo.fragment.ScheduleExamsFragment;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.fragment.UniversityFragment;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsFragment;
+import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Account;
+import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.ProtocolTracker;
+import com.bukhmastov.cdoitmo.object.ProtocolTracker;
+import com.bukhmastov.cdoitmo.util.NavigationMenu;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Migration;
+import com.bukhmastov.cdoitmo.util.Theme;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 public class MainActivity extends ConnectedActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -52,18 +57,18 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
         if (!initialized) {
             // initialize app
             super.onCreate(savedInstanceState);
-            Static.T.runThread(() -> {
+            Thread.run(() -> {
                 try {
                     try {
                         Log.i(TAG, "App | launched");
                         PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
                         Log.i(TAG, "App | version code = ", pInfo.versionCode);
                         Log.i(TAG, "App | sdk = ", Build.VERSION.SDK_INT);
-                        Log.i(TAG, "App | theme = ", Static.getAppTheme(activity));
+                        Log.i(TAG, "App | theme = ", Theme.getAppTheme(activity));
                     } catch (Exception e) {
-                        Static.error(e);
+                        Log.exception(e);
                     }
-                    Static.applyActivityTheme(activity);
+                    Theme.applyActivityTheme(activity);
                     // apply compatibility changes
                     Migration.migrate(activity);
                     // set default preferences
@@ -72,24 +77,22 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                     FirebaseCrashlyticsProvider.setEnabled(activity);
                     FirebaseAnalyticsProvider.setEnabled(activity);
                     FirebasePerformanceProvider.setEnabled(activity);
-                    // init static variables
-                    Static.init(activity);
                     // set auto_logout value
                     LoginActivity.auto_logout = Storage.pref.get(activity, "pref_auto_logout", false);
                     // set first_launch and intro values
-                    Static.isFirstLaunchEver = Storage.pref.get(activity, "pref_first_launch", true);
-                    Static.showIntroducingActivity = Static.isFirstLaunchEver;
-                    if (Static.isFirstLaunchEver) {
+                    App.isFirstLaunchEver = Storage.pref.get(activity, "pref_first_launch", true);
+                    App.showIntroducingActivity = App.isFirstLaunchEver;
+                    if (App.isFirstLaunchEver) {
                         Storage.pref.put(activity, "pref_first_launch", false);
                     }
                     // firebase events and properties
                     FirebaseAnalyticsProvider.logEvent(activity, FirebaseAnalyticsProvider.Event.APP_OPEN);
-                    FirebaseAnalyticsProvider.setUserProperty(activity, FirebaseAnalyticsProvider.Property.THEME, Static.getAppTheme(activity));
+                    FirebaseAnalyticsProvider.setUserProperty(activity, FirebaseAnalyticsProvider.Property.THEME, Theme.getAppTheme(activity));
                 } catch (Exception e) {
-                    Static.error(e);
+                    Log.exception(e);
                 } finally {
                     Log.i(TAG, "App | initialized");
-                    Static.T.runOnUiThread(() -> {
+                    Thread.runOnUI(() -> {
                         // app initialization completed, going to recreate activity
                         initialized = true;
                         recreate();
@@ -98,43 +101,43 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
             });
         } else {
             // regular app's runtime
-            Static.applyActivityTheme(activity);
+            Theme.applyActivityTheme(activity);
             super.onCreate(savedInstanceState);
             setContentView(R.layout.activity_main);
             // setup toolbar and drawer layout
             final Toolbar toolbar = findViewById(R.id.toolbar_main);
             final DrawerLayout drawer_layout = findViewById(R.id.drawer_layout);
             if (toolbar != null) {
-                Static.applyToolbarTheme(activity, toolbar);
+                Theme.applyToolbarTheme(activity, toolbar);
                 setSupportActionBar(toolbar);
             }
             if (drawer_layout != null) {
-                Static.tablet = false;
+                App.tablet = false;
                 if (toolbar != null) {
                     ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(this, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
                     drawer_layout.addDrawerListener(mDrawerToggle);
                     mDrawerToggle.syncState();
-                    if (Static.isFirstLaunchEver) {
+                    if (App.isFirstLaunchEver) {
                         drawer_layout.openDrawer(Gravity.START);
                     }
                 }
             } else {
-                Static.tablet = true;
+                App.tablet = true;
             }
             NavigationView navigationView = findViewById(R.id.nav_view);
             navigationView.setNavigationItemSelectedListener(this);
             // track to firebase
             FirebaseAnalyticsProvider.logCurrentScreen(this);
-            FirebaseAnalyticsProvider.setUserProperty(this, FirebaseAnalyticsProvider.Property.DEVICE, Static.tablet ? "tablet" : "mobile");
+            FirebaseAnalyticsProvider.setUserProperty(this, FirebaseAnalyticsProvider.Property.DEVICE, App.tablet ? "tablet" : "mobile");
             // setup static variables
-            Static.OFFLINE_MODE = "offline".equals(getIntent().getStringExtra("mode")) ||
-                    !Static.isOnline(this) ||
-                    (Static.firstLaunch && Storage.pref.get(this, "pref_initial_offline", false));
-            Static.firstLaunch = false;
-            Static.isFirstLaunchEver = false;
+            App.OFFLINE_MODE = "offline".equals(getIntent().getStringExtra("mode")) ||
+                    !Client.isOnline(this) ||
+                    (App.firstLaunch && Storage.pref.get(this, "pref_initial_offline", false));
+            App.firstLaunch = false;
+            App.isFirstLaunchEver = false;
             // do some logging
-            Log.i(TAG, "Device = ", (Static.tablet ? "tablet" : "mobile"));
-            Log.i(TAG, "Mode = ", (Static.OFFLINE_MODE ? "offline" : "online"));
+            Log.i(TAG, "Device = ", (App.tablet ? "tablet" : "mobile"));
+            Log.i(TAG, "Mode = ", (App.OFFLINE_MODE ? "offline" : "online"));
             // define section to be opened
             final String action = getIntent().getStringExtra("action");
             if (action == null && savedInstanceState != null && savedInstanceState.containsKey(STATE_SELECTED_SELECTION)) {
@@ -170,9 +173,9 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
         Log.v(TAG, "Activity resumed");
         if (initialized) {
             final NavigationView navigationView = activity.findViewById(R.id.nav_view);
-            Static.NavigationMenu.displayEnableDisableOfflineButton(navigationView);
-            Static.NavigationMenu.hideIfUnauthorizedMode(navigationView);
-            if (!exitOfflineMode && (Static.OFFLINE_MODE || Account.authorized)) {
+            NavigationMenu.displayEnableDisableOfflineButton(navigationView);
+            NavigationMenu.hideIfUnauthorizedMode(navigationView);
+            if (!exitOfflineMode && (App.OFFLINE_MODE || Account.authorized)) {
                 authorized();
             } else {
                 authorize(LoginActivity.SIGNAL_LOGIN);
@@ -226,8 +229,8 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.toolbar, menu);
         toolbar = menu;
-        Static.NavigationMenu.snackbarOffline(this);
-        Static.NavigationMenu.toggleOfflineIcon(toolbar);
+        BottomBar.snackBarOffline(this);
+        NavigationMenu.toggleOfflineIcon(toolbar);
         return true;
     }
 
@@ -253,7 +256,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
     }
 
     private void authorize(final int state) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             try {
                 Log.v(TAG, "authorize | state=", state);
                 loaded = false;
@@ -265,16 +268,16 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
         });
     }
     private void authorized() {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.v(TAG, "authorized");
             if (!loaded) {
                 loaded = true;
-                Static.T.runThread(Static.T.BACKGROUND, () -> new ProtocolTracker(activity).check());
+                Thread.run(Thread.BACKGROUND, () -> new ProtocolTracker(activity).check());
                 selectSection(selectedSection);
-                Static.NavigationMenu.displayUserData(activity, findViewById(R.id.nav_view));
-                Static.NavigationMenu.displayRemoteMessage(activity);
-                Static.NavigationMenu.snackbarOffline(activity);
-                Static.NavigationMenu.toggleOfflineIcon(toolbar);
+                NavigationMenu.displayUserData(activity, findViewById(R.id.nav_view));
+                NavigationMenu.displayRemoteMessage(activity);
+                BottomBar.snackBarOffline(activity);
+                NavigationMenu.toggleOfflineIcon(toolbar);
             } else if (selectedMenuItem != null) {
                 try {
                     selectSection(selectedMenuItem.getItemId());
@@ -286,7 +289,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
     }
     private void selectSection(final int s) {
         final int section;
-        if (Static.UNAUTHORIZED_MODE) {
+        if (App.UNAUTHORIZED_MODE) {
             switch (s) {
                 case R.id.nav_e_register:
                 case R.id.nav_protocol_changes: section = R.id.nav_schedule; break;
@@ -298,7 +301,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
         } else {
             section = s;
         }
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.v(TAG, "selectSection | section=", section);
             switch (section) {
                 case R.id.nav_e_register:
@@ -321,12 +324,12 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                         case R.id.nav_room101: connectedFragmentClass = Room101Fragment.class; break;
                         case R.id.nav_university: connectedFragmentClass = UniversityFragment.class; break;
                     }
-                    Static.T.runOnUiThread(() -> {
+                    Thread.runOnUI(() -> {
                         if (openFragment(TYPE.ROOT, connectedFragmentClass, null)) {
                             ((NavigationView) findViewById(R.id.nav_view)).setCheckedItem(section);
                             selectedSection = section;
                         } else {
-                            Static.snackBar(activity, activity.getString(R.string.failed_to_open_fragment), activity.getString(R.string.redo), view -> selectSection(section));
+                            BottomBar.snackBar(activity, activity.getString(R.string.failed_to_open_fragment), activity.getString(R.string.redo), view -> selectSection(section));
                         }
                     });
                     break;
@@ -339,14 +342,14 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                         case R.id.nav_homescreen: connectedFragmentClass = HomeScreenInteractionFragment.class; break;
                         case R.id.nav_settings: connectedFragmentClass = SettingsFragment.class; break;
                     }
-                    Static.T.runOnUiThread(() -> {
+                    Thread.runOnUI(() -> {
                         if (openActivityOrFragment(TYPE.ROOT, connectedFragmentClass, null)) {
-                            if (Static.tablet) {
+                            if (App.tablet) {
                                 ((NavigationView) findViewById(R.id.nav_view)).setCheckedItem(section);
                                 selectedSection = section;
                             }
                         } else {
-                            Static.snackBar(activity, activity.getString(R.string.failed_to_open_fragment), activity.getString(R.string.redo), view -> selectSection(section));
+                            BottomBar.snackBar(activity, activity.getString(R.string.failed_to_open_fragment), activity.getString(R.string.redo), view -> selectSection(section));
                         }
                     });
                     break;

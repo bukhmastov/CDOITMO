@@ -6,8 +6,9 @@ import android.util.SparseArray;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
+import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 public abstract class ScheduleLessonsTabHostFragment extends Fragment {
 
@@ -43,8 +44,8 @@ public abstract class ScheduleLessonsTabHostFragment extends Fragment {
                 try {
                     activity = (ConnectedActivity) context;
                 } catch (Exception e1) {
-                    Static.error(e);
-                    Static.error(e1);
+                    Log.exception(e);
+                    Log.exception(e1);
                     activity = null;
                 }
             }
@@ -102,9 +103,9 @@ public abstract class ScheduleLessonsTabHostFragment extends Fragment {
     }
     public static void invalidateOnDemand() {
         if (!isActive() || activity == null) return;
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.v(TAG, "invalidateOnDemand");
-            Static.snackBar(activity.findViewById(android.R.id.content), activity.getString(R.string.schedule_refresh), activity.getString(R.string.update), v -> {
+            BottomBar.snackBar(activity, activity.findViewById(android.R.id.content), activity.getString(R.string.schedule_refresh), activity.getString(R.string.update), v -> {
                 setQuery(getQuery());
                 invalidate();
             });

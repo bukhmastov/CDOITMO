@@ -19,9 +19,11 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
+import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.Color;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -75,7 +77,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
         Log.v(TAG, "Fragment created | action=" + action);
         if (action == null || !(action.equals("share") || action.equals("handle"))) {
             keepGoing = false;
-            Static.toast(activity, activity.getString(R.string.corrupted_data));
+            BottomBar.toast(activity, activity.getString(R.string.corrupted_data));
             finish();
         }
         switch (action) {
@@ -107,7 +109,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                 }
                 load(extras);
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
                 finish();
             }
         }
@@ -132,7 +134,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
     }
 
     private void load(final Bundle extras) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             try {
                 Log.v(TAG, "load | action=" + action);
                 switch (action) {
@@ -142,10 +144,10 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                 }
             } catch (Exception e) {
                 if (e.getMessage() != null && "corrupted file".equals(e.getMessage().toLowerCase())) {
-                    Static.toast(activity, activity.getString(R.string.corrupted_file));
+                    BottomBar.toast(activity, activity.getString(R.string.corrupted_file));
                 } else {
-                    Static.error(e);
-                    Static.toast(activity, activity.getString(R.string.something_went_wrong));
+                    Log.exception(e);
+                    BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
                 }
                 finish();
             }
@@ -187,15 +189,15 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                 throw new Exception("Corrupted file");
             }
         }
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             try {
                 TextView share_title = container.findViewById(R.id.share_title);
                 if (share_title != null) {
                     share_title.setText(ScheduleLessons.getScheduleHeader(activity, content.getString("title"), content.getString("type")));
                 }
             } catch (Exception e) {
-                Static.error(e);
-                Static.toast(activity, activity.getString(R.string.something_went_wrong));
+                Log.exception(e);
+                BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
                 finish();
             }
         });
@@ -237,7 +239,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
         if (query == null || title == null || type == null) {
             throw new NullPointerException("Some extras are null: " + query + " | " + title + " | " + type);
         }
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             try {
                 TextView share_title = container.findViewById(R.id.share_title);
                 if (share_title != null) {
@@ -245,7 +247,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                 }
                 ViewGroup share_info = container.findViewById(R.id.share_info);
                 if (share_info != null) {
-                    share_info.setOnClickListener(view -> Static.T.runThread(() -> {
+                    share_info.setOnClickListener(view -> Thread.run(() -> {
                         if (activity != null) {
                             new AlertDialog.Builder(activity)
                                     .setTitle(R.string.share_changes)
@@ -256,19 +258,19 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                     }));
                 }
             } catch (Exception e) {
-                Static.error(e);
-                Static.toast(activity, activity.getString(R.string.something_went_wrong));
+                Log.exception(e);
+                BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
                 finish();
             }
         });
         new ScheduleLessons(new Schedule.Handler() {
             @Override
             public void onSuccess(final JSONObject json, final boolean fromCache) {
-                Static.T.runThread(() -> {
+                Thread.run(() -> {
                     try {
                         Log.v(TAG, "loadShare | success | json=" + (json == null ? "null" : "notnull"));
                         if (json == null || json.getString("type").equals("teachers")) {
-                            Static.toast(activity, activity.getString(R.string.something_went_wrong));
+                            BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
                             finish();
                             return;
                         }
@@ -327,8 +329,8 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                         }
                         display(null);
                     } catch (Exception e) {
-                        Static.error(e);
-                        Static.toast(activity, activity.getString(R.string.something_went_wrong));
+                        Log.exception(e);
+                        BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
                         finish();
                     }
                 });
@@ -339,7 +341,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
             }
             @Override
             public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                Static.T.runOnUiThread(() -> {
+                Thread.runOnUI(() -> {
                     try {
                         Log.v(TAG, "loadShare | failure " + state);
                         ViewGroup share_content = container.findViewById(R.id.share_content);
@@ -373,13 +375,13 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                             }
                         }
                     } catch (Exception e) {
-                        Static.error(e);
+                        Log.exception(e);
                     }
                 });
             }
             @Override
             public void onProgress(final int state) {
-                Static.T.runOnUiThread(() -> {
+                Thread.runOnUI(() -> {
                     Log.v(TAG, "loadShare | progress " + state);
                     try {
                         ViewGroup share_content = container.findViewById(R.id.share_content);
@@ -388,7 +390,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                             share_content.addView(inflate(R.layout.state_loading_text_compact));
                         }
                     } catch (Exception e) {
-                        Static.error(e);
+                        Log.exception(e);
                     }
                 });
             }
@@ -410,7 +412,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
         );
     }
     private void display(final String notification) {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             try {
                 Log.v(TAG, "display | action=" + action);
                 ViewGroup share_content = container.findViewById(R.id.share_content);
@@ -464,7 +466,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                         content.addView(lesson);
                         share_content.addView(item);
                     } catch (Exception e) {
-                        Static.error(e);
+                        Log.exception(e);
                     }
                 }
                 switch (action) {
@@ -491,14 +493,14 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                     }
                 }
             } catch (Exception e) {
-                Static.error(e);
-                Static.toast(activity, activity.getString(R.string.something_went_wrong));
+                Log.exception(e);
+                BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
                 finish();
             }
         });
     }
     private void execute() {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             try {
                 Log.v(TAG, "execute | action=" + action);
                 boolean selected = false;
@@ -509,7 +511,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                     }
                 }
                 if (!selected) {
-                    Static.snackBar(activity, activity.getString(R.string.nothing_to_share));
+                    BottomBar.snackBar(activity, activity.getString(R.string.nothing_to_share));
                     return;
                 }
                 switch (action) {
@@ -518,8 +520,8 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                     default: executeShare(); break;
                 }
             } catch (Exception e) {
-                Static.error(e);
-                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                Log.exception(e);
+                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
@@ -578,7 +580,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                 FirebaseAnalyticsProvider.Event.RECEIVE,
                 FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "schedule_lessons")
         );
-        Static.toast(activity, getString(R.string.changes_applied));
+        BottomBar.toast(activity, getString(R.string.changes_applied));
         finish();
     }
     private void executeShare() throws Exception {
@@ -614,7 +616,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                         FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "schedule_lessons")
                 );
             } catch (Exception ignore) {
-                Static.toast(activity, activity.getString(R.string.failed_to_share_file));
+                BottomBar.toast(activity, activity.getString(R.string.failed_to_share_file));
             }
         }
     }
@@ -667,12 +669,12 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
     }
     private void setFlags(JSONObject lesson, ViewGroup viewGroup) throws Exception {
         String type = lesson.getString("type");
-        if (colorScheduleFlagTEXT == -1) colorScheduleFlagTEXT = Static.resolveColor(activity, R.attr.colorScheduleFlagTEXT);
-        if (colorScheduleFlagCommonBG == -1) colorScheduleFlagCommonBG = Static.resolveColor(activity, R.attr.colorScheduleFlagCommonBG);
-        if (colorScheduleFlagPracticeBG == -1) colorScheduleFlagPracticeBG = Static.resolveColor(activity, R.attr.colorScheduleFlagPracticeBG);
-        if (colorScheduleFlagLectureBG == -1) colorScheduleFlagLectureBG = Static.resolveColor(activity, R.attr.colorScheduleFlagLectureBG);
-        if (colorScheduleFlagLabBG == -1) colorScheduleFlagLabBG = Static.resolveColor(activity, R.attr.colorScheduleFlagLabBG);
-        if (colorScheduleFlagIwsBG == -1) colorScheduleFlagIwsBG = Static.resolveColor(activity, R.attr.colorScheduleFlagIwsBG);
+        if (colorScheduleFlagTEXT == -1) colorScheduleFlagTEXT = Color.resolve(activity, R.attr.colorScheduleFlagTEXT);
+        if (colorScheduleFlagCommonBG == -1) colorScheduleFlagCommonBG = Color.resolve(activity, R.attr.colorScheduleFlagCommonBG);
+        if (colorScheduleFlagPracticeBG == -1) colorScheduleFlagPracticeBG = Color.resolve(activity, R.attr.colorScheduleFlagPracticeBG);
+        if (colorScheduleFlagLectureBG == -1) colorScheduleFlagLectureBG = Color.resolve(activity, R.attr.colorScheduleFlagLectureBG);
+        if (colorScheduleFlagLabBG == -1) colorScheduleFlagLabBG = Color.resolve(activity, R.attr.colorScheduleFlagLabBG);
+        if (colorScheduleFlagIwsBG == -1) colorScheduleFlagIwsBG = Color.resolve(activity, R.attr.colorScheduleFlagIwsBG);
         if (!type.isEmpty()) {
             switch (type) {
                 case "practice":
@@ -721,8 +723,8 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
             bos.close();
             return temp;
         } catch (Exception e) {
-            Static.error(e);
-            Static.toast(activity, activity.getString(R.string.something_went_wrong));
+            Log.exception(e);
+            BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
             return null;
         }
     }

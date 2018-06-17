@@ -12,7 +12,9 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.WebViewActivity;
+import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 
 import java.util.ArrayList;
 
@@ -79,7 +81,7 @@ public class UniversityEventsRVA extends UniversityRVA {
             View newsImageContainerView = viewHolder.container.findViewById(R.id.news_image_container);
             View countViewContainerView = viewHolder.container.findViewById(R.id.count_view_container);
             if (titleView != null) {
-                ((TextView) titleView).setText(Static.escapeString(title));
+                ((TextView) titleView).setText(TextUtils.escapeString(title));
             }
             if (categoriesView != null) {
                 if (type != null && !type.trim().isEmpty()) {
@@ -96,11 +98,11 @@ public class UniversityEventsRVA extends UniversityRVA {
                 if (date_begin_exists || date_end_exists) {
                     String date = null;
                     if (date_begin_exists && date_end_exists) {
-                        date = Static.cuteDate(context, "yyyy-MM-dd HH:mm:ss", date_begin, date_end);
+                        date = TextUtils.cuteDate(context, "yyyy-MM-dd HH:mm:ss", date_begin, date_end);
                     } else if (date_begin_exists) {
-                        date = Static.cuteDate(context, "yyyy-MM-dd HH:mm:ss", date_begin);
+                        date = TextUtils.cuteDate(context, "yyyy-MM-dd HH:mm:ss", date_begin);
                     } else if (date_end_exists) {
-                        date = Static.cuteDate(context, "yyyy-MM-dd HH:mm:ss", date_end);
+                        date = TextUtils.cuteDate(context, "yyyy-MM-dd HH:mm:ss", date_end);
                     }
                     ((TextView) dateView).setText(date);
                 } else {
@@ -124,7 +126,7 @@ public class UniversityEventsRVA extends UniversityRVA {
                 });
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void bindState(RecyclerView.ViewHolder holder, Item item) {
@@ -143,7 +145,7 @@ public class UniversityEventsRVA extends UniversityRVA {
                 viewHolder.container.setOnClickListener(onStateClickListener);
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
 }

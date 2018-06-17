@@ -16,8 +16,9 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapter.rva.ERegisterSubjectViewRVA;
 import com.bukhmastov.cdoitmo.exception.SilentException;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
+import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -53,7 +54,7 @@ public class SubjectShowFragment extends ConnectedFragment {
             }
             this.data = new JSONObject(data);
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             this.data = null;
             activity.back();
         }
@@ -68,7 +69,7 @@ public class SubjectShowFragment extends ConnectedFragment {
                 if (action_share != null) action_share.setVisible(false);
             }
         } catch (Exception e){
-            Static.error(e);
+            Log.exception(e);
         }
     }
 
@@ -104,13 +105,13 @@ public class SubjectShowFragment extends ConnectedFragment {
 
     private void display() {
         if (data == null) return;
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             try {
                 Log.v(TAG, "display");
                 final JSONObject subject = data.getJSONObject("subject");
                 final int term = data.getInt("term");
                 final ERegisterSubjectViewRVA adapter = new ERegisterSubjectViewRVA(activity, subject, term);
-                Static.T.runOnUiThread(() -> {
+                Thread.runOnUI(() -> {
                     try {
                         // отображаем заголовок
                         activity.updateToolbar(activity, subject.getString("name"), R.drawable.ic_e_journal);
@@ -124,18 +125,18 @@ public class SubjectShowFragment extends ConnectedFragment {
                     } catch (SilentException e) {
                         activity.back();
                     } catch (Exception e) {
-                        Static.error(e);
+                        Log.exception(e);
                         activity.back();
                     }
                 });
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
                 activity.back();
             }
         });
     }
     private void toggleShare() {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             try {
                 if (data == null || activity.toolbar == null) return;
                 final JSONObject subject = data.getJSONObject("subject");
@@ -157,7 +158,7 @@ public class SubjectShowFragment extends ConnectedFragment {
                     shareEntities.add(shareEntity);
                 }
                 if (shareEntities.size() == 0) return;
-                Static.T.runOnUiThread(() -> {
+                Thread.runOnUI(() -> {
                     try {
                         final MenuItem action_share = activity.toolbar.findItem(R.id.action_share);
                         if (action_share == null) return;
@@ -178,27 +179,27 @@ public class SubjectShowFragment extends ConnectedFragment {
                                                 try {
                                                     share(shareEntities.get(position).text);
                                                 } catch (Exception e) {
-                                                    Static.error(e);
-                                                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                                    Log.exception(e);
+                                                    BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                                 }
                                             })
                                             .setNegativeButton(R.string.do_cancel, null)
                                             .create().show();
                                 }
                             } catch (Exception e) {
-                                Static.error(e);
-                                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                Log.exception(e);
+                                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                             }
                             return false;
                         });
                     } catch (Exception e) {
-                        Static.error(e);
-                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        Log.exception(e);
+                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 });
             } catch (Exception e) {
-                Static.error(e);
-                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                Log.exception(e);
+                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
@@ -260,7 +261,7 @@ public class SubjectShowFragment extends ConnectedFragment {
         }
     }
     private void share(final String title) {
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             Log.v(TAG, "share | " + title);
             Intent intent = new Intent(Intent.ACTION_SEND);
             intent.setType("text/plain");

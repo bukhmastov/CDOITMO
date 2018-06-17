@@ -4,9 +4,10 @@ import android.content.Context;
 
 import com.bukhmastov.cdoitmo.network.interfaces.RawHandler;
 import com.bukhmastov.cdoitmo.network.interfaces.ResponseHandler;
+import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.network.model.Ifmo;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.util.Map;
 
@@ -20,14 +21,14 @@ public class IfmoClient extends Ifmo {
         get(context, DEFAULT_PROTOCOL, url, query, responseHandler);
     }
     public static void get(final Context context, final @Protocol String protocol, final String url, final Map<String, String> query, final ResponseHandler responseHandler) {
-        Static.T.runThread(Static.T.BACKGROUND, () -> {
+        Thread.run(Thread.BACKGROUND, () -> {
             Log.v(TAG, "get | url=", url);
-            if (Static.isOnline(context)) {
+            if (Client.isOnline(context)) {
                 responseHandler.onProgress(STATE_HANDLING);
                 g(context, getAbsoluteUrl(protocol, url), query, new RawHandler() {
                     @Override
                     public void onDone(final int code, final okhttp3.Headers headers, final String response) {
-                        Static.T.runThread(Static.T.BACKGROUND, () -> {
+                        Thread.run(Thread.BACKGROUND, () -> {
                             Log.v(TAG, "get | url=", url, " | success | statusCode=", code);
                             if (code >= 400) {
                                 responseHandler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
@@ -38,7 +39,7 @@ public class IfmoClient extends Ifmo {
                     }
                     @Override
                     public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
-                        Static.T.runThread(Static.T.BACKGROUND, () -> {
+                        Thread.run(Thread.BACKGROUND, () -> {
                             Log.v(TAG, "get | url=", url, " | failure | statusCode=", code, " | throwable=", throwable);
                             responseHandler.onFailure(code, new Headers(headers), (code >= 400 ? FAILED_SERVER_ERROR : FAILED_TRY_AGAIN));
                         });

@@ -345,7 +345,7 @@ public class Storage {
                 }
             } catch (Exception e) {
                 FirebasePerformanceProvider.putAttribute(trace, "exception", e.getMessage());
-                Static.error(e);
+                Log.exception(e);
             } finally {
                 FirebasePerformanceProvider.stopTrace(trace);
             }

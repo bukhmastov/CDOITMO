@@ -10,11 +10,14 @@ import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.fragment.RatingFragment;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.Time;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -88,7 +91,7 @@ public class RatingRVA extends RVA {
                         dataset.add(getNewItem(TYPE_COMMON, new JSONObject().put("faculties", faculties)));
                     }
                 } catch (Exception e) {
-                    Static.error(e);
+                    Log.exception(e);
                 }
             } else {
                 dataset.add(getNewItem(
@@ -97,7 +100,7 @@ public class RatingRVA extends RVA {
                 ));
             }
             // setup own mode
-            if (!Static.UNAUTHORIZED_MODE) {
+            if (!App.UNAUTHORIZED_MODE) {
                 dataset.add(getNewItem(TYPE_HEADER, new JSONObject().put("title", context.getString(R.string.your_rating))));
                 if (own.status.equals(RatingFragment.LOADED) && own.data != null) {
                     try {
@@ -116,7 +119,7 @@ public class RatingRVA extends RVA {
                                     JSONObject faculty = faculties.getJSONObject(j);
                                     if (faculty.getString("name").contains(f)) {
                                         int course_delta = (max_course - c);
-                                        Calendar now = Static.getCalendar();
+                                        Calendar now = Time.getCalendar();
                                         int year = now.get(Calendar.YEAR) - course_delta;
                                         int month = now.get(Calendar.MONTH);
                                         String years = month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year;
@@ -135,7 +138,7 @@ public class RatingRVA extends RVA {
                             }
                         }
                     } catch (Exception e) {
-                        Static.error(e);
+                        Log.exception(e);
                     }
                 } else {
                     dataset.add(getNewItem(
@@ -145,7 +148,7 @@ public class RatingRVA extends RVA {
                 }
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
         return dataset;
     }
@@ -154,11 +157,11 @@ public class RatingRVA extends RVA {
         try {
             ((TextView) container.findViewById(R.id.title)).setText(item.data.getString("title"));
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void bindCommon(View container, Item item) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             try {
                 final Context context = container.getContext();
                 final JSONArray faculties = item.data.getJSONArray("faculties");
@@ -180,7 +183,7 @@ public class RatingRVA extends RVA {
                         selected.add(1, i - 1);
                     }
                 }
-                Static.T.runOnUiThread(() -> {
+                Thread.runOnUI(() -> {
                     try {
                         // faculty spinner
                         final Spinner faculty_spinner = container.findViewById(R.id.faculty);
@@ -191,12 +194,12 @@ public class RatingRVA extends RVA {
                             faculty_spinner.setSelection(selected.get(0));
                             faculty_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                                 public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
-                                    Static.T.runThread(() -> {
+                                    Thread.run(() -> {
                                         try {
                                             commonSelectedFaculty = faculties.getJSONObject(position).getString("depId");
                                             Storage.file.cache.put(context, "rating#choose#faculty", commonSelectedFaculty);
                                         } catch (Exception e) {
-                                            Static.error(e);
+                                            Log.exception(e);
                                         }
                                     });
                                 }
@@ -213,12 +216,12 @@ public class RatingRVA extends RVA {
                             course_spinner.setSelection(selected.get(1));
                             course_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                                 public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
-                                    Static.T.runThread(() -> {
+                                    Thread.run(() -> {
                                         try {
                                             commonSelectedCourse = String.valueOf(position + 1);
                                             Storage.file.cache.put(context, "rating#choose#course", commonSelectedCourse);
                                         } catch (Exception e) {
-                                            Static.error(e);
+                                            Log.exception(e);
                                         }
                                     });
                                 }
@@ -228,24 +231,24 @@ public class RatingRVA extends RVA {
                         }
                         // apply button
                         if (onElementClickListeners.containsKey(R.id.common_apply)) {
-                            container.findViewById(R.id.common_apply).setOnClickListener(v -> Static.T.runThread(() -> {
+                            container.findViewById(R.id.common_apply).setOnClickListener(v -> Thread.run(() -> {
                                 try {
                                     final Map<String, Object> extras = getMap("data", new JSONObject()
                                             .put("faculty", commonSelectedFaculty)
                                             .put("course", commonSelectedCourse)
                                     );
-                                    Static.T.runOnUiThread(() -> onElementClickListeners.get(R.id.common_apply).onClick(v, extras));
+                                    Thread.runOnUI(() -> onElementClickListeners.get(R.id.common_apply).onClick(v, extras));
                                 } catch (Exception e) {
-                                    Static.error(e);
+                                    Log.exception(e);
                                 }
                             }));
                         }
                     } catch (Exception e) {
-                        Static.error(e);
+                        Log.exception(e);
                     }
                 });
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }
@@ -256,24 +259,24 @@ public class RatingRVA extends RVA {
             ((TextView) container.findViewById(R.id.title)).setText(title);
             ((TextView) container.findViewById(R.id.position)).setText(position);
             if (onElementClickListeners.containsKey(R.id.own_apply)) {
-                container.findViewById(R.id.own_apply).setOnClickListener(v -> Static.T.runThread(() -> {
+                container.findViewById(R.id.own_apply).setOnClickListener(v -> Thread.run(() -> {
                     try {
                         final Map<String, Object> extras = getMap("data", item.data.has("extras") && !item.data.isNull("extras") ? item.data.getJSONObject("extras") : null);
-                        Static.T.runOnUiThread(() -> onElementClickListeners.get(R.id.own_apply).onClick(v, extras));
+                        Thread.runOnUI(() -> onElementClickListeners.get(R.id.own_apply).onClick(v, extras));
                     } catch (Exception e) {
-                        Static.error(e);
+                        Log.exception(e);
                     }
                 }));
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void bindEmpty(View container, Item item) {
         try {
             ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_data);
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void bindFailed(View container, Item item) {
@@ -283,7 +286,7 @@ public class RatingRVA extends RVA {
                 ((TextView) container.findViewById(R.id.state_failed_compact_message)).setText(text);
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
 }

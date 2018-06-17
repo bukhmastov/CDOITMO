@@ -24,9 +24,14 @@ import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsShareFragment;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsTabHostFragment;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
+import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.Color;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.Time;
+import com.bukhmastov.cdoitmo.interfaces.CallableString;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -58,13 +63,13 @@ public class ScheduleLessonsRVA extends RVA {
     private final int TYPE;
     private final JSONObject data;
     private final SparseIntArray days_positions = new SparseIntArray();
-    private final Static.StringCallback callback;
+    private final CallableString callback;
     private String reduced_lesson_mode = "compact";
     private String type = "";
     private String query = null;
     private int colorScheduleFlagTEXT = -1, colorScheduleFlagCommonBG = -1, colorScheduleFlagPracticeBG = -1, colorScheduleFlagLectureBG = -1, colorScheduleFlagLabBG = -1, colorScheduleFlagIwsBG = -1;
 
-    public ScheduleLessonsRVA(final ConnectedActivity activity, int TYPE, JSONObject data, int weekday, final Static.StringCallback callback) {
+    public ScheduleLessonsRVA(final ConnectedActivity activity, int TYPE, JSONObject data, int weekday, final CallableString callback) {
         this.activity = activity;
         this.TYPE = TYPE;
         this.data = data;
@@ -75,7 +80,7 @@ public class ScheduleLessonsRVA extends RVA {
             query = data.getString("query");
             addItems(json2dataset(activity, data, weekday));
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
 
@@ -161,10 +166,10 @@ public class ScheduleLessonsRVA extends RVA {
             } else {
                 ((ViewGroup) schedule_lessons_week.getParent()).removeView(schedule_lessons_week);
             }
-            container.findViewById(R.id.schedule_lessons_menu).setOnClickListener(view -> Static.T.runThread(() -> {
+            container.findViewById(R.id.schedule_lessons_menu).setOnClickListener(view -> Thread.run(() -> {
                 final String cache_token = query == null ? null : query.toLowerCase();
                 final boolean cached = cache_token != null && !Storage.file.general.cache.get(activity, "schedule_lessons#lessons#" + cache_token, "").isEmpty();
-                Static.T.runOnUiThread(() -> {
+                Thread.runOnUI(() -> {
                     try {
                         final PopupMenu popup = new PopupMenu(activity, view);
                         final Menu menu = popup.getMenu();
@@ -177,52 +182,52 @@ public class ScheduleLessonsRVA extends RVA {
                                 case R.id.remove_from_cache: {
                                     try {
                                         if (cache_token == null) {
-                                            Static.snackBar(activity, activity.getString(R.string.cache_failed));
+                                            BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
                                         } else {
                                             if (Storage.file.general.cache.exists(activity, "schedule_lessons#lessons#" + cache_token)) {
                                                 if (Storage.file.general.cache.delete(activity, "schedule_lessons#lessons#" + cache_token)) {
-                                                    Static.snackBar(activity, activity.getString(R.string.cache_false));
+                                                    BottomBar.snackBar(activity, activity.getString(R.string.cache_false));
                                                 } else {
-                                                    Static.snackBar(activity, activity.getString(R.string.cache_failed));
+                                                    BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
                                                 }
                                             } else {
                                                 if (data == null) {
-                                                    Static.snackBar(activity, activity.getString(R.string.cache_failed));
+                                                    BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
                                                 } else {
                                                     if (Storage.file.general.cache.put(activity, "schedule_lessons#lessons#" + cache_token, data.toString())) {
-                                                        Static.snackBar(activity, activity.getString(R.string.cache_true));
+                                                        BottomBar.snackBar(activity, activity.getString(R.string.cache_true));
                                                     } else {
-                                                        Static.snackBar(activity, activity.getString(R.string.cache_failed));
+                                                        BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
                                                     }
                                                 }
                                             }
                                         }
                                     } catch (Exception e) {
-                                        Static.error(e);
-                                        Static.snackBar(activity, activity.getString(R.string.cache_failed));
+                                        Log.exception(e);
+                                        BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
                                     }
                                     break;
                                 }
                                 case R.id.add_lesson: {
-                                    Static.T.runThread(() -> {
+                                    Thread.run(() -> {
                                         try {
-                                            if (!ScheduleLessons.createLesson(activity, query, data.getString("title"), type, Static.getWeekDay(), new JSONObject(), null)) {
-                                                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                            if (!ScheduleLessons.createLesson(activity, query, data.getString("title"), type, Time.getWeekDay(), new JSONObject(), null)) {
+                                                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                             }
                                         } catch (Exception e) {
-                                            Static.error(e);
-                                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                            Log.exception(e);
+                                            BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                         }
                                     });
                                     break;
                                 }
                                 case R.id.add_military_day: {
-                                    Static.T.runOnUiThread(() -> {
+                                    Thread.runOnUI(() -> {
                                         final List<String> days = new ArrayList<>(Arrays.asList(activity.getString(R.string.monday), activity.getString(R.string.tuesday), activity.getString(R.string.wednesday), activity.getString(R.string.thursday), activity.getString(R.string.friday), activity.getString(R.string.saturday), activity.getString(R.string.sunday)));
                                         final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(activity, R.layout.spinner_center);
                                         arrayAdapter.addAll(days);
                                         new AlertDialog.Builder(activity)
-                                                .setAdapter(arrayAdapter, (dialogInterface, position) -> Static.T.runThread(() -> {
+                                                .setAdapter(arrayAdapter, (dialogInterface, position) -> Thread.run(() -> {
                                                     try {
                                                         ScheduleLessons.createLesson(activity, query, position, new JSONObject().put("subject", "Утренний осмотр, строевая подготовка").put("type", "Военка").put("week", 2).put("timeStart", "9:05").put("timeEnd", "9:20").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
                                                         ScheduleLessons.createLesson(activity, query, position, new JSONObject().put("subject", "1 пара").put("type", "Военка").put("week", 2).put("timeStart", "9:30").put("timeEnd", "10:50").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
@@ -233,8 +238,8 @@ public class ScheduleLessonsRVA extends RVA {
                                                         ScheduleLessons.createLesson(activity, query, position, new JSONObject().put("subject", "Кураторский час").put("type", "Военка").put("week", 2).put("timeStart", "16:45").put("timeEnd", "17:30").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
                                                         ScheduleLessonsTabHostFragment.invalidateOnDemand();
                                                     } catch (Exception e) {
-                                                        Static.error(e);
-                                                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                                        Log.exception(e);
+                                                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                                     }
                                                 }))
                                                 .setNegativeButton(R.string.do_cancel, null)
@@ -243,29 +248,29 @@ public class ScheduleLessonsRVA extends RVA {
                                     break;
                                 }
                                 case R.id.share_changes: {
-                                    Static.T.runThread(() -> {
+                                    Thread.run(() -> {
                                         try {
                                             final Bundle extras = new Bundle();
                                             extras.putString("action", "share");
                                             extras.putString("query", query);
                                             extras.putString("type", type);
                                             extras.putString("title", data.getString("title"));
-                                            Static.T.runOnUiThread(() -> activity.openActivityOrFragment(ScheduleLessonsShareFragment.class, extras));
+                                            Thread.runOnUI(() -> activity.openActivityOrFragment(ScheduleLessonsShareFragment.class, extras));
                                         } catch (Exception e) {
-                                            Static.error(e);
+                                            Log.exception(e);
                                         }
                                     });
                                     break;
                                 }
                                 case R.id.remove_changes: {
-                                    Static.T.runThread(() -> new AlertDialog.Builder(activity)
+                                    Thread.run(() -> new AlertDialog.Builder(activity)
                                             .setTitle(R.string.pref_schedule_lessons_clear_additional_title)
                                             .setMessage(R.string.pref_schedule_lessons_clear_direct_additional_warning)
                                             .setIcon(R.drawable.ic_warning)
-                                            .setPositiveButton(R.string.proceed, (dialog, which) -> Static.T.runThread(() -> {
+                                            .setPositiveButton(R.string.proceed, (dialog, which) -> Thread.run(() -> {
                                                 Log.v(TAG, "menu | popup item | remove_changes | dialog accepted");
                                                 if (!ScheduleLessons.clearChanges(activity, query, ScheduleLessonsTabHostFragment::invalidateOnDemand)) {
-                                                    Static.snackBar(activity, activity.getString(R.string.no_changes));
+                                                    BottomBar.snackBar(activity, activity.getString(R.string.no_changes));
                                                 }
                                             }))
                                             .setNegativeButton(R.string.cancel, null)
@@ -281,13 +286,13 @@ public class ScheduleLessonsRVA extends RVA {
                         });
                         popup.show();
                     } catch (Exception e) {
-                        Static.error(e);
-                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        Log.exception(e);
+                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 });
             }));
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void bindDay(View container, Item item) {
@@ -295,7 +300,7 @@ public class ScheduleLessonsRVA extends RVA {
             final String text = getString(item.data, "text");
             ((TextView) container.findViewById(R.id.day_title)).setText(text != null && !text.isEmpty() ? text : Static.GLITCH);
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void bindLesson(View container, Item item) {
@@ -343,58 +348,58 @@ public class ScheduleLessonsRVA extends RVA {
                     popup.setOnMenuItemClickListener(item1 -> {
                         Log.v(TAG, "lesson_touch_icon | popup.MenuItem clicked | " + item1.getTitle().toString());
                         switch (item1.getItemId()) {
-                            case R.id.open_group: callback.onCall(group); break;
-                            case R.id.open_teacher: callback.onCall(teacher_id); break;
-                            case R.id.open_room: callback.onCall(room); break;
+                            case R.id.open_group: callback.call(group); break;
+                            case R.id.open_teacher: callback.call(teacher_id); break;
+                            case R.id.open_room: callback.call(room); break;
                             case R.id.open_location:
                                 try {
                                     activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=Санкт-Петербург, " + building)));
                                 } catch (ActivityNotFoundException e) {
-                                    Static.snackBar(activity, activity.getString(R.string.failed_to_start_geo_activity));
+                                    BottomBar.snackBar(activity, activity.getString(R.string.failed_to_start_geo_activity));
                                 }
                                 break;
                             case R.id.reduce_lesson:
-                                Static.T.runThread(() -> {
+                                Thread.run(() -> {
                                     if (!ScheduleLessons.reduceLesson(activity, query, weekday, lesson, ScheduleLessonsTabHostFragment::invalidateOnDemand)) {
-                                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                     }
                                 });
                                 break;
                             case R.id.restore_lesson:
-                                Static.T.runThread(() -> {
+                                Thread.run(() -> {
                                     if (!ScheduleLessons.restoreLesson(activity, query, weekday, lesson, ScheduleLessonsTabHostFragment::invalidateOnDemand)) {
-                                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                     }
                                 });
                                 break;
                             case R.id.delete_lesson:
-                                Static.T.runThread(() -> {
+                                Thread.run(() -> {
                                     if (!ScheduleLessons.deleteLesson(activity, query, weekday, lesson, ScheduleLessonsTabHostFragment::invalidateOnDemand)) {
-                                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                     }
                                 });
                                 break;
                             case R.id.copy_lesson:
-                                Static.T.runThread(() -> {
+                                Thread.run(() -> {
                                     try {
                                         if (!ScheduleLessons.createLesson(activity, query, data.getString("title"), ScheduleLessonsRVA.this.type, weekday, lesson, null)) {
-                                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                            BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                         }
                                     } catch (Exception e) {
-                                        Static.error(e);
-                                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                        Log.exception(e);
+                                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                     }
                                 });
                                 break;
                             case R.id.edit_lesson:
-                                Static.T.runThread(() -> {
+                                Thread.run(() -> {
                                     try {
                                         if (!ScheduleLessons.editLesson(activity, query, data.getString("title"), ScheduleLessonsRVA.this.type, weekday, lesson, null)) {
-                                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                            BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                         }
                                     } catch (Exception e) {
-                                        Static.error(e);
-                                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                        Log.exception(e);
+                                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                     }
                                 });
                                 break;
@@ -403,7 +408,7 @@ public class ScheduleLessonsRVA extends RVA {
                     });
                     popup.show();
                 } catch (Exception e){
-                    Static.error(e);
+                    Log.exception(e);
                 }
             });
             // title and time
@@ -438,12 +443,12 @@ public class ScheduleLessonsRVA extends RVA {
             // flags
             ViewGroup lesson_flags = container.findViewById(R.id.lesson_flags);
             lesson_flags.removeAllViews();
-            if (colorScheduleFlagTEXT == -1) colorScheduleFlagTEXT = Static.resolveColor(activity, R.attr.colorScheduleFlagTEXT);
-            if (colorScheduleFlagCommonBG == -1) colorScheduleFlagCommonBG = Static.resolveColor(activity, R.attr.colorScheduleFlagCommonBG);
-            if (colorScheduleFlagPracticeBG == -1) colorScheduleFlagPracticeBG = Static.resolveColor(activity, R.attr.colorScheduleFlagPracticeBG);
-            if (colorScheduleFlagLectureBG == -1) colorScheduleFlagLectureBG = Static.resolveColor(activity, R.attr.colorScheduleFlagLectureBG);
-            if (colorScheduleFlagLabBG == -1) colorScheduleFlagLabBG = Static.resolveColor(activity, R.attr.colorScheduleFlagLabBG);
-            if (colorScheduleFlagIwsBG == -1) colorScheduleFlagIwsBG = Static.resolveColor(activity, R.attr.colorScheduleFlagIwsBG);
+            if (colorScheduleFlagTEXT == -1) colorScheduleFlagTEXT = Color.resolve(activity, R.attr.colorScheduleFlagTEXT);
+            if (colorScheduleFlagCommonBG == -1) colorScheduleFlagCommonBG = Color.resolve(activity, R.attr.colorScheduleFlagCommonBG);
+            if (colorScheduleFlagPracticeBG == -1) colorScheduleFlagPracticeBG = Color.resolve(activity, R.attr.colorScheduleFlagPracticeBG);
+            if (colorScheduleFlagLectureBG == -1) colorScheduleFlagLectureBG = Color.resolve(activity, R.attr.colorScheduleFlagLectureBG);
+            if (colorScheduleFlagLabBG == -1) colorScheduleFlagLabBG = Color.resolve(activity, R.attr.colorScheduleFlagLabBG);
+            if (colorScheduleFlagIwsBG == -1) colorScheduleFlagIwsBG = Color.resolve(activity, R.attr.colorScheduleFlagIwsBG);
             if (!type.isEmpty()) {
                 switch (type) {
                     case "practice":
@@ -497,7 +502,7 @@ public class ScheduleLessonsRVA extends RVA {
                 lesson_meta.setText(meta);
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void bindNotification(View container, Item item) {
@@ -505,7 +510,7 @@ public class ScheduleLessonsRVA extends RVA {
             final String text = getString(item.data, "text");
             ((TextView) container.findViewById(R.id.lessons_warning)).setText(text != null && !text.isEmpty() ? text : Static.GLITCH);
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void bindUpdateTime(View container, Item item) {
@@ -513,14 +518,14 @@ public class ScheduleLessonsRVA extends RVA {
             final String text = getString(item.data, "text");
             ((TextView) container.findViewById(R.id.update_time)).setText(text != null && !text.isEmpty() ? text : Static.GLITCH);
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void bindNoLessons(View container, Item item) {
         try {
             ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_lessons);
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void bindPickerHeader(View container, Item item) {
@@ -534,7 +539,7 @@ public class ScheduleLessonsRVA extends RVA {
             }
             ((TextView) container.findViewById(R.id.teacher_picker_header)).setText(text);
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void bindPickerItem(View container, Item item) {
@@ -548,11 +553,11 @@ public class ScheduleLessonsRVA extends RVA {
             ((TextView) container.findViewById(R.id.teacher_picker_title)).setText(teacher);
             container.findViewById(R.id.teacher_picker_item).setOnClickListener(view -> {
                 if (pid != null && !pid.isEmpty()) {
-                    callback.onCall(pid);
+                    callback.call(pid);
                 }
             });
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
     private void bindPickerNoTeachers(View container, Item item) {
@@ -566,7 +571,7 @@ public class ScheduleLessonsRVA extends RVA {
             }
             ((TextView) container.findViewById(R.id.ntd_text)).setText(text);
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
 
@@ -676,14 +681,14 @@ public class ScheduleLessonsRVA extends RVA {
                 dataset.add(getNewItem(TYPE_NO_LESSONS, null));
             } else {
                 // notification
-                Calendar calendar = Static.getCalendar();
+                Calendar calendar = Time.getCalendar();
                 int month = calendar.get(Calendar.MONTH);
                 int day = calendar.get(Calendar.DAY_OF_MONTH);
                 if (month == Calendar.AUGUST && day > 21 || month == Calendar.SEPTEMBER && day < 21 || month == Calendar.JANUARY && day > 14 || month == Calendar.FEBRUARY && day < 14) {
                     dataset.add(getNewItem(TYPE_NOTIFICATION, new JSONObject().put("text", activity.getString(R.string.schedule_lessons_unstable_warning))));
                 }
                 // update time
-                dataset.add(getNewItem(TYPE_UPDATE_TIME, new JSONObject().put("text", activity.getString(R.string.update_date) + " " + Static.getUpdateTime(activity, json.getLong("timestamp")))));
+                dataset.add(getNewItem(TYPE_UPDATE_TIME, new JSONObject().put("text", activity.getString(R.string.update_date) + " " + Time.getUpdateTime(activity, json.getLong("timestamp")))));
             }
         }
         // that's all

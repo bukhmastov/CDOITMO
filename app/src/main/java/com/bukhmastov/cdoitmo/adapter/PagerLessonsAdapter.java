@@ -8,7 +8,7 @@ import android.support.v4.app.FragmentPagerAdapter;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsTabFragment;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Log;
 
 import java.util.ArrayList;
 
@@ -49,7 +49,7 @@ public class PagerLessonsAdapter extends FragmentPagerAdapter {
             fragment.setArguments(bundle);
             return fragment;
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             return null;
         }
     }

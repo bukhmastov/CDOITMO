@@ -20,6 +20,7 @@ import android.support.annotation.LayoutRes;
 import android.view.View;
 import android.widget.RemoteViews;
 
+import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.MainActivity;
 import com.bukhmastov.cdoitmo.activity.PikaActivity;
@@ -31,8 +32,9 @@ import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.Time;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -88,7 +90,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         updateAppWidget(context, appWidgetManager, appWidgetId, force, false);
     }
     public static void updateAppWidget(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final boolean force, final boolean controls) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.i(TAG, "update | appWidgetId=" + appWidgetId);
             try {
                 JSONObject settings = Data.getJson(context, appWidgetId, "settings");
@@ -100,35 +102,35 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 } else {
                     long timestamp = cache.getLong("timestamp");
                     long shift = settings.getInt("updateTime") * 3600000L;
-                    if (shift != 0 && timestamp + shift < Static.getCalendar().getTimeInMillis()) {
+                    if (shift != 0 && timestamp + shift < Time.getCalendar().getTimeInMillis()) {
                         refresh(context, appWidgetManager, appWidgetId, settings);
                     } else {
                         display(context, appWidgetManager, appWidgetId, controls);
                     }
                 }
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }
     public static void deleteAppWidget(final Context context, final int appWidgetId) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.i(TAG, "delete | appWidgetId=" + appWidgetId);
             Data.delete(context, appWidgetId);
         });
     }
 
     private static void refresh(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final JSONObject settings) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.i(TAG, "refresh | appWidgetId=" + appWidgetId);
             try {
                 new ScheduleLessons(new Schedule.Handler() {
                     @Override
                     public void onSuccess(final JSONObject json, final boolean fromCache) {
-                        Static.T.runThread(() -> {
+                        Thread.run(() -> {
                             try {
                                 JSONObject jsonObject = new JSONObject();
-                                jsonObject.put("timestamp", Static.getCalendar().getTimeInMillis());
+                                jsonObject.put("timestamp", Time.getCalendar().getTimeInMillis());
                                 jsonObject.put("content", json);
                                 Data.save(context, appWidgetId, "cache", jsonObject.toString());
                                 new ScheduleLessonsAdditionalConverter(context, json, content -> {
@@ -136,7 +138,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                                     display(context, appWidgetManager, appWidgetId, false);
                                 }).run();
                             } catch (Exception e) {
-                                Static.error(e);
+                                Log.exception(e);
                                 failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_show_schedule));
                             }
                         });
@@ -172,13 +174,13 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                     }
                 }).search(context, settings.getString("query"), 0, false, false);
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
                 failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_load_schedule));
             }
         });
     }
     private static void progress(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final JSONObject settings) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.v(TAG, "progress | appWidgetId=" + appWidgetId);
             final @SIZE int size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
             final Colors colors = getColors(settings);
@@ -221,7 +223,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         });
     }
     private static void display(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final boolean controls) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.v(TAG, "display | appWidgetId=" + appWidgetId + " | controls=" + (controls ? "true" : "false"));
             JSONObject settings = Data.getJson(context, appWidgetId, "settings");
             JSONObject cache = Data.getJson(context, appWidgetId, "cache");
@@ -240,12 +242,12 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 final @SIZE int size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
                 final Colors colors = getColors(settings);
                 final JSONObject json = cache.getJSONObject("content");
-                final Calendar calendar = Static.getCalendar();
+                final Calendar calendar = Time.getCalendar();
                 final int[] shift = getShiftBasedOnTime(context, appWidgetId, settings, calendar);
                 if (shift[0] + shift[1] != 0) {
                     calendar.add(Calendar.HOUR, (shift[0] + shift[1]) * 24);
                 }
-                final int week = Static.getWeek(context, calendar) % 2;
+                final int week = Time.getWeek(context, calendar) % 2;
                 final RemoteViews layout = new RemoteViews(context.getPackageName(), getViewLayout(size));
                 // цвет
                 layout.setInt(R.id.widget_content, "setBackgroundColor", colors.background);
@@ -261,7 +263,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                                 (shift[0] != 0 ? ((shift[0] > 0 ? "+" : "") + String.valueOf(shift[0]) + " ") : "") +
                                 (shift[1] != 0 ? ("(" + (shift[1] > 0 ? "+" : "") + String.valueOf(shift[1] + ") ")) : "")
                         ) +
-                        Static.getDay(context, calendar.get(Calendar.DAY_OF_WEEK)) +
+                        Time.getDay(context, calendar.get(Calendar.DAY_OF_WEEK)) +
                         (week == 0 ? " (" + context.getString(R.string.tab_even) + ")" : (week == 1 ? " (" + context.getString(R.string.tab_odd) + ")" : ""))
                 );
                 // кнопки управления
@@ -353,14 +355,14 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.slw_day_schedule);
             } catch (Exception e) {
                 if (!("settings cannot be null".equals(e.getMessage()) || "cache cannot be null".equals(e.getMessage()))) {
-                    Static.error(e);
+                    Log.exception(e);
                 }
                 failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_show_schedule));
             }
         });
     }
     private static void failed(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final JSONObject settings, final String text) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.v(TAG, "failed | appWidgetId=" + appWidgetId + " | text=" + text);
             final @SIZE int size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
             final Colors colors = getColors(settings);
@@ -408,7 +410,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         });
     }
     private static void needPreparations(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId) {
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             Log.v(TAG, "needPreparations | appWidgetId=" + appWidgetId);
             final @SIZE int size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
             final Colors colors = getColors();
@@ -585,8 +587,8 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 if (day > 0) {
                     seek.add(Calendar.HOUR, 24);
                 }
-                final int week = Static.getWeek(context, seek) % 2;
-                final int weekday = Static.getWeekDay(seek);
+                final int week = Time.getWeek(context, seek) % 2;
+                final int weekday = Time.getWeekDay(seek);
                 final JSONArray lessons = getLessonsForWeekday(schedule, week, weekday);
                 // if this day contains lessons
                 if (lessons.length() > 0) {
@@ -643,7 +645,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
 
     public void onReceive(final Context context, final Intent intent) {
         super.onReceive(context, intent);
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             final String action = intent.getAction() != null ? intent.getAction() : "";
             final int appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
             Log.v(TAG, "onReceive | action=" + action);
@@ -666,7 +668,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 case ACTION_WIDGET_CONTROLS_NEXT:
                 case ACTION_WIDGET_CONTROLS_BEFORE:
                 case ACTION_WIDGET_CONTROLS_RESET: {
-                    Static.T.runThread(() -> {
+                    Thread.run(() -> {
                         switch (action) {
                             case ACTION_WIDGET_CONTROLS_NEXT: logStatistic(context, "shift_next"); break;
                             case ACTION_WIDGET_CONTROLS_BEFORE: logStatistic(context, "shift_before"); break;
@@ -701,10 +703,10 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                     break;
                 }
                 case ACTION_WIDGET_OPEN: {
-                    Static.T.runThread(() -> {
+                    Thread.run(() -> {
                         logStatistic(context, "schedule_open");
                         Intent oIntent = new Intent(context, MainActivity.class);
-                        oIntent.addFlags(Static.intentFlagRestart);
+                        oIntent.addFlags(App.intentFlagRestart);
                         oIntent.putExtra("action", "schedule_lessons");
                         try {
                             String settings = Data.get(context, appWidgetId, "settings");
@@ -712,7 +714,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                                 oIntent.putExtra("action_extra", new JSONObject(settings).getString("query"));
                             }
                         } catch (Exception e) {
-                            Static.error(e);
+                            Log.exception(e);
                         }
                         context.startActivity(oIntent);
                     });
@@ -755,7 +757,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
             canvas.drawBitmap(b, 0, 0, paint);
             return bitmap;
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             return null;
         }
     }

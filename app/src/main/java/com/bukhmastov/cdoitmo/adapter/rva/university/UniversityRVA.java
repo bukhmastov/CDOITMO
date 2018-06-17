@@ -8,7 +8,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -77,7 +77,7 @@ public abstract class UniversityRVA extends RecyclerView.Adapter<RecyclerView.Vi
                 ((TextView) viewHolder.container.findViewById(R.id.update_time)).setText(title);
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
 

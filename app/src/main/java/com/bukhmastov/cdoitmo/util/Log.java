@@ -5,6 +5,7 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 
+import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
 
 import org.json.JSONArray;
@@ -78,7 +79,7 @@ public class Log {
         stringBuilder.append("DISPLAY: ").append(Build.DISPLAY).append("\n");
         stringBuilder.append("SDK_INT: ").append(Build.VERSION.SDK_INT).append("\n");
         stringBuilder.append("-----Application-----").append("\n");
-        stringBuilder.append(Static.versionName).append(" (").append(Static.versionCode).append(")").append("\n");
+        stringBuilder.append(App.versionName).append(" (").append(App.versionCode).append(")").append("\n");
         stringBuilder.append("---------Log---------").append("\n");
         for (int i = reverse ? (logList.size() - 1) : 0; reverse ? (i >= 0) : (i < logList.size()); i = reverse ? (i - 1) : (i + 1)) {
             LogItem logItem = logList.get(i);
@@ -210,7 +211,7 @@ public class Log {
 
     @NonNull
     private static String wrapLog(String log) {
-        return "[" + Thread.currentThread().getName() + ":" + Thread.currentThread().getId() + "] " + (log == null ? "" : log);
+        return "[" + java.lang.Thread.currentThread().getName() + ":" + java.lang.Thread.currentThread().getId() + "] " + (log == null ? "" : log);
     }
     @NonNull
     private static String joinObjects(Object... log) {
@@ -250,18 +251,7 @@ public class Log {
         return str == null ? "<null>" : str;
     }
     @NonNull
-    @Deprecated
-    public static String lBool(boolean bool) {
-        return bool ? "true" : "false";
-    }
-    @NonNull
-    @Deprecated
     public static String lNull(Object o) {
         return o == null ? "<null>" : "<notnull>";
-    }
-    @NonNull
-    @Deprecated
-    public static String lThrow(Throwable throwable) {
-        return throwable != null ? throwable.getMessage() : "<empty>";
     }
 }

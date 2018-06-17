@@ -5,9 +5,11 @@ import android.support.annotation.StringDef;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
+import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.Thread;
 import com.crashlytics.android.Crashlytics;
 
 import java.lang.annotation.Retention;
@@ -41,7 +43,7 @@ public class FirebaseCrashlyticsProvider {
             }
             Log.i(TAG, "Firebase Crashlytics " + (FirebaseCrashlyticsProvider.enabled ? "enabled" : "disabled"));
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
         return FirebaseCrashlyticsProvider.enabled;
     }
@@ -52,12 +54,12 @@ public class FirebaseCrashlyticsProvider {
                 Fabric.with(activity, new Crashlytics());
                 Log.i(TAG, "Firebase Crashlytics enabled");
             } else {
-                Static.snackBar(activity, activity.getString(R.string.changes_will_take_effect_next_startup));
+                BottomBar.snackBar(activity, activity.getString(R.string.changes_will_take_effect_next_startup));
                 Log.i(TAG, "Firebase Crashlytics will be disabled at the next start up");
                 FirebaseAnalyticsProvider.logBasicEvent(activity, "firebase_crash_disabled");
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
         return FirebaseCrashlyticsProvider.enabled;
     }
@@ -98,7 +100,7 @@ public class FirebaseCrashlyticsProvider {
     }
 
     public static void exception(final Throwable throwable) {
-        Static.T.runThread(Static.T.BACKGROUND, () -> {
+        Thread.run(Thread.BACKGROUND, () -> {
             try {
                 if (!enabled) return;
                 Crashlytics.logException(throwable);
@@ -109,7 +111,7 @@ public class FirebaseCrashlyticsProvider {
     }
 
     public static void log(final @LEVEL String level, final String TAG, final String log) {
-        Static.T.runThread(Static.T.BACKGROUND, () -> {
+        Thread.run(Thread.BACKGROUND, () -> {
             try {
                 if (!enabled) return;
                 Crashlytics.log(level2priority(level), TAG, log);

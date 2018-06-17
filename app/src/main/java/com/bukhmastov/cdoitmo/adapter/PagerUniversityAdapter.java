@@ -12,7 +12,7 @@ import com.bukhmastov.cdoitmo.fragment.UniversityFacultiesFragment;
 import com.bukhmastov.cdoitmo.fragment.UniversityNewsFragment;
 import com.bukhmastov.cdoitmo.fragment.UniversityPersonsFragment;
 import com.bukhmastov.cdoitmo.fragment.UniversityUnitsFragment;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Log;
 
 import java.util.ArrayList;
 
@@ -48,7 +48,7 @@ public class PagerUniversityAdapter extends FragmentStatePagerAdapter {
                 try {
                     fragment = (Fragment) element.fragment.newInstance();
                 } catch (Exception e) {
-                    Static.error(e);
+                    Log.exception(e);
                 }
                 break;
             }

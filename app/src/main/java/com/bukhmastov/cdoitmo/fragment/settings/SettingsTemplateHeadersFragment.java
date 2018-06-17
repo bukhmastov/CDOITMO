@@ -70,7 +70,7 @@ public abstract class SettingsTemplateHeadersFragment extends ConnectedFragment 
                 loaded = true;
             }
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
             failed();
         }
     }
@@ -87,11 +87,11 @@ public abstract class SettingsTemplateHeadersFragment extends ConnectedFragment 
                         load();
                     }
                 } catch (Exception e) {
-                    Static.error(e);
+                    Log.exception(e);
                 }
             });
         } catch (Exception e) {
-            Static.error(e);
+            Log.exception(e);
         }
     }
 

@@ -32,10 +32,14 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
+import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.dialog.ColorPickerDialog;
 import com.bukhmastov.cdoitmo.util.CtxWrapper;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.Theme;
+import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.widget.ScheduleLessonsWidget;
 
 import org.json.JSONArray;
@@ -86,18 +90,17 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
 
     @Override
     public void onCreate(Bundle icicle) {
-        Static.applyActivityTheme(this);
-        final String theme = Static.getAppTheme(this);
+        Theme.applyActivityTheme(this);
+        final String theme = Theme.getAppTheme(this);
         isDarkTheme = "dark".equals(theme) || "black".equals(theme);
         super.onCreate(icicle);
         Log.i(TAG, "Activity created");
         FirebaseAnalyticsProvider.logCurrentScreen(this);
-        Static.init(this);
         setResult(RESULT_CANCELED);
         setContentView(R.layout.widget_configure_schedule_lessons);
         Toolbar toolbar = findViewById(R.id.toolbar_widget);
         if (toolbar != null) {
-            Static.applyToolbarTheme(this, toolbar);
+            Theme.applyToolbarTheme(this, toolbar);
             toolbar.setTitle(R.string.configure_schedule_widget);
             setSupportActionBar(toolbar);
         }
@@ -137,7 +140,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
     }
     private void initPartPreview() {
         Log.v(TAG, "initPartPreview");
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             // Starting from Android 27 (8.1) there is no longer free access to current wallpaper
             // Getting wallpaper requires "dangerous" permission android.permission.READ_EXTERNAL_STORAGE
             // To avoid using this permission, we just not gonna use wallpaper for widget preview
@@ -151,7 +154,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                     if (wallpaperDrawable == null) {
                         throw new NullPointerException("WallpaperDrawable is null");
                     }
-                    Static.T.runOnUiThread(() -> {
+                    Thread.runOnUI(() -> {
                         ImageView part_preview_background = activity.findViewById(R.id.part_preview_background);
                         if (part_preview_background != null) {
                             part_preview_background.setImageDrawable(wallpaperDrawable);
@@ -168,7 +171,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
     }
     private void initPartSchedule() {
         Log.v(TAG, "initPartSchedule");
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             try {
                 ViewGroup part_schedule = activity.findViewById(R.id.part_schedule);
                 part_schedule.setOnClickListener(view -> {
@@ -186,40 +189,40 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                 });
                 updateScheduleSummary();
             } catch (Exception e) {
-                Static.error(e);
-                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                Log.exception(e);
+                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
     private void initPartTheme() {
         Log.v(TAG, "initPartTheme");
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             try {
                 ViewGroup part_theme = activity.findViewById(R.id.part_theme);
                 part_theme.setOnClickListener(view -> activatePartTheme());
                 updateThemeSummary();
             } catch (Exception e) {
-                Static.error(e);
-                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                Log.exception(e);
+                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
     private void initPartUpdate() {
         Log.v(TAG, "initPartUpdate");
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             try {
                 ViewGroup part_update = activity.findViewById(R.id.part_update);
                 part_update.setOnClickListener(view -> activatePartUpdate());
                 updateUpdateSummary();
             } catch (Exception e) {
-                Static.error(e);
-                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                Log.exception(e);
+                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
     private void initPartDynamicShift() {
         Log.v(TAG, "initPartDynamicShift");
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             try {
                 ViewGroup part_dynamic_shift = activity.findViewById(R.id.part_automatic_shift);
                 Switch part_dynamic_shift_switch = activity.findViewById(R.id.part_automatic_shift_switch);
@@ -231,20 +234,20 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                     part_dynamic_shift_switch.setChecked(!part_dynamic_shift_switch.isChecked());
                 });
             } catch (Exception e) {
-                Static.error(e);
-                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                Log.exception(e);
+                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
     private void initFinishButton() {
         Log.v(TAG, "initFinishButton");
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             try {
                 Button add_button = activity.findViewById(R.id.add_button);
                 add_button.setOnClickListener(view -> activateFinish());
             } catch (Exception e) {
-                Static.error(e);
-                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                Log.exception(e);
+                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
@@ -254,7 +257,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
     }
     private void activatePartSchedule(final String title) {
         Log.v(TAG, "activatePartSchedule | scope=" + title);
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             try {
                 final ViewGroup layout = (ViewGroup) inflate(R.layout.widget_configure_schedule_lessons_create_search);
                 final AlertDialog alertDialog = new AlertDialog.Builder(activity)
@@ -277,25 +280,25 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                     public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
                     @Override
                     public void afterTextChanged(Editable editable) {
-                        Static.T.runThread(() -> {
+                        Thread.run(() -> {
                             teacherPickerAdapter.clear();
                             search_text_view.dismissDropDown();
                         });
                     }
                 });
-                search_action.setOnClickListener(view -> Static.T.runThread(() -> {
+                search_action.setOnClickListener(view -> Thread.run(() -> {
                     final String query = search_text_view.getText().toString().trim();
                     Log.v(TAG, "activatePartSchedule | search action | clicked | query=" + query);
                     if (!query.isEmpty()) {
                         new ScheduleLessons(new Schedule.Handler() {
                             @Override
                             public void onSuccess(final JSONObject json, final boolean fromCache) {
-                                Static.T.runThread(() -> {
+                                Thread.run(() -> {
                                     Log.v(TAG, "activatePartSchedule | search action | onSuccess | json=" + (json == null ? "null" : "notnull"));
                                     search_loading.setVisibility(View.GONE);
                                     search_action.setVisibility(View.VISIBLE);
                                     if (json == null) {
-                                        Static.snackBar(activity, activity.getString(R.string.schedule_not_found));
+                                        BottomBar.snackBar(activity, activity.getString(R.string.schedule_not_found));
                                     } else {
                                         try {
                                             final String type = json.getString("type");
@@ -336,7 +339,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                                                             }
                                                             updateScheduleSummary();
                                                         } else {
-                                                            Static.snackBar(activity, getString(R.string.something_went_wrong));
+                                                            BottomBar.snackBar(activity, getString(R.string.something_went_wrong));
                                                         }
                                                     } else {
                                                         ArrayList<JSONObject> arrayList = new ArrayList<>();
@@ -352,13 +355,13 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                                                     break;
                                                 }
                                                 default: {
-                                                    Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                                    BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                                     break;
                                                 }
                                             }
                                         } catch (Exception e) {
-                                            Static.error(e);
-                                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                            Log.exception(e);
+                                            BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                         }
                                     }
                                 });
@@ -370,7 +373,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                             @Override
                             public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                                 Log.v(TAG, "activatePartSchedule | search action | onFailure | state=" + state + " | statusCode=" + statusCode);
-                                Static.T.runThread(() -> {
+                                Thread.run(() -> {
                                     search_loading.setVisibility(View.GONE);
                                     search_action.setVisibility(View.VISIBLE);
                                     String text = activity.getString(R.string.schedule_not_found);
@@ -380,13 +383,13 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                                         case Client.FAILED_SERVER_ERROR: text = Client.getFailureMessage(activity, statusCode); break;
                                         case Client.FAILED_CORRUPTED_JSON: text = activity.getString(R.string.server_provided_corrupted_json); break;
                                     }
-                                    Static.snackBar(activity, text);
+                                    BottomBar.snackBar(activity, text);
                                 });
                             }
                             @Override
                             public void onProgress(final int state) {
                                 Log.v(TAG, "activatePartSchedule | search action | onProgress | state=" + state);
-                                Static.T.runThread(() -> {
+                                Thread.run(() -> {
                                     search_loading.setVisibility(View.VISIBLE);
                                     search_action.setVisibility(View.GONE);
                                 });
@@ -404,7 +407,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                         }).search(activity, query);
                     }
                 }));
-                search_text_view.setOnItemClickListener((parent, view, position, id) -> Static.T.runThread(() -> {
+                search_text_view.setOnItemClickListener((parent, view, position, id) -> Thread.run(() -> {
                     try {
                         Log.v(TAG, "activatePartSchedule | search list selected");
                         JSONObject item = teacherPickerAdapter.getItem(position);
@@ -417,24 +420,24 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                             }
                             updateScheduleSummary();
                         } else {
-                            Static.snackBar(activity, getString(R.string.something_went_wrong));
+                            BottomBar.snackBar(activity, getString(R.string.something_went_wrong));
                         }
                     } catch (Exception e) {
-                        Static.error(e);
-                        Static.snackBar(activity, getString(R.string.something_went_wrong));
+                        Log.exception(e);
+                        BottomBar.snackBar(activity, getString(R.string.something_went_wrong));
                     }
                 }));
                 alertDialog.show();
                 search_action.setVisibility(View.VISIBLE);
             } catch (Exception e) {
-                Static.error(e);
-                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                Log.exception(e);
+                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
     private void activatePartTheme() {
         Log.v(TAG, "activatePartTheme");
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             try {
                 // define variables
                 final ViewGroup layout = (ViewGroup) inflate(R.layout.widget_configure_schedule_lessons_create_theme);
@@ -468,7 +471,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
 
                 final AlertDialog alertDialog = new AlertDialog.Builder(activity)
                         .setView(layout)
-                        .setPositiveButton(R.string.apply, (dialogInterface, i) -> Static.T.runThread(() -> {
+                        .setPositiveButton(R.string.apply, (dialogInterface, i) -> Thread.run(() -> {
                             Log.v(TAG, "activatePartTheme | apply");
                             try {
                                 String background = background_color_picker_value.getText().toString().trim();
@@ -505,7 +508,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                         .setNegativeButton(R.string.do_cancel, null)
                         .create();
 
-                default_theme_light.setOnClickListener(view -> Static.T.runThread(() -> {
+                default_theme_light.setOnClickListener(view -> Thread.run(() -> {
                     Log.v(TAG, "activatePartTheme | light theme selected");
                     try {
                         Settings.Theme.text       = Default.Theme.Light.text;
@@ -517,15 +520,15 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                         updateDemo();
                         updateThemeSummary();
                     } catch (Exception e) {
-                        Static.error(e);
-                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        Log.exception(e);
+                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 }));
                 default_theme_light_background.setText(activity.getString(R.string.background_color) + ": " + Default.Theme.Light.background);
                 default_theme_light_text.setText(activity.getString(R.string.text_color) + ": " + Default.Theme.Light.text);
                 default_theme_light_opacity.setText(activity.getString(R.string.background_opacity) + ": " + Default.Theme.Light.opacity);
 
-                default_theme_dark.setOnClickListener(view -> Static.T.runThread(() -> {
+                default_theme_dark.setOnClickListener(view -> Thread.run(() -> {
                     Log.v(TAG, "activatePartTheme | dark theme selected");
                     try {
                         Settings.Theme.text       = Default.Theme.Dark.text;
@@ -537,47 +540,47 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                         updateDemo();
                         updateThemeSummary();
                     } catch (Exception e) {
-                        Static.error(e);
-                        Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        Log.exception(e);
+                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 }));
                 default_theme_dark_background.setText(activity.getString(R.string.background_color) + ": " + Default.Theme.Dark.background);
                 default_theme_dark_text.setText(activity.getString(R.string.text_color) + ": " + Default.Theme.Dark.text);
                 default_theme_dark_opacity.setText(activity.getString(R.string.background_opacity) + ": " + Default.Theme.Dark.opacity);
 
-                background_color_picker.setOnClickListener(view -> Static.T.runThread(() -> {
+                background_color_picker.setOnClickListener(view -> Thread.run(() -> {
                     Log.v(TAG, "activatePartTheme | background color picker clicked");
-                    Static.ColorPicker.get(activity, new Static.ColorPicker.ColorPickerCallback() {
+                    new ColorPickerDialog(activity, new ColorPickerDialog.ColorPickerCallback() {
                         @Override
                         public void result(final String hex) {
-                            Static.T.runThread(() -> {
+                            Thread.run(() -> {
                                 Log.v(TAG, "activatePartTheme | background color picker | hex=" + hex);
                                 applyColor(hex, background_color_picker, background_color_picker_image, background_color_picker_value, background_color_picker_header, background_color_picker_hint);
                             });
                         }
                         @Override
                         public void exception(Exception e) {
-                            Static.error(e);
-                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                            Log.exception(e);
+                            BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                         }
                     }).show(Settings.Theme.background);
                 }));
                 applyColor(Settings.Theme.background, background_color_picker, background_color_picker_image, background_color_picker_value, background_color_picker_header, background_color_picker_hint);
 
-                text_color_picker.setOnClickListener(view -> Static.T.runThread(() -> {
+                text_color_picker.setOnClickListener(view -> Thread.run(() -> {
                     Log.v(TAG, "activatePartTheme | text color picker clicked");
-                    Static.ColorPicker.get(activity, new Static.ColorPicker.ColorPickerCallback() {
+                    new ColorPickerDialog(activity, new ColorPickerDialog.ColorPickerCallback() {
                         @Override
                         public void result(final String hex) {
-                            Static.T.runThread(() -> {
+                            Thread.run(() -> {
                                 Log.v(TAG, "activatePartTheme | text color picker | hex=" + hex);
                                 applyColor(hex, text_color_picker, text_color_picker_image, text_color_picker_value, text_color_picker_header, text_color_picker_hint);
                             });
                         }
                         @Override
                         public void exception(Exception e) {
-                            Static.error(e);
-                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                            Log.exception(e);
+                            BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                         }
                     }).show(Settings.Theme.text);
                 }));
@@ -597,8 +600,8 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                             }
                             background_opacity_picker.getBackground().setAlpha((int) ((double) (255 - progress) * 0.5));
                         } catch (Exception e) {
-                            Static.error(e);
-                            Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                            Log.exception(e);
+                            BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                         }
                     }
                     @Override
@@ -609,14 +612,14 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
 
                 alertDialog.show();
             } catch (Exception e) {
-                Static.error(e);
-                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                Log.exception(e);
+                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
     private void activatePartUpdate() {
         Log.v(TAG, "activatePartUpdate");
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             try {
                 int select = 0;
                 switch (Settings.updateTime){
@@ -630,7 +633,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                         .setTitle(R.string.update_interval)
                         .setSingleChoiceItems(R.array.pref_widget_refresh_titles, select, (dialog, which) -> {
                             Log.v(TAG, "activatePartUpdate | apply");
-                            Static.T.runThread(() -> {
+                            Thread.run(() -> {
                                 switch (which){
                                     case 0: Settings.updateTime = 0; break;
                                     case 1: Settings.updateTime = 12; break;
@@ -647,28 +650,28 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                         .create();
                 alertDialog.show();
             } catch (Exception e) {
-                Static.error(e);
-                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                Log.exception(e);
+                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
     private void activatePartDynamicShift(boolean checked) {
         Log.v(TAG, "activatePartDynamicShift | checked=", checked);
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             try {
                 Settings.useShiftAutomatic = checked;
             } catch (Exception e) {
-                Static.error(e);
-                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                Log.exception(e);
+                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
     private void activateFinish() {
         Log.v(TAG, "activateFinish");
-        Static.T.runThread(() -> {
+        Thread.run(() -> {
             try {
                 if (Settings.Schedule.query == null || Settings.Schedule.query.trim().isEmpty()) {
-                    Static.snackBar(activity, activity.getString(R.string.need_to_choose_schedule));
+                    BottomBar.snackBar(activity, activity.getString(R.string.need_to_choose_schedule));
                     return;
                 }
                 JSONObject theme = new JSONObject();
@@ -695,15 +698,15 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                 );
             } catch (Exception e) {
                 Log.w(TAG, "activateFinish | failed to create widget");
-                Static.error(e);
-                Static.snackBar(activity, activity.getString(R.string.failed_to_create_widget));
+                Log.exception(e);
+                BottomBar.snackBar(activity, activity.getString(R.string.failed_to_create_widget));
             }
         });
     }
 
     private void updateDemo() {
         Log.v(TAG, "updateDemo");
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             try {
                 int background = parseColor(Settings.Theme.background, Settings.Theme.opacity);
                 int text = parseColor(Settings.Theme.text);
@@ -734,25 +737,25 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                     slw_item_meta.setTextColor(text);
                 }
             } catch (Exception e) {
-                Static.error(e);
+                Log.exception(e);
             }
         });
     }
     private void updateScheduleSummary() {
         Log.v(TAG, "updateScheduleSummary");
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             try {
                 TextView part_schedule_summary = activity.findViewById(R.id.part_schedule_summary);
                 part_schedule_summary.setText(!Settings.Schedule.query.isEmpty() ? Settings.Schedule.title : getString(R.string.need_to_choose_schedule));
             } catch (Exception e) {
-                Static.error(e);
-                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                Log.exception(e);
+                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
     private void updateThemeSummary() {
         Log.v(TAG, "updateThemeSummary");
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             try {
                 TextView part_theme_summary = activity.findViewById(R.id.part_theme_summary);
                 String summary;
@@ -767,14 +770,14 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                 }
                 part_theme_summary.setText(summary);
             } catch (Exception e) {
-                Static.error(e);
-                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                Log.exception(e);
+                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
     private void updateUpdateSummary() {
         Log.v(TAG, "updateUpdateSummary");
-        Static.T.runOnUiThread(() -> {
+        Thread.runOnUI(() -> {
             try {
                 TextView part_update_summary = activity.findViewById(R.id.part_update_summary);
                 String summary;
@@ -788,8 +791,8 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                 }
                 part_update_summary.setText(summary);
             } catch (Exception e) {
-                Static.error(e);
-                Static.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                Log.exception(e);
+                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
