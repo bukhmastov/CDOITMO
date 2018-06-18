@@ -1,37 +1,46 @@
 package com.bukhmastov.cdoitmo.parse;
 
+import com.bukhmastov.cdoitmo.data.User;
+import com.bukhmastov.cdoitmo.data.Week;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 
 import org.htmlcleaner.TagNode;
-import org.json.JSONObject;
 
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class UserDataParse extends Parse {
+public class UserDataParse extends Parse<UserDataParse.ProfileData> {
+    public class ProfileData {
+        public final User user;
+        public final Week week;
 
-    public UserDataParse(String data, Response delegate) {
+        ProfileData(User user, Week week) {
+            this.user = user;
+            this.week = week;
+        }
+    }
+
+    public UserDataParse(String data, Response<ProfileData> delegate) {
         super(data, delegate);
     }
 
     @Override
-    protected JSONObject parse(TagNode root) throws Throwable {
-        JSONObject response = new JSONObject();
+    protected ProfileData parse(TagNode root) {
         // находим имя пользователя
         TagNode fio = root.findElementByAttValue("id", "fio", true, false);
-        response.put("name", fio == null ? "" : fio.getText().toString().trim());
+        String name = fio == null ? "" : fio.getText().toString().trim();
         // находим адрес аватарки
-        response.put("avatar", "");
+        String avatar = "";
         TagNode alink_Avatar = root.findElementByAttValue("class", "alink_Avatar", true, false);
         if (alink_Avatar != null && alink_Avatar.hasChildren()) {
             TagNode img = alink_Avatar.findElementByName("img", false);
             if (img != null) {
-                response.put("avatar", "servlet/" + img.getAttributeByName("src").trim().replace("&amp;", "&"));
+                avatar = "servlet/" + img.getAttributeByName("src").trim().replace("&amp;", "&");
             }
         }
         // находим группу пользователя
-        response.put("group", "");
+        String group = "";
         TagNode editForm = root.findElementByAttValue("name", "editForm", true, false);
         if (editForm != null) {
             TagNode div = editForm.findElementByAttValue("class", "d_text", false, false);
@@ -43,7 +52,7 @@ public class UserDataParse extends Parse {
                         for (TagNode row : rows) {
                             List<? extends TagNode> columns = row.getAllElementsList(false);
                             if (columns != null && "группа".equals(columns.get(0).getText().toString().toLowerCase().trim())) {
-                                response.put("group", columns.get(1).getText().toString().trim());
+                                group = columns.get(1).getText().toString().trim();
                                 break;
                             }
                         }
@@ -52,15 +61,15 @@ public class UserDataParse extends Parse {
             }
         }
         // находим номер текущей недели
-        response.put("week", "-1");
+        String week = "";
         TagNode divCalendarIcon = root.findElementByAttValue("id", "divCalendarIcon", true, false);
         if (divCalendarIcon != null) {
             Matcher m = Pattern.compile("^.*\\((.*) нед\\).*$").matcher(divCalendarIcon.getText().toString().trim());
             if (m.find()) {
-                response.put("week", m.group(1));
+                week = m.group(1);
             }
         }
-        return response;
+        return new ProfileData(new User(name, avatar, group, null), new Week(week));
     }
 
     @Override

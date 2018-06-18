@@ -1,9 +1,9 @@
 package com.bukhmastov.cdoitmo.network;
 
 import android.content.Context;
-import android.text.TextUtils;
 
 import com.bukhmastov.cdoitmo.App;
+import com.bukhmastov.cdoitmo.data.StorageProxy;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.interfaces.RawHandler;
 import com.bukhmastov.cdoitmo.network.interfaces.ResponseHandler;
@@ -61,45 +61,13 @@ public class DeIfmoClient extends DeIfmo {
                         @Override
                         public void onSuccess(final int statusCode, final Headers headers, final String response) {
                             Log.v(TAG, "check | success | going to parse user data");
-                            Thread.run(Thread.BACKGROUND, () -> new UserDataParse(response, result -> {
-                                if (result != null) {
+                            Thread.run(Thread.BACKGROUND, () -> new UserDataParse(response, profile -> {
+                                if (profile != null) {
                                     Log.v(TAG, "check | success | parsed");
-                                    String name = com.bukhmastov.cdoitmo.util.TextUtils.getStringSafely(result, "name", "");
-                                    String avatar = com.bukhmastov.cdoitmo.util.TextUtils.getStringSafely(result, "avatar", "");
-                                    String group = com.bukhmastov.cdoitmo.util.TextUtils.getStringSafely(result, "group", "");
-                                    String pref_group_force_override = Storage.pref.get(context, "pref_group_force_override", "");
-                                    if (pref_group_force_override == null) {
-                                        pref_group_force_override = "";
-                                    } else {
-                                        pref_group_force_override = pref_group_force_override.trim();
-                                    }
-                                    String[] groups = (pref_group_force_override.isEmpty() ? group : pref_group_force_override).split(",\\s|\\s|,");
-                                    String g = Storage.file.perm.get(context, "user#group");
-                                    boolean gFound = false;
-                                    for (String g1 : groups) {
-                                        if (g1.equals(g)) {
-                                            gFound = true;
-                                            break;
-                                        }
-                                    }
-                                    if (!gFound) {
-                                        g = groups.length > 0 ? groups[0] : "";
-                                    }
-                                    Storage.file.perm.put(context, "user#name", name);
-                                    Storage.file.perm.put(context, "user#group", g);
-                                    Storage.file.perm.put(context, "user#groups", TextUtils.join(", ", groups));
-                                    Storage.file.perm.put(context, "user#avatar", avatar);
-                                    try {
-                                        Storage.file.general.perm.put(context, "user#week", new JSONObject()
-                                                .put("week", Integer.parseInt(result.getString("week")))
-                                                .put("timestamp", Time.getCalendar().getTimeInMillis())
-                                                .toString()
-                                        );
-                                    } catch (Exception e) {
-                                        Log.exception(e);
-                                        Storage.file.general.perm.delete(context, "user#week");
-                                    }
-                                    FirebaseAnalyticsProvider.setUserProperties(context, group);
+                                    StorageProxy storage = new Storage.Proxy(context);
+                                    profile.user.store(storage);
+                                    profile.week.store(storage);
+                                    FirebaseAnalyticsProvider.setUserProperties(context, profile.user.getGroup());
                                     responseHandler.onSuccess(200, headers, "");
                                 } else {
                                     Log.v(TAG, "check | success | not parsed");
