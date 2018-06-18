@@ -1,6 +1,7 @@
 package com.bukhmastov.cdoitmo.parse.schedule;
 
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
+import com.bukhmastov.cdoitmo.parse.JSONParse;
 import com.bukhmastov.cdoitmo.parse.Parse;
 
 import org.htmlcleaner.TagNode;
@@ -10,13 +11,13 @@ import org.json.JSONObject;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ScheduleExamsGroupParse extends Parse {
+public class ScheduleExamsGroupParse extends JSONParse {
 
     private final String query;
     private final Pattern groupPattern = Pattern.compile("[a-zа-яё]\\d{4}[a-zа-яё]?", Pattern.CASE_INSENSITIVE);
     private final Pattern advicePattern = Pattern.compile("^Консультация (.{1,10}) в (\\d{1,2}:\\d{1,2}) Место:(.*)$", Pattern.CASE_INSENSITIVE);
 
-    public ScheduleExamsGroupParse(String data, String query, Response delegate) {
+    public ScheduleExamsGroupParse(String data, String query, Response<JSONObject> delegate) {
         super(data, delegate);
         this.query = query;
     }

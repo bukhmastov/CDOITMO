@@ -8,16 +8,16 @@ import org.htmlcleaner.HtmlCleaner;
 import org.htmlcleaner.TagNode;
 import org.json.JSONObject;
 
-public abstract class Parse implements Runnable {
+public abstract class Parse<T> implements Runnable {
 
-    private final Response delegate;
+    private final Response<T> delegate;
     private final String data;
 
-    public interface Response {
-        void finish(JSONObject json);
+    public interface Response<T> {
+        void finish(T json);
     }
 
-    public Parse(String data, Response delegate) {
+    public Parse(String data, Response<T> delegate) {
         this.data = data;
         this.delegate = delegate;
     }
@@ -30,9 +30,9 @@ public abstract class Parse implements Runnable {
             if (root == null) {
                 throw new SilentException();
             }
-            JSONObject json = parse(root);
+            T data = parse(root);
             FirebasePerformanceProvider.putAttribute(trace, "state", "done");
-            delegate.finish(json);
+            delegate.finish(data);
         } catch (SilentException silent) {
             FirebasePerformanceProvider.putAttribute(trace, "state", "failed");
             delegate.finish(null);
@@ -46,7 +46,7 @@ public abstract class Parse implements Runnable {
         }
     }
 
-    abstract protected JSONObject parse(TagNode root) throws Throwable;
+    abstract protected T parse(TagNode root) throws Throwable;
 
     abstract protected @FirebasePerformanceProvider.TRACE String getTraceName();
 }

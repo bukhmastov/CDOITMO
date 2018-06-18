@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.bukhmastov.cdoitmo.exception.SilentException;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
+import com.bukhmastov.cdoitmo.parse.JSONParse;
 import com.bukhmastov.cdoitmo.parse.Parse;
 import com.bukhmastov.cdoitmo.util.Time;
 
@@ -14,11 +15,11 @@ import org.json.JSONObject;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Room101ViewRequestParse extends Parse {
+public class Room101ViewRequestParse extends JSONParse {
 
     private final Context context;
 
-    public Room101ViewRequestParse(Context context, String data, Response delegate) {
+    public Room101ViewRequestParse(Context context, String data, Response<JSONObject> delegate) {
         super(data, delegate);
         this.context = context;
     }

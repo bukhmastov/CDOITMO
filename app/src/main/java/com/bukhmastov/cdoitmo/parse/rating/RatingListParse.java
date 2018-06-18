@@ -2,6 +2,7 @@ package com.bukhmastov.cdoitmo.parse.rating;
 
 import com.bukhmastov.cdoitmo.exception.SilentException;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
+import com.bukhmastov.cdoitmo.parse.JSONParse;
 import com.bukhmastov.cdoitmo.parse.Parse;
 
 import org.htmlcleaner.TagNode;
@@ -11,9 +12,9 @@ import org.json.JSONObject;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class RatingListParse extends Parse {
+public class RatingListParse extends JSONParse {
 
-    public RatingListParse(String data, Response delegate) {
+    public RatingListParse(String data, Response<JSONObject> delegate) {
         super(data, delegate);
     }
 
