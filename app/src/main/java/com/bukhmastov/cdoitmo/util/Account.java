@@ -8,6 +8,10 @@ import android.support.v7.app.AlertDialog;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.data.AccountList;
+import com.bukhmastov.cdoitmo.data.StorageProxy;
+import com.bukhmastov.cdoitmo.data.User;
+import com.bukhmastov.cdoitmo.data.UserCredentials;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
@@ -17,13 +21,10 @@ import com.bukhmastov.cdoitmo.object.ProtocolTracker;
 import com.bukhmastov.cdoitmo.interfaces.Callable;
 import com.bukhmastov.cdoitmo.interfaces.CallableString;
 
-import org.json.JSONArray;
-
 public class Account {
 
     private static final String TAG = "Account";
 
-    public static final String USER_UNAUTHORIZED = "unauthorized";
     public static boolean authorized = false;
 
     public interface LoginHandler {
@@ -41,19 +42,20 @@ public class Account {
         void onNewRequest(final Client.Request request);
     }
 
-    public static void login(@NonNull final Context context, @NonNull final String login, @NonNull final String password, @NonNull final String role, final boolean isNewUser, @NonNull final LoginHandler loginHandler) {
+    public static void login(@NonNull final Context context, @NonNull final UserCredentials creds, final boolean isNewUser, @NonNull final LoginHandler loginHandler) {
         final String trace = FirebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.LOGIN);
+        final StorageProxy storage = new Storage.Proxy(context);
         Thread.run(() -> {
-            final boolean IS_USER_UNAUTHORIZED = USER_UNAUTHORIZED.equals(login);
-            Log.v(TAG, "login | login=", login, " | password.length()=", password.length(), " | role=", role, " | isNewUser=", isNewUser, " | IS_USER_UNAUTHORIZED=", IS_USER_UNAUTHORIZED, " | OFFLINE_MODE=", App.OFFLINE_MODE);
-            if (login.isEmpty() || password.isEmpty()) {
+            final boolean IS_USER_UNAUTHORIZED = creds == UserCredentials.UNAUTHORIZED;
+            Log.v(TAG, "login | login=", creds.getLogin(), " | password.length()=", creds.getPassword().length(), " | role=", creds.getRole(), " | isNewUser=", isNewUser, " | IS_USER_UNAUTHORIZED=", IS_USER_UNAUTHORIZED, " | OFFLINE_MODE=", App.OFFLINE_MODE);
+            if (creds.areInvalid()) {
                 Thread.runOnUI(() -> {
                     loginHandler.onFailure(context.getString(R.string.required_login_password));
                     FirebasePerformanceProvider.putAttributeAndStop(trace, "state", "failed_credentials_required");
                 });
                 return;
             }
-            if ("general".equals(login)) {
+            if ("general".equals(creds.getLogin())) {
                 Log.w(TAG, "login | got \"general\" login that does not supported");
                 Thread.runOnUI(() -> {
                     loginHandler.onFailure(context.getString(R.string.wrong_login_general));
@@ -62,12 +64,9 @@ public class Account {
                 return;
             }
             Account.authorized = false;
-            Storage.file.general.perm.put(context, "users#current_login", login);
-            if (isNewUser || IS_USER_UNAUTHORIZED) {
-                Storage.file.perm.put(context, "user#deifmo#login", login);
-                Storage.file.perm.put(context, "user#deifmo#password", password);
-                Storage.file.perm.put(context, "user#role", role);
-            }
+
+            UserCredentials.setCurrentLogin(storage, creds.getLogin());
+            if (isNewUser || IS_USER_UNAUTHORIZED) creds.store(storage);
             if (IS_USER_UNAUTHORIZED) {
                 Thread.runOnUI(() -> {
                     Account.authorized = true;
@@ -99,7 +98,15 @@ public class Account {
                 public void onSuccess(int statusCode, Client.Headers headers, String response) {
                     Thread.run(() -> {
                         Account.authorized = true;
-                        List.push(context, login);
+
+                        AccountList accounts = new AccountList(storage);
+                        boolean isNewAuthorization = accounts.add(creds.getLogin());
+
+                        Bundle bundle;
+                        bundle = FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_COUNT, accounts.length());
+                        bundle = FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_NEW, isNewAuthorization ? "new" : "old", bundle);
+                        FirebaseAnalyticsProvider.logEvent(context, FirebaseAnalyticsProvider.Event.LOGIN, bundle);
+
                         if (isNewUser) {
                             FirebaseAnalyticsProvider.logBasicEvent(context, "New user authorized");
                             ProtocolTracker.setup(context, 0);
@@ -203,9 +210,13 @@ public class Account {
     }
     public static void logout(@NonNull final Context context, @Nullable final String login, @NonNull final LogoutHandler logoutHandler) {
         final String trace = FirebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.LOGOUT);
+        final StorageProxy storage = new Storage.Proxy(context);
         Thread.run(() -> {
-            @NonNull final String cLogin = login != null ? login : Storage.file.general.perm.get(context, "users#current_login");
-            final boolean IS_USER_UNAUTHORIZED = USER_UNAUTHORIZED.equals(cLogin);
+            if (login != null) UserCredentials.setCurrentLogin(storage, login);
+            @NonNull final String cLogin = login != null ? login : UserCredentials.getCurrentLogin(storage);
+            final String uName = User.getName(storage);
+
+            final boolean IS_USER_UNAUTHORIZED = UserCredentials.LOGIN_UNAUTHORIZED.equals(cLogin);
             Log.i(TAG, "logout | login=", cLogin, " | IS_USER_UNAUTHORIZED=", IS_USER_UNAUTHORIZED, " | OFFLINE_MODE=", App.OFFLINE_MODE);
             if ("general".equals(login)) {
                 Log.w(TAG, "logout | got \"general\" login that does not supported");
@@ -316,80 +327,5 @@ public class Account {
                 .setPositiveButton(R.string.do_logout, (dialogInterface, i) -> Thread.runOnUI(callback::call))
                 .setNegativeButton(R.string.do_cancel, null)
                 .create().show());
-    }
-
-    public static class List {
-        private static final String TAG = Account.TAG + ".List";
-        public static void push(@NonNull final Context context, @NonNull final String login) {
-            if (USER_UNAUTHORIZED.equals(login)) return;
-            Thread.run(() -> {
-                try {
-                    Log.v(TAG, "push | login=", login);
-                    boolean isNewAuthorization = true;
-                    // save login on top of the list of authorized users
-                    JSONArray list = get(context);
-                    JSONArray accounts = new JSONArray();
-                    accounts.put(login);
-                    for (int i = 0; i < list.length(); i++) {
-                        String entry = list.getString(i);
-                        if (entry.equals(login)) {
-                            isNewAuthorization = false;
-                        } else {
-                            accounts.put(entry);
-                        }
-                    }
-                    Storage.file.general.perm.put(context, "users#list", accounts.toString());
-                    // track statistics
-                    Bundle bundle;
-                    bundle = FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_COUNT, accounts.length());
-                    bundle = FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_NEW, isNewAuthorization ? "new" : "old", bundle);
-                    FirebaseAnalyticsProvider.logEvent(
-                            context,
-                            FirebaseAnalyticsProvider.Event.LOGIN,
-                            bundle
-                    );
-                } catch (Exception e) {
-                    Log.exception(e);
-                }
-            });
-        }
-        public static void remove(@NonNull final Context context, @NonNull final String login) {
-            if (USER_UNAUTHORIZED.equals(login)) return;
-            Thread.run(() -> {
-                try {
-                    Log.v(TAG, "remove | login=", login);
-                    // remove login from the list of authorized users
-                    JSONArray list = get(context);
-                    for (int i = 0; i < list.length(); i++) {
-                        if (list.getString(i).equals(login)) {
-                            list.remove(i);
-                            break;
-                        }
-                    }
-                    Storage.file.general.perm.put(context, "users#list", list.toString());
-                    // track statistics
-                    FirebaseAnalyticsProvider.logEvent(
-                            context,
-                            FirebaseAnalyticsProvider.Event.LOGOUT,
-                            FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_COUNT, list.length())
-                    );
-                } catch (Exception e) {
-                    Log.exception(e);
-                }
-            });
-        }
-        public static JSONArray get(@NonNull Context context) {
-            try {
-                Log.v(TAG, "get");
-                try {
-                    return TextUtils.string2jsonArray(Storage.file.general.perm.get(context, "users#list", ""));
-                } catch (Exception e) {
-                    return new JSONArray();
-                }
-            } catch (Exception e) {
-                Log.exception(e);
-                return new JSONArray();
-            }
-        }
     }
 }

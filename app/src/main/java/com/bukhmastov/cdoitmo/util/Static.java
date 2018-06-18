@@ -72,4 +72,11 @@ public class Static {
             }
         });
     }
+
+    public static <T> boolean contains(T[] array, T value) {
+        for (T element : array) {
+            if (element == value || value != null && value.equals(element)) return true;
+        }
+        return false;
+    }
 }

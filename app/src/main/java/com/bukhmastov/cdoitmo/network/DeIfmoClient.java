@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.data.StorageProxy;
+import com.bukhmastov.cdoitmo.data.UserCredentials;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.interfaces.RawHandler;
 import com.bukhmastov.cdoitmo.network.interfaces.ResponseHandler;
@@ -13,9 +14,6 @@ import com.bukhmastov.cdoitmo.parse.UserDataParse;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
-import com.bukhmastov.cdoitmo.util.Time;
-
-import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -105,16 +103,15 @@ public class DeIfmoClient extends DeIfmo {
                 responseHandler.onSuccess(STATUS_CODE_EMPTY, new Headers(null), "authorized");
                 return;
             }
-            String login = Storage.file.perm.get(context, "user#deifmo#login", "").trim();
-            String password = Storage.file.perm.get(context, "user#deifmo#password", "").trim();
-            if (login.isEmpty() || password.isEmpty()) {
+            UserCredentials creds = UserCredentials.load(new Storage.Proxy(context));
+            if (creds.areInvalid()) {
                 Log.v(TAG, "authorize | FAILED_AUTH_CREDENTIALS_REQUIRED");
                 responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_AUTH_CREDENTIALS_REQUIRED);
             } else {
                 HashMap<String, String> params = new HashMap<>();
                 params.put("Rule", "LOGON");
-                params.put("LOGIN", login);
-                params.put("PASSWD", password);
+                params.put("LOGIN", creds.getLogin());
+                params.put("PASSWD", creds.getPassword());
                 p(context, getAbsoluteUrl(DEFAULT_PROTOCOL, "servlet"), params, new RawHandler() {
                     @Override
                     public void onDone(final int code, final okhttp3.Headers headers, final String response) {
@@ -137,7 +134,7 @@ public class DeIfmoClient extends DeIfmo {
                                         responseHandler.onFailure(code, new Headers(headers), FAILED_AUTH_CREDENTIALS_FAILED);
                                     } else if (response.contains("Выбор группы безопасности") && response.contains("OPTION VALUE=8")) {
                                         Log.v(TAG, "authorize | success | going to select security group");
-                                        g(context, getAbsoluteUrl(DEFAULT_PROTOCOL, "servlet/distributedCDE?Rule=APPLYSECURITYGROUP&PERSON=" + Storage.file.perm.get(context, "user#deifmo#login") + "&SECURITYGROUP=8&COMPNAME="), null, new RawHandler() {
+                                        g(context, getAbsoluteUrl(DEFAULT_PROTOCOL, "servlet/distributedCDE?Rule=APPLYSECURITYGROUP&PERSON=" + creds.getLogin() + "&SECURITYGROUP=8&COMPNAME="), null, new RawHandler() {
                                             @Override
                                             public void onDone(final int code, final okhttp3.Headers headers, final String response) {
                                                 Thread.run(Thread.BACKGROUND, () -> {
@@ -401,12 +398,6 @@ public class DeIfmoClient extends DeIfmo {
                 responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_OFFLINE);
             }
         });
-    }
-
-    public static boolean isAuthorized(final Context context) {
-        final String login = Storage.file.perm.get(context, "user#deifmo#login", "").trim();
-        final String password = Storage.file.perm.get(context, "user#deifmo#password", "").trim();
-        return !login.isEmpty() && !password.isEmpty();
     }
 
     private static String getAbsoluteUrl(@Protocol String protocol, String relativeUrl) {
