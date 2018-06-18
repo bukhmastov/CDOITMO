@@ -3,6 +3,7 @@ package com.bukhmastov.cdoitmo.firebase;
 import android.content.Context;
 import android.support.annotation.StringDef;
 
+import com.bukhmastov.cdoitmo.BuildConfig;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.util.BottomBar;
@@ -20,7 +21,7 @@ import io.fabric.sdk.android.Fabric;
 public class FirebaseCrashlyticsProvider {
 
     private static final String TAG = "FirebaseCrashlyticsProvider";
-    private static boolean enabled = true;
+    private static boolean enabled = !BuildConfig.DEBUG;
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({VERBOSE, DEBUG, INFO, WARN, ERROR})
@@ -100,9 +101,9 @@ public class FirebaseCrashlyticsProvider {
     }
 
     public static void exception(final Throwable throwable) {
+        if (!enabled) return;
         Thread.run(Thread.BACKGROUND, () -> {
             try {
-                if (!enabled) return;
                 Crashlytics.logException(throwable);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -111,9 +112,9 @@ public class FirebaseCrashlyticsProvider {
     }
 
     public static void log(final @LEVEL String level, final String TAG, final String log) {
+        if (!enabled) return;
         Thread.run(Thread.BACKGROUND, () -> {
             try {
-                if (!enabled) return;
                 Crashlytics.log(level2priority(level), TAG, log);
             } catch (Exception e) {
                 e.printStackTrace();

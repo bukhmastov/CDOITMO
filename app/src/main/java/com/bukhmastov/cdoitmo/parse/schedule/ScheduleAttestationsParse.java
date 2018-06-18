@@ -2,6 +2,7 @@ package com.bukhmastov.cdoitmo.parse.schedule;
 
 import com.bukhmastov.cdoitmo.exception.SilentException;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
+import com.bukhmastov.cdoitmo.parse.JSONParse;
 import com.bukhmastov.cdoitmo.parse.Parse;
 import com.bukhmastov.cdoitmo.util.Log;
 
@@ -9,11 +10,11 @@ import org.htmlcleaner.TagNode;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class ScheduleAttestationsParse extends Parse {
+public class ScheduleAttestationsParse extends JSONParse {
 
     private final int term;
 
-    public ScheduleAttestationsParse(String data, int term, Response delegate) {
+    public ScheduleAttestationsParse(String data, int term, Response<JSONObject> delegate) {
         super(data, delegate);
         this.term = term;
     }

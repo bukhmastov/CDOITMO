@@ -1,15 +1,16 @@
 package com.bukhmastov.cdoitmo.parse.room101;
 
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
+import com.bukhmastov.cdoitmo.parse.JSONParse;
 import com.bukhmastov.cdoitmo.parse.Parse;
 
 import org.htmlcleaner.TagNode;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class Room101TimeEndPickParse extends Parse {
+public class Room101TimeEndPickParse extends JSONParse {
 
-    public Room101TimeEndPickParse(String data, Response delegate) {
+    public Room101TimeEndPickParse(String data, Response<JSONObject> delegate) {
         super(data, delegate);
     }
 

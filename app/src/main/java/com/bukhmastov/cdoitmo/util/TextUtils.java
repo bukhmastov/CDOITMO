@@ -162,14 +162,6 @@ public class TextUtils {
         return string.toString();
     }
 
-    public static String getStringSafely(JSONObject json, String key, String def) {
-        try {
-            return json.getString(key);
-        } catch (Exception e) {
-            return def;
-        }
-    }
-
     public static String bytes2readable(Context context, long bytes) {
         int unit = 1024;
         if (bytes < unit) return bytes + " B";

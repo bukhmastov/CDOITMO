@@ -3,8 +3,10 @@ package com.bukhmastov.cdoitmo.util;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.annotation.StringDef;
 
+import com.bukhmastov.cdoitmo.data.StorageProxy;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 
 import java.io.File;
@@ -36,6 +38,46 @@ public class Storage {
     public @interface TYPE {}
     public static final String USER = "user";
     public static final String GENERAL = "general";
+
+    public enum StorageType {
+        PER_USER,
+        GLOBAL,
+        PREFS
+    }
+
+    public static class Proxy implements StorageProxy {
+        private Context context;
+
+        public Proxy(Context context) { this.context = context; }
+
+        @NonNull
+        @Override
+        public String get(StorageType type, String path) {
+            switch (type) {
+                case PER_USER: return file.perm.get(context, path, "");
+                case GLOBAL: return file.general.perm.get(context, path, "");
+                default: return pref.get(context, path, "");
+            }
+        }
+
+        @Override
+        public boolean put(StorageType type, String path, String data) {
+            switch (type) {
+                case PER_USER: return file.perm.put(context, path, data);
+                case GLOBAL: return file.general.perm.put(context, path, data);
+                default: pref.put(context, path, data); return true;
+            }
+        }
+
+        @Override
+        public boolean delete(StorageType type, String path) {
+            switch (type) {
+                case PER_USER: return file.perm.delete(context, path);
+                case GLOBAL: return file.general.perm.delete(context, path);
+                default: pref.delete(context, path); return true;
+            }
+        }
+    }
 
     public static class file {
         public static class cache {

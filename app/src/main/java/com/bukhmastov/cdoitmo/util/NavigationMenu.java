@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.data.User;
 import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
 import com.bukhmastov.cdoitmo.view.Message;
 
@@ -45,32 +46,13 @@ public class NavigationMenu {
 
     public static void displayUserData(final Context context, final NavigationView navigationView) {
         Thread.run(() -> {
-            final String name = Storage.file.perm.get(context, "user#name");
-            final List<String> groups = getGroups(context);
-            final String group = TextUtils.join(", ", groups);
+            final User user = User.load(new Storage.Proxy(context));
             Thread.runOnUI(() -> {
-                displayUserData(navigationView, R.id.user_name, name);
-                displayUserData(navigationView, R.id.user_group, group);
-                displayUserDataExpand(context, navigationView, groups);
+                displayUserData(navigationView, R.id.user_name, user.getName());
+                displayUserData(navigationView, R.id.user_group, user.getGroup());
+                displayUserDataExpand(context, navigationView, user.getGroups());
             });
         });
-    }
-
-    private static List<String> getGroups(final Context context) {
-        final String g = Storage.file.perm.get(context, "user#group").trim();
-        final String[] gs = Storage.file.perm.get(context, "user#groups").split(",");
-        List<String> groups = new ArrayList<>();
-        if (!g.isEmpty()) {
-            groups.add(g);
-        }
-        for (String g1 : gs) {
-            g1 = g1.trim();
-            if (g1.equals(g)) {
-                continue;
-            }
-            groups.add(g1);
-        }
-        return groups;
     }
 
     private static void displayUserData(final NavigationView navigationView, final int id, final String text) {

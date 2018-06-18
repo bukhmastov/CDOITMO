@@ -43,7 +43,7 @@ public class Static {
             Log.w(TAG, "hardReset | context is null");
             return;
         }
-        Account.logoutPermanently(context, () -> {
+        Account.clearAuthorization(/* permanently? */ true, context, () -> {
             Storage.file.all.reset(context);
             App.firstLaunch = true;
             App.OFFLINE_MODE = false;
@@ -71,5 +71,12 @@ public class Static {
                 Log.exception(e);
             }
         });
+    }
+
+    public static <T> boolean contains(T[] array, T value) {
+        for (T element : array) {
+            if (element == value || value != null && value.equals(element)) return true;
+        }
+        return false;
     }
 }

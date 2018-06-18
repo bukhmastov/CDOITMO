@@ -1,6 +1,7 @@
 package com.bukhmastov.cdoitmo.parse.room101;
 
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
+import com.bukhmastov.cdoitmo.parse.JSONParse;
 import com.bukhmastov.cdoitmo.parse.Parse;
 
 import org.htmlcleaner.TagNode;
@@ -10,9 +11,9 @@ import org.json.JSONObject;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Room101DatePickParse extends Parse {
+public class Room101DatePickParse extends JSONParse {
 
-    public Room101DatePickParse(String data, Response delegate) {
+    public Room101DatePickParse(String data, Response<JSONObject> delegate) {
         super(data, delegate);
     }
 

@@ -1,6 +1,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'io.fabric'
 apply plugin: 'com.google.firebase.firebase-perf'
+apply plugin: 'de.mannodermaus.android-junit5'
 
 android {
     compileSdkVersion 27
@@ -19,8 +20,14 @@ android {
         }
     }
     compileOptions {
+        incremental false /* incremental compilation breaks unit tests */
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+    testOptions.junitPlatform {
+        jupiterVersion '5.2.0'
+        platformVersion '1.2.0'
+        vintageVersion '5.2.0'
     }
 }
 
@@ -54,6 +61,9 @@ dependencies {
     implementation "com.squareup.okhttp3:okhttp:${okhttpVersion}"
     implementation "net.sourceforge.htmlcleaner:htmlcleaner:${htmlcleanerVersion}"
     implementation "com.squareup.picasso:picasso:${picassoVersion}"
+    // tests
+    testImplementation junit5.unitTests()
+    testImplementation "org.json:json:20080701"
 }
 
 apply plugin: 'com.google.gms.google-services'
