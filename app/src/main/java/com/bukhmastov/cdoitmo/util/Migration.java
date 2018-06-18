@@ -601,7 +601,7 @@ public class Migration {
         // get rid of pref_allow_owner_notifications
         Storage.pref.delete(context, "pref_allow_owner_notifications");
         // move files
-        Account.logoutTemporarily(context, null);
+        Account.clearAuthorization(/* permanently? */ false, context, null);
         try {
             String path = context.getFilesDir() + File.separator + "app_data";
             File file = new File(path);
@@ -797,7 +797,7 @@ public class Migration {
         if (jobScheduler != null) {
             jobScheduler.cancelAll();
         }
-        Account.logoutPermanently(context, null);
+        Account.clearAuthorization(/* permanently? */ true, context, null);
         Storage.pref.clearExceptPref(context);
     }
 

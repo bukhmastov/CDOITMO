@@ -145,7 +145,7 @@ public class LoginActivity extends ConnectedActivity {
                 }
                 case SIGNAL_CHANGE_ACCOUNT: {
                     if (UserCredentials.hasCurrentLogin(storage)) {
-                        Account.logoutTemporarily(activity, this::show);
+                        Account.clearAuthorization(/* permanently? */ false, activity, this::show);
                     } else {
                         show();
                     }
@@ -168,7 +168,7 @@ public class LoginActivity extends ConnectedActivity {
                 case SIGNAL_CREDENTIALS_REQUIRED: {
                     if (UserCredentials.hasCurrentLogin(storage)) {
                         UserCredentials.clearCookies(storage);
-                        Account.logoutTemporarily(activity, () -> {
+                        Account.clearAuthorization(/* permanently? */ false, activity, () -> {
                             BottomBar.snackBar(activity, activity.getString(R.string.required_login_password));
                             show();
                         });
@@ -180,7 +180,7 @@ public class LoginActivity extends ConnectedActivity {
                     if (UserCredentials.hasCurrentLogin(storage)) {
                         UserCredentials.clearCookies(storage);
                         UserCredentials.clearPassword(storage);
-                        Account.logoutTemporarily(activity, () -> {
+                        Account.clearAuthorization(/* permanently? */ false, activity, () -> {
                             BottomBar.snackBar(activity, activity.getString(R.string.invalid_login_password));
                             show();
                         });

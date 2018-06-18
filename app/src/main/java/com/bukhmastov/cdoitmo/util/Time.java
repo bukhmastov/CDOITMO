@@ -3,6 +3,7 @@ package com.bukhmastov.cdoitmo.util;
 import android.content.Context;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.data.Week;
 
 import org.json.JSONObject;
 
@@ -20,42 +21,11 @@ public class Time {
     }
 
     public static int getWeek(Context context) {
-        return getWeek(context, getCalendar());
+        return Week.getCurrent(new Storage.Proxy(context));
     }
 
     public static int getWeek(Context context, Calendar calendar) {
-        int week = -1;
-        long ts = 0;
-        try {
-            final String override = Storage.pref.get(context, "pref_week_force_override", "");
-            if (!override.isEmpty()) {
-                try {
-                    String[] v = override.split("#");
-                    if (v.length == 2) {
-                        week = Integer.parseInt(v[0]);
-                        ts = Long.parseLong(v[1]);
-                    }
-                } catch (Exception ignore) {/* ignore */}
-            }
-            if (week < 0) {
-                final String stored = Storage.file.general.perm.get(context, "user#week").trim();
-                if (!stored.isEmpty()) {
-                    try {
-                        JSONObject json = new JSONObject(stored);
-                        week = json.getInt("week");
-                        ts = json.getLong("timestamp");
-                    } catch (Exception e) {
-                        Storage.file.general.perm.delete(context, "user#week");
-                    }
-                }
-            }
-            if (week >= 0) {
-                final Calendar past = (Calendar) calendar.clone();
-                past.setTimeInMillis(ts);
-                return week + (calendar.get(Calendar.WEEK_OF_YEAR) - past.get(Calendar.WEEK_OF_YEAR));
-            }
-        } catch (Exception ignore) {/* ignore */}
-        return week;
+        return Week.getCurrent(new Storage.Proxy(context), calendar);
     }
 
     public static int getWeekDay() {

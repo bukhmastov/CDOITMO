@@ -128,11 +128,10 @@ public class Account {
                             }
                             FirebasePerformanceProvider.stopTrace(trace);
                         });
-                        Callable cb;
                         switch (state) {
                             case DeIfmoClient.FAILED_OFFLINE:
                                 if (isNewUser) {
-                                    Account.logoutTemporarily(context, () -> {
+                                    Account.clearAuthorization(/* permanently? */ false, context, () -> {
                                         callback.call(context.getString(R.string.network_unavailable));
                                         FirebasePerformanceProvider.putAttribute(trace, "state", "failed_network_unavailable");
                                     });
@@ -146,7 +145,7 @@ public class Account {
                             case DeIfmoClient.FAILED_TRY_AGAIN:
                             case DeIfmoClient.FAILED_AUTH_TRY_AGAIN:
                             case DeIfmoClient.FAILED_SERVER_ERROR:
-                                Account.logoutTemporarily(context, () -> {
+                                Account.clearAuthorization(/* permanently? */ false, context, creds.getLogin(), () -> {
                                     callback.call(context.getString(R.string.auth_failed) + (state == DeIfmoClient.FAILED_SERVER_ERROR ? ". " + DeIfmoClient.getFailureMessage(context, statusCode) : ""));
                                     FirebasePerformanceProvider.putAttribute(trace, "state", "failed_auth");
                                 });
@@ -155,26 +154,16 @@ public class Account {
                                 loginHandler.onInterrupted();
                                 break;
                             case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
-                                cb = () -> {
+                                Account.clearAuthorization(/* permanently? */ isNewUser, context, creds.getLogin(), () -> {
                                     callback.call(context.getString(R.string.required_login_password));
                                     FirebasePerformanceProvider.putAttribute(trace, "state", "failed_credentials_required");
-                                };
-                                if (isNewUser) {
-                                    Account.logoutPermanently(context, login, cb);
-                                } else {
-                                    Account.logoutTemporarily(context, login, cb);
-                                }
+                                });
                                 break;
                             case DeIfmoClient.FAILED_AUTH_CREDENTIALS_FAILED:
-                                cb = () -> {
+                                Account.clearAuthorization(/* permanently? */ isNewUser, context, creds.getLogin(), () -> {
                                     callback.call(context.getString(R.string.invalid_login_password));
                                     FirebasePerformanceProvider.putAttribute(trace, "state", "failed_credentials_failed");
-                                };
-                                if (isNewUser) {
-                                    Account.logoutPermanently(context, login, cb);
-                                } else {
-                                    Account.logoutTemporarily(context, login, cb);
-                                }
+                                });
                                 break;
                         }
                     });
@@ -227,19 +216,17 @@ public class Account {
                 return;
             }
             if (IS_USER_UNAUTHORIZED || App.OFFLINE_MODE || cLogin.isEmpty()) {
-                logoutPermanently(context, cLogin, () -> {
+                clearAuthorization(/* permanently? */ true, context, cLogin, () -> {
                     logoutHandler.onSuccess();
                     FirebasePerformanceProvider.putAttributeAndStop(trace, "state", "success_local");
                 });
                 return;
             }
-            Storage.file.general.perm.put(context, "users#current_login", cLogin);
-            final String uName = Storage.file.perm.get(context, "user#name");
             DeIfmoClient.get(context, "servlet/distributedCDE?Rule=SYSTEM_EXIT", null, new ResponseHandler() {
                 @Override
                 public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                     Log.v(TAG, "logout | onSuccess");
-                    logoutPermanently(context, cLogin, () -> {
+                    clearAuthorization(/* permanently? */ true, context, cLogin, () -> {
                         logoutHandler.onSuccess();
                         FirebasePerformanceProvider.putAttributeAndStop(trace, "state", "success");
                     });
@@ -247,7 +234,7 @@ public class Account {
                 @Override
                 public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                     Log.v(TAG, "logout | onFailure | statusCode=", statusCode, " | state=", state);
-                    logoutPermanently(context, cLogin, () -> {
+                    clearAuthorization(/* permanently? */ true, context, cLogin, () -> {
                         logoutHandler.onSuccess();
                         FirebasePerformanceProvider.putAttributeAndStop(trace, "state", "success");
                     });
@@ -263,24 +250,33 @@ public class Account {
             });
         });
     }
-    public static void logoutPermanently(@NonNull final Context context, @Nullable final Callable callback) {
-        logoutPermanently(context, null, callback);
+
+    public static void clearAuthorization(boolean permanently, @NonNull final Context context, @Nullable final Callable callback) {
+        clearAuthorization(permanently, context, null, callback);
     }
-    public static void logoutPermanently(@NonNull final Context context, @Nullable final String login, @Nullable final Callable callback) {
+    public static void clearAuthorization(boolean permanently, @NonNull final Context context, @Nullable final String login, @Nullable final Callable callback) {
         Thread.run(() -> {
-            @NonNull final String cLogin = login != null ? login : Storage.file.general.perm.get(context, "users#current_login");
-            final boolean IS_USER_UNAUTHORIZED = USER_UNAUTHORIZED.equals(cLogin);
+            final StorageProxy storage = new Storage.Proxy(context);
+            if (login != null && !login.isEmpty()) UserCredentials.setCurrentLogin(storage, login);
+            @NonNull final String cLogin = login != null ? login : UserCredentials.getCurrentLogin(storage);
+
+            final boolean IS_USER_UNAUTHORIZED = UserCredentials.LOGIN_UNAUTHORIZED.equals(cLogin);
             final boolean IS_LOGIN_EMPTY = cLogin.isEmpty();
-            Log.v(TAG, "logoutPermanently | login=", cLogin, " | IS_USER_UNAUTHORIZED=", IS_USER_UNAUTHORIZED);
-            if (!IS_LOGIN_EMPTY) {
-                Storage.file.general.perm.put(context, "users#current_login", cLogin);
-            }
+
+            Log.v(TAG, "clearAuthorization | login=", cLogin, " | IS_USER_UNAUTHORIZED=", IS_USER_UNAUTHORIZED, " | permanently=", permanently);
+
             final Callable cb = () -> {
-                if (!IS_USER_UNAUTHORIZED && !IS_LOGIN_EMPTY) {
+                if (permanently && !IS_USER_UNAUTHORIZED && !IS_LOGIN_EMPTY) {
                     Storage.file.all.clear(context);
-                    List.remove(context, cLogin);
+                    AccountList accounts = new AccountList(storage);
+                    accounts.remove(cLogin);
+                    FirebaseAnalyticsProvider.logEvent(
+                            context,
+                            FirebaseAnalyticsProvider.Event.LOGOUT,
+                            FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_COUNT, accounts.length())
+                    );
                 }
-                Storage.file.general.perm.delete(context, "users#current_login");
+                UserCredentials.resetCurrentLogin(storage);
                 Storage.cache.reset();
                 Account.authorized = false;
                 App.UNAUTHORIZED_MODE = false;
@@ -295,31 +291,7 @@ public class Account {
             }
         });
     }
-    public static void logoutTemporarily(@NonNull final Context context, @Nullable final Callable callback) {
-        logoutTemporarily(context, null, callback);
-    }
-    public static void logoutTemporarily(@NonNull final Context context, @Nullable final String login, @Nullable final Callable callback) {
-        Thread.run(() -> {
-            @NonNull final String cLogin = login != null ? login : Storage.file.general.perm.get(context, "users#current_login");
-            final boolean IS_USER_UNAUTHORIZED = USER_UNAUTHORIZED.equals(cLogin);
-            Log.i(TAG, "logoutTemporarily | login=", cLogin, " | IS_USER_UNAUTHORIZED=", IS_USER_UNAUTHORIZED);
-            final Callable cb = () -> {
-                Storage.file.general.perm.delete(context, "users#current_login");
-                Storage.cache.reset();
-                Account.authorized = false;
-                App.UNAUTHORIZED_MODE = false;
-                if (callback != null) {
-                    Thread.runOnUI(callback::call);
-                }
-            };
-            if (IS_USER_UNAUTHORIZED) {
-                cb.call();
-            } else {
-                new ProtocolTracker(context).stop(cb);
-            }
 
-        });
-    }
     public static void logoutConfirmation(@NonNull final Context context, @NonNull final Callable callback) {
         Thread.runOnUI(() -> new AlertDialog.Builder(context)
                 .setTitle(R.string.logout_confirmation)
