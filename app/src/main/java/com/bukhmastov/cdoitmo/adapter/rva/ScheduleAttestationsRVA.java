@@ -17,6 +17,7 @@ import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
@@ -36,6 +37,11 @@ public class ScheduleAttestationsRVA extends RVA {
     private static final int TYPE_ATTESTATION_BOTTOM = 3;
     private static final int TYPE_UPDATE_TIME = 4;
     private static final int TYPE_NO_ATTESTATIONS = 5;
+
+    //@Inject
+    private Storage storage = Storage.instance();
+    //@Inject
+    private StoragePref storagePref = StoragePref.instance();
 
     private final ConnectedActivity activity;
     private final JSONObject data;
@@ -89,7 +95,7 @@ public class ScheduleAttestationsRVA extends RVA {
             // header
             dataset.add(getNewItem(TYPE_HEADER, new JSONObject()
                     .put("title", ScheduleAttestations.getScheduleHeader(context, data.getString("title"), data.getString("type")))
-                    .put("week", ScheduleAttestations.getScheduleWeek(context, weekday))
+                    .put("week", ScheduleAttestations.getScheduleWeek(context, storagePref, weekday))
             ));
             // schedule
             final JSONArray schedule = data.getJSONArray("schedule");
@@ -143,7 +149,7 @@ public class ScheduleAttestationsRVA extends RVA {
             }
             container.findViewById(R.id.schedule_lessons_menu).setOnClickListener(view -> Thread.run(() -> {
                 final String cache_token = query == null ? null : query.toLowerCase();
-                final boolean cached = cache_token != null && !Storage.file.general.cache.get(activity, "schedule_attestations#lessons#" + cache_token, "").isEmpty();
+                final boolean cached = cache_token != null && !storage.get(activity, Storage.CACHE, Storage.GLOBAL, "schedule_attestations#lessons#" + cache_token, "").isEmpty();
                 Thread.runOnUI(() -> {
                     try {
                         final PopupMenu popup = new PopupMenu(activity, view);
@@ -159,8 +165,8 @@ public class ScheduleAttestationsRVA extends RVA {
                                         if (cache_token == null) {
                                             BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
                                         } else {
-                                            if (Storage.file.general.cache.exists(activity, "schedule_attestations#lessons#" + cache_token)) {
-                                                if (Storage.file.general.cache.delete(activity, "schedule_attestations#lessons#" + cache_token)) {
+                                            if (storage.exists(activity, Storage.CACHE, Storage.GLOBAL, "schedule_attestations#lessons#" + cache_token)) {
+                                                if (storage.delete(activity, Storage.CACHE, Storage.GLOBAL, "schedule_attestations#lessons#" + cache_token)) {
                                                     BottomBar.snackBar(activity, activity.getString(R.string.cache_false));
                                                 } else {
                                                     BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
@@ -169,7 +175,7 @@ public class ScheduleAttestationsRVA extends RVA {
                                                 if (data == null) {
                                                     BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
                                                 } else {
-                                                    if (Storage.file.general.cache.put(activity, "schedule_attestations#lessons#" + cache_token, data.toString())) {
+                                                    if (storage.put(activity, Storage.CACHE, Storage.GLOBAL, "schedule_attestations#lessons#" + cache_token, data.toString())) {
                                                         BottomBar.snackBar(activity, activity.getString(R.string.cache_true));
                                                     } else {
                                                         BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));

@@ -50,6 +50,9 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
     private final ShortcutReceiver receiver = new ShortcutReceiver();
     private Client.Request requestHandle = null;
 
+    //@Inject
+    private Storage storage = Storage.instance();
+
     private interface result {
         void done(String title, String query);
     }
@@ -254,7 +257,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                         ((TextView) item.findViewById(R.id.desc)).setText(app.desc);
                         ((TextView) item.findViewById(R.id.desc_extra)).setText(app.desc_extra);
                         item.setOnClickListener(view -> Thread.run(() -> {
-                            String group = Storage.file.perm.get(activity, "user#group", "");
+                            String group = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#group", "");
                             switch (app.id) {
                                 case "time_remaining_widget": {
                                     getScheduleLessons(group.isEmpty() ? null : group, (title, query) -> {
@@ -339,7 +342,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                     break;
                                 }
                                 case "schedule_lessons": {
-                                    String group = Storage.file.perm.get(activity, "user#group", "");
+                                    String group = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#group", "");
                                     getScheduleLessons(group.isEmpty() ? null : group, (title, query) -> {
                                         try {
                                             addShortcut(
@@ -354,7 +357,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                     break;
                                 }
                                 case "schedule_exams": {
-                                    String group = Storage.file.perm.get(activity, "user#group", "");
+                                    String group = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#group", "");
                                     getScheduleExams(group.isEmpty() ? null : group, (title, query) -> {
                                         try {
                                             addShortcut(
@@ -369,7 +372,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                     break;
                                 }
                                 case "schedule_attestations": {
-                                    String group = Storage.file.perm.get(activity, "user#group", "");
+                                    String group = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#group", "");
                                     getScheduleAttestations(group.isEmpty() ? null : group, (title, query) -> {
                                         try {
                                             addShortcut(

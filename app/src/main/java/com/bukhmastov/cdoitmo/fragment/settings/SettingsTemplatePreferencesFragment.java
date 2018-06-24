@@ -12,8 +12,7 @@ import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.object.preference.Preference;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
-import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +20,9 @@ import java.util.List;
 public abstract class SettingsTemplatePreferencesFragment extends ConnectedFragment {
 
     private boolean loaded = false;
+
+    //@Inject
+    protected StoragePref storagePref = StoragePref.instance();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -68,14 +70,14 @@ public abstract class SettingsTemplatePreferencesFragment extends ConnectedFragm
             if (settings_container != null) {
                 settings_container.removeAllViews();
                 for (Preference preference : getPreferences()) {
-                    settings_container.addView(Preference.getView(activity, preference));
+                    settings_container.addView(Preference.getView(activity, preference, storagePref));
                 }
                 for (Preference preference : getPreferences()) {
                     if (preference instanceof PreferenceSwitch) {
                         final PreferenceSwitch preferenceSwitch = (PreferenceSwitch) preference;
                         final ArrayList<String> dependencies = preferenceSwitch.getDependencies();
                         if (dependencies.size() > 0) {
-                            PreferenceSwitch.toggleDependencies(activity, preferenceSwitch, Storage.pref.get(activity, preference.key, (Boolean) preference.defaultValue));
+                            PreferenceSwitch.toggleDependencies(activity, preferenceSwitch, storagePref.get(activity, preference.key, (Boolean) preference.defaultValue));
                             for (Preference pref : getPreferences()) {
                                 if (dependencies.contains(pref.key)) {
                                     pref.setPreferenceDependency(preferenceSwitch);

@@ -32,7 +32,6 @@ import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
@@ -93,8 +92,8 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         Thread.run(() -> {
             Log.i(TAG, "update | appWidgetId=" + appWidgetId);
             try {
-                JSONObject settings = Data.getJson(context, appWidgetId, "settings");
-                JSONObject cache = Data.getJson(context, appWidgetId, "cache");
+                JSONObject settings = ScheduleLessonsWidgetStorage.getJson(context, appWidgetId, "settings");
+                JSONObject cache = ScheduleLessonsWidgetStorage.getJson(context, appWidgetId, "cache");
                 if (settings == null) {
                     needPreparations(context, appWidgetManager, appWidgetId);
                 } else if (cache == null || force) {
@@ -116,7 +115,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     public static void deleteAppWidget(final Context context, final int appWidgetId) {
         Thread.run(() -> {
             Log.i(TAG, "delete | appWidgetId=" + appWidgetId);
-            Data.delete(context, appWidgetId);
+            ScheduleLessonsWidgetStorage.delete(context, appWidgetId);
         });
     }
 
@@ -132,9 +131,9 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                                 JSONObject jsonObject = new JSONObject();
                                 jsonObject.put("timestamp", Time.getCalendar().getTimeInMillis());
                                 jsonObject.put("content", json);
-                                Data.save(context, appWidgetId, "cache", jsonObject.toString());
+                                ScheduleLessonsWidgetStorage.save(context, appWidgetId, "cache", jsonObject.toString());
                                 new ScheduleLessonsAdditionalConverter(context, json, content -> {
-                                    Data.save(context, appWidgetId, "cache_converted", content.toString());
+                                    ScheduleLessonsWidgetStorage.save(context, appWidgetId, "cache_converted", content.toString());
                                     display(context, appWidgetManager, appWidgetId, false);
                                 }).run();
                             } catch (Exception e) {
@@ -225,8 +224,8 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     private static void display(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final boolean controls) {
         Thread.run(() -> {
             Log.v(TAG, "display | appWidgetId=" + appWidgetId + " | controls=" + (controls ? "true" : "false"));
-            JSONObject settings = Data.getJson(context, appWidgetId, "settings");
-            JSONObject cache = Data.getJson(context, appWidgetId, "cache");
+            JSONObject settings = ScheduleLessonsWidgetStorage.getJson(context, appWidgetId, "settings");
+            JSONObject cache = ScheduleLessonsWidgetStorage.getJson(context, appWidgetId, "cache");
             try {
                 if (settings == null) {
                     needPreparations(context, appWidgetManager, appWidgetId);
@@ -570,7 +569,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         // calculate new auto shift from schedule
         try {
             // fetch current schedule
-            final JSONObject content = Data.getJson(context, appWidgetId, "cache_converted");
+            final JSONObject content = ScheduleLessonsWidgetStorage.getJson(context, appWidgetId, "cache_converted");
             if (content == null) {
                 return new int[] {shift, shiftAutomatic};
             }
@@ -634,7 +633,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         if (delta != 0) {
             try {
                 settings.put("shiftAutomatic", oldShift);
-                Data.save(context, appWidgetId, "settings", settings.toString());
+                ScheduleLessonsWidgetStorage.save(context, appWidgetId, "settings", settings.toString());
             } catch (Exception e) {
                 // failed to save new shifts, restore to previous ones
                 oldShift -= delta;
@@ -674,7 +673,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                             case ACTION_WIDGET_CONTROLS_BEFORE: logStatistic(context, "shift_before"); break;
                             case ACTION_WIDGET_CONTROLS_RESET: logStatistic(context, "shift_reset"); break;
                         }
-                        JSONObject settings = Data.getJson(context, appWidgetId, "settings");
+                        JSONObject settings = ScheduleLessonsWidgetStorage.getJson(context, appWidgetId, "settings");
                         if (settings != null) {
                             int shift;
                             try {
@@ -693,7 +692,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                             }
                             try {
                                 settings.put("shift", shift);
-                                Data.save(context, appWidgetId, "settings", settings.toString());
+                                ScheduleLessonsWidgetStorage.save(context, appWidgetId, "settings", settings.toString());
                             } catch (JSONException ignore) {
                                 // ignore
                             }
@@ -709,7 +708,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                         oIntent.addFlags(App.intentFlagRestart);
                         oIntent.putExtra("action", "schedule_lessons");
                         try {
-                            String settings = Data.get(context, appWidgetId, "settings");
+                            String settings = ScheduleLessonsWidgetStorage.get(context, appWidgetId, "settings");
                             if (settings != null) {
                                 oIntent.putExtra("action_extra", new JSONObject(settings).getString("query"));
                             }
@@ -794,56 +793,6 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
             return NARROW;
         } else {
             return REGULAR;
-        }
-    }
-
-    public static class Data {
-        public static String get(Context context, int appWidgetId, String type) {
-            Log.v(TAG, "get | appWidgetId=" + appWidgetId + " | type=" + type);
-            String pref;
-            if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
-                Log.w(TAG, "get | prevented due to invalid appwidget id");
-                pref = "";
-            } else {
-                pref = Storage.file.general.perm.get(context, "widget_schedule_lessons#" + appWidgetId + "#" + type).trim();
-            }
-            return pref.isEmpty() ? null : pref;
-        }
-        public static JSONObject getJson(Context context, int appWidgetId, String type) {
-            Log.v(TAG, "getJson | appWidgetId=" + appWidgetId + " | type=" + type);
-            JSONObject pref;
-            try {
-                String tmp = get(context, appWidgetId, type);
-                if (tmp == null) throw new NullPointerException(type + " is null");
-                pref = new JSONObject(tmp);
-            } catch (Exception e) {
-                pref = null;
-            }
-            return pref;
-        }
-        public static void save(Context context, int appWidgetId, String type, String text) {
-            Log.v(TAG, "save | appWidgetId=" + appWidgetId + " | type=" + type);
-            if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
-                Log.w(TAG, "save | prevented due to invalid appwidget id");
-                return;
-            }
-            Storage.file.general.perm.put(context, "widget_schedule_lessons#" + appWidgetId + "#" + type, text);
-        }
-        public static void delete(Context context, int appWidgetId, String type) {
-            Log.v(TAG, "delete | appWidgetId=" + appWidgetId + " | type=" + type);
-            if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
-                Log.w(TAG, "delete | prevented due to invalid appwidget id");
-                return;
-            }
-            Storage.file.general.perm.delete(context, "widget_schedule_lessons#" + appWidgetId + "#" + type);
-        }
-        public static void delete(Context context, int appWidgetId) {
-            Log.v(TAG, "delete | appWidgetId=" + appWidgetId);
-            if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
-                Log.w(TAG, "delete | prevented due to invalid appwidget id");
-                return;
-            }
-            Storage.file.general.perm.clear(context, "widget_schedule_lessons#" + appWidgetId);
         }
     }
 

@@ -4,6 +4,8 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Build;
 
+import com.bukhmastov.cdoitmo.util.impl.StorageImpl;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -22,9 +24,9 @@ import java.util.regex.Pattern;
 public class TextUtils {
 
     @SuppressWarnings("deprecation")
-    public static Locale getLocale(Context context) {
+    public static Locale getLocale(Context context, StoragePref storagePref) {
         Locale locale;
-        String lang = Storage.pref.get(context, "pref_lang", "default");
+        String lang = storagePref.get(context, "pref_lang", "default");
         switch (lang) {
             case "ru": case "en": {
                 locale = new Locale(lang);
@@ -56,8 +58,8 @@ public class TextUtils {
         }
     }
 
-    public static String cuteDate(Context context, String date_format, String date_string) throws ParseException {
-        SimpleDateFormat format_input = new SimpleDateFormat(date_format, getLocale(context));
+    public static String cuteDate(Context context, StoragePref storagePref, String date_format, String date_string) throws ParseException {
+        SimpleDateFormat format_input = new SimpleDateFormat(date_format, getLocale(context, storagePref));
         Calendar date = Time.getCalendar();
         date.setTime(format_input.parse(date_string));
         return (new StringBuilder())
@@ -73,8 +75,8 @@ public class TextUtils {
                 .toString();
     }
 
-    public static String cuteDate(Context context, String date_format, String date_start, String date_end) throws ParseException {
-        SimpleDateFormat format_input = new SimpleDateFormat(date_format, getLocale(context));
+    public static String cuteDate(Context context, StoragePref storagePref, String date_format, String date_start, String date_end) throws ParseException {
+        SimpleDateFormat format_input = new SimpleDateFormat(date_format, getLocale(context, storagePref));
         Calendar calendar_start = Time.getCalendar();
         Calendar calendar_end = Time.getCalendar();
         calendar_start.setTime(format_input.parse(date_start));
@@ -99,8 +101,8 @@ public class TextUtils {
         return sb.toString();
     }
 
-    public static String cuteDateWithoutTime(Context context, String date_format, String date_string) throws ParseException {
-        SimpleDateFormat format_input = new SimpleDateFormat(date_format, getLocale(context));
+    public static String cuteDateWithoutTime(Context context, StoragePref storagePref, String date_format, String date_string) throws ParseException {
+        SimpleDateFormat format_input = new SimpleDateFormat(date_format, getLocale(context, storagePref));
         Calendar date = Time.getCalendar();
         date.setTime(format_input.parse(date_string));
         return (new StringBuilder())
@@ -170,12 +172,12 @@ public class TextUtils {
         }
     }
 
-    public static String bytes2readable(Context context, long bytes) {
+    public static String bytes2readable(Context context, StoragePref storagePref, long bytes) {
         int unit = 1024;
         if (bytes < unit) return bytes + " B";
         int exp = (int) (Math.log(bytes) / Math.log(unit));
         String pre = "KMGTPE".charAt(exp - 1) + "i";
-        return String.format(getLocale(context), "%.1f %sB", bytes / Math.pow(unit, exp), pre);
+        return String.format(getLocale(context, storagePref), "%.1f %sB", bytes / Math.pow(unit, exp), pre);
     }
 
     public static String crypt(String value) {

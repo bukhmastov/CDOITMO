@@ -9,6 +9,7 @@ import com.bukhmastov.cdoitmo.util.Thread;
 import java.util.HashMap;
 import java.util.Map;
 
+//TODO interface - impl
 public abstract class Ifmo extends Client {
 
     protected static void g(final Context context, final String url, final Map<String, String> query, final RawHandler rawHandler) {

@@ -16,6 +16,7 @@ import org.json.JSONObject;
 
 import java.util.Map;
 
+//TODO interface - impl
 public class DeIfmoRestClient extends DeIfmo {
 
     private static final String TAG = "DeIfmoRestClient";

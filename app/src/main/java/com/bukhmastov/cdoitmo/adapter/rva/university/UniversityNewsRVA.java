@@ -165,7 +165,7 @@ public class UniversityNewsRVA extends UniversityRVA {
             if (date_exists || count_exists) {
                 if (dateView != null) {
                     if (date_exists) {
-                        ((TextView) dateView).setText(TextUtils.cuteDate(context, "yyyy-MM-dd HH:mm:ss", date));
+                        ((TextView) dateView).setText(TextUtils.cuteDate(context, storagePref, "yyyy-MM-dd HH:mm:ss", date));
                     } else {
                         Static.removeView(dateView);
                     }
@@ -282,7 +282,7 @@ public class UniversityNewsRVA extends UniversityRVA {
             if (date_exists || count_exists) {
                 if (dateView != null) {
                     if (date_exists) {
-                        ((TextView) dateView).setText(TextUtils.cuteDate(context, "yyyy-MM-dd HH:mm:ss", date));
+                        ((TextView) dateView).setText(TextUtils.cuteDate(context, storagePref, "yyyy-MM-dd HH:mm:ss", date));
                     } else {
                         Static.removeView(dateView);
                     }

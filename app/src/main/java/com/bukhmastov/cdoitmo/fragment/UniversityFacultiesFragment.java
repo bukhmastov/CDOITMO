@@ -34,6 +34,7 @@ import com.bukhmastov.cdoitmo.util.Color;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
@@ -54,6 +55,11 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
     private final ArrayMap<String, String> history = new ArrayMap<>();
     private UniversityFacultiesRVA facultiesRecyclerViewAdapter = null;
     private long timestamp = 0;
+
+    //@Inject
+    private Storage storage = Storage.instance();
+    //@Inject
+    private StoragePref storagePref = StoragePref.instance();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -103,16 +109,16 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
     }
 
     private void load() {
-        Thread.run(() -> load(Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)
-                ? Integer.parseInt(Storage.pref.get(activity, "pref_static_refresh", "168"))
+        Thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)
+                ? Integer.parseInt(storagePref.get(activity, "pref_static_refresh", "168"))
                 : 0));
     }
     private void load(final int refresh_rate) {
         Thread.run(() -> {
             Log.v(TAG, "load | refresh_rate=" + refresh_rate);
             String fid = stack.size() == 0 ? "0" : stack.get(stack.size() - 1);
-            if (Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
-                String cache = Storage.file.general.cache.get(activity, "university#faculties#" + fid).trim();
+            if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
+                String cache = storage.get(activity, Storage.CACHE, Storage.GLOBAL, "university#faculties#" + fid).trim();
                 if (!cache.isEmpty()) {
                     try {
                         JSONObject cacheJson = new JSONObject(cache);
@@ -154,9 +160,9 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                     history.remove(fid);
                 }
             }
-            if ((!force || !Client.isOnline(activity)) && Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
+            if ((!force || !Client.isOnline(activity)) && storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
                 try {
-                    String c = cache.isEmpty() ? Storage.file.general.cache.get(activity, "university#faculties#" + fid).trim() : cache;
+                    String c = cache.isEmpty() ? storage.get(activity, Storage.CACHE, Storage.GLOBAL, "university#faculties#" + fid).trim() : cache;
                     if (!c.isEmpty()) {
                         Log.v(TAG, "load | from cache");
                         display(new JSONObject(c).getJSONObject("data"));
@@ -164,7 +170,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                     }
                 } catch (Exception e) {
                     Log.v(TAG, "load | failed to load from cache");
-                    Storage.file.general.cache.delete(activity, "university#faculties#" + fid);
+                    storage.delete(activity, Storage.CACHE, Storage.GLOBAL, "university#faculties#" + fid);
                 }
             }
             if (!App.OFFLINE_MODE) {
@@ -174,9 +180,9 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
                         Thread.run(() -> {
                             if (statusCode == 200) {
                                 long now = Time.getCalendar().getTimeInMillis();
-                                if (json != null && Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
+                                if (json != null && storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
                                     try {
-                                        Storage.file.general.cache.put(activity, "university#faculties#" + fid, new JSONObject()
+                                        storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#faculties#" + fid, new JSONObject()
                                                 .put("timestamp", now)
                                                 .put("data", json)
                                                 .toString()

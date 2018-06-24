@@ -10,6 +10,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.util.CtxWrapper;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 
 import java.util.Random;
 
@@ -18,6 +19,9 @@ public class PikaActivity extends AppCompatActivity {
     private static final String TAG = "PikaActivity";
     private final Random random = new Random();
     private boolean dimas = false;
+
+    //@Inject
+    private StoragePref storagePref = StoragePref.instance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +56,6 @@ public class PikaActivity extends AppCompatActivity {
 
     @Override
     protected void attachBaseContext(Context context) {
-        super.attachBaseContext(CtxWrapper.wrap(context));
+        super.attachBaseContext(CtxWrapper.wrap(context, storagePref));
     }
 }

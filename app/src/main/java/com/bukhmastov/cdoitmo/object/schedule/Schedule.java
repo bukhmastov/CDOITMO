@@ -12,6 +12,8 @@ import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
+import com.bukhmastov.cdoitmo.util.StorageProvider;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
@@ -66,6 +68,13 @@ public abstract class Schedule {
     public static final int FAILED_INVALID_QUERY = 104;
     public static final int FAILED_NOT_FOUND = 105;
 
+    //@Inject
+    private Storage storage = Storage.instance();
+    //@Inject
+    private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private StorageProvider storageProvider = StorageProvider.instance();
+
     // Remote source of schedules to be downloaded from
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({SOURCE.ISU, SOURCE.IFMO})
@@ -92,7 +101,7 @@ public abstract class Schedule {
         Thread.run(() -> search(context, query, getRefreshRate(context)));
     }
     public void search(final Context context, final String query, final int refreshRate) {
-        Thread.run(() -> search(context, query, refreshRate, Storage.pref.get(context, "pref_schedule_" + getType() + "_use_cache", false)));
+        Thread.run(() -> search(context, query, refreshRate, storagePref.get(context, "pref_schedule_" + getType() + "_use_cache", false)));
     }
     public void search(final Context context, final String query, final boolean forceToCache) {
         Thread.run(() -> search(context, query, getRefreshRate(context), forceToCache));
@@ -362,7 +371,7 @@ public abstract class Schedule {
             }
         }
         if (cache == null || cache.isEmpty()) {
-            cache = Storage.file.general.cache.get(context, "schedule_" + getType() + "#lessons#" + token, "");
+            cache = storage.get(context, Storage.CACHE, Storage.GLOBAL, "schedule_" + getType() + "#lessons#" + token, "");
         }
         return cache;
     }
@@ -371,9 +380,9 @@ public abstract class Schedule {
             Log.v(TAG, "putCache | token=", token, " | forceToCache=", forceToCache);
             token = token.toLowerCase();
             putLocalCache(token, value);
-            if (forceToCache || token.equals(getDefaultScope(context).toLowerCase()) || Storage.file.general.cache.exists(context, "schedule_" + getType() + "#lessons#" + token)) {
+            if (forceToCache || token.equals(getDefaultScope(context).toLowerCase()) || storage.exists(context, Storage.CACHE, Storage.GLOBAL, "schedule_" + getType() + "#lessons#" + token)) {
                 Log.v(TAG, "putCache | token=", token, " | proceed");
-                Storage.file.general.cache.put(context, "schedule_" + getType() + "#lessons#" + token, value);
+                storage.put(context, Storage.CACHE, Storage.GLOBAL, "schedule_" + getType() + "#lessons#" + token, value);
             }
         }
     }
@@ -403,19 +412,19 @@ public abstract class Schedule {
                 localCache.remove(memoizeKey);
             }
         }
-        Storage.file.general.cache.delete(context, "schedule_" + getType() + "#lessons#" + token);
+        storage.delete(context, Storage.CACHE, Storage.GLOBAL, "schedule_" + getType() + "#lessons#" + token);
     }
     // --<- Cache schedule -<--
 
     // Defines the source of the schedule
     protected @Source String getSource(Context context) {
         String token = "pref_schedule_" + getType() + "_source";
-        String source = Storage.pref.get(context, token, getDefaultSource());
+        String source = storagePref.get(context, token, getDefaultSource());
         switch (source) {
             case "ifmo": case "isu": break;
             default: {
                 source = getDefaultSource();
-                Storage.pref.put(context, token, source);
+                storagePref.put(context, token, source);
             }
         }
         return source;
@@ -448,7 +457,7 @@ public abstract class Schedule {
     protected int getRefreshRate(final Context context) {
         Log.v(TAG, "getRefreshRate");
         try {
-            return Storage.pref.get(context, "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(context, "pref_static_refresh", "168")) : 0;
+            return storagePref.get(context, "pref_use_cache", true) ? Integer.parseInt(storagePref.get(context, "pref_static_refresh", "168")) : 0;
         } catch (Exception e) {
             return 0;
         }
@@ -472,11 +481,11 @@ public abstract class Schedule {
 
     // Returns the default query string for a schedule search
     public String getDefaultScope(final Context context) {
-        return getDefaultScope(context, getType());
+        return getDefaultScope(context, storageProvider, getType());
     }
-    public static String getDefaultScope(final Context context, final String type) {
+    public static String getDefaultScope(final Context context, final StorageProvider storageProvider, final String type) {
         Log.v(TAG, "getDefaultScope | type=", type);
-        final String pref = Storage.pref.get(context, "pref_schedule_" + type + "_default", "").trim();
+        final String pref = storageProvider.getStoragePref().get(context, "pref_schedule_" + type + "_default", "").trim();
         String scope;
         if (pref.isEmpty()) {
             scope = "auto";
@@ -488,7 +497,7 @@ public abstract class Schedule {
             }
         }
         switch (scope) {
-            case "auto": return Storage.file.perm.get(context, "user#group");
+            case "auto": return storageProvider.getStorage().get(context, Storage.PERMANENT, Storage.USER, "user#group");
             case "mine":
             default: return scope;
         }
@@ -528,14 +537,14 @@ public abstract class Schedule {
     }
 
     // Returns second title for schedules
-    public static String getScheduleWeek(Context context, int week) {
+    public static String getScheduleWeek(Context context, final StoragePref storagePref, int week) {
         if (week >= 0) {
             return week + " " + context.getString(R.string.school_week);
         } else {
             String pattern = "dd.MM.yyyy";
             String date = new SimpleDateFormat(pattern, Locale.ROOT).format(new Date(Time.getCalendar().getTimeInMillis()));
             try {
-                return TextUtils.cuteDateWithoutTime(context, pattern, date);
+                return TextUtils.cuteDateWithoutTime(context, storagePref, pattern, date);
             } catch (ParseException e) {
                 return date;
             }

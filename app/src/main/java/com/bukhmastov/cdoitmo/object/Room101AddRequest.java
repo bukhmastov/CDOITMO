@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+//TODO interface - impl
 public class Room101AddRequest {
 
     private static final String TAG = "Room101AddRequest";
@@ -66,6 +67,9 @@ public class Room101AddRequest {
     private String pick_date = null;
     private String pick_time_start = null;
     private String pick_time_end = null;
+
+    //@Inject
+    private Storage storage = Storage.instance();
 
     public Room101AddRequest(Activity activity, callback callback) {
         this.callback = callback;
@@ -162,7 +166,7 @@ public class Room101AddRequest {
                 callback.onDraw(getLoadingLayout(activity.getString(R.string.data_loading)));
                 data = null;
                 pick_date = null;
-                Room101Fragment.execute(activity, "newRequest", new ResponseHandler() {
+                Room101Fragment.execute(activity, storage, "newRequest", new ResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                         Thread.run(() -> {
@@ -198,8 +202,8 @@ public class Room101AddRequest {
             } else if (stage == 1) {
                 HashMap<String, String> params = new HashMap<>();
                 params.put("month", "next");
-                params.put("login", Storage.file.perm.get(activity, "user#deifmo#login"));
-                params.put("password", Storage.file.perm.get(activity, "user#deifmo#password"));
+                params.put("login", storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#login"));
+                params.put("password", storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#password"));
                 Room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
@@ -260,8 +264,8 @@ public class Room101AddRequest {
             params.put("dateRequest", pick_date);
             params.put("timeBegin", "");
             params.put("timeEnd", "");
-            params.put("login", Storage.file.perm.get(activity, "user#deifmo#login"));
-            params.put("password", Storage.file.perm.get(activity, "user#deifmo#password"));
+            params.put("login", storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#login"));
+            params.put("password", storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#password"));
             Room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
                 @Override
                 public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
@@ -309,8 +313,8 @@ public class Room101AddRequest {
             params.put("dateRequest", pick_date);
             params.put("timeBegin", pick_time_start);
             params.put("timeEnd", "");
-            params.put("login", Storage.file.perm.get(activity, "user#deifmo#login"));
-            params.put("password", Storage.file.perm.get(activity, "user#deifmo#password"));
+            params.put("login", storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#login"));
+            params.put("password", storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#password"));
             Room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
                 @Override
                 public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
@@ -365,8 +369,8 @@ public class Room101AddRequest {
             params.put("dateRequest", pick_date);
             params.put("timeBegin", pick_time_start);
             params.put("timeEnd", pick_time_end);
-            params.put("login", Storage.file.perm.get(activity, "user#deifmo#login"));
-            params.put("password", Storage.file.perm.get(activity, "user#deifmo#password"));
+            params.put("login", storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#login"));
+            params.put("password", storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#password"));
             Room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Client.Headers headers, String response) {

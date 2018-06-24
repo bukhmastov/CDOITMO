@@ -25,7 +25,7 @@ public class ERegisterSubjectViewRVA extends RVA {
     private static final int TYPE_POINT = 2;
     private static final int TYPE_NO_POINTS = 3;
 
-    private static Pattern patternHighlight = Pattern.compile("^зач[её]т$|^экзамен$|^модуль\\s\\d+$|^промежуточная\\sаттестация$|^защита\\s(кп/кр|кп|кр|курсового\\sпроекта|курсовой\\sработы|курсового\\sпроекта/курсовой\\sработы)$", Pattern.CASE_INSENSITIVE);
+    private static Pattern patternHighlight = Pattern.compile("^.*зач[её]т$|^экзамен$|^модуль\\s\\d+$|^промежуточная\\sаттестация$|^защита\\s(кп/кр|кп|кр|курсового\\sпроекта|курсовой\\sработы|курсового\\sпроекта/курсовой\\sработы)$", Pattern.CASE_INSENSITIVE);
 
     public ERegisterSubjectViewRVA(@NonNull Context context, @NonNull JSONObject subject, int term) {
         addItems(json2dataset(context, subject, term));

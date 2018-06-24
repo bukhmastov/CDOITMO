@@ -15,7 +15,7 @@ import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
 import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
-import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.dialog.ThemeDialog;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.util.Thread;
@@ -35,12 +35,12 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
         preferences.add(new PreferenceList("pref_default_fragment", "e_journal", R.string.pref_default_fragment, R.array.pref_general_default_fragment_titles, R.array.pref_general_default_fragment_values, true));
         preferences.add(new PreferenceBasic("pref_theme", "light", R.string.theme, true, new PreferenceBasic.Callback() {
             @Override
-            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final PreferenceBasic.OnPreferenceClickedCallback callback) {
+            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final StoragePref storagePref, final PreferenceBasic.OnPreferenceClickedCallback callback) {
                 Thread.run(() -> {
                     Log.v(TAG, "pref_theme clicked");
-                    final String theme = Storage.pref.get(activity, "pref_theme", "light");
+                    final String theme = storagePref.get(activity, "pref_theme", "light");
                     new ThemeDialog(activity, theme, (theme1, desc) -> Thread.run(() -> {
-                        Storage.pref.put(activity, "pref_theme", theme1);
+                        storagePref.put(activity, "pref_theme", theme1);
                         callback.onSetSummary(activity, desc);
                         BottomBar.snackBar(activity, activity.getString(R.string.restart_required), activity.getString(R.string.restart), view -> {
                             Theme.updateAppTheme(activity);
@@ -99,7 +99,7 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
         }));
         preferences.add(new PreferenceBasic("pref_open_system_settings", null, R.string.pref_open_system_settings, false, new PreferenceBasic.Callback() {
             @Override
-            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final PreferenceBasic.OnPreferenceClickedCallback callback) {
+            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final StoragePref storagePref, final PreferenceBasic.OnPreferenceClickedCallback callback) {
                 Thread.runOnUI(() -> {
                     try {
                         Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
@@ -125,7 +125,7 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
         }));
         preferences.add(new PreferenceBasic("pref_reset_application", null, R.string.pref_reset_application_summary, false, new PreferenceBasic.Callback() {
             @Override
-            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final PreferenceBasic.OnPreferenceClickedCallback callback) {
+            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final StoragePref storagePref, final PreferenceBasic.OnPreferenceClickedCallback callback) {
                 Thread.runOnUI(() -> {
                     Log.v(TAG, "pref_reset_application clicked");
                     new AlertDialog.Builder(activity)

@@ -12,16 +12,24 @@ import com.bukhmastov.cdoitmo.activity.MainActivity;
 
 import java.util.UUID;
 
+//TODO interface - impl
 public class Static {
 
     private static final String TAG = "Static";
     public static final String GLITCH = "%*<@?!";
 
+    //@Inject
+    //TODO interface - impl: remove static
+    private static StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    //TODO interface - impl: remove static
+    private static Storage storage = Storage.instance();
+
     public static String getUUID(Context context) {
-        String uuid = Storage.pref.get(context, "pref_uuid", "");
+        String uuid = storagePref.get(context, "pref_uuid", "");
         if (uuid.isEmpty()) {
             uuid = UUID.randomUUID().toString();
-            Storage.pref.put(context, "pref_uuid", uuid);
+            storagePref.put(context, "pref_uuid", uuid);
         }
         return uuid;
     }
@@ -44,7 +52,7 @@ public class Static {
             return;
         }
         Account.logoutPermanently(context, () -> {
-            Storage.file.all.reset(context);
+            storage.clear(context, null);
             App.firstLaunch = true;
             App.OFFLINE_MODE = false;
             MainActivity.loaded = false;

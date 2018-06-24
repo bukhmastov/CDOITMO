@@ -14,6 +14,7 @@ import com.bukhmastov.cdoitmo.util.Thread;
 
 import org.json.JSONObject;
 
+//TODO interface - impl
 public class ScheduleExams extends Schedule {
 
     private static final String TAG = "ScheduleExams";

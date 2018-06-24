@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -45,6 +46,9 @@ public abstract class UniversityRVA extends RecyclerView.Adapter<RecyclerView.Vi
     }
     protected final Context context;
     protected ArrayList<Item> dataset = new ArrayList<>();
+
+    //@Inject
+    protected StoragePref storagePref = StoragePref.instance();
 
     public UniversityRVA(final Context context) {
         this(context, null);

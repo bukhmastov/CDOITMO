@@ -24,6 +24,7 @@ import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Color;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
@@ -44,6 +45,11 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
     private Client.Request requestHandle = null;
     protected boolean forbidden = false;
 
+    //@Inject
+    private Storage storage = Storage.instance();
+    //@Inject
+    private StoragePref storagePref = StoragePref.instance();
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,7 +61,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
             return;
         }
         FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
-        group = Storage.file.cache.get(activity, "eregister#params#selected_group", "");
+        group = storage.get(activity, Storage.CACHE, Storage.USER, "eregister#params#selected_group", "");
         term = -2;
     }
 
@@ -138,13 +144,13 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
     }
 
     private void load() {
-        Thread.run(() -> load(Storage.pref.get(activity, "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(activity, "pref_dynamic_refresh", "0")) : 0));
+        Thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) ? Integer.parseInt(storagePref.get(activity, "pref_dynamic_refresh", "0")) : 0));
     }
     private void load(final int refresh_rate) {
         Thread.run(() -> {
             Log.v(TAG, "load | refresh_rate=" + refresh_rate);
-            if (Storage.pref.get(activity, "pref_use_cache", true)) {
-                String cache = Storage.file.cache.get(activity, "eregister#core").trim();
+            if (storagePref.get(activity, "pref_use_cache", true)) {
+                String cache = storage.get(activity, Storage.CACHE, Storage.USER, "eregister#core").trim();
                 if (!cache.isEmpty()) {
                     try {
                         JSONObject data = new JSONObject(cache);
@@ -172,9 +178,9 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
     private void load(final boolean force, final String cache) {
         Thread.run(() -> {
             Log.v(TAG, "load | force=" + (force ? "true" : "false"));
-            if ((!force || !Client.isOnline(activity)) && Storage.pref.get(activity, "pref_use_cache", true)) {
+            if ((!force || !Client.isOnline(activity)) && storagePref.get(activity, "pref_use_cache", true)) {
                 try {
-                    String c = cache.isEmpty() ? Storage.file.cache.get(activity, "eregister#core").trim() : cache;
+                    String c = cache.isEmpty() ? storage.get(activity, Storage.CACHE, Storage.USER, "eregister#core").trim() : cache;
                     if (!c.isEmpty()) {
                         Log.v(TAG, "load | from cache");
                         setData(new JSONObject(c));
@@ -183,7 +189,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                     }
                 } catch (Exception e) {
                     Log.v(TAG, "load | failed to load from cache");
-                    Storage.file.cache.delete(activity, "eregister#core");
+                    storage.delete(activity, Storage.CACHE, Storage.USER, "eregister#core");
                 }
             }
             if (!App.OFFLINE_MODE) {
@@ -194,8 +200,8 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                             Log.v(TAG, "load | success | statusCode=" + statusCode + " | responseObj=" + (responseObj == null ? "null" : "notnull"));
                             if (statusCode == 200 && responseObj != null) {
                                 new ERegisterConverter(responseObj, json -> {
-                                    if (Storage.pref.get(activity, "pref_use_cache", true)) {
-                                        Storage.file.cache.put(activity, "eregister#core", json.toString());
+                                    if (storagePref.get(activity, "pref_use_cache", true)) {
+                                        storage.put(activity, Storage.CACHE, Storage.USER, "eregister#core", json.toString());
                                     }
                                     setData(json);
                                     display();
@@ -387,7 +393,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                                         }
                                         group = spinner_group_arr_names.get(position);
                                         Log.v(TAG, "spinner_group clicked | group=" + group);
-                                        Storage.file.cache.put(activity, "eregister#params#selected_group", group);
+                                        storage.put(activity, Storage.CACHE, Storage.USER, "eregister#params#selected_group", group);
                                         load(false);
                                     });
                                 }
@@ -465,7 +471,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                 if (this.term == -2) {
                     final JSONArray years = group.getJSONArray("years");
                     if (year == years.getInt(month > Calendar.AUGUST ? 0 : 1)) {
-                        switch (Integer.parseInt(Storage.pref.get(activity, "pref_e_journal_term", "0"))) {
+                        switch (Integer.parseInt(storagePref.get(activity, "pref_e_journal_term", "0"))) {
                             default: case 0: this.term = group.getJSONArray("terms").getJSONObject(month > Calendar.AUGUST || month == Calendar.JANUARY ? 0 : 1).getInt("number"); break;
                             case 1: this.term = group.getJSONArray("terms").getJSONObject(0).getInt("number"); break;
                             case 2: this.term = group.getJSONArray("terms").getJSONObject(1).getInt("number"); break;
@@ -493,7 +499,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                 if (currentGroup.isEmpty()) {
                     if (year == years.getInt(month > Calendar.AUGUST ? 0 : 1)) {
                         currentGroup = group.getString("name");
-                        switch (Integer.parseInt(Storage.pref.get(activity, "pref_e_journal_term", "0"))) {
+                        switch (Integer.parseInt(storagePref.get(activity, "pref_e_journal_term", "0"))) {
                             default: case 0: currentTerm = group.getJSONArray("terms").getJSONObject(month > Calendar.AUGUST || month == Calendar.JANUARY ? 0 : 1).getInt("number"); break;
                             case 1: currentTerm = group.getJSONArray("terms").getJSONObject(0).getInt("number"); break;
                             case 2: currentTerm = group.getJSONArray("terms").getJSONObject(1).getInt("number"); break;

@@ -9,6 +9,7 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+//TODO interface - impl
 public class FirebaseConfigProvider {
 
     private static final String TAG = "FirebaseConfigProvider";

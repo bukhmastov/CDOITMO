@@ -24,7 +24,7 @@ import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.util.Color;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
@@ -40,6 +40,9 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
     private ScheduleLessons scheduleLessons = null;
     private Client.Request requestHandle = null;
     private View container = null;
+
+    //@Inject
+    private StoragePref storagePref = StoragePref.instance();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -201,7 +204,7 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
                                 if (s != null) {
                                     layoutManager.scrollToPositionWithOffset(s.position, s.offset);
                                 } else {
-                                    if (Storage.pref.get(activity, "pref_schedule_lessons_scroll_to_day", true)) {
+                                    if (storagePref.get(activity, "pref_schedule_lessons_scroll_to_day", true)) {
                                         int position = -1;
                                         switch (Time.getCalendar().get(Calendar.DAY_OF_WEEK)) {
                                             case Calendar.MONDAY: position = adapter.getDayPosition(0); if (position >= 0) break;

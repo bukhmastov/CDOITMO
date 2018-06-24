@@ -29,6 +29,7 @@ import com.bukhmastov.cdoitmo.util.Color;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
@@ -46,6 +47,11 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
     public static Client.Request requestHandle = null;
     private String action_extra = null;
     protected boolean forbidden = false;
+
+    //@Inject
+    private Storage storage = Storage.instance();
+    //@Inject
+    private StoragePref storagePref = StoragePref.instance();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -151,8 +157,8 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                 default: params.put("getFunc", "delRequest"); break;
             }
             params.put("reid", String.valueOf(reid));
-            params.put("login", Storage.file.perm.get(activity, "user#deifmo#login"));
-            params.put("password", Storage.file.perm.get(activity, "user#deifmo#password"));
+            params.put("login", storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#login"));
+            params.put("password", storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#password"));
             Room101Client.post(activity, "delRequest.php", params, new ResponseHandler() {
                 @Override
                 public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
@@ -337,14 +343,14 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
         });
     }
 
-    public static void execute(final Context context, final String scope, final ResponseHandler responseHandler) {
+    public static void execute(final Context context, final Storage storage, final String scope, final ResponseHandler responseHandler) {
         Thread.run(Thread.BACKGROUND, () -> {
             Log.v(TAG, "execute | scope=" + scope);
             HashMap<String, String> params = new HashMap<>();
             params.put("getFunc", "isLoginPassword");
             params.put("view", scope);
-            params.put("login", Storage.file.perm.get(context, "user#deifmo#login"));
-            params.put("password", Storage.file.perm.get(context, "user#deifmo#password"));
+            params.put("login", storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#login"));
+            params.put("password", storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#password"));
             Room101Client.post(context, "index.php", params, new ResponseHandler() {
                 @Override
                 public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
@@ -406,18 +412,19 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
             });
         });
     }
+
     private void load() {
-        Thread.run(() -> load(Storage.pref.get(activity, "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(activity, "pref_dynamic_refresh", "0")) : 0));
+        Thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) ? Integer.parseInt(storagePref.get(activity, "pref_dynamic_refresh", "0")) : 0));
     }
     private void load(final int refresh_rate) {
         Thread.run(() -> {
             Log.v(TAG, "load | refresh_rate=" + refresh_rate);
-            if (Storage.pref.get(activity, "pref_use_cache", true)) {
-                String cache = Storage.file.cache.get(activity, "room101#core").trim();
+            if (storagePref.get(activity, "pref_use_cache", true)) {
+                String cache = storage.get(activity, Storage.CACHE, Storage.USER, "room101#core").trim();
                 if (!cache.isEmpty()) {
                     try {
                         setData(new JSONObject(cache));
-                        if (getData().getLong("timestamp") + refresh_rate * 3600000L < Time.getCalendar().getTimeInMillis()) {
+                        if (getData() == null || getData().getLong("timestamp") + refresh_rate * 3600000L < Time.getCalendar().getTimeInMillis()) {
                             load(true, cache);
                         } else {
                             load(false, cache);
@@ -440,9 +447,9 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
     private void load(final boolean force, final String cache) {
         Thread.run(() -> {
             Log.v(TAG, "load | force=" + (force ? "true" : "false"));
-            if ((!force || !Client.isOnline(activity)) && Storage.pref.get(activity, "pref_use_cache", true)) {
+            if ((!force || !Client.isOnline(activity)) && storagePref.get(activity, "pref_use_cache", true)) {
                 try {
-                    String c = cache.isEmpty() ? Storage.file.cache.get(activity, "room101#core").trim() : cache;
+                    String c = cache.isEmpty() ? storage.get(activity, Storage.CACHE, Storage.USER, "room101#core").trim() : cache;
                     if (!c.isEmpty()) {
                         Log.v(TAG, "load | from cache");
                         setData(new JSONObject(c));
@@ -451,11 +458,11 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                     }
                 } catch (Exception e) {
                     Log.v(TAG, "load | failed to load from cache");
-                    Storage.file.cache.delete(activity, "room101#core");
+                    storage.delete(activity, Storage.CACHE, Storage.USER, "room101#core");
                 }
             }
             if (!App.OFFLINE_MODE) {
-                execute(activity, "delRequest", new ResponseHandler() {
+                execute(activity, storage, "delRequest", new ResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                         Thread.run(() -> {
@@ -467,8 +474,8 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                                             json = new JSONObject()
                                                     .put("timestamp", Time.getCalendar().getTimeInMillis())
                                                     .put("data", json);
-                                            if (Storage.pref.get(activity, "pref_use_cache", true)) {
-                                                Storage.file.cache.put(activity, "room101#core", json.toString());
+                                            if (storagePref.get(activity, "pref_use_cache", true)) {
+                                                storage.put(activity, Storage.CACHE, Storage.USER, "room101#core", json.toString());
                                             }
                                             setData(json);
                                             display();

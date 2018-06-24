@@ -14,7 +14,7 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
 import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.io.File;
@@ -23,6 +23,9 @@ import java.io.FileWriter;
 public class LogFragment extends ConnectedFragment {
 
     private static final String TAG = "LogFragment";
+
+    //@Inject
+    private StoragePref storagePref = StoragePref.instance();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -56,15 +59,15 @@ public class LogFragment extends ConnectedFragment {
             final Switch firebase_logs_switch = activity.findViewById(R.id.firebase_logs_switch);
             firebase_logs.setOnClickListener(v -> Thread.runOnUI(() -> {
                 try {
-                    firebase_logs_switch.setChecked(!Storage.pref.get(activity, "pref_allow_send_reports", true));
+                    firebase_logs_switch.setChecked(!storagePref.get(activity, "pref_allow_send_reports", true));
                 } catch (Exception e) {
                     Log.exception(e);
                 }
             }));
-            firebase_logs_switch.setChecked(Storage.pref.get(activity, "pref_allow_send_reports", true));
+            firebase_logs_switch.setChecked(storagePref.get(activity, "pref_allow_send_reports", true));
             firebase_logs_switch.setOnCheckedChangeListener((compoundButton, allowed) -> Thread.run(() -> {
                 try {
-                    Storage.pref.put(activity, "pref_allow_send_reports", allowed);
+                    storagePref.put(activity, "pref_allow_send_reports", allowed);
                     firebaseToggled(allowed);
                 } catch (Exception e) {
                     Log.exception(e);
@@ -75,15 +78,15 @@ public class LogFragment extends ConnectedFragment {
             final Switch generic_logs_switch = activity.findViewById(R.id.generic_logs_switch);
             generic_logs.setOnClickListener(v -> Thread.runOnUI(() -> {
                 try {
-                    generic_logs_switch.setChecked(!Storage.pref.get(activity, "pref_allow_collect_logs", false));
+                    generic_logs_switch.setChecked(!storagePref.get(activity, "pref_allow_collect_logs", false));
                 } catch (Exception e) {
                     Log.exception(e);
                 }
             }));
-            generic_logs_switch.setChecked(Storage.pref.get(activity, "pref_allow_collect_logs", false));
+            generic_logs_switch.setChecked(storagePref.get(activity, "pref_allow_collect_logs", false));
             generic_logs_switch.setOnCheckedChangeListener((compoundButton, allowed) -> Thread.run(() -> {
                 try {
-                    Storage.pref.put(activity, "pref_allow_collect_logs", allowed);
+                    storagePref.put(activity, "pref_allow_collect_logs", allowed);
                     genericToggled(allowed);
                     Log.setEnabled(allowed);
                     if (allowed) {

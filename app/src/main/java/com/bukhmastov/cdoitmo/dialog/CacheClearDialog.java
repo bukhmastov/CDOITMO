@@ -1,10 +1,6 @@
 package com.bukhmastov.cdoitmo.dialog;
 
-import android.content.Context;
-import android.support.annotation.LayoutRes;
 import android.support.v7.app.AlertDialog;
-import android.view.InflateException;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -15,29 +11,34 @@ import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class CacheClearDialog {
+public class CacheClearDialog extends Dialog {
 
     private static final String TAG = "CacheClearDialog";
     private static final String TAG_PREFIX = "cache_clear_";
     private final ConnectedActivity activity;
 
+    //@Inject
+    private Storage storage = Storage.instance();
+    //@Inject
+    private StoragePref storagePref = StoragePref.instance();
+
     private class Entry {
         String title;
         String desc;
         String path;
-        @Storage.TYPE
-        String type;
+        @Storage.Type String type;
         long bytes;
-        Entry(String title, String path, @Storage.TYPE String type) {
+        Entry(String title, String path, @Storage.Type String type) {
             this(title, null, path, type);
         }
-        Entry(String title, String desc, String path, @Storage.TYPE String type) {
+        Entry(String title, String desc, String path, @Storage.Type String type) {
             this.title = title;
             this.desc = desc;
             this.path = path;
@@ -48,18 +49,19 @@ public class CacheClearDialog {
     private List<Entry> items = new ArrayList<>();
 
     public CacheClearDialog(ConnectedActivity activity) {
+        super(activity);
         this.activity = activity;
         items.clear();
         items.add(new Entry(activity.getString(R.string.cache_mem), activity.getString(R.string.cache_mem_desc), "_mem_", Storage.USER));
-        items.add(new Entry(activity.getString(R.string.cache_all), activity.getString(R.string.cache_all_desc), "_all_", Storage.GENERAL));
+        items.add(new Entry(activity.getString(R.string.cache_all), activity.getString(R.string.cache_all_desc), "_all_", Storage.GLOBAL));
         items.add(new Entry(activity.getString(R.string.e_journal), "eregister", Storage.USER));
         items.add(new Entry(activity.getString(R.string.protocol_changes), "protocol", Storage.USER));
         items.add(new Entry(activity.getString(R.string.rating), "rating", Storage.USER));
-        items.add(new Entry(activity.getString(R.string.schedule_lessons), "schedule_lessons", Storage.GENERAL));
-        items.add(new Entry(activity.getString(R.string.schedule_exams), "schedule_exams", Storage.GENERAL));
-        items.add(new Entry(activity.getString(R.string.schedule_attestations), "schedule_attestations", Storage.GENERAL));
+        items.add(new Entry(activity.getString(R.string.schedule_lessons), "schedule_lessons", Storage.GLOBAL));
+        items.add(new Entry(activity.getString(R.string.schedule_exams), "schedule_exams", Storage.GLOBAL));
+        items.add(new Entry(activity.getString(R.string.schedule_attestations), "schedule_attestations", Storage.GLOBAL));
         items.add(new Entry(activity.getString(R.string.room101), "room101", Storage.USER));
-        items.add(new Entry(activity.getString(R.string.university), "university", Storage.GENERAL));
+        items.add(new Entry(activity.getString(R.string.university), "university", Storage.GLOBAL));
     }
 
     public void show() {
@@ -91,14 +93,14 @@ public class CacheClearDialog {
                             cache_item_summary.setText(item.desc);
                         }
                         switch (item.type) {
-                            case Storage.GENERAL: cache_item_type.setImageResource(R.drawable.ic_group); break;
+                            case Storage.GLOBAL: cache_item_type.setImageResource(R.drawable.ic_group); break;
                             case Storage.USER: cache_item_type.setImageResource(R.drawable.ic_person); break;
                         }
                         cache_item_size_container.setVisibility(View.INVISIBLE);
                         cache_item_size.setText("...");
                         cache_item.setOnClickListener((v) -> Thread.run(Thread.BACKGROUND, () -> {
                             if ("_mem_".equals(item.path)) {
-                                Storage.cache.reset();
+                                storage.cacheReset();
                                 ConnectedActivity.clearStore();
                                 BottomBar.snackBar(activity, activity.getString(R.string.cache_cleared));
                                 return;
@@ -107,12 +109,12 @@ public class CacheClearDialog {
                                     return;
                                 }
                                 if ("_all_".equals(item.path)) {
-                                    Storage.file.cache.clear(activity);
-                                    Storage.file.general.cache.clear(activity);
+                                    storage.clear(activity, Storage.CACHE, Storage.USER);
+                                    storage.clear(activity, Storage.CACHE, Storage.GLOBAL);
                                 } else {
                                     switch (item.type) {
-                                        case Storage.USER: Storage.file.cache.clear(activity, item.path); break;
-                                        case Storage.GENERAL: Storage.file.general.cache.clear(activity, item.path); break;
+                                        case Storage.USER: storage.clear(activity, Storage.CACHE, Storage.USER, item.path); break;
+                                        case Storage.GLOBAL: storage.clear(activity, Storage.CACHE, Storage.GLOBAL, item.path); break;
                                     }
                                 }
                             }
@@ -155,11 +157,12 @@ public class CacheClearDialog {
                 if ("_mem_".equals(item.path)) {
                     size = -1L;
                 } else if ("_all_".equals(item.path)) {
-                    size = Storage.file.cache.getDirSize(activity, "") + Storage.file.general.cache.getDirSize(activity, "");
+                    size =  storage.getDirSize(activity, Storage.CACHE, Storage.USER, "") +
+                            storage.getDirSize(activity, Storage.CACHE, Storage.GLOBAL, "");
                 } else {
                     switch (item.type) {
-                        case Storage.USER: size = Storage.file.cache.getDirSize(activity, item.path); break;
-                        case Storage.GENERAL: size = Storage.file.general.cache.getDirSize(activity, item.path); break;
+                        case Storage.USER: size = storage.getDirSize(activity, Storage.CACHE, Storage.USER, item.path); break;
+                        case Storage.GLOBAL: size = storage.getDirSize(activity, Storage.CACHE, Storage.GLOBAL, item.path); break;
                         default: size = -1L; break;
                     }
                 }
@@ -177,25 +180,12 @@ public class CacheClearDialog {
                         cache_item_size.setText(R.string.empty);
                         cache_item_size_container.setVisibility(View.VISIBLE);
                     } else {
-                        cache_item_size.setText(TextUtils.bytes2readable(activity, size));
+                        cache_item_size.setText(TextUtils.bytes2readable(activity, storagePref, size));
                         cache_item_size_container.setVisibility(View.VISIBLE);
                     }
                     cache_item_size_container.invalidate();
                 });
             }
         });
-    }
-
-    private View inflate(@LayoutRes int layout) throws InflateException {
-        if (activity == null) {
-            Log.e(TAG, "Failed to inflate layout, activity is null");
-            return null;
-        }
-        LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        if (inflater == null) {
-            Log.e(TAG, "Failed to inflate layout, inflater is null");
-            return null;
-        }
-        return inflater.inflate(layout, null);
     }
 }

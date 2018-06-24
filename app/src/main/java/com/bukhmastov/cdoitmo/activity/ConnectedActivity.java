@@ -23,6 +23,7 @@ import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.util.Color;
 import com.bukhmastov.cdoitmo.util.CtxWrapper;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.lang.annotation.Retention;
@@ -43,6 +44,9 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     public static String storedFragmentData = null;
     public static String storedFragmentExtra = null;
     protected final ConnectedActivity activity = this;
+
+    //@Inject
+    protected StoragePref storagePref = StoragePref.instance();
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({TYPE.ROOT, TYPE.STACKABLE})
@@ -269,6 +273,6 @@ public abstract class ConnectedActivity extends AppCompatActivity {
 
     @Override
     protected void attachBaseContext(Context context) {
-        super.attachBaseContext(CtxWrapper.wrap(context));
+        super.attachBaseContext(CtxWrapper.wrap(context, storagePref));
     }
 }

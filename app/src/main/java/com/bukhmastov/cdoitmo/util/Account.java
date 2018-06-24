@@ -1,7 +1,6 @@
 package com.bukhmastov.cdoitmo.util;
 
 import android.content.Context;
-import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
@@ -17,12 +16,10 @@ import com.bukhmastov.cdoitmo.object.ProtocolTracker;
 import com.bukhmastov.cdoitmo.interfaces.Callable;
 import com.bukhmastov.cdoitmo.interfaces.CallableString;
 
-import org.json.JSONArray;
-
+//TODO interface - impl
 public class Account {
 
     private static final String TAG = "Account";
-
     public static final String USER_UNAUTHORIZED = "unauthorized";
     public static boolean authorized = false;
 
@@ -40,6 +37,13 @@ public class Account {
         void onProgress(final String text);
         void onNewRequest(final Client.Request request);
     }
+
+    //@Inject
+    //TODO interface - impl: remove static
+    private static Storage storage = Storage.instance();
+    //@Inject
+    //TODO interface - impl: remove static
+    private static StoragePref storagePref = StoragePref.instance();
 
     public static void login(@NonNull final Context context, @NonNull final String login, @NonNull final String password, @NonNull final String role, final boolean isNewUser, @NonNull final LoginHandler loginHandler) {
         final String trace = FirebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.LOGIN);
@@ -62,11 +66,11 @@ public class Account {
                 return;
             }
             Account.authorized = false;
-            Storage.file.general.perm.put(context, "users#current_login", login);
+            storage.put(context, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", login);
             if (isNewUser || IS_USER_UNAUTHORIZED) {
-                Storage.file.perm.put(context, "user#deifmo#login", login);
-                Storage.file.perm.put(context, "user#deifmo#password", password);
-                Storage.file.perm.put(context, "user#role", role);
+                storage.put(context, Storage.PERMANENT, Storage.USER,"user#deifmo#login", login);
+                storage.put(context, Storage.PERMANENT, Storage.USER, "user#deifmo#password", password);
+                storage.put(context, Storage.PERMANENT, Storage.USER, "user#role", role);
             }
             if (IS_USER_UNAUTHORIZED) {
                 Thread.runOnUI(() -> {
@@ -99,10 +103,10 @@ public class Account {
                 public void onSuccess(int statusCode, Client.Headers headers, String response) {
                     Thread.run(() -> {
                         Account.authorized = true;
-                        List.push(context, login);
+                        Accounts.push(context, login);
                         if (isNewUser) {
                             FirebaseAnalyticsProvider.logBasicEvent(context, "New user authorized");
-                            ProtocolTracker.setup(context, 0);
+                            ProtocolTracker.setup(context, storagePref, 0);
                         }
                         Thread.runOnUI(() -> {
                             loginHandler.onSuccess();
@@ -204,7 +208,7 @@ public class Account {
     public static void logout(@NonNull final Context context, @Nullable final String login, @NonNull final LogoutHandler logoutHandler) {
         final String trace = FirebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.LOGOUT);
         Thread.run(() -> {
-            @NonNull final String cLogin = login != null ? login : Storage.file.general.perm.get(context, "users#current_login");
+            @NonNull final String cLogin = login != null ? login : storage.get(context, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
             final boolean IS_USER_UNAUTHORIZED = USER_UNAUTHORIZED.equals(cLogin);
             Log.i(TAG, "logout | login=", cLogin, " | IS_USER_UNAUTHORIZED=", IS_USER_UNAUTHORIZED, " | OFFLINE_MODE=", App.OFFLINE_MODE);
             if ("general".equals(login)) {
@@ -222,8 +226,8 @@ public class Account {
                 });
                 return;
             }
-            Storage.file.general.perm.put(context, "users#current_login", cLogin);
-            final String uName = Storage.file.perm.get(context, "user#name");
+            storage.put(context, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", cLogin);
+            final String uName = storage.get(context, Storage.PERMANENT, Storage.USER, "user#name");
             DeIfmoClient.get(context, "servlet/distributedCDE?Rule=SYSTEM_EXIT", null, new ResponseHandler() {
                 @Override
                 public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
@@ -257,20 +261,20 @@ public class Account {
     }
     public static void logoutPermanently(@NonNull final Context context, @Nullable final String login, @Nullable final Callable callback) {
         Thread.run(() -> {
-            @NonNull final String cLogin = login != null ? login : Storage.file.general.perm.get(context, "users#current_login");
+            @NonNull final String cLogin = login != null ? login : storage.get(context, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
             final boolean IS_USER_UNAUTHORIZED = USER_UNAUTHORIZED.equals(cLogin);
             final boolean IS_LOGIN_EMPTY = cLogin.isEmpty();
             Log.v(TAG, "logoutPermanently | login=", cLogin, " | IS_USER_UNAUTHORIZED=", IS_USER_UNAUTHORIZED);
             if (!IS_LOGIN_EMPTY) {
-                Storage.file.general.perm.put(context, "users#current_login", cLogin);
+                storage.put(context, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", cLogin);
             }
             final Callable cb = () -> {
                 if (!IS_USER_UNAUTHORIZED && !IS_LOGIN_EMPTY) {
-                    Storage.file.all.clear(context);
-                    List.remove(context, cLogin);
+                    storage.clear(context, null, Storage.USER);
+                    Accounts.remove(context, cLogin);
                 }
-                Storage.file.general.perm.delete(context, "users#current_login");
-                Storage.cache.reset();
+                storage.delete(context, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
+                storage.cacheReset();
                 Account.authorized = false;
                 App.UNAUTHORIZED_MODE = false;
                 if (callback != null) {
@@ -289,12 +293,12 @@ public class Account {
     }
     public static void logoutTemporarily(@NonNull final Context context, @Nullable final String login, @Nullable final Callable callback) {
         Thread.run(() -> {
-            @NonNull final String cLogin = login != null ? login : Storage.file.general.perm.get(context, "users#current_login");
+            @NonNull final String cLogin = login != null ? login : storage.get(context, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
             final boolean IS_USER_UNAUTHORIZED = USER_UNAUTHORIZED.equals(cLogin);
             Log.i(TAG, "logoutTemporarily | login=", cLogin, " | IS_USER_UNAUTHORIZED=", IS_USER_UNAUTHORIZED);
             final Callable cb = () -> {
-                Storage.file.general.perm.delete(context, "users#current_login");
-                Storage.cache.reset();
+                storage.delete(context, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
+                storage.cacheReset();
                 Account.authorized = false;
                 App.UNAUTHORIZED_MODE = false;
                 if (callback != null) {
@@ -306,7 +310,6 @@ public class Account {
             } else {
                 new ProtocolTracker(context).stop(cb);
             }
-
         });
     }
     public static void logoutConfirmation(@NonNull final Context context, @NonNull final Callable callback) {
@@ -318,78 +321,4 @@ public class Account {
                 .create().show());
     }
 
-    public static class List {
-        private static final String TAG = Account.TAG + ".List";
-        public static void push(@NonNull final Context context, @NonNull final String login) {
-            if (USER_UNAUTHORIZED.equals(login)) return;
-            Thread.run(() -> {
-                try {
-                    Log.v(TAG, "push | login=", login);
-                    boolean isNewAuthorization = true;
-                    // save login on top of the list of authorized users
-                    JSONArray list = get(context);
-                    JSONArray accounts = new JSONArray();
-                    accounts.put(login);
-                    for (int i = 0; i < list.length(); i++) {
-                        String entry = list.getString(i);
-                        if (entry.equals(login)) {
-                            isNewAuthorization = false;
-                        } else {
-                            accounts.put(entry);
-                        }
-                    }
-                    Storage.file.general.perm.put(context, "users#list", accounts.toString());
-                    // track statistics
-                    Bundle bundle;
-                    bundle = FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_COUNT, accounts.length());
-                    bundle = FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_NEW, isNewAuthorization ? "new" : "old", bundle);
-                    FirebaseAnalyticsProvider.logEvent(
-                            context,
-                            FirebaseAnalyticsProvider.Event.LOGIN,
-                            bundle
-                    );
-                } catch (Exception e) {
-                    Log.exception(e);
-                }
-            });
-        }
-        public static void remove(@NonNull final Context context, @NonNull final String login) {
-            if (USER_UNAUTHORIZED.equals(login)) return;
-            Thread.run(() -> {
-                try {
-                    Log.v(TAG, "remove | login=", login);
-                    // remove login from the list of authorized users
-                    JSONArray list = get(context);
-                    for (int i = 0; i < list.length(); i++) {
-                        if (list.getString(i).equals(login)) {
-                            list.remove(i);
-                            break;
-                        }
-                    }
-                    Storage.file.general.perm.put(context, "users#list", list.toString());
-                    // track statistics
-                    FirebaseAnalyticsProvider.logEvent(
-                            context,
-                            FirebaseAnalyticsProvider.Event.LOGOUT,
-                            FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_COUNT, list.length())
-                    );
-                } catch (Exception e) {
-                    Log.exception(e);
-                }
-            });
-        }
-        public static JSONArray get(@NonNull Context context) {
-            try {
-                Log.v(TAG, "get");
-                try {
-                    return TextUtils.string2jsonArray(Storage.file.general.perm.get(context, "users#list", ""));
-                } catch (Exception e) {
-                    return new JSONArray();
-                }
-            } catch (Exception e) {
-                Log.exception(e);
-                return new JSONArray();
-            }
-        }
-    }
 }

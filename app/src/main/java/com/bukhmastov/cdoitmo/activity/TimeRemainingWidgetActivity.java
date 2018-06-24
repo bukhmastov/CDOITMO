@@ -22,6 +22,7 @@ import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.CtxWrapper;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.util.Thread;
 
@@ -41,6 +42,9 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
     private Client.Request requestHandle = null;
     private boolean is_message_displaying = false;
     private TimeRemainingWidget.Data data = null;
+
+    //@Inject
+    private StoragePref storagePref = StoragePref.instance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -130,7 +134,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
 
     @Override
     protected void attachBaseContext(Context context) {
-        super.attachBaseContext(CtxWrapper.wrap(context));
+        super.attachBaseContext(CtxWrapper.wrap(context, storagePref));
     }
 
     @Override

@@ -15,18 +15,25 @@ import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.interfaces.Callable;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+//TODO interface - impl
 public class ProtocolTracker {
 
     private static final String TAG = "ProtocolTracker";
     private final @NonNull Context context;
     private final @NonNull JobScheduler jobScheduler;
     private final int jobID = 0;
+
+    //@Inject
+    private Storage storage = Storage.instance();
+    //@Inject
+    private StoragePref storagePref = StoragePref.instance();
 
     public ProtocolTracker(@NonNull Context context) {
         final JobScheduler js = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
@@ -42,8 +49,8 @@ public class ProtocolTracker {
     }
     public ProtocolTracker check(@Nullable final Callable callback) {
         Log.v(TAG, "check");
-        boolean enabled = Storage.pref.get(context, "pref_use_notifications", true);
-        boolean running = "1".equals(Storage.file.perm.get(context, "protocol_tracker#job_service_running", "0"));
+        boolean enabled = storagePref.get(context, "pref_use_notifications", true);
+        boolean running = "1".equals(storage.get(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#job_service_running", "0"));
         if (enabled && !running) {
             start(callback);
         } else if (!enabled && running) {
@@ -85,21 +92,21 @@ public class ProtocolTracker {
             stop(callback);
             return this;
         }
-        boolean enabled = Storage.pref.get(context, "pref_use_notifications", true);
-        boolean running = "1".equals(Storage.file.perm.get(context, "protocol_tracker#job_service_running", "0"));
+        boolean enabled = storagePref.get(context, "pref_use_notifications", true);
+        boolean running = "1".equals(storage.get(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#job_service_running", "0"));
         if (enabled && !running) {
             Log.v(TAG, "Starting");
             try {
-                int frequency = Integer.parseInt(Storage.pref.get(context, "pref_notify_frequency", "30"));
-                boolean network_unmetered = Storage.pref.get(context, "pref_notify_network_unmetered", false);
+                int frequency = Integer.parseInt(storagePref.get(context, "pref_notify_frequency", "30"));
+                boolean network_unmetered = storagePref.get(context, "pref_notify_network_unmetered", false);
                 JobInfo.Builder builder = new JobInfo.Builder(0, new ComponentName(context, ProtocolTrackerJobService.class));
                 builder.setPeriodic(frequency * 60000);
                 builder.setPersisted(true);
                 builder.setRequiredNetworkType(network_unmetered ? JobInfo.NETWORK_TYPE_UNMETERED : JobInfo.NETWORK_TYPE_ANY);
                 jobScheduler.schedule(builder.build());
-                Storage.file.perm.put(context, "protocol_tracker#job_service_running", "1");
-                Storage.file.perm.put(context, "protocol_tracker#protocol", "");
-                Log.i(TAG, "Started | user = " + Storage.file.general.perm.get(context, "users#current_login") + " | frequency = " + frequency);
+                storage.put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#job_service_running", "1");
+                storage.put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#protocol", "");
+                Log.i(TAG, "Started | user = " + storage.get(context, Storage.PERMANENT, Storage.GLOBAL, "users#current_login") + " | frequency = " + frequency);
                 if (callback != null) {
                     callback.call();
                 }
@@ -121,12 +128,12 @@ public class ProtocolTracker {
     }
     public ProtocolTracker stop(@Nullable final Callable callback) {
         Log.v(TAG, "stop");
-        boolean running = "1".equals(Storage.file.perm.get(context, "protocol_tracker#job_service_running", "0"));
+        boolean running = "1".equals(storage.get(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#job_service_running", "0"));
         if (running) {
             Log.v(TAG, "Stopping");
             jobScheduler.cancel(jobID);
-            Storage.file.perm.put(context, "protocol_tracker#job_service_running", "0");
-            Storage.file.perm.put(context, "protocol_tracker#protocol", "");
+            storage.put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#job_service_running", "0");
+            storage.put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#protocol", "");
             Log.i(TAG, "Stopped");
         }
         if (callback != null) {
@@ -141,16 +148,16 @@ public class ProtocolTracker {
     public ProtocolTracker reset(@Nullable final Callable callback) {
         Log.v(TAG, "reset");
         jobScheduler.cancelAll();
-        Storage.file.perm.put(context, "protocol_tracker#job_service_running", "0");
-        Storage.file.perm.put(context, "protocol_tracker#protocol", "");
+        storage.put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#job_service_running", "0");
+        storage.put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#protocol", "");
         check(callback);
         return this;
     }
 
-    public static void setup(final Context context, final int attempt) {
+    public static void setup(final Context context, final StoragePref storagePref, final int attempt) {
         Thread.run(Thread.BACKGROUND, () -> {
             Log.v(TAG, "setup | attempt=" + attempt);
-            if (!Storage.pref.get(context, "pref_protocol_changes_track", true)) {
+            if (!storagePref.get(context, "pref_protocol_changes_track", true)) {
                 Log.v(TAG, "setup | pref_protocol_changes_track=false");
                 return;
             }
@@ -162,13 +169,13 @@ public class ProtocolTracker {
                             if (statusCode == 200 && responseArr != null) {
                                 new ProtocolConverter(context, responseArr, 18, json -> Log.i(TAG, "setup | uploaded")).run();
                             } else {
-                                setup(context, attempt + 1);
+                                setup(context, storagePref, attempt + 1);
                             }
                         });
                     }
                     @Override
                     public void onFailure(int statusCode, Client.Headers headers, int state) {
-                        Thread.run(Thread.BACKGROUND, () -> setup(context, attempt + 1));
+                        Thread.run(Thread.BACKGROUND, () -> setup(context, storagePref, attempt + 1));
                     }
                     @Override
                     public void onProgress(int state) {}

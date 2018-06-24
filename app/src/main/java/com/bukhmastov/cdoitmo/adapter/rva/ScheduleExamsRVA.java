@@ -16,6 +16,7 @@ import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.interfaces.CallableString;
@@ -45,6 +46,11 @@ public class ScheduleExamsRVA extends RVA {
     private static final int TYPE_PICKER_NO_TEACHERS = 6;
 
     private static Pattern patternBrokenDate = Pattern.compile("^(\\d{1,2})(\\s\\S*)(.*)$", Pattern.CASE_INSENSITIVE);
+
+    //@Inject
+    private Storage storage = Storage.instance();
+    //@Inject
+    private StoragePref storagePref = StoragePref.instance();
 
     private final ConnectedActivity activity;
     private final JSONObject data;
@@ -135,7 +141,7 @@ public class ScheduleExamsRVA extends RVA {
             }
             container.findViewById(R.id.schedule_lessons_menu).setOnClickListener(view -> Thread.run(() -> {
                 final String cache_token = query == null ? null : query.toLowerCase();
-                final boolean cached = cache_token != null && !Storage.file.general.cache.get(activity, "schedule_exams#lessons#" + cache_token, "").isEmpty();
+                final boolean cached = cache_token != null && !storage.get(activity, Storage.CACHE, Storage.GLOBAL, "schedule_exams#lessons#" + cache_token, "").isEmpty();
                 Thread.runOnUI(() -> {
                     try {
                         final PopupMenu popup = new PopupMenu(activity, view);
@@ -151,8 +157,8 @@ public class ScheduleExamsRVA extends RVA {
                                         if (cache_token == null) {
                                             BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
                                         } else {
-                                            if (Storage.file.general.cache.exists(activity, "schedule_exams#lessons#" + cache_token)) {
-                                                if (Storage.file.general.cache.delete(activity, "schedule_exams#lessons#" + cache_token)) {
+                                            if (storage.exists(activity, Storage.CACHE, Storage.GLOBAL, "schedule_exams#lessons#" + cache_token)) {
+                                                if (storage.delete(activity, Storage.CACHE, Storage.GLOBAL, "schedule_exams#lessons#" + cache_token)) {
                                                     BottomBar.snackBar(activity, activity.getString(R.string.cache_false));
                                                 } else {
                                                     BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
@@ -161,7 +167,7 @@ public class ScheduleExamsRVA extends RVA {
                                                 if (data == null) {
                                                     BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
                                                 } else {
-                                                    if (Storage.file.general.cache.put(activity, "schedule_exams#lessons#" + cache_token, data.toString())) {
+                                                    if (storage.put(activity, Storage.CACHE, Storage.GLOBAL, "schedule_exams#lessons#" + cache_token, data.toString())) {
                                                         BottomBar.snackBar(activity, activity.getString(R.string.cache_true));
                                                     } else {
                                                         BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
@@ -304,7 +310,7 @@ public class ScheduleExamsRVA extends RVA {
                     if (!place.isEmpty()) {
                         place = activity.getString(R.string.place) + ": " + place;
                     }
-                    ((TextView) container.findViewById(R.id.exam_info_advice_date)).setText(cuteDate(activity, date, date_format_append));
+                    ((TextView) container.findViewById(R.id.exam_info_advice_date)).setText(cuteDate(activity, storagePref, date, date_format_append));
                     TextView exam_info_advice_place = container.findViewById(R.id.exam_info_advice_place);
                     if (!place.isEmpty()) {
                         exam_info_advice_place.setText(place);
@@ -341,7 +347,7 @@ public class ScheduleExamsRVA extends RVA {
                         place = activity.getString(R.string.place) + ": " + place;
                     }
                     ((TextView) container.findViewById(R.id.exam_info_exam_title)).setText("credit".equals(t) ? R.string.credit : R.string.exam);
-                    ((TextView) container.findViewById(R.id.exam_info_exam_date)).setText(cuteDate(activity, date, date_format_append));
+                    ((TextView) container.findViewById(R.id.exam_info_exam_date)).setText(cuteDate(activity, storagePref, date, date_format_append));
                     TextView exam_info_exam_place = container.findViewById(R.id.exam_info_exam_place);
                     if (!place.isEmpty()) {
                         exam_info_exam_place.setText(place);
@@ -452,7 +458,7 @@ public class ScheduleExamsRVA extends RVA {
             // header
             dataset.add(new Item(TYPE_HEADER, new JSONObject()
                     .put("title", ScheduleExams.getScheduleHeader(activity, json.getString("title"), json.getString("type")))
-                    .put("week", ScheduleExams.getScheduleWeek(activity, -1))
+                    .put("week", ScheduleExams.getScheduleWeek(activity, storagePref, -1))
             ));
             // schedule
             final JSONArray exams = json.getJSONArray("schedule");
@@ -473,11 +479,11 @@ public class ScheduleExamsRVA extends RVA {
         return dataset;
     }
 
-    protected static String cuteDate(Context context, String date, String date_format_append) {
+    protected static String cuteDate(Context context, StoragePref storagePref, String date, String date_format_append) {
         try {
             String date_format = "dd.MM.yyyy" + date_format_append;
-            if (isValidFormat(context, date, date_format)) {
-                date = TextUtils.cuteDate(context, date_format, date);
+            if (isValidFormat(context, storagePref, date, date_format)) {
+                date = TextUtils.cuteDate(context, storagePref, date_format, date);
             } else {
                 Matcher m = patternBrokenDate.matcher(date);
                 if (m.find()) {
@@ -498,15 +504,15 @@ public class ScheduleExamsRVA extends RVA {
                     date = m.group(1) + d + m.group(3);
                 }
                 date_format = "dd.MM" + date_format_append;
-                if (isValidFormat(context, date, date_format)) {
-                    date = cuteDateWOYear(context, date_format, date);
+                if (isValidFormat(context, storagePref, date, date_format)) {
+                    date = cuteDateWOYear(context, storagePref, date_format, date);
                 }
             }
         } catch (Exception ignore) {/* ignore */}
         return date;
     }
-    protected static String cuteDateWOYear(Context context, String date_format, String date_string) throws Exception {
-        SimpleDateFormat format_input = new SimpleDateFormat(date_format, TextUtils.getLocale(context));
+    protected static String cuteDateWOYear(Context context, StoragePref storagePref, String date_format, String date_string) throws Exception {
+        SimpleDateFormat format_input = new SimpleDateFormat(date_format, TextUtils.getLocale(context, storagePref));
         Calendar date = Time.getCalendar();
         date.setTime(format_input.parse(date_string));
         return (new StringBuilder())
@@ -519,9 +525,9 @@ public class ScheduleExamsRVA extends RVA {
                 .append(TextUtils.ldgZero(date.get(Calendar.MINUTE)))
                 .toString();
     }
-    protected static boolean isValidFormat(Context context, String value, String format) {
+    protected static boolean isValidFormat(Context context, StoragePref storagePref, String value, String format) {
         try {
-            SimpleDateFormat sdf = new SimpleDateFormat(format, TextUtils.getLocale(context));
+            SimpleDateFormat sdf = new SimpleDateFormat(format, TextUtils.getLocale(context, storagePref));
             Date date = sdf.parse(value);
             if (!value.equals(sdf.format(date))) {
                 date = null;

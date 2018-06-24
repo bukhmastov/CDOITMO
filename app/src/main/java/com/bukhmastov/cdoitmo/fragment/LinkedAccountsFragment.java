@@ -18,6 +18,9 @@ public class LinkedAccountsFragment extends ConnectedFragment {
 
     private static final String TAG = "LinkedAccountsFragment";
 
+    //@Inject
+    private Storage storage = Storage.instance();
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,7 +63,7 @@ public class LinkedAccountsFragment extends ConnectedFragment {
                 });
             }
             Thread.run(() -> {
-                final String cdo_user_info = Storage.file.perm.get(activity, "user#deifmo#login", "").trim() + " (" + Storage.file.perm.get(activity, "user#name", "").trim() + ")";
+                final String cdo_user_info = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#login", "").trim() + " (" + storage.get(activity, Storage.PERMANENT, Storage.USER, "user#name", "").trim() + ")";
                 Thread.runOnUI(() -> {
                     if (account_cdo_info != null) {
                         ((TextView) account_cdo_info).setText(cdo_user_info);

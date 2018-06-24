@@ -20,6 +20,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
+//TODO interface - impl
 public class DeIfmoClient extends DeIfmo {
 
     private static final String TAG = "DeIfmoClient";
@@ -67,14 +68,14 @@ public class DeIfmoClient extends DeIfmo {
                                     String name = com.bukhmastov.cdoitmo.util.TextUtils.getStringSafely(result, "name", "");
                                     String avatar = com.bukhmastov.cdoitmo.util.TextUtils.getStringSafely(result, "avatar", "");
                                     String group = com.bukhmastov.cdoitmo.util.TextUtils.getStringSafely(result, "group", "");
-                                    String pref_group_force_override = Storage.pref.get(context, "pref_group_force_override", "");
+                                    String pref_group_force_override = storagePref.get(context, "pref_group_force_override", "");
                                     if (pref_group_force_override == null) {
                                         pref_group_force_override = "";
                                     } else {
                                         pref_group_force_override = pref_group_force_override.trim();
                                     }
                                     String[] groups = (pref_group_force_override.isEmpty() ? group : pref_group_force_override).split(",\\s|\\s|,");
-                                    String g = Storage.file.perm.get(context, "user#group");
+                                    String g = storage.get(context, Storage.PERMANENT, Storage.USER, "user#group");
                                     boolean gFound = false;
                                     for (String g1 : groups) {
                                         if (g1.equals(g)) {
@@ -85,19 +86,19 @@ public class DeIfmoClient extends DeIfmo {
                                     if (!gFound) {
                                         g = groups.length > 0 ? groups[0] : "";
                                     }
-                                    Storage.file.perm.put(context, "user#name", name);
-                                    Storage.file.perm.put(context, "user#group", g);
-                                    Storage.file.perm.put(context, "user#groups", TextUtils.join(", ", groups));
-                                    Storage.file.perm.put(context, "user#avatar", avatar);
+                                    storage.put(context, Storage.PERMANENT, Storage.USER, "user#name", name);
+                                    storage.put(context, Storage.PERMANENT, Storage.USER, "user#group", g);
+                                    storage.put(context, Storage.PERMANENT, Storage.USER, "user#groups", TextUtils.join(", ", groups));
+                                    storage.put(context, Storage.PERMANENT, Storage.USER, "user#avatar", avatar);
                                     try {
-                                        Storage.file.general.perm.put(context, "user#week", new JSONObject()
+                                        storage.put(context, Storage.PERMANENT, Storage.GLOBAL, "user#week", new JSONObject()
                                                 .put("week", Integer.parseInt(result.getString("week")))
                                                 .put("timestamp", Time.getCalendar().getTimeInMillis())
                                                 .toString()
                                         );
                                     } catch (Exception e) {
                                         Log.exception(e);
-                                        Storage.file.general.perm.delete(context, "user#week");
+                                        storage.delete(context, Storage.PERMANENT, Storage.GLOBAL, "user#week");
                                     }
                                     FirebaseAnalyticsProvider.setUserProperties(context, group);
                                     responseHandler.onSuccess(200, headers, "");
@@ -137,8 +138,8 @@ public class DeIfmoClient extends DeIfmo {
                 responseHandler.onSuccess(STATUS_CODE_EMPTY, new Headers(null), "authorized");
                 return;
             }
-            String login = Storage.file.perm.get(context, "user#deifmo#login", "").trim();
-            String password = Storage.file.perm.get(context, "user#deifmo#password", "").trim();
+            String login = storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#login", "").trim();
+            String password = storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#password", "").trim();
             if (login.isEmpty() || password.isEmpty()) {
                 Log.v(TAG, "authorize | FAILED_AUTH_CREDENTIALS_REQUIRED");
                 responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_AUTH_CREDENTIALS_REQUIRED);
@@ -169,7 +170,7 @@ public class DeIfmoClient extends DeIfmo {
                                         responseHandler.onFailure(code, new Headers(headers), FAILED_AUTH_CREDENTIALS_FAILED);
                                     } else if (response.contains("Выбор группы безопасности") && response.contains("OPTION VALUE=8")) {
                                         Log.v(TAG, "authorize | success | going to select security group");
-                                        g(context, getAbsoluteUrl(DEFAULT_PROTOCOL, "servlet/distributedCDE?Rule=APPLYSECURITYGROUP&PERSON=" + Storage.file.perm.get(context, "user#deifmo#login") + "&SECURITYGROUP=8&COMPNAME="), null, new RawHandler() {
+                                        g(context, getAbsoluteUrl(DEFAULT_PROTOCOL, "servlet/distributedCDE?Rule=APPLYSECURITYGROUP&PERSON=" + storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#login") + "&SECURITYGROUP=8&COMPNAME="), null, new RawHandler() {
                                             @Override
                                             public void onDone(final int code, final okhttp3.Headers headers, final String response) {
                                                 Thread.run(Thread.BACKGROUND, () -> {
@@ -436,8 +437,8 @@ public class DeIfmoClient extends DeIfmo {
     }
 
     public static boolean isAuthorized(final Context context) {
-        final String login = Storage.file.perm.get(context, "user#deifmo#login", "").trim();
-        final String password = Storage.file.perm.get(context, "user#deifmo#password", "").trim();
+        final String login = storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#login", "").trim();
+        final String password = storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#password", "").trim();
         return !login.isEmpty() && !password.isEmpty();
     }
 

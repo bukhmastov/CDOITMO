@@ -35,9 +35,10 @@ import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.object.ProtocolTracker;
 import com.bukhmastov.cdoitmo.util.NavigationMenu;
-import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Migration;
+import com.bukhmastov.cdoitmo.util.StorageProvider;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.util.Thread;
 
@@ -50,6 +51,13 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
     public static boolean exitOfflineMode = false;
     public static int selectedSection = -1;
     public static MenuItem selectedMenuItem = null;
+
+    //@Inject
+    private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private Storage storage = Storage.instance();
+    //@Inject
+    private StorageProvider storageProvider = StorageProvider.instance();
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -70,7 +78,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                     }
                     Theme.applyActivityTheme(activity);
                     // apply compatibility changes
-                    Migration.migrate(activity);
+                    Migration.migrate(activity, storageProvider);
                     // set default preferences
                     SettingsFragment.applyDefaultValues(activity);
                     // enable/disable firebase
@@ -78,12 +86,12 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                     FirebaseAnalyticsProvider.setEnabled(activity);
                     FirebasePerformanceProvider.setEnabled(activity);
                     // set auto_logout value
-                    LoginActivity.auto_logout = Storage.pref.get(activity, "pref_auto_logout", false);
+                    LoginActivity.auto_logout = storagePref.get(activity, "pref_auto_logout", false);
                     // set first_launch and intro values
-                    App.isFirstLaunchEver = Storage.pref.get(activity, "pref_first_launch", true);
+                    App.isFirstLaunchEver = storagePref.get(activity, "pref_first_launch", true);
                     App.showIntroducingActivity = App.isFirstLaunchEver;
                     if (App.isFirstLaunchEver) {
-                        Storage.pref.put(activity, "pref_first_launch", false);
+                        storagePref.put(activity, "pref_first_launch", false);
                     }
                     // firebase events and properties
                     FirebaseAnalyticsProvider.logEvent(activity, FirebaseAnalyticsProvider.Event.APP_OPEN);
@@ -132,7 +140,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
             // setup static variables
             App.OFFLINE_MODE = "offline".equals(getIntent().getStringExtra("mode")) ||
                     !Client.isOnline(this) ||
-                    (App.firstLaunch && Storage.pref.get(this, "pref_initial_offline", false));
+                    (App.firstLaunch && storagePref.get(this, "pref_initial_offline", false));
             App.firstLaunch = false;
             App.isFirstLaunchEver = false;
             // do some logging
@@ -144,7 +152,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                 selectedSection = savedInstanceState.getInt(STATE_SELECTED_SELECTION);
                 Log.v(TAG, "Section selected from savedInstanceState");
             } else {
-                String act = action == null ? Storage.pref.get(this, "pref_default_fragment", "e_journal") : action;
+                String act = action == null ? storagePref.get(this, "pref_default_fragment", "e_journal") : action;
                 Log.v(TAG, "Section = ", act, " from ", (action == null ? "preference" : "intent's extras"));
                 switch (act) {
                     case "e_journal": selectedSection = R.id.nav_e_register; break;
@@ -274,8 +282,8 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                 loaded = true;
                 Thread.run(Thread.BACKGROUND, () -> new ProtocolTracker(activity).check());
                 selectSection(selectedSection);
-                NavigationMenu.displayUserData(activity, findViewById(R.id.nav_view));
-                NavigationMenu.displayRemoteMessage(activity);
+                NavigationMenu.displayUserData(activity, storage, findViewById(R.id.nav_view));
+                NavigationMenu.displayRemoteMessage(activity, storage);
                 BottomBar.snackBarOffline(activity);
                 NavigationMenu.toggleOfflineIcon(toolbar);
             } else if (selectedMenuItem != null) {

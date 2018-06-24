@@ -8,12 +8,44 @@ import android.content.res.Configuration;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 
 import java.util.Locale;
 import java.util.UUID;
 
+/**
+ * Roadmap 2k18
+ *
+ * 1. Подготовка к DI: абстракция (TODO interface - impl):
+ *  storage [done]
+ *  network
+ *  firebase
+ *  objects
+ *  utils
+ *
+ * 2. Избавление от оставшихся статичных методов и полей
+ *
+ * 3. Добавление объектов данных / оставление все в json представлениях
+ *
+ * 4. DI:
+ *  app
+ *  activity
+ *  fragment
+ *  view/widget
+ *  storage
+ *  network
+ *  firebase
+ *  objects
+ *  utils
+ *
+ * ???
+ *
+ * 5. Профит (Столько не живут)
+ *
+ * 6. ИСУ (попытка номер два)
+ *
+ */
 public class App extends Application {
 
     private static final String TAG = "Application";
@@ -28,12 +60,15 @@ public class App extends Application {
     public static boolean showIntroducingActivity = false;
     private Locale locale;
 
+    //@Inject
+    private StoragePref storagePref = StoragePref.instance();
+
     @Override
     public void onCreate() {
         super.onCreate();
         try {
-            Log.setEnabled(Storage.pref.get(this, "pref_allow_collect_logs", false));
-            locale = TextUtils.getLocale(this);
+            Log.setEnabled(storagePref.get(this, "pref_allow_collect_logs", false));
+            locale = TextUtils.getLocale(this, storagePref);
             Log.i(TAG, "Language | locale=" + locale.toString());
             init();
             setUUID();
@@ -65,8 +100,8 @@ public class App extends Application {
     }
 
     private void setUUID() {
-        if (!Storage.pref.exists(this, "pref_uuid")) {
-            Storage.pref.put(this, "pref_uuid", UUID.randomUUID().toString());
+        if (!storagePref.exists(this, "pref_uuid")) {
+            storagePref.put(this, "pref_uuid", UUID.randomUUID().toString());
         }
     }
 

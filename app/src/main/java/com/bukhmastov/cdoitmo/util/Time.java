@@ -11,9 +11,17 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
+//TODO interface - impl
 public class Time {
 
     private static final String TAG = "Time";
+
+    //@Inject
+    //TODO interface - impl: remove static
+    private static Storage storage = Storage.instance();
+    //@Inject
+    //TODO interface - impl: remove static
+    private static StoragePref storagePref = StoragePref.instance();
 
     public static Calendar getCalendar() {
         return Calendar.getInstance(Locale.GERMANY);
@@ -27,7 +35,7 @@ public class Time {
         int week = -1;
         long ts = 0;
         try {
-            final String override = Storage.pref.get(context, "pref_week_force_override", "");
+            final String override = storagePref.get(context, "pref_week_force_override", "");
             if (!override.isEmpty()) {
                 try {
                     String[] v = override.split("#");
@@ -38,14 +46,14 @@ public class Time {
                 } catch (Exception ignore) {/* ignore */}
             }
             if (week < 0) {
-                final String stored = Storage.file.general.perm.get(context, "user#week").trim();
+                final String stored = storage.get(context, Storage.PERMANENT, Storage.GLOBAL, "user#week").trim();
                 if (!stored.isEmpty()) {
                     try {
                         JSONObject json = new JSONObject(stored);
                         week = json.getInt("week");
                         ts = json.getLong("timestamp");
                     } catch (Exception e) {
-                        Storage.file.general.perm.delete(context, "user#week");
+                        storage.delete(context, Storage.PERMANENT, Storage.GLOBAL, "user#week");
                     }
                 }
             }

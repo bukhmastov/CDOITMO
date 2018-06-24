@@ -20,12 +20,16 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NavigationMenu;
+import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.util.Thread;
 
 public class FragmentActivity extends ConnectedActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "FragmentActivity";
+
+    //@Inject
+    private Storage storage = Storage.instance();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -87,8 +91,8 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
             NavigationView navigationView = findViewById(R.id.nav_view);
             NavigationMenu.displayEnableDisableOfflineButton(navigationView);
             NavigationMenu.hideIfUnauthorizedMode(navigationView);
-            NavigationMenu.displayUserData(this, navigationView);
-            NavigationMenu.displayRemoteMessage(this);
+            NavigationMenu.displayUserData(this, storage, navigationView);
+            NavigationMenu.displayRemoteMessage(this, storage);
         }
     }
 

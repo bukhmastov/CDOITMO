@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.object.preference;
 
+import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,20 +10,23 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 
 import java.util.ArrayList;
 
 public class PreferenceSwitch extends Preference {
+
     public interface ApproveChangeCallback {
         void onDecisionMade(ConnectedActivity activity, PreferenceSwitch preference, boolean decision);
     }
     public interface Callback {
         void onApproveChange(ConnectedActivity activity, PreferenceSwitch preference, boolean value, ApproveChangeCallback callback);
     }
+
     private Callback callback = null;
     private ArrayList<String> dependencies = new ArrayList<>();
     public boolean enabled = false;
+
     public PreferenceSwitch(String key, Object defaultValue, @StringRes int title, @StringRes int summary, ArrayList<String> dependencies, Callback callback) {
         super(key, defaultValue, title, summary);
         this.callback = callback;
@@ -43,11 +47,31 @@ public class PreferenceSwitch extends Preference {
             Log.w(TAG, "PreferenceSwitch | defaultValue should not be null!");
         }
     }
+
     public ArrayList<String> getDependencies() {
         return dependencies;
     }
-    public static View getView(final ConnectedActivity activity, final PreferenceSwitch preference) {
+
+    public static void toggleDependencies(final ConnectedActivity activity, final PreferenceSwitch preference, final boolean enabled) {
+        if (preference.dependencies != null && preference.dependencies.size() > 0) {
+            View content = activity.findViewById(android.R.id.content);
+            if (content != null) {
+                for (String key : preference.dependencies) {
+                    View view = content.findViewWithTag(key);
+                    if (view != null) {
+                        view.setAlpha(enabled ? 1F : 0.3F);
+                    }
+                }
+            }
+        }
+    }
+
+    @Nullable
+    public static View getView(final ConnectedActivity activity, final PreferenceSwitch preference, final StoragePref storagePref) {
         final View preference_layout = inflate(activity, R.layout.preference_switcher);
+        if (preference_layout == null) {
+            return null;
+        }
         final ViewGroup preference_switcher = preference_layout.findViewById(R.id.preference_switcher);
         final Switch preference_switcher_switch = preference_layout.findViewById(R.id.preference_switcher_switch);
         final TextView preference_switcher_title = preference_layout.findViewById(R.id.preference_switcher_title);
@@ -60,7 +84,7 @@ public class PreferenceSwitch extends Preference {
             preference_switcher_summary.setVisibility(View.GONE);
         }
         if (preference.defaultValue != null) {
-            preference.enabled = Storage.pref.get(activity, preference.key, (Boolean) preference.defaultValue);
+            preference.enabled = storagePref.get(activity, preference.key, (Boolean) preference.defaultValue);
             preference_switcher_switch.setChecked(preference.enabled);
         }
         preference_switcher_switch.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -70,15 +94,15 @@ public class PreferenceSwitch extends Preference {
             }
             if (preference.callback == null) {
                 preference.enabled = isChecked;
-                Storage.pref.put(activity, preference.key, isChecked);
-                Preference.onPreferenceChanged(activity, preference.key);
+                storagePref.put(activity, preference.key, isChecked);
+                preference.onPreferenceChanged(activity);
                 toggleDependencies(activity, preference, isChecked);
             } else {
                 preference.callback.onApproveChange(activity, preference, isChecked, (activity1, preference1, decision) -> {
                     if (decision) {
                         preference1.enabled = isChecked;
-                        Storage.pref.put(activity1, preference1.key, isChecked);
-                        Preference.onPreferenceChanged(activity1, preference1.key);
+                        storagePref.put(activity1, preference1.key, isChecked);
+                        preference1.onPreferenceChanged(activity1);
                         toggleDependencies(activity1, preference1, isChecked);
                     } else {
                         preference_switcher_switch.setChecked(!isChecked);
@@ -92,18 +116,5 @@ public class PreferenceSwitch extends Preference {
         });
         preference_switcher.setTag(preference.key);
         return preference_layout;
-    }
-    public static void toggleDependencies(final ConnectedActivity activity, final PreferenceSwitch preference, final boolean enabled) {
-        if (preference.dependencies != null && preference.dependencies.size() > 0) {
-            View content = activity.findViewById(android.R.id.content);
-            if (content != null) {
-                for (String key : preference.dependencies) {
-                    View view = content.findViewWithTag(key);
-                    if (view != null) {
-                        view.setAlpha(enabled ? 1F : 0.3F);
-                    }
-                }
-            }
-        }
     }
 }

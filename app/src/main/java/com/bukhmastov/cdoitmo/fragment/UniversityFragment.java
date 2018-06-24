@@ -13,13 +13,16 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapter.PagerUniversityAdapter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 
 public class UniversityFragment extends ConnectedFragment implements ViewPager.OnPageChangeListener {
 
     private static final String TAG = "UniversityFragment";
     private static int tabSelected = -1;
     private String action_extra = null;
+
+    //@Inject
+    private StoragePref storagePref = StoragePref.instance();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -73,7 +76,7 @@ public class UniversityFragment extends ConnectedFragment implements ViewPager.O
             }
             if (tab == null) {
                 if (tabSelected == -1) {
-                    int pref = Storage.pref.get(activity, "pref_university_tab", -1);
+                    int pref = storagePref.get(activity, "pref_university_tab", -1);
                     tab = main_tabs.getTabAt(pref < 0 ? 0 : pref);
                 } else {
                     tab = main_tabs.getTabAt(tabSelected);
@@ -117,7 +120,7 @@ public class UniversityFragment extends ConnectedFragment implements ViewPager.O
     @Override
     public void onPageSelected(int position) {
         tabSelected = position;
-        Storage.pref.put(activity, "pref_university_tab", tabSelected);
+        storagePref.put(activity, "pref_university_tab", tabSelected);
     }
 
     @Override

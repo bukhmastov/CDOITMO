@@ -7,6 +7,7 @@ import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.util.Map;
 
+//TODO interface - impl
 public abstract class Room101 extends DeIfmo {
 
     public static final int FAILED_AUTH = 10;

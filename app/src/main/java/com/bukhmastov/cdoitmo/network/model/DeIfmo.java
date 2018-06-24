@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+//TODO interface - impl
 public abstract class DeIfmo extends Client {
 
     private static final long jsessionid_ts_limit = 1200000L; // 20min // 20 * 60 * 1000
@@ -36,7 +37,7 @@ public abstract class DeIfmo extends Client {
         boolean legit = false;
         JSONArray storedCookies;
         try {
-            storedCookies = new JSONArray(Storage.file.perm.get(context, "user#deifmo#cookies", ""));
+            storedCookies = new JSONArray(storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#cookies", ""));
         } catch (Exception ignore) {
             storedCookies = new JSONArray();
         }
@@ -94,8 +95,8 @@ public abstract class DeIfmo extends Client {
         storeCookies(context, headers, true);
     }
     protected static void storeCookies(final Context context, final okhttp3.Headers headers, final boolean refreshJsessionid) {
-        JSONArray cookies = mergeCookies(headers, Storage.file.perm.get(context, "user#deifmo#cookies", ""), refreshJsessionid);
-        Storage.file.perm.put(context, "user#deifmo#cookies", cookies.toString());
+        JSONArray cookies = mergeCookies(headers, storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#cookies", ""), refreshJsessionid);
+        storage.put(context, Storage.PERMANENT, Storage.USER, "user#deifmo#cookies", cookies.toString());
     }
     protected static JSONArray parseCookies(final okhttp3.Headers headers) {
         try {
@@ -210,7 +211,7 @@ public abstract class DeIfmo extends Client {
         headers.put("User-Agent", Client.getUserAgent(context));
         JSONArray storedCookies;
         try {
-            storedCookies = new JSONArray(Storage.file.perm.get(context, "user#deifmo#cookies", ""));
+            storedCookies = new JSONArray(storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#cookies", ""));
         } catch (Exception ignore) {
             storedCookies = new JSONArray();
         }

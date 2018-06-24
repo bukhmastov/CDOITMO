@@ -16,6 +16,9 @@ public class ScheduleLessonsAdditionalConverter extends ScheduleConverter {
     private final Context context;
     private final JSONObject data;
 
+    //@Inject
+    private Storage storage = Storage.instance();
+
     public ScheduleLessonsAdditionalConverter(Context context, JSONObject data, Response delegate) {
         super(delegate);
         this.context = context;
@@ -33,8 +36,8 @@ public class ScheduleLessonsAdditionalConverter extends ScheduleConverter {
         }
         final String token = query.toLowerCase();
         final JSONArray schedule = data.getJSONArray("schedule");
-        final JSONArray scheduleAdded = string2jsonArray(Storage.file.perm.get(context, "schedule_lessons#added#" + token, ""));
-        final JSONArray scheduleReduced = string2jsonArray(Storage.file.perm.get(context, "schedule_lessons#reduced#" + token, ""));
+        final JSONArray scheduleAdded = string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token, ""));
+        final JSONArray scheduleReduced = string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token, ""));
         if (scheduleAdded.length() > 0 || scheduleReduced.length() > 0) {
             for (int i = 0; i < schedule.length(); i++) {
                 final JSONObject day = schedule.getJSONObject(i);

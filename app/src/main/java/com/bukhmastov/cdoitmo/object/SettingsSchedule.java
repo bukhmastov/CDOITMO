@@ -19,7 +19,7 @@ import com.bukhmastov.cdoitmo.object.preference.Preference;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
 
 import org.json.JSONArray;
@@ -27,6 +27,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
+//TODO interface - impl
 public abstract class SettingsSchedule {
 
     private static final String TAG = "SettingsSchedule";
@@ -45,6 +46,9 @@ public abstract class SettingsSchedule {
     protected ViewGroup lsp_search_loading = null;
     protected ViewGroup lsp_search_selected = null;
 
+    //@Inject
+    private StoragePref storagePref = StoragePref.instance();
+
     public SettingsSchedule(ConnectedActivity activity, Preference preference, Callback callback) {
         this.activity = activity;
         this.preference = preference;
@@ -54,7 +58,7 @@ public abstract class SettingsSchedule {
     public void show() {
         Thread.runOnUI(() -> {
             try {
-                final String value = Storage.pref.get(activity, preference.key, (String) preference.defaultValue);
+                final String value = storagePref.get(activity, preference.key, (String) preference.defaultValue);
                 final ViewGroup layout = (ViewGroup) inflate(R.layout.preference_schedule);
                 final RadioGroup lsp_radio_group = layout.findViewById(R.id.lsp_radio_group);
                 final ViewGroup lsp_schedule_chooser = layout.findViewById(R.id.lsp_schedule_chooser);

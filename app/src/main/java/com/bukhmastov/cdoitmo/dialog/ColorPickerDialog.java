@@ -4,11 +4,9 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
-import android.support.annotation.LayoutRes;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,7 +19,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Thread;
 
-public class ColorPickerDialog {
+public class ColorPickerDialog extends Dialog {
 
     private static final String TAG = "ColorPickerDialog";
     private static final String[][] COLORS = {
@@ -48,7 +46,6 @@ public class ColorPickerDialog {
             {"#FFFFFF"}  /* White */
     };
 
-    private final Context context;
     private final ColorPickerCallback callback;
     private AlertDialog alertDialog = null;
     private GridView container = null;
@@ -60,7 +57,7 @@ public class ColorPickerDialog {
     }
 
     public ColorPickerDialog(final Context context, final ColorPickerCallback callback) {
-        this.context = context;
+        super(context);
         this.callback = callback;
     }
 
@@ -72,7 +69,7 @@ public class ColorPickerDialog {
         Log.v(TAG, "show");
         Thread.runOnUI(() -> {
             try {
-                ViewGroup layout = (ViewGroup) inflate(context, R.layout.dialog_color_picker);
+                ViewGroup layout = (ViewGroup) inflate(R.layout.dialog_color_picker);
                 if (layout == null) {
                     return;
                 }
@@ -265,18 +262,5 @@ public class ColorPickerDialog {
                 return null;
             }
         }
-    }
-
-    private View inflate(Context context, @LayoutRes int layout) throws InflateException {
-        if (context == null) {
-            Log.e(TAG, "Failed to inflate layout, context is null");
-            return null;
-        }
-        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        if (inflater == null) {
-            Log.e(TAG, "Failed to inflate layout, inflater is null");
-            return null;
-        }
-        return inflater.inflate(layout, null);
     }
 }

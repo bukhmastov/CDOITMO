@@ -39,9 +39,12 @@ public class RatingRVA extends RVA {
     private String commonSelectedFaculty;
     private String commonSelectedCourse;
 
+    //@Inject
+    private Storage storage = Storage.instance();
+
     public RatingRVA(@NonNull Context context, @NonNull ArrayMap<String, RatingFragment.Info> data) {
-        this.commonSelectedFaculty = Storage.file.cache.get(context, "rating#choose#faculty");
-        this.commonSelectedCourse = Storage.file.cache.get(context, "rating#choose#course");
+        this.commonSelectedFaculty = storage.get(context, Storage.CACHE, Storage.USER, "rating#choose#faculty");
+        this.commonSelectedCourse = storage.get(context, Storage.CACHE, Storage.USER, "rating#choose#course");
         addItems(map2dataset(context, data));
     }
 
@@ -197,7 +200,7 @@ public class RatingRVA extends RVA {
                                     Thread.run(() -> {
                                         try {
                                             commonSelectedFaculty = faculties.getJSONObject(position).getString("depId");
-                                            Storage.file.cache.put(context, "rating#choose#faculty", commonSelectedFaculty);
+                                            storage.put(context, Storage.CACHE, Storage.USER, "rating#choose#faculty", commonSelectedFaculty);
                                         } catch (Exception e) {
                                             Log.exception(e);
                                         }
@@ -219,7 +222,7 @@ public class RatingRVA extends RVA {
                                     Thread.run(() -> {
                                         try {
                                             commonSelectedCourse = String.valueOf(position + 1);
-                                            Storage.file.cache.put(context, "rating#choose#course", commonSelectedCourse);
+                                            storage.put(context, Storage.CACHE, Storage.USER, "rating#choose#course", commonSelectedCourse);
                                         } catch (Exception e) {
                                             Log.exception(e);
                                         }

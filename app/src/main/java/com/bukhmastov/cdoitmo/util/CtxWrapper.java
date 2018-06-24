@@ -13,10 +13,10 @@ public class CtxWrapper extends ContextWrapper {
         super(base);
     }
 
-    public static ContextWrapper wrap(Context context) {
+    public static ContextWrapper wrap(Context context, StoragePref storagePref) {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                Locale locale = TextUtils.getLocale(context);
+                Locale locale = TextUtils.getLocale(context, storagePref);
                 Locale.setDefault(locale);
                 Configuration config = context.getResources().getConfiguration();
                 config.setLocale(locale);

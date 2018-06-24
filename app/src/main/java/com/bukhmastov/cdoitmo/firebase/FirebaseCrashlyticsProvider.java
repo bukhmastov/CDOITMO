@@ -7,8 +7,8 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Static;
-import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.crashlytics.android.Crashlytics;
 
@@ -17,6 +17,7 @@ import java.lang.annotation.RetentionPolicy;
 
 import io.fabric.sdk.android.Fabric;
 
+//TODO interface - impl
 public class FirebaseCrashlyticsProvider {
 
     private static final String TAG = "FirebaseCrashlyticsProvider";
@@ -32,7 +33,9 @@ public class FirebaseCrashlyticsProvider {
     private static final String ERROR = "ERROR";
 
     public static boolean setEnabled(Context context) {
-        return setEnabled(context, Storage.pref.get(context, "pref_allow_send_reports", true));
+        //@Inject
+        StoragePref storagePref = StoragePref.instance();
+        return setEnabled(context, storagePref.get(context, "pref_allow_send_reports", true));
     }
     public static boolean setEnabled(Context context, boolean enabled) {
         try {

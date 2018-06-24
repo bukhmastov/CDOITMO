@@ -29,7 +29,7 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
         this.appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
         this.lessons = new JSONArray();
         try {
-            JSONObject settings = ScheduleLessonsWidget.Data.getJson(context, appWidgetId, "settings");
+            JSONObject settings = ScheduleLessonsWidgetStorage.getJson(context, appWidgetId, "settings");
             if (settings == null) throw new NullPointerException("settings cannot be null");
             colors = ScheduleLessonsWidget.getColors(settings);
         } catch (Exception e) {
@@ -43,8 +43,8 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
     @Override
     public void onDataSetChanged() {
         try {
-            JSONObject content = ScheduleLessonsWidget.Data.getJson(context, appWidgetId, "cache_converted");
-            JSONObject settings = ScheduleLessonsWidget.Data.getJson(context, appWidgetId, "settings");
+            JSONObject content = ScheduleLessonsWidgetStorage.getJson(context, appWidgetId, "cache_converted");
+            JSONObject settings = ScheduleLessonsWidgetStorage.getJson(context, appWidgetId, "settings");
             if (content == null) throw new NullPointerException("content cannot be null");
             if (settings == null) throw new NullPointerException("settings cannot be null");
             try {

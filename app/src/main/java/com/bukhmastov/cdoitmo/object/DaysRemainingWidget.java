@@ -12,6 +12,7 @@ import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+//TODO interface - impl
 public class DaysRemainingWidget {
 
     private static final String TAG = "DRWidget";

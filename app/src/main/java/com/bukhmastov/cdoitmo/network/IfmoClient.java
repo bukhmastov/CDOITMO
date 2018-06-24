@@ -11,6 +11,7 @@ import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.util.Map;
 
+//TODO interface - impl
 public class IfmoClient extends Ifmo {
 
     private static final String TAG = "IfmoClient";

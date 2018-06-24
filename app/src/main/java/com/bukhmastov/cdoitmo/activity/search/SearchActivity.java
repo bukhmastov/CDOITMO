@@ -24,6 +24,7 @@ import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.CtxWrapper;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.util.Thread;
@@ -49,6 +50,11 @@ public abstract class SearchActivity extends AppCompatActivity {
     protected final int maxCountOfSuggestionsToStore;
     protected int currentNumberOfSuggestions = 0;
     protected boolean saveCurrentSuggestion = true;
+
+    //@Inject
+    private Storage storage = Storage.instance();
+    //@Inject
+    private StoragePref storagePref = StoragePref.instance();
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({SPEECH_RECOGNITION, CLEAR, NONE})
@@ -104,7 +110,7 @@ public abstract class SearchActivity extends AppCompatActivity {
 
     @Override
     protected void attachBaseContext(Context context) {
-        super.attachBaseContext(CtxWrapper.wrap(context));
+        super.attachBaseContext(CtxWrapper.wrap(context, storagePref));
     }
 
     private void setMode(final @EXTRA_ACTION_MODE String mode) {
@@ -168,12 +174,12 @@ public abstract class SearchActivity extends AppCompatActivity {
                         public void onRemove(Suggestion suggestion) {
                             try {
                                 if (suggestion.removable) {
-                                    JSONArray recent = TextUtils.string2jsonArray(Storage.file.perm.get(context, "schedule_" + getType() + "#recent", ""));
+                                    JSONArray recent = TextUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent", ""));
                                     for (int i = 0; i < recent.length(); i++) {
                                         String item = recent.getString(i);
                                         if (SearchActivity.equals(item, suggestion.query) || SearchActivity.equals(item, suggestion.title)) {
                                             recent.remove(i);
-                                            Storage.file.perm.put(context, "schedule_" + getType() + "#recent", recent.toString());
+                                            storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent", recent.toString());
                                             setSuggestions(getSuggestions(""));
                                             break;
                                         }
@@ -219,7 +225,7 @@ public abstract class SearchActivity extends AppCompatActivity {
         Thread.run(() -> {
             Log.v(TAG, "done | type=", getType(), " | query=", query, " | title=", title);
             try {
-                JSONArray recent = TextUtils.string2jsonArray(Storage.file.perm.get(this, "schedule_" + getType() + "#recent", ""));
+                JSONArray recent = TextUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent", ""));
                 for (int i = 0; i < recent.length(); i++) {
                     String item = recent.getString(i);
                     if (equals(item, query) || equals(item, title)) {
@@ -246,10 +252,10 @@ public abstract class SearchActivity extends AppCompatActivity {
                         }
                     }
                 }
-                Storage.file.perm.put(this, "schedule_" + getType() + "#recent", recent.toString());
+                storage.put(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent", recent.toString());
             } catch (Exception e) {
                 Log.exception(e);
-                Storage.file.perm.delete(this, "schedule_" + getType() + "#recent");
+                storage.delete(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent");
             }
             onDone(query);
             Thread.runOnUI(this::finish);
@@ -310,7 +316,7 @@ public abstract class SearchActivity extends AppCompatActivity {
         boolean onIterate(String query, String title);
     }
     protected void recentSchedulesIterator(String type, RecentSchedulesIterator recentSchedulesIterator) throws JSONException {
-        JSONArray recent = TextUtils.string2jsonArray(Storage.file.perm.get(this, "schedule_" + type + "#recent", ""));
+        JSONArray recent = TextUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_" + type + "#recent", ""));
         for (int i = 0; i < recent.length(); i++) {
             if (recentSchedulesIterator.onIterate(recent.getString(i))) {
                 break;
@@ -318,9 +324,9 @@ public abstract class SearchActivity extends AppCompatActivity {
         }
     }
     protected void cachedSchedulesIterator(String type, CachedSchedulesIterator cachedSchedulesIterator) {
-        ArrayList<String> cachedFiles = Storage.file.general.cache.list(this, "schedule_" + type + "#lessons");
+        ArrayList<String> cachedFiles = storage.list(context, Storage.CACHE, Storage.GLOBAL, "schedule_" + type + "#lessons");
         for (String file : cachedFiles) {
-            String cachedFile = Storage.file.general.cache.get(this, "schedule_" + type + "#lessons#" + file);
+            String cachedFile = storage.get(context, Storage.CACHE, Storage.GLOBAL, "schedule_" + type + "#lessons#" + file);
             if (!cachedFile.isEmpty()) {
                 try {
                     JSONObject cached = new JSONObject(cachedFile);

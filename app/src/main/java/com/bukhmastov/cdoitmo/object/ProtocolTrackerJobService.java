@@ -17,6 +17,7 @@ import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Notifications;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
 
 import org.json.JSONArray;
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+//TODO interface - impl
 public class ProtocolTrackerJobService extends JobService {
 
     private static final String TAG = "ProtocolTrackerJS";
@@ -35,6 +37,11 @@ public class ProtocolTrackerJobService extends JobService {
     private int attempt = 0;
     private static final int maxAttempts = 3;
     private String trace = null;
+
+    //@Inject
+    private Storage storage = Storage.instance();
+    //@Inject
+    private StoragePref storagePref = StoragePref.instance();
 
     @Override
     public boolean onStartJob(JobParameters params) {
@@ -144,14 +151,14 @@ public class ProtocolTrackerJobService extends JobService {
                     JSONArray previousProtocol = new JSONArray();
                     boolean firstInit = false;
                     try {
-                        final String previousProtocolValue = Storage.file.perm.get(this, "protocol_tracker#protocol");
+                        final String previousProtocolValue = storage.get(this, Storage.PERMANENT, Storage.USER, "protocol_tracker#protocol");
                         if (previousProtocolValue.isEmpty()) {
                             firstInit = true;
                         } else {
                             previousProtocol = new JSONArray(previousProtocolValue);
                         }
                     } catch (Exception ignore) {/* ignore */}
-                    Storage.file.perm.put(this, "protocol_tracker#protocol", protocol.toString());
+                    storage.put(this, Storage.PERMANENT, Storage.USER, "protocol_tracker#protocol", protocol.toString());
                     if (firstInit) {
                         finish();
                         return;
@@ -180,7 +187,7 @@ public class ProtocolTrackerJobService extends JobService {
                     // creating notifications for existing new changes
                     if (changes.size() > 0) {
                         final long timestamp = System.currentTimeMillis();
-                        final String pref_notify_type = Storage.pref.get(this, "pref_notify_type", Build.VERSION.SDK_INT <= Build.VERSION_CODES.M ? "0" : "1");
+                        final String pref_notify_type = storagePref.get(this, "pref_notify_type", Build.VERSION.SDK_INT <= Build.VERSION_CODES.M ? "0" : "1");
                         if ("0".equals(pref_notify_type)) {
                             // show single notification per subject that contains all changes related to that subject
                             // best suitable: android <= 6.0 and android == 8.0

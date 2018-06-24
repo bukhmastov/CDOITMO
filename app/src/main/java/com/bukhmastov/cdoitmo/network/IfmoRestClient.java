@@ -14,6 +14,7 @@ import org.json.JSONObject;
 
 import java.util.Map;
 
+//TODO interface - impl
 public class IfmoRestClient extends Ifmo {
 
     private static final String TAG = "IfmoRestClient";

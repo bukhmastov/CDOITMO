@@ -24,6 +24,9 @@ public class Notifications extends ContextWrapper {
     private static final long[] VIBRATION_PATTERN = new long[] {0, 1000};
     private NotificationManager manager;
 
+    //@Inject
+    private StoragePref storagePref = StoragePref.instance();
+
     public Notifications(@NonNull Context context) {
         super(context);
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
@@ -56,11 +59,11 @@ public class Notifications extends ContextWrapper {
             builder.setContentIntent(pIntent);
         }
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O && isSummary) {
-            String ringtonePath = Storage.pref.get(context, "pref_notify_sound").trim();
+            String ringtonePath = storagePref.get(context, "pref_notify_sound").trim();
             if (!ringtonePath.isEmpty()) {
                 builder.setSound(Uri.parse(ringtonePath));
             }
-            if (Storage.pref.get(context, "pref_notify_vibrate", true)) {
+            if (storagePref.get(context, "pref_notify_vibrate", true)) {
                 builder.setDefaults(Notification.DEFAULT_VIBRATE);
             }
         }
@@ -82,12 +85,12 @@ public class Notifications extends ContextWrapper {
     @RequiresApi(api = Build.VERSION_CODES.O)
     public String getProtocolSound(@NonNull Context context) {
         NotificationChannel channel = getManager().getNotificationChannel(CHANNELS.PROTOCOL);
-        return channel != null ? (channel.getSound() != null ? channel.getSound().toString() : "") : Storage.pref.get(context, "pref_notify_sound", "");
+        return channel != null ? (channel.getSound() != null ? channel.getSound().toString() : "") : storagePref.get(context, "pref_notify_sound", "");
     }
     @RequiresApi(api = Build.VERSION_CODES.O)
     public boolean getProtocolVibration(@NonNull Context context) {
         NotificationChannel channel = getManager().getNotificationChannel(CHANNELS.PROTOCOL);
-        return channel != null ? channel.shouldVibrate() : Storage.pref.get(context, "pref_notify_vibrate", true);
+        return channel != null ? channel.shouldVibrate() : storagePref.get(context, "pref_notify_vibrate", true);
     }
 
     public void notify(int id, @Nullable Notification.Builder notification) {
@@ -104,13 +107,13 @@ public class Notifications extends ContextWrapper {
                 channel = new NotificationChannel(name, title, NotificationManager.IMPORTANCE_DEFAULT);
                 channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
                 channel.setShowBadge(true);
-                if (Storage.pref.get(context, "pref_notify_vibrate", true)) {
+                if (storagePref.get(context, "pref_notify_vibrate", true)) {
                     channel.enableVibration(true);
                     channel.setVibrationPattern(VIBRATION_PATTERN);
                 } else {
                     channel.enableVibration(false);
                 }
-                String ringtonePath = Storage.pref.get(context, "pref_notify_sound", "").trim();
+                String ringtonePath = storagePref.get(context, "pref_notify_sound", "").trim();
                 if (!ringtonePath.isEmpty()) {
                     channel.setSound(Uri.parse(ringtonePath), null);
                 }

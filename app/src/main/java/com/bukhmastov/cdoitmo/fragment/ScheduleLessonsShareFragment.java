@@ -63,6 +63,9 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
     private Client.Request requestHandle = null;
     private int colorScheduleFlagTEXT = -1, colorScheduleFlagCommonBG = -1, colorScheduleFlagPracticeBG = -1, colorScheduleFlagLectureBG = -1, colorScheduleFlagLabBG = -1, colorScheduleFlagIwsBG = -1;
 
+    //@Inject
+    private Storage storage = Storage.instance();
+
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({ADDED, REDUCED})
     public @interface TYPE {}
@@ -276,8 +279,8 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                         }
                         final String token = query.toLowerCase();
                         final JSONArray schedule = json.getJSONArray("schedule");
-                        final JSONArray scheduleAdded = string2json(Storage.file.perm.get(activity, "schedule_lessons#added#" + token, ""));
-                        final JSONArray scheduleReduced = string2json(Storage.file.perm.get(activity, "schedule_lessons#reduced#" + token, ""));
+                        final JSONArray scheduleAdded = string2json(storage.get(activity, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token, ""));
+                        final JSONArray scheduleReduced = string2json(storage.get(activity, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token, ""));
                         for (int i = 0; i < scheduleAdded.length(); i++) {
                             try {
                                 JSONObject day = scheduleAdded.getJSONObject(i);
@@ -530,7 +533,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
         for (Change change : changes) {
             if (!change.enabled) continue;
             if (change.type.equals(ADDED)) {
-                final JSONArray added = string2json(Storage.file.perm.get(activity, "schedule_lessons#added#" + token, ""));
+                final JSONArray added = string2json(storage.get(activity, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token, ""));
                 boolean found = false;
                 for (int i = 0; i < added.length(); i++) {
                     JSONObject day = added.getJSONObject(i);
@@ -545,10 +548,10 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                             .put("lessons", new JSONArray().put(change.content))
                     );
                 }
-                Storage.file.perm.put(activity, "schedule_lessons#added#" + token, added.toString());
+                storage.put(activity, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token, added.toString());
             } else {
                 final String hash = change.content.getString("hash");
-                final JSONArray reduced = string2json(Storage.file.perm.get(activity, "schedule_lessons#reduced#" + token, ""));
+                final JSONArray reduced = string2json(storage.get(activity, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token, ""));
                 boolean found = false;
                 for (int i = 0; i < reduced.length(); i++) {
                     JSONObject day = reduced.getJSONObject(i);
@@ -572,7 +575,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                             .put("lessons", new JSONArray().put(hash))
                     );
                 }
-                Storage.file.perm.put(activity, "schedule_lessons#reduced#" + token, reduced.toString());
+                storage.put(activity, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token, reduced.toString());
             }
         }
         FirebaseAnalyticsProvider.logEvent(

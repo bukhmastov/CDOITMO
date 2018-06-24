@@ -46,6 +46,9 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
     private int minePosition = -1;
     private String mineFaculty = "";
 
+    //@Inject
+    private Storage storage = Storage.instance();
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         setHasOptionsMenu(true);
@@ -151,7 +154,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                         Thread.run(() -> {
                             Log.v(TAG, "load | success | statusCode=" + statusCode);
                             if (statusCode == 200) {
-                                new RatingTopListParse(response, Storage.file.perm.get(activity, "user#name"), json -> {
+                                new RatingTopListParse(response, storage.get(activity, Storage.PERMANENT, Storage.USER, "user#name"), json -> {
                                     if (json != null) {
                                         storeData(RatingListFragment.this, json.toString());
                                     }

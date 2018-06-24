@@ -20,6 +20,7 @@ import com.bukhmastov.cdoitmo.util.Thread;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+//TODO interface - impl
 public class ScheduleLessons extends Schedule {
 
     private static final String TAG = "ScheduleLessons";
@@ -211,7 +212,7 @@ public class ScheduleLessons extends Schedule {
         });
     }
 
-    public static boolean clearChanges(final Context context, final String query, final Callable callback) {
+    public static boolean clearChanges(final Context context, final Storage storage, final String query, final Callable callback) {
         try {
             if (context == null) throw new NullPointerException("context cannot be null");
             if (query == null) throw new NullPointerException("query cannot be null");
@@ -220,16 +221,16 @@ public class ScheduleLessons extends Schedule {
             final String token = query.toLowerCase();
             boolean added = false;
             boolean reduced = false;
-            if (Storage.file.perm.exists(context, "schedule_lessons#added#" + token)) {
-                added = Storage.file.perm.delete(context, "schedule_lessons#added#" + token);
-                if (Storage.file.perm.list(context, "schedule_lessons#added").size() == 0) {
-                    Storage.file.perm.clear(context, "schedule_lessons#added");
+            if (storage.exists(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token)) {
+                added = storage.delete(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token);
+                if (storage.list(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added").size() == 0) {
+                    storage.clear(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added");
                 }
             }
-            if (Storage.file.perm.exists(context, "schedule_lessons#reduced#" + token)) {
-                reduced = Storage.file.perm.delete(context, "schedule_lessons#reduced#" + token);
-                if (Storage.file.perm.list(context, "schedule_lessons#reduced").size() == 0) {
-                    Storage.file.perm.clear(context, "schedule_lessons#reduced");
+            if (storage.exists(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token)) {
+                reduced = storage.delete(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token);
+                if (storage.list(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced").size() == 0) {
+                    storage.clear(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced");
                 }
             }
             if (callback != null && (added || reduced)) {
@@ -241,7 +242,7 @@ public class ScheduleLessons extends Schedule {
             return false;
         }
     }
-    public static boolean reduceLesson(final Context context, final String query, final int weekday, final JSONObject lesson, final Callable callback) {
+    public static boolean reduceLesson(final Context context, final Storage storage, final String query, final int weekday, final JSONObject lesson, final Callable callback) {
         try {
             if (context == null) throw new NullPointerException("context cannot be null");
             if (query == null) throw new NullPointerException("query cannot be null");
@@ -252,7 +253,7 @@ public class ScheduleLessons extends Schedule {
             if (!cdoitmo_type.equals("normal")) throw new Exception("wrong cdoitmo_type type: " + cdoitmo_type);
             final String token = query.toLowerCase();
             final String hash = ScheduleLessons.getLessonHash(lesson);
-            final JSONArray reduced = TextUtils.string2jsonArray(Storage.file.perm.get(context, "schedule_lessons#reduced#" + token, ""));
+            final JSONArray reduced = TextUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token, ""));
             boolean found = false;
             for (int i = 0; i < reduced.length(); i++) {
                 final JSONObject day = reduced.getJSONObject(i);
@@ -276,7 +277,7 @@ public class ScheduleLessons extends Schedule {
                         .put("lessons", new JSONArray().put(hash))
                 );
             }
-            Storage.file.perm.put(context, "schedule_lessons#reduced#" + token, reduced.toString());
+            storage.put(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token, reduced.toString());
             if (callback != null) {
                 callback.call();
             }
@@ -291,7 +292,7 @@ public class ScheduleLessons extends Schedule {
             return false;
         }
     }
-    public static boolean restoreLesson(final Context context, final String query, final int weekday, final JSONObject lesson, final Callable callback) {
+    public static boolean restoreLesson(final Context context, final Storage storage, final String query, final int weekday, final JSONObject lesson, final Callable callback) {
         try {
             if (context == null) throw new NullPointerException("context cannot be null");
             if (query == null) throw new NullPointerException("query cannot be null");
@@ -302,7 +303,7 @@ public class ScheduleLessons extends Schedule {
             if (!cdoitmo_type.equals("reduced")) throw new Exception("wrong cdoitmo_type type: " + cdoitmo_type);
             final String token = query.toLowerCase();
             final String hash = ScheduleLessons.getLessonHash(lesson);
-            final JSONArray reduced = TextUtils.string2jsonArray(Storage.file.perm.get(context, "schedule_lessons#reduced#" + token, ""));
+            final JSONArray reduced = TextUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token, ""));
             for (int i = 0; i < reduced.length(); i++) {
                 final JSONObject day = reduced.getJSONObject(i);
                 if (day.getInt("weekday") == weekday) {
@@ -320,12 +321,12 @@ public class ScheduleLessons extends Schedule {
                 }
             }
             if (reduced.length() == 0) {
-                Storage.file.perm.delete(context, "schedule_lessons#reduced#" + token);
-                if (Storage.file.perm.list(context, "schedule_lessons#reduced").size() == 0) {
-                    Storage.file.perm.clear(context, "schedule_lessons#reduced");
+                storage.delete(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token);
+                if (storage.list(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced").size() == 0) {
+                    storage.clear(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced");
                 }
             } else {
-                Storage.file.perm.put(context, "schedule_lessons#reduced#" + token, reduced.toString());
+                storage.put(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token, reduced.toString());
             }
             if (callback != null) {
                 callback.call();
@@ -363,7 +364,7 @@ public class ScheduleLessons extends Schedule {
             return false;
         }
     }
-    public static boolean createLesson(final Context context, final String query, final int weekday, final JSONObject lesson, final Callable callback) {
+    public static boolean createLesson(final Context context, final Storage storage, final String query, final int weekday, final JSONObject lesson, final Callable callback) {
         try {
             if (context == null) throw new NullPointerException("context cannot be null");
             if (query == null) throw new NullPointerException("query cannot be null");
@@ -373,7 +374,7 @@ public class ScheduleLessons extends Schedule {
             lesson.put("cdoitmo_type", "synthetic");
             final String subject = lesson.getString("subject");
             final String token = query.toLowerCase();
-            final JSONArray added = TextUtils.string2jsonArray(Storage.file.perm.get(context, "schedule_lessons#added#" + token, ""));
+            final JSONArray added = TextUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token, ""));
             boolean found = false;
             for (int i = 0; i < added.length(); i++) {
                 final JSONObject day = added.getJSONObject(i);
@@ -388,7 +389,7 @@ public class ScheduleLessons extends Schedule {
                         .put("lessons", new JSONArray().put(lesson))
                 );
             }
-            Storage.file.perm.put(context, "schedule_lessons#added#" + token, added.toString());
+            storage.put(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token, added.toString());
             FirebaseAnalyticsProvider.logEvent(
                     context,
                     FirebaseAnalyticsProvider.Event.SCHEDULE_LESSON_ADD,
@@ -403,7 +404,7 @@ public class ScheduleLessons extends Schedule {
             return false;
         }
     }
-    public static boolean deleteLesson(final Context context, final String query, final int weekday, final JSONObject lesson, final Callable callback) {
+    public static boolean deleteLesson(final Context context, final Storage storage, final String query, final int weekday, final JSONObject lesson, final Callable callback) {
         try {
             if (context == null) throw new NullPointerException("context cannot be null");
             if (query == null) throw new NullPointerException("query cannot be null");
@@ -414,7 +415,7 @@ public class ScheduleLessons extends Schedule {
             if (!cdoitmo_type.equals("synthetic")) throw new Exception("wrong cdoitmo_type type: " + cdoitmo_type);
             final String hash = getLessonHash(lesson);
             final String token = query.toLowerCase();
-            final JSONArray added = TextUtils.string2jsonArray(Storage.file.perm.get(context, "schedule_lessons#added#" + token, ""));
+            final JSONArray added = TextUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token, ""));
             for (int i = 0; i < added.length(); i++) {
                 final JSONObject day = added.getJSONObject(i);
                 if (day.getInt("weekday") == weekday) {
@@ -432,12 +433,12 @@ public class ScheduleLessons extends Schedule {
                 }
             }
             if (added.length() == 0) {
-                Storage.file.perm.delete(context, "schedule_lessons#added#" + token);
-                if (Storage.file.perm.list(context, "schedule_lessons#added").size() == 0) {
-                    Storage.file.perm.clear(context, "schedule_lessons#added");
+                storage.delete(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token);
+                if (storage.list(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added").size() == 0) {
+                    storage.clear(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added");
                 }
             } else {
-                Storage.file.perm.put(context, "schedule_lessons#added#" + token, added.toString());
+                storage.put(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token, added.toString());
             }
             if (callback != null) {
                 callback.call();

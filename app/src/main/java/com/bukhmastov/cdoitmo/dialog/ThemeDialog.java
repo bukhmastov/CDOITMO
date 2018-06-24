@@ -2,10 +2,7 @@ package com.bukhmastov.cdoitmo.dialog;
 
 import android.app.TimePickerDialog;
 import android.content.Context;
-import android.support.annotation.LayoutRes;
 import android.support.v7.app.AlertDialog;
-import android.view.InflateException;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RadioButton;
@@ -15,8 +12,8 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Static;
-import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
@@ -25,7 +22,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 
-public class ThemeDialog {
+public class ThemeDialog extends Dialog {
 
     private static final String TAG = "ThemeDialog";
     public interface Callback {
@@ -37,7 +34,6 @@ public class ThemeDialog {
     private interface TimePickerCallback {
         void onDone(int hours, int minutes);
     }
-    private final Context context;
     private final Callback cb;
     private final List<String> pref_theme_titles;
     private final List<String> pref_theme_values;
@@ -62,9 +58,9 @@ public class ThemeDialog {
     private int t2_minutes = 0;
 
     public ThemeDialog(Context context, String value, Callback cb) {
+        super(context);
         this.pref_theme_titles = Arrays.asList(context.getResources().getStringArray(R.array.pref_theme_titles));
         this.pref_theme_values = Arrays.asList(context.getResources().getStringArray(R.array.pref_theme_values));
-        this.context = context;
         this.cb = cb;
         this.auto_enabled = value.contains("#");
         if (auto_enabled) {
@@ -236,7 +232,9 @@ public class ThemeDialog {
 
     public static String getTheme(final Context context) {
         Log.v(TAG, "getTheme");
-        final String theme = Storage.pref.get(context, "pref_theme", DEFAULT_THEME);
+        //@Inject static method arg
+        final StoragePref storagePref = StoragePref.instance();
+        final String theme = storagePref.get(context, "pref_theme", DEFAULT_THEME);
         if (theme.contains("#")) {
             try {
                 final String[] values = theme.split("#");
@@ -285,7 +283,7 @@ public class ThemeDialog {
                 }
             } catch (Exception ignore) {
                 Log.w(TAG, "getTheme | pref_theme | INVALID VALUE | theme = " + theme);
-                Storage.pref.put(context, "pref_theme", DEFAULT_THEME);
+                storagePref.put(context, "pref_theme", DEFAULT_THEME);
                 return DEFAULT_THEME;
             }
         } else {
@@ -323,18 +321,5 @@ public class ThemeDialog {
             int index = pref_theme_values.indexOf(value);
             return index != -1 ? pref_theme_titles.get(index) : null;
         }
-    }
-
-    private View inflate(@LayoutRes int layout) throws InflateException {
-        if (context == null) {
-            Log.e(TAG, "Failed to inflate layout, context is null");
-            return null;
-        }
-        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        if (inflater == null) {
-            Log.e(TAG, "Failed to inflate layout, inflater is null");
-            return null;
-        }
-        return inflater.inflate(layout, null);
     }
 }

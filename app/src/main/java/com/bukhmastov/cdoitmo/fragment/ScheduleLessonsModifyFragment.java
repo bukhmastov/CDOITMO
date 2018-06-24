@@ -24,6 +24,8 @@ import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
@@ -46,6 +48,11 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
     private @TYPE String type;
     private boolean block_time_start = false;
     private boolean block_time_end = false;
+
+    //@Inject
+    private Storage storage = Storage.instance();
+    //@Inject
+    private StoragePref storagePref = StoragePref.instance();
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({CREATE, EDIT})
@@ -122,7 +129,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                             slc_title.setText(ScheduleLessons.getScheduleHeader(activity, title, type_lesson));
                         }
                         if (slc_desc != null) {
-                            slc_desc.setText(ScheduleLessons.getScheduleWeek(activity, week));
+                            slc_desc.setText(ScheduleLessons.getScheduleWeek(activity, storagePref, week));
                         }
                         // ---------
                         TextInputEditText lesson_title = container.findViewById(R.id.lesson_title);
@@ -459,7 +466,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                 }
                                 switch (type) {
                                     case CREATE: {
-                                        if (ScheduleLessons.createLesson(activity, query, lesson.weekday, convertLessonUnit2Json(lesson), null)) {
+                                        if (ScheduleLessons.createLesson(activity, storage, query, lesson.weekday, convertLessonUnit2Json(lesson), null)) {
                                             ScheduleLessonsTabHostFragment.invalidateOnDemand();
                                             close();
                                         } else {
@@ -469,7 +476,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                         break;
                                     }
                                     case EDIT: {
-                                        if (ScheduleLessons.deleteLesson(activity, query, weekday, lessonOriginal, null) && ScheduleLessons.createLesson(activity, query, lesson.weekday, convertLessonUnit2Json(lesson), null)) {
+                                        if (ScheduleLessons.deleteLesson(activity, storage, query, weekday, lessonOriginal, null) && ScheduleLessons.createLesson(activity, storage, query, lesson.weekday, convertLessonUnit2Json(lesson), null)) {
                                             ScheduleLessonsTabHostFragment.invalidateOnDemand();
                                             close();
                                         } else {

@@ -25,6 +25,7 @@ import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleAttestations;
 import com.bukhmastov.cdoitmo.util.Color;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.StorageProvider;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
@@ -50,6 +51,9 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
 
     private boolean invalidate = false;
     private boolean invalidate_refresh = false;
+
+    //@Inject
+    private StorageProvider storageProvider = StorageProvider.instance();
 
     public static void setQuery(String query) {
         ScheduleAttestationsFragment.lastQuery = ScheduleAttestationsFragment.query;
@@ -78,7 +82,7 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
         // define query
         String scope = restoreData(this);
         if (scope == null) {
-            scope = ScheduleAttestations.getDefaultScope(activity, ScheduleAttestations.TYPE);
+            scope = ScheduleAttestations.getDefaultScope(activity, storageProvider, ScheduleAttestations.TYPE);
         }
         final Intent intent = activity.getIntent();
         if (intent != null && intent.hasExtra("action_extra")) {

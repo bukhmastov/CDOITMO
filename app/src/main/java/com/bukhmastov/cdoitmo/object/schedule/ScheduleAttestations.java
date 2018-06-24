@@ -8,7 +8,7 @@ import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.parse.schedule.ScheduleAttestationsParse;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
@@ -17,10 +17,14 @@ import org.json.JSONObject;
 
 import java.util.Calendar;
 
+//TODO interface - impl
 public class ScheduleAttestations extends Schedule {
 
     private static final String TAG = "ScheduleExams";
     public static final String TYPE = "attestations";
+
+    //@Inject
+    private StoragePref storagePref = StoragePref.instance();
 
     public ScheduleAttestations(Handler handler) {
         super(handler);
@@ -136,7 +140,7 @@ public class ScheduleAttestations extends Schedule {
     private int getTerm(Context context) {
         int term;
         try {
-            term = Integer.parseInt(Storage.pref.get(context, "pref_schedule_attestations_term", "0"));
+            term = Integer.parseInt(storagePref.get(context, "pref_schedule_attestations_term", "0"));
             if (term == 0) {
                 int month = Time.getCalendar().get(Calendar.MONTH);
                 if (month >= Calendar.SEPTEMBER || month == Calendar.JANUARY) {

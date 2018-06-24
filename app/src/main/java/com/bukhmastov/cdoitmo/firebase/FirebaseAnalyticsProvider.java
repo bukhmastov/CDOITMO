@@ -6,14 +6,15 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Static;
-import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.google.firebase.analytics.FirebaseAnalytics;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+//TODO interface - impl
 public class FirebaseAnalyticsProvider {
 
     private static final String TAG = "FirebaseAnalyticsProvider";
@@ -70,7 +71,9 @@ public class FirebaseAnalyticsProvider {
     }
 
     public static boolean setEnabled(Context context) {
-        return setEnabled(context, Storage.pref.get(context, "pref_allow_collect_analytics", true));
+        //@Inject
+        StoragePref storagePref = StoragePref.instance();
+        return setEnabled(context, storagePref.get(context, "pref_allow_collect_analytics", true));
     }
     public static boolean setEnabled(Context context, boolean enabled) {
         return setEnabled(context, enabled, false);

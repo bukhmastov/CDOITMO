@@ -16,7 +16,8 @@ import com.bukhmastov.cdoitmo.adapter.PagerLessonsAdapter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
+import com.bukhmastov.cdoitmo.util.StorageProvider;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
@@ -26,6 +27,11 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
     private boolean loaded = false;
     private int activeTab = -1;
 
+    //@Inject
+    private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private StorageProvider storageProvider = StorageProvider.instance();
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,7 +40,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
         // define query
         String scope = ScheduleLessonsTabHostFragment.restoreData();
         if (scope == null) {
-            scope = ScheduleLessons.getDefaultScope(activity, ScheduleLessons.TYPE);
+            scope = ScheduleLessons.getDefaultScope(activity, storageProvider, ScheduleLessons.TYPE);
         }
         final Intent intent = activity.getIntent();
         if (intent != null && intent.hasExtra("action_extra")) {
@@ -132,7 +138,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
             }
             final int week = Time.getWeek(activity);
             if (ScheduleLessonsTabHostFragment.getQuery() == null) {
-                ScheduleLessonsTabHostFragment.setQuery(ScheduleLessons.getDefaultScope(activity, ScheduleLessons.TYPE));
+                ScheduleLessonsTabHostFragment.setQuery(ScheduleLessons.getDefaultScope(activity, storageProvider, ScheduleLessons.TYPE));
             }
             Thread.runOnUI(() -> {
                 try {
@@ -164,7 +170,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
                         }
                     }
                     if (activeTab == -1) {
-                        int activeTabByDefault = Integer.parseInt(Storage.pref.get(activity, "pref_schedule_lessons_week", "-1"));
+                        int activeTabByDefault = Integer.parseInt(storagePref.get(activity, "pref_schedule_lessons_week", "-1"));
                         if (activeTabByDefault == -1) {
                             tab = fixed_tabs.getTabAt(week >= 0 ? (week % 2) + 1 : 0);
                         } else {

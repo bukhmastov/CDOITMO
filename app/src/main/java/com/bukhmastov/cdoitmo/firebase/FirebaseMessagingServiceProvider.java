@@ -10,6 +10,7 @@ import com.bukhmastov.cdoitmo.util.Thread;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
+//TODO interface - impl
 public class FirebaseMessagingServiceProvider extends FirebaseMessagingService {
 
     private static final String TAG = "FirebaseMessagingServiceProvider";

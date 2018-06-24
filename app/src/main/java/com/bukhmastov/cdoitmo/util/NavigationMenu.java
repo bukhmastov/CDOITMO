@@ -43,22 +43,22 @@ public class NavigationMenu {
         });
     }
 
-    public static void displayUserData(final Context context, final NavigationView navigationView) {
+    public static void displayUserData(final Context context, final Storage storage, final NavigationView navigationView) {
         Thread.run(() -> {
-            final String name = Storage.file.perm.get(context, "user#name");
-            final List<String> groups = getGroups(context);
+            final String name = storage.get(context, Storage.PERMANENT, Storage.USER, "user#name");
+            final List<String> groups = getGroups(context, storage);
             final String group = TextUtils.join(", ", groups);
             Thread.runOnUI(() -> {
                 displayUserData(navigationView, R.id.user_name, name);
                 displayUserData(navigationView, R.id.user_group, group);
-                displayUserDataExpand(context, navigationView, groups);
+                displayUserDataExpand(context, storage, navigationView, groups);
             });
         });
     }
 
-    private static List<String> getGroups(final Context context) {
-        final String g = Storage.file.perm.get(context, "user#group").trim();
-        final String[] gs = Storage.file.perm.get(context, "user#groups").split(",");
+    private static List<String> getGroups(final Context context, final Storage storage) {
+        final String g = storage.get(context, Storage.PERMANENT, Storage.USER, "user#group").trim();
+        final String[] gs = storage.get(context, Storage.PERMANENT, Storage.USER, "user#groups").split(",");
         List<String> groups = new ArrayList<>();
         if (!g.isEmpty()) {
             groups.add(g);
@@ -90,7 +90,7 @@ public class NavigationMenu {
         });
     }
 
-    private static void displayUserDataExpand(final Context context, final NavigationView navigationView, final List<String> groups) {
+    private static void displayUserDataExpand(final Context context, final Storage storage, final NavigationView navigationView, final List<String> groups) {
         Thread.runOnUI(() -> {
             if (navigationView == null) return;
             View activity_main_nav_header = navigationView.getHeaderView(0);
@@ -105,8 +105,8 @@ public class NavigationMenu {
                                 .setTitle(R.string.set_main_group)
                                 .setAdapter(arrayAdapter, (dialogInterface, position) -> Thread.run(() -> {
                                     try {
-                                        Storage.file.perm.put(context, "user#group", groups.get(position));
-                                        Thread.runOnUI(() -> displayUserData(context, navigationView));
+                                        storage.put(context, Storage.PERMANENT, Storage.USER, "user#group", groups.get(position));
+                                        Thread.runOnUI(() -> displayUserData(context, storage, navigationView));
                                     } catch (Exception e) {
                                         Log.exception(e);
                                     }
@@ -133,7 +133,7 @@ public class NavigationMenu {
         });
     }
 
-    public static void displayRemoteMessage(final Activity activity) {
+    public static void displayRemoteMessage(final Activity activity, final Storage storage) {
         Thread.run(() -> FirebaseConfigProvider.getJson(FirebaseConfigProvider.MESSAGE_MENU, value -> Thread.run(() -> {
             try {
                 if (value == null) return;
@@ -141,7 +141,7 @@ public class NavigationMenu {
                 final String message = value.getString("message");
                 if (message == null || message.trim().isEmpty()) return;
                 final String hash = com.bukhmastov.cdoitmo.util.TextUtils.crypt(message);
-                if (hash != null && hash.equals(Storage.file.general.perm.get(activity, "firebase#remote_message#menu", ""))) {
+                if (hash != null && hash.equals(storage.get(activity, Storage.PERMANENT, Storage.GLOBAL, "firebase#remote_message#menu", ""))) {
                     return;
                 }
                 Thread.runOnUI(() -> {
@@ -149,7 +149,7 @@ public class NavigationMenu {
                     final View message_menu_separator = activity.findViewById(R.id.message_menu_separator);
                     final View layout = Message.getRemoteMessage(activity, type, message, (context, view) -> {
                         if (hash != null) {
-                            if (Storage.file.general.perm.put(activity, "firebase#remote_message#menu", hash)) {
+                            if (storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "firebase#remote_message#menu", hash)) {
                                 if (message_menu != null && view != null) {
                                     message_menu.removeView(view);
                                     if (message_menu_separator != null) {
@@ -157,7 +157,7 @@ public class NavigationMenu {
                                     }
                                 }
                                 BottomBar.snackBar(activity, activity.getString(R.string.notification_dismissed), activity.getString(R.string.undo), v -> Thread.run(() -> {
-                                    if (Storage.file.general.perm.delete(activity, "firebase#remote_message#menu")) {
+                                    if (storage.delete(activity, Storage.PERMANENT, Storage.GLOBAL, "firebase#remote_message#menu")) {
                                         Thread.runOnUI(() -> {
                                             if (message_menu != null && view != null) {
                                                 message_menu.addView(view);

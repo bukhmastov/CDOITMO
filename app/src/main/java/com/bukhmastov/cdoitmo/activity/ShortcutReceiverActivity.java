@@ -9,10 +9,14 @@ import android.support.v7.app.AppCompatActivity;
 import com.bukhmastov.cdoitmo.receiver.ShortcutReceiver;
 import com.bukhmastov.cdoitmo.util.CtxWrapper;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 
 public class ShortcutReceiverActivity extends AppCompatActivity {
 
     private static final String TAG = "ShortcutReceiverActivity";
+
+    //@Inject
+    private StoragePref storagePref = StoragePref.instance();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -33,6 +37,6 @@ public class ShortcutReceiverActivity extends AppCompatActivity {
 
     @Override
     protected void attachBaseContext(Context context) {
-        super.attachBaseContext(CtxWrapper.wrap(context));
+        super.attachBaseContext(CtxWrapper.wrap(context, storagePref));
     }
 }

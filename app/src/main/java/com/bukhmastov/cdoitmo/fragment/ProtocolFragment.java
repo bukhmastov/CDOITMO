@@ -23,6 +23,7 @@ import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Color;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
@@ -44,6 +45,11 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
     private Client.Request requestHandle = null;
     protected boolean forbidden = false;
 
+    //@Inject
+    private Storage storage = Storage.instance();
+    //@Inject
+    private StoragePref storagePref = StoragePref.instance();
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,7 +61,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
             return;
         }
         FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
-        number_of_weeks = Integer.parseInt(Storage.pref.get(activity, "pref_protocol_changes_weeks", "1"));
+        number_of_weeks = Integer.parseInt(storagePref.get(activity, "pref_protocol_changes_weeks", "1"));
     }
 
     @Override
@@ -87,19 +93,19 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                 final MenuItem simple = activity.toolbar.findItem(R.id.action_protocol_changes_switch_to_simple);
                 final MenuItem advanced = activity.toolbar.findItem(R.id.action_protocol_changes_switch_to_advanced);
                 if (simple != null && advanced != null) {
-                    switch (Storage.pref.get(activity, "pref_protocol_changes_mode", "advanced")) {
+                    switch (storagePref.get(activity, "pref_protocol_changes_mode", "advanced")) {
                         case "simple": advanced.setVisible(true); break;
                         case "advanced": simple.setVisible(true); break;
                     }
                     simple.setOnMenuItemClickListener(item -> {
-                        Storage.pref.put(activity, "pref_protocol_changes_mode", "simple");
+                        storagePref.put(activity, "pref_protocol_changes_mode", "simple");
                         simple.setVisible(false);
                         advanced.setVisible(true);
                         load(false);
                         return false;
                     });
                     advanced.setOnMenuItemClickListener(item -> {
-                        Storage.pref.put(activity, "pref_protocol_changes_mode", "advanced");
+                        storagePref.put(activity, "pref_protocol_changes_mode", "advanced");
                         simple.setVisible(true);
                         advanced.setVisible(false);
                         load(false);
@@ -146,13 +152,13 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
     }
 
     private void load() {
-        Thread.run(() -> load(Storage.pref.get(activity, "pref_use_cache", true) ? Integer.parseInt(Storage.pref.get(activity, "pref_dynamic_refresh", "0")) : 0));
+        Thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) ? Integer.parseInt(storagePref.get(activity, "pref_dynamic_refresh", "0")) : 0));
     }
     private void load(final int refresh_rate) {
         Thread.run(() -> {
             Log.v(TAG, "load | refresh_rate=" + refresh_rate);
-            if (Storage.pref.get(activity, "pref_use_cache", true)) {
-                String cache = Storage.file.cache.get(activity, "protocol#core").trim();
+            if (storagePref.get(activity, "pref_use_cache", true)) {
+                String cache = storage.get(activity, Storage.CACHE, Storage.USER, "protocol#core").trim();
                 if (!cache.isEmpty()) {
                     try {
                         JSONObject data = new JSONObject(cache);
@@ -183,9 +189,9 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
     private void load(final boolean force, final String cache, final int attempt) {
         Thread.run(() -> {
             Log.v(TAG, "load | force=" + (force ? "true" : "false") + " | attempt=" + attempt);
-            if ((!force || !Client.isOnline(activity)) && Storage.pref.get(activity, "pref_use_cache", true)) {
+            if ((!force || !Client.isOnline(activity)) && storagePref.get(activity, "pref_use_cache", true)) {
                 try {
-                    String c = cache.isEmpty() ? Storage.file.cache.get(activity, "protocol#core").trim() : cache;
+                    String c = cache.isEmpty() ? storage.get(activity, Storage.CACHE, Storage.USER, "protocol#core").trim() : cache;
                     if (!c.isEmpty()) {
                         Log.v(TAG, "load | from cache");
                         JSONObject d = new JSONObject(c);
@@ -197,7 +203,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                     }
                 } catch (Exception e) {
                     Log.v(TAG, "load | failed to load from cache");
-                    Storage.file.cache.delete(activity, "protocol#core");
+                    storage.delete(activity, Storage.CACHE, Storage.USER, "protocol#core");
                 }
             }
             if (!App.OFFLINE_MODE) {
@@ -220,9 +226,9 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                                 if (statusCode == 200 && responseArr != null) {
                                     new ProtocolConverter(activity, responseArr, number_of_weeks, json -> {
                                         try {
-                                            if (Storage.pref.get(activity, "pref_use_cache", true)) {
-                                                Storage.file.cache.put(activity, "protocol#core", json.toString());
-                                                Storage.file.perm.put(activity, "protocol_tracker#protocol", json.getJSONArray("protocol").toString());
+                                            if (storagePref.get(activity, "pref_use_cache", true)) {
+                                                storage.put(activity, Storage.CACHE, Storage.USER, "protocol#core", json.toString());
+                                                storage.put(activity, Storage.PERMANENT, Storage.USER, "protocol_tracker#protocol", json.getJSONArray("protocol").toString());
                                             }
                                         } catch (JSONException e) {
                                             Log.exception(e);
@@ -335,7 +341,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
             Log.v(TAG, "display");
             try {
                 if (getData() == null) throw new NullPointerException("data cannot be null");
-                final ProtocolRVA adapter = new ProtocolRVA(activity, getData().getJSONArray("protocol"), "advanced".equals(Storage.pref.get(activity, "pref_protocol_changes_mode", "advanced")));
+                final ProtocolRVA adapter = new ProtocolRVA(activity, getData().getJSONArray("protocol"), "advanced".equals(storagePref.get(activity, "pref_protocol_changes_mode", "advanced")));
                 Thread.runOnUI(() -> {
                     try {
                         draw(R.layout.layout_protocol);

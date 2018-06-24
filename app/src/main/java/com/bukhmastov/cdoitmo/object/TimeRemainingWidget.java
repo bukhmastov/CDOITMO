@@ -13,6 +13,7 @@ import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+//TODO interface - impl
 public class TimeRemainingWidget {
 
     private static final String TAG = "TRWidget";

@@ -3,6 +3,7 @@ package com.bukhmastov.cdoitmo.converter;
 import android.content.Context;
 
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Time;
@@ -20,6 +21,11 @@ public class ProtocolConverter extends Converter {
     private final JSONArray protocol;
     private final int number_of_weeks;
 
+    //@Inject
+    private Storage storage = Storage.instance();
+    //@Inject
+    private StoragePref storagePref = StoragePref.instance();
+
     public ProtocolConverter(Context context, JSONArray protocol, int number_of_weeks, Response delegate) {
         super(delegate);
         this.context = context;
@@ -33,8 +39,8 @@ public class ProtocolConverter extends Converter {
             JSONObject item = markConvert(protocol.getJSONObject(i));
             String hash = TextUtils.crypt(getCast(item));
             Double value, oldValue, delta, oldDelta;
-            if (Storage.pref.get(context, "pref_protocol_changes_track_title", true)) {
-                String changeLogItemString = Storage.file.cache.get(context, "protocol#log#" + hash, null);
+            if (storagePref.get(context, "pref_protocol_changes_track_title", true)) {
+                String changeLogItemString = storage.get(context, Storage.CACHE, Storage.USER, "protocol#log#" + hash, null);
                 if (changeLogItemString == null) {
                     oldValue = null;
                     oldDelta = null;
@@ -60,7 +66,7 @@ public class ProtocolConverter extends Converter {
                 JSONObject log = new JSONObject();
                 log.put("value", value);
                 log.put("delta", delta);
-                Storage.file.cache.put(context, "protocol#log#" + hash, log.toString());
+                storage.put(context, Storage.CACHE, Storage.USER, "protocol#log#" + hash, log.toString());
             } else {
                 delta = 0.0;
             }
@@ -81,7 +87,7 @@ public class ProtocolConverter extends Converter {
         return FirebasePerformanceProvider.Trace.Convert.PROTOCOL;
     }
 
-    private static String getCast(JSONObject item) throws JSONException {
+    private String getCast(JSONObject item) throws JSONException {
         final String separator = "#";
         JSONObject var = item.getJSONObject("var");
         return (new StringBuilder())
@@ -92,7 +98,7 @@ public class ProtocolConverter extends Converter {
                 .append(var.getString("threshold")).append(separator)
                 .toString();
     }
-    private static JSONObject markConvert(JSONObject item) throws JSONException {
+    private JSONObject markConvert(JSONObject item) throws JSONException {
         item.put("value", markConverter(item.getString("value")));
         JSONObject var = item.getJSONObject("var");
         var.put("min", markConverter(var.getString("min")));
@@ -101,10 +107,10 @@ public class ProtocolConverter extends Converter {
         item.put("var", var);
         return item;
     }
-    private static String markConverter(String value){
+    private String markConverter(String value){
         return markConverter(value, false);
     }
-    private static String markConverter(String value, boolean withSign){
+    private String markConverter(String value, boolean withSign){
         Matcher m;
         value = value.replace(",", ".").trim();
         m = Pattern.compile("^\\.(.+)").matcher(value);
@@ -119,14 +125,14 @@ public class ProtocolConverter extends Converter {
         }
         return value;
     }
-    private static double string2double(String string){
+    private double string2double(String string){
         try {
             return Double.parseDouble(string);
         } catch (NumberFormatException e) {
             return 0;
         }
     }
-    private static double round(double d) {
+    private double round(double d) {
         int precise = 100;
         d = d * precise;
         int i = (int) Math.round(d);

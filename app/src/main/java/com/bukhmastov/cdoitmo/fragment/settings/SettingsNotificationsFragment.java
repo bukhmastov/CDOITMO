@@ -17,7 +17,7 @@ import com.bukhmastov.cdoitmo.object.preference.PreferenceList;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
 import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.util.ArrayList;
@@ -52,8 +52,8 @@ public class SettingsNotificationsFragment extends SettingsTemplatePreferencesFr
         if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O) {
             preferences.add(new PreferenceBasic("pref_notify_sound", "content://settings/system/notification_sound", R.string.pref_notify_sound, true, new PreferenceBasic.Callback() {
                 @Override
-                public void onPreferenceClicked(ConnectedActivity activity, Preference preference, PreferenceBasic.OnPreferenceClickedCallback callback) {
-                    final String value = Storage.pref.get(activity, preference.key, (String) preference.defaultValue).trim();
+                public void onPreferenceClicked(ConnectedActivity activity, Preference preference, final StoragePref storagePref, PreferenceBasic.OnPreferenceClickedCallback callback) {
+                    final String value = storagePref.get(activity, preference.key, (String) preference.defaultValue).trim();
                     final Uri currentTone = value.isEmpty() ? null : Uri.parse(value);
                     final Intent intent = new Intent(RingtoneManager.ACTION_RINGTONE_PICKER);
                     intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_NOTIFICATION);
@@ -98,7 +98,7 @@ public class SettingsNotificationsFragment extends SettingsTemplatePreferencesFr
         }
         preferences.add(new PreferenceBasic("pref_open_system_notifications_settings", null, R.string.pref_open_system_notifications_settings, false, new PreferenceBasic.Callback() {
             @Override
-            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final PreferenceBasic.OnPreferenceClickedCallback callback) {
+            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final StoragePref storagePref, final PreferenceBasic.OnPreferenceClickedCallback callback) {
                 Thread.runOnUI(() -> {
                     try {
                         Intent intent = new Intent("android.settings.APP_NOTIFICATION_SETTINGS");
@@ -118,6 +118,9 @@ public class SettingsNotificationsFragment extends SettingsTemplatePreferencesFr
             }
         }));
     }
+
+    //@Inject
+    private StoragePref storagePref = StoragePref.instance();
 
     @Override
     protected List<Preference> getPreferences() {
@@ -142,7 +145,7 @@ public class SettingsNotificationsFragment extends SettingsTemplatePreferencesFr
                     if (RingtoneHelper.preference_key != null) {
                         Uri ringtone = data.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI);
                         String value = ringtone == null ? "" : ringtone.toString();
-                        Storage.pref.put(activity, RingtoneHelper.preference_key, value);
+                        storagePref.put(activity, RingtoneHelper.preference_key, value);
                         RingtoneHelper.callback.onSetSummary(activity, value);
                         RingtoneHelper.preference_key = null;
                         RingtoneHelper.callback = null;

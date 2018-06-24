@@ -31,11 +31,13 @@ import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Color;
+import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.view.CircularTransformation;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
-import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.impl.StorageImpl;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -70,14 +72,19 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     private boolean markers_dormitory = true;
     private long timestamp = 0;
 
+    //@Inject
+    private Storage storage = Storage.instance();
+    //@Inject
+    private StoragePref storagePref = StoragePref.instance();
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.v(TAG, "Fragment created");
         activity = getActivity();
         FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
-        markers_campus = Storage.pref.get(activity, "pref_university_buildings_campus", true);
-        markers_dormitory = Storage.pref.get(activity, "pref_university_buildings_dormitory", true);
+        markers_campus = storagePref.get(activity, "pref_university_buildings_campus", true);
+        markers_dormitory = storagePref.get(activity, "pref_university_buildings_dormitory", true);
     }
 
     @Override
@@ -98,7 +105,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
             dormitory_switch.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 markers_dormitory = isChecked;
                 displayMarkers();
-                Storage.pref.put(activity, "pref_university_buildings_dormitory", markers_dormitory);
+                storagePref.put(activity, "pref_university_buildings_dormitory", markers_dormitory);
             });
         }
         Switch campus_switch = container.findViewById(R.id.campus_switch);
@@ -107,7 +114,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
             campus_switch.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 markers_campus = isChecked;
                 displayMarkers();
-                Storage.pref.put(activity, "pref_university_buildings_campus", markers_campus);
+                storagePref.put(activity, "pref_university_buildings_campus", markers_campus);
             });
         }
         View view_list = container.findViewById(R.id.view_list);
@@ -140,15 +147,15 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     }
 
     private void load() {
-        Thread.run(() -> load(Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)
-                ? Integer.parseInt(Storage.pref.get(activity, "pref_static_refresh", "168"))
+        Thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)
+                ? Integer.parseInt(storagePref.get(activity, "pref_static_refresh", "168"))
                 : 0));
     }
     private void load(final int refresh_rate) {
         Thread.run(() -> {
             Log.v(TAG, "load | refresh_rate=" + refresh_rate);
-            if (Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
-                String cache = Storage.file.general.cache.get(activity, "university#buildings").trim();
+            if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
+                String cache = storage.get(activity, Storage.CACHE, Storage.GLOBAL, "university#buildings").trim();
                 if (!cache.isEmpty()) {
                     try {
                         JSONObject cacheJson = new JSONObject(cache);
@@ -185,9 +192,9 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                         Thread.run(() -> {
                             if (statusCode == 200) {
                                 long now = Time.getCalendar().getTimeInMillis();
-                                if (json != null && Storage.pref.get(activity, "pref_use_cache", true) && Storage.pref.get(activity, "pref_use_university_cache", false)) {
+                                if (json != null && storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
                                     try {
-                                        Storage.file.general.cache.put(activity, "university#buildings", new JSONObject()
+                                        storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#buildings", new JSONObject()
                                                 .put("timestamp", now)
                                                 .put("data", json)
                                                 .toString()

@@ -36,11 +36,12 @@ import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.dialog.ColorPickerDialog;
 import com.bukhmastov.cdoitmo.util.CtxWrapper;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.widget.ScheduleLessonsWidget;
+import com.bukhmastov.cdoitmo.widget.ScheduleLessonsWidgetStorage;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -88,6 +89,11 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
         private static boolean useShiftAutomatic = true;
     }
 
+    //@Inject
+    private Storage storage = Storage.instance();
+    //@Inject
+    private StoragePref storagePref = StoragePref.instance();
+
     @Override
     public void onCreate(Bundle icicle) {
         Theme.applyActivityTheme(this);
@@ -127,7 +133,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
 
     @Override
     protected void attachBaseContext(Context context) {
-        super.attachBaseContext(CtxWrapper.wrap(context));
+        super.attachBaseContext(CtxWrapper.wrap(context, storagePref));
     }
 
     private void init() {
@@ -176,7 +182,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                 ViewGroup part_schedule = activity.findViewById(R.id.part_schedule);
                 part_schedule.setOnClickListener(view -> {
                     if (Settings.Schedule.query.isEmpty()) {
-                        String group = Storage.file.perm.get(activity, "user#group");
+                        String group = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#group");
                         if (group.isEmpty()) {
                             // TODO uncomment, when personal schedule will be ready
                             activatePartSchedule(/*"mine"*/);
@@ -686,7 +692,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                 settings.put("shiftAutomatic", 0);
                 settings.put("useShiftAutomatic", Settings.useShiftAutomatic);
                 Log.v(TAG, "activateFinish | settings=" + settings.toString());
-                ScheduleLessonsWidget.Data.save(activity, mAppWidgetId, "settings", settings.toString());
+                ScheduleLessonsWidgetStorage.save(activity, mAppWidgetId, "settings", settings.toString());
                 ScheduleLessonsWidget.updateAppWidget(activity, AppWidgetManager.getInstance(activity), mAppWidgetId, false);
                 Intent resultValue = new Intent();
                 resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);

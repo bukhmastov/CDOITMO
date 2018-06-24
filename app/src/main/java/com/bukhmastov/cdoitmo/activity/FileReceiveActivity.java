@@ -20,7 +20,6 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsShareFragment;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.util.Thread;
@@ -44,6 +43,9 @@ import okhttp3.ResponseBody;
 public class FileReceiveActivity extends ConnectedActivity {
 
     private static final String TAG = "FileReceiveActivity";
+
+    //@Inject
+    private Storage storage = Storage.instance();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -186,7 +188,7 @@ public class FileReceiveActivity extends ConnectedActivity {
         Thread.run(() -> {
             try {
                 Log.v(TAG, "share_schedule_of_lessons");
-                if (Storage.file.general.perm.get(activity, "users#current_login", "").trim().isEmpty()) {
+                if (storage.get(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", "").trim().isEmpty()) {
                     throw new MessageException(activity.getString(R.string.file_requires_auth));
                 }
                 if (object.has("content")) {

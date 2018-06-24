@@ -10,18 +10,19 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
-import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 
 public class PreferenceEditText extends Preference {
+
+    public @StringRes int message = 0;
+    public @StringRes int hint = 0;
+    public boolean changeSummary = true;
+    public Callback callback = null;
 
     public interface Callback {
         String onSetText(final Context context, final String value);
         String onGetText(final Context context, final String value);
     }
-    public @StringRes int message = 0;
-    public @StringRes int hint = 0;
-    public boolean changeSummary = true;
-    public Callback callback = null;
 
     public PreferenceEditText(String key, Object defaultValue, @StringRes int title, @StringRes int summary, @StringRes int message, @StringRes int hint, boolean changeSummary, @Nullable Callback callback) {
         super(key, defaultValue, title, summary);
@@ -37,8 +38,13 @@ public class PreferenceEditText extends Preference {
         this.changeSummary = changeSummary;
         this.callback = callback;
     }
-    public static View getView(final ConnectedActivity activity, final PreferenceEditText preference) {
+
+    @Nullable
+    public static View getView(final ConnectedActivity activity, final PreferenceEditText preference, final StoragePref storagePref) {
         final View preference_layout = inflate(activity, R.layout.preference_basic);
+        if (preference_layout == null) {
+            return null;
+        }
         final View preference_basic = preference_layout.findViewById(R.id.preference_basic);
         final TextView preference_basic_title = preference_layout.findViewById(R.id.preference_basic_title);
         final TextView preference_basic_summary = preference_layout.findViewById(R.id.preference_basic_summary);
@@ -47,7 +53,7 @@ public class PreferenceEditText extends Preference {
             preference_basic_summary.setVisibility(View.VISIBLE);
             preference_basic_summary.setText(preference.summary);
         } else {
-            String value = Storage.pref.get(activity, preference.key, (String) preference.defaultValue);
+            String value = storagePref.get(activity, preference.key, (String) preference.defaultValue);
             if (preference.callback != null) {
                 value = preference.callback.onSetText(activity, value);
             }
@@ -63,7 +69,7 @@ public class PreferenceEditText extends Preference {
             final View view = inflate(activity, R.layout.preference_dialog_input);
             final TextView message = view.findViewById(R.id.message);
             final EditText edittext = view.findViewById(R.id.edittext);
-            String value = Storage.pref.get(activity, preference.key, preference.defaultValue == null ? "" : (String) preference.defaultValue);
+            String value = storagePref.get(activity, preference.key, preference.defaultValue == null ? "" : (String) preference.defaultValue);
             if (preference.callback != null) {
                 value = preference.callback.onSetText(activity, value);
             }
@@ -83,8 +89,8 @@ public class PreferenceEditText extends Preference {
                         if (preference.callback != null) {
                             val = preference.callback.onGetText(activity, val);
                         }
-                        Storage.pref.put(activity, preference.key, val);
-                        Preference.onPreferenceChanged(activity, preference.key);
+                        storagePref.put(activity, preference.key, val);
+                        preference.onPreferenceChanged(activity);
                         if (preference.changeSummary) {
                             preference_basic_summary.setVisibility(View.VISIBLE);
                             preference_basic_summary.setText(val);

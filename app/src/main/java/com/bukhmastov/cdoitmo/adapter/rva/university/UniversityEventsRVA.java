@@ -98,11 +98,11 @@ public class UniversityEventsRVA extends UniversityRVA {
                 if (date_begin_exists || date_end_exists) {
                     String date = null;
                     if (date_begin_exists && date_end_exists) {
-                        date = TextUtils.cuteDate(context, "yyyy-MM-dd HH:mm:ss", date_begin, date_end);
+                        date = TextUtils.cuteDate(context, storagePref, "yyyy-MM-dd HH:mm:ss", date_begin, date_end);
                     } else if (date_begin_exists) {
-                        date = TextUtils.cuteDate(context, "yyyy-MM-dd HH:mm:ss", date_begin);
+                        date = TextUtils.cuteDate(context, storagePref, "yyyy-MM-dd HH:mm:ss", date_begin);
                     } else if (date_end_exists) {
-                        date = TextUtils.cuteDate(context, "yyyy-MM-dd HH:mm:ss", date_end);
+                        date = TextUtils.cuteDate(context, storagePref, "yyyy-MM-dd HH:mm:ss", date_end);
                     }
                     ((TextView) dateView).setText(date);
                 } else {

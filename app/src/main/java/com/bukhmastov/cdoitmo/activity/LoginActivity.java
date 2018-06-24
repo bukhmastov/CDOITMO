@@ -23,6 +23,7 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
 import com.bukhmastov.cdoitmo.fragment.AboutFragment;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Account;
+import com.bukhmastov.cdoitmo.util.Accounts;
 import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.CtxWrapper;
 import com.bukhmastov.cdoitmo.util.Log;
@@ -50,6 +51,9 @@ public class LoginActivity extends ConnectedActivity {
 
     private Client.Request requestHandle = null;
     public static boolean auto_logout = false;
+
+    //@Inject
+    private Storage storage = Storage.instance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,7 +117,7 @@ public class LoginActivity extends ConnectedActivity {
 
     @Override
     protected void attachBaseContext(Context context) {
-        super.attachBaseContext(CtxWrapper.wrap(context));
+        super.attachBaseContext(CtxWrapper.wrap(context, storagePref));
     }
 
     @Override
@@ -142,7 +146,7 @@ public class LoginActivity extends ConnectedActivity {
                     break;
                 }
                 case SIGNAL_CHANGE_ACCOUNT: {
-                    String current_login = Storage.file.general.perm.get(activity, "users#current_login");
+                    String current_login = storage.get(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
                     if (!current_login.isEmpty()) {
                         Account.logoutTemporarily(activity, this::show);
                     } else {
@@ -151,15 +155,15 @@ public class LoginActivity extends ConnectedActivity {
                     break;
                 }
                 case SIGNAL_DO_CLEAN_AUTH: {
-                    String current_login = Storage.file.general.perm.get(activity, "users#current_login");
+                    String current_login = storage.get(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
                     if (!current_login.isEmpty()) {
-                        Storage.file.perm.delete(activity, "user#deifmo#cookies");
+                        storage.delete(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#cookies");
                     }
                     show();
                     break;
                 }
                 case SIGNAL_LOGOUT: {
-                    String current_login = Storage.file.general.perm.get(activity, "users#current_login");
+                    String current_login = storage.get(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
                     if (!current_login.isEmpty()) {
                         logout(current_login);
                     } else {
@@ -168,9 +172,9 @@ public class LoginActivity extends ConnectedActivity {
                     break;
                 }
                 case SIGNAL_CREDENTIALS_REQUIRED: {
-                    String current_login = Storage.file.general.perm.get(activity, "users#current_login");
+                    String current_login = storage.get(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
                     if (!current_login.isEmpty()) {
-                        Storage.file.perm.delete(activity, "user#deifmo#cookies");
+                        storage.delete(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#cookies");
                         Account.logoutTemporarily(activity, () -> {
                             BottomBar.snackBar(activity, activity.getString(R.string.required_login_password));
                             show();
@@ -180,10 +184,10 @@ public class LoginActivity extends ConnectedActivity {
                     break;
                 }
                 case SIGNAL_CREDENTIALS_FAILED: {
-                    String current_login = Storage.file.general.perm.get(activity, "users#current_login");
+                    String current_login = storage.get(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
                     if (!current_login.isEmpty()) {
-                        Storage.file.perm.delete(activity, "user#deifmo#cookies");
-                        Storage.file.perm.delete(activity, "user#deifmo#password");
+                        storage.delete(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#cookies");
+                        storage.delete(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#password");
                         Account.logoutTemporarily(activity, () -> {
                             BottomBar.snackBar(activity, activity.getString(R.string.invalid_login_password));
                             show();
@@ -200,242 +204,32 @@ public class LoginActivity extends ConnectedActivity {
             }
         });
     }
+
     private void show() {
         Thread.run(() -> {
             try {
                 Log.v(TAG, "show");
                 FirebaseAnalyticsProvider.logEvent(activity, FirebaseAnalyticsProvider.Event.LOGIN_REQUIRED);
-                String current_login = Storage.file.general.perm.get(activity, "users#current_login");
                 String cLogin = "", cPassword = "", cRole = "";
-                if (!current_login.isEmpty()) {
-                    cLogin = Storage.file.perm.get(activity, "user#deifmo#login");
-                    cPassword = Storage.file.perm.get(activity, "user#deifmo#password");
-                    cRole = Storage.file.perm.get(activity, "user#role");
+                if (!storage.get(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", "").isEmpty()) {
+                    cLogin = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#login", "");
+                    cPassword = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#password", "");
+                    cRole = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#role", "");
                 }
                 if (!cLogin.isEmpty() && !cPassword.isEmpty()) {
                     // already logged in
                     login(cLogin, cPassword, cRole, false);
                 } else {
                     // show login UI
-                    final LinearLayout login_tiles_container = new LinearLayout(activity);
-                    login_tiles_container.setOrientation(LinearLayout.VERTICAL);
-                    login_tiles_container.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                    // show UI: new user
-                    final ViewGroup new_user_tile = (ViewGroup) inflate(R.layout.layout_login_new_user_tile);
-                    final EditText input_login = new_user_tile.findViewById(R.id.input_login);
-                    final EditText input_password = new_user_tile.findViewById(R.id.input_password);
-                    new_user_tile.findViewById(R.id.login).setOnClickListener(v -> {
-                        Log.v(TAG, "new_user_tile login clicked");
-                        String login = "";
-                        String password = "";
-                        if (input_login != null) login = input_login.getText().toString();
-                        if (input_password != null) password = input_password.getText().toString();
-                        login(login, password, "student", true);
-                    });
-                    new_user_tile.findViewById(R.id.help).setOnClickListener(view -> {
-                        FirebaseAnalyticsProvider.logBasicEvent(getBaseContext(), "Help with login clicked");
-                        new AlertDialog.Builder(activity)
-                                .setIcon(R.drawable.ic_help)
-                                .setTitle(R.string.auth_help_0)
-                                .setMessage(
-                                        activity.getString(R.string.auth_help_1) + "\n" +
-                                        activity.getString(R.string.auth_help_2) + "\n\n" +
-                                        activity.getString(R.string.auth_help_3) + "\n" +
-                                        activity.getString(R.string.auth_help_4) + "\n\n" +
-                                        activity.getString(R.string.auth_help_5)
-                                )
-                                .setNegativeButton(R.string.close, null)
-                                .create().show();
-                    });
-                    login_tiles_container.addView(new_user_tile);
-                    // show UI: list of existing accounts
-                    final JSONArray accounts = Account.List.get(activity);
-                    for (int i = 0; i < accounts.length(); i++) {
-                        try {
-                            final String acLogin = accounts.getString(i);
-                            Log.v(TAG, "show | account in accounts | ", acLogin);
-                            Storage.file.general.perm.put(activity, "users#current_login", acLogin);
-                            final String login = Storage.file.perm.get(activity, "user#deifmo#login");
-                            final String password = Storage.file.perm.get(activity, "user#deifmo#password");
-                            final String role = Storage.file.perm.get(activity, "user#role");
-                            final String name = Storage.file.perm.get(activity, "user#name").trim();
-                            Storage.file.general.perm.delete(activity, "users#current_login");
-                            final ViewGroup user_tile = (ViewGroup) inflate(R.layout.layout_login_user_tile);
-                            View nameView = user_tile.findViewById(R.id.name);
-                            View descView = user_tile.findViewById(R.id.desc);
-                            String desc = "";
-                            if (!login.isEmpty()) {
-                                desc += login;
-                            }
-                            switch (role) {
-                                case "student": {
-                                    desc += desc.isEmpty() ? activity.getString(R.string.student) : " (" + activity.getString(R.string.student) + ")";
-                                    break;
-                                }
-                                default: {
-                                    desc += desc.isEmpty() ? role : " (" + role + ")";
-                                    break;
-                                }
-                            }
-                            if (!name.isEmpty()) {
-                                if (nameView != null) {
-                                    ((TextView) nameView).setText(name);
-                                }
-                                if (descView != null) {
-                                    ((TextView) descView).setText(desc);
-                                }
-                            } else {
-                                if (nameView != null) {
-                                    ((TextView) nameView).setText(desc);
-                                }
-                                if (descView != null) {
-                                    Static.removeView(descView);
-                                }
-                            }
-                            user_tile.findViewById(R.id.auth).setOnClickListener(v -> {
-                                Log.v(TAG, "user_tile login clicked");
-                                login(login, password, role, false);
-                            });
-                            user_tile.findViewById(R.id.expand_auth_menu).setOnClickListener(view -> {
-                                Log.v(TAG, "user_tile expand_auth_menu clicked");
-                                final PopupMenu popup = new PopupMenu(activity, view);
-                                final Menu menu = popup.getMenu();
-                                popup.getMenuInflater().inflate(R.menu.auth_expanded_menu, menu);
-                                popup.setOnMenuItemClickListener(item -> {
-                                    Log.v(TAG, "auth_expanded_menu | popup.MenuItem clicked | ", item.getTitle().toString());
-                                    switch (item.getItemId()) {
-                                        case R.id.offline: {
-                                            Storage.file.general.perm.put(activity, "users#current_login", login);
-                                            route(SIGNAL_GO_OFFLINE);
-                                            break;
-                                        }
-                                        case R.id.clean_auth: {
-                                            Storage.file.general.perm.put(activity, "users#current_login", login);
-                                            route(SIGNAL_DO_CLEAN_AUTH);
-                                            break;
-                                        }
-                                        case R.id.logout: {
-                                            Account.logoutConfirmation(activity, () -> logout(login));
-                                            break;
-                                        }
-                                        case R.id.change_password: {
-                                            Thread.runOnUI(() -> {
-                                                try {
-                                                    final View layout = inflate(R.layout.preference_dialog_input);
-                                                    final EditText editText = layout.findViewById(R.id.edittext);
-                                                    final TextView message = layout.findViewById(R.id.message);
-                                                    editText.setHint(R.string.new_password);
-                                                    message.setText(activity.getString(R.string.change_password_message).replace("%login%", login));
-                                                    new AlertDialog.Builder(activity)
-                                                            .setTitle(R.string.change_password_title)
-                                                            .setView(layout)
-                                                            .setPositiveButton(R.string.accept, (dialog, which) -> {
-                                                                try {
-                                                                    final String value = editText.getText().toString().trim();
-                                                                    if (!value.isEmpty()) {
-                                                                        Thread.run(() -> {
-                                                                            Storage.file.general.perm.put(activity, "users#current_login", acLogin);
-                                                                            Storage.file.perm.put(activity, "user#deifmo#password", value);
-                                                                            Storage.file.general.perm.delete(activity, "users#current_login");
-                                                                            BottomBar.snackBar(activity, activity.getString(R.string.password_changed));
-                                                                        });
-                                                                    }
-                                                                } catch (Exception e) {
-                                                                    Log.exception(e);
-                                                                }
-                                                            })
-                                                            .setNegativeButton(R.string.cancel, null)
-                                                            .create().show();
-                                                } catch (Exception e) {
-                                                    Log.exception(e);
-                                                }
-                                            });
-                                            break;
-                                        }
-                                    }
-                                    return false;
-                                });
-                                popup.show();
-                            });
-                            login_tiles_container.addView(user_tile);
-                        } catch (JSONException e) {
-                            Log.exception(e);
-                        }
-                    }
-                    // show UI: anonymous login
-                    final ViewGroup anonymous_user_tile = (ViewGroup) inflate(R.layout.layout_login_anonymous_user_tile);
-                    final EditText input_group = anonymous_user_tile.findViewById(R.id.input_group);
-                    anonymous_user_tile.findViewById(R.id.login).setOnClickListener(view -> {
-                        Log.v(TAG, "anonymous_user_tile login clicked");
-                        String group = "";
-                        if (input_group != null) {
-                            group = com.bukhmastov.cdoitmo.util.TextUtils.prettifyGroupNumber(input_group.getText().toString());
-                        }
-                        String[] groups = group.split(",\\s|\\s|,");
-                        Storage.file.general.perm.put(activity, "users#current_login", Account.USER_UNAUTHORIZED);
-                        String g = Storage.file.perm.get(activity, "user#group");
-                        boolean gFound = false;
-                        for (String g1 : groups) {
-                            if (g1.equals(g)) {
-                                gFound = true;
-                                break;
-                            }
-                        }
-                        if (!gFound) {
-                            g = groups.length > 0 ? groups[0] : "";
-                        }
-                        Storage.file.perm.put(activity, "user#name", activity.getString(R.string.anonymous));
-                        Storage.file.perm.put(activity, "user#group", g);
-                        Storage.file.perm.put(activity, "user#groups", TextUtils.join(", ", groups));
-                        Storage.file.perm.put(activity, "user#avatar", "");
-                        Storage.file.general.perm.delete(activity, "users#current_login");
-                        login(Account.USER_UNAUTHORIZED, Account.USER_UNAUTHORIZED, "anonymous", false);
-                    });
-                    anonymous_user_tile.findViewById(R.id.expand_auth_menu).setOnClickListener(view -> {
-                        Log.v(TAG, "anonymous_user_tile expand_auth_menu clicked");
-                        final PopupMenu popup = new PopupMenu(activity, view);
-                        final Menu menu = popup.getMenu();
-                        popup.getMenuInflater().inflate(R.menu.auth_anonymous_expanded_menu, menu);
-                        popup.setOnMenuItemClickListener(item -> {
-                            Log.v(TAG, "auth_expanded_menu | popup.MenuItem clicked | ", item.getTitle().toString());
-                            switch (item.getItemId()) {
-                                case R.id.offline: {
-                                    Storage.file.general.perm.put(activity, "users#current_login", Account.USER_UNAUTHORIZED);
-                                    route(SIGNAL_GO_OFFLINE);
-                                    break;
-                                }
-                            }
-                            return false;
-                        });
-                        popup.show();
-                    });
-                    anonymous_user_tile.findViewById(R.id.info).setOnClickListener(view -> {
-                        FirebaseAnalyticsProvider.logBasicEvent(getBaseContext(), "Help with anonymous login clicked");
-                        new AlertDialog.Builder(activity)
-                                .setIcon(R.drawable.ic_help)
-                                .setTitle(R.string.anonymous_login)
-                                .setMessage(
-                                        activity.getString(R.string.anonymous_login_info_1) + "\n" +
-                                        activity.getString(R.string.anonymous_login_info_2) + "\n\n" +
-                                        activity.getString(R.string.anonymous_login_info_3) + "\n" +
-                                        activity.getString(R.string.anonymous_login_info_4)
-                                )
-                                .setNegativeButton(R.string.close, null)
-                                .create().show();
-                    });
-                    login_tiles_container.addView(anonymous_user_tile);
-                    Storage.file.general.perm.put(activity, "users#current_login", Account.USER_UNAUTHORIZED);
-                    input_group.setText(Storage.file.perm.get(activity, "user#groups", ""));
-                    Storage.file.general.perm.delete(activity, "users#current_login");
+                    final LinearLayout container = new LinearLayout(activity);
+                    container.setOrientation(LinearLayout.VERTICAL);
+                    container.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                    // append components
+                    appendNewUserView(container);
+                    appendAllUsersView(container);
+                    appendAnonUserView(container);
                     // draw UI
-                    Thread.runOnUI(() -> {
-                        try {
-                            draw(login_tiles_container);
-                        } catch (Exception e) {
-                            Log.exception(e);
-                            BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                        }
-                    });
+                    Thread.runOnUI(() -> draw(container));
                 }
             } catch (Exception e) {
                 Log.exception(e);
@@ -443,6 +237,234 @@ public class LoginActivity extends ConnectedActivity {
             }
         });
     }
+    private void appendNewUserView(final ViewGroup container) throws Exception {
+        final ViewGroup new_user_tile = (ViewGroup) inflate(R.layout.layout_login_new_user_tile);
+        final EditText input_login = new_user_tile.findViewById(R.id.input_login);
+        final EditText input_password = new_user_tile.findViewById(R.id.input_password);
+        new_user_tile.findViewById(R.id.login).setOnClickListener(v -> {
+            Log.v(TAG, "new_user_tile login clicked");
+            String login = "";
+            String password = "";
+            if (input_login != null) {
+                login = input_login.getText().toString();
+            }
+            if (input_password != null) {
+                password = input_password.getText().toString();
+            }
+            // we support only 'student' role at the moment
+            login(login, password, "student", true);
+        });
+        new_user_tile.findViewById(R.id.help).setOnClickListener(view -> {
+            FirebaseAnalyticsProvider.logBasicEvent(getBaseContext(), "Help with login clicked");
+            new AlertDialog.Builder(activity)
+                    .setIcon(R.drawable.ic_help)
+                    .setTitle(R.string.auth_help_0)
+                    .setMessage(
+                            activity.getString(R.string.auth_help_1) + "\n" +
+                                    activity.getString(R.string.auth_help_2) + "\n\n" +
+                                    activity.getString(R.string.auth_help_3) + "\n" +
+                                    activity.getString(R.string.auth_help_4) + "\n\n" +
+                                    activity.getString(R.string.auth_help_5)
+                    )
+                    .setNegativeButton(R.string.close, null)
+                    .create().show();
+        });
+        container.addView(new_user_tile);
+    }
+    private void appendAllUsersView(final ViewGroup container) throws Exception {
+        final JSONArray accounts = Accounts.get(activity);
+        for (int i = 0; i < accounts.length(); i++) {
+            try {
+                // unique situation, we need to grab info about accounts in which we are not logged in
+                // danger zone begins
+                final String acLogin = accounts.getString(i);
+                Log.v(TAG, "show | account in accounts | login=", acLogin);
+                storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", acLogin);
+                final String login = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#login");
+                final String password = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#password");
+                final String role = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#role");
+                final String name = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#name").trim();
+                storage.delete(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
+                // danger zone ends
+                final ViewGroup user_tile = (ViewGroup) inflate(R.layout.layout_login_user_tile);
+                final View nameView = user_tile.findViewById(R.id.name);
+                final View descView = user_tile.findViewById(R.id.desc);
+                String desc = "";
+                if (!login.isEmpty()) {
+                    desc += login;
+                }
+                switch (role) {
+                    case "student": {
+                        desc += desc.isEmpty() ? activity.getString(R.string.student) : " (" + activity.getString(R.string.student) + ")";
+                        break;
+                    }
+                    default: {
+                        desc += desc.isEmpty() ? role : " (" + role + ")";
+                        break;
+                    }
+                }
+                if (!name.isEmpty()) {
+                    if (nameView != null) {
+                        ((TextView) nameView).setText(name);
+                    }
+                    if (descView != null) {
+                        ((TextView) descView).setText(desc);
+                    }
+                } else {
+                    if (nameView != null) {
+                        ((TextView) nameView).setText(desc);
+                    }
+                    if (descView != null) {
+                        Static.removeView(descView);
+                    }
+                }
+                user_tile.findViewById(R.id.auth).setOnClickListener(v -> {
+                    Log.v(TAG, "user_tile login clicked");
+                    login(login, password, role, false);
+                });
+                user_tile.findViewById(R.id.expand_auth_menu).setOnClickListener(view -> {
+                    Log.v(TAG, "user_tile expand_auth_menu clicked");
+                    final PopupMenu popup = new PopupMenu(activity, view);
+                    final Menu menu = popup.getMenu();
+                    popup.getMenuInflater().inflate(R.menu.auth_expanded_menu, menu);
+                    popup.setOnMenuItemClickListener(item -> {
+                        Log.v(TAG, "auth_expanded_menu | popup.MenuItem clicked | ", item.getTitle().toString());
+                        switch (item.getItemId()) {
+                            case R.id.offline: {
+                                storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", login);
+                                route(SIGNAL_GO_OFFLINE);
+                                break;
+                            }
+                            case R.id.clean_auth: {
+                                storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", login);
+                                route(SIGNAL_DO_CLEAN_AUTH);
+                                break;
+                            }
+                            case R.id.logout: {
+                                Account.logoutConfirmation(activity, () -> logout(login));
+                                break;
+                            }
+                            case R.id.change_password: {
+                                Thread.runOnUI(() -> {
+                                    try {
+                                        final View layout = inflate(R.layout.preference_dialog_input);
+                                        final EditText editText = layout.findViewById(R.id.edittext);
+                                        final TextView message = layout.findViewById(R.id.message);
+                                        editText.setHint(R.string.new_password);
+                                        message.setText(activity.getString(R.string.change_password_message).replace("%login%", login));
+                                        new AlertDialog.Builder(activity)
+                                                .setTitle(R.string.change_password_title)
+                                                .setView(layout)
+                                                .setPositiveButton(R.string.accept, (dialog, which) -> {
+                                                    try {
+                                                        final String value = editText.getText().toString().trim();
+                                                        if (!value.isEmpty()) {
+                                                            Thread.run(() -> {
+                                                                // unique situation, we need to modify account info in which we are not logged in
+                                                                // danger zone begins
+                                                                storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", acLogin);
+                                                                storage.put(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#password", value);
+                                                                storage.delete(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
+                                                                // danger zone ends
+                                                                BottomBar.snackBar(activity, activity.getString(R.string.password_changed));
+                                                            });
+                                                        }
+                                                    } catch (Exception e) {
+                                                        Log.exception(e);
+                                                    }
+                                                })
+                                                .setNegativeButton(R.string.cancel, null)
+                                                .create().show();
+                                    } catch (Exception e) {
+                                        Log.exception(e);
+                                    }
+                                });
+                                break;
+                            }
+                        }
+                        return false;
+                    });
+                    popup.show();
+                });
+                container.addView(user_tile);
+            } catch (JSONException e) {
+                Log.exception(e);
+            }
+        }
+    }
+    private void appendAnonUserView(final ViewGroup container) throws Exception {
+        final ViewGroup anonymous_user_tile = (ViewGroup) inflate(R.layout.layout_login_anonymous_user_tile);
+        final EditText input_group = anonymous_user_tile.findViewById(R.id.input_group);
+        // grab current groups of anon user
+        // not really danger zone begins
+        storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", Account.USER_UNAUTHORIZED);
+        input_group.setText(storage.get(activity, Storage.PERMANENT, Storage.USER, "user#groups", ""));
+        storage.delete(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
+        // not really danger zone ends
+        anonymous_user_tile.findViewById(R.id.login).setOnClickListener(view -> {
+            Log.v(TAG, "anonymous_user_tile login clicked");
+            String group = "";
+            if (input_group != null) {
+                group = com.bukhmastov.cdoitmo.util.TextUtils.prettifyGroupNumber(input_group.getText().toString());
+            }
+            String[] groups = group.split(",\\s|\\s|,");
+            // set anon user info
+            // not really danger zone begins
+            storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", Account.USER_UNAUTHORIZED);
+            String g = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#group");
+            boolean gFound = false;
+            for (String g1 : groups) {
+                if (g1.equals(g)) {
+                    gFound = true;
+                    break;
+                }
+            }
+            if (!gFound) {
+                g = groups.length > 0 ? groups[0] : "";
+            }
+            storage.put(activity, Storage.PERMANENT, Storage.USER, "user#name", activity.getString(R.string.anonymous));
+            storage.put(activity, Storage.PERMANENT, Storage.USER, "user#group", g);
+            storage.put(activity, Storage.PERMANENT, Storage.USER, "user#groups", TextUtils.join(", ", groups));
+            storage.put(activity, Storage.PERMANENT, Storage.USER, "user#avatar", "");
+            storage.delete(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
+            // not really danger zone ends
+            login(Account.USER_UNAUTHORIZED, Account.USER_UNAUTHORIZED, "anonymous", false);
+        });
+        anonymous_user_tile.findViewById(R.id.expand_auth_menu).setOnClickListener(view -> {
+            Log.v(TAG, "anonymous_user_tile expand_auth_menu clicked");
+            final PopupMenu popup = new PopupMenu(activity, view);
+            final Menu menu = popup.getMenu();
+            popup.getMenuInflater().inflate(R.menu.auth_anonymous_expanded_menu, menu);
+            popup.setOnMenuItemClickListener(item -> {
+                Log.v(TAG, "auth_expanded_menu | popup.MenuItem clicked | ", item.getTitle().toString());
+                switch (item.getItemId()) {
+                    case R.id.offline: {
+                        storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", Account.USER_UNAUTHORIZED);
+                        route(SIGNAL_GO_OFFLINE);
+                        break;
+                    }
+                }
+                return false;
+            });
+            popup.show();
+        });
+        anonymous_user_tile.findViewById(R.id.info).setOnClickListener(view -> {
+            FirebaseAnalyticsProvider.logBasicEvent(getBaseContext(), "Help with anonymous login clicked");
+            new AlertDialog.Builder(activity)
+                    .setIcon(R.drawable.ic_help)
+                    .setTitle(R.string.anonymous_login)
+                    .setMessage(
+                            activity.getString(R.string.anonymous_login_info_1) + "\n" +
+                                    activity.getString(R.string.anonymous_login_info_2) + "\n\n" +
+                                    activity.getString(R.string.anonymous_login_info_3) + "\n" +
+                                    activity.getString(R.string.anonymous_login_info_4)
+                    )
+                    .setNegativeButton(R.string.close, null)
+                    .create().show();
+        });
+        container.addView(anonymous_user_tile);
+    }
+
     private void login(final String login, final String password, final String role, final boolean isNewUser) {
         Log.v(TAG, "login | login=", login, " | role=", role, " | isNewUser=", isNewUser);
         Static.lockOrientation(activity, true);
@@ -463,7 +485,7 @@ public class LoginActivity extends ConnectedActivity {
             public void onInterrupted() {
                 Log.v(TAG, "login | onInterrupted");
                 FirebaseAnalyticsProvider.logBasicEvent(activity, "login interrupted");
-                Storage.file.general.perm.put(activity, "users#current_login", login);
+                storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", login);
                 route(SIGNAL_GO_OFFLINE);
                 Static.lockOrientation(activity, false);
             }
@@ -551,7 +573,7 @@ public class LoginActivity extends ConnectedActivity {
                 final String message = value.getString("message");
                 if (message == null || message.trim().isEmpty()) return;
                 final String hash = com.bukhmastov.cdoitmo.util.TextUtils.crypt(message);
-                if (hash != null && hash.equals(Storage.file.general.perm.get(activity, "firebase#remote_message#login", ""))) {
+                if (hash != null && hash.equals(storage.get(activity, Storage.PERMANENT, Storage.GLOBAL, "firebase#remote_message#login", ""))) {
                     return;
                 }
                 Thread.runOnUI(() -> {
@@ -559,14 +581,14 @@ public class LoginActivity extends ConnectedActivity {
                     final View layout = Message.getRemoteMessage(activity, type, message, (context, view) -> {
                         if (hash != null) {
                             Thread.run(() -> {
-                                if (Storage.file.general.perm.put(activity, "firebase#remote_message#login", hash)) {
+                                if (storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "firebase#remote_message#login", hash)) {
                                     Thread.runOnUI(() -> {
                                         if (message_login != null && view != null) {
                                             message_login.removeView(view);
                                         }
                                     });
                                     BottomBar.snackBar(activity, activity.getString(R.string.notification_dismissed), activity.getString(R.string.undo), v -> Thread.run(() -> {
-                                        if (Storage.file.general.perm.delete(activity, "firebase#remote_message#login")) {
+                                        if (storage.delete(activity, Storage.PERMANENT, Storage.GLOBAL, "firebase#remote_message#login")) {
                                             Thread.runOnUI(() -> {
                                                 if (message_login != null && view != null) {
                                                     message_login.addView(view);

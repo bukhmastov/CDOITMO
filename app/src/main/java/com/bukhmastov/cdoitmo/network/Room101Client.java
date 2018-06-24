@@ -12,6 +12,7 @@ import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.util.Map;
 
+//TODO interface - impl
 public class Room101Client extends Room101 {
 
     private static final String TAG = "Room101Client";
@@ -96,8 +97,8 @@ public class Room101Client extends Room101 {
     }
 
     public static boolean isAuthorized(final Context context) {
-        final String login = Storage.file.perm.get(context, "user#deifmo#login", "").trim();
-        final String password = Storage.file.perm.get(context, "user#deifmo#password", "").trim();
+        final String login = storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#login", "").trim();
+        final String password = storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#password", "").trim();
         return !login.isEmpty() && !password.isEmpty();
     }
 

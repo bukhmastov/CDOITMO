@@ -8,7 +8,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.fragment.AboutFragment;
 import com.bukhmastov.cdoitmo.object.preference.Preference;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceHeader;
-import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,29 +44,20 @@ public class SettingsFragment extends SettingsTemplateHeadersFragment {
     }
 
     public static void applyDefaultValues(final Context context) {
-        if (!Storage.pref.get(context, "pref_default_values_applied", false)) {
-            Storage.pref.put(context, "pref_default_values_applied", true);
-            for (Preference preference : SettingsGeneralFragment.preferences) applyDefaultValues(context, preference);
-            for (Preference preference : SettingsCacheFragment.preferences) applyDefaultValues(context, preference);
-            for (Preference preference : SettingsNotificationsFragment.preferences) applyDefaultValues(context, preference);
-            for (Preference preference : SettingsERegisterFragment.preferences) applyDefaultValues(context, preference);
-            for (Preference preference : SettingsProtocolFragment.preferences) applyDefaultValues(context, preference);
-            for (Preference preference : SettingsScheduleLessonsFragment.preferences) applyDefaultValues(context, preference);
-            for (Preference preference : SettingsScheduleExamsFragment.preferences) applyDefaultValues(context, preference);
-            for (Preference preference : SettingsScheduleAttestationsFragment.preferences) applyDefaultValues(context, preference);
-            for (Preference preference : SettingsSystemsFragment.preferences) applyDefaultValues(context, preference);
-            Storage.pref.put(context, "pref_notify_type", Build.VERSION.SDK_INT <= Build.VERSION_CODES.M ? "0" : "1");
-        }
-    }
-    private static void applyDefaultValues(final Context context, final Preference preference) {
-        if (preference.defaultValue != null && !Storage.pref.exists(context, preference.key)) {
-            if (preference.defaultValue instanceof String) {
-                Storage.pref.put(context, preference.key, (String) preference.defaultValue);
-            } else if (preference.defaultValue instanceof Integer) {
-                Storage.pref.put(context, preference.key, (Integer) preference.defaultValue);
-            } else if (preference.defaultValue instanceof Boolean) {
-                Storage.pref.put(context, preference.key, (Boolean) preference.defaultValue);
-            }
+        //@Inject static method arg
+        StoragePref storagePref = StoragePref.instance();
+        if (!storagePref.get(context, "pref_default_values_applied", false)) {
+            storagePref.put(context, "pref_default_values_applied", true);
+            for (Preference preference : SettingsGeneralFragment.preferences) preference.applyDefaultValue(context);
+            for (Preference preference : SettingsCacheFragment.preferences) preference.applyDefaultValue(context);
+            for (Preference preference : SettingsNotificationsFragment.preferences) preference.applyDefaultValue(context);
+            for (Preference preference : SettingsERegisterFragment.preferences) preference.applyDefaultValue(context);
+            for (Preference preference : SettingsProtocolFragment.preferences) preference.applyDefaultValue(context);
+            for (Preference preference : SettingsScheduleLessonsFragment.preferences) preference.applyDefaultValue(context);
+            for (Preference preference : SettingsScheduleExamsFragment.preferences) preference.applyDefaultValue(context);
+            for (Preference preference : SettingsScheduleAttestationsFragment.preferences) preference.applyDefaultValue(context);
+            for (Preference preference : SettingsSystemsFragment.preferences) preference.applyDefaultValue(context);
+            storagePref.put(context, "pref_notify_type", Build.VERSION.SDK_INT <= Build.VERSION_CODES.M ? "0" : "1");
         }
     }
 }

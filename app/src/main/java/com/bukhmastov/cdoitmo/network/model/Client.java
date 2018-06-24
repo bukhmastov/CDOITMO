@@ -12,7 +12,8 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.network.interfaces.RawHandler;
 import com.bukhmastov.cdoitmo.network.interfaces.RawJsonHandler;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
+import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
 
 import org.json.JSONArray;
@@ -54,12 +55,21 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 import okio.Buffer;
 
+//TODO interface - impl
 public abstract class Client {
 
     private static final String TAG = "Client";
     public static final String USER_AGENT_TEMPLATE = "CDOITMO/{versionName}/{versionCode} Java/Android/{sdkInt}";
     public static String USER_AGENT = null;
 
+    //@Inject
+    //TODO interface - impl: remove static
+    protected static Storage storage = Storage.instance();
+    //@Inject
+    //TODO interface - impl: remove static
+    protected static StoragePref storagePref = StoragePref.instance();
+
+    //TODO interface - impl
     private static class client {
         private static OkHttpClient client = null;
         private static class timeout {
