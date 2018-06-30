@@ -8,7 +8,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.converter.schedule.ScheduleTeachersConverter;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
-import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
+import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
@@ -74,6 +74,8 @@ public abstract class Schedule {
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
     private StorageProvider storageProvider = StorageProvider.instance();
+    //@Inject
+    private IfmoRestClient ifmoRestClient = IfmoRestClient.instance();
 
     // Remote source of schedules to be downloaded from
     @Retention(RetentionPolicy.SOURCE)
@@ -218,7 +220,7 @@ public abstract class Schedule {
             }
             @Override
             public void onWebRequest(final String query, final String cache, final RestResponseHandler restResponseHandler) {
-                IfmoRestClient.get(context, "schedule_person?lastname=" + query, null, restResponseHandler);
+                ifmoRestClient.get(context, "schedule_person?lastname=" + query, null, restResponseHandler);
             }
             @Override
             public void onWebRequestSuccess(final String query, final JSONObject data, final JSONObject template) {

@@ -16,7 +16,7 @@ import com.bukhmastov.cdoitmo.activity.LoginActivity;
 import com.bukhmastov.cdoitmo.adapter.rva.RatingRVA;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
-import com.bukhmastov.cdoitmo.network.interfaces.ResponseHandler;
+import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.parse.rating.RatingListParse;
 import com.bukhmastov.cdoitmo.parse.rating.RatingParse;
@@ -46,6 +46,8 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
     private Storage storage = Storage.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private DeIfmoClient deIfmoClient = DeIfmoClient.instance();
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({COMMON, OWN})
@@ -261,7 +263,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                         break;
                     }
                 }
-                DeIfmoClient.get(activity, url, null, new ResponseHandler() {
+                deIfmoClient.get(activity, url, null, new ResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                         Thread.run(() -> {

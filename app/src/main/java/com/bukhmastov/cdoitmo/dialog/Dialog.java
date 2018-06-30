@@ -6,7 +6,6 @@ import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
 
-import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Log;
 
 public abstract class Dialog {

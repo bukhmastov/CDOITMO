@@ -12,7 +12,7 @@ import com.bukhmastov.cdoitmo.activity.MainActivity;
 import com.bukhmastov.cdoitmo.converter.ProtocolConverter;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
-import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
+import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Notifications;
@@ -42,6 +42,8 @@ public class ProtocolTrackerJobService extends JobService {
     private Storage storage = Storage.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private DeIfmoRestClient deIfmoRestClient = DeIfmoRestClient.instance();
 
     @Override
     public boolean onStartJob(JobParameters params) {
@@ -67,7 +69,7 @@ public class ProtocolTrackerJobService extends JobService {
                 attempt++;
                 if (attempt > maxAttempts) throw new Exception("Number of attempts exceeded the limit");
                 Log.v(TAG, "request | attempt #" + attempt);
-                DeIfmoRestClient.get(getBaseContext(), "eregisterlog?days=2", null, new RestResponseHandler() {
+                deIfmoRestClient.get(getBaseContext(), "eregisterlog?days=2", null, new RestResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, Client.Headers headers, JSONObject responseObj, final JSONArray responseArr) {
                         try {

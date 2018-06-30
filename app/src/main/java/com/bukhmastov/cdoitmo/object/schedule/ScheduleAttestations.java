@@ -3,8 +3,8 @@ package com.bukhmastov.cdoitmo.object.schedule;
 import android.content.Context;
 
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
-import com.bukhmastov.cdoitmo.network.interfaces.ResponseHandler;
-import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
+import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
+import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.parse.schedule.ScheduleAttestationsParse;
 import com.bukhmastov.cdoitmo.util.Log;
@@ -25,6 +25,8 @@ public class ScheduleAttestations extends Schedule {
 
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private DeIfmoClient deIfmoClient = DeIfmoClient.instance();
 
     public ScheduleAttestations(Handler handler) {
         super(handler);
@@ -41,7 +43,7 @@ public class ScheduleAttestations extends Schedule {
             @Override
             public void onWebRequest(final String query, final String cache, final RestResponseHandler restResponseHandler) {
                 final int term = getTerm(context);
-                DeIfmoClient.get(context, "index.php?node=schedule&index=sched&semiId=" + String.valueOf(term) + "&group=" + TextUtils.prettifyGroupNumber(group), null, new ResponseHandler() {
+                deIfmoClient.get(context, "index.php?node=schedule&index=sched&semiId=" + String.valueOf(term) + "&group=" + TextUtils.prettifyGroupNumber(group), null, new ResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                         Thread.run(new ScheduleAttestationsParse(response, term, json -> restResponseHandler.onSuccess(statusCode, headers, json, null)));

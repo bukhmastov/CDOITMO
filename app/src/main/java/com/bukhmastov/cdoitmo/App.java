@@ -19,7 +19,7 @@ import java.util.UUID;
  *
  * 1. Подготовка к DI: абстракция (TODO interface - impl):
  *  storage [done]
- *  network
+ *  network [done]
  *  firebase
  *  objects
  *  utils

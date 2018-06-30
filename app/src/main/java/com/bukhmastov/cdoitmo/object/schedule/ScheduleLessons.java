@@ -9,7 +9,7 @@ import com.bukhmastov.cdoitmo.converter.schedule.lessons.ScheduleLessonsConverte
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsModifyFragment;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
-import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
+import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.interfaces.Callable;
@@ -25,6 +25,9 @@ public class ScheduleLessons extends Schedule {
 
     private static final String TAG = "ScheduleLessons";
     public static final String TYPE = "lessons";
+
+    //@Inject
+    private IfmoRestClient ifmoRestClient = IfmoRestClient.instance();
 
     public ScheduleLessons(Handler handler) {
         super(handler);
@@ -48,7 +51,7 @@ public class ScheduleLessons extends Schedule {
             public void onWebRequest(final String query, final String cache, final RestResponseHandler restResponseHandler) {
                 switch (source) {
                     case SOURCE.ISU: invokePending(query, withUserChanges, true, handler -> handler.onFailure(FAILED_INVALID_QUERY)); break;
-                    case SOURCE.IFMO: IfmoRestClient.get(context, "schedule_lesson_group/" + query, null, restResponseHandler); break;
+                    case SOURCE.IFMO: ifmoRestClient.get(context, "schedule_lesson_group/" + query, null, restResponseHandler); break;
                 }
             }
             @Override
@@ -86,7 +89,7 @@ public class ScheduleLessons extends Schedule {
             }
             @Override
             public void onWebRequest(final String query, final String cache, final RestResponseHandler restResponseHandler) {
-                IfmoRestClient.get(context, "schedule_lesson_room/" + query, null, restResponseHandler);
+                ifmoRestClient.get(context, "schedule_lesson_room/" + query, null, restResponseHandler);
             }
             @Override
             public void onWebRequestSuccess(final String query, final JSONObject data, final JSONObject template) {
@@ -123,7 +126,7 @@ public class ScheduleLessons extends Schedule {
             public void onWebRequest(final String query, final String cache, final RestResponseHandler restResponseHandler) {
                 switch (source) {
                     case SOURCE.ISU: invokePending(query, withUserChanges, true, handler -> handler.onFailure(FAILED_INVALID_QUERY)); break;
-                    case SOURCE.IFMO: IfmoRestClient.get(context, "schedule_lesson_person/" + query, null, restResponseHandler); break;
+                    case SOURCE.IFMO: ifmoRestClient.get(context, "schedule_lesson_person/" + query, null, restResponseHandler); break;
                 }
             }
             @Override

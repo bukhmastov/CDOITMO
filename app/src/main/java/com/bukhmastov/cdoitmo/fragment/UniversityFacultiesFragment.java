@@ -28,7 +28,7 @@ import com.bukhmastov.cdoitmo.adapter.rva.RecyclerViewOnScrollListener;
 import com.bukhmastov.cdoitmo.adapter.rva.university.UniversityRVA;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
-import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
+import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Color;
 import com.bukhmastov.cdoitmo.util.Log;
@@ -60,6 +60,8 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
     private Storage storage = Storage.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private IfmoRestClient ifmoRestClient = IfmoRestClient.instance();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -275,7 +277,7 @@ public class UniversityFacultiesFragment extends Fragment implements SwipeRefres
         if (stack.size() > 0) {
             dep_id = stack.get(stack.size() - 1);
         }
-        IfmoRestClient.get(activity, "study_structure" + (dep_id.isEmpty() ? "" : "/" + dep_id), null, handler);
+        ifmoRestClient.get(activity, "study_structure" + (dep_id.isEmpty() ? "" : "/" + dep_id), null, handler);
     }
     private void loadFailed() {
         Thread.runOnUI(() -> {

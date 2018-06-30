@@ -14,7 +14,7 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
-import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
+import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Color;
 import com.bukhmastov.cdoitmo.util.TextUtils;
@@ -37,6 +37,9 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
     private boolean first_load = true;
     private JSONObject person = null;
     private int pid = -1;
+
+    //@Inject
+    private IfmoRestClient ifmoRestClient = IfmoRestClient.instance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -221,7 +224,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
     }
     private void loadProvider(RestResponseHandler handler) {
         Log.v(TAG, "loadProvider");
-        IfmoRestClient.get(activity, "person/" + pid, null, handler);
+        ifmoRestClient.get(activity, "person/" + pid, null, handler);
     }
     private void loadFailed() {
         Thread.runOnUI(() -> {

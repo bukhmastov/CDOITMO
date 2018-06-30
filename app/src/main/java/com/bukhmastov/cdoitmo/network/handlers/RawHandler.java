@@ -1,4 +1,4 @@
-package com.bukhmastov.cdoitmo.network.interfaces;
+package com.bukhmastov.cdoitmo.network.handlers;
 
 import com.bukhmastov.cdoitmo.network.model.Client;
 

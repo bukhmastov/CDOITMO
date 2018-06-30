@@ -16,7 +16,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.Room101Fragment;
 import com.bukhmastov.cdoitmo.network.Room101Client;
-import com.bukhmastov.cdoitmo.network.interfaces.ResponseHandler;
+import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.parse.room101.Room101DatePickParse;
 import com.bukhmastov.cdoitmo.parse.room101.Room101TimeEndPickParse;
@@ -70,6 +70,8 @@ public class Room101AddRequest {
 
     //@Inject
     private Storage storage = Storage.instance();
+    //@Inject
+    private Room101Client room101Client = Room101Client.instance();
 
     public Room101AddRequest(Activity activity, callback callback) {
         this.callback = callback;
@@ -166,7 +168,7 @@ public class Room101AddRequest {
                 callback.onDraw(getLoadingLayout(activity.getString(R.string.data_loading)));
                 data = null;
                 pick_date = null;
-                Room101Fragment.execute(activity, storage, "newRequest", new ResponseHandler() {
+                Room101Fragment.execute(activity, room101Client, storage, "newRequest", new ResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                         Thread.run(() -> {
@@ -204,7 +206,7 @@ public class Room101AddRequest {
                 params.put("month", "next");
                 params.put("login", storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#login"));
                 params.put("password", storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#password"));
-                Room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
+                room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                         Thread.run(() -> {
@@ -266,7 +268,7 @@ public class Room101AddRequest {
             params.put("timeEnd", "");
             params.put("login", storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#login"));
             params.put("password", storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#password"));
-            Room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
+            room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
                 @Override
                 public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                     Thread.run(() -> {
@@ -315,7 +317,7 @@ public class Room101AddRequest {
             params.put("timeEnd", "");
             params.put("login", storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#login"));
             params.put("password", storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#password"));
-            Room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
+            room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
                 @Override
                 public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                     Thread.run(() -> {
@@ -371,7 +373,7 @@ public class Room101AddRequest {
             params.put("timeEnd", pick_time_end);
             params.put("login", storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#login"));
             params.put("password", storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#password"));
-            Room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
+            room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Client.Headers headers, String response) {
                     try {

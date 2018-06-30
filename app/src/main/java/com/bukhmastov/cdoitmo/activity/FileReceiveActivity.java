@@ -18,7 +18,7 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsShareFragment;
-import com.bukhmastov.cdoitmo.network.model.Client;
+import com.bukhmastov.cdoitmo.network.provider.NetworkUserAgentProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Theme;
@@ -46,6 +46,8 @@ public class FileReceiveActivity extends ConnectedActivity {
 
     //@Inject
     private Storage storage = Storage.instance();
+    //@Inject
+    private NetworkUserAgentProvider networkUserAgentProvider = NetworkUserAgentProvider.instance();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -143,7 +145,7 @@ public class FileReceiveActivity extends ConnectedActivity {
     private String fileFromWeb(final Context context, final Uri uri) throws Throwable {
         Log.v(TAG, "fileFromWeb | uri: " + uri.toString());
         HashMap<String, String> headers = new HashMap<>();
-        headers.put("User-Agent", Client.getUserAgent(context));
+        headers.put("User-Agent", networkUserAgentProvider.get(context));
         Request request = new Request.Builder()
                 .url(uri.toString())
                 .headers(okhttp3.Headers.of(headers))

@@ -1,19 +1,21 @@
 package com.bukhmastov.cdoitmo.network.model;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
-import com.bukhmastov.cdoitmo.network.interfaces.RawHandler;
+import com.bukhmastov.cdoitmo.network.handlers.RawHandler;
 import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.util.Map;
 
-//TODO interface - impl
 public abstract class Room101 extends DeIfmo {
 
     public static final int FAILED_AUTH = 10;
     public static final int FAILED_EXPECTED_REDIRECTION = 11;
 
-    protected static void g(final Context context, final String url, final Map<String, String> query, final RawHandler rawHandler) {
+    @Override
+    protected void g(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final RawHandler rawHandler) {
         Thread.run(Thread.BACKGROUND, () -> {
             try {
                 _g(url, getHeaders(context), query, new RawHandler() {
@@ -38,7 +40,9 @@ public abstract class Room101 extends DeIfmo {
             }
         });
     }
-    protected static void p(final Context context, final String url, final Map<String, String> params, final RawHandler rawHandler) {
+
+    @Override
+    protected void p(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> params, @NonNull final RawHandler rawHandler) {
         Thread.run(Thread.BACKGROUND, () -> {
             try {
                 _p(url, getHeaders(context), null, params, new RawHandler() {

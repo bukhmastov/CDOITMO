@@ -11,7 +11,7 @@ import android.support.annotation.Nullable;
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.converter.ProtocolConverter;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
-import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
+import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
@@ -154,7 +154,7 @@ public class ProtocolTracker {
         return this;
     }
 
-    public static void setup(final Context context, final StoragePref storagePref, final int attempt) {
+    public static void setup(final Context context, final DeIfmoRestClient deIfmoRestClient, final StoragePref storagePref, final int attempt) {
         Thread.run(Thread.BACKGROUND, () -> {
             Log.v(TAG, "setup | attempt=" + attempt);
             if (!storagePref.get(context, "pref_protocol_changes_track", true)) {
@@ -162,20 +162,20 @@ public class ProtocolTracker {
                 return;
             }
             if (attempt < 3) {
-                DeIfmoRestClient.get(context, "eregisterlog?days=126", null, new RestResponseHandler() {
+                deIfmoRestClient.get(context, "eregisterlog?days=126", null, new RestResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, Client.Headers headers, JSONObject responseObj, final JSONArray responseArr) {
                         Thread.run(Thread.BACKGROUND, () -> {
                             if (statusCode == 200 && responseArr != null) {
                                 new ProtocolConverter(context, responseArr, 18, json -> Log.i(TAG, "setup | uploaded")).run();
                             } else {
-                                setup(context, storagePref, attempt + 1);
+                                setup(context, deIfmoRestClient, storagePref, attempt + 1);
                             }
                         });
                     }
                     @Override
                     public void onFailure(int statusCode, Client.Headers headers, int state) {
-                        Thread.run(Thread.BACKGROUND, () -> setup(context, storagePref, attempt + 1));
+                        Thread.run(Thread.BACKGROUND, () -> setup(context, deIfmoRestClient, storagePref, attempt + 1));
                     }
                     @Override
                     public void onProgress(int state) {}

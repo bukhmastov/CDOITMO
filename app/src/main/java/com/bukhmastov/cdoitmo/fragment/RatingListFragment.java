@@ -17,7 +17,7 @@ import com.bukhmastov.cdoitmo.adapter.rva.RatingListRVA;
 import com.bukhmastov.cdoitmo.exception.SilentException;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
-import com.bukhmastov.cdoitmo.network.interfaces.ResponseHandler;
+import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.parse.rating.RatingTopListParse;
 import com.bukhmastov.cdoitmo.util.BottomBar;
@@ -48,6 +48,8 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
 
     //@Inject
     private Storage storage = Storage.instance();
+    //@Inject
+    private DeIfmoClient deIfmoClient = DeIfmoClient.instance();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -148,7 +150,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                     loadFailed();
                     return;
                 }
-                DeIfmoClient.get(activity, "index.php?node=rating&std&depId=" + faculty + "&year=" + course + "&app=" + years, null, new ResponseHandler() {
+                deIfmoClient.get(activity, "index.php?node=rating&std&depId=" + faculty + "&year=" + course + "&app=" + years, null, new ResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                         Thread.run(() -> {

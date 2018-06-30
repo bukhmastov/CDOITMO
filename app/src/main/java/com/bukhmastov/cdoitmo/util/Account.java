@@ -10,7 +10,8 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
-import com.bukhmastov.cdoitmo.network.interfaces.ResponseHandler;
+import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
+import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.ProtocolTracker;
 import com.bukhmastov.cdoitmo.interfaces.Callable;
@@ -44,6 +45,12 @@ public class Account {
     //@Inject
     //TODO interface - impl: remove static
     private static StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    //TODO interface - impl: remove static
+    private static DeIfmoClient deIfmoClient = DeIfmoClient.instance();
+    //@Inject
+    //TODO interface - impl: remove static
+    private static DeIfmoRestClient deIfmoRestClient = DeIfmoRestClient.instance();
 
     public static void login(@NonNull final Context context, @NonNull final String login, @NonNull final String password, @NonNull final String role, final boolean isNewUser, @NonNull final LoginHandler loginHandler) {
         final String trace = FirebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.LOGIN);
@@ -98,7 +105,7 @@ public class Account {
                     return;
                 }
             }
-            DeIfmoClient.check(context, new ResponseHandler() {
+            deIfmoClient.check(context, new ResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Client.Headers headers, String response) {
                     Thread.run(() -> {
@@ -106,7 +113,7 @@ public class Account {
                         Accounts.push(context, login);
                         if (isNewUser) {
                             FirebaseAnalyticsProvider.logBasicEvent(context, "New user authorized");
-                            ProtocolTracker.setup(context, storagePref, 0);
+                            ProtocolTracker.setup(context, deIfmoRestClient, storagePref, 0);
                         }
                         Thread.runOnUI(() -> {
                             loginHandler.onSuccess();
@@ -228,7 +235,7 @@ public class Account {
             }
             storage.put(context, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", cLogin);
             final String uName = storage.get(context, Storage.PERMANENT, Storage.USER, "user#name");
-            DeIfmoClient.get(context, "servlet/distributedCDE?Rule=SYSTEM_EXIT", null, new ResponseHandler() {
+            deIfmoClient.get(context, "servlet/distributedCDE?Rule=SYSTEM_EXIT", null, new ResponseHandler() {
                 @Override
                 public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                     Log.v(TAG, "logout | onSuccess");

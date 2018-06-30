@@ -19,7 +19,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.builder.Room101ReviewBuilder;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.Room101Client;
-import com.bukhmastov.cdoitmo.network.interfaces.ResponseHandler;
+import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.network.model.Room101;
 import com.bukhmastov.cdoitmo.object.Room101AddRequest;
@@ -52,6 +52,8 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
     private Storage storage = Storage.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private Room101Client room101Client = Room101Client.instance();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -159,7 +161,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
             params.put("reid", String.valueOf(reid));
             params.put("login", storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#login"));
             params.put("password", storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#password"));
-            Room101Client.post(activity, "delRequest.php", params, new ResponseHandler() {
+            room101Client.post(activity, "delRequest.php", params, new ResponseHandler() {
                 @Override
                 public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                     Thread.runOnUI(() -> {
@@ -343,7 +345,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
         });
     }
 
-    public static void execute(final Context context, final Storage storage, final String scope, final ResponseHandler responseHandler) {
+    public static void execute(final Context context, final Room101Client room101Client, final Storage storage, final String scope, final ResponseHandler responseHandler) {
         Thread.run(Thread.BACKGROUND, () -> {
             Log.v(TAG, "execute | scope=" + scope);
             HashMap<String, String> params = new HashMap<>();
@@ -351,7 +353,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
             params.put("view", scope);
             params.put("login", storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#login"));
             params.put("password", storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#password"));
-            Room101Client.post(context, "index.php", params, new ResponseHandler() {
+            room101Client.post(context, "index.php", params, new ResponseHandler() {
                 @Override
                 public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                     //noinspection Convert2Lambda
@@ -362,7 +364,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                                 Log.v(TAG, "execute | scope=" + scope + " | success | statusCode=" + statusCode);
                                 String location = headers.getValue("Location");
                                 if (location != null && !location.trim().isEmpty()) {
-                                    Room101Client.get(context, location, null, new ResponseHandler() {
+                                    room101Client.get(context, location, null, new ResponseHandler() {
                                         @Override
                                         public void onSuccess(int sc, Client.Headers h, String r) {
                                             responseHandler.onSuccess(sc, h, r);
@@ -462,7 +464,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                 }
             }
             if (!App.OFFLINE_MODE) {
-                execute(activity, storage, "delRequest", new ResponseHandler() {
+                execute(activity, room101Client, storage, "delRequest", new ResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                         Thread.run(() -> {

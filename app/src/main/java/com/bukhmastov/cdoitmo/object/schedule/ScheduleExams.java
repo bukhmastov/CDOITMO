@@ -4,8 +4,8 @@ import android.content.Context;
 
 import com.bukhmastov.cdoitmo.converter.schedule.exams.ScheduleExamsConverterIfmo;
 import com.bukhmastov.cdoitmo.network.IfmoClient;
-import com.bukhmastov.cdoitmo.network.interfaces.ResponseHandler;
-import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
+import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
+import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.parse.schedule.ScheduleExamsGroupParse;
 import com.bukhmastov.cdoitmo.parse.schedule.ScheduleExamsTeacherParse;
@@ -19,6 +19,9 @@ public class ScheduleExams extends Schedule {
 
     private static final String TAG = "ScheduleExams";
     public static final String TYPE = "exams";
+
+    //@Inject
+    private IfmoClient ifmoClient = IfmoClient.instance();
 
     public ScheduleExams(Handler handler) {
         super(handler);
@@ -42,7 +45,7 @@ public class ScheduleExams extends Schedule {
             public void onWebRequest(final String query, final String cache, final RestResponseHandler restResponseHandler) {
                 switch (source) {
                     case SOURCE.ISU: invokePending(query, withUserChanges, true, handler -> handler.onFailure(FAILED_INVALID_QUERY)); break;
-                    case SOURCE.IFMO: IfmoClient.get(context, "ru/exam/0/" + group + "/raspisanie_sessii.htm", null, new ResponseHandler() {
+                    case SOURCE.IFMO: ifmoClient.get(context, "ru/exam/0/" + group + "/raspisanie_sessii.htm", null, new ResponseHandler() {
                         @Override
                         public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                             Thread.run(new ScheduleExamsGroupParse(response, query, json -> restResponseHandler.onSuccess(statusCode, headers, json, null)));
@@ -105,7 +108,7 @@ public class ScheduleExams extends Schedule {
             public void onWebRequest(final String query, final String cache, final RestResponseHandler restResponseHandler) {
                 switch (source) {
                     case SOURCE.ISU: invokePending(query, withUserChanges, true, handler -> handler.onFailure(FAILED_INVALID_QUERY)); break;
-                    case SOURCE.IFMO: IfmoClient.get(context, "ru/exam/3/" + query + "/raspisanie_sessii.htm", null, new ResponseHandler() {
+                    case SOURCE.IFMO: ifmoClient.get(context, "ru/exam/3/" + query + "/raspisanie_sessii.htm", null, new ResponseHandler() {
                         @Override
                         public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                             Thread.run(new ScheduleExamsTeacherParse(response, query, json -> restResponseHandler.onSuccess(statusCode, headers, json, null)));

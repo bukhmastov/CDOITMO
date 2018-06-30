@@ -43,6 +43,7 @@ public class Migration {
                 // Skip migration for first launch. Users with version <28 become deprecated and unsupported.
                 // (actually, its 10 users at the beginning of december 2017)
                 // (5 users at the start of may 2018)
+                // (3 users at the end of june 2018)
                 if (!first_launch) {
                     try {
                         Class<?> migration = Class.forName("com.bukhmastov.cdoitmo.util.Migration");
@@ -778,13 +779,14 @@ public class Migration {
         storageProvider.getStoragePref().delete(context, "pref_schedule_refresh");
     }
 
-    @Keep
-    private static void migrate51(final Context context, final StorageProvider storageProvider) {
-        storageProvider.getStorage().clear(context, Storage.CACHE, Storage.USER, "protocol#log");
-        if (storageProvider.getStoragePref().get(context, "pref_protocol_changes_track", true)) {
-            ProtocolTracker.setup(context, storageProvider.getStoragePref(), 0);
-        }
-    }
+    // This migration no longer supported (5 users will be affected (28.06.2018))
+    //@Keep
+    //private static void migrate51(final Context context, final StorageProvider storageProvider) {
+    //    storageProvider.getStorage().clear(context, Storage.CACHE, Storage.USER, "protocol#log");
+    //    if (storageProvider.getStoragePref().get(context, "pref_protocol_changes_track", true)) {
+    //        ProtocolTracker.setup(context, storageProvider.getStoragePref(), 0);
+    //    }
+    //}
 
     @Keep
     private static void migrate29(final Context context, final StorageProvider storageProvider) {

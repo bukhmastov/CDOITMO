@@ -28,7 +28,7 @@ import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
-import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
+import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Color;
 import com.bukhmastov.cdoitmo.util.Storage;
@@ -37,7 +37,6 @@ import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.view.CircularTransformation;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
-import com.bukhmastov.cdoitmo.util.impl.StorageImpl;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -76,6 +75,8 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     private Storage storage = Storage.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private IfmoRestClient ifmoRestClient = IfmoRestClient.instance();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -246,7 +247,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     }
     private void loadProvider(RestResponseHandler handler) {
         Log.v(TAG, "loadProvider");
-        IfmoRestClient.get(activity, "building_map", null, handler);
+        ifmoRestClient.get(activity, "building_map", null, handler);
     }
     private void display() {
         if (building_map != null) {

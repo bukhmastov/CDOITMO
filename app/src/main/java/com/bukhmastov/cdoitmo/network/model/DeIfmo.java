@@ -1,11 +1,14 @@
 package com.bukhmastov.cdoitmo.network.model;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.network.interfaces.RawHandler;
-import com.bukhmastov.cdoitmo.network.interfaces.RawJsonHandler;
+import com.bukhmastov.cdoitmo.network.handlers.RawHandler;
+import com.bukhmastov.cdoitmo.network.handlers.RawJsonHandler;
+import com.bukhmastov.cdoitmo.network.provider.NetworkUserAgentProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
@@ -20,10 +23,9 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-//TODO interface - impl
 public abstract class DeIfmo extends Client {
 
-    private static final long jsessionid_ts_limit = 1200000L; // 20min // 20 * 60 * 1000
+    private static final long jsessionid_expiration_time_ms = 1200000L; // 20min // 20 * 60 * 1000
 
     public static final int STATE_CHECKING = 10;
     public static final int STATE_AUTHORIZATION = 11;
@@ -33,7 +35,69 @@ public abstract class DeIfmo extends Client {
     public static final int FAILED_AUTH_CREDENTIALS_FAILED = 12;
     public static final int FAILED_UNAUTHORIZED_MODE = 13;
 
-    protected static boolean checkJsessionId(final Context context) {
+    //@Inject
+    private NetworkUserAgentProvider networkUserAgentProvider = NetworkUserAgentProvider.instance();
+
+    /**
+     * Performs GET request
+     * @param context context, cannot be null
+     * @param url to be requested, cannot be null
+     * @param query of request
+     * @param rawHandler of request, cannot be null
+     * @see RawHandler
+     */
+    protected void g(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final RawHandler rawHandler) {
+        Thread.run(Thread.BACKGROUND, () -> {
+            try {
+                _g(url, getHeaders(context), query, rawHandler);
+            } catch (Throwable throwable) {
+                rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
+            }
+        });
+    }
+
+    /**
+     * Performs POST request
+     * @param context context, cannot be null
+     * @param url to be requested, cannot be null
+     * @param params of request
+     * @param rawHandler of request, cannot be null
+     * @see RawHandler
+     */
+    protected void p(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> params, @NonNull final RawHandler rawHandler) {
+        Thread.run(Thread.BACKGROUND, () -> {
+            try {
+                _p(url, getHeaders(context), null, params, rawHandler);
+            } catch (Throwable throwable) {
+                rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
+            }
+        });
+    }
+
+    /**
+     * Performs GET request and parse result as json
+     * @param context context, cannot be null
+     * @param url to be requested, cannot be null
+     * @param query of request
+     * @param rawJsonHandler of request, cannot be null
+     * @see RawJsonHandler
+     */
+    protected void gJson(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final RawJsonHandler rawJsonHandler) {
+        Thread.run(Thread.BACKGROUND, () -> {
+            try {
+                _gJson(url, getHeaders(context), query, rawJsonHandler);
+            } catch (Throwable throwable) {
+                rawJsonHandler.onError(STATUS_CODE_EMPTY, null, throwable);
+            }
+        });
+    }
+
+    /**
+     * Checks if jsessionid cookie is expired
+     * @param context context
+     * @return true if jsessionid is expired, false otherwise
+     */
+    protected boolean checkJsessionId(@NonNull final Context context) {
         boolean legit = false;
         JSONArray storedCookies;
         try {
@@ -63,44 +127,15 @@ public abstract class DeIfmo extends Client {
         }
         return !legit;
     }
-    protected static void g(final Context context, final String url, final Map<String, String> query, final RawHandler rawHandler) {
-        Thread.run(Thread.BACKGROUND, () -> {
-            try {
-                _g(url, getHeaders(context), query, rawHandler);
-            } catch (Throwable throwable) {
-                rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
-            }
-        });
-    }
-    protected static void p(final Context context, final String url, final Map<String, String> params, final RawHandler rawHandler) {
-        Thread.run(Thread.BACKGROUND, () -> {
-            try {
-                _p(url, getHeaders(context), null, params, rawHandler);
-            } catch (Throwable throwable) {
-                rawHandler.onError(STATUS_CODE_EMPTY, null, throwable);
-            }
-        });
-    }
-    protected static void gJson(final Context context, final String url, final Map<String, String> query, final RawJsonHandler rawJsonHandler) {
-        Thread.run(Thread.BACKGROUND, () -> {
-            try {
-                _gJson(url, getHeaders(context), query, rawJsonHandler);
-            } catch (Throwable throwable) {
-                rawJsonHandler.onError(STATUS_CODE_EMPTY, null, throwable);
-            }
-        });
-    }
 
-    protected static void storeCookies(final Context context, final okhttp3.Headers headers) {
-        storeCookies(context, headers, true);
-    }
-    protected static void storeCookies(final Context context, final okhttp3.Headers headers, final boolean refreshJsessionid) {
-        JSONArray cookies = mergeCookies(headers, storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#cookies", ""), refreshJsessionid);
-        storage.put(context, Storage.PERMANENT, Storage.USER, "user#deifmo#cookies", cookies.toString());
-    }
-    protected static JSONArray parseCookies(final okhttp3.Headers headers) {
+    @Override
+    @Nullable
+    protected JSONArray parseCookies(@Nullable final okhttp3.Headers headers) {
         try {
-            final JSONArray parsed = Client.parseCookies(headers);
+            final JSONArray parsed = super.parseCookies(headers);
+            if (parsed == null) {
+                return null;
+            }
             for (int i = 0; i < parsed.length(); i++) {
                 JSONObject cookie = parsed.getJSONObject(i);
                 String cookieName = cookie.getString("name");
@@ -125,7 +160,7 @@ public abstract class DeIfmo extends Client {
                         }
                     }
                     if (expires.isEmpty()) {
-                        expires = String.valueOf(System.currentTimeMillis() + jsessionid_ts_limit);
+                        expires = String.valueOf(System.currentTimeMillis() + jsessionid_expiration_time_ms);
                     }
                     for (int j = 0; j < cookieAttrs.length(); j++) {
                         JSONObject attr = cookieAttrs.getJSONObject(j);
@@ -147,12 +182,24 @@ public abstract class DeIfmo extends Client {
             return new JSONArray();
         }
     }
-    protected static JSONArray mergeCookies(final okhttp3.Headers headers, final String stored, final boolean refreshJsessionid) {
+
+    protected void storeCookies(@NonNull final Context context, final okhttp3.Headers headers) {
+        storeCookies(context, headers, true);
+    }
+    protected void storeCookies(@NonNull final Context context, final okhttp3.Headers headers, final boolean refreshJsessionid) {
+        JSONArray cookies = mergeCookies(headers, storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#cookies", ""), refreshJsessionid);
+        storage.put(context, Storage.PERMANENT, Storage.USER, "user#deifmo#cookies", cookies.toString());
+    }
+    @NonNull
+    private JSONArray mergeCookies(@NonNull final okhttp3.Headers headers, final String stored, final boolean refreshJsessionid) {
         JSONArray newCookies;
         JSONArray storedCookies;
         try {
             newCookies = parseCookies(headers);
         } catch (Exception e) {
+            newCookies = new JSONArray();
+        }
+        if (newCookies == null) {
             newCookies = new JSONArray();
         }
         try {
@@ -192,7 +239,7 @@ public abstract class DeIfmo extends Client {
                         }
                         attrs.put(new JSONObject()
                                 .put("name", "expires")
-                                .put("value", String.valueOf(System.currentTimeMillis() + jsessionid_ts_limit))
+                                .put("value", String.valueOf(System.currentTimeMillis() + jsessionid_expiration_time_ms))
                         );
                         storedCookie.put("attrs", attrs);
                         storedCookies.put(i, storedCookie);
@@ -206,9 +253,10 @@ public abstract class DeIfmo extends Client {
         }
     }
 
-    protected static okhttp3.Headers getHeaders(final Context context) throws Throwable {
+    @NonNull
+    protected okhttp3.Headers getHeaders(@NonNull final Context context) {
         HashMap<String, String> headers = new HashMap<>();
-        headers.put("User-Agent", Client.getUserAgent(context));
+        headers.put("User-Agent", networkUserAgentProvider.get(context));
         JSONArray storedCookies;
         try {
             storedCookies = new JSONArray(storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#cookies", ""));
@@ -230,7 +278,8 @@ public abstract class DeIfmo extends Client {
         return okhttp3.Headers.of(headers);
     }
 
-    public static String getFailureMessage(final Context context, final int statusCode) {
+    @NonNull
+    public static String getFailureMessage(@NonNull final Context context, final int statusCode) {
         if (statusCode == 591) {
             return context.getString(R.string.server_maintenance);
         } else {

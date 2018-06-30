@@ -17,7 +17,7 @@ import com.bukhmastov.cdoitmo.adapter.rva.ProtocolRVA;
 import com.bukhmastov.cdoitmo.converter.ProtocolConverter;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
-import com.bukhmastov.cdoitmo.network.interfaces.RestResponseHandler;
+import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Color;
@@ -49,6 +49,8 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
     private Storage storage = Storage.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private DeIfmoRestClient deIfmoRestClient = DeIfmoRestClient.instance();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -218,7 +220,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                         }
                     }
                 } else {
-                    DeIfmoRestClient.get(activity, "eregisterlog?days=" + String.valueOf(number_of_weeks * 7), null, new RestResponseHandler() {
+                    deIfmoRestClient.get(activity, "eregisterlog?days=" + String.valueOf(number_of_weeks * 7), null, new RestResponseHandler() {
                         @Override
                         public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject responseObj, final JSONArray responseArr) {
                             Thread.run(() -> {

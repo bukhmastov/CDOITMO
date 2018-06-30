@@ -12,6 +12,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
+import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.object.ProtocolTracker;
 import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
@@ -35,6 +36,8 @@ public abstract class Preference {
     protected Storage storage = Storage.instance();
     //@Inject
     protected StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private DeIfmoRestClient deIfmoRestClient = DeIfmoRestClient.instance();
 
     protected final ArrayList<PreferenceSwitch> preferenceDependencies = new ArrayList<>();
 
@@ -87,7 +90,7 @@ public abstract class Preference {
                 break;
             case "pref_protocol_changes_track":
                 if (storagePref.get(activity, "pref_protocol_changes_track", true)) {
-                    ProtocolTracker.setup(activity, storagePref, 0);
+                    ProtocolTracker.setup(activity, deIfmoRestClient, storagePref, 0);
                 } else {
                     storage.clear(activity, Storage.CACHE, Storage.USER, "protocol#log");
                 }
