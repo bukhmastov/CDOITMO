@@ -76,6 +76,8 @@ public abstract class Schedule {
     private StorageProvider storageProvider = StorageProvider.instance();
     //@Inject
     private IfmoRestClient ifmoRestClient = IfmoRestClient.instance();
+    //@Inject
+    private FirebasePerformanceProvider firebasePerformanceProvider = FirebasePerformanceProvider.instance();
 
     // Remote source of schedules to be downloaded from
     @Retention(RetentionPolicy.SOURCE)
@@ -173,7 +175,7 @@ public abstract class Schedule {
                 case "exams": name = FirebasePerformanceProvider.Trace.Schedule.EXAMS; break;
                 case "lessons": default: name = FirebasePerformanceProvider.Trace.Schedule.LESSONS; break;
             }
-            Schedule.trace.put(token, FirebasePerformanceProvider.startTrace(name));
+            Schedule.trace.put(token, firebasePerformanceProvider.startTrace(name));
             Schedule.pending.put(token, handlers);
             return true;
         }
@@ -194,7 +196,7 @@ public abstract class Schedule {
         if (remove) {
             Schedule.pending.remove(token);
             if (Schedule.trace.containsKey(token)) {
-                FirebasePerformanceProvider.stopTrace(Schedule.trace.get(token));
+                firebasePerformanceProvider.stopTrace(Schedule.trace.get(token));
                 Schedule.trace.remove(token);
             }
         }

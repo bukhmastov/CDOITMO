@@ -51,6 +51,8 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
     private DeIfmoRestClient deIfmoRestClient = DeIfmoRestClient.instance();
+    //@Inject
+    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -62,7 +64,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
             close();
             return;
         }
-        FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
+        firebaseAnalyticsProvider.logCurrentScreen(activity, this);
         group = storage.get(activity, Storage.CACHE, Storage.USER, "eregister#params#selected_group", "");
         term = -2;
     }
@@ -90,7 +92,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
         if (forbidden) {
             return;
         }
-        FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
+        firebaseAnalyticsProvider.setCurrentScreen(activity, this);
         try {
             if (activity.toolbar != null) {
                 MenuItem action_info = activity.toolbar.findItem(R.id.action_info);

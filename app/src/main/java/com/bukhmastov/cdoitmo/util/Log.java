@@ -15,6 +15,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Locale;
 
+//TODO interface - impl
 public class Log {
 
     public static String TAGD = "TAG_DEBUG";
@@ -25,6 +26,10 @@ public class Log {
             logList.clear();
         }
     }
+
+    //@Inject
+    //TODO interface - impl: remove static
+    private static FirebaseCrashlyticsProvider firebaseCrashlyticsProvider = FirebaseCrashlyticsProvider.instance();
 
     private static final SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.SSS", Locale.getDefault());
     private static ArrayList<LogItem> logList = null;
@@ -111,7 +116,7 @@ public class Log {
 
     public static int v(String TAG, Object... log) {
         String l = wrapLog(joinObjects(log));
-        FirebaseCrashlyticsProvider.v(TAG, l);
+        firebaseCrashlyticsProvider.v(TAG, l);
         if (enabled) {
             addLog(new LogItem(VERBOSE, TAG, l));
             return android.util.Log.v(TAG, l);
@@ -121,7 +126,7 @@ public class Log {
     }
     public static int d(Object... log) {
         String l = wrapLog(joinObjects(log));
-        FirebaseCrashlyticsProvider.d(TAGD, l);
+        firebaseCrashlyticsProvider.d(TAGD, l);
         if (enabled) {
             addLog(new LogItem(DEBUG, TAGD, l));
             return android.util.Log.d(TAGD, l);
@@ -131,7 +136,7 @@ public class Log {
     }
     public static int i(String TAG, Object... log) {
         String l = wrapLog(joinObjects(log));
-        FirebaseCrashlyticsProvider.i(TAG, l);
+        firebaseCrashlyticsProvider.i(TAG, l);
         if (enabled) {
             addLog(new LogItem(INFO, TAG, l));
             return android.util.Log.i(TAG, l);
@@ -142,7 +147,7 @@ public class Log {
     public static int w(String TAG, Object... log) {
         Metrics.warn++;
         String l = wrapLog(joinObjects(log));
-        FirebaseCrashlyticsProvider.w(TAG, l);
+        firebaseCrashlyticsProvider.w(TAG, l);
         if (enabled) {
             addLog(new LogItem(WARN, TAG, l));
             return android.util.Log.w(TAG, l);
@@ -153,7 +158,7 @@ public class Log {
     public static int e(String TAG, Object... log) {
         Metrics.error++;
         String l = wrapLog(joinObjects(log));
-        FirebaseCrashlyticsProvider.e(TAG, l);
+        firebaseCrashlyticsProvider.e(TAG, l);
         if (enabled) {
             addLog(new LogItem(ERROR, TAG, l));
             return android.util.Log.e(TAG, l);
@@ -164,7 +169,7 @@ public class Log {
     public static int wtf(String TAG, Object... log) {
         Metrics.wtf++;
         String l = wrapLog(joinObjects(log));
-        FirebaseCrashlyticsProvider.wtf(TAG, l);
+        firebaseCrashlyticsProvider.wtf(TAG, l);
         if (enabled) {
             addLog(new LogItem(WTF, TAG, l));
             return android.util.Log.wtf(TAG, l);
@@ -174,7 +179,7 @@ public class Log {
     }
     public static int wtf(Throwable throwable) {
         Metrics.wtf++;
-        FirebaseCrashlyticsProvider.wtf(throwable);
+        firebaseCrashlyticsProvider.wtf(throwable);
         if (enabled) {
             addLog(new LogItem(WTF_EXCEPTION, throwable));
             return android.util.Log.wtf("Assert", wrapLog(null), throwable);
@@ -188,7 +193,7 @@ public class Log {
     public static int exception(String msg, Throwable throwable) {
         Metrics.exception++;
         msg = wrapLog(msg);
-        FirebaseCrashlyticsProvider.exception(throwable);
+        firebaseCrashlyticsProvider.exception(throwable);
         if (enabled) {
             addLog(new LogItem(EXCEPTION, throwable));
             return android.util.Log.e("Exception", msg, throwable);

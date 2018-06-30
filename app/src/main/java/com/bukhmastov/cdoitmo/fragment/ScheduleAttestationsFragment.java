@@ -54,6 +54,8 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
 
     //@Inject
     private StorageProvider storageProvider = StorageProvider.instance();
+    //@Inject
+    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     public static void setQuery(String query) {
         ScheduleAttestationsFragment.lastQuery = ScheduleAttestationsFragment.query;
@@ -78,7 +80,7 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.v(TAG, "Fragment created");
-        FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
+        firebaseAnalyticsProvider.logCurrentScreen(activity, this);
         // define query
         String scope = restoreData(this);
         if (scope == null) {
@@ -120,7 +122,7 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
     public void onResume() {
         super.onResume();
         Log.v(TAG, "resumed");
-        FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
+        firebaseAnalyticsProvider.setCurrentScreen(activity, this);
         try {
             if (activity.toolbar != null) {
                 MenuItem action_search = activity.toolbar.findItem(R.id.action_search);

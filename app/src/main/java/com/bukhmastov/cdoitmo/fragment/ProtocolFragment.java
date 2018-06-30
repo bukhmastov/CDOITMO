@@ -51,6 +51,8 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
     private DeIfmoRestClient deIfmoRestClient = DeIfmoRestClient.instance();
+    //@Inject
+    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -62,7 +64,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
             close();
             return;
         }
-        FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
+        firebaseAnalyticsProvider.logCurrentScreen(activity, this);
         number_of_weeks = Integer.parseInt(storagePref.get(activity, "pref_protocol_changes_weeks", "1"));
     }
 
@@ -89,7 +91,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
         if (forbidden) {
             return;
         }
-        FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
+        firebaseAnalyticsProvider.setCurrentScreen(activity, this);
         try {
             if (activity.toolbar != null) {
                 final MenuItem simple = activity.toolbar.findItem(R.id.action_protocol_changes_switch_to_simple);

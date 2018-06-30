@@ -1,137 +1,35 @@
 package com.bukhmastov.cdoitmo.firebase;
 
 import android.content.Context;
-import android.support.annotation.StringDef;
 
-import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
-import com.bukhmastov.cdoitmo.util.BottomBar;
-import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.Static;
-import com.bukhmastov.cdoitmo.util.Thread;
-import com.crashlytics.android.Crashlytics;
+import com.bukhmastov.cdoitmo.firebase.impl.FirebaseCrashlyticsProviderImpl;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+public interface FirebaseCrashlyticsProvider {
 
-import io.fabric.sdk.android.Fabric;
-
-//TODO interface - impl
-public class FirebaseCrashlyticsProvider {
-
-    private static final String TAG = "FirebaseCrashlyticsProvider";
-    private static boolean enabled = true;
-
-    @Retention(RetentionPolicy.SOURCE)
-    @StringDef({VERBOSE, DEBUG, INFO, WARN, ERROR})
-    private @interface LEVEL {}
-    private static final String VERBOSE = "VERBOSE";
-    private static final String DEBUG = "DEBUG";
-    private static final String INFO = "INFO";
-    private static final String WARN = "WARN";
-    private static final String ERROR = "ERROR";
-
-    public static boolean setEnabled(Context context) {
-        //@Inject
-        StoragePref storagePref = StoragePref.instance();
-        return setEnabled(context, storagePref.get(context, "pref_allow_send_reports", true));
-    }
-    public static boolean setEnabled(Context context, boolean enabled) {
-        try {
-            FirebaseCrashlyticsProvider.enabled = enabled;
-            if (FirebaseCrashlyticsProvider.enabled) {
-                Fabric.with(context, new Crashlytics());
-                Crashlytics.setUserIdentifier(Static.getUUID(context));
-            }
-            Log.i(TAG, "Firebase Crashlytics " + (FirebaseCrashlyticsProvider.enabled ? "enabled" : "disabled"));
-        } catch (Exception e) {
-            Log.exception(e);
-        }
-        return FirebaseCrashlyticsProvider.enabled;
-    }
-    public static boolean setEnabled(ConnectedActivity activity, boolean enabled) {
-        try {
-            if (enabled) {
-                FirebaseCrashlyticsProvider.enabled = true;
-                Fabric.with(activity, new Crashlytics());
-                Log.i(TAG, "Firebase Crashlytics enabled");
-            } else {
-                BottomBar.snackBar(activity, activity.getString(R.string.changes_will_take_effect_next_startup));
-                Log.i(TAG, "Firebase Crashlytics will be disabled at the next start up");
-                FirebaseAnalyticsProvider.logBasicEvent(activity, "firebase_crash_disabled");
-            }
-        } catch (Exception e) {
-            Log.exception(e);
-        }
-        return FirebaseCrashlyticsProvider.enabled;
+    // future: replace with DI factory
+    FirebaseCrashlyticsProvider instance = new FirebaseCrashlyticsProviderImpl();
+    static FirebaseCrashlyticsProvider instance() {
+        return instance;
     }
 
-    public static void v(String TAG, String log) {
-        if (!enabled) return;
-        FirebaseCrashlyticsProvider.log(VERBOSE, TAG, log);
-    }
+    boolean setEnabled(Context context);
+    boolean setEnabled(Context context, boolean enabled);
+    boolean setEnabled(ConnectedActivity activity, boolean enabled);
 
-    public static void d(String TAG, String log) {
-        if (!enabled) return;
-        FirebaseCrashlyticsProvider.log(DEBUG, TAG, log);
-    }
+    void v(String TAG, String log);
 
-    public static void i(String TAG, String log) {
-        if (!enabled) return;
-        FirebaseCrashlyticsProvider.log(INFO, TAG, log);
-    }
+    void d(String TAG, String log);
 
-    public static void w(String TAG, String log) {
-        if (!enabled) return;
-        FirebaseCrashlyticsProvider.log(WARN, TAG, log);
-    }
+    void i(String TAG, String log);
 
-    public static void e(String TAG, String log) {
-        if (!enabled) return;
-        FirebaseCrashlyticsProvider.log(ERROR, TAG, log);
-    }
+    void w(String TAG, String log);
 
-    public static void wtf(String TAG, String log) {
-        if (!enabled) return;
-        FirebaseCrashlyticsProvider.exception(new Exception("WTF" + "/" + TAG + " " + log));
-    }
+    void e(String TAG, String log);
 
-    public static void wtf(Throwable throwable) {
-        if (!enabled) return;
-        FirebaseCrashlyticsProvider.exception(throwable);
-    }
+    void wtf(String TAG, String log);
 
-    public static void exception(final Throwable throwable) {
-        Thread.run(Thread.BACKGROUND, () -> {
-            try {
-                if (!enabled) return;
-                Crashlytics.logException(throwable);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-    }
+    void wtf(Throwable throwable);
 
-    public static void log(final @LEVEL String level, final String TAG, final String log) {
-        Thread.run(Thread.BACKGROUND, () -> {
-            try {
-                if (!enabled) return;
-                Crashlytics.log(level2priority(level), TAG, log);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-    }
-
-    private static int level2priority(final @LEVEL String level) {
-        switch(level) {
-            default:
-            case VERBOSE: return 2;
-            case DEBUG: return 3;
-            case INFO: return 4;
-            case WARN: return 5;
-            case ERROR: return 6;
-        }
-    }
+    void exception(final Throwable throwable);
 }

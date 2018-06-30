@@ -15,27 +15,30 @@ public abstract class Converter implements Runnable {
         void finish(JSONObject json);
     }
 
+    //@Inject
+    private FirebasePerformanceProvider firebasePerformanceProvider = FirebasePerformanceProvider.instance();
+
     public Converter(Response delegate) {
         this.delegate = delegate;
     }
 
     @Override
     public void run() {
-        String trace = FirebasePerformanceProvider.startTrace(getTraceName());
+        String trace = firebasePerformanceProvider.startTrace(getTraceName());
         try {
             JSONObject json = convert();
-            FirebasePerformanceProvider.putAttribute(trace, "state", "done");
+            firebasePerformanceProvider.putAttribute(trace, "state", "done");
             delegate.finish(json);
         } catch (SilentException silent) {
-            FirebasePerformanceProvider.putAttribute(trace, "state", "failed");
+            firebasePerformanceProvider.putAttribute(trace, "state", "failed");
             delegate.finish(null);
         } catch (Throwable e) {
-            FirebasePerformanceProvider.putAttribute(trace, "state", "failed");
-            FirebasePerformanceProvider.putAttribute(trace, "exception", e.getMessage());
+            firebasePerformanceProvider.putAttribute(trace, "state", "failed");
+            firebasePerformanceProvider.putAttribute(trace, "exception", e.getMessage());
             Log.exception(e);
             delegate.finish(null);
         } finally {
-            FirebasePerformanceProvider.stopTrace(trace);
+            firebasePerformanceProvider.stopTrace(trace);
         }
     }
 

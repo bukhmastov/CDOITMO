@@ -48,6 +48,8 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
     private DeIfmoClient deIfmoClient = DeIfmoClient.instance();
+    //@Inject
+    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({COMMON, OWN})
@@ -77,7 +79,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.v(TAG, "Fragment created");
-        FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
+        firebaseAnalyticsProvider.logCurrentScreen(activity, this);
         data.put(COMMON, new Info(EMPTY, null));
         data.put(OWN,    new Info(EMPTY, null));
     }
@@ -92,7 +94,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
     public void onResume() {
         super.onResume();
         Log.v(TAG, "resumed");
-        FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
+        firebaseAnalyticsProvider.setCurrentScreen(activity, this);
         if (!loaded) {
             loaded = true;
             try {
@@ -442,7 +444,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                 final RatingRVA adapter = new RatingRVA(activity, data);
                 adapter.setOnElementClickListener(R.id.common_apply, (v, data) -> Thread.run(() -> {
                     try {
-                        FirebaseAnalyticsProvider.logBasicEvent(activity, "Detailed rating used");
+                        firebaseAnalyticsProvider.logBasicEvent(activity, "Detailed rating used");
                         final JSONObject d = (JSONObject) data.get("data");
                         final String faculty = d.getString("faculty");
                         final String course = d.getString("course");
@@ -467,7 +469,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                     try {
                         final JSONObject d = (JSONObject) data.get("data");
                         if (d != null) {
-                            FirebaseAnalyticsProvider.logBasicEvent(activity, "Own rating used");
+                            firebaseAnalyticsProvider.logBasicEvent(activity, "Own rating used");
                             final String faculty = d.getString("faculty");
                             final String course = d.getString("course");
                             final String years = d.getString("years");

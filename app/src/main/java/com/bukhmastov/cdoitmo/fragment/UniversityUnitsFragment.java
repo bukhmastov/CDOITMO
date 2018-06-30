@@ -62,13 +62,15 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
     private IfmoRestClient ifmoRestClient = IfmoRestClient.instance();
+    //@Inject
+    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.v(TAG, "Fragment created");
         activity = getActivity();
-        FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
+        firebaseAnalyticsProvider.logCurrentScreen(activity, this);
     }
 
     @Override
@@ -81,7 +83,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
     public void onResume() {
         super.onResume();
         Log.v(TAG, "resumed");
-        FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
+        firebaseAnalyticsProvider.setCurrentScreen(activity, this);
         if (!loaded) {
             loaded = true;
             load();

@@ -23,12 +23,14 @@ public abstract class SettingsTemplatePreferencesFragment extends ConnectedFragm
 
     //@Inject
     protected StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.v(getTAG(), "Fragment created");
-        FirebaseAnalyticsProvider.logCurrentScreen(activity, getSelf());
+        firebaseAnalyticsProvider.logCurrentScreen(activity, getSelf());
     }
 
     @Override
@@ -42,7 +44,7 @@ public abstract class SettingsTemplatePreferencesFragment extends ConnectedFragm
     public void onResume() {
         super.onResume();
         Log.v(getTAG(), "resumed");
-        FirebaseAnalyticsProvider.setCurrentScreen(activity, getSelf());
+        firebaseAnalyticsProvider.setCurrentScreen(activity, getSelf());
         if (!loaded) {
             load();
         }

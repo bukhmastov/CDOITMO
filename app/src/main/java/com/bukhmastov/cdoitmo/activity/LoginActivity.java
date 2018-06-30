@@ -54,13 +54,17 @@ public class LoginActivity extends ConnectedActivity {
 
     //@Inject
     private Storage storage = Storage.instance();
+    //@Inject
+    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    //@Inject
+    private FirebaseConfigProvider firebaseConfigProvider = FirebaseConfigProvider.instance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Theme.applyActivityTheme(this);
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
-        FirebaseAnalyticsProvider.logCurrentScreen(this);
+        firebaseAnalyticsProvider.logCurrentScreen(this);
         setContentView(R.layout.activity_login);
         // Show introducing activity
         if (App.showIntroducingActivity) {
@@ -209,7 +213,7 @@ public class LoginActivity extends ConnectedActivity {
         Thread.run(() -> {
             try {
                 Log.v(TAG, "show");
-                FirebaseAnalyticsProvider.logEvent(activity, FirebaseAnalyticsProvider.Event.LOGIN_REQUIRED);
+                firebaseAnalyticsProvider.logEvent(activity, FirebaseAnalyticsProvider.Event.LOGIN_REQUIRED);
                 String cLogin = "", cPassword = "", cRole = "";
                 if (!storage.get(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", "").isEmpty()) {
                     cLogin = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#login", "");
@@ -255,7 +259,7 @@ public class LoginActivity extends ConnectedActivity {
             login(login, password, "student", true);
         });
         new_user_tile.findViewById(R.id.help).setOnClickListener(view -> {
-            FirebaseAnalyticsProvider.logBasicEvent(getBaseContext(), "Help with login clicked");
+            firebaseAnalyticsProvider.logBasicEvent(getBaseContext(), "Help with login clicked");
             new AlertDialog.Builder(activity)
                     .setIcon(R.drawable.ic_help)
                     .setTitle(R.string.auth_help_0)
@@ -449,7 +453,7 @@ public class LoginActivity extends ConnectedActivity {
             popup.show();
         });
         anonymous_user_tile.findViewById(R.id.info).setOnClickListener(view -> {
-            FirebaseAnalyticsProvider.logBasicEvent(getBaseContext(), "Help with anonymous login clicked");
+            firebaseAnalyticsProvider.logBasicEvent(getBaseContext(), "Help with anonymous login clicked");
             new AlertDialog.Builder(activity)
                     .setIcon(R.drawable.ic_help)
                     .setTitle(R.string.anonymous_login)
@@ -484,7 +488,7 @@ public class LoginActivity extends ConnectedActivity {
             @Override
             public void onInterrupted() {
                 Log.v(TAG, "login | onInterrupted");
-                FirebaseAnalyticsProvider.logBasicEvent(activity, "login interrupted");
+                firebaseAnalyticsProvider.logBasicEvent(activity, "login interrupted");
                 storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", login);
                 route(SIGNAL_GO_OFFLINE);
                 Static.lockOrientation(activity, false);
@@ -566,7 +570,7 @@ public class LoginActivity extends ConnectedActivity {
         });
     }
     private void displayRemoteMessage() {
-        Thread.run(() -> FirebaseConfigProvider.getJson(FirebaseConfigProvider.MESSAGE_LOGIN, value -> Thread.run(() -> {
+        Thread.run(() -> firebaseConfigProvider.getJson(FirebaseConfigProvider.MESSAGE_LOGIN, value -> Thread.run(() -> {
             try {
                 if (value == null) return;
                 final int type = value.getInt("type");

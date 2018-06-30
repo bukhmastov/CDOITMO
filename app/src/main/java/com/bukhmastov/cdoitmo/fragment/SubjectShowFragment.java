@@ -38,11 +38,14 @@ public class SubjectShowFragment extends ConnectedFragment {
         public String text = "";
     }
 
+    //@Inject
+    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         setHasOptionsMenu(true);
         super.onCreate(savedInstanceState);
-        FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
+        firebaseAnalyticsProvider.logCurrentScreen(activity, this);
         try {
             final Bundle extras = getArguments();
             if (extras == null) {
@@ -84,7 +87,7 @@ public class SubjectShowFragment extends ConnectedFragment {
     public void onResume() {
         super.onResume();
         if (data == null) return;
-        FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
+        firebaseAnalyticsProvider.setCurrentScreen(activity, this);
     }
 
     @Override
@@ -268,10 +271,10 @@ public class SubjectShowFragment extends ConnectedFragment {
             intent.putExtra(Intent.EXTRA_TEXT, title);
             activity.startActivity(Intent.createChooser(intent, activity.getString(R.string.share)));
             // track statistics
-            FirebaseAnalyticsProvider.logEvent(
+            firebaseAnalyticsProvider.logEvent(
                     activity,
                     FirebaseAnalyticsProvider.Event.SHARE,
-                    FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "subject")
+                    firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "subject")
             );
         });
     }

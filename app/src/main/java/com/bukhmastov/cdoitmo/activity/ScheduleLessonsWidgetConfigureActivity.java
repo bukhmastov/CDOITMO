@@ -93,6 +93,8 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
     private Storage storage = Storage.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Override
     public void onCreate(Bundle icicle) {
@@ -101,7 +103,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
         isDarkTheme = "dark".equals(theme) || "black".equals(theme);
         super.onCreate(icicle);
         Log.i(TAG, "Activity created");
-        FirebaseAnalyticsProvider.logCurrentScreen(this);
+        firebaseAnalyticsProvider.logCurrentScreen(this);
         setResult(RESULT_CANCELED);
         setContentView(R.layout.widget_configure_schedule_lessons);
         Toolbar toolbar = findViewById(R.id.toolbar_widget);
@@ -693,14 +695,14 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                 settings.put("useShiftAutomatic", Settings.useShiftAutomatic);
                 Log.v(TAG, "activateFinish | settings=" + settings.toString());
                 ScheduleLessonsWidgetStorage.save(activity, mAppWidgetId, "settings", settings.toString());
-                ScheduleLessonsWidget.updateAppWidget(activity, AppWidgetManager.getInstance(activity), mAppWidgetId, false);
+                (new ScheduleLessonsWidget()).updateAppWidget(activity, AppWidgetManager.getInstance(activity), mAppWidgetId, false);
                 Intent resultValue = new Intent();
                 resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
                 close(RESULT_OK, resultValue);
-                FirebaseAnalyticsProvider.logEvent(
+                firebaseAnalyticsProvider.logEvent(
                         activity,
                         FirebaseAnalyticsProvider.Event.WIDGET_INSTALL,
-                        FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.WIDGET_QUERY, Settings.Schedule.query)
+                        firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.WIDGET_QUERY, Settings.Schedule.query)
                 );
             } catch (Exception e) {
                 Log.w(TAG, "activateFinish | failed to create widget");

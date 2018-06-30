@@ -22,12 +22,14 @@ public class PikaActivity extends AppCompatActivity {
 
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.v(TAG, "PIKA is no longer hiding");
-        FirebaseAnalyticsProvider.logCurrentScreen(this);
+        firebaseAnalyticsProvider.logCurrentScreen(this);
         setContentView(R.layout.activity_pika);
         overridePendingTransition(R.anim.zoom_bottom_in, R.anim.zoom_bottom_out);
         if (random.nextInt(6) % 6 == 0) {

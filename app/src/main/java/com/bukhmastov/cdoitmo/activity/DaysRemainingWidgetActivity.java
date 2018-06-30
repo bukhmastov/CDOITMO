@@ -45,6 +45,8 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
 
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +59,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
         }
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
-        FirebaseAnalyticsProvider.logCurrentScreen(this);
+        firebaseAnalyticsProvider.logCurrentScreen(this);
         setContentView(R.layout.activity_widget_remaining);
         try {
             String shortcut_data = getIntent().getStringExtra("shortcut_data");
@@ -397,10 +399,10 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
             intent.putExtra(Intent.EXTRA_TEXT, text);
             activity.startActivity(Intent.createChooser(intent, activity.getString(R.string.share)));
             // track statistics
-            FirebaseAnalyticsProvider.logEvent(
+            firebaseAnalyticsProvider.logEvent(
                     activity,
                     FirebaseAnalyticsProvider.Event.SHARE,
-                    FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "days_remaining_widget")
+                    firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "days_remaining_widget")
             );
         }
     }

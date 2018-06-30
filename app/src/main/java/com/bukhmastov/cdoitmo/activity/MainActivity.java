@@ -17,6 +17,7 @@ import android.view.MenuItem;
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
+import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.fragment.ERegisterFragment;
@@ -58,6 +59,14 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
     private Storage storage = Storage.instance();
     //@Inject
     private StorageProvider storageProvider = StorageProvider.instance();
+    //@Inject
+    private FirebaseCrashlyticsProvider firebaseCrashlyticsProvider = FirebaseCrashlyticsProvider.instance();
+    //@Inject
+    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    //@Inject
+    private FirebasePerformanceProvider firebasePerformanceProvider = FirebasePerformanceProvider.instance();
+    //@Inject
+    private FirebaseConfigProvider firebaseConfigProvider = FirebaseConfigProvider.instance();
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -82,9 +91,9 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                     // set default preferences
                     SettingsFragment.applyDefaultValues(activity);
                     // enable/disable firebase
-                    FirebaseCrashlyticsProvider.setEnabled(activity);
-                    FirebaseAnalyticsProvider.setEnabled(activity);
-                    FirebasePerformanceProvider.setEnabled(activity);
+                    firebaseCrashlyticsProvider.setEnabled(activity);
+                    firebaseAnalyticsProvider.setEnabled(activity);
+                    firebasePerformanceProvider.setEnabled(activity);
                     // set auto_logout value
                     LoginActivity.auto_logout = storagePref.get(activity, "pref_auto_logout", false);
                     // set first_launch and intro values
@@ -94,8 +103,8 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                         storagePref.put(activity, "pref_first_launch", false);
                     }
                     // firebase events and properties
-                    FirebaseAnalyticsProvider.logEvent(activity, FirebaseAnalyticsProvider.Event.APP_OPEN);
-                    FirebaseAnalyticsProvider.setUserProperty(activity, FirebaseAnalyticsProvider.Property.THEME, Theme.getAppTheme(activity));
+                    firebaseAnalyticsProvider.logEvent(activity, FirebaseAnalyticsProvider.Event.APP_OPEN);
+                    firebaseAnalyticsProvider.setUserProperty(activity, FirebaseAnalyticsProvider.Property.THEME, Theme.getAppTheme(activity));
                 } catch (Exception e) {
                     Log.exception(e);
                 } finally {
@@ -135,8 +144,8 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
             NavigationView navigationView = findViewById(R.id.nav_view);
             navigationView.setNavigationItemSelectedListener(this);
             // track to firebase
-            FirebaseAnalyticsProvider.logCurrentScreen(this);
-            FirebaseAnalyticsProvider.setUserProperty(this, FirebaseAnalyticsProvider.Property.DEVICE, App.tablet ? "tablet" : "mobile");
+            firebaseAnalyticsProvider.logCurrentScreen(this);
+            firebaseAnalyticsProvider.setUserProperty(this, FirebaseAnalyticsProvider.Property.DEVICE, App.tablet ? "tablet" : "mobile");
             // setup static variables
             App.OFFLINE_MODE = "offline".equals(getIntent().getStringExtra("mode")) ||
                     !Client.isOnline(this) ||
@@ -283,7 +292,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                 Thread.run(Thread.BACKGROUND, () -> new ProtocolTracker(activity).check());
                 selectSection(selectedSection);
                 NavigationMenu.displayUserData(activity, storage, findViewById(R.id.nav_view));
-                NavigationMenu.displayRemoteMessage(activity, storage);
+                NavigationMenu.displayRemoteMessage(activity, firebaseConfigProvider, storage);
                 BottomBar.snackBarOffline(activity);
                 NavigationMenu.toggleOfflineIcon(toolbar);
             } else if (selectedMenuItem != null) {

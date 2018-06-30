@@ -65,6 +65,8 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
 
     //@Inject
     private Storage storage = Storage.instance();
+    //@Inject
+    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({ADDED, REDUCED})
@@ -75,7 +77,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
+        firebaseAnalyticsProvider.logCurrentScreen(activity, this);
         action = extras.getString("action");
         Log.v(TAG, "Fragment created | action=" + action);
         if (action == null || !(action.equals("share") || action.equals("handle"))) {
@@ -102,7 +104,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
         if (!keepGoing) {
             return;
         }
-        FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
+        firebaseAnalyticsProvider.setCurrentScreen(activity, this);
         if (!loaded) {
             loaded = true;
             try {
@@ -578,10 +580,10 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                 storage.put(activity, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token, reduced.toString());
             }
         }
-        FirebaseAnalyticsProvider.logEvent(
+        firebaseAnalyticsProvider.logEvent(
                 activity,
                 FirebaseAnalyticsProvider.Event.RECEIVE,
-                FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "schedule_lessons")
+                firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "schedule_lessons")
         );
         BottomBar.toast(activity, getString(R.string.changes_applied));
         finish();
@@ -613,10 +615,10 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
             intent.putExtra(Intent.EXTRA_STREAM, uri);
             try {
                 startActivity(Intent.createChooser(intent, activity.getString(R.string.share) + "..."));
-                FirebaseAnalyticsProvider.logEvent(
+                firebaseAnalyticsProvider.logEvent(
                         activity,
                         FirebaseAnalyticsProvider.Event.SHARE,
-                        FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "schedule_lessons")
+                        firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "schedule_lessons")
                 );
             } catch (Exception ignore) {
                 BottomBar.toast(activity, activity.getString(R.string.failed_to_share_file));

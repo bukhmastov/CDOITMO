@@ -17,6 +17,7 @@ import android.view.MenuItem;
 import android.view.ViewGroup;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NavigationMenu;
@@ -30,6 +31,8 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
 
     //@Inject
     private Storage storage = Storage.instance();
+    //@Inject
+    private FirebaseConfigProvider firebaseConfigProvider = FirebaseConfigProvider.instance();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -92,7 +95,7 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
             NavigationMenu.displayEnableDisableOfflineButton(navigationView);
             NavigationMenu.hideIfUnauthorizedMode(navigationView);
             NavigationMenu.displayUserData(this, storage, navigationView);
-            NavigationMenu.displayRemoteMessage(this, storage);
+            NavigationMenu.displayRemoteMessage(this, firebaseConfigProvider, storage);
         }
     }
 

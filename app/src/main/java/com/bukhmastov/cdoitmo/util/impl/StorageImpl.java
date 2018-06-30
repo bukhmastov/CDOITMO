@@ -26,13 +26,15 @@ public class StorageImpl implements Storage {
     private StorageLocalCache storageLocalCache = StorageLocalCache.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private FirebasePerformanceProvider firebasePerformanceProvider = FirebasePerformanceProvider.instance();
 
     @Override
     public synchronized boolean put(@NonNull Context context, @NonNull String mode, @NonNull String type, @NonNull String path, String data) {
-        String trace = FirebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.Storage.PUT);
+        String trace = firebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.Storage.PUT);
         try {
             Log.v(TAG, "put | mode=", mode, " | type=", type, " | path=", path);
-            FirebasePerformanceProvider.putAttribute(trace, "path", mode, "#", type, "#", path);
+            firebasePerformanceProvider.putAttribute(trace, "path", mode, "#", type, "#", path);
             if (context == null) {
                 Log.v(TAG, "put | mode=", mode, " | type=", type, " | path=", path, " | context is null");
                 return false;
@@ -50,10 +52,10 @@ public class StorageImpl implements Storage {
             storageLocalCache.push(file.getAbsolutePath(), data, 1);
             return true;
         } catch (Exception e) {
-            FirebasePerformanceProvider.putAttribute(trace, "exception", e.getMessage());
+            firebasePerformanceProvider.putAttribute(trace, "exception", e.getMessage());
             return false;
         } finally {
-            FirebasePerformanceProvider.stopTrace(trace);
+            firebasePerformanceProvider.stopTrace(trace);
         }
     }
 
@@ -64,10 +66,10 @@ public class StorageImpl implements Storage {
 
     @Override
     public String get(@NonNull Context context, @NonNull String mode, @NonNull String type, @NonNull String path, String def) {
-        String trace = FirebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.Storage.GET);
+        String trace = firebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.Storage.GET);
         try {
             Log.v(TAG, "get | mode=", mode, " | type=", type, " | path=", path);
-            FirebasePerformanceProvider.putAttribute(trace, "path", mode, "#", type, "#", path);
+            firebasePerformanceProvider.putAttribute(trace, "path", mode, "#", type, "#", path);
             if (context == null) {
                 Log.v(TAG, "get | mode=", mode, " | type=", type, " | path=", path, " | context is null");
                 return def;
@@ -93,19 +95,19 @@ public class StorageImpl implements Storage {
             storageLocalCache.push(path, data.toString(), 1);
             return data.toString();
         } catch (Exception e) {
-            FirebasePerformanceProvider.putAttribute(trace, "exception", e.getMessage());
+            firebasePerformanceProvider.putAttribute(trace, "exception", e.getMessage());
             return def;
         } finally {
-            FirebasePerformanceProvider.stopTrace(trace);
+            firebasePerformanceProvider.stopTrace(trace);
         }
     }
 
     @Override
     public boolean exists(@NonNull Context context, @NonNull String mode, @NonNull String type, @NonNull String path) {
-        String trace = FirebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.Storage.EXISTS);
+        String trace = firebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.Storage.EXISTS);
         try {
             Log.v(TAG, "exists | mode=", mode, " | type=", type, " | path=", path);
-            FirebasePerformanceProvider.putAttribute(trace, "path", mode, "#", type, "#",  path);
+            firebasePerformanceProvider.putAttribute(trace, "path", mode, "#", type, "#",  path);
             if (context == null) {
                 Log.v(TAG, "exists | mode=", mode, " | type=", type, " | path=", path, " | context is null");
                 return false;
@@ -114,19 +116,19 @@ public class StorageImpl implements Storage {
             storageLocalCache.access(file.getAbsolutePath());
             return file.exists();
         } catch (Exception e) {
-            FirebasePerformanceProvider.putAttribute(trace, "exception", e.getMessage());
+            firebasePerformanceProvider.putAttribute(trace, "exception", e.getMessage());
             return false;
         } finally {
-            FirebasePerformanceProvider.stopTrace(trace);
+            firebasePerformanceProvider.stopTrace(trace);
         }
     }
 
     @Override
     public synchronized boolean delete(@NonNull Context context, @NonNull String mode, @NonNull String type, @NonNull String path) {
-        String trace = FirebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.Storage.DELETE);
+        String trace = firebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.Storage.DELETE);
         try {
             Log.v(TAG, "delete | mode=", mode, " | type=", type, " | path=", path);
-            FirebasePerformanceProvider.putAttribute(trace, "path", mode, "#", type, "#", path);
+            firebasePerformanceProvider.putAttribute(trace, "path", mode, "#", type, "#", path);
             if (context == null) {
                 Log.v(TAG, "delete | mode=", mode, " | type=", type, " | path=", path, " | context is null");
                 return false;
@@ -136,10 +138,10 @@ public class StorageImpl implements Storage {
             storageLocalCache.delete(path);
             return file.exists() && deleteRecursive(file);
         } catch (Exception e) {
-            FirebasePerformanceProvider.putAttribute(trace, "exception", e.getMessage());
+            firebasePerformanceProvider.putAttribute(trace, "exception", e.getMessage());
             return false;
         } finally {
-            FirebasePerformanceProvider.stopTrace(trace);
+            firebasePerformanceProvider.stopTrace(trace);
         }
     }
 
@@ -148,10 +150,10 @@ public class StorageImpl implements Storage {
         if (mode == null) {
             return clear(context, Storage.CACHE) && clear(context, Storage.PERMANENT);
         }
-        String trace = FirebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.Storage.CLEAR);
+        String trace = firebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.Storage.CLEAR);
         try {
             Log.v(TAG, "clear | mode=", mode);
-            FirebasePerformanceProvider.putAttribute(trace, "path", mode);
+            firebasePerformanceProvider.putAttribute(trace, "path", mode);
             if (context == null) {
                 Log.v(TAG, "clear | mode=", mode, " | context is null");
                 return false;
@@ -159,10 +161,10 @@ public class StorageImpl implements Storage {
             File file = new File(getCoreLocation(context, mode));
             return file.exists() && deleteRecursive(file);
         } catch (Exception e) {
-            FirebasePerformanceProvider.putAttribute(trace, "exception", e.getMessage());
+            firebasePerformanceProvider.putAttribute(trace, "exception", e.getMessage());
             return false;
         } finally {
-            FirebasePerformanceProvider.stopTrace(trace);
+            firebasePerformanceProvider.stopTrace(trace);
         }
     }
 
@@ -171,10 +173,10 @@ public class StorageImpl implements Storage {
         if (mode == null) {
             return clear(context, Storage.CACHE, type) && clear(context, Storage.PERMANENT, type);
         }
-        String trace = FirebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.Storage.CLEAR);
+        String trace = firebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.Storage.CLEAR);
         try {
             Log.v(TAG, "clear | mode=", mode, " | type=", type);
-            FirebasePerformanceProvider.putAttribute(trace, "path", mode, "#", type);
+            firebasePerformanceProvider.putAttribute(trace, "path", mode, "#", type);
             if (context == null) {
                 Log.v(TAG, "clear | mode=", mode, " | type=", type, " | context is null");
                 return false;
@@ -182,10 +184,10 @@ public class StorageImpl implements Storage {
             File file = new File(getLocation(context, mode, type));
             return file.exists() && deleteRecursive(file);
         } catch (Exception e) {
-            FirebasePerformanceProvider.putAttribute(trace, "exception", e.getMessage());
+            firebasePerformanceProvider.putAttribute(trace, "exception", e.getMessage());
             return false;
         } finally {
-            FirebasePerformanceProvider.stopTrace(trace);
+            firebasePerformanceProvider.stopTrace(trace);
         }
     }
 
@@ -194,10 +196,10 @@ public class StorageImpl implements Storage {
         if (mode == null) {
             return clear(context, Storage.CACHE, type, path) && clear(context, Storage.PERMANENT, type, path);
         }
-        String trace = FirebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.Storage.CLEAR);
+        String trace = firebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.Storage.CLEAR);
         try {
             Log.v(TAG, "clear | mode=", mode, " | type=", type, " | path=", path);
-            FirebasePerformanceProvider.putAttribute(trace, "path", mode, "#", type, "#", path);
+            firebasePerformanceProvider.putAttribute(trace, "path", mode, "#", type, "#", path);
             if (context == null) {
                 Log.v(TAG, "clear | mode=", mode, " | type=", type, " | path=", path, " | context is null");
                 return false;
@@ -205,20 +207,20 @@ public class StorageImpl implements Storage {
             File file = new File(getFileLocation(context, mode, type, path, false));
             return file.exists() && deleteRecursive(file);
         } catch (Exception e) {
-            FirebasePerformanceProvider.putAttribute(trace, "exception", e.getMessage());
+            firebasePerformanceProvider.putAttribute(trace, "exception", e.getMessage());
             return false;
         } finally {
-            FirebasePerformanceProvider.stopTrace(trace);
+            firebasePerformanceProvider.stopTrace(trace);
         }
     }
 
     @Override
     public ArrayList<String> list(@NonNull Context context, @NonNull String mode, @NonNull String type, @NonNull String path) {
-        String trace = FirebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.Storage.LIST);
+        String trace = firebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.Storage.LIST);
         ArrayList<String> response = new ArrayList<>();
         try {
             Log.v(TAG, "list | mode=", mode, " | type=", type, " | path=", path);
-            FirebasePerformanceProvider.putAttribute(trace, "path", mode, "#", type, "#", path);
+            firebasePerformanceProvider.putAttribute(trace, "path", mode, "#", type, "#", path);
             if (context == null) {
                 Log.v(TAG, "list | mode=", mode, " | type=", type, " | path=", path, " | context is null");
                 return response;
@@ -231,20 +233,20 @@ public class StorageImpl implements Storage {
                 }
             }
         } catch (Exception e) {
-            FirebasePerformanceProvider.putAttribute(trace, "exception", e.getMessage());
+            firebasePerformanceProvider.putAttribute(trace, "exception", e.getMessage());
             Log.exception(e);
         } finally {
-            FirebasePerformanceProvider.stopTrace(trace);
+            firebasePerformanceProvider.stopTrace(trace);
         }
         return response;
     }
 
     @Override
     public long getDirSize(@NonNull Context context, @NonNull String mode, @NonNull String type,@NonNull  String path) {
-        String trace = FirebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.Storage.SIZE);
+        String trace = firebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.Storage.SIZE);
         try {
             Log.v(TAG, "size | mode=", mode, " | type=", type, " | path=", path);
-            FirebasePerformanceProvider.putAttribute(trace, "path", mode, "#", type, "#", path);
+            firebasePerformanceProvider.putAttribute(trace, "path", mode, "#", type, "#", path);
             if (context == null) {
                 Log.v(TAG, "size | mode=", mode, " | type=", type, " | path=", path, " | context is null");
                 return 0L;
@@ -275,9 +277,9 @@ public class StorageImpl implements Storage {
             }
             return size;
         } catch (Exception e) {
-            FirebasePerformanceProvider.putAttribute(trace, "exception", e.getMessage());
+            firebasePerformanceProvider.putAttribute(trace, "exception", e.getMessage());
         } finally {
-            FirebasePerformanceProvider.stopTrace(trace);
+            firebasePerformanceProvider.stopTrace(trace);
         }
         return 0L;
     }

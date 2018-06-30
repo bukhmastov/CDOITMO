@@ -31,12 +31,14 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
     private StorageProvider storageProvider = StorageProvider.instance();
+    //@Inject
+    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.v(TAG, "Fragment created");
-        FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
+        firebaseAnalyticsProvider.logCurrentScreen(activity, this);
         // define query
         String scope = ScheduleLessonsTabHostFragment.restoreData();
         if (scope == null) {
@@ -79,7 +81,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
     public void onResume() {
         super.onResume();
         Log.v(TAG, "resumed");
-        FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
+        firebaseAnalyticsProvider.setCurrentScreen(activity, this);
         try {
             if (activity.toolbar != null) {
                 MenuItem action_search = activity.toolbar.findItem(R.id.action_search);

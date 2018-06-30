@@ -50,12 +50,14 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
     private Storage storage = Storage.instance();
     //@Inject
     private DeIfmoClient deIfmoClient = DeIfmoClient.instance();
+    //@Inject
+    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         setHasOptionsMenu(true);
         super.onCreate(savedInstanceState);
-        FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
+        firebaseAnalyticsProvider.logCurrentScreen(activity, this);
     }
 
     @Override
@@ -96,7 +98,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
     public void onResume() {
         super.onResume();
         Log.v(TAG, "Fragment resumed");
-        FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
+        firebaseAnalyticsProvider.setCurrentScreen(activity, this);
         if (!loaded) {
             loaded = true;
             try {
@@ -365,10 +367,10 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
             intent.putExtra(Intent.EXTRA_TEXT, title);
             activity.startActivity(Intent.createChooser(intent, activity.getString(R.string.share)));
             // track statistics
-            FirebaseAnalyticsProvider.logEvent(
+            firebaseAnalyticsProvider.logEvent(
                     activity,
                     FirebaseAnalyticsProvider.Event.SHARE,
-                    FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "rating")
+                    firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "rating")
             );
         });
     }

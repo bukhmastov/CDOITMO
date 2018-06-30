@@ -17,6 +17,9 @@ public abstract class Parse implements Runnable {
         void finish(JSONObject json);
     }
 
+    //@Inject
+    private FirebasePerformanceProvider firebasePerformanceProvider = FirebasePerformanceProvider.instance();
+
     public Parse(String data, Response delegate) {
         this.data = data;
         this.delegate = delegate;
@@ -24,25 +27,25 @@ public abstract class Parse implements Runnable {
 
     @Override
     public void run() {
-        String trace = FirebasePerformanceProvider.startTrace(getTraceName());
+        String trace = firebasePerformanceProvider.startTrace(getTraceName());
         try {
             TagNode root = new HtmlCleaner().clean(data.replace("&nbsp;", " "));
             if (root == null) {
                 throw new SilentException();
             }
             JSONObject json = parse(root);
-            FirebasePerformanceProvider.putAttribute(trace, "state", "done");
+            firebasePerformanceProvider.putAttribute(trace, "state", "done");
             delegate.finish(json);
         } catch (SilentException silent) {
-            FirebasePerformanceProvider.putAttribute(trace, "state", "failed");
+            firebasePerformanceProvider.putAttribute(trace, "state", "failed");
             delegate.finish(null);
         } catch (Throwable e) {
-            FirebasePerformanceProvider.putAttribute(trace, "state", "failed");
-            FirebasePerformanceProvider.putAttribute(trace, "exception", e.getMessage());
+            firebasePerformanceProvider.putAttribute(trace, "state", "failed");
+            firebasePerformanceProvider.putAttribute(trace, "exception", e.getMessage());
             Log.exception(e);
             delegate.finish(null);
         } finally {
-            FirebasePerformanceProvider.stopTrace(trace);
+            firebasePerformanceProvider.stopTrace(trace);
         }
     }
 

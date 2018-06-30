@@ -29,6 +29,9 @@ public class DeIfmoClientImpl extends DeIfmoClient {
     private static final String DEFAULT_PROTOCOL = HTTPS;
     private static final boolean DEFAULT_RE_AUTH = true;
 
+    //@Inject
+    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+
     @Override
     public void check(@NonNull final Context context, @NonNull final ResponseHandler responseHandler) {
         Thread.run(Thread.BACKGROUND, () -> {
@@ -102,7 +105,7 @@ public class DeIfmoClientImpl extends DeIfmoClient {
                                         Log.exception(e);
                                         storage.delete(context, Storage.PERMANENT, Storage.GLOBAL, "user#week");
                                     }
-                                    FirebaseAnalyticsProvider.setUserProperties(context, group);
+                                    firebaseAnalyticsProvider.setUserProperties(context, group);
                                     responseHandler.onSuccess(200, headers, "");
                                 } else {
                                     Log.v(TAG, "check | success | not parsed");

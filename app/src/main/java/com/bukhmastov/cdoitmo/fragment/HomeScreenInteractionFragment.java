@@ -52,6 +52,8 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
 
     //@Inject
     private Storage storage = Storage.instance();
+    //@Inject
+    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     private interface result {
         void done(String title, String query);
@@ -102,7 +104,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.v(TAG, "Fragment created");
-        FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
+        firebaseAnalyticsProvider.logCurrentScreen(activity, this);
         Data data = getData(activity, this.getClass());
         if (data != null) {
             activity.updateToolbar(activity, data.title, data.image);
@@ -141,7 +143,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
     public void onResume() {
         super.onResume();
         Log.v(TAG, "Fragment resumed");
-        FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
+        firebaseAnalyticsProvider.setCurrentScreen(activity, this);
         if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O) {
             activity.registerReceiver(receiver, new IntentFilter(ShortcutReceiver.ACTION_INSTALL_SHORTCUT));
         }

@@ -44,6 +44,8 @@ public class ProtocolTrackerJobService extends JobService {
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
     private DeIfmoRestClient deIfmoRestClient = DeIfmoRestClient.instance();
+    //@Inject
+    private FirebasePerformanceProvider firebasePerformanceProvider = FirebasePerformanceProvider.instance();
 
     @Override
     public boolean onStartJob(JobParameters params) {
@@ -58,12 +60,12 @@ public class ProtocolTrackerJobService extends JobService {
     public boolean onStopJob(JobParameters params) {
         Log.i(TAG, "Stopped");
         if (requestHandle != null) requestHandle.cancel();
-        FirebasePerformanceProvider.stopTrace(trace);
+        firebasePerformanceProvider.stopTrace(trace);
         return true;
     }
 
     private void request() {
-        trace = FirebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.PROTOCOL_TRACKER);
+        trace = firebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.PROTOCOL_TRACKER);
         Thread.run(Thread.BACKGROUND, () -> {
             try {
                 attempt++;
@@ -120,7 +122,7 @@ public class ProtocolTrackerJobService extends JobService {
     }
     private void w8andRequest() {
         try {
-            FirebasePerformanceProvider.stopTrace(trace);
+            firebasePerformanceProvider.stopTrace(trace);
             Thread.run(Thread.BACKGROUND, () -> {
                 try {
                     Log.v(TAG, "w8andRequest");
@@ -270,7 +272,7 @@ public class ProtocolTrackerJobService extends JobService {
     }
     private void finish() {
         try {
-            FirebasePerformanceProvider.stopTrace(trace);
+            firebasePerformanceProvider.stopTrace(trace);
             Thread.run(Thread.BACKGROUND, () -> {
                 try {
                     Log.i(TAG, "Executed");

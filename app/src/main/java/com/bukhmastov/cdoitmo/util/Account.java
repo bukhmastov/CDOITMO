@@ -51,16 +51,22 @@ public class Account {
     //@Inject
     //TODO interface - impl: remove static
     private static DeIfmoRestClient deIfmoRestClient = DeIfmoRestClient.instance();
+    //@Inject
+    //TODO interface - impl: remove static
+    private static FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    //@Inject
+    //TODO interface - impl: remove static
+    private static FirebasePerformanceProvider firebasePerformanceProvider = FirebasePerformanceProvider.instance();
 
     public static void login(@NonNull final Context context, @NonNull final String login, @NonNull final String password, @NonNull final String role, final boolean isNewUser, @NonNull final LoginHandler loginHandler) {
-        final String trace = FirebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.LOGIN);
+        final String trace = firebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.LOGIN);
         Thread.run(() -> {
             final boolean IS_USER_UNAUTHORIZED = USER_UNAUTHORIZED.equals(login);
             Log.v(TAG, "login | login=", login, " | password.length()=", password.length(), " | role=", role, " | isNewUser=", isNewUser, " | IS_USER_UNAUTHORIZED=", IS_USER_UNAUTHORIZED, " | OFFLINE_MODE=", App.OFFLINE_MODE);
             if (login.isEmpty() || password.isEmpty()) {
                 Thread.runOnUI(() -> {
                     loginHandler.onFailure(context.getString(R.string.required_login_password));
-                    FirebasePerformanceProvider.putAttributeAndStop(trace, "state", "failed_credentials_required");
+                    firebasePerformanceProvider.putAttributeAndStop(trace, "state", "failed_credentials_required");
                 });
                 return;
             }
@@ -68,7 +74,7 @@ public class Account {
                 Log.w(TAG, "login | got \"general\" login that does not supported");
                 Thread.runOnUI(() -> {
                     loginHandler.onFailure(context.getString(R.string.wrong_login_general));
-                    FirebasePerformanceProvider.putAttributeAndStop(trace, "state", "failed_login_general");
+                    firebasePerformanceProvider.putAttributeAndStop(trace, "state", "failed_login_general");
                 });
                 return;
             }
@@ -85,10 +91,10 @@ public class Account {
                     App.UNAUTHORIZED_MODE = true;
                     if (App.OFFLINE_MODE) {
                         loginHandler.onOffline();
-                        FirebasePerformanceProvider.putAttributeAndStop(trace, "state", "success_unauthorized_offline");
+                        firebasePerformanceProvider.putAttributeAndStop(trace, "state", "success_unauthorized_offline");
                     } else {
                         loginHandler.onSuccess();
-                        FirebasePerformanceProvider.putAttributeAndStop(trace, "state", "success_unauthorized");
+                        firebasePerformanceProvider.putAttributeAndStop(trace, "state", "success_unauthorized");
                     }
                     return;
                 });
@@ -100,7 +106,7 @@ public class Account {
                     Thread.runOnUI(() -> {
                         Account.authorized = true;
                         loginHandler.onOffline();
-                        FirebasePerformanceProvider.putAttributeAndStop(trace, "state", "success_offline");
+                        firebasePerformanceProvider.putAttributeAndStop(trace, "state", "success_offline");
                     });
                     return;
                 }
@@ -112,12 +118,12 @@ public class Account {
                         Account.authorized = true;
                         Accounts.push(context, login);
                         if (isNewUser) {
-                            FirebaseAnalyticsProvider.logBasicEvent(context, "New user authorized");
+                            firebaseAnalyticsProvider.logBasicEvent(context, "New user authorized");
                             ProtocolTracker.setup(context, deIfmoRestClient, storagePref, 0);
                         }
                         Thread.runOnUI(() -> {
                             loginHandler.onSuccess();
-                            FirebasePerformanceProvider.putAttributeAndStop(trace, "state", "success");
+                            firebasePerformanceProvider.putAttributeAndStop(trace, "state", "success");
                         });
                     });
                 }
@@ -130,7 +136,7 @@ public class Account {
                             } else {
                                 loginHandler.onFailure(text);
                             }
-                            FirebasePerformanceProvider.stopTrace(trace);
+                            firebasePerformanceProvider.stopTrace(trace);
                         });
                         Callable cb;
                         switch (state) {
@@ -138,12 +144,12 @@ public class Account {
                                 if (isNewUser) {
                                     Account.logoutTemporarily(context, () -> {
                                         callback.call(context.getString(R.string.network_unavailable));
-                                        FirebasePerformanceProvider.putAttribute(trace, "state", "failed_network_unavailable");
+                                        firebasePerformanceProvider.putAttribute(trace, "state", "failed_network_unavailable");
                                     });
                                 } else {
                                     Account.authorized = true;
                                     callback.call("offline");
-                                    FirebasePerformanceProvider.putAttribute(trace, "state", "failed_offline");
+                                    firebasePerformanceProvider.putAttribute(trace, "state", "failed_offline");
                                 }
                                 break;
                             default:
@@ -152,7 +158,7 @@ public class Account {
                             case DeIfmoClient.FAILED_SERVER_ERROR:
                                 Account.logoutTemporarily(context, () -> {
                                     callback.call(context.getString(R.string.auth_failed) + (state == DeIfmoClient.FAILED_SERVER_ERROR ? ". " + DeIfmoClient.getFailureMessage(context, statusCode) : ""));
-                                    FirebasePerformanceProvider.putAttribute(trace, "state", "failed_auth");
+                                    firebasePerformanceProvider.putAttribute(trace, "state", "failed_auth");
                                 });
                                 break;
                             case DeIfmoClient.FAILED_INTERRUPTED:
@@ -161,7 +167,7 @@ public class Account {
                             case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED:
                                 cb = () -> {
                                     callback.call(context.getString(R.string.required_login_password));
-                                    FirebasePerformanceProvider.putAttribute(trace, "state", "failed_credentials_required");
+                                    firebasePerformanceProvider.putAttribute(trace, "state", "failed_credentials_required");
                                 };
                                 if (isNewUser) {
                                     Account.logoutPermanently(context, login, cb);
@@ -172,7 +178,7 @@ public class Account {
                             case DeIfmoClient.FAILED_AUTH_CREDENTIALS_FAILED:
                                 cb = () -> {
                                     callback.call(context.getString(R.string.invalid_login_password));
-                                    FirebasePerformanceProvider.putAttribute(trace, "state", "failed_credentials_failed");
+                                    firebasePerformanceProvider.putAttribute(trace, "state", "failed_credentials_failed");
                                 };
                                 if (isNewUser) {
                                     Account.logoutPermanently(context, login, cb);
@@ -213,7 +219,7 @@ public class Account {
         logout(context, null, logoutHandler);
     }
     public static void logout(@NonNull final Context context, @Nullable final String login, @NonNull final LogoutHandler logoutHandler) {
-        final String trace = FirebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.LOGOUT);
+        final String trace = firebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.LOGOUT);
         Thread.run(() -> {
             @NonNull final String cLogin = login != null ? login : storage.get(context, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
             final boolean IS_USER_UNAUTHORIZED = USER_UNAUTHORIZED.equals(cLogin);
@@ -222,14 +228,14 @@ public class Account {
                 Log.w(TAG, "logout | got \"general\" login that does not supported");
                 Thread.runOnUI(() -> {
                     logoutHandler.onFailure(context.getString(R.string.wrong_login_general));
-                    FirebasePerformanceProvider.putAttributeAndStop(trace, "state", "failed_login_general");
+                    firebasePerformanceProvider.putAttributeAndStop(trace, "state", "failed_login_general");
                 });
                 return;
             }
             if (IS_USER_UNAUTHORIZED || App.OFFLINE_MODE || cLogin.isEmpty()) {
                 logoutPermanently(context, cLogin, () -> {
                     logoutHandler.onSuccess();
-                    FirebasePerformanceProvider.putAttributeAndStop(trace, "state", "success_local");
+                    firebasePerformanceProvider.putAttributeAndStop(trace, "state", "success_local");
                 });
                 return;
             }
@@ -241,7 +247,7 @@ public class Account {
                     Log.v(TAG, "logout | onSuccess");
                     logoutPermanently(context, cLogin, () -> {
                         logoutHandler.onSuccess();
-                        FirebasePerformanceProvider.putAttributeAndStop(trace, "state", "success");
+                        firebasePerformanceProvider.putAttributeAndStop(trace, "state", "success");
                     });
                 }
                 @Override
@@ -249,7 +255,7 @@ public class Account {
                     Log.v(TAG, "logout | onFailure | statusCode=", statusCode, " | state=", state);
                     logoutPermanently(context, cLogin, () -> {
                         logoutHandler.onSuccess();
-                        FirebasePerformanceProvider.putAttributeAndStop(trace, "state", "success");
+                        firebasePerformanceProvider.putAttributeAndStop(trace, "state", "success");
                     });
                 }
                 @Override

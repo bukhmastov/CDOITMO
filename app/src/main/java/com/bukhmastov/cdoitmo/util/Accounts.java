@@ -16,6 +16,9 @@ public class Accounts {
     //@Inject
     //TODO interface - impl: remove static
     private static Storage storage = Storage.instance();
+    //@Inject
+    //TODO interface - impl: remove static
+    private static FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     public static void push(@NonNull final Context context, @NonNull final String login) {
         if (Account.USER_UNAUTHORIZED.equals(login)) return;
@@ -38,9 +41,9 @@ public class Accounts {
                 storage.put(context, Storage.PERMANENT, Storage.GLOBAL, "users#list", accounts.toString());
                 // track statistics
                 Bundle bundle;
-                bundle = FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_COUNT, accounts.length());
-                bundle = FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_NEW, isNewAuthorization ? "new" : "old", bundle);
-                FirebaseAnalyticsProvider.logEvent(
+                bundle = firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_COUNT, accounts.length());
+                bundle = firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_NEW, isNewAuthorization ? "new" : "old", bundle);
+                firebaseAnalyticsProvider.logEvent(
                         context,
                         FirebaseAnalyticsProvider.Event.LOGIN,
                         bundle
@@ -65,10 +68,10 @@ public class Accounts {
                 }
                 storage.put(context, Storage.PERMANENT, Storage.GLOBAL, "users#list", list.toString());
                 // track statistics
-                FirebaseAnalyticsProvider.logEvent(
+                firebaseAnalyticsProvider.logEvent(
                         context,
                         FirebaseAnalyticsProvider.Event.LOGOUT,
-                        FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_COUNT, list.length())
+                        firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_COUNT, list.length())
                 );
             } catch (Exception e) {
                 Log.exception(e);

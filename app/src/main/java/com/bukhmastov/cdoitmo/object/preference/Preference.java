@@ -38,6 +38,10 @@ public abstract class Preference {
     protected StoragePref storagePref = StoragePref.instance();
     //@Inject
     private DeIfmoRestClient deIfmoRestClient = DeIfmoRestClient.instance();
+    //@Inject
+    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    //@Inject
+    private FirebaseCrashlyticsProvider firebaseCrashlyticsProvider = FirebaseCrashlyticsProvider.instance();
 
     protected final ArrayList<PreferenceSwitch> preferenceDependencies = new ArrayList<>();
 
@@ -96,10 +100,10 @@ public abstract class Preference {
                 }
                 break;
             case "pref_allow_send_reports":
-                FirebaseCrashlyticsProvider.setEnabled(activity, storagePref.get(activity, "pref_allow_send_reports", true));
+                firebaseCrashlyticsProvider.setEnabled(activity, storagePref.get(activity, "pref_allow_send_reports", true));
                 break;
             case "pref_allow_collect_analytics":
-                FirebaseAnalyticsProvider.setEnabled(activity, storagePref.get(activity, "pref_allow_collect_analytics", true), true);
+                firebaseAnalyticsProvider.setEnabled(activity, storagePref.get(activity, "pref_allow_collect_analytics", true), true);
                 break;
             case "pref_use_cache":
                 if (!storagePref.get(activity, "pref_use_cache", true)) {

@@ -28,6 +28,9 @@ public class ScheduleLessons extends Schedule {
 
     //@Inject
     private IfmoRestClient ifmoRestClient = IfmoRestClient.instance();
+    //@Inject
+    //TODO interface - impl: remove static
+    private static FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     public ScheduleLessons(Handler handler) {
         super(handler);
@@ -284,10 +287,10 @@ public class ScheduleLessons extends Schedule {
             if (callback != null) {
                 callback.call();
             }
-            FirebaseAnalyticsProvider.logEvent(
+            firebaseAnalyticsProvider.logEvent(
                     context,
                     FirebaseAnalyticsProvider.Event.SCHEDULE_LESSON_REDUCE,
-                    FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LESSON_TITLE, lesson.getString("subject"))
+                    firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LESSON_TITLE, lesson.getString("subject"))
             );
             return true;
         } catch (Exception e) {
@@ -393,10 +396,10 @@ public class ScheduleLessons extends Schedule {
                 );
             }
             storage.put(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token, added.toString());
-            FirebaseAnalyticsProvider.logEvent(
+            firebaseAnalyticsProvider.logEvent(
                     context,
                     FirebaseAnalyticsProvider.Event.SCHEDULE_LESSON_ADD,
-                    FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LESSON_TITLE, subject)
+                    firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LESSON_TITLE, subject)
             );
             if (callback != null) {
                 callback.call();

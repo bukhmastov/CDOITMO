@@ -20,7 +20,8 @@ import java.util.UUID;
  * 1. Подготовка к DI: абстракция (TODO interface - impl):
  *  storage [done]
  *  network [done]
- *  firebase
+ *  firebase [done]
+ *  log
  *  objects
  *  utils
  *
@@ -62,6 +63,10 @@ public class App extends Application {
 
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    //@Inject
+    private FirebaseCrashlyticsProvider firebaseCrashlyticsProvider = FirebaseCrashlyticsProvider.instance();
 
     @Override
     public void onCreate() {
@@ -113,7 +118,7 @@ public class App extends Application {
     }
 
     private void setFirebase() {
-        FirebaseCrashlyticsProvider.setEnabled(this);
-        FirebaseAnalyticsProvider.setEnabled(this);
+        firebaseCrashlyticsProvider.setEnabled(this);
+        firebaseAnalyticsProvider.setEnabled(this);
     }
 }

@@ -54,6 +54,8 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
     private Room101Client room101Client = Room101Client.instance();
+    //@Inject
+    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -65,7 +67,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
             close();
             return;
         }
-        FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
+        firebaseAnalyticsProvider.logCurrentScreen(activity, this);
         Activity activity = getActivity();
         if (activity != null) {
             Intent intent = activity.getIntent();
@@ -91,7 +93,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
         if (forbidden) {
             return;
         }
-        FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
+        firebaseAnalyticsProvider.setCurrentScreen(activity, this);
         if (!loaded) {
             loaded = true;
             if (getData() == null) {
@@ -168,7 +170,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                         if (statusCode == 302) {
                             Log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status + " | success | statusCode=" + statusCode);
                             load(true);
-                            FirebaseAnalyticsProvider.logEvent(
+                            firebaseAnalyticsProvider.logEvent(
                                     activity,
                                     FirebaseAnalyticsProvider.Event.ROOM101_REQUEST_DENIED
                             );

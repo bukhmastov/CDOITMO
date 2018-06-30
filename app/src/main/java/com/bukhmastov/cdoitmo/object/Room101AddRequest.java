@@ -72,6 +72,8 @@ public class Room101AddRequest {
     private Storage storage = Storage.instance();
     //@Inject
     private Room101Client room101Client = Room101Client.instance();
+    //@Inject
+    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     public Room101AddRequest(Activity activity, callback callback) {
         this.callback = callback;
@@ -535,10 +537,10 @@ public class Room101AddRequest {
                 }
                 callback.onDraw(getChooserLayout(message, null, null, null));
                 if (data.getBoolean("done")) {
-                    FirebaseAnalyticsProvider.logEvent(
+                    firebaseAnalyticsProvider.logEvent(
                             activity,
                             FirebaseAnalyticsProvider.Event.ROOM101_REQUEST_ADDED,
-                            FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.ROOM101_REQUEST_DETAILS, pick_date + "#" + pick_time_start + "#" + pick_time_end)
+                            firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.ROOM101_REQUEST_DETAILS, pick_date + "#" + pick_time_start + "#" + pick_time_end)
                     );
                 }
             } catch (Exception e){

@@ -29,6 +29,9 @@ public class IntroducingActivity extends ConnectedActivity {
     private static final String colorIndicatorActive = "#FFFFFFFF";
     private static final String colorIndicatorInActive = "#88FFFFFF";
 
+    //@Inject
+    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+
     private class Screen {
         public final String title;
         public final String desc;
@@ -56,7 +59,7 @@ public class IntroducingActivity extends ConnectedActivity {
         }
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Activity created");
-        FirebaseAnalyticsProvider.logCurrentScreen(this);
+        firebaseAnalyticsProvider.logCurrentScreen(this);
         setContentView(R.layout.activity_introducing);
         findViewById(R.id.content).setPadding(0, getStatusBarHeight(), 0, 0);
         initScreens();

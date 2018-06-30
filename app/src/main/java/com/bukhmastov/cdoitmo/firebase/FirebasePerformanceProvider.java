@@ -3,6 +3,7 @@ package com.bukhmastov.cdoitmo.firebase;
 import android.content.Context;
 import android.support.annotation.StringDef;
 
+import com.bukhmastov.cdoitmo.firebase.impl.FirebasePerformanceProviderImpl;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.TextUtils;
@@ -14,13 +15,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.HashMap;
 import java.util.Map;
 
-//TODO interface - impl
-public class FirebasePerformanceProvider {
+public interface FirebasePerformanceProvider {
 
-    private static final String TAG = "FirebasePerformanceProvider";
-    private static boolean enabled = false;
-    private static FirebasePerformance firebasePerformance = null;
-    private static String uuid = null;
+    // future: replace with DI factory
+    FirebasePerformanceProvider instance = new FirebasePerformanceProviderImpl();
+    static FirebasePerformanceProvider instance() {
+        return instance;
+    }
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({
@@ -32,8 +33,8 @@ public class FirebasePerformanceProvider {
             Trace.Parse.SCHEDULE_EXAMS_TEACHER, Trace.Parse.USER_DATA,
             Trace.Convert.EREGISTER, Trace.Convert.PROTOCOL, Trace.Convert.Schedule.LESSONS, Trace.Convert.Schedule.EXAMS, Trace.Convert.Schedule.TEACHERS, Trace.Convert.Schedule.ADDITIONAL,
     })
-    public @interface TRACE {}
-    public static class Trace {
+    @interface TRACE {}
+    class Trace {
         public static final String UNKNOWN = "unknown";
         public static final String LOGIN = "login";
         public static final String LOGOUT = "logout";
@@ -77,137 +78,16 @@ public class FirebasePerformanceProvider {
         }
     }
 
-    private static FirebasePerformance getFirebasePerformance() {
-        if (firebasePerformance == null) {
-            firebasePerformance = FirebasePerformance.getInstance();
-        }
-        return firebasePerformance;
-    }
+    void setEnabled(Context context);
+    void setEnabled(Context context, boolean enabled);
 
-    public static void setEnabled(Context context) {
-        Thread.run(() -> {
-            Log.i(TAG, "Firebase Performance fetching status");
-            FirebaseConfigProvider.getString(FirebaseConfigProvider.PERFORMANCE_ENABLED, value -> Thread.run(() -> setEnabled(context, "1".equals(value))));
-        });
-    }
-    public static void setEnabled(Context context, boolean enabled) {
-        try {
-            FirebasePerformanceProvider.enabled = enabled;
-            FirebasePerformanceProvider.uuid = Static.getUUID(context);
-            if (!enabled) {
-                FirebasePerformanceProvider.stopAll();
-            }
-            getFirebasePerformance().setPerformanceCollectionEnabled(FirebasePerformanceProvider.enabled);
-            Log.i(TAG, "Firebase Performance ", (FirebasePerformanceProvider.enabled ? "enabled" : "disabled"));
-        } catch (Exception e) {
-            Log.exception(e);
-        }
-    }
+    String startTrace(@TRACE String name);
+    boolean stopTrace(String key);
+    void stopAll();
 
-    private static Map<String, com.google.firebase.perf.metrics.Trace> traceMap = new HashMap<>();
+    void putAttribute(String key, String attr, Object... values);
+    void putAttribute(String key, String attr, String value);
 
-    public static String startTrace(@TRACE String name) {
-        try {
-            if (!enabled) {
-                return null;
-            }
-            name = name != null ? name : Trace.UNKNOWN;
-            String key;
-            do {
-                key = name + "_" + TextUtils.getRandomString(8);
-            } while (traceMap.containsKey(key));
-            com.google.firebase.perf.metrics.Trace trace = getFirebasePerformance().newTrace(name);
-            traceMap.put(key, trace);
-            trace.putAttribute("user_id", uuid);
-            trace.start();
-            return key;
-        } catch (Exception e) {
-            Log.exception(e);
-            return null;
-        }
-    }
-    public static boolean stopTrace(String key) {
-        try {
-            if (!enabled || key == null) {
-                return false;
-            }
-            com.google.firebase.perf.metrics.Trace trace = traceMap.get(key);
-            if (trace != null) {
-                trace.stop();
-                traceMap.remove(key);
-                return true;
-            } else {
-                return false;
-            }
-        } catch (Exception e) {
-            Log.exception(e);
-            return false;
-        }
-    }
-    public static void stopAll() {
-        for (Map.Entry<String, com.google.firebase.perf.metrics.Trace> entry : traceMap.entrySet()) {
-            try {
-                if (entry != null) {
-                    com.google.firebase.perf.metrics.Trace trace = entry.getValue();
-                    if (trace != null) {
-                        trace.stop();
-                    }
-                }
-            } catch (Exception ignore) {/* ignore */}
-        }
-        traceMap.clear();
-    }
-
-    public static void putAttribute(String key, String attr, Object... values) {
-        try {
-            if (!enabled || key == null || attr == null || values == null) {
-                return;
-            }
-            StringBuilder sb = new StringBuilder();
-            for (Object value : values) {
-                try {
-                    if (value instanceof String) {
-                        sb.append((String) value);
-                    } else {
-                        sb.append(value.toString());
-                    }
-                } catch (Exception ignore) {
-                    sb.append("<ERR>");
-                }
-            }
-            putAttribute(key, attr, sb.toString());
-        } catch (Exception e) {
-            Log.exception(e);
-        }
-    }
-    public static void putAttribute(String key, String attr, String value) {
-        try {
-            if (!enabled || key == null || attr == null || value == null) {
-                return;
-            }
-            com.google.firebase.perf.metrics.Trace trace = traceMap.get(key);
-            if (trace != null) {
-                attr = attr.trim();
-                value = value.trim();
-                if (attr.length() > 40) {
-                    attr = attr.substring(0, 40);
-                }
-                if (value.length() > 100) {
-                    value = value.substring(0, 100);
-                }
-                trace.putAttribute(attr, value);
-            }
-        } catch (Exception e) {
-            Log.exception(e);
-        }
-    }
-
-    public static void putAttributeAndStop(String key, String attr, Object... values) {
-        putAttribute(key, attr, values);
-        stopTrace(key);
-    }
-    public static void putAttributeAndStop(String key, String attr, String value) {
-        putAttribute(key, attr, value);
-        stopTrace(key);
-    }
+    void putAttributeAndStop(String key, String attr, Object... values);
+    void putAttributeAndStop(String key, String attr, String value);
 }

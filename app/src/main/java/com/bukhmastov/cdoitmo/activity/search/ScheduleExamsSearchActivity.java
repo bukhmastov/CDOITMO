@@ -12,6 +12,9 @@ public class ScheduleExamsSearchActivity extends SearchActivity {
 
     private static final String TAG = "SESearchActivity";
 
+    //@Inject
+    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+
     public ScheduleExamsSearchActivity() {
         super(3, 100);
     }
@@ -19,7 +22,7 @@ public class ScheduleExamsSearchActivity extends SearchActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        FirebaseAnalyticsProvider.logCurrentScreen(this);
+        firebaseAnalyticsProvider.logCurrentScreen(this);
     }
 
     @Override

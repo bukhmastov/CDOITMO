@@ -38,6 +38,9 @@ public class ShortcutReceiver extends BroadcastReceiver {
     public static final String EXTRA_TYPE = "shortcut_type";
     public static final String EXTRA_DATA = "shortcut_data";
 
+    //@Inject
+    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+
     public void onReceive(final Context context, final Intent intent) {
         Thread.run(() -> {
             try {
@@ -87,10 +90,10 @@ public class ShortcutReceiver extends BroadcastReceiver {
         Thread.run(() -> {
             Log.v(TAG, "resolve | shortcut_type=" + shortcut_type + " | shortcut_data=" + shortcut_data);
             try {
-                FirebaseAnalyticsProvider.logEvent(
+                firebaseAnalyticsProvider.logEvent(
                         context,
                         FirebaseAnalyticsProvider.Event.SHORTCUT_USE,
-                        FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.SHORTCUT_TYPE, shortcut_type)
+                        firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.SHORTCUT_TYPE, shortcut_type)
                 );
                 switch (shortcut_type) {
                     case "offline": {
@@ -246,10 +249,10 @@ public class ShortcutReceiver extends BroadcastReceiver {
                     addIntent.putExtra("duplicate", false);
                     context.sendBroadcast(addIntent);
                 }
-                FirebaseAnalyticsProvider.logEvent(
+                firebaseAnalyticsProvider.logEvent(
                         context,
                         FirebaseAnalyticsProvider.Event.SHORTCUT_INSTALL,
-                        FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.SHORTCUT_TYPE, type)
+                        firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.SHORTCUT_TYPE, type)
                 );
             } catch (Exception e) {
                 Log.exception(e);

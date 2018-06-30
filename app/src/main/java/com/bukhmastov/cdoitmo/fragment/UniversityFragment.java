@@ -23,12 +23,14 @@ public class UniversityFragment extends ConnectedFragment implements ViewPager.O
 
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.v(TAG, "Fragment created");
-        FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
+        firebaseAnalyticsProvider.logCurrentScreen(activity, this);
         Activity activity = getActivity();
         if (activity != null) {
             Intent intent = activity.getIntent();
@@ -94,7 +96,7 @@ public class UniversityFragment extends ConnectedFragment implements ViewPager.O
     public void onResume() {
         super.onResume();
         Log.v(TAG, "resumed");
-        FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
+        firebaseAnalyticsProvider.setCurrentScreen(activity, this);
         TabLayout scrollable_tabs = activity.findViewById(R.id.scrollable_tabs);
         if (scrollable_tabs != null) {
             scrollable_tabs.setVisibility(View.VISIBLE);

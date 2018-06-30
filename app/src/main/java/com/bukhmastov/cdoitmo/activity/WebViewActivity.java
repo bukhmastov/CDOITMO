@@ -33,6 +33,9 @@ public class WebViewActivity extends AppCompatActivity {
     private ProgressBar webviewProgressBar = null;
     private SwipeRefreshLayout swipe = null;
 
+    //@Inject
+    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Theme.applyActivityTheme(this);
@@ -49,7 +52,7 @@ public class WebViewActivity extends AppCompatActivity {
         } catch (Exception e) {
             finish();
         }
-        FirebaseAnalyticsProvider.logCurrentScreen(this);
+        firebaseAnalyticsProvider.logCurrentScreen(this);
         setContentView(R.layout.activity_webview);
         Toolbar toolbar = findViewById(R.id.toolbar_webview);
         if (toolbar != null) {

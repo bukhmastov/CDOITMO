@@ -40,6 +40,8 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
 
     //@Inject
     private IfmoRestClient ifmoRestClient = IfmoRestClient.instance();
+    //@Inject
+    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,7 +84,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
             finish();
         }
 
-        FirebaseAnalyticsProvider.logCurrentScreen(this);
+        firebaseAnalyticsProvider.logCurrentScreen(this);
         setContentView(R.layout.activity_university_person_card);
     }
 
@@ -96,7 +98,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
     public void onResume() {
         super.onResume();
         Log.v(TAG, "resumed");
-        FirebaseAnalyticsProvider.setCurrentScreen(this);
+        firebaseAnalyticsProvider.setCurrentScreen(this);
         if (!loaded) {
             loaded = true;
             load();

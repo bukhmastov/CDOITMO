@@ -53,6 +53,8 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
     private Storage storage = Storage.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({CREATE, EDIT})
@@ -63,7 +65,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
+        firebaseAnalyticsProvider.logCurrentScreen(activity, this);
     }
 
     @Override
@@ -94,7 +96,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
     @Override
     public void onResume() {
         super.onResume();
-        FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
+        firebaseAnalyticsProvider.setCurrentScreen(activity, this);
     }
 
     @Override

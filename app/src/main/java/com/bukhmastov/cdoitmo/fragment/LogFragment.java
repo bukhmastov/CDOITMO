@@ -26,12 +26,16 @@ public class LogFragment extends ConnectedFragment {
 
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    //@Inject
+    private FirebaseCrashlyticsProvider firebaseCrashlyticsProvider = FirebaseCrashlyticsProvider.instance();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.v(TAG, "Fragment created");
-        FirebaseAnalyticsProvider.logCurrentScreen(activity, this);
+        firebaseAnalyticsProvider.logCurrentScreen(activity, this);
     }
 
     @Override
@@ -44,7 +48,7 @@ public class LogFragment extends ConnectedFragment {
     public void onResume() {
         super.onResume();
         Log.v(TAG, "resumed");
-        FirebaseAnalyticsProvider.setCurrentScreen(activity, this);
+        firebaseAnalyticsProvider.setCurrentScreen(activity, this);
     }
 
     @Override
@@ -113,7 +117,7 @@ public class LogFragment extends ConnectedFragment {
     }
 
     private void firebaseToggled(final boolean allowed) {
-        Thread.run(() -> FirebaseCrashlyticsProvider.setEnabled(activity, allowed));
+        Thread.run(() -> firebaseCrashlyticsProvider.setEnabled(activity, allowed));
     }
 
     private void genericToggled(final boolean allowed) {

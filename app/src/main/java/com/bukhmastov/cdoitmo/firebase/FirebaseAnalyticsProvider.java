@@ -5,23 +5,17 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 
-import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.Static;
-import com.bukhmastov.cdoitmo.util.Thread;
-import com.google.firebase.analytics.FirebaseAnalytics;
+import com.bukhmastov.cdoitmo.firebase.impl.FirebaseAnalyticsProviderImpl;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+public interface FirebaseAnalyticsProvider {
 
-//TODO interface - impl
-public class FirebaseAnalyticsProvider {
+    // future: replace with DI factory
+    FirebaseAnalyticsProvider instance = new FirebaseAnalyticsProviderImpl();
+    static FirebaseAnalyticsProvider instance() {
+        return instance;
+    }
 
-    private static final String TAG = "FirebaseAnalyticsProvider";
-    private static boolean enabled = true;
-    private static FirebaseAnalytics firebaseAnalytics = null;
-
-    public static class Event {
+    class Event {
         // 500 different types of Events | 40 characters long
         public static final String APP_OPEN = "cdo_app_open";                                   // приложение запущено
         public static final String LOGIN_REQUIRED = "cdo_login_required";                       // нужна авторизация
@@ -40,7 +34,7 @@ public class FirebaseAnalyticsProvider {
         public static final String RECEIVE = "cdo_receive";                                     // принял контент
         public static final String EVENT = "cdo_event";                                         // обычное событие, не подходящее под остальные типы событий
     }
-    public static class Param {
+    class Param {
         // 25 unique Params with each Event type | 40 characters long | values 100 characters long
         public static final String LOGIN_COUNT = "cdo_login_count";
         public static final String LOGIN_NEW = "cdo_login_new";
@@ -53,7 +47,7 @@ public class FirebaseAnalyticsProvider {
         public static final String EVENT_EXTRA = "cdo_event_extra";
         public static final String TYPE = "cdo_type";
     }
-    public static class Property {
+    class Property {
         // 25 unique UserProperties | 24 characters long | values 36 characters long
         public static final String FACULTY = "cdo_user_faculty";
         public static final String LEVEL = "cdo_user_level";
@@ -63,200 +57,29 @@ public class FirebaseAnalyticsProvider {
         public static final String DEVICE = "cdo_device";
     }
 
-    private static FirebaseAnalytics getFirebaseAnalytics(Context context) {
-        if (firebaseAnalytics == null) {
-            firebaseAnalytics = FirebaseAnalytics.getInstance(context);
-        }
-        return firebaseAnalytics;
-    }
+    boolean setEnabled(Context context);
+    boolean setEnabled(Context context, boolean enabled);
+    boolean setEnabled(Context context, boolean enabled, boolean notify);
 
-    public static boolean setEnabled(Context context) {
-        //@Inject
-        StoragePref storagePref = StoragePref.instance();
-        return setEnabled(context, storagePref.get(context, "pref_allow_collect_analytics", true));
-    }
-    public static boolean setEnabled(Context context, boolean enabled) {
-        return setEnabled(context, enabled, false);
-    }
-    public static boolean setEnabled(Context context, boolean enabled, boolean notify) {
-        try {
-            if (!enabled && notify) {
-                logBasicEvent(context, "firebase_analytics_disabled");
-            }
-            FirebaseAnalyticsProvider.enabled = enabled;
-            FirebaseAnalytics firebaseAnalytics = getFirebaseAnalytics(context);
-            firebaseAnalytics.setAnalyticsCollectionEnabled(FirebaseAnalyticsProvider.enabled);
-            firebaseAnalytics.setUserId(Static.getUUID(context));
-            Log.i(TAG, "Firebase Analytics ", (FirebaseAnalyticsProvider.enabled ? "enabled" : "disabled"));
-        } catch (Exception e) {
-            Log.exception(e);
-        }
-        return FirebaseAnalyticsProvider.enabled;
-    }
+    void setCurrentScreen(Activity activity);
+    void setCurrentScreen(Activity activity, String screenOverride);
+    void setCurrentScreen(Activity activity, Fragment fragment);
+    void setCurrentScreen(Activity activity, Fragment fragment, String view_screen);
 
-    public static void setCurrentScreen(Activity activity) {
-        setCurrentScreen(activity, null, null);
-    }
-    public static void setCurrentScreen(Activity activity, String screenOverride) {
-        logCurrentScreen(activity, null, screenOverride);
-    }
-    public static void setCurrentScreen(Activity activity, Fragment fragment) {
-        logCurrentScreen(activity, fragment, null);
-    }
-    public static void setCurrentScreen(final Activity activity, final Fragment fragment, final String view_screen) {
-        Thread.run(Thread.BACKGROUND, () -> {
-            try {
-                if (!enabled) return;
-                if (activity == null) return;
-                String vs = view_screen;
-                if (view_screen == null) {
-                    if (fragment != null) {
-                        vs = fragment.getClass().getSimpleName();
-                    } else {
-                        vs = activity.getClass().getSimpleName();
-                    }
-                }
-                getFirebaseAnalytics(activity).setCurrentScreen(activity, vs, null);
-            } catch (Exception e) {
-                Log.exception(e);
-            }
-        });
-    }
+    void logCurrentScreen(Activity activity);
+    void logCurrentScreen(Activity activity, String screenOverride);
+    void logCurrentScreen(Activity activity, Fragment fragment);
+    void logCurrentScreen(Activity activity, Fragment fragment, String view_screen);
 
-    public static void logCurrentScreen(Activity activity) {
-        logCurrentScreen(activity, null, null);
-    }
-    public static void logCurrentScreen(Activity activity, String screenOverride) {
-        logCurrentScreen(activity, null, screenOverride);
-    }
-    public static void logCurrentScreen(Activity activity, Fragment fragment) {
-        logCurrentScreen(activity, fragment, null);
-    }
-    public static void logCurrentScreen(Activity activity, Fragment fragment, String view_screen) {
-        try {
-            if (!enabled) return;
-            if (activity == null) return;
-            if (view_screen == null) {
-                if (fragment != null) {
-                    view_screen = fragment.getClass().getSimpleName();
-                } else {
-                    view_screen = activity.getClass().getSimpleName();
-                }
-            }
-            FirebaseAnalyticsProvider.logEvent(
-                    activity,
-                    FirebaseAnalyticsProvider.Event.APP_VIEW,
-                    FirebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.APP_VIEW_SCREEN, view_screen)
-            );
-        } catch (Exception e) {
-            Log.exception(e);
-        }
-    }
+    void setUserProperties(Context context, String group);
+    void setUserProperty(Context context, String property, String value);
 
-    public static void setUserProperties(Context context, String group) {
-        try {
-            group = group.trim();
-            if (group.isEmpty()) return;
-            Matcher m = Pattern.compile("(\\w)(\\d)(\\d)(\\d)(\\d)(\\w?)").matcher(group);
-            if (m.find()) {
-                String faculty = m.group(1).trim().toUpperCase();
-                String level = m.group(2).trim();
-                String course = m.group(3).trim();
-                switch (faculty) {
-                    case "B": faculty = "B - Лазерной и световой инженерии"; break;
-                    case "C": faculty = "C - Дизайна и урбанистики"; break;
-                    case "D": faculty = "D - ИМРиП"; break;
-                    case "F": faculty = "F - Трансляционной медицины"; break;
-                    case "K": faculty = "K - Инфокоммуникационных технологий"; break;
-                    case "M": faculty = "M - ИТиП"; break;
-                    case "N": faculty = "N - 'ИБиКТ'"; break;
-                    case "O": faculty = "O - 'ИМБиП'"; break;
-                    case "P": faculty = "P - КТиУ"; break;
-                    case "S": faculty = "S - 'Академия ЛИМТУ'"; break;
-                    case "T": faculty = "T - ФПБИ"; break;
-                    case "U": faculty = "U - ФТМИ"; break;
-                    case "V": faculty = "V - Фотоники и оптоинформатики"; break;
-                    case "W": faculty = "W - ФХКТК"; break;
-                    case "X": faculty = "X - Заочный"; break;
-                    case "Y": faculty = "Y - Среднего проф. образования"; break;
-                    case "Z": faculty = "Z - Физико-технический факультет"; break;
-                }
-                switch (level) {
-                    case "0": level = "0 - Подг. отделение для ин. граждан"; break;
-                    case "2": level = "2 - Среднее проф. образование"; break;
-                    case "3": level = "3 - Бакалавриат"; break;
-                    case "4": level = "4 - Магистратура"; break;
-                    case "5": level = "5 - Специалитет"; break;
-                    case "6": level = "6 - Аспирантура"; break;
-                    case "9": level = "9 - Дополнительное образование"; break;
-                }
-                course = course + " " + "курс";
-                setUserProperty(context, Property.FACULTY, faculty);
-                setUserProperty(context, Property.LEVEL, level);
-                setUserProperty(context, Property.COURSE, course);
-            }
-            setUserProperty(context, Property.GROUP, group);
-        } catch (Exception e) {
-            Log.exception(e);
-        }
-    }
-    public static void setUserProperty(final Context context, final String property, final String value) {
-        Thread.run(Thread.BACKGROUND, () -> {
-            try {
-                if (!enabled) return;
-                getFirebaseAnalytics(context).setUserProperty(property, value);
-            } catch (Exception e) {
-                Log.exception(e);
-            }
-        });
-    }
+    void logEvent(Context context, String name);
+    void logEvent(Context context, String name, Bundle params);
+    void logBasicEvent(Context context, String content);
 
-    public static void logEvent(Context context, String name) {
-        logEvent(context, name, null);
-    }
-    public static void logEvent(final Context context, final String name, final Bundle params) {
-        Thread.run(Thread.BACKGROUND, () -> {
-            try {
-                if (!enabled) return;
-                getFirebaseAnalytics(context).logEvent(name, params);
-            } catch (Exception e) {
-                Log.exception(e);
-            }
-        });
-    }
-    public static void logBasicEvent(final Context context, final String content) {
-        Thread.run(Thread.BACKGROUND, () -> {
-            try {
-                if (!enabled) return;
-                getFirebaseAnalytics(context).logEvent(
-                        Event.EVENT,
-                        FirebaseAnalyticsProvider.getBundle(Param.EVENT_EXTRA, content)
-                );
-            } catch (Exception e) {
-                Log.exception(e);
-            }
-        });
-    }
-
-    public static Bundle getBundle(String key, Object value) {
-        return getBundle(key, value, null);
-    }
-    public static Bundle getBundle(String key, int value) {
-        return getBundle(key, value, null);
-    }
-    public static Bundle getBundle(String key, int value, Bundle bundle) {
-        return getBundle(key, (Integer) value, bundle);
-    }
-    public static Bundle getBundle(String key, Object value, Bundle bundle) {
-        if (bundle == null) {
-            bundle = new Bundle();
-        }
-        if (value instanceof String) {
-            bundle.putString(key, (String) value);
-        }
-        if (value instanceof Integer) {
-            bundle.putInt(key, (Integer) value);
-        }
-        return bundle;
-    }
+    Bundle getBundle(String key, Object value);
+    Bundle getBundle(String key, int value);
+    Bundle getBundle(String key, int value, Bundle bundle);
+    Bundle getBundle(String key, Object value, Bundle bundle);
 }

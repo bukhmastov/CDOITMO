@@ -133,8 +133,8 @@ public class NavigationMenu {
         });
     }
 
-    public static void displayRemoteMessage(final Activity activity, final Storage storage) {
-        Thread.run(() -> FirebaseConfigProvider.getJson(FirebaseConfigProvider.MESSAGE_MENU, value -> Thread.run(() -> {
+    public static void displayRemoteMessage(final Activity activity, final FirebaseConfigProvider firebaseConfigProvider, final Storage storage) {
+        Thread.run(() -> firebaseConfigProvider.getJson(FirebaseConfigProvider.MESSAGE_MENU, value -> Thread.run(() -> {
             try {
                 if (value == null) return;
                 final int type = value.getInt("type");
