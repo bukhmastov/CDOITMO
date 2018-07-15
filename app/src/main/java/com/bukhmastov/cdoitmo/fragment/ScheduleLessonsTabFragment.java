@@ -22,7 +22,7 @@ import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
-import com.bukhmastov.cdoitmo.util.Color;
+import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
@@ -43,6 +43,8 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
 
     //@Inject
     private Log log = Log.instance();
+    //@Inject
+    private Thread thread = Thread.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
 
@@ -116,14 +118,14 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
     }
 
     private void load(final boolean refresh) {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             if (activity == null) {
                 log.w(TAG, "load | activity is null");
                 failed(activity);
                 return;
             }
             draw(activity, R.layout.state_loading_text);
-            Thread.run(() -> {
+            thread.run(() -> {
                 try {
                     if (activity == null || getQuery() == null) {
                         log.w(TAG, "load | some values are null | activity=", activity, " | getQuery()=", getQuery());
@@ -149,7 +151,7 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
         if (scheduleLessons == null) scheduleLessons = new ScheduleLessons(new Schedule.Handler() {
             @Override
             public void onSuccess(final JSONObject json, final boolean fromCache) {
-                Thread.run(() -> {
+                thread.run(() -> {
                     try {
                         try {
                             if (json.getString("type").equals("teachers")) {
@@ -168,7 +170,7 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
                             setQuery(data);
                             invalidate(false);
                         });
-                        Thread.runOnUI(() -> {
+                        thread.runOnUI(() -> {
                             try {
                                 draw(activity, R.layout.layout_schedule_both_recycle_list);
                                 // prepare
@@ -241,7 +243,7 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
             }
             @Override
             public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     try {
                         log.v(TAG, "onFailure | statusCode=", statusCode, " | state=", state);
                         switch (state) {
@@ -298,7 +300,7 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
             }
             @Override
             public void onProgress(final int state) {
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     try {
                         log.v(TAG, "onProgress | state=", state);
                         final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_loading_text);

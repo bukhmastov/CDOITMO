@@ -27,6 +27,8 @@ public class FirebaseCrashlyticsProviderImpl implements FirebaseCrashlyticsProvi
     //@Inject
     private Log log = Log.instance();
     //@Inject
+    private Thread thread = Thread.instance();
+    //@Inject
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
@@ -120,7 +122,7 @@ public class FirebaseCrashlyticsProviderImpl implements FirebaseCrashlyticsProvi
 
     @Override
     public void exception(final Throwable throwable) {
-        Thread.run(Thread.BACKGROUND, () -> {
+        thread.run(thread.BACKGROUND, () -> {
             try {
                 if (!enabled) return;
                 Crashlytics.logException(throwable);
@@ -131,7 +133,7 @@ public class FirebaseCrashlyticsProviderImpl implements FirebaseCrashlyticsProvi
     }
 
     private void log(final @LEVEL String level, final String TAG, final String log) {
-        Thread.run(Thread.BACKGROUND, () -> {
+        thread.run(thread.BACKGROUND, () -> {
             try {
                 if (!enabled) return;
                 Crashlytics.log(level2priority(level), TAG, log);

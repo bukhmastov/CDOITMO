@@ -61,6 +61,8 @@ public abstract class Client {
     //@Inject
     protected Log log = Log.instance();
     //@Inject
+    protected Thread thread = Thread.instance();
+    //@Inject
     protected Storage storage = Storage.instance();
     //@Inject
     protected StoragePref storagePref = StoragePref.instance();
@@ -76,7 +78,7 @@ public abstract class Client {
      * @see RawHandler
      */
     protected void _g(@NonNull final String url, @Nullable final okhttp3.Headers headers, @Nullable final Map<String, String> query, @NonNull final RawHandler rawHandler) {
-        Thread.run(Thread.BACKGROUND, () -> {
+        thread.run(thread.BACKGROUND, () -> {
             try {
                 HttpUrl httpUrl = HttpUrl.parse(url);
                 if (httpUrl == null) {
@@ -106,7 +108,7 @@ public abstract class Client {
      * @see RawHandler
      */
     protected void _p(@NonNull final String url, @Nullable final okhttp3.Headers headers, @Nullable final Map<String, String> query, @Nullable final Map<String, String> params, @NonNull final RawHandler rawHandler) {
-        Thread.run(Thread.BACKGROUND, () -> {
+        thread.run(thread.BACKGROUND, () -> {
             try {
                 HttpUrl httpUrl = HttpUrl.parse(url);
                 if (httpUrl == null) {
@@ -142,7 +144,7 @@ public abstract class Client {
      * @see RawJsonHandler
      */
     protected void _gJson(@NonNull final String url, @Nullable final okhttp3.Headers headers, @Nullable final Map<String, String> query, @NonNull final RawJsonHandler rawJsonHandler) {
-        Thread.run(Thread.BACKGROUND, () -> {
+        thread.run(thread.BACKGROUND, () -> {
             try {
                 HttpUrl httpUrl = HttpUrl.parse(url);
                 if (httpUrl == null) {
@@ -151,7 +153,7 @@ public abstract class Client {
                 RawHandler rawHandler = new RawHandler() {
                     @Override
                     public void onDone(final int code, final okhttp3.Headers responseHeaders, final String response) {
-                        Thread.run(Thread.BACKGROUND, () -> {
+                        thread.run(thread.BACKGROUND, () -> {
                             try {
                                 if (code >= 400) {
                                     rawJsonHandler.onDone(code, headers, response, null, null);
@@ -239,7 +241,7 @@ public abstract class Client {
      * @see RawHandler
      */
     private void execute(@NonNull final HttpUrl url, @Nullable final okhttp3.Headers headers, @Nullable final RequestBody requestBody, @NonNull final RawHandler rawHandler) {
-        Thread.run(Thread.BACKGROUND, () -> {
+        thread.run(thread.BACKGROUND, () -> {
             try {
                 log.v(TAG,
                         "execute | load | " +

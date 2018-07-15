@@ -13,8 +13,8 @@ import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.StorageProvider;
-import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.provider.StorageProvider;
+import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
@@ -71,6 +71,8 @@ public abstract class Schedule {
     //@Inject
     private Log log = Log.instance();
     //@Inject
+    private Thread thread = Thread.instance();
+    //@Inject
     private Storage storage = Storage.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
@@ -104,22 +106,22 @@ public abstract class Schedule {
     // -->- Search schedule ->--
     // Search functions to be invoked.
     public void search(final Context context, final String query) {
-        Thread.run(() -> search(context, query, getRefreshRate(context)));
+        thread.run(() -> search(context, query, getRefreshRate(context)));
     }
     public void search(final Context context, final String query, final int refreshRate) {
-        Thread.run(() -> search(context, query, refreshRate, storagePref.get(context, "pref_schedule_" + getType() + "_use_cache", false)));
+        thread.run(() -> search(context, query, refreshRate, storagePref.get(context, "pref_schedule_" + getType() + "_use_cache", false)));
     }
     public void search(final Context context, final String query, final boolean forceToCache) {
-        Thread.run(() -> search(context, query, getRefreshRate(context), forceToCache));
+        thread.run(() -> search(context, query, getRefreshRate(context), forceToCache));
     }
     public void search(final Context context, final String query, final boolean forceToCache, final boolean withUserChanges) {
-        Thread.run(() -> search(context, query, getRefreshRate(context), forceToCache, withUserChanges));
+        thread.run(() -> search(context, query, getRefreshRate(context), forceToCache, withUserChanges));
     }
     public void search(final Context context, final String query, final int refreshRate, final boolean forceToCache) {
-        Thread.run(() -> search(context, query, refreshRate, forceToCache, true));
+        thread.run(() -> search(context, query, refreshRate, forceToCache, true));
     }
     public void search(final Context context, final String query, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
-        Thread.run(() -> {
+        thread.run(() -> {
             String q = query.trim();
             log.v(TAG, "search | query=", q, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges);
             if (q.isEmpty()) {
@@ -217,7 +219,7 @@ public abstract class Schedule {
             invokePending(teacherName, withUserChanges, true, handler -> handler.onFailure(FAILED_INVALID_QUERY));
             return;
         }
-        Thread.run(() -> searchByQuery(context, "teachers", teacherName, refreshRate, withUserChanges, new SearchByQuery() {
+        thread.run(() -> searchByQuery(context, "teachers", teacherName, refreshRate, withUserChanges, new SearchByQuery() {
             @Override
             public boolean isWebAvailable() {
                 return true;
@@ -229,7 +231,7 @@ public abstract class Schedule {
             @Override
             public void onWebRequestSuccess(final String query, final JSONObject data, final JSONObject template) {
                 final SearchByQuery self = this;
-                Thread.run(new ScheduleTeachersConverter(data, template, json -> self.onFound(query, json, false, false)));
+                thread.run(new ScheduleTeachersConverter(data, template, json -> self.onFound(query, json, false, false)));
             }
             @Override
             public void onWebRequestFailed(final int statusCode, final Client.Headers headers, final int state) {
@@ -254,7 +256,7 @@ public abstract class Schedule {
     }
     // Private functions to proceed search and get schedule from cache
     protected void searchByQuery(final Context context, final String type, final String query, final int refreshRate, final boolean withUserChanges, final SearchByQuery search) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "searchByQuery | type=", type, " | query=", query, " | refreshRate=", refreshRate);
             final String cache = getCache(context, query);
             if (!App.OFFLINE_MODE) {
@@ -262,7 +264,7 @@ public abstract class Schedule {
                     final RestResponseHandler restResponseHandler = new RestResponseHandler() {
                         @Override
                         public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject data, final JSONArray responseArr) {
-                            Thread.run(() -> {
+                            thread.run(() -> {
                                 log.v(TAG, "searchByQuery | type=", type, " | query=", query, " || onSuccess | statusCode=", statusCode, " | data=", data);
                                 if (statusCode == 200 && data != null) {
                                     final JSONObject template = getTemplate(query, type);

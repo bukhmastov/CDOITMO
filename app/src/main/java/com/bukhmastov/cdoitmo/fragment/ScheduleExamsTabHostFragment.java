@@ -104,9 +104,9 @@ public abstract class ScheduleExamsTabHostFragment extends Fragment {
             }
         }
     }
-    public static void invalidateOnDemand() {
+    public static void invalidateOnDemand(Thread thread) {
         if (!isActive() || activity == null) return;
-        Thread.run(() -> {
+        thread.run(() -> {
             BottomBar.snackBar(activity, activity.findViewById(android.R.id.content), activity.getString(R.string.schedule_refresh), activity.getString(R.string.update), v -> {
                 setQuery(getQuery());
                 invalidate();

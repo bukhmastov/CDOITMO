@@ -41,10 +41,12 @@ public class ShortcutReceiver extends BroadcastReceiver {
     //@Inject
     private Log log = Log.instance();
     //@Inject
+    private Thread thread = Thread.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     public void onReceive(final Context context, final Intent intent) {
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 String action = intent.getAction();
                 log.i(TAG, "onReceive | action=" + action);
@@ -89,7 +91,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
     }
 
     private void resolve(final Context context, final String shortcut_type, final String shortcut_data) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "resolve | shortcut_type=" + shortcut_type + " | shortcut_data=" + shortcut_data);
             try {
                 firebaseAnalyticsProvider.logEvent(
@@ -153,7 +155,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
     }
 
     private void addShortcut(final Context context, final String type, final String data) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "addShortcut | type=" + type + " | data=" + data);
             try {
                 switch (type) {
@@ -221,7 +223,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
 
     @SuppressWarnings("deprecation")
     private void installShortcut(final Context context, final String type, final String data, final String label, @DrawableRes final int icon) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "installShortcut | type=" + type + " | data=" + data);
             try {
                 Intent shortcutIntent = new Intent(context, ShortcutReceiverActivity.class);

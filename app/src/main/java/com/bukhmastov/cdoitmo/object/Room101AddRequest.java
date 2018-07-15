@@ -21,8 +21,9 @@ import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.parse.room101.Room101DatePickParse;
 import com.bukhmastov.cdoitmo.parse.room101.Room101TimeEndPickParse;
 import com.bukhmastov.cdoitmo.parse.room101.Room101TimeStartPickParse;
+import com.bukhmastov.cdoitmo.provider.InjectProvider;
 import com.bukhmastov.cdoitmo.util.BottomBar;
-import com.bukhmastov.cdoitmo.util.Color;
+import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
@@ -71,7 +72,11 @@ public class Room101AddRequest {
     //@Inject
     private Log log = Log.instance();
     //@Inject
+    private Thread thread = Thread.instance();
+    //@Inject
     private Storage storage = Storage.instance();
+    //@Inject
+    private InjectProvider injectProvider = InjectProvider.instance();
     //@Inject
     private Room101Client room101Client = Room101Client.instance();
     //@Inject
@@ -166,16 +171,16 @@ public class Room101AddRequest {
     }
 
     private void loadDatePick(final int stage) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "loadDatePick | stage=" + stage);
             if (stage == 0) {
                 callback.onDraw(getLoadingLayout(activity.getString(R.string.data_loading)));
                 data = null;
                 pick_date = null;
-                Room101Fragment.execute(activity, room101Client, storage, log, "newRequest", new ResponseHandler() {
+                Room101Fragment.execute(activity, room101Client, injectProvider, "newRequest", new ResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                        Thread.run(() -> {
+                        thread.run(() -> {
                             if (statusCode == 200) {
                                 new Room101DatePickParse(response, json -> {
                                     if (json != null) {
@@ -213,7 +218,7 @@ public class Room101AddRequest {
                 room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                        Thread.run(() -> {
+                        thread.run(() -> {
                             if (statusCode == 200) {
                                 new Room101DatePickParse(response, json -> {
                                     if (json != null) {
@@ -260,7 +265,7 @@ public class Room101AddRequest {
         });
     }
     private void loadTimeStartPick() {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "loadTimeStartPick");
             callback.onDraw(getLoadingLayout(activity.getString(R.string.data_handling)));
             data = null;
@@ -275,7 +280,7 @@ public class Room101AddRequest {
             room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
                 @Override
                 public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                    Thread.run(() -> {
+                    thread.run(() -> {
                         if (statusCode == 200) {
                             new Room101TimeStartPickParse(response, json -> {
                                 if (json != null) {
@@ -309,7 +314,7 @@ public class Room101AddRequest {
         });
     }
     private void loadTimeEndPick() {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "loadTimeEndPick");
             callback.onDraw(getLoadingLayout(activity.getString(R.string.data_handling)));
             data = null;
@@ -324,7 +329,7 @@ public class Room101AddRequest {
             room101Client.post(activity, "newRequest.php", params, new ResponseHandler() {
                 @Override
                 public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                    Thread.run(() -> {
+                    thread.run(() -> {
                         if (statusCode == 200) {
                             new Room101TimeEndPickParse(response, json -> {
                                 if (json != null) {
@@ -358,7 +363,7 @@ public class Room101AddRequest {
         });
     }
     private void loadConfirmation() {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "loadConfirmation");
             data = null;
             CURRENT_STAGE++;
@@ -366,7 +371,7 @@ public class Room101AddRequest {
         });
     }
     private void create() {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "create");
             callback.onDraw(getLoadingLayout(activity.getString(R.string.add_request)));
             data = null;
@@ -414,7 +419,7 @@ public class Room101AddRequest {
     }
 
     private void datePick() {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "datePick | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
             try {
                 if (data == null) throw new NullPointerException("data cannot be null");
@@ -442,7 +447,7 @@ public class Room101AddRequest {
         });
     }
     private void timeStartPick() {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "timeStartPick | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
             try {
                 if (data == null) throw new NullPointerException("data cannot be null");
@@ -475,7 +480,7 @@ public class Room101AddRequest {
         });
     }
     private void timeEndPick() {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "timeEndPick | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
             try {
                 if (data == null) throw new NullPointerException("data cannot be null");
@@ -508,7 +513,7 @@ public class Room101AddRequest {
         });
     }
     private void confirmation() {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "confirmation | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
             try {
                 if (pick_date == null) throw new NullPointerException("pick_date cannot be null");
@@ -522,7 +527,7 @@ public class Room101AddRequest {
         });
     }
     private void done() {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "done | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
             try {
                 if (data == null) throw new NullPointerException("data cannot be null");
@@ -620,7 +625,7 @@ public class Room101AddRequest {
         return view;
     }
     private void setRequestInfo(final ViewGroup viewGroup, final int layout, final boolean show, final String text) {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             if (show) {
                 ((TextView) viewGroup.findViewById(layout)).setText(text);
             } else {

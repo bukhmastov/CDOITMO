@@ -3,7 +3,7 @@ package com.bukhmastov.cdoitmo.object;
 import android.content.Context;
 
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
 import com.bukhmastov.cdoitmo.util.Time;
 
 import org.json.JSONArray;

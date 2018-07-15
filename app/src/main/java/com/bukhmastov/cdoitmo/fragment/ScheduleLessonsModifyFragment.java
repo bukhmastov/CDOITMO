@@ -26,7 +26,7 @@ import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
@@ -51,6 +51,8 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
 
     //@Inject
     private Log log = Log.instance();
+    //@Inject
+    private Thread thread = Thread.instance();
     //@Inject
     private Storage storage = Storage.instance();
     //@Inject
@@ -112,7 +114,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
     }
 
     private void display() {
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 final int week = Time.getWeek(activity);
                 final String query = getStringExtra(extras, "query", true);
@@ -121,7 +123,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                 final int weekday = getIntExtra(extras, "weekday", true);
                 final JSONObject lessonOriginal = TextUtils.string2json(getStringExtra(extras, "lesson", true));
                 final LessonUnit lesson = convertJson2LessonUnit(lessonOriginal);
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     try {
                         if (lesson == null) {
                             throw new NullPointerException("lesson cannot be null");
@@ -368,7 +370,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                 teacherPickerAdapter.clear();
                                 lesson_teacher.dismissDropDown();
                                 if (!query1.isEmpty()) {
-                                    TeacherSearch.search(activity, query1, lesson_teacher_bar, new TeacherSearch.response() {
+                                    TeacherSearch.search(activity, thread, query1, lesson_teacher_bar, new TeacherSearch.response() {
                                         @Override
                                         public void onPermitted() {
                                             lesson.teacher = query1;
@@ -376,7 +378,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                         }
                                         @Override
                                         public void onSuccess(final JSONObject json) {
-                                            Thread.runOnUI(() -> {
+                                            thread.runOnUI(() -> {
                                                 try {
                                                     teacherPickerAdapter.clear();
                                                     if (json.getString("type").equals("teachers")) {
@@ -449,7 +451,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                             case CREATE: lesson_create_button.setText(activity.getString(R.string.create)); break;
                             case EDIT: lesson_create_button.setText(activity.getString(R.string.save)); break;
                         }
-                        lesson_create_button.setOnClickListener(v -> Thread.run(() -> {
+                        lesson_create_button.setOnClickListener(v -> thread.run(() -> {
                             try {
                                 log.v(TAG, "create_button clicked");
                                 if (lesson.subject == null || lesson.subject.isEmpty()) {
@@ -471,7 +473,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                 switch (type) {
                                     case CREATE: {
                                         if (ScheduleLessons.createLesson(activity, storage, query, lesson.weekday, convertLessonUnit2Json(lesson), null)) {
-                                            ScheduleLessonsTabHostFragment.invalidateOnDemand();
+                                            ScheduleLessonsTabHostFragment.invalidateOnDemand(thread);
                                             close();
                                         } else {
                                             log.w(TAG, "failed to create lesson");
@@ -481,7 +483,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                     }
                                     case EDIT: {
                                         if (ScheduleLessons.deleteLesson(activity, storage, query, weekday, lessonOriginal, null) && ScheduleLessons.createLesson(activity, storage, query, lesson.weekday, convertLessonUnit2Json(lesson), null)) {
-                                            ScheduleLessonsTabHostFragment.invalidateOnDemand();
+                                            ScheduleLessonsTabHostFragment.invalidateOnDemand(thread);
                                             close();
                                         } else {
                                             log.w(TAG, "failed to create lesson");
@@ -641,8 +643,8 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
         static boolean blocked = false;
         private static String lastQuery = "";
 
-        public static void search(final Context context, final String query, final ProgressBar progressBar, final response delegate) {
-            Thread.run(() -> {
+        public static void search(final Context context, final Thread thread, final String query, final ProgressBar progressBar, final response delegate) {
+            thread.run(() -> {
                 if (requestHandle != null) {
                     requestHandle.cancel();
                 }
@@ -657,15 +659,15 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                 }
                 if (blocked || !allowed) {
                     blocked = false;
-                    Thread.runOnUI(() -> progressBar.setVisibility(View.GONE));
+                    thread.runOnUI(() -> progressBar.setVisibility(View.GONE));
                     return;
                 }
                 delegate.onPermitted();
-                Thread.runOnUI(() -> progressBar.setVisibility(View.VISIBLE));
+                thread.runOnUI(() -> progressBar.setVisibility(View.VISIBLE));
                 new ScheduleLessons(new Schedule.Handler() {
                     @Override
                     public void onSuccess(JSONObject json, boolean fromCache) {
-                        Thread.runOnUI(() -> progressBar.setVisibility(View.GONE));
+                        thread.runOnUI(() -> progressBar.setVisibility(View.GONE));
                         delegate.onSuccess(json);
                     }
                     @Override
@@ -674,7 +676,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                     }
                     @Override
                     public void onFailure(int statusCode, Client.Headers headers, int state) {
-                        Thread.runOnUI(() -> progressBar.setVisibility(View.GONE));
+                        thread.runOnUI(() -> progressBar.setVisibility(View.GONE));
                     }
                     @Override
                     public void onProgress(int state) {}

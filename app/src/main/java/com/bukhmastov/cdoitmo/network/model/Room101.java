@@ -16,12 +16,12 @@ public abstract class Room101 extends DeIfmo {
 
     @Override
     protected void g(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final RawHandler rawHandler) {
-        Thread.run(Thread.BACKGROUND, () -> {
+        thread.run(thread.BACKGROUND, () -> {
             try {
                 _g(url, getHeaders(context), query, new RawHandler() {
                     @Override
                     public void onDone(final int code, final okhttp3.Headers headers, final String response) {
-                        Thread.run(Thread.BACKGROUND, () -> {
+                        thread.run(thread.BACKGROUND, () -> {
                             storeCookies(context, headers, false);
                             rawHandler.onDone(code, headers, response);
                         });
@@ -43,12 +43,12 @@ public abstract class Room101 extends DeIfmo {
 
     @Override
     protected void p(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> params, @NonNull final RawHandler rawHandler) {
-        Thread.run(Thread.BACKGROUND, () -> {
+        thread.run(thread.BACKGROUND, () -> {
             try {
                 _p(url, getHeaders(context), null, params, new RawHandler() {
                     @Override
                     public void onDone(final int code, final okhttp3.Headers headers, final String response) {
-                        Thread.run(Thread.BACKGROUND, () -> {
+                        thread.run(thread.BACKGROUND, () -> {
                             storeCookies(context, headers, false);
                             rawHandler.onDone(code, headers, response);
                         });

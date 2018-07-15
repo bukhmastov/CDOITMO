@@ -31,6 +31,7 @@ import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.fragment.UniversityFragment;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsFragment;
 import com.bukhmastov.cdoitmo.network.model.Client;
+import com.bukhmastov.cdoitmo.provider.InjectProvider;
 import com.bukhmastov.cdoitmo.util.Account;
 import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
@@ -39,7 +40,7 @@ import com.bukhmastov.cdoitmo.util.NavigationMenu;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Migration;
-import com.bukhmastov.cdoitmo.util.StorageProvider;
+import com.bukhmastov.cdoitmo.provider.StorageProvider;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.util.Thread;
 
@@ -56,11 +57,13 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
     //@Inject
     private Log log = Log.instance();
     //@Inject
+    private Thread thread = Thread.instance();
+    //@Inject
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
     private Storage storage = Storage.instance();
     //@Inject
-    private StorageProvider storageProvider = StorageProvider.instance();
+    private InjectProvider injectProvider = InjectProvider.instance();
     //@Inject
     private FirebaseCrashlyticsProvider firebaseCrashlyticsProvider = FirebaseCrashlyticsProvider.instance();
     //@Inject
@@ -76,7 +79,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
         if (!initialized) {
             // initialize app
             super.onCreate(savedInstanceState);
-            Thread.run(() -> {
+            thread.run(() -> {
                 try {
                     try {
                         log.i(TAG, "App | launched");
@@ -89,7 +92,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                     }
                     Theme.applyActivityTheme(activity);
                     // apply compatibility changes
-                    Migration.migrate(activity, storageProvider, log);
+                    Migration.migrate(activity, injectProvider);
                     // set default preferences
                     SettingsFragment.applyDefaultValues(activity);
                     // enable/disable firebase
@@ -111,7 +114,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                     log.exception(e);
                 } finally {
                     log.i(TAG, "App | initialized");
-                    Thread.runOnUI(() -> {
+                    thread.runOnUI(() -> {
                         // app initialization completed, going to recreate activity
                         initialized = true;
                         recreate();
@@ -275,7 +278,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
     }
 
     private void authorize(final int state) {
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 log.v(TAG, "authorize | state=", state);
                 loaded = false;
@@ -287,11 +290,11 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
         });
     }
     private void authorized() {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "authorized");
             if (!loaded) {
                 loaded = true;
-                Thread.run(Thread.BACKGROUND, () -> new ProtocolTracker(activity).check());
+                thread.run(thread.BACKGROUND, () -> new ProtocolTracker(activity).check());
                 selectSection(selectedSection);
                 NavigationMenu.displayUserData(activity, storage, findViewById(R.id.nav_view));
                 NavigationMenu.displayRemoteMessage(activity, firebaseConfigProvider, storage);
@@ -320,7 +323,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
         } else {
             section = s;
         }
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "selectSection | section=", section);
             switch (section) {
                 case R.id.nav_e_register:
@@ -343,7 +346,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                         case R.id.nav_room101: connectedFragmentClass = Room101Fragment.class; break;
                         case R.id.nav_university: connectedFragmentClass = UniversityFragment.class; break;
                     }
-                    Thread.runOnUI(() -> {
+                    thread.runOnUI(() -> {
                         if (openFragment(TYPE.ROOT, connectedFragmentClass, null)) {
                             ((NavigationView) findViewById(R.id.nav_view)).setCheckedItem(section);
                             selectedSection = section;
@@ -361,7 +364,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                         case R.id.nav_homescreen: connectedFragmentClass = HomeScreenInteractionFragment.class; break;
                         case R.id.nav_settings: connectedFragmentClass = SettingsFragment.class; break;
                     }
-                    Thread.runOnUI(() -> {
+                    thread.runOnUI(() -> {
                         if (openActivityOrFragment(TYPE.ROOT, connectedFragmentClass, null)) {
                             if (App.tablet) {
                                 ((NavigationView) findViewById(R.id.nav_view)).setCheckedItem(section);

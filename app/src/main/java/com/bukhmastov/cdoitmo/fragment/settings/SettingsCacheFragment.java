@@ -10,8 +10,7 @@ import com.bukhmastov.cdoitmo.object.preference.Preference;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceBasic;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceList;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
-import com.bukhmastov.cdoitmo.util.StorageProvider;
-import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.provider.InjectProvider;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,8 +46,8 @@ public class SettingsCacheFragment extends SettingsTemplatePreferencesFragment {
         preferences.add(new PreferenceSwitch("pref_use_university_cache", false, R.string.pref_use_university_cache, R.string.pref_use_university_cache_summary, null, null));
         preferences.add(new PreferenceBasic("pref_clear_cache", null, R.string.cache_clear, false, new PreferenceBasic.Callback() {
             @Override
-            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final StorageProvider storageProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                Thread.run(() -> new CacheClearDialog(activity).show());
+            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final InjectProvider injectProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
+                injectProvider.getThread().run(() -> new CacheClearDialog(activity).show());
             }
             @Override
             public String onGetSummary(ConnectedActivity activity, String value) {

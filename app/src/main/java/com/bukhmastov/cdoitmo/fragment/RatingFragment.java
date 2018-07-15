@@ -21,11 +21,11 @@ import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.parse.rating.RatingListParse;
 import com.bukhmastov.cdoitmo.parse.rating.RatingParse;
 import com.bukhmastov.cdoitmo.util.BottomBar;
-import com.bukhmastov.cdoitmo.util.Color;
+import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
@@ -44,6 +44,8 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
 
     //@Inject
     private Log log = Log.instance();
+    //@Inject
+    private Thread thread = Thread.instance();
     //@Inject
     private Storage storage = Storage.instance();
     //@Inject
@@ -148,10 +150,10 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
     }
 
     private void load() {
-        Thread.run(() -> load(COMMON));
+        thread.run(() -> load(COMMON));
     }
     private void load(final @TYPE String type) {
-        Thread.run(() -> {
+        thread.run(() -> {
             switch (type) {
                 case COMMON: {
                     load(type, storagePref.get(activity, "pref_use_cache", true) ? Integer.parseInt(storagePref.get(activity, "pref_static_refresh", "168")) : 0);
@@ -165,7 +167,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
         });
     }
     private void load(final @TYPE String type, final int refresh_rate) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "load | type=" + type + " | refresh_rate=" + refresh_rate);
             if (storagePref.get(activity, "pref_use_cache", true)) {
                 String cache = "";
@@ -200,10 +202,10 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
         });
     }
     private void load(final @TYPE String type, final boolean force) {
-        Thread.run(() -> load(type, force, ""));
+        thread.run(() -> load(type, force, ""));
     }
     private void load(final @TYPE String type, final boolean force, final String cache) {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             draw(R.layout.state_loading_text);
             if (activity != null) {
                 TextView loading_message = container.findViewById(R.id.loading_message);
@@ -212,7 +214,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                 }
             }
         });
-        Thread.run(() -> {
+        thread.run(() -> {
             if (App.UNAUTHORIZED_MODE && type.equals(OWN)) {
                 loaded(type);
                 return;
@@ -270,7 +272,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                 deIfmoClient.get(activity, url, null, new ResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                        Thread.run(() -> {
+                        thread.run(() -> {
                             log.v(TAG, "load | type=" + type + " | success | statusCode=" + statusCode + " | response=" + (response == null ? "null" : "notnull"));
                             if (statusCode == 200) {
                                 switch (type) {
@@ -352,7 +354,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                     }
                     @Override
                     public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                        Thread.run(() -> {
+                        thread.run(() -> {
                             log.v(TAG, "load | type=" + type + " | failure " + state);
                             switch (state) {
                                 case DeIfmoClient.FAILED_AUTH_CREDENTIALS_REQUIRED: {
@@ -404,7 +406,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
         });
     }
     private void loaded(final @TYPE String type) {
-        Thread.run(() -> {
+        thread.run(() -> {
             switch (type) {
                 case COMMON: {
                     if (!App.UNAUTHORIZED_MODE) {
@@ -422,7 +424,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
         });
     }
     private void loadFailed() {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             log.v(TAG, "loadFailed");
             try {
                 draw(R.layout.state_failed_button);
@@ -436,7 +438,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
         });
     }
     private void display() {
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 log.v(TAG, "display");
                 storeData(this,
@@ -444,14 +446,14 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                         data.containsKey(OWN) ? (data.get(OWN).data != null ? data.get(OWN).data.toString() : null) : null
                 );
                 final RatingRVA adapter = new RatingRVA(activity, data);
-                adapter.setOnElementClickListener(R.id.common_apply, (v, data) -> Thread.run(() -> {
+                adapter.setOnElementClickListener(R.id.common_apply, (v, data) -> thread.run(() -> {
                     try {
                         firebaseAnalyticsProvider.logBasicEvent(activity, "Detailed rating used");
                         final JSONObject d = (JSONObject) data.get("data");
                         final String faculty = d.getString("faculty");
                         final String course = d.getString("course");
                         log.v(TAG, "detailed rating used | faculty=" + faculty + " | course=" + course);
-                        Thread.runOnUI(() -> {
+                        thread.runOnUI(() -> {
                             try {
                                 Bundle extras = new Bundle();
                                 extras.putString("faculty", faculty);
@@ -467,7 +469,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                         BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 }));
-                adapter.setOnElementClickListener(R.id.own_apply, (v, data) -> Thread.run(() -> {
+                adapter.setOnElementClickListener(R.id.own_apply, (v, data) -> thread.run(() -> {
                     try {
                         final JSONObject d = (JSONObject) data.get("data");
                         if (d != null) {
@@ -476,7 +478,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                             final String course = d.getString("course");
                             final String years = d.getString("years");
                             log.v(TAG, "own rating used | faculty=" + faculty + " | course=" + course + " | years=" + years);
-                            Thread.runOnUI(() -> {
+                            thread.runOnUI(() -> {
                                 try {
                                     Bundle extras = new Bundle();
                                     extras.putString("faculty", faculty);
@@ -496,7 +498,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                         BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 }));
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     try {
                         draw(R.layout.layout_rating_list);
                         // set adapter to recycler view
@@ -527,7 +529,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
     }
 
     private void gotoLogin(final int state) {
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 log.v(TAG, "gotoLogin | state=" + state);
                 Intent intent = new Intent(activity, LoginActivity.class);

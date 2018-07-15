@@ -53,6 +53,8 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
     //@Inject
     private Log log = Log.instance();
     //@Inject
+    private Thread thread = Thread.instance();
+    //@Inject
     private Storage storage = Storage.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
@@ -171,7 +173,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
     }
 
     private void route(final @MODE String mode) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "route | mode=" + mode);
             switch (mode) {
                 case PICK: initPicker(false); break;
@@ -183,7 +185,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
     }
 
     private void initPicker(final boolean first_launch) {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             log.v(TAG, "initPicker | first_launch=" + (first_launch ? "true" : "false"));
             try {
                 // Переключаем режим отображения
@@ -208,7 +210,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
         });
     }
     private void initWidgets() {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "initWidgets");
             try {
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
@@ -232,7 +234,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
         });
     }
     private void initApps() {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             log.v(TAG, "initApps");
             try {
                 // Переключаем режим отображения
@@ -260,7 +262,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                         ((TextView) item.findViewById(R.id.title)).setText(app.title);
                         ((TextView) item.findViewById(R.id.desc)).setText(app.desc);
                         ((TextView) item.findViewById(R.id.desc_extra)).setText(app.desc_extra);
-                        item.setOnClickListener(view -> Thread.run(() -> {
+                        item.setOnClickListener(view -> thread.run(() -> {
                             String group = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#group", "");
                             switch (app.id) {
                                 case "time_remaining_widget": {
@@ -303,7 +305,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
         });
     }
     private void initShortcuts() {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             log.v(TAG, "initShortcuts");
             try {
                 // Переключаем режим отображения
@@ -339,7 +341,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                 log.exception(e);
                             }
                         }
-                        item.setOnClickListener(view -> Thread.run(() -> {
+                        item.setOnClickListener(view -> thread.run(() -> {
                             switch (shortcut.id) {
                                 case "offline": case "tab": case "room101": {
                                     addShortcut(shortcut.id, shortcut.meta);
@@ -438,7 +440,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
         toggleMode(hide, true);
     }
     private void toggleMode(final boolean hide, final boolean animate) {
-        Thread.runOnUI(new Runnable() {
+        thread.runOnUI(new Runnable() {
             @Override
             public void run() {
                 log.v(TAG, "toggleMode | hide=" + (hide ? "true" : "false") + " | animate=" + (animate ? "true" : "false"));
@@ -527,7 +529,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
         });
     }
     private void showWidgetsHolder() {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             log.v(TAG, "showWidgetsHolder");
             new AlertDialog.Builder(activity)
                     .setMessage(R.string.pin_app_widget_not_supported)
@@ -546,7 +548,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
         getSchedule(scope, callback, (context, query, handler) -> new ScheduleAttestations(handler).search(context, query));
     }
     private void getSchedule(final String scope, final result callback, final Schedule.ScheduleSearchProvider scheduleSearchProvider) {
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 log.v(TAG, "getSchedule | scope=" + scope);
                 final ViewGroup layout = (ViewGroup) inflate(R.layout.widget_configure_schedule_lessons_create_search);
@@ -570,13 +572,13 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                     public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
                     @Override
                     public void afterTextChanged(Editable editable) {
-                        Thread.run(() -> {
+                        thread.run(() -> {
                             teacherPickerAdapter.clear();
                             search_text_view.dismissDropDown();
                         });
                     }
                 });
-                search_action.setOnClickListener(view -> Thread.run(() -> {
+                search_action.setOnClickListener(view -> thread.run(() -> {
                     final String query = search_text_view.getText().toString().trim();
                     log.v(TAG, "getSchedule | search action | clicked | query=" + query);
                     if (!query.isEmpty()) {
@@ -584,7 +586,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                             @Override
                             public void onSuccess(final JSONObject json, final boolean fromCache) {
                                 log.v(TAG, "getSchedule | search action | onSuccess | json=" + (json == null ? "null" : "notnull"));
-                                Thread.run(() -> {
+                                thread.run(() -> {
                                     search_loading.setVisibility(View.GONE);
                                     search_action.setVisibility(View.VISIBLE);
                                     if (json == null) {
@@ -662,7 +664,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                             }
                             @Override
                             public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                                Thread.run(() -> {
+                                thread.run(() -> {
                                     log.v(TAG, "getSchedule | search action | onFailure | state=" + state);
                                     search_loading.setVisibility(View.GONE);
                                     search_action.setVisibility(View.VISIBLE);
@@ -671,7 +673,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                             }
                             @Override
                             public void onProgress(final int state) {
-                                Thread.run(() -> {
+                                thread.run(() -> {
                                     log.v(TAG, "getSchedule | search action | onProgress | state=" + state);
                                     search_loading.setVisibility(View.VISIBLE);
                                     search_action.setVisibility(View.GONE);
@@ -690,7 +692,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                         });
                     }
                 }));
-                search_text_view.setOnItemClickListener((parent, view, position, id) -> Thread.run(() -> {
+                search_text_view.setOnItemClickListener((parent, view, position, id) -> thread.run(() -> {
                     try {
                         log.v(TAG, "getSchedule | search list selected");
                         final JSONObject teacher = teacherPickerAdapter.getItem(position);
@@ -720,7 +722,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
     }
 
     private void addShortcut(final String type, final String data) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "addShortcut | type=" + type + " | data=" + data);
             Intent intent = new Intent(ShortcutReceiver.ACTION_ADD_SHORTCUT);
             intent.putExtra(ShortcutReceiver.EXTRA_TYPE, type);

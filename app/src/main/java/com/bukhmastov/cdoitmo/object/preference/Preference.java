@@ -14,13 +14,13 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.object.ProtocolTracker;
+import com.bukhmastov.cdoitmo.provider.InjectProvider;
 import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.StorageProvider;
-import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.util.ArrayList;
@@ -36,11 +36,15 @@ public abstract class Preference {
     //@Inject
     protected Log log = Log.instance();
     //@Inject
+    private Thread thread = Thread.instance();
+    //@Inject
     protected Storage storage = Storage.instance();
     //@Inject
     protected StoragePref storagePref = StoragePref.instance();
     //@Inject
     private DeIfmoRestClient deIfmoRestClient = DeIfmoRestClient.instance();
+    //@Inject
+    private InjectProvider injectProvider = InjectProvider.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
     //@Inject
@@ -94,11 +98,11 @@ public abstract class Preference {
             case "pref_use_notifications":
             case "pref_notify_frequency":
             case "pref_notify_network_unmetered":
-                Thread.run(Thread.BACKGROUND, () -> new ProtocolTracker(activity).restart());
+                thread.run(Thread.BACKGROUND, () -> new ProtocolTracker(activity).restart());
                 break;
             case "pref_protocol_changes_track":
                 if (storagePref.get(activity, "pref_protocol_changes_track", true)) {
-                    ProtocolTracker.setup(activity, deIfmoRestClient, storagePref, log, 0);
+                    ProtocolTracker.setup(activity, deIfmoRestClient, injectProvider, 0);
                 } else {
                     storage.clear(activity, Storage.CACHE, Storage.USER, "protocol#log");
                 }
@@ -141,15 +145,15 @@ public abstract class Preference {
     }
 
     @Nullable
-    public static View getView(final ConnectedActivity activity, final Preference preference, final StorageProvider storageProvider) {
+    public static View getView(final ConnectedActivity activity, final Preference preference, final InjectProvider injectProvider) {
         if (preference instanceof PreferenceList) {
-            return PreferenceList.getView(activity, preference, storageProvider);
+            return PreferenceList.getView(activity, preference, injectProvider);
         } else if (preference instanceof PreferenceSwitch) {
-            return PreferenceSwitch.getView(activity, preference, storageProvider);
+            return PreferenceSwitch.getView(activity, preference, injectProvider);
         } else if (preference instanceof PreferenceEditText) {
-            return PreferenceEditText.getView(activity, preference, storageProvider);
+            return PreferenceEditText.getView(activity, preference, injectProvider);
         } else if (preference instanceof PreferenceBasic) {
-            return PreferenceBasic.getView(activity, preference, storageProvider);
+            return PreferenceBasic.getView(activity, preference, injectProvider);
         } else {
             return null;
         }

@@ -59,6 +59,8 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     //@Inject
     private Log log = Log.instance();
     //@Inject
+    private Thread thread = Thread.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Retention(RetentionPolicy.SOURCE)
@@ -94,7 +96,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         updateAppWidget(context, appWidgetManager, appWidgetId, force, false);
     }
     public void updateAppWidget(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final boolean force, final boolean controls) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.i(TAG, "update | appWidgetId=" + appWidgetId);
             try {
                 JSONObject settings = ScheduleLessonsWidgetStorage.getJson(context, appWidgetId, "settings");
@@ -118,20 +120,20 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         });
     }
     public void deleteAppWidget(final Context context, final int appWidgetId) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.i(TAG, "delete | appWidgetId=" + appWidgetId);
             ScheduleLessonsWidgetStorage.delete(context, appWidgetId);
         });
     }
 
     private void refresh(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final JSONObject settings) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.i(TAG, "refresh | appWidgetId=" + appWidgetId);
             try {
                 new ScheduleLessons(new Schedule.Handler() {
                     @Override
                     public void onSuccess(final JSONObject json, final boolean fromCache) {
-                        Thread.run(() -> {
+                        thread.run(() -> {
                             try {
                                 JSONObject jsonObject = new JSONObject();
                                 jsonObject.put("timestamp", Time.getCalendar().getTimeInMillis());
@@ -184,7 +186,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         });
     }
     private void progress(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final JSONObject settings) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "progress | appWidgetId=" + appWidgetId);
             final @SIZE int size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
             final Colors colors = getColors(settings);
@@ -227,7 +229,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         });
     }
     private void display(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final boolean controls) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "display | appWidgetId=" + appWidgetId + " | controls=" + (controls ? "true" : "false"));
             JSONObject settings = ScheduleLessonsWidgetStorage.getJson(context, appWidgetId, "settings");
             JSONObject cache = ScheduleLessonsWidgetStorage.getJson(context, appWidgetId, "cache");
@@ -366,7 +368,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         });
     }
     private void failed(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final JSONObject settings, final String text) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "failed | appWidgetId=" + appWidgetId + " | text=" + text);
             final @SIZE int size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
             final Colors colors = getColors(settings);
@@ -414,7 +416,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         });
     }
     private void needPreparations(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "needPreparations | appWidgetId=" + appWidgetId);
             final @SIZE int size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
             final Colors colors = getColors();
@@ -649,7 +651,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
 
     public void onReceive(final Context context, final Intent intent) {
         super.onReceive(context, intent);
-        Thread.run(() -> {
+        thread.run(() -> {
             final String action = intent.getAction() != null ? intent.getAction() : "";
             final int appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
             log.v(TAG, "onReceive | action=" + action);
@@ -672,7 +674,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 case ACTION_WIDGET_CONTROLS_NEXT:
                 case ACTION_WIDGET_CONTROLS_BEFORE:
                 case ACTION_WIDGET_CONTROLS_RESET: {
-                    Thread.run(() -> {
+                    thread.run(() -> {
                         switch (action) {
                             case ACTION_WIDGET_CONTROLS_NEXT: logStatistic(context, "shift_next"); break;
                             case ACTION_WIDGET_CONTROLS_BEFORE: logStatistic(context, "shift_before"); break;
@@ -707,7 +709,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                     break;
                 }
                 case ACTION_WIDGET_OPEN: {
-                    Thread.run(() -> {
+                    thread.run(() -> {
                         logStatistic(context, "schedule_open");
                         Intent oIntent = new Intent(context, MainActivity.class);
                         oIntent.addFlags(App.intentFlagRestart);

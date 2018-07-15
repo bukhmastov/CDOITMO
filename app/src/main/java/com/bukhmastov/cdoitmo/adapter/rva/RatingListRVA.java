@@ -12,7 +12,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -159,7 +158,7 @@ public class RatingListRVA extends RVA {
         if (saved != -1) {
             return saved;
         }
-        int color = com.bukhmastov.cdoitmo.util.Color.resolve(context, reference);
+        int color = com.bukhmastov.cdoitmo.util.singleton.Color.resolve(context, reference);
         colors.put(reference, color);
         return color;
     }

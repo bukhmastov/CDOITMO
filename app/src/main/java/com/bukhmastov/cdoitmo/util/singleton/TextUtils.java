@@ -1,10 +1,11 @@
-package com.bukhmastov.cdoitmo.util;
+package com.bukhmastov.cdoitmo.util.singleton;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Build;
 
-import com.bukhmastov.cdoitmo.util.impl.StorageImpl;
+import com.bukhmastov.cdoitmo.util.StoragePref;
+import com.bukhmastov.cdoitmo.util.Time;
 
 import org.json.JSONArray;
 import org.json.JSONException;

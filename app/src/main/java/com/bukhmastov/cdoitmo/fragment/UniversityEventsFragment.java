@@ -28,7 +28,7 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
-import com.bukhmastov.cdoitmo.util.Color;
+import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
@@ -57,6 +57,8 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
 
     //@Inject
     private Log log = Log.instance();
+    //@Inject
+    private Thread thread = Thread.instance();
     //@Inject
     private Storage storage = Storage.instance();
     //@Inject
@@ -114,15 +116,15 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
     }
 
     private void load() {
-        Thread.run(() -> load(""));
+        thread.run(() -> load(""));
     }
     private void load(final String search) {
-        Thread.run(() -> load(search, storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)
+        thread.run(() -> load(search, storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)
                 ? Integer.parseInt(storagePref.get(activity, "pref_dynamic_refresh", "0"))
                 : 0));
     }
     private void load(final String search, final int refresh_rate) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "load | search=" + search + " | refresh_rate=" + refresh_rate);
             if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
                 String cache = storage.get(activity, Storage.CACHE, Storage.GLOBAL, "university#events").trim();
@@ -149,7 +151,7 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
         });
     }
     private void load(final String search, final boolean force) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "load | search=" + search + " | force=" + (force ? "true" : "false"));
             if ((!force || !Client.isOnline(activity)) && events != null) {
                 display();
@@ -161,7 +163,7 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
                 loadProvider(new RestResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject json, final JSONArray responseArr) {
-                        Thread.run(() -> {
+                        thread.run(() -> {
                             if (statusCode == 200) {
                                 long now = Time.getCalendar().getTimeInMillis();
                                 if (json != null && storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
@@ -185,7 +187,7 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
                     }
                     @Override
                     public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                        Thread.runOnUI(() -> {
+                        thread.runOnUI(() -> {
                             log.v(TAG, "load | failure " + state);
                             switch (state) {
                                 case IfmoRestClient.FAILED_OFFLINE:
@@ -220,7 +222,7 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
                     }
                     @Override
                     public void onProgress(final int state) {
-                        Thread.runOnUI(() -> {
+                        thread.runOnUI(() -> {
                             log.v(TAG, "load | progress " + state);
                             draw(R.layout.state_loading_text);
                             if (activity != null) {
@@ -241,7 +243,7 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
                     }
                 });
             } else {
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     draw(R.layout.state_offline_text);
                     if (activity != null) {
                         View offline_reload = activity.findViewById(R.id.offline_reload);
@@ -258,7 +260,7 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
         ifmoRestClient.get(activity, "event?limit=" + limit + "&offset=" + offset + "&search=" + search, null, handler);
     }
     private void loadFailed() {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             log.v(TAG, "loadFailed");
             try {
                 draw(R.layout.state_failed_button);
@@ -274,7 +276,7 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
         });
     }
     private void display() {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             log.v(TAG, "display");
             if (events == null) {
                 loadFailed();
@@ -311,10 +313,10 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
                     eventsRecyclerViewAdapter.setOnStateClickListener(R.id.load_more, v -> {
                         offset += limit;
                         eventsRecyclerViewAdapter.setState(R.id.loading_more);
-                        Thread.run(() -> loadProvider(new RestResponseHandler() {
+                        thread.run(() -> loadProvider(new RestResponseHandler() {
                             @Override
                             public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject json, final JSONArray responseArr) {
-                                Thread.run(() -> {
+                                thread.run(() -> {
                                     try {
                                         events.put("count", json.getInt("count"));
                                         events.put("limit", json.getInt("limit"));
@@ -340,13 +342,13 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
                                         displayContent(list1);
                                     } catch (Exception e) {
                                         log.exception(e);
-                                        Thread.runOnUI(() -> eventsRecyclerViewAdapter.setState(R.id.load_more));
+                                        thread.runOnUI(() -> eventsRecyclerViewAdapter.setState(R.id.load_more));
                                     }
                                 });
                             }
                             @Override
                             public void onFailure(int statusCode, Client.Headers headers, int state) {
-                                Thread.runOnUI(() -> eventsRecyclerViewAdapter.setState(R.id.load_more));
+                                thread.runOnUI(() -> eventsRecyclerViewAdapter.setState(R.id.load_more));
                             }
                             @Override
                             public void onProgress(int state) {}
@@ -396,7 +398,7 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
         });
     }
     private void displayContent(final JSONArray list) {
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 final ArrayList<UniversityEventsRVA.Item> items = new ArrayList<>();
                 for (int i = 0; i < list.length(); i++) {
@@ -410,7 +412,7 @@ public class UniversityEventsFragment extends Fragment implements SwipeRefreshLa
                         log.exception(e);
                     }
                 }
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     try {
                         if (eventsRecyclerViewAdapter != null) {
                             eventsRecyclerViewAdapter.addItem(items);

@@ -16,8 +16,8 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
-import com.bukhmastov.cdoitmo.util.Color;
-import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.singleton.Color;
+import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.view.CircularTransformation;
 import com.bukhmastov.cdoitmo.util.Log;
@@ -40,6 +40,8 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
 
     //@Inject
     private Log log = Log.instance();
+    //@Inject
+    private Thread thread = Thread.instance();
     //@Inject
     private IfmoRestClient ifmoRestClient = IfmoRestClient.instance();
     //@Inject
@@ -129,7 +131,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
     }
 
     private void load() {
-        Thread.run(() -> {
+        thread.run(() -> {
             if (person != null) {
                 display();
                 return;
@@ -137,13 +139,13 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
             loadProvider(new RestResponseHandler() {
                 @Override
                 public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject json, final JSONArray responseArr) {
-                    Thread.runOnUI(() -> {
+                    thread.runOnUI(() -> {
                         SwipeRefreshLayout mSwipeRefreshLayout = findViewById(R.id.person_swipe);
                         if (mSwipeRefreshLayout != null) {
                             mSwipeRefreshLayout.setRefreshing(false);
                         }
                     });
-                    Thread.run(() -> {
+                    thread.run(() -> {
                         if (statusCode == 200 && json != null) {
                             try {
                                 String post = json.getString("post");
@@ -165,7 +167,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                 }
                 @Override
                 public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                    Thread.runOnUI(() -> {
+                    thread.runOnUI(() -> {
                         log.v(TAG, "load | statusCode = " + statusCode + " | failure " + state);
                         SwipeRefreshLayout mSwipeRefreshLayout = findViewById(R.id.person_swipe);
                         if (mSwipeRefreshLayout != null) {
@@ -204,7 +206,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                 }
                 @Override
                 public void onProgress(final int state) {
-                    Thread.runOnUI(() -> {
+                    thread.runOnUI(() -> {
                         log.v(TAG, "load | progress " + state);
                         if (first_load) {
                             draw(R.layout.state_loading_text);
@@ -231,7 +233,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
         ifmoRestClient.get(activity, "person/" + pid, null, handler);
     }
     private void loadFailed() {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             log.v(TAG, "loadFailed");
             try {
                 draw(R.layout.state_failed_button);
@@ -247,7 +249,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
         });
     }
     private void loadNotFound() {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             log.v(TAG, "loadNotFound");
             try {
                 draw(R.layout.state_nothing_to_display_person);
@@ -259,7 +261,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
     }
 
     private void display() {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             try {
                 first_load = false;
                 draw(R.layout.layout_university_person_card);

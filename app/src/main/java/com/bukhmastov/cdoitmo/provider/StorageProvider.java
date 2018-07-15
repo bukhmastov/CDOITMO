@@ -1,4 +1,7 @@
-package com.bukhmastov.cdoitmo.util;
+package com.bukhmastov.cdoitmo.provider;
+
+import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 
 public class StorageProvider {
 

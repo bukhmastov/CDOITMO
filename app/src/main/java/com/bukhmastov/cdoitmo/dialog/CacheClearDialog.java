@@ -12,7 +12,7 @@ import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.util.ArrayList;
@@ -26,6 +26,8 @@ public class CacheClearDialog extends Dialog {
 
     //@Inject
     private Log log = Log.instance();
+    //@Inject
+    private Thread thread = Thread.instance();
     //@Inject
     private Storage storage = Storage.instance();
     //@Inject
@@ -68,12 +70,12 @@ public class CacheClearDialog extends Dialog {
 
     public void show() {
         log.v(TAG, "show");
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             final ViewGroup layout = (ViewGroup) inflate(R.layout.dialog_storage_cache);
             if (layout == null) {
                 return;
             }
-            Thread.run(() -> {
+            thread.run(() -> {
                 try {
                     final ViewGroup cache_list = layout.findViewById(R.id.cache_list);
                     for (Entry item : items) {
@@ -100,7 +102,7 @@ public class CacheClearDialog extends Dialog {
                         }
                         cache_item_size_container.setVisibility(View.INVISIBLE);
                         cache_item_size.setText("...");
-                        cache_item.setOnClickListener((v) -> Thread.run(Thread.BACKGROUND, () -> {
+                        cache_item.setOnClickListener((v) -> thread.run(thread.BACKGROUND, () -> {
                             if ("_mem_".equals(item.path)) {
                                 storage.cacheReset();
                                 ConnectedActivity.clearStore();
@@ -126,7 +128,7 @@ public class CacheClearDialog extends Dialog {
                         cache_list.addView(layout_item);
                     }
                     // show dialog
-                    Thread.runOnUI(() -> new AlertDialog.Builder(activity)
+                    thread.runOnUI(() -> new AlertDialog.Builder(activity)
                             .setTitle(R.string.cache_clear)
                             .setView(layout)
                             .setNegativeButton(R.string.close, null)
@@ -141,9 +143,9 @@ public class CacheClearDialog extends Dialog {
     }
 
     private void calculateCacheSize(final ViewGroup cache_list) {
-        Thread.run(Thread.BACKGROUND, () -> {
+        thread.run(thread.BACKGROUND, () -> {
             for (final Entry item : items) {
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     final ViewGroup layout_item = cache_list.findViewWithTag(TAG_PREFIX + item.path);
                     if (layout_item == null) {
                         return;
@@ -168,7 +170,7 @@ public class CacheClearDialog extends Dialog {
                         default: size = -1L; break;
                     }
                 }
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     final ViewGroup layout_item = cache_list.findViewWithTag(TAG_PREFIX + item.path);
                     if (layout_item == null) {
                         return;

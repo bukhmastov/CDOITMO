@@ -12,9 +12,7 @@ import com.bukhmastov.cdoitmo.network.handlers.RawHandler;
 import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.parse.UserDataParse;
-import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
-import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
 import org.json.JSONObject;
@@ -34,7 +32,7 @@ public class DeIfmoClientImpl extends DeIfmoClient {
 
     @Override
     public void check(@NonNull final Context context, @NonNull final ResponseHandler responseHandler) {
-        Thread.run(Thread.BACKGROUND, () -> {
+        thread.run(thread.BACKGROUND, () -> {
             log.v(TAG, "check");
             if (Client.isOnline(context)) {
                 responseHandler.onProgress(STATE_CHECKING);
@@ -67,12 +65,12 @@ public class DeIfmoClientImpl extends DeIfmoClient {
                         @Override
                         public void onSuccess(final int statusCode, final Headers headers, final String response) {
                             log.v(TAG, "check | success | going to parse user data");
-                            Thread.run(Thread.BACKGROUND, () -> new UserDataParse(response, result -> {
+                            thread.run(thread.BACKGROUND, () -> new UserDataParse(response, result -> {
                                 if (result != null) {
                                     log.v(TAG, "check | success | parsed");
-                                    String name = com.bukhmastov.cdoitmo.util.TextUtils.getStringSafely(result, "name", "");
-                                    String avatar = com.bukhmastov.cdoitmo.util.TextUtils.getStringSafely(result, "avatar", "");
-                                    String group = com.bukhmastov.cdoitmo.util.TextUtils.getStringSafely(result, "group", "");
+                                    String name = com.bukhmastov.cdoitmo.util.singleton.TextUtils.getStringSafely(result, "name", "");
+                                    String avatar = com.bukhmastov.cdoitmo.util.singleton.TextUtils.getStringSafely(result, "avatar", "");
+                                    String group = com.bukhmastov.cdoitmo.util.singleton.TextUtils.getStringSafely(result, "group", "");
                                     String pref_group_force_override = storagePref.get(context, "pref_group_force_override", "");
                                     if (pref_group_force_override == null) {
                                         pref_group_force_override = "";
@@ -117,7 +115,7 @@ public class DeIfmoClientImpl extends DeIfmoClient {
                         public void onProgress(int state) {}
                         @Override
                         public void onFailure(final int statusCode, final Headers headers, final int state) {
-                            Thread.run(Thread.BACKGROUND, () -> {
+                            thread.run(thread.BACKGROUND, () -> {
                                 log.v(TAG, "check | failed | statusCode=", statusCode, " | state=", state);
                                 responseHandler.onFailure(statusCode, headers, state);
                             });
@@ -136,7 +134,7 @@ public class DeIfmoClientImpl extends DeIfmoClient {
 
     @Override
     public void authorize(@NonNull final Context context, @NonNull final ResponseHandler responseHandler) {
-        Thread.run(Thread.BACKGROUND, () -> {
+        thread.run(thread.BACKGROUND, () -> {
             log.v(TAG, "authorize");
             responseHandler.onProgress(STATE_AUTHORIZATION);
             if (App.UNAUTHORIZED_MODE) {
@@ -159,7 +157,7 @@ public class DeIfmoClientImpl extends DeIfmoClient {
                     @Override
                     public void onDone(final int code, final okhttp3.Headers headers, final String response) {
                         //noinspection Convert2Lambda
-                        Thread.run(Thread.BACKGROUND, new Runnable() {
+                        thread.run(thread.BACKGROUND, new Runnable() {
                             @Override
                             public void run() {
                                 log.v(TAG, "authorize | success | code=", code);
@@ -180,7 +178,7 @@ public class DeIfmoClientImpl extends DeIfmoClient {
                                         g(context, getAbsoluteUrl(DEFAULT_PROTOCOL, "servlet/distributedCDE?Rule=APPLYSECURITYGROUP&PERSON=" + storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#login") + "&SECURITYGROUP=8&COMPNAME="), null, new RawHandler() {
                                             @Override
                                             public void onDone(final int code, final okhttp3.Headers headers, final String response) {
-                                                Thread.run(Thread.BACKGROUND, () -> {
+                                                thread.run(thread.BACKGROUND, () -> {
                                                     if (code == 200) {
                                                         log.v(TAG, "authorize | success | security group | authorized | statusCode=" + code);
                                                         responseHandler.onProgress(STATE_AUTHORIZED);
@@ -193,7 +191,7 @@ public class DeIfmoClientImpl extends DeIfmoClient {
                                             }
                                             @Override
                                             public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
-                                                Thread.run(Thread.BACKGROUND, () -> {
+                                                thread.run(thread.BACKGROUND, () -> {
                                                     log.v(TAG, "authorize | success | security group | FAILED | statusCode=", code, " | throwable=", throwable);
                                                     responseHandler.onFailure(code, new Headers(headers), code >= 400 ? FAILED_SERVER_ERROR : FAILED_AUTH_TRY_AGAIN);
                                                 });
@@ -220,7 +218,7 @@ public class DeIfmoClientImpl extends DeIfmoClient {
                     }
                     @Override
                     public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
-                        Thread.run(Thread.BACKGROUND, () -> {
+                        thread.run(thread.BACKGROUND, () -> {
                             log.v(TAG, "authorize | failure | statusCode=", code, " | throwable=", throwable);
                             responseHandler.onFailure(code, new Headers(headers), isInterrupted(throwable) ? FAILED_INTERRUPTED : (code >= 400 ? FAILED_SERVER_ERROR : FAILED_AUTH_TRY_AGAIN));
                         });
@@ -251,7 +249,7 @@ public class DeIfmoClientImpl extends DeIfmoClient {
 
     @Override
     public void get(@NonNull final Context context, @NonNull final @Protocol String protocol, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final ResponseHandler responseHandler, final boolean reAuth) {
-        Thread.run(Thread.BACKGROUND, () -> {
+        thread.run(thread.BACKGROUND, () -> {
             log.v(TAG, "get | url=", url);
             if (Client.isOnline(context)) {
                 if (App.UNAUTHORIZED_MODE && !url.startsWith("index.php")) {
@@ -285,7 +283,7 @@ public class DeIfmoClientImpl extends DeIfmoClient {
                     @Override
                     public void onDone(final int code, final okhttp3.Headers headers, final String response) {
                         //noinspection Convert2Lambda
-                        Thread.run(Thread.BACKGROUND, new Runnable() {
+                        thread.run(thread.BACKGROUND, new Runnable() {
                             @Override
                             public void run() {
                                 log.v(TAG, "get | url=", url, " | success | statusCode=", code);
@@ -333,7 +331,7 @@ public class DeIfmoClientImpl extends DeIfmoClient {
                     }
                     @Override
                     public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
-                        Thread.run(Thread.BACKGROUND, () -> {
+                        thread.run(thread.BACKGROUND, () -> {
                             log.v(TAG, "get | url=", url, " | failure | statusCode=", code, " | throwable=", throwable);
                             responseHandler.onFailure(code, new Headers(headers), isInterrupted(throwable) ? FAILED_INTERRUPTED : (code >= 400 ? FAILED_SERVER_ERROR : FAILED_AUTH_TRY_AGAIN));
                         });
@@ -357,7 +355,7 @@ public class DeIfmoClientImpl extends DeIfmoClient {
 
     @Override
     public void post(@NonNull final Context context, @NonNull final @Protocol String protocol, @NonNull final String url, @Nullable final Map<String, String> params, @NonNull final ResponseHandler responseHandler) {
-        Thread.run(Thread.BACKGROUND, () -> {
+        thread.run(thread.BACKGROUND, () -> {
             log.v(TAG, "post | url=", url);
             if (Client.isOnline(context)) {
                 if (App.UNAUTHORIZED_MODE && !url.startsWith("index.php")) {
@@ -391,7 +389,7 @@ public class DeIfmoClientImpl extends DeIfmoClient {
                     @Override
                     public void onDone(final int code, final okhttp3.Headers headers, final String response) {
                         //noinspection Convert2Lambda
-                        Thread.run(Thread.BACKGROUND, new Runnable() {
+                        thread.run(thread.BACKGROUND, new Runnable() {
                             @Override
                             public void run() {
                                 log.v(TAG, "post | url=", url, " | success | statusCode=", code);
@@ -438,7 +436,7 @@ public class DeIfmoClientImpl extends DeIfmoClient {
                     }
                     @Override
                     public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
-                        Thread.run(Thread.BACKGROUND, () -> {
+                        thread.run(thread.BACKGROUND, () -> {
                             log.v(TAG, "post | url=", url, " | failure | statusCode=", code, " | throwable=", throwable);
                             responseHandler.onFailure(code, new Headers(headers), isInterrupted(throwable) ? FAILED_INTERRUPTED : (code >= 400 ? FAILED_SERVER_ERROR : FAILED_AUTH_TRY_AGAIN));
                         });

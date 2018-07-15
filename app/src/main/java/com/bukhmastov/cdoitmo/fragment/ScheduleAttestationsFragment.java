@@ -23,9 +23,9 @@ import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleAttestationsFrag
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleAttestations;
-import com.bukhmastov.cdoitmo.util.Color;
+import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.StorageProvider;
+import com.bukhmastov.cdoitmo.provider.StorageProvider;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
@@ -54,6 +54,8 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
 
     //@Inject
     private Log log = Log.instance();
+    //@Inject
+    private Thread thread = Thread.instance();
     //@Inject
     private StorageProvider storageProvider = StorageProvider.instance();
     //@Inject
@@ -186,14 +188,14 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
     }
 
     private void load(final boolean refresh) {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             if (activity == null) {
                 log.w(TAG, "load | activity is null");
                 failed(getContext());
                 return;
             }
             draw(R.layout.state_loading_text);
-            Thread.run(() -> {
+            thread.run(() -> {
                 try {
                     if (activity == null || getQuery() == null) {
                         log.w(TAG, "load | some values are null | activity=", activity, " | getQuery()=", getQuery());
@@ -220,11 +222,11 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
         if (scheduleAttestations == null) scheduleAttestations = new ScheduleAttestations(new Schedule.Handler() {
             @Override
             public void onSuccess(final JSONObject json, final boolean fromCache) {
-                Thread.run(() -> {
+                thread.run(() -> {
                     try {
                         final int week = Time.getWeek(activity);
                         final ScheduleAttestationsRVA adapter = new ScheduleAttestationsRVA(activity, json, week);
-                        Thread.runOnUI(() -> {
+                        thread.runOnUI(() -> {
                             try {
                                 draw(R.layout.layout_schedule_both_recycle_list);
                                 // prepare
@@ -278,7 +280,7 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
             }
             @Override
             public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     try {
                         log.v(TAG, "onFailure | statusCode=" + statusCode + " | state=" + state);
                         switch (state) {
@@ -333,7 +335,7 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
             }
             @Override
             public void onProgress(final int state) {
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     try {
                         log.v(TAG, "onProgress | state=" + state);
                         final ViewGroup view = (ViewGroup) inflate(R.layout.state_loading_text);

@@ -13,11 +13,10 @@ import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleExamsFragment;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleExams;
 import com.bukhmastov.cdoitmo.util.BottomBar;
-import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.interfaces.CallableString;
 import com.bukhmastov.cdoitmo.util.Thread;
@@ -47,6 +46,8 @@ public class ScheduleExamsRVA extends RVA {
 
     private static Pattern patternBrokenDate = Pattern.compile("^(\\d{1,2})(\\s\\S*)(.*)$", Pattern.CASE_INSENSITIVE);
 
+    //@Inject
+    private Thread thread = Thread.instance();
     //@Inject
     private Storage storage = Storage.instance();
     //@Inject
@@ -139,10 +140,10 @@ public class ScheduleExamsRVA extends RVA {
             } else {
                 ((ViewGroup) schedule_lessons_week.getParent()).removeView(schedule_lessons_week);
             }
-            container.findViewById(R.id.schedule_lessons_menu).setOnClickListener(view -> Thread.run(() -> {
+            container.findViewById(R.id.schedule_lessons_menu).setOnClickListener(view -> thread.run(() -> {
                 final String cache_token = query == null ? null : query.toLowerCase();
                 final boolean cached = cache_token != null && !storage.get(activity, Storage.CACHE, Storage.GLOBAL, "schedule_exams#lessons#" + cache_token, "").isEmpty();
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     try {
                         final PopupMenu popup = new PopupMenu(activity, view);
                         final Menu menu = popup.getMenu();

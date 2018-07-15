@@ -17,7 +17,7 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleExams;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.StorageProvider;
+import com.bukhmastov.cdoitmo.provider.StorageProvider;
 import com.bukhmastov.cdoitmo.util.Thread;
 
 public class ScheduleExamsFragment extends ConnectedFragment implements ViewPager.OnPageChangeListener {
@@ -28,6 +28,8 @@ public class ScheduleExamsFragment extends ConnectedFragment implements ViewPage
 
     //@Inject
     private Log log = Log.instance();
+    //@Inject
+    private Thread thread = Thread.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
@@ -134,7 +136,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements ViewPage
 
     private void load() {
         final FragmentManager fragmentManager = getChildFragmentManager();
-        Thread.run(() -> {
+        thread.run(() -> {
             if (activity == null) {
                 log.w(TAG, "load | activity is null");
                 return;
@@ -142,7 +144,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements ViewPage
             if (ScheduleLessonsTabHostFragment.getQuery() == null) {
                 ScheduleLessonsTabHostFragment.setQuery(ScheduleExams.getDefaultScope(activity, storageProvider, ScheduleExams.TYPE));
             }
-            Thread.runOnUI(() -> {
+            thread.runOnUI(() -> {
                 try {
                     if (activity == null) {
                         log.w(TAG, "load | activity is null");

@@ -24,6 +24,8 @@ public class FirebaseAnalyticsProviderImpl implements FirebaseAnalyticsProvider 
     //@Inject
     private Log log = Log.instance();
     //@Inject
+    private Thread thread = Thread.instance();
+    //@Inject
     private StoragePref storagePref = StoragePref.instance();
 
     private FirebaseAnalytics getFirebaseAnalytics(Context context) {
@@ -72,7 +74,7 @@ public class FirebaseAnalyticsProviderImpl implements FirebaseAnalyticsProvider 
     }
     @Override
     public void setCurrentScreen(final Activity activity, final Fragment fragment, final String view_screen) {
-        Thread.run(Thread.BACKGROUND, () -> {
+        thread.run(thread.BACKGROUND, () -> {
             try {
                 if (!enabled) return;
                 if (activity == null) return;
@@ -175,7 +177,7 @@ public class FirebaseAnalyticsProviderImpl implements FirebaseAnalyticsProvider 
     }
     @Override
     public void setUserProperty(final Context context, final String property, final String value) {
-        Thread.run(Thread.BACKGROUND, () -> {
+        thread.run(thread.BACKGROUND, () -> {
             try {
                 if (!enabled) return;
                 getFirebaseAnalytics(context).setUserProperty(property, value);
@@ -191,7 +193,7 @@ public class FirebaseAnalyticsProviderImpl implements FirebaseAnalyticsProvider 
     }
     @Override
     public void logEvent(final Context context, final String name, final Bundle params) {
-        Thread.run(Thread.BACKGROUND, () -> {
+        thread.run(thread.BACKGROUND, () -> {
             try {
                 if (!enabled) return;
                 getFirebaseAnalytics(context).logEvent(name, params);
@@ -202,7 +204,7 @@ public class FirebaseAnalyticsProviderImpl implements FirebaseAnalyticsProvider 
     }
     @Override
     public void logBasicEvent(final Context context, final String content) {
-        Thread.run(Thread.BACKGROUND, () -> {
+        thread.run(thread.BACKGROUND, () -> {
             try {
                 if (!enabled) return;
                 getFirebaseAnalytics(context).logEvent(

@@ -18,7 +18,6 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.UniversityPersonCardActivity;
 import com.bukhmastov.cdoitmo.util.BottomBar;
-import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.view.CircularTransformation;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.squareup.picasso.Picasso;
@@ -84,7 +83,7 @@ public class UniversityFacultiesRVA extends UniversityRVA {
             removeFirstSeparator(viewHolder.container);
             String header = item.data.getString("header");
             if (header != null) {
-                ((TextView) viewHolder.container.findViewById(R.id.structure_header)).setText(com.bukhmastov.cdoitmo.util.TextUtils.capitalizeFirstLetter(header.trim()));
+                ((TextView) viewHolder.container.findViewById(R.id.structure_header)).setText(com.bukhmastov.cdoitmo.util.singleton.TextUtils.capitalizeFirstLetter(header.trim()));
             } else {
                 Static.removeView(viewHolder.container.findViewById(R.id.structure_header));
             }
@@ -255,7 +254,7 @@ public class UniversityFacultiesRVA extends UniversityRVA {
             removeFirstSeparator(viewHolder.container);
             String header = getString(item.data, "header");
             if (header != null) {
-                ((TextView) viewHolder.container.findViewById(R.id.structure_header)).setText(com.bukhmastov.cdoitmo.util.TextUtils.capitalizeFirstLetter(header.trim()));
+                ((TextView) viewHolder.container.findViewById(R.id.structure_header)).setText(com.bukhmastov.cdoitmo.util.singleton.TextUtils.capitalizeFirstLetter(header.trim()));
             } else {
                 Static.removeView(viewHolder.container.findViewById(R.id.structure_header));
             }

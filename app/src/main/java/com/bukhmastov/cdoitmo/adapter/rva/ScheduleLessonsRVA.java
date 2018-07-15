@@ -25,8 +25,7 @@ import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsTabHostFragment;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.util.BottomBar;
-import com.bukhmastov.cdoitmo.util.Color;
-import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
@@ -60,6 +59,8 @@ public class ScheduleLessonsRVA extends RVA {
     private static final int TYPE_PICKER_ITEM = 10;
     private static final int TYPE_PICKER_NO_TEACHERS = 11;
 
+    //@Inject
+    private Thread thread = Thread.instance();
     //@Inject
     private Storage storage = Storage.instance();
     //@Inject
@@ -172,10 +173,10 @@ public class ScheduleLessonsRVA extends RVA {
             } else {
                 ((ViewGroup) schedule_lessons_week.getParent()).removeView(schedule_lessons_week);
             }
-            container.findViewById(R.id.schedule_lessons_menu).setOnClickListener(view -> Thread.run(() -> {
+            container.findViewById(R.id.schedule_lessons_menu).setOnClickListener(view -> thread.run(() -> {
                 final String cache_token = query == null ? null : query.toLowerCase();
                 final boolean cached = cache_token != null && !storage.get(activity, Storage.CACHE, Storage.GLOBAL, "schedule_lessons#lessons#" + cache_token, "").isEmpty();
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     try {
                         final PopupMenu popup = new PopupMenu(activity, view);
                         final Menu menu = popup.getMenu();
@@ -215,7 +216,7 @@ public class ScheduleLessonsRVA extends RVA {
                                     break;
                                 }
                                 case R.id.add_lesson: {
-                                    Thread.run(() -> {
+                                    thread.run(() -> {
                                         try {
                                             if (!ScheduleLessons.createLesson(activity, query, data.getString("title"), type, Time.getWeekDay(), new JSONObject(), null)) {
                                                 BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
@@ -228,12 +229,12 @@ public class ScheduleLessonsRVA extends RVA {
                                     break;
                                 }
                                 case R.id.add_military_day: {
-                                    Thread.runOnUI(() -> {
+                                    thread.runOnUI(() -> {
                                         final List<String> days = new ArrayList<>(Arrays.asList(activity.getString(R.string.monday), activity.getString(R.string.tuesday), activity.getString(R.string.wednesday), activity.getString(R.string.thursday), activity.getString(R.string.friday), activity.getString(R.string.saturday), activity.getString(R.string.sunday)));
                                         final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(activity, R.layout.spinner_center);
                                         arrayAdapter.addAll(days);
                                         new AlertDialog.Builder(activity)
-                                                .setAdapter(arrayAdapter, (dialogInterface, position) -> Thread.run(() -> {
+                                                .setAdapter(arrayAdapter, (dialogInterface, position) -> thread.run(() -> {
                                                     try {
                                                         ScheduleLessons.createLesson(activity, storage, query, position, new JSONObject().put("subject", "Утренний осмотр, строевая подготовка").put("type", "Военка").put("week", 2).put("timeStart", "9:05").put("timeEnd", "9:20").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
                                                         ScheduleLessons.createLesson(activity, storage, query, position, new JSONObject().put("subject", "1 пара").put("type", "Военка").put("week", 2).put("timeStart", "9:30").put("timeEnd", "10:50").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
@@ -242,7 +243,7 @@ public class ScheduleLessonsRVA extends RVA {
                                                         ScheduleLessons.createLesson(activity, storage, query, position, new JSONObject().put("subject", "4 пара").put("type", "Военка").put("week", 2).put("timeStart", "14:50").put("timeEnd", "16:10").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
                                                         ScheduleLessons.createLesson(activity, storage, query, position, new JSONObject().put("subject", "Строевая подготовка").put("type", "Военка").put("week", 2).put("timeStart", "16:20").put("timeEnd", "16:35").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
                                                         ScheduleLessons.createLesson(activity, storage, query, position, new JSONObject().put("subject", "Кураторский час").put("type", "Военка").put("week", 2).put("timeStart", "16:45").put("timeEnd", "17:30").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
-                                                        ScheduleLessonsTabHostFragment.invalidateOnDemand();
+                                                        ScheduleLessonsTabHostFragment.invalidateOnDemand(thread);
                                                     } catch (Exception e) {
                                                         log.exception(e);
                                                         BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
@@ -254,14 +255,14 @@ public class ScheduleLessonsRVA extends RVA {
                                     break;
                                 }
                                 case R.id.share_changes: {
-                                    Thread.run(() -> {
+                                    thread.run(() -> {
                                         try {
                                             final Bundle extras = new Bundle();
                                             extras.putString("action", "share");
                                             extras.putString("query", query);
                                             extras.putString("type", type);
                                             extras.putString("title", data.getString("title"));
-                                            Thread.runOnUI(() -> activity.openActivityOrFragment(ScheduleLessonsShareFragment.class, extras));
+                                            thread.runOnUI(() -> activity.openActivityOrFragment(ScheduleLessonsShareFragment.class, extras));
                                         } catch (Exception e) {
                                             log.exception(e);
                                         }
@@ -269,13 +270,13 @@ public class ScheduleLessonsRVA extends RVA {
                                     break;
                                 }
                                 case R.id.remove_changes: {
-                                    Thread.run(() -> new AlertDialog.Builder(activity)
+                                    thread.run(() -> new AlertDialog.Builder(activity)
                                             .setTitle(R.string.pref_schedule_lessons_clear_additional_title)
                                             .setMessage(R.string.pref_schedule_lessons_clear_direct_additional_warning)
                                             .setIcon(R.drawable.ic_warning)
-                                            .setPositiveButton(R.string.proceed, (dialog, which) -> Thread.run(() -> {
+                                            .setPositiveButton(R.string.proceed, (dialog, which) -> thread.run(() -> {
                                                 log.v(TAG, "menu | popup item | remove_changes | dialog accepted");
-                                                if (!ScheduleLessons.clearChanges(activity, storage, query, ScheduleLessonsTabHostFragment::invalidateOnDemand)) {
+                                                if (!ScheduleLessons.clearChanges(activity, storage, query, () -> ScheduleLessonsTabHostFragment.invalidateOnDemand(thread))) {
                                                     BottomBar.snackBar(activity, activity.getString(R.string.no_changes));
                                                 }
                                             }))
@@ -365,28 +366,28 @@ public class ScheduleLessonsRVA extends RVA {
                                 }
                                 break;
                             case R.id.reduce_lesson:
-                                Thread.run(() -> {
-                                    if (!ScheduleLessons.reduceLesson(activity, storage, query, weekday, lesson, ScheduleLessonsTabHostFragment::invalidateOnDemand)) {
+                                thread.run(() -> {
+                                    if (!ScheduleLessons.reduceLesson(activity, storage, query, weekday, lesson, () -> ScheduleLessonsTabHostFragment.invalidateOnDemand(thread))) {
                                         BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                     }
                                 });
                                 break;
                             case R.id.restore_lesson:
-                                Thread.run(() -> {
-                                    if (!ScheduleLessons.restoreLesson(activity, storage, query, weekday, lesson, ScheduleLessonsTabHostFragment::invalidateOnDemand)) {
+                                thread.run(() -> {
+                                    if (!ScheduleLessons.restoreLesson(activity, storage, query, weekday, lesson, () -> ScheduleLessonsTabHostFragment.invalidateOnDemand(thread))) {
                                         BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                     }
                                 });
                                 break;
                             case R.id.delete_lesson:
-                                Thread.run(() -> {
-                                    if (!ScheduleLessons.deleteLesson(activity, storage, query, weekday, lesson, ScheduleLessonsTabHostFragment::invalidateOnDemand)) {
+                                thread.run(() -> {
+                                    if (!ScheduleLessons.deleteLesson(activity, storage, query, weekday, lesson, () -> ScheduleLessonsTabHostFragment.invalidateOnDemand(thread))) {
                                         BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                     }
                                 });
                                 break;
                             case R.id.copy_lesson:
-                                Thread.run(() -> {
+                                thread.run(() -> {
                                     try {
                                         if (!ScheduleLessons.createLesson(activity, query, data.getString("title"), ScheduleLessonsRVA.this.type, weekday, lesson, null)) {
                                             BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
@@ -398,7 +399,7 @@ public class ScheduleLessonsRVA extends RVA {
                                 });
                                 break;
                             case R.id.edit_lesson:
-                                Thread.run(() -> {
+                                thread.run(() -> {
                                     try {
                                         if (!ScheduleLessons.editLesson(activity, query, data.getString("title"), ScheduleLessonsRVA.this.type, weekday, lesson, null)) {
                                             BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));

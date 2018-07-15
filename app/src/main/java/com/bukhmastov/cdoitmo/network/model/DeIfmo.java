@@ -47,7 +47,7 @@ public abstract class DeIfmo extends Client {
      * @see RawHandler
      */
     protected void g(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final RawHandler rawHandler) {
-        Thread.run(Thread.BACKGROUND, () -> {
+        thread.run(thread.BACKGROUND, () -> {
             try {
                 _g(url, getHeaders(context), query, rawHandler);
             } catch (Throwable throwable) {
@@ -65,7 +65,7 @@ public abstract class DeIfmo extends Client {
      * @see RawHandler
      */
     protected void p(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> params, @NonNull final RawHandler rawHandler) {
-        Thread.run(Thread.BACKGROUND, () -> {
+        thread.run(thread.BACKGROUND, () -> {
             try {
                 _p(url, getHeaders(context), null, params, rawHandler);
             } catch (Throwable throwable) {
@@ -83,7 +83,7 @@ public abstract class DeIfmo extends Client {
      * @see RawJsonHandler
      */
     protected void gJson(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final RawJsonHandler rawJsonHandler) {
-        Thread.run(Thread.BACKGROUND, () -> {
+        thread.run(thread.BACKGROUND, () -> {
             try {
                 _gJson(url, getHeaders(context), query, rawJsonHandler);
             } catch (Throwable throwable) {

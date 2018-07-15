@@ -22,6 +22,8 @@ public class FirebaseConfigProviderImpl implements FirebaseConfigProvider {
 
     //@Inject
     private Log log = Log.instance();
+    //@Inject
+    private Thread thread = Thread.instance();
 
     private FirebaseRemoteConfig getFirebaseRemoteConfig() {
         FirebaseRemoteConfig firebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
@@ -68,10 +70,10 @@ public class FirebaseConfigProviderImpl implements FirebaseConfigProvider {
     }
 
     private void fetch(final Callback callback) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "fetch");
             getFirebaseRemoteConfig().fetch(DEBUG ? 0 : cacheExpiration)
-                    .addOnCompleteListener(task -> Thread.run(() -> {
+                    .addOnCompleteListener(task -> thread.run(() -> {
                         boolean successful = task.isSuccessful();
                         log.v(TAG, "fetch | onComplete | successful=", successful);
                         if (successful) {

@@ -32,6 +32,8 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
     //@Inject
     private Log log = Log.instance();
     //@Inject
+    private Thread thread = Thread.instance();
+    //@Inject
     private Storage storage = Storage.instance();
     //@Inject
     private FirebaseConfigProvider firebaseConfigProvider = FirebaseConfigProvider.instance();
@@ -163,7 +165,7 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
     public void invoke(final Class connectedFragmentClass, final Bundle extras) {
         final FragmentActivity self = this;
         final FragmentManager fragmentManager = getSupportFragmentManager();
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             log.v(TAG, "invoke | " + connectedFragmentClass.toString());
             try {
                 ConnectedFragment.Data data = ConnectedFragment.getData(self, connectedFragmentClass);

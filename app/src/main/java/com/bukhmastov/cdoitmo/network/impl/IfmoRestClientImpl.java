@@ -29,14 +29,14 @@ public class IfmoRestClientImpl extends IfmoRestClient {
 
     @Override
     public void get(@NonNull final Context context, @NonNull final @Client.Protocol String protocol, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final RestResponseHandler responseHandler) {
-        Thread.run(Thread.BACKGROUND, () -> {
+        thread.run(thread.BACKGROUND, () -> {
             log.v(TAG, "get | url=", url);
             if (Client.isOnline(context)) {
                 responseHandler.onProgress(STATE_HANDLING);
                 gJson(context, getAbsoluteUrl(protocol, url), query, new RawJsonHandler() {
                     @Override
                     public void onDone(final int code, final okhttp3.Headers headers, final String response, final JSONObject responseObj, final JSONArray responseArr) {
-                        Thread.run(Thread.BACKGROUND, () -> {
+                        thread.run(thread.BACKGROUND, () -> {
                             log.v(TAG, "get | url=", url, " | success | statusCode=", code);
                             if (code >= 400) {
                                 responseHandler.onFailure(code, new Client.Headers(headers), FAILED_SERVER_ERROR);
@@ -47,7 +47,7 @@ public class IfmoRestClientImpl extends IfmoRestClient {
                     }
                     @Override
                     public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
-                        Thread.run(Thread.BACKGROUND, () -> {
+                        thread.run(thread.BACKGROUND, () -> {
                             log.v(TAG, "get | url=", url, " | failure | statusCode=", code, " | throwable=", throwable);
                             responseHandler.onFailure(code, new Client.Headers(headers), code >= 400 ? FAILED_SERVER_ERROR : (isCorruptedJson(throwable) ? FAILED_CORRUPTED_JSON : FAILED_TRY_AGAIN));
                         });

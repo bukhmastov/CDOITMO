@@ -1,4 +1,4 @@
-package com.bukhmastov.cdoitmo.util;
+package com.bukhmastov.cdoitmo.util.singleton;
 
 public class Transliterate {
 

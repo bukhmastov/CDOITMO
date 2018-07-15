@@ -9,7 +9,7 @@ import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.parse.schedule.ScheduleAttestationsParse;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
@@ -26,6 +26,8 @@ public class ScheduleAttestations extends Schedule {
     //@Inject
     private Log log = Log.instance();
     //@Inject
+    private Thread thread = Thread.instance();
+    //@Inject
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
     private DeIfmoClient deIfmoClient = DeIfmoClient.instance();
@@ -37,7 +39,7 @@ public class ScheduleAttestations extends Schedule {
     @Override
     protected void searchGroup(Context context, String group, int refreshRate, boolean forceToCache, boolean withUserChanges) {
         log.v(TAG, "searchGroup | group=", group, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges);
-        Thread.run(() -> searchByQuery(context, "group", group, refreshRate, withUserChanges, new SearchByQuery() {
+        thread.run(() -> searchByQuery(context, "group", group, refreshRate, withUserChanges, new SearchByQuery() {
             @Override
             public boolean isWebAvailable() {
                 return true;
@@ -48,7 +50,7 @@ public class ScheduleAttestations extends Schedule {
                 deIfmoClient.get(context, "index.php?node=schedule&index=sched&semiId=" + String.valueOf(term) + "&group=" + TextUtils.prettifyGroupNumber(group), null, new ResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                        Thread.run(new ScheduleAttestationsParse(response, term, json -> restResponseHandler.onSuccess(statusCode, headers, json, null)));
+                        thread.run(new ScheduleAttestationsParse(response, term, json -> restResponseHandler.onSuccess(statusCode, headers, json, null)));
                     }
                     @Override
                     public void onFailure(int statusCode, Client.Headers headers, int state) {
@@ -66,7 +68,7 @@ public class ScheduleAttestations extends Schedule {
             }
             @Override
             public void onWebRequestSuccess(final String query, final JSONObject data, final JSONObject template) {
-                Thread.run(() -> {
+                thread.run(() -> {
                     try {
                         template.put("title", TextUtils.prettifyGroupNumber(group));
                         template.put("schedule", data.getJSONArray("schedule"));
@@ -91,7 +93,7 @@ public class ScheduleAttestations extends Schedule {
             }
             @Override
             public void onFound(final String query, final JSONObject data, final boolean putToCache, boolean fromCache) {
-                Thread.run(() -> {
+                thread.run(() -> {
                     try {
                         if (context == null || query == null || data == null) {
                             log.w(TAG, "onFound | some values are null | context=", context, " | query=", query, " | data=", data);

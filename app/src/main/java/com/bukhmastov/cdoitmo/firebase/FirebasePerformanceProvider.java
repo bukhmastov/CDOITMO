@@ -4,16 +4,9 @@ import android.content.Context;
 import android.support.annotation.StringDef;
 
 import com.bukhmastov.cdoitmo.firebase.impl.FirebasePerformanceProviderImpl;
-import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.Static;
-import com.bukhmastov.cdoitmo.util.TextUtils;
-import com.bukhmastov.cdoitmo.util.Thread;
-import com.google.firebase.perf.FirebasePerformance;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.HashMap;
-import java.util.Map;
 
 public interface FirebasePerformanceProvider {
 

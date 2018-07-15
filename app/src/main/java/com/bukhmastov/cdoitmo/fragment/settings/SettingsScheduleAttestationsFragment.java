@@ -9,10 +9,9 @@ import com.bukhmastov.cdoitmo.object.preference.Preference;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceBasic;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceList;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
+import com.bukhmastov.cdoitmo.provider.InjectProvider;
 import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Storage;
-import com.bukhmastov.cdoitmo.util.StorageProvider;
-import com.bukhmastov.cdoitmo.util.Thread;
 
 import org.json.JSONObject;
 
@@ -27,9 +26,9 @@ public class SettingsScheduleAttestationsFragment extends SettingsTemplatePrefer
         preferences = new ArrayList<>();
         preferences.add(new PreferenceBasic("pref_schedule_attestations_default", "{\"query\":\"auto\",\"title\":\"\"}", R.string.default_schedule, true, new PreferenceBasic.Callback() {
             @Override
-            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final StorageProvider storageProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                new SettingsScheduleAttestations(activity, preference, value -> Thread.run(() -> {
-                    storageProvider.getStoragePref().put(activity, "pref_schedule_attestations_default", value);
+            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final InjectProvider injectProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
+                new SettingsScheduleAttestations(activity, preference, value -> injectProvider.getThread().run(() -> {
+                    injectProvider.getStoragePref().put(activity, "pref_schedule_attestations_default", value);
                     callback.onSetSummary(activity, value);
                 })).show();
             }
@@ -51,10 +50,10 @@ public class SettingsScheduleAttestationsFragment extends SettingsTemplatePrefer
         preferences.add(new PreferenceSwitch("pref_schedule_attestations_use_cache", false, R.string.cache_schedule, null, null));
         preferences.add(new PreferenceBasic("pref_schedule_attestations_clear_cache", null, R.string.clear_schedule_cache, false, new PreferenceBasic.Callback() {
             @Override
-            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final StorageProvider storageProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                Thread.run(() -> {
+            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final InjectProvider injectProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
+                injectProvider.getThread().run(() -> {
                     if (activity != null) {
-                        boolean success = storageProvider.getStorage().clear(activity, Storage.CACHE, Storage.GLOBAL, "schedule_attestations");
+                        boolean success = injectProvider.getStorage().clear(activity, Storage.CACHE, Storage.GLOBAL, "schedule_attestations");
                         BottomBar.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
                     }
                 });

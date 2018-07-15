@@ -6,7 +6,7 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
-import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.google.firebase.perf.FirebasePerformance;
 
@@ -24,6 +24,8 @@ public class FirebasePerformanceProviderImpl implements FirebasePerformanceProvi
     //@Inject
     private Log log = Log.instance();
     //@Inject
+    private Thread thread = Thread.instance();
+    //@Inject
     private FirebaseConfigProvider firebaseConfigProvider = FirebaseConfigProvider.instance();
 
     private FirebasePerformance getFirebasePerformance() {
@@ -35,9 +37,9 @@ public class FirebasePerformanceProviderImpl implements FirebasePerformanceProvi
 
     @Override
     public void setEnabled(Context context) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.i(TAG, "Firebase Performance fetching status");
-            firebaseConfigProvider.getString(FirebaseConfigProvider.PERFORMANCE_ENABLED, value -> Thread.run(() -> setEnabled(context, "1".equals(value))));
+            firebaseConfigProvider.getString(FirebaseConfigProvider.PERFORMANCE_ENABLED, value -> thread.run(() -> setEnabled(context, "1".equals(value))));
         });
     }
     @Override

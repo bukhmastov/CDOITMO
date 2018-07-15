@@ -16,6 +16,8 @@ public class FirebaseMessagingServiceProvider extends FirebaseMessagingService {
 
     //@Inject
     private Log log = Log.instance();
+    //@Inject
+    private Thread thread = Thread.instance();
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
@@ -35,7 +37,7 @@ public class FirebaseMessagingServiceProvider extends FirebaseMessagingService {
     }
 
     private void handleNotification(final String title, final String text, final long timestamp) {
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 if (title.isEmpty() || text.isEmpty()) {
                     log.w(TAG, "Got FCM message with empty title/text | title=", title, " | text=", text);

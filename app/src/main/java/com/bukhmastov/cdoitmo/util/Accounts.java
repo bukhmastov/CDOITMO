@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
+import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
 
 import org.json.JSONArray;
 
@@ -18,6 +19,9 @@ public class Accounts {
     private static Log log = Log.instance();
     //@Inject
     //TODO interface - impl: remove static
+    private static Thread thread = Thread.instance();
+    //@Inject
+    //TODO interface - impl: remove static
     private static Storage storage = Storage.instance();
     //@Inject
     //TODO interface - impl: remove static
@@ -25,7 +29,7 @@ public class Accounts {
 
     public static void push(@NonNull final Context context, @NonNull final String login) {
         if (Account.USER_UNAUTHORIZED.equals(login)) return;
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 log.v(TAG, "push | login=", login);
                 boolean isNewAuthorization = true;
@@ -58,7 +62,7 @@ public class Accounts {
     }
     public static void remove(@NonNull final Context context, @NonNull final String login) {
         if (Account.USER_UNAUTHORIZED.equals(login)) return;
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 log.v(TAG, "remove | login=", login);
                 // remove login from the list of authorized users

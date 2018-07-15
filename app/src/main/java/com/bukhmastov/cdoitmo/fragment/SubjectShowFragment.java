@@ -41,6 +41,8 @@ public class SubjectShowFragment extends ConnectedFragment {
     //@Inject
     private Log log = Log.instance();
     //@Inject
+    private Thread thread = Thread.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Override
@@ -110,13 +112,13 @@ public class SubjectShowFragment extends ConnectedFragment {
 
     private void display() {
         if (data == null) return;
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 log.v(TAG, "display");
                 final JSONObject subject = data.getJSONObject("subject");
                 final int term = data.getInt("term");
                 final ERegisterSubjectViewRVA adapter = new ERegisterSubjectViewRVA(activity, subject, term);
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     try {
                         // отображаем заголовок
                         activity.updateToolbar(activity, subject.getString("name"), R.drawable.ic_e_journal);
@@ -141,7 +143,7 @@ public class SubjectShowFragment extends ConnectedFragment {
         });
     }
     private void toggleShare() {
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 if (data == null || activity.toolbar == null) return;
                 final JSONObject subject = data.getJSONObject("subject");
@@ -163,7 +165,7 @@ public class SubjectShowFragment extends ConnectedFragment {
                     shareEntities.add(shareEntity);
                 }
                 if (shareEntities.size() == 0) return;
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     try {
                         final MenuItem action_share = activity.toolbar.findItem(R.id.action_share);
                         if (action_share == null) return;
@@ -266,7 +268,7 @@ public class SubjectShowFragment extends ConnectedFragment {
         }
     }
     private void share(final String title) {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             log.v(TAG, "share | " + title);
             Intent intent = new Intent(Intent.ACTION_SEND);
             intent.setType("text/plain");

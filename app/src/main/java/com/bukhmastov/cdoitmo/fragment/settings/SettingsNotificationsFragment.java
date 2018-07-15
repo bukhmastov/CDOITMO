@@ -15,10 +15,9 @@ import com.bukhmastov.cdoitmo.object.preference.Preference;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceBasic;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceList;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
+import com.bukhmastov.cdoitmo.provider.InjectProvider;
 import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.StorageProvider;
-import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,8 +51,8 @@ public class SettingsNotificationsFragment extends SettingsTemplatePreferencesFr
         if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O) {
             preferences.add(new PreferenceBasic("pref_notify_sound", "content://settings/system/notification_sound", R.string.pref_notify_sound, true, new PreferenceBasic.Callback() {
                 @Override
-                public void onPreferenceClicked(ConnectedActivity activity, Preference preference, final StorageProvider storageProvider, PreferenceBasic.OnPreferenceClickedCallback callback) {
-                    final String value = storageProvider.getStoragePref().get(activity, preference.key, (String) preference.defaultValue).trim();
+                public void onPreferenceClicked(ConnectedActivity activity, Preference preference, final InjectProvider injectProvider, PreferenceBasic.OnPreferenceClickedCallback callback) {
+                    final String value = injectProvider.getStoragePref().get(activity, preference.key, (String) preference.defaultValue).trim();
                     final Uri currentTone = value.isEmpty() ? null : Uri.parse(value);
                     final Intent intent = new Intent(RingtoneManager.ACTION_RINGTONE_PICKER);
                     intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_NOTIFICATION);
@@ -97,8 +96,8 @@ public class SettingsNotificationsFragment extends SettingsTemplatePreferencesFr
         }
         preferences.add(new PreferenceBasic("pref_open_system_notifications_settings", null, R.string.pref_open_system_notifications_settings, false, new PreferenceBasic.Callback() {
             @Override
-            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final StorageProvider storageProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                Thread.runOnUI(() -> {
+            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final InjectProvider injectProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
+                injectProvider.getThread().runOnUI(() -> {
                     try {
                         Intent intent = new Intent("android.settings.APP_NOTIFICATION_SETTINGS");
                         intent.putExtra("android.provider.extra.APP_PACKAGE", activity.getPackageName());

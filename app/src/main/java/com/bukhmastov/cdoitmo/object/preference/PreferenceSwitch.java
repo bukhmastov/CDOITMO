@@ -9,8 +9,8 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
+import com.bukhmastov.cdoitmo.provider.InjectProvider;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.StorageProvider;
 
 import java.util.ArrayList;
 
@@ -70,7 +70,7 @@ public class PreferenceSwitch extends Preference {
     }
 
     @Nullable
-    public static View getView(final ConnectedActivity activity, final PreferenceSwitch preference, final StorageProvider storageProvider) {
+    public static View getView(final ConnectedActivity activity, final PreferenceSwitch preference, final InjectProvider injectProvider) {
         final View preference_layout = inflate(activity, R.layout.preference_switcher);
         if (preference_layout == null) {
             return null;
@@ -87,7 +87,7 @@ public class PreferenceSwitch extends Preference {
             preference_switcher_summary.setVisibility(View.GONE);
         }
         if (preference.defaultValue != null) {
-            preference.enabled = storageProvider.getStoragePref().get(activity, preference.key, (Boolean) preference.defaultValue);
+            preference.enabled = injectProvider.getStoragePref().get(activity, preference.key, (Boolean) preference.defaultValue);
             preference_switcher_switch.setChecked(preference.enabled);
         }
         preference_switcher_switch.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -97,14 +97,14 @@ public class PreferenceSwitch extends Preference {
             }
             if (preference.callback == null) {
                 preference.enabled = isChecked;
-                storageProvider.getStoragePref().put(activity, preference.key, isChecked);
+                injectProvider.getStoragePref().put(activity, preference.key, isChecked);
                 preference.onPreferenceChanged(activity);
                 toggleDependencies(activity, preference, isChecked);
             } else {
                 preference.callback.onApproveChange(activity, preference, isChecked, (activity1, preference1, decision) -> {
                     if (decision) {
                         preference1.enabled = isChecked;
-                        storageProvider.getStoragePref().put(activity1, preference1.key, isChecked);
+                        injectProvider.getStoragePref().put(activity1, preference1.key, isChecked);
                         preference1.onPreferenceChanged(activity1);
                         toggleDependencies(activity1, preference1, isChecked);
                     } else {

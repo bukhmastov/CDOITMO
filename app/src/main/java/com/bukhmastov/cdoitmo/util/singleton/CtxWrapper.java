@@ -1,9 +1,12 @@
-package com.bukhmastov.cdoitmo.util;
+package com.bukhmastov.cdoitmo.util.singleton;
 
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.res.Configuration;
 import android.os.Build;
+
+import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 
 import java.util.Locale;
 

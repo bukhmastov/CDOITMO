@@ -30,7 +30,7 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
-import com.bukhmastov.cdoitmo.util.Color;
+import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
@@ -58,6 +58,8 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
 
     //@Inject
     private Log log = Log.instance();
+    //@Inject
+    private Thread thread = Thread.instance();
     //@Inject
     private Storage storage = Storage.instance();
     //@Inject
@@ -115,12 +117,12 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
     }
 
     private void load() {
-        Thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)
+        thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)
                 ? Integer.parseInt(storagePref.get(activity, "pref_static_refresh", "168"))
                 : 0));
     }
     private void load(final int refresh_rate) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "load | refresh_rate=" + refresh_rate);
             String uid = stack.size() == 0 ? "0" : stack.get(stack.size() - 1);
             if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
@@ -147,10 +149,10 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
         });
     }
     private void load(final boolean force) {
-        Thread.run(() -> load(force, ""));
+        thread.run(() -> load(force, ""));
     }
     private void load(final boolean force, final String cache) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "load | force=" + (force ? "true" : "false"));
             final String uid = stack.size() == 0 ? "0" : stack.get(stack.size() - 1);
             if (!force && history.containsKey(uid)) {
@@ -183,7 +185,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                 loadProvider(new RestResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject json, final JSONArray responseArr) {
-                        Thread.run(() -> {
+                        thread.run(() -> {
                             if (statusCode == 200) {
                                 long now = Time.getCalendar().getTimeInMillis();
                                 if (json != null && storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
@@ -209,7 +211,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                     }
                     @Override
                     public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                        Thread.runOnUI(() -> {
+                        thread.runOnUI(() -> {
                             log.v(TAG, "forceLoad | failure " + state);
                             switch (state) {
                                 case IfmoRestClient.FAILED_OFFLINE:
@@ -244,7 +246,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                     }
                     @Override
                     public void onProgress(final int state) {
-                        Thread.runOnUI(() -> {
+                        thread.runOnUI(() -> {
                             log.v(TAG, "forceLoad | progress " + state);
                             draw(R.layout.state_loading_text);
                             if (activity != null) {
@@ -263,7 +265,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                     }
                 });
             } else {
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     draw(R.layout.state_offline_text);
                     if (activity != null) {
                         View offline_reload = activity.findViewById(R.id.offline_reload);
@@ -284,7 +286,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
         ifmoRestClient.get(activity, "unit" + (unit_id.isEmpty() ? "" : "/" + unit_id), null, handler);
     }
     private void loadFailed() {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             log.v(TAG, "loadFailed");
             try {
                 draw(R.layout.state_failed_button);
@@ -300,7 +302,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
         });
     }
     private void display(final JSONObject json) {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             try {
                 JSONObject unit = getJsonObject(json, "unit");
                 JSONArray divisions = getJsonArray(json, "divisions");
@@ -375,7 +377,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
         });
     }
     private void displayContent(final JSONObject unit, final JSONArray divisions) {
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 final ArrayList<UniversityFacultiesRVA.Item> items = new ArrayList<>();
                 if (unit != null) {
@@ -434,7 +436,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                             .put("divisions", d);
                     items.add(item);
                 }
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     if (facultiesRecyclerViewAdapter != null) {
                         facultiesRecyclerViewAdapter.setOnDivisionClickListener(dep_id -> {
                             stack.add(String.valueOf(dep_id));

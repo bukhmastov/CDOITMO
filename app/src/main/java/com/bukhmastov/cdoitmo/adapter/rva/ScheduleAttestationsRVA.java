@@ -39,6 +39,8 @@ public class ScheduleAttestationsRVA extends RVA {
     private static final int TYPE_NO_ATTESTATIONS = 5;
 
     //@Inject
+    private Thread thread = Thread.instance();
+    //@Inject
     private Storage storage = Storage.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
@@ -147,10 +149,10 @@ public class ScheduleAttestationsRVA extends RVA {
             } else {
                 ((ViewGroup) schedule_lessons_week.getParent()).removeView(schedule_lessons_week);
             }
-            container.findViewById(R.id.schedule_lessons_menu).setOnClickListener(view -> Thread.run(() -> {
+            container.findViewById(R.id.schedule_lessons_menu).setOnClickListener(view -> thread.run(() -> {
                 final String cache_token = query == null ? null : query.toLowerCase();
                 final boolean cached = cache_token != null && !storage.get(activity, Storage.CACHE, Storage.GLOBAL, "schedule_attestations#lessons#" + cache_token, "").isEmpty();
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     try {
                         final PopupMenu popup = new PopupMenu(activity, view);
                         final Menu menu = popup.getMenu();

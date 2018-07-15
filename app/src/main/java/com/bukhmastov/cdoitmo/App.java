@@ -9,7 +9,7 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
 
 import java.util.Locale;
 import java.util.UUID;
@@ -22,7 +22,7 @@ import java.util.UUID;
  *  network [done]
  *  firebase [done]
  *  log [done]
- *  thread
+ *  thread [done]
  *  objects
  *  utils
  *

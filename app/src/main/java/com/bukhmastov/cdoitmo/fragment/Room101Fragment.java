@@ -24,13 +24,14 @@ import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.network.model.Room101;
 import com.bukhmastov.cdoitmo.object.Room101AddRequest;
 import com.bukhmastov.cdoitmo.parse.room101.Room101ViewRequestParse;
+import com.bukhmastov.cdoitmo.provider.InjectProvider;
 import com.bukhmastov.cdoitmo.util.BottomBar;
-import com.bukhmastov.cdoitmo.util.Color;
+import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
@@ -51,9 +52,13 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
     //@Inject
     private Log log = Log.instance();
     //@Inject
+    private Thread thread = Thread.instance();
+    //@Inject
     private Storage storage = Storage.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private InjectProvider injectProvider = InjectProvider.instance();
     //@Inject
     private Room101Client room101Client = Room101Client.instance();
     //@Inject
@@ -133,7 +138,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
 
     @Override
     public void onDenyRequest(final int reid, final int status) {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             log.v(TAG, "onDenyRequest | reid=" + reid + " | status=" + status);
             if (App.OFFLINE_MODE) {
                 log.v(TAG, "onDenyRequest rejected: offline mode");
@@ -154,7 +159,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
         });
     }
     private void denyRequest(final int reid, final int status) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status);
             Static.lockOrientation(activity, true);
             HashMap<String, String> params = new HashMap<>();
@@ -168,7 +173,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
             room101Client.post(activity, "delRequest.php", params, new ResponseHandler() {
                 @Override
                 public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                    Thread.runOnUI(() -> {
+                    thread.runOnUI(() -> {
                         if (statusCode == 302) {
                             log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status + " | success | statusCode=" + statusCode);
                             load(true);
@@ -191,7 +196,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                 }
                 @Override
                 public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                    Thread.runOnUI(() -> {
+                    thread.runOnUI(() -> {
                         log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status + " | failure | statusCode=" + statusCode);
                         draw(R.layout.state_failed_button);
                         TextView try_again_message = container.findViewById(R.id.try_again_message);
@@ -211,7 +216,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                 }
                 @Override
                 public void onProgress(final int state) {
-                    Thread.runOnUI(() -> {
+                    thread.runOnUI(() -> {
                         log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status + " | progress " + state);
                         draw(R.layout.state_loading_text);
                         TextView loading_message = container.findViewById(R.id.loading_message);
@@ -231,7 +236,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
     }
 
     private void addRequest() {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             log.v(TAG, "addRequest");
             if (App.OFFLINE_MODE) {
                 log.v(TAG, "addRequest rejected: offline mode");
@@ -248,7 +253,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                 final Room101AddRequest room101AddRequest = new Room101AddRequest(activity, new Room101AddRequest.callback() {
                     @Override
                     public void onProgress(final int stage) {
-                        Thread.runOnUI(() -> {
+                        thread.runOnUI(() -> {
                             try {
                                 progressBar.setProgress((stage * 100) / Room101AddRequest.STAGES_COUNT);
                                 room101_back.setAlpha(1f);
@@ -297,7 +302,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                     }
                     @Override
                     public void onDraw(final View view) {
-                        Thread.runOnUI(() -> {
+                        thread.runOnUI(() -> {
                             try {
                                 if (view == null) {
                                     BottomBar.snackBar(activity, R.id.room101_review_swipe, activity.getString(R.string.error_occurred));
@@ -349,23 +354,23 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
         });
     }
 
-    public static void execute(final Context context, final Room101Client room101Client, final Storage storage, final Log log, final String scope, final ResponseHandler responseHandler) {
-        Thread.run(Thread.BACKGROUND, () -> {
-            log.v(TAG, "execute | scope=" + scope);
+    public static void execute(final Context context, final Room101Client room101Client, final InjectProvider injectProvider, final String scope, final ResponseHandler responseHandler) {
+        injectProvider.getThread().run(Thread.BACKGROUND, () -> {
+            injectProvider.getLog().v(TAG, "execute | scope=" + scope);
             HashMap<String, String> params = new HashMap<>();
             params.put("getFunc", "isLoginPassword");
             params.put("view", scope);
-            params.put("login", storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#login"));
-            params.put("password", storage.get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#password"));
+            params.put("login", injectProvider.getStorage().get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#login"));
+            params.put("password", injectProvider.getStorage().get(context, Storage.PERMANENT, Storage.USER, "user#deifmo#password"));
             room101Client.post(context, "index.php", params, new ResponseHandler() {
                 @Override
                 public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                     //noinspection Convert2Lambda
-                    Thread.run(new Runnable() {
+                    injectProvider.getThread().run(new Runnable() {
                         @Override
                         public void run() {
                             if (statusCode == 302) {
-                                log.v(TAG, "execute | scope=" + scope + " | success | statusCode=" + statusCode);
+                                injectProvider.getLog().v(TAG, "execute | scope=" + scope + " | success | statusCode=" + statusCode);
                                 String location = headers.getValue("Location");
                                 if (location != null && !location.trim().isEmpty()) {
                                     room101Client.get(context, location, null, new ResponseHandler() {
@@ -390,7 +395,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                                     responseHandler.onFailure(statusCode, headers, Room101.FAILED_EXPECTED_REDIRECTION);
                                 }
                             } else {
-                                log.v(TAG, "execute | scope=" + scope + " | success(not really) | statusCode=" + statusCode);
+                                injectProvider.getLog().v(TAG, "execute | scope=" + scope + " | success(not really) | statusCode=" + statusCode);
                                 if (response.contains("Доступ запрещен") || (response.contains("Неверный") && response.contains("логин/пароль"))) {
                                     responseHandler.onFailure(statusCode, headers, Room101.FAILED_AUTH);
                                 } else {
@@ -402,12 +407,12 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                 }
                 @Override
                 public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                    Thread.run(Thread.BACKGROUND, () -> responseHandler.onFailure(statusCode, headers, state));
+                    injectProvider.getThread().run(Thread.BACKGROUND, () -> responseHandler.onFailure(statusCode, headers, state));
                 }
                 @Override
                 public void onProgress(final int state) {
-                    Thread.run(() -> {
-                        log.v(TAG, "execute | scope=" + scope + " | progress " + state);
+                    injectProvider.getThread().run(() -> {
+                        injectProvider.getLog().v(TAG, "execute | scope=" + scope + " | progress " + state);
                         responseHandler.onProgress(state);
                     });
                 }
@@ -420,10 +425,10 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
     }
 
     private void load() {
-        Thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) ? Integer.parseInt(storagePref.get(activity, "pref_dynamic_refresh", "0")) : 0));
+        thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) ? Integer.parseInt(storagePref.get(activity, "pref_dynamic_refresh", "0")) : 0));
     }
     private void load(final int refresh_rate) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "load | refresh_rate=" + refresh_rate);
             if (storagePref.get(activity, "pref_use_cache", true)) {
                 String cache = storage.get(activity, Storage.CACHE, Storage.USER, "room101#core").trim();
@@ -448,10 +453,10 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
         });
     }
     private void load(final boolean force) {
-        Thread.run(() -> load(force, ""));
+        thread.run(() -> load(force, ""));
     }
     private void load(final boolean force, final String cache) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "load | force=" + (force ? "true" : "false"));
             if ((!force || !Client.isOnline(activity)) && storagePref.get(activity, "pref_use_cache", true)) {
                 try {
@@ -468,10 +473,10 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                 }
             }
             if (!App.OFFLINE_MODE) {
-                execute(activity, room101Client, storage, log, "delRequest", new ResponseHandler() {
+                execute(activity, room101Client, injectProvider, "delRequest", new ResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                        Thread.run(() -> {
+                        thread.run(() -> {
                             log.v(TAG, "load | success | statusCode=" + statusCode);
                             if (statusCode == 200) {
                                 new Room101ViewRequestParse(activity, response, json -> {
@@ -512,7 +517,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                     }
                     @Override
                     public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                        Thread.runOnUI(() -> {
+                        thread.runOnUI(() -> {
                             log.v(TAG, "load | failure " + state);
                             switch (state) {
                                 case Room101Client.FAILED_OFFLINE:
@@ -563,7 +568,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                     }
                     @Override
                     public void onProgress(final int state) {
-                        Thread.runOnUI(() -> {
+                        thread.runOnUI(() -> {
                             log.v(TAG, "load | progress " + state);
                             draw(R.layout.state_loading_text);
                             if (activity != null) {
@@ -584,7 +589,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                     }
                 });
             } else {
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     if (getData() != null) {
                         display();
                     } else {
@@ -601,7 +606,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
         });
     }
     private void loadFailed() {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             log.v(TAG, "loadFailed");
             try {
                 draw(R.layout.state_failed_button);
@@ -615,7 +620,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
         });
     }
     private void display() {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             log.v(TAG, "display");
             try {
                 if (getData() == null) throw new NullPointerException("data cannot be null");
@@ -638,7 +643,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                 if (room101_last != null) room101_last.setText(viewRequest.getString("left"));
                 if (room101_penalty != null) room101_penalty.setText(viewRequest.getString("penalty"));
                 final LinearLayout room101_review_container = container.findViewById(R.id.room101_review_container);
-                Thread.run(new Room101ReviewBuilder(activity, this, viewRequest.getJSONArray("sessions"), (state, layout) -> Thread.runOnUI(() -> {
+                thread.run(new Room101ReviewBuilder(activity, this, viewRequest.getJSONArray("sessions"), (state, layout) -> thread.runOnUI(() -> {
                     try {
                         if (room101_review_container != null) {
                             room101_review_container.removeAllViews();

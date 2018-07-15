@@ -21,6 +21,8 @@ public class LinkedAccountsFragment extends ConnectedFragment {
     //@Inject
     private Log log = Log.instance();
     //@Inject
+    private Thread thread = Thread.instance();
+    //@Inject
     private Storage storage = Storage.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
@@ -66,9 +68,9 @@ public class LinkedAccountsFragment extends ConnectedFragment {
                     }
                 });
             }
-            Thread.run(() -> {
+            thread.run(() -> {
                 final String cdo_user_info = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#login", "").trim() + " (" + storage.get(activity, Storage.PERMANENT, Storage.USER, "user#name", "").trim() + ")";
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     if (account_cdo_info != null) {
                         ((TextView) account_cdo_info).setText(cdo_user_info);
                     }

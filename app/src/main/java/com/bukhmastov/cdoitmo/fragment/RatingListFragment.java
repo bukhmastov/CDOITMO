@@ -21,10 +21,10 @@ import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.parse.rating.RatingTopListParse;
 import com.bukhmastov.cdoitmo.util.BottomBar;
-import com.bukhmastov.cdoitmo.util.Color;
+import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
-import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
@@ -48,6 +48,8 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
 
     //@Inject
     private Log log = Log.instance();
+    //@Inject
+    private Thread thread = Thread.instance();
     //@Inject
     private Storage storage = Storage.instance();
     //@Inject
@@ -142,7 +144,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
     }
 
     private void load() {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "load");
             activity.updateToolbar(activity, activity.getString(R.string.top_rating), R.drawable.ic_rating);
             minePosition = -1;
@@ -157,7 +159,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                 deIfmoClient.get(activity, "index.php?node=rating&std&depId=" + faculty + "&year=" + course + "&app=" + years, null, new ResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                        Thread.run(() -> {
+                        thread.run(() -> {
                             log.v(TAG, "load | success | statusCode=" + statusCode);
                             if (statusCode == 200) {
                                 new RatingTopListParse(response, storage.get(activity, Storage.PERMANENT, Storage.USER, "user#name"), json -> {
@@ -173,7 +175,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                     }
                     @Override
                     public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                        Thread.runOnUI(() -> {
+                        thread.runOnUI(() -> {
                             log.v(TAG, "load | failure " + state);
                             switch (state) {
                                 case DeIfmoClient.FAILED_OFFLINE:
@@ -202,7 +204,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                     }
                     @Override
                     public void onProgress(final int state) {
-                        Thread.runOnUI(() -> {
+                        thread.runOnUI(() -> {
                             log.v(TAG, "load | progress " + state);
                             draw(R.layout.state_loading_text);
                             TextView loading_message = container.findViewById(R.id.loading_message);
@@ -221,7 +223,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                     }
                 });
             } else {
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     try {
                         BottomBar.snackBar(activity, activity.getString(R.string.offline_mode_on));
                         draw(R.layout.state_offline_text);
@@ -237,7 +239,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
         });
     }
     private void loadFailed() {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             log.v(TAG, "loadFailed");
             try {
                 draw(R.layout.state_failed_button);
@@ -251,7 +253,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
         });
     }
     private void display(final JSONObject data) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "display");
             try {
                 if (data == null) throw new SilentException();
@@ -292,7 +294,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                     showShareButton();
                 }
                 final RatingListRVA adapter = new RatingListRVA(activity, rating);
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     try {
                         draw(R.layout.layout_rating_list);
                         // set adapter to recycler view
@@ -324,7 +326,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
         });
     }
     private void showShareButton() {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             try {
                 if (activity.toolbar != null) {
                     final MenuItem action_share = activity.toolbar.findItem(R.id.action_share);
@@ -350,7 +352,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
         });
     }
     private void hideShareButton() {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             try {
                 if (activity != null && activity.toolbar != null) {
                     MenuItem action_share = activity.toolbar.findItem(R.id.action_share);
@@ -362,7 +364,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
         });
     }
     private void share(final String title) throws Exception {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             log.v(TAG, "share | " + title);
             Intent intent = new Intent(Intent.ACTION_SEND);
             intent.setType("text/plain");

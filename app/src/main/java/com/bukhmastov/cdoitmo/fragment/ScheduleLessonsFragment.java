@@ -17,7 +17,7 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.StorageProvider;
+import com.bukhmastov.cdoitmo.provider.StorageProvider;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
@@ -29,6 +29,8 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
 
     //@Inject
     private Log log = Log.instance();
+    //@Inject
+    private Thread thread = Thread.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
@@ -135,7 +137,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
 
     private void load() {
         final FragmentManager fragmentManager = getChildFragmentManager();
-        Thread.run(() -> {
+        thread.run(() -> {
             if (activity == null) {
                 log.w(TAG, "load | activity is null");
                 return;
@@ -144,7 +146,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
             if (ScheduleLessonsTabHostFragment.getQuery() == null) {
                 ScheduleLessonsTabHostFragment.setQuery(ScheduleLessons.getDefaultScope(activity, storageProvider, ScheduleLessons.TYPE));
             }
-            Thread.runOnUI(() -> {
+            thread.runOnUI(() -> {
                 try {
                     if (activity == null) {
                         log.w(TAG, "load | activity is null");

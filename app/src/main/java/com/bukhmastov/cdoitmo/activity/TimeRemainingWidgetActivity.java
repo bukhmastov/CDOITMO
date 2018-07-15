@@ -20,7 +20,7 @@ import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.TimeRemainingWidget;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.util.BottomBar;
-import com.bukhmastov.cdoitmo.util.CtxWrapper;
+import com.bukhmastov.cdoitmo.util.singleton.CtxWrapper;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Theme;
@@ -45,6 +45,8 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
 
     //@Inject
     private Log log = Log.instance();
+    //@Inject
+    private Thread thread = Thread.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
@@ -87,7 +89,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
         }
         View wr_share = findViewById(R.id.wr_share);
         if (wr_share != null) {
-            wr_share.setOnClickListener(v -> Thread.runOnUI(() -> {
+            wr_share.setOnClickListener(v -> thread.runOnUI(() -> {
                 log.v(TAG, "wr_share clicked");
                 share();
             }));
@@ -226,7 +228,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
         if (data.current == null && data.next == null && data.day == null) {
             message(activity.getString(R.string.lessons_gone));
         } else {
-            Thread.runOnUI(() -> {
+            thread.runOnUI(() -> {
                 if (is_message_displaying) {
                     draw(R.layout.widget_remaining_time);
                     is_message_displaying = false;
@@ -273,7 +275,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
 
     private void begin() {
         final TimeRemainingWidgetActivity self = this;
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "begin");
             message(activity.getString(R.string.loaded));
             if (timeRemainingWidget != null) {
@@ -285,7 +287,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
         });
     }
     private void close() {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "close");
             if (requestHandle != null) {
                 requestHandle.cancel();
@@ -294,7 +296,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
         });
     }
     private void setText(final int layout, final String text) {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             TextView textView = activity.findViewById(layout);
             if (textView != null) {
                 textView.setText(text);
@@ -302,7 +304,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
         });
     }
     private void message(final String text) {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             draw(R.layout.widget_remaining_message);
             is_message_displaying = true;
             TextView message = activity.findViewById(R.id.message);
@@ -312,7 +314,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
         });
     }
     private void share() {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             if (data == null) {
                 BottomBar.snackBar(activity, activity.getString(R.string.share_unable));
                 return;

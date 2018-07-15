@@ -30,7 +30,7 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
-import com.bukhmastov.cdoitmo.util.Color;
+import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Theme;
@@ -73,6 +73,8 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
 
     //@Inject
     private Log log = Log.instance();
+    //@Inject
+    private Thread thread = Thread.instance();
     //@Inject
     private Storage storage = Storage.instance();
     //@Inject
@@ -152,12 +154,12 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     }
 
     private void load() {
-        Thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)
+        thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)
                 ? Integer.parseInt(storagePref.get(activity, "pref_static_refresh", "168"))
                 : 0));
     }
     private void load(final int refresh_rate) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "load | refresh_rate=" + refresh_rate);
             if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
                 String cache = storage.get(activity, Storage.CACHE, Storage.GLOBAL, "university#buildings").trim();
@@ -184,7 +186,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         });
     }
     private void load(final boolean force) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "load | force=" + (force ? "true" : "false"));
             if ((!force || !Client.isOnline(activity)) && building_map != null) {
                 display();
@@ -194,7 +196,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                 loadProvider(new RestResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject json, final JSONArray responseArr) {
-                        Thread.run(() -> {
+                        thread.run(() -> {
                             if (statusCode == 200) {
                                 long now = Time.getCalendar().getTimeInMillis();
                                 if (json != null && storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
@@ -218,7 +220,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                     }
                     @Override
                     public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                        Thread.run(() -> {
+                        thread.run(() -> {
                             log.v(TAG, "forceLoad | failure " + state);
                             switch (state) {
                                 case IfmoRestClient.FAILED_OFFLINE:
@@ -234,7 +236,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                     }
                     @Override
                     public void onProgress(final int state) {
-                        Thread.run(() -> {
+                        thread.run(() -> {
                             log.v(TAG, "forceLoad | progress " + state);
                             loading();
                         });
@@ -264,7 +266,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
 
     @Override
     public void onMapReady(final GoogleMap gMap) {
-        Thread.run(() -> {
+        thread.run(() -> {
             final MapStyleOptions mapStyleOptions;
             switch (Theme.getAppTheme(activity)) {
                 case "light":
@@ -273,7 +275,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                 case "black": mapStyleOptions = MapStyleOptions.loadRawResourceStyle(activity, R.raw.google_map_black); break;
                 case "white": mapStyleOptions = MapStyleOptions.loadRawResourceStyle(activity, R.raw.google_map_white); break;
             }
-            Thread.runOnUI(() -> {
+            thread.runOnUI(() -> {
                 googleMap = gMap;
                 googleMap.setMapStyle(mapStyleOptions);
                 googleMap.setOnMarkerClickListener(this);
@@ -301,7 +303,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         }
     }
     private void displayMarkers() {
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 if (building_map == null) return;
                 if (googleMap == null) return;
@@ -342,7 +344,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                             if (icon != -1) {
                                 markerOptions.icon(tintMarker(activity, icon));
                             }
-                            Thread.runOnUI(() -> {
+                            thread.runOnUI(() -> {
                                 try {
                                     Marker marker = googleMap.addMarker(markerOptions);
                                     marker.setTag(building);
@@ -362,7 +364,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         });
     }
     private void removeAllMarkers() {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             for (Marker marker : markers) {
                 marker.remove();
             }
@@ -396,7 +398,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         }
     }
     private void closeMarkerInfo() {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             try {
                 View marker_info_container = container.findViewById(R.id.marker_info_container);
                 if (marker_info_container != null) {
@@ -411,7 +413,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         });
     }
     private void openList() {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             try {
                 closeMarkerInfo();
                 closeList();
@@ -461,7 +463,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         });
     }
     private void closeList() {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             try {
                 View marker_info_container = container.findViewById(R.id.marker_info_container);
                 if (marker_info_container != null) {
@@ -476,7 +478,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         });
     }
     private void zoomToMarker(final Marker marker) {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             CameraPosition cameraPosition = new CameraPosition.Builder().target(marker.getPosition()).zoom(15).build();
             googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 1000, null);
         });
@@ -510,7 +512,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     }
 
     private void loading() {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             try {
                 ViewGroup vg = container.findViewById(R.id.status);
                 if (vg != null) {
@@ -523,7 +525,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         });
     }
     private void loadFailed() {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             try {
                 View view = inflate(R.layout.layout_university_buildings_status_image);
                 ImageView imageView = view.findViewById(R.id.image);
@@ -540,7 +542,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         });
     }
     private void loadOffline() {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             try {
                 View view = inflate(R.layout.layout_university_buildings_status_image);
                 ImageView imageView = view.findViewById(R.id.image);
@@ -556,7 +558,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         });
     }
     private void loaded() {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             try {
                 ViewGroup vg = container.findViewById(R.id.status);
                 if (vg != null) {
@@ -568,7 +570,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         });
     }
     private void failed() {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             try {
                 View view = inflate(R.layout.layout_university_buildings_status_image);
                 ImageView imageView = view.findViewById(R.id.image);

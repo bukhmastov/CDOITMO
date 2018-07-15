@@ -20,8 +20,8 @@ import android.view.ViewGroup;
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
-import com.bukhmastov.cdoitmo.util.Color;
-import com.bukhmastov.cdoitmo.util.CtxWrapper;
+import com.bukhmastov.cdoitmo.util.singleton.Color;
+import com.bukhmastov.cdoitmo.util.singleton.CtxWrapper;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
@@ -47,6 +47,8 @@ public abstract class ConnectedActivity extends AppCompatActivity {
 
     //@Inject
     private Log log = Log.instance();
+    //@Inject
+    private Thread thread = Thread.instance();
     //@Inject
     protected StoragePref storagePref = StoragePref.instance();
 
@@ -213,7 +215,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     }
 
     public void updateToolbar(final Context context, final String title, final Integer image) {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             ActionBar actionBar = getSupportActionBar();
             if (actionBar != null) {
                 actionBar.setTitle(title);

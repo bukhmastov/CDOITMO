@@ -20,7 +20,7 @@ import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.util.BottomBar;
-import com.bukhmastov.cdoitmo.util.Color;
+import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
@@ -65,6 +65,8 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
 
     //@Inject
     private Log log = Log.instance();
+    //@Inject
+    private Thread thread = Thread.instance();
     //@Inject
     private Storage storage = Storage.instance();
     //@Inject
@@ -141,7 +143,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
     }
 
     private void load(final Bundle extras) {
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 log.v(TAG, "load | action=" + action);
                 switch (action) {
@@ -196,7 +198,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                 throw new Exception("Corrupted file");
             }
         }
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             try {
                 TextView share_title = container.findViewById(R.id.share_title);
                 if (share_title != null) {
@@ -246,7 +248,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
         if (query == null || title == null || type == null) {
             throw new NullPointerException("Some extras are null: " + query + " | " + title + " | " + type);
         }
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             try {
                 TextView share_title = container.findViewById(R.id.share_title);
                 if (share_title != null) {
@@ -254,7 +256,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                 }
                 ViewGroup share_info = container.findViewById(R.id.share_info);
                 if (share_info != null) {
-                    share_info.setOnClickListener(view -> Thread.run(() -> {
+                    share_info.setOnClickListener(view -> thread.run(() -> {
                         if (activity != null) {
                             new AlertDialog.Builder(activity)
                                     .setTitle(R.string.share_changes)
@@ -273,7 +275,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
         new ScheduleLessons(new Schedule.Handler() {
             @Override
             public void onSuccess(final JSONObject json, final boolean fromCache) {
-                Thread.run(() -> {
+                thread.run(() -> {
                     try {
                         log.v(TAG, "loadShare | success | json=" + (json == null ? "null" : "notnull"));
                         if (json == null || json.getString("type").equals("teachers")) {
@@ -348,7 +350,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
             }
             @Override
             public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     try {
                         log.v(TAG, "loadShare | failure " + state);
                         ViewGroup share_content = container.findViewById(R.id.share_content);
@@ -388,7 +390,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
             }
             @Override
             public void onProgress(final int state) {
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     log.v(TAG, "loadShare | progress " + state);
                     try {
                         ViewGroup share_content = container.findViewById(R.id.share_content);
@@ -419,7 +421,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
         );
     }
     private void display(final String notification) {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             try {
                 log.v(TAG, "display | action=" + action);
                 ViewGroup share_content = container.findViewById(R.id.share_content);
@@ -507,7 +509,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
         });
     }
     private void execute() {
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 log.v(TAG, "execute | action=" + action);
                 boolean selected = false;

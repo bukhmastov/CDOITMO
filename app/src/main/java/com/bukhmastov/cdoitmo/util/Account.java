@@ -16,6 +16,7 @@ import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.ProtocolTracker;
 import com.bukhmastov.cdoitmo.interfaces.Callable;
 import com.bukhmastov.cdoitmo.interfaces.CallableString;
+import com.bukhmastov.cdoitmo.provider.InjectProvider;
 
 //TODO interface - impl
 public class Account {
@@ -44,6 +45,9 @@ public class Account {
     private static Log log = Log.instance();
     //@Inject
     //TODO interface - impl: remove static
+    private static Thread thread = Thread.instance();
+    //@Inject
+    //TODO interface - impl: remove static
     private static Storage storage = Storage.instance();
     //@Inject
     //TODO interface - impl: remove static
@@ -56,6 +60,9 @@ public class Account {
     private static DeIfmoRestClient deIfmoRestClient = DeIfmoRestClient.instance();
     //@Inject
     //TODO interface - impl: remove static
+    private static InjectProvider injectProvider = InjectProvider.instance();
+    //@Inject
+    //TODO interface - impl: remove static
     private static FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
     //@Inject
     //TODO interface - impl: remove static
@@ -63,11 +70,11 @@ public class Account {
 
     public static void login(@NonNull final Context context, @NonNull final String login, @NonNull final String password, @NonNull final String role, final boolean isNewUser, @NonNull final LoginHandler loginHandler) {
         final String trace = firebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.LOGIN);
-        Thread.run(() -> {
+        thread.run(() -> {
             final boolean IS_USER_UNAUTHORIZED = USER_UNAUTHORIZED.equals(login);
             log.v(TAG, "login | login=", login, " | password.length()=", password.length(), " | role=", role, " | isNewUser=", isNewUser, " | IS_USER_UNAUTHORIZED=", IS_USER_UNAUTHORIZED, " | OFFLINE_MODE=", App.OFFLINE_MODE);
             if (login.isEmpty() || password.isEmpty()) {
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     loginHandler.onFailure(context.getString(R.string.required_login_password));
                     firebasePerformanceProvider.putAttributeAndStop(trace, "state", "failed_credentials_required");
                 });
@@ -75,7 +82,7 @@ public class Account {
             }
             if ("general".equals(login)) {
                 log.w(TAG, "login | got \"general\" login that does not supported");
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     loginHandler.onFailure(context.getString(R.string.wrong_login_general));
                     firebasePerformanceProvider.putAttributeAndStop(trace, "state", "failed_login_general");
                 });
@@ -89,7 +96,7 @@ public class Account {
                 storage.put(context, Storage.PERMANENT, Storage.USER, "user#role", role);
             }
             if (IS_USER_UNAUTHORIZED) {
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     Account.authorized = true;
                     App.UNAUTHORIZED_MODE = true;
                     if (App.OFFLINE_MODE) {
@@ -106,7 +113,7 @@ public class Account {
                 if (isNewUser) {
                     App.OFFLINE_MODE = false;
                 } else {
-                    Thread.runOnUI(() -> {
+                    thread.runOnUI(() -> {
                         Account.authorized = true;
                         loginHandler.onOffline();
                         firebasePerformanceProvider.putAttributeAndStop(trace, "state", "success_offline");
@@ -117,14 +124,14 @@ public class Account {
             deIfmoClient.check(context, new ResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Client.Headers headers, String response) {
-                    Thread.run(() -> {
+                    thread.run(() -> {
                         Account.authorized = true;
                         Accounts.push(context, login);
                         if (isNewUser) {
                             firebaseAnalyticsProvider.logBasicEvent(context, "New user authorized");
-                            ProtocolTracker.setup(context, deIfmoRestClient, storagePref, log, 0);
+                            ProtocolTracker.setup(context, deIfmoRestClient, injectProvider, 0);
                         }
-                        Thread.runOnUI(() -> {
+                        thread.runOnUI(() -> {
                             loginHandler.onSuccess();
                             firebasePerformanceProvider.putAttributeAndStop(trace, "state", "success");
                         });
@@ -132,8 +139,8 @@ public class Account {
                 }
                 @Override
                 public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                    Thread.run(() -> {
-                        final CallableString callback = text -> Thread.runOnUI(() -> {
+                    thread.run(() -> {
+                        final CallableString callback = text -> thread.runOnUI(() -> {
                             if ("offline".equals(text)) {
                                 loginHandler.onOffline();
                             } else {
@@ -194,7 +201,7 @@ public class Account {
                 }
                 @Override
                 public void onProgress(final int state) {
-                    Thread.runOnUI(() -> {
+                    thread.runOnUI(() -> {
                         switch (state) {
                             default:
                             case DeIfmoClient.STATE_HANDLING:
@@ -223,13 +230,13 @@ public class Account {
     }
     public static void logout(@NonNull final Context context, @Nullable final String login, @NonNull final LogoutHandler logoutHandler) {
         final String trace = firebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.LOGOUT);
-        Thread.run(() -> {
+        thread.run(() -> {
             @NonNull final String cLogin = login != null ? login : storage.get(context, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
             final boolean IS_USER_UNAUTHORIZED = USER_UNAUTHORIZED.equals(cLogin);
             log.i(TAG, "logout | login=", cLogin, " | IS_USER_UNAUTHORIZED=", IS_USER_UNAUTHORIZED, " | OFFLINE_MODE=", App.OFFLINE_MODE);
             if ("general".equals(login)) {
                 log.w(TAG, "logout | got \"general\" login that does not supported");
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     logoutHandler.onFailure(context.getString(R.string.wrong_login_general));
                     firebasePerformanceProvider.putAttributeAndStop(trace, "state", "failed_login_general");
                 });
@@ -263,7 +270,7 @@ public class Account {
                 }
                 @Override
                 public void onProgress(final int state) {
-                    Thread.runOnUI(() -> logoutHandler.onProgress(context.getString(R.string.exiting) + "\n" + uName));
+                    thread.runOnUI(() -> logoutHandler.onProgress(context.getString(R.string.exiting) + "\n" + uName));
                 }
                 @Override
                 public void onNewRequest(Client.Request request) {
@@ -276,7 +283,7 @@ public class Account {
         logoutPermanently(context, null, callback);
     }
     public static void logoutPermanently(@NonNull final Context context, @Nullable final String login, @Nullable final Callable callback) {
-        Thread.run(() -> {
+        thread.run(() -> {
             @NonNull final String cLogin = login != null ? login : storage.get(context, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
             final boolean IS_USER_UNAUTHORIZED = USER_UNAUTHORIZED.equals(cLogin);
             final boolean IS_LOGIN_EMPTY = cLogin.isEmpty();
@@ -294,7 +301,7 @@ public class Account {
                 Account.authorized = false;
                 App.UNAUTHORIZED_MODE = false;
                 if (callback != null) {
-                    Thread.runOnUI(callback::call);
+                    thread.runOnUI(callback::call);
                 }
             };
             if (IS_USER_UNAUTHORIZED || IS_LOGIN_EMPTY) {
@@ -308,7 +315,7 @@ public class Account {
         logoutTemporarily(context, null, callback);
     }
     public static void logoutTemporarily(@NonNull final Context context, @Nullable final String login, @Nullable final Callable callback) {
-        Thread.run(() -> {
+        thread.run(() -> {
             @NonNull final String cLogin = login != null ? login : storage.get(context, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
             final boolean IS_USER_UNAUTHORIZED = USER_UNAUTHORIZED.equals(cLogin);
             log.i(TAG, "logoutTemporarily | login=", cLogin, " | IS_USER_UNAUTHORIZED=", IS_USER_UNAUTHORIZED);
@@ -318,7 +325,7 @@ public class Account {
                 Account.authorized = false;
                 App.UNAUTHORIZED_MODE = false;
                 if (callback != null) {
-                    Thread.runOnUI(callback::call);
+                    thread.runOnUI(callback::call);
                 }
             };
             if (IS_USER_UNAUTHORIZED) {
@@ -329,10 +336,10 @@ public class Account {
         });
     }
     public static void logoutConfirmation(@NonNull final Context context, @NonNull final Callable callback) {
-        Thread.runOnUI(() -> new AlertDialog.Builder(context)
+        thread.runOnUI(() -> new AlertDialog.Builder(context)
                 .setTitle(R.string.logout_confirmation)
                 .setMessage(R.string.logout_confirmation_message)
-                .setPositiveButton(R.string.do_logout, (dialogInterface, i) -> Thread.runOnUI(callback::call))
+                .setPositiveButton(R.string.do_logout, (dialogInterface, i) -> thread.runOnUI(callback::call))
                 .setNegativeButton(R.string.do_cancel, null)
                 .create().show());
     }

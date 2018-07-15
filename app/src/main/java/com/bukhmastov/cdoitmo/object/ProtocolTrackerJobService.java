@@ -41,6 +41,8 @@ public class ProtocolTrackerJobService extends JobService {
     //@Inject
     private Log log = Log.instance();
     //@Inject
+    private Thread thread = Thread.instance();
+    //@Inject
     private Storage storage = Storage.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
@@ -68,7 +70,7 @@ public class ProtocolTrackerJobService extends JobService {
 
     private void request() {
         trace = firebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.PROTOCOL_TRACKER);
-        Thread.run(Thread.BACKGROUND, () -> {
+        thread.run(thread.BACKGROUND, () -> {
             try {
                 attempt++;
                 if (attempt > maxAttempts) throw new Exception("Number of attempts exceeded the limit");
@@ -77,7 +79,7 @@ public class ProtocolTrackerJobService extends JobService {
                     @Override
                     public void onSuccess(final int statusCode, Client.Headers headers, JSONObject responseObj, final JSONArray responseArr) {
                         try {
-                            Thread.run(Thread.BACKGROUND, () -> {
+                            thread.run(thread.BACKGROUND, () -> {
                                 try {
                                     if (statusCode == 200 && responseArr != null) {
                                         new ProtocolConverter(getBaseContext(), responseArr, 0, json -> {
@@ -125,11 +127,11 @@ public class ProtocolTrackerJobService extends JobService {
     private void w8andRequest() {
         try {
             firebasePerformanceProvider.stopTrace(trace);
-            Thread.run(Thread.BACKGROUND, () -> {
+            thread.run(thread.BACKGROUND, () -> {
                 try {
                     log.v(TAG, "w8andRequest");
                     try {
-                        Thread.sleep(1000);
+                        thread.sleep(1000);
                     } catch (InterruptedException ignore) {
                         // just ignore
                     }
@@ -146,7 +148,7 @@ public class ProtocolTrackerJobService extends JobService {
     }
     private void handle(final JSONArray protocol) {
         try {
-            Thread.run(Thread.BACKGROUND, () -> {
+            thread.run(thread.BACKGROUND, () -> {
                 try {
                     log.v(TAG, "handle");
                     if (protocol == null) throw new NullPointerException("json can't be null");
@@ -252,7 +254,7 @@ public class ProtocolTrackerJobService extends JobService {
     }
     private void addNotification(final String title, final String text, final long timestamp, final int group, final boolean isSummary) {
         try {
-            Thread.run(() -> {
+            thread.run(() -> {
                 try {
                     log.v(TAG, "addNotification | title=" + title + " | text=" + text.replaceAll("\n", "\\n") + " | timestamp=" + timestamp + " | isSummary=" + (isSummary ? "true" : "false"));
                     if (notificationId > Integer.MAX_VALUE - 10) notificationId = 0;
@@ -275,7 +277,7 @@ public class ProtocolTrackerJobService extends JobService {
     private void finish() {
         try {
             firebasePerformanceProvider.stopTrace(trace);
-            Thread.run(Thread.BACKGROUND, () -> {
+            thread.run(thread.BACKGROUND, () -> {
                 try {
                     log.i(TAG, "Executed");
                     if (requestHandle != null) requestHandle.cancel();

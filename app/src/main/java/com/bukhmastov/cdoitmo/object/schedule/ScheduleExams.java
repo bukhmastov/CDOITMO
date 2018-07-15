@@ -23,6 +23,8 @@ public class ScheduleExams extends Schedule {
     //@Inject
     private Log log = Log.instance();
     //@Inject
+    private Thread thread = Thread.instance();
+    //@Inject
     private IfmoClient ifmoClient = IfmoClient.instance();
 
     public ScheduleExams(Handler handler) {
@@ -38,7 +40,7 @@ public class ScheduleExams extends Schedule {
     protected void searchGroup(final Context context, final String group, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
         final @Source String source = getSource(context);
         log.v(TAG, "searchGroup | group=", group, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=" + source);
-        Thread.run(() -> searchByQuery(context, "group", group, refreshRate, withUserChanges, new SearchByQuery() {
+        thread.run(() -> searchByQuery(context, "group", group, refreshRate, withUserChanges, new SearchByQuery() {
             @Override
             public boolean isWebAvailable() {
                 return true;
@@ -50,7 +52,7 @@ public class ScheduleExams extends Schedule {
                     case SOURCE.IFMO: ifmoClient.get(context, "ru/exam/0/" + group + "/raspisanie_sessii.htm", null, new ResponseHandler() {
                         @Override
                         public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                            Thread.run(new ScheduleExamsGroupParse(response, query, json -> restResponseHandler.onSuccess(statusCode, headers, json, null)));
+                            thread.run(new ScheduleExamsGroupParse(response, query, json -> restResponseHandler.onSuccess(statusCode, headers, json, null)));
                         }
                         @Override
                         public void onFailure(int statusCode, Client.Headers headers, int state) {
@@ -101,7 +103,7 @@ public class ScheduleExams extends Schedule {
     protected void searchTeacher(final Context context, final String teacherId, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
         final @Source String source = getSource(context);
         log.v(TAG, "searchTeacher | teacherId=", teacherId, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=" + source);
-        Thread.run(() -> searchByQuery(context, "teacher", teacherId, refreshRate, withUserChanges, new SearchByQuery() {
+        thread.run(() -> searchByQuery(context, "teacher", teacherId, refreshRate, withUserChanges, new SearchByQuery() {
             @Override
             public boolean isWebAvailable() {
                 return true;
@@ -113,7 +115,7 @@ public class ScheduleExams extends Schedule {
                     case SOURCE.IFMO: ifmoClient.get(context, "ru/exam/3/" + query + "/raspisanie_sessii.htm", null, new ResponseHandler() {
                         @Override
                         public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                            Thread.run(new ScheduleExamsTeacherParse(response, query, json -> restResponseHandler.onSuccess(statusCode, headers, json, null)));
+                            thread.run(new ScheduleExamsTeacherParse(response, query, json -> restResponseHandler.onSuccess(statusCode, headers, json, null)));
                         }
                         @Override
                         public void onFailure(int statusCode, Client.Headers headers, int state) {
@@ -169,10 +171,10 @@ public class ScheduleExams extends Schedule {
     }
 
     private void onWebRequestSuccessIfmo(final SearchByQuery searchByQuery, final String query, final JSONObject data, final JSONObject template) {
-        Thread.run(new ScheduleExamsConverterIfmo(data, template, json -> searchByQuery.onFound(query, json, true, false)));
+        thread.run(new ScheduleExamsConverterIfmo(data, template, json -> searchByQuery.onFound(query, json, true, false)));
     }
     private void onFound(final Context context, final String query, final JSONObject data, final boolean putToCache, final boolean forceToCache, final boolean fromCache, final boolean withUserChanges) {
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 if (context == null || query == null || data == null) {
                     log.w(TAG, "onFound | some values are null | context=", context, " | query=", query, " | data=", data);

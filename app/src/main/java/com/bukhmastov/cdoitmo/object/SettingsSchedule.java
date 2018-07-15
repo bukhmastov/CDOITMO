@@ -49,6 +49,8 @@ public abstract class SettingsSchedule {
     //@Inject
     protected Log log = Log.instance();
     //@Inject
+    private Thread thread = Thread.instance();
+    //@Inject
     private StoragePref storagePref = StoragePref.instance();
 
     public SettingsSchedule(ConnectedActivity activity, Preference preference, Callback callback) {
@@ -58,7 +60,7 @@ public abstract class SettingsSchedule {
     }
 
     public void show() {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             try {
                 final String value = storagePref.get(activity, preference.key, (String) preference.defaultValue);
                 final ViewGroup layout = (ViewGroup) inflate(R.layout.preference_schedule);
@@ -80,18 +82,18 @@ public abstract class SettingsSchedule {
                     @Override
                     public void afterTextChanged(Editable editable) {
                         toggleSearchState("action");
-                        Thread.runOnUI(() -> {
+                        thread.runOnUI(() -> {
                             teacherPickerAdapter.clear();
                             lsp_search.dismissDropDown();
                         });
-                        Thread.run(() -> {
+                        thread.run(() -> {
                             if (requestHandle != null) {
                                 requestHandle.cancel();
                             }
                         });
                     }
                 });
-                lsp_search_action.setOnClickListener(view -> Thread.run(() -> {
+                lsp_search_action.setOnClickListener(view -> thread.run(() -> {
                     final String query = lsp_search.getText().toString().trim();
                     log.v(TAG, "show | search action | clicked | query=" + query);
                     if (!query.isEmpty()) {
@@ -101,7 +103,7 @@ public abstract class SettingsSchedule {
                         search(query);
                     }
                 }));
-                lsp_search.setOnItemClickListener((parent, view, position, id) -> Thread.run(() -> {
+                lsp_search.setOnItemClickListener((parent, view, position, id) -> thread.run(() -> {
                     try {
                         log.v(TAG, "show | search list selected");
                         final JSONObject item = teacherPickerAdapter.getItem(position);
@@ -109,7 +111,7 @@ public abstract class SettingsSchedule {
                             query = item.getString("pid");
                             title = item.getString("person");
                             log.v(TAG, "show | search list selected | query=" + query + " | title=" + title);
-                            Thread.runOnUI(() -> lsp_search.setText(title));
+                            thread.runOnUI(() -> lsp_search.setText(title));
                             toggleSearchState("selected");
                         } else {
                             BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
@@ -119,7 +121,7 @@ public abstract class SettingsSchedule {
                         BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 }));
-                lsp_radio_group.setOnCheckedChangeListener((group, checkedId) -> Thread.runOnUI(() -> {
+                lsp_radio_group.setOnCheckedChangeListener((group, checkedId) -> thread.runOnUI(() -> {
                     switch (group.getCheckedRadioButtonId()) {
                         // TODO uncomment, when personal schedule will be ready
                         /*case R.id.lsp_schedule_personal: {
@@ -168,7 +170,7 @@ public abstract class SettingsSchedule {
                 new AlertDialog.Builder(activity)
                         .setTitle(R.string.default_schedule)
                         .setView(layout)
-                        .setPositiveButton(R.string.accept, (dialog, which) -> Thread.run(() -> {
+                        .setPositiveButton(R.string.accept, (dialog, which) -> thread.run(() -> {
                             log.v(TAG, "show | onPositiveButton | query=" + query + " | title=" + title);
                             try {
                                 if (callback != null && query != null && title != null) {
@@ -195,12 +197,12 @@ public abstract class SettingsSchedule {
     protected abstract void search(final String query);
     protected abstract String getHint();
     protected void search(final String q, final Schedule.ScheduleSearchProvider scheduleSearchProvider) {
-        Thread.run(() -> scheduleSearchProvider.onSearch(activity, q, new Schedule.Handler() {
+        thread.run(() -> scheduleSearchProvider.onSearch(activity, q, new Schedule.Handler() {
             @Override
             public void onSuccess(final JSONObject json, final boolean fromCache) {
                 log.v(TAG, "show | search action | onSuccess | json=" + (json == null ? "null" : "notnull"));
                 toggleSearchState("action");
-                Thread.run(() -> {
+                thread.run(() -> {
                     if (json == null) {
                         BottomBar.snackBar(activity, activity.getString(R.string.schedule_not_found));
                     } else {
@@ -233,7 +235,7 @@ public abstract class SettingsSchedule {
                                             query = item.getString("pid");
                                             title = item.getString("person");
                                             log.v(TAG, "show | search action | onSuccess | done | query=" + query + " | title=" + title);
-                                            Thread.runOnUI(() -> lsp_search.setText(title));
+                                            thread.runOnUI(() -> lsp_search.setText(title));
                                             toggleSearchState("selected");
                                         } else {
                                             BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
@@ -243,7 +245,7 @@ public abstract class SettingsSchedule {
                                         for (int i = 0; i < schedule.length(); i++) {
                                             arrayList.add(schedule.getJSONObject(i));
                                         }
-                                        Thread.runOnUI(() -> {
+                                        thread.runOnUI(() -> {
                                             teacherPickerAdapter.addAll(arrayList);
                                             teacherPickerAdapter.addTeachers(arrayList);
                                             if (arrayList.size() > 0) {
@@ -273,7 +275,7 @@ public abstract class SettingsSchedule {
             public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                 log.v(TAG, "show | search action | onFailure | state=" + state);
                 toggleSearchState("action");
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     switch (state) {
                         case Client.FAILED_OFFLINE:
                         case Schedule.FAILED_OFFLINE: {
@@ -313,7 +315,7 @@ public abstract class SettingsSchedule {
         }));
     }
     protected void toggleSearchState(final String state) {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             switch (state) {
                 case "action":
                 default: {

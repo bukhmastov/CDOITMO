@@ -21,14 +21,14 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapter.SuggestionsListView;
 import com.bukhmastov.cdoitmo.object.entity.Suggestion;
 import com.bukhmastov.cdoitmo.util.BottomBar;
-import com.bukhmastov.cdoitmo.util.CtxWrapper;
+import com.bukhmastov.cdoitmo.util.singleton.CtxWrapper;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.util.Thread;
-import com.bukhmastov.cdoitmo.util.Transliterate;
+import com.bukhmastov.cdoitmo.util.singleton.Transliterate;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -53,6 +53,8 @@ public abstract class SearchActivity extends AppCompatActivity {
 
     //@Inject
     private Log log = Log.instance();
+    //@Inject
+    private Thread thread = Thread.instance();
     //@Inject
     private Storage storage = Storage.instance();
     //@Inject
@@ -116,7 +118,7 @@ public abstract class SearchActivity extends AppCompatActivity {
     }
 
     private void setMode(final @EXTRA_ACTION_MODE String mode) {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             log.v(TAG, "setMode | type=", getType(), " | mode=", mode);
             final ViewGroup search_extra_action = findViewById(R.id.search_extra_action);
             final ImageView search_extra_action_image = findViewById(R.id.search_extra_action_image);
@@ -160,7 +162,7 @@ public abstract class SearchActivity extends AppCompatActivity {
         });
     }
     private void setSuggestions(final List<Suggestion> suggestions) {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             log.v(TAG, "setSuggestions | type=", getType());
             try {
                 ListView search_suggestions = findViewById(R.id.search_suggestions);
@@ -224,7 +226,7 @@ public abstract class SearchActivity extends AppCompatActivity {
         }
     }
     private void done(String query, String title) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "done | type=", getType(), " | query=", query, " | title=", title);
             try {
                 JSONArray recent = TextUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent", ""));
@@ -260,7 +262,7 @@ public abstract class SearchActivity extends AppCompatActivity {
                 storage.delete(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent");
             }
             onDone(query);
-            Thread.runOnUI(this::finish);
+            thread.runOnUI(this::finish);
         });
     }
     private static boolean contains(String first, String second) {
@@ -294,7 +296,7 @@ public abstract class SearchActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             switch (requestCode) {
                 case REQ_CODE_SPEECH_INPUT: {
                     log.v(TAG, "doneRecognition");
@@ -353,7 +355,7 @@ public abstract class SearchActivity extends AppCompatActivity {
         public void onTextChanged(CharSequence s, int start, int before, int count) {}
         @Override
         public void afterTextChanged(final Editable s) {
-            Thread.run(() -> {
+            thread.run(() -> {
                 String query = s.toString().trim();
                 if (query.isEmpty()) {
                     setMode(SPEECH_RECOGNITION);

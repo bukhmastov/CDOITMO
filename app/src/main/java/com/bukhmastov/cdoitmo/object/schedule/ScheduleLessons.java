@@ -14,7 +14,7 @@ import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.interfaces.Callable;
 import com.bukhmastov.cdoitmo.util.Storage;
-import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 
 import org.json.JSONArray;
@@ -29,6 +29,9 @@ public class ScheduleLessons extends Schedule {
     //@Inject
     //TODO interface - impl: remove static
     private static Log log = Log.instance();
+    //@Inject
+    //TODO interface - impl: remove static
+    private static Thread thread = Thread.instance();
     //@Inject
     private IfmoRestClient ifmoRestClient = IfmoRestClient.instance();
     //@Inject
@@ -48,7 +51,7 @@ public class ScheduleLessons extends Schedule {
     protected void searchGroup(final Context context, final String group, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
         final @Source String source = getSource(context);
         log.v(TAG, "searchGroup | group=", group, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=" + source);
-        Thread.run(() -> searchByQuery(context, "group", group, refreshRate, withUserChanges, new SearchByQuery() {
+        thread.run(() -> searchByQuery(context, "group", group, refreshRate, withUserChanges, new SearchByQuery() {
             @Override
             public boolean isWebAvailable() {
                 return true;
@@ -88,7 +91,7 @@ public class ScheduleLessons extends Schedule {
     @Override
     protected void searchRoom(final Context context, final String room, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
         log.v(TAG, "searchRoom | room=", room, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges);
-        Thread.run(() -> searchByQuery(context, "room", room, refreshRate, withUserChanges, new SearchByQuery() {
+        thread.run(() -> searchByQuery(context, "room", room, refreshRate, withUserChanges, new SearchByQuery() {
             @Override
             public boolean isWebAvailable() {
                 return true;
@@ -123,7 +126,7 @@ public class ScheduleLessons extends Schedule {
     protected void searchTeacher(final Context context, final String teacherId, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
         final @Source String source = getSource(context);
         log.v(TAG, "searchTeacher | teacherId=", teacherId, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=", source);
-        Thread.run(() -> searchByQuery(context, "teacher", teacherId, refreshRate, withUserChanges, new SearchByQuery() {
+        thread.run(() -> searchByQuery(context, "teacher", teacherId, refreshRate, withUserChanges, new SearchByQuery() {
             @Override
             public boolean isWebAvailable() {
                 return true;
@@ -174,10 +177,10 @@ public class ScheduleLessons extends Schedule {
     }
 
     private void onWebRequestSuccessIfmo(final SearchByQuery searchByQuery, final String query, final JSONObject data, final JSONObject template) {
-        Thread.run(new ScheduleLessonsConverterIfmo(data, template, json -> searchByQuery.onFound(query, json, true, false)));
+        thread.run(new ScheduleLessonsConverterIfmo(data, template, json -> searchByQuery.onFound(query, json, true, false)));
     }
     private void onFound(final Context context, final String query, final JSONObject data, final boolean putToCache, final boolean forceToCache, final boolean fromCache, final boolean withUserChanges) {
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 if (context == null || query == null || data == null) {
                     log.w(TAG, "onFound | some values are null | context=", context, " | query=", query, " | data=", data);
@@ -362,9 +365,9 @@ public class ScheduleLessons extends Schedule {
             extras.putString("title", title);
             extras.putInt("weekday", weekday);
             extras.putString("lesson", lesson.toString());
-            Thread.runOnUI(() -> {
+            thread.runOnUI(() -> {
                 if (activity.openActivityOrFragment(ScheduleLessonsModifyFragment.class, extras) && callback != null) {
-                    Thread.run(callback::call);
+                    thread.run(callback::call);
                 }
             });
             return true;
@@ -474,9 +477,9 @@ public class ScheduleLessons extends Schedule {
             extras.putString("title", title);
             extras.putInt("weekday", weekday);
             extras.putString("lesson", lesson.toString());
-            Thread.runOnUI(() -> {
+            thread.runOnUI(() -> {
                 if (activity.openActivityOrFragment(ScheduleLessonsModifyFragment.class, extras) && callback != null) {
-                    Thread.run(callback::call);
+                    thread.run(callback::call);
                 }
             });
             return true;

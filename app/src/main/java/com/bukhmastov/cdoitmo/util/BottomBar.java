@@ -10,7 +10,9 @@ import android.widget.Toast;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.util.singleton.Color;
 
+//TODO interface - impl
 public class BottomBar {
 
     private static final String TAG = "BottomBar";
@@ -18,6 +20,10 @@ public class BottomBar {
     public static final int LENGTH_MOMENTUM = 600;
     public static final int LENGTH_SHORT = 1500;
     public static final int LENGTH_LONG = 2750;
+
+    //@Inject
+    //TODO interface - impl: remove static
+    private static Thread thread = Thread.instance();
 
     public static void showUpdateTime(Activity activity, long time) {
         showUpdateTime(activity, time, LENGTH_MOMENTUM, false);
@@ -52,7 +58,7 @@ public class BottomBar {
     }
 
     public static void toast(final Context context, final String text) {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             if (context == null) {
                 return;
             }
@@ -106,7 +112,7 @@ public class BottomBar {
     }
 
     public static void snackBar(final Context context, final View layout, final String text, final String action, final int duration, final View.OnClickListener onClickListener) {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             if (layout != null) {
                 Snackbar snackbar = Snackbar.make(layout, text, duration);
                 snackbar.getView().setBackgroundColor(Color.resolve(context, R.attr.colorBackgroundSnackBar));

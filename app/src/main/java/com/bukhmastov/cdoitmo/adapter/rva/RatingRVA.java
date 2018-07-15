@@ -40,6 +40,8 @@ public class RatingRVA extends RVA {
     private String commonSelectedCourse;
 
     //@Inject
+    private Thread thread = Thread.instance();
+    //@Inject
     private Storage storage = Storage.instance();
 
     public RatingRVA(@NonNull Context context, @NonNull ArrayMap<String, RatingFragment.Info> data) {
@@ -164,7 +166,7 @@ public class RatingRVA extends RVA {
         }
     }
     private void bindCommon(View container, Item item) {
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 final Context context = container.getContext();
                 final JSONArray faculties = item.data.getJSONArray("faculties");
@@ -186,7 +188,7 @@ public class RatingRVA extends RVA {
                         selected.add(1, i - 1);
                     }
                 }
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     try {
                         // faculty spinner
                         final Spinner faculty_spinner = container.findViewById(R.id.faculty);
@@ -197,7 +199,7 @@ public class RatingRVA extends RVA {
                             faculty_spinner.setSelection(selected.get(0));
                             faculty_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                                 public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
-                                    Thread.run(() -> {
+                                    thread.run(() -> {
                                         try {
                                             commonSelectedFaculty = faculties.getJSONObject(position).getString("depId");
                                             storage.put(context, Storage.CACHE, Storage.USER, "rating#choose#faculty", commonSelectedFaculty);
@@ -219,7 +221,7 @@ public class RatingRVA extends RVA {
                             course_spinner.setSelection(selected.get(1));
                             course_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                                 public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
-                                    Thread.run(() -> {
+                                    thread.run(() -> {
                                         try {
                                             commonSelectedCourse = String.valueOf(position + 1);
                                             storage.put(context, Storage.CACHE, Storage.USER, "rating#choose#course", commonSelectedCourse);
@@ -234,13 +236,13 @@ public class RatingRVA extends RVA {
                         }
                         // apply button
                         if (onElementClickListeners.containsKey(R.id.common_apply)) {
-                            container.findViewById(R.id.common_apply).setOnClickListener(v -> Thread.run(() -> {
+                            container.findViewById(R.id.common_apply).setOnClickListener(v -> thread.run(() -> {
                                 try {
                                     final Map<String, Object> extras = getMap("data", new JSONObject()
                                             .put("faculty", commonSelectedFaculty)
                                             .put("course", commonSelectedCourse)
                                     );
-                                    Thread.runOnUI(() -> onElementClickListeners.get(R.id.common_apply).onClick(v, extras));
+                                    thread.runOnUI(() -> onElementClickListeners.get(R.id.common_apply).onClick(v, extras));
                                 } catch (Exception e) {
                                     log.exception(e);
                                 }
@@ -262,10 +264,10 @@ public class RatingRVA extends RVA {
             ((TextView) container.findViewById(R.id.title)).setText(title);
             ((TextView) container.findViewById(R.id.position)).setText(position);
             if (onElementClickListeners.containsKey(R.id.own_apply)) {
-                container.findViewById(R.id.own_apply).setOnClickListener(v -> Thread.run(() -> {
+                container.findViewById(R.id.own_apply).setOnClickListener(v -> thread.run(() -> {
                     try {
                         final Map<String, Object> extras = getMap("data", item.data.has("extras") && !item.data.isNull("extras") ? item.data.getJSONObject("extras") : null);
-                        Thread.runOnUI(() -> onElementClickListeners.get(R.id.own_apply).onClick(v, extras));
+                        thread.runOnUI(() -> onElementClickListeners.get(R.id.own_apply).onClick(v, extras));
                     } catch (Exception e) {
                         log.exception(e);
                     }

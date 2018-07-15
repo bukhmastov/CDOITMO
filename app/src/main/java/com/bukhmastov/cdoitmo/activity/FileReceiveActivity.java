@@ -47,6 +47,8 @@ public class FileReceiveActivity extends ConnectedActivity {
     //@Inject
     private Log log = Log.instance();
     //@Inject
+    private Thread thread = Thread.instance();
+    //@Inject
     private Storage storage = Storage.instance();
     //@Inject
     private NetworkUserAgentProvider networkUserAgentProvider = NetworkUserAgentProvider.instance();
@@ -74,7 +76,7 @@ public class FileReceiveActivity extends ConnectedActivity {
     }
 
     private void proceed() {
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 final Intent intent = activity.getIntent();
                 if (intent == null) {
@@ -191,7 +193,7 @@ public class FileReceiveActivity extends ConnectedActivity {
     }
 
     private void share_schedule_of_lessons(final String file, final JSONObject object) {
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 log.v(TAG, "share_schedule_of_lessons");
                 if (storage.get(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", "").trim().isEmpty()) {
@@ -210,7 +212,7 @@ public class FileReceiveActivity extends ConnectedActivity {
                 } else {
                     throw new MessageException(activity.getString(R.string.corrupted_file));
                 }
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     Bundle extras = new Bundle();
                     extras.putString("action", "handle");
                     extras.putString("data", file);
@@ -229,7 +231,7 @@ public class FileReceiveActivity extends ConnectedActivity {
     }
 
     private void failure(final String message) {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             log.v(TAG, "failure | message=" + message);
             View state_failed_without_align = inflate(R.layout.state_failed_text_compact);
             ((TextView) state_failed_without_align.findViewById(R.id.text)).setText(message);

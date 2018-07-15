@@ -20,10 +20,15 @@ import com.bukhmastov.cdoitmo.view.Message;
 import java.util.ArrayList;
 import java.util.List;
 
+//TODO interface - impl
 public class NavigationMenu {
 
+    //@Inject
+    //TODO interface - impl: remove static
+    private static Thread thread = Thread.instance();
+
     public static void displayEnableDisableOfflineButton(final NavigationView navigationView) {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             if (navigationView != null) {
                 try {
                     Menu menu = navigationView.getMenu();
@@ -42,11 +47,11 @@ public class NavigationMenu {
     }
 
     public static void displayUserData(final Context context, final Storage storage, final NavigationView navigationView) {
-        Thread.run(() -> {
+        thread.run(() -> {
             final String name = storage.get(context, Storage.PERMANENT, Storage.USER, "user#name");
             final List<String> groups = getGroups(context, storage);
             final String group = TextUtils.join(", ", groups);
-            Thread.runOnUI(() -> {
+            thread.runOnUI(() -> {
                 displayUserData(navigationView, R.id.user_name, name);
                 displayUserData(navigationView, R.id.user_group, group);
                 displayUserDataExpand(context, storage, navigationView, groups);
@@ -72,7 +77,7 @@ public class NavigationMenu {
     }
 
     private static void displayUserData(final NavigationView navigationView, final int id, final String text) {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             if (navigationView == null) return;
             View activity_main_nav_header = navigationView.getHeaderView(0);
             if (activity_main_nav_header == null) return;
@@ -89,22 +94,22 @@ public class NavigationMenu {
     }
 
     private static void displayUserDataExpand(final Context context, final Storage storage, final NavigationView navigationView, final List<String> groups) {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             if (navigationView == null) return;
             View activity_main_nav_header = navigationView.getHeaderView(0);
             if (activity_main_nav_header == null) return;
             ViewGroup user_info_expand = activity_main_nav_header.findViewById(R.id.user_info_expand);
             if (user_info_expand != null) {
                 if (groups.size() > 1) {
-                    user_info_expand.setOnClickListener(v -> Thread.runOnUI(() -> {
+                    user_info_expand.setOnClickListener(v -> thread.runOnUI(() -> {
                         final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(context, R.layout.spinner_center);
                         arrayAdapter.addAll(groups);
                         new AlertDialog.Builder(context)
                                 .setTitle(R.string.set_main_group)
-                                .setAdapter(arrayAdapter, (dialogInterface, position) -> Thread.run(() -> {
+                                .setAdapter(arrayAdapter, (dialogInterface, position) -> thread.run(() -> {
                                     try {
                                         storage.put(context, Storage.PERMANENT, Storage.USER, "user#group", groups.get(position));
-                                        Thread.runOnUI(() -> displayUserData(context, storage, navigationView));
+                                        thread.runOnUI(() -> displayUserData(context, storage, navigationView));
                                     } catch (Exception ignore) {}
                                 }))
                                 .setNegativeButton(R.string.do_cancel, null)
@@ -119,7 +124,7 @@ public class NavigationMenu {
     }
 
     public static void toggleOfflineIcon(final Menu menu) {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             if (menu != null) {
                 MenuItem menuItem = menu.findItem(R.id.offline_mode);
                 if (menuItem != null) {
@@ -130,17 +135,17 @@ public class NavigationMenu {
     }
 
     public static void displayRemoteMessage(final Activity activity, final FirebaseConfigProvider firebaseConfigProvider, final Storage storage) {
-        Thread.run(() -> firebaseConfigProvider.getJson(FirebaseConfigProvider.MESSAGE_MENU, value -> Thread.run(() -> {
+        thread.run(() -> firebaseConfigProvider.getJson(FirebaseConfigProvider.MESSAGE_MENU, value -> thread.run(() -> {
             try {
                 if (value == null) return;
                 final int type = value.getInt("type");
                 final String message = value.getString("message");
                 if (message == null || message.trim().isEmpty()) return;
-                final String hash = com.bukhmastov.cdoitmo.util.TextUtils.crypt(message);
+                final String hash = com.bukhmastov.cdoitmo.util.singleton.TextUtils.crypt(message);
                 if (hash != null && hash.equals(storage.get(activity, Storage.PERMANENT, Storage.GLOBAL, "firebase#remote_message#menu", ""))) {
                     return;
                 }
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     final ViewGroup message_menu = activity.findViewById(R.id.message_menu);
                     final View message_menu_separator = activity.findViewById(R.id.message_menu_separator);
                     final View layout = Message.getRemoteMessage(activity, type, message, (context, view) -> {
@@ -152,9 +157,9 @@ public class NavigationMenu {
                                         message_menu_separator.setVisibility(View.GONE);
                                     }
                                 }
-                                BottomBar.snackBar(activity, activity.getString(R.string.notification_dismissed), activity.getString(R.string.undo), v -> Thread.run(() -> {
+                                BottomBar.snackBar(activity, activity.getString(R.string.notification_dismissed), activity.getString(R.string.undo), v -> thread.run(() -> {
                                     if (storage.delete(activity, Storage.PERMANENT, Storage.GLOBAL, "firebase#remote_message#menu")) {
-                                        Thread.runOnUI(() -> {
+                                        thread.runOnUI(() -> {
                                             if (message_menu != null && view != null) {
                                                 message_menu.addView(view);
                                                 if (message_menu_separator != null) {
@@ -182,7 +187,7 @@ public class NavigationMenu {
     }
 
     public static void hideIfUnauthorizedMode(final NavigationView navigationView) {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             try {
                 if (navigationView != null) {
                     final Menu menu = navigationView.getMenu();

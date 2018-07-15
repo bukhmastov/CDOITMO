@@ -13,6 +13,7 @@ import com.bukhmastov.cdoitmo.converter.ProtocolConverter;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
+import com.bukhmastov.cdoitmo.provider.InjectProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
@@ -156,28 +157,28 @@ public class ProtocolTracker {
         return this;
     }
 
-    public static void setup(final Context context, final DeIfmoRestClient deIfmoRestClient, final StoragePref storagePref, final Log log, final int attempt) {
-        Thread.run(Thread.BACKGROUND, () -> {
-            log.v(TAG, "setup | attempt=" + attempt);
-            if (!storagePref.get(context, "pref_protocol_changes_track", true)) {
-                log.v(TAG, "setup | pref_protocol_changes_track=false");
+    public static void setup(final Context context, final DeIfmoRestClient deIfmoRestClient, final InjectProvider injectProvider, final int attempt) {
+        injectProvider.getThread().run(Thread.BACKGROUND, () -> {
+            injectProvider.getLog().v(TAG, "setup | attempt=" + attempt);
+            if (!injectProvider.getStoragePref().get(context, "pref_protocol_changes_track", true)) {
+                injectProvider.getLog().v(TAG, "setup | pref_protocol_changes_track=false");
                 return;
             }
             if (attempt < 3) {
                 deIfmoRestClient.get(context, "eregisterlog?days=126", null, new RestResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, Client.Headers headers, JSONObject responseObj, final JSONArray responseArr) {
-                        Thread.run(Thread.BACKGROUND, () -> {
+                        injectProvider.getThread().run(Thread.BACKGROUND, () -> {
                             if (statusCode == 200 && responseArr != null) {
-                                new ProtocolConverter(context, responseArr, 18, json -> log.i(TAG, "setup | uploaded")).run();
+                                new ProtocolConverter(context, responseArr, 18, json -> injectProvider.getLog().i(TAG, "setup | uploaded")).run();
                             } else {
-                                setup(context, deIfmoRestClient, storagePref, log, attempt + 1);
+                                setup(context, deIfmoRestClient, injectProvider, attempt + 1);
                             }
                         });
                     }
                     @Override
                     public void onFailure(int statusCode, Client.Headers headers, int state) {
-                        Thread.run(Thread.BACKGROUND, () -> setup(context, deIfmoRestClient, storagePref, log, attempt + 1));
+                        injectProvider.getThread().run(Thread.BACKGROUND, () -> setup(context, deIfmoRestClient, injectProvider, attempt + 1));
                     }
                     @Override
                     public void onProgress(int state) {}

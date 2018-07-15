@@ -13,11 +13,10 @@ import com.bukhmastov.cdoitmo.object.preference.PreferenceBasic;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceEditText;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceList;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
+import com.bukhmastov.cdoitmo.provider.InjectProvider;
 import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Static;
-import com.bukhmastov.cdoitmo.util.StorageProvider;
 import com.bukhmastov.cdoitmo.util.Theme;
-import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
 import java.util.ArrayList;
@@ -34,11 +33,11 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
         preferences.add(new PreferenceList("pref_default_fragment", "e_journal", R.string.pref_default_fragment, R.array.pref_general_default_fragment_titles, R.array.pref_general_default_fragment_values, true));
         preferences.add(new PreferenceBasic("pref_theme", "light", R.string.theme, true, new PreferenceBasic.Callback() {
             @Override
-            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final StorageProvider storageProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                Thread.run(() -> {
-                    final String theme = storageProvider.getStoragePref().get(activity, "pref_theme", "light");
-                    new ThemeDialog(activity, theme, (theme1, desc) -> Thread.run(() -> {
-                        storageProvider.getStoragePref().put(activity, "pref_theme", theme1);
+            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final InjectProvider injectProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
+                injectProvider.getThread().run(() -> {
+                    final String theme = injectProvider.getStoragePref().get(activity, "pref_theme", "light");
+                    new ThemeDialog(activity, theme, (theme1, desc) -> injectProvider.getThread().run(() -> {
+                        injectProvider.getStoragePref().put(activity, "pref_theme", theme1);
                         callback.onSetSummary(activity, desc);
                         BottomBar.snackBar(activity, activity.getString(R.string.restart_required), activity.getString(R.string.restart), view -> {
                             Theme.updateAppTheme(activity);
@@ -97,8 +96,8 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
         }));
         preferences.add(new PreferenceBasic("pref_open_system_settings", null, R.string.pref_open_system_settings, false, new PreferenceBasic.Callback() {
             @Override
-            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final StorageProvider storageProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                Thread.runOnUI(() -> {
+            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final InjectProvider injectProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
+                injectProvider.getThread().runOnUI(() -> {
                     try {
                         Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
                         intent.setData(android.net.Uri.parse("package:" + activity.getPackageName()));
@@ -123,8 +122,8 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
         }));
         preferences.add(new PreferenceBasic("pref_reset_application", null, R.string.pref_reset_application_summary, false, new PreferenceBasic.Callback() {
             @Override
-            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final StorageProvider storageProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                Thread.runOnUI(() -> {
+            public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final InjectProvider injectProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
+                injectProvider.getThread().runOnUI(() -> {
                     new AlertDialog.Builder(activity)
                             .setTitle(R.string.pref_reset_application_summary)
                             .setMessage(R.string.pref_reset_application_warning)

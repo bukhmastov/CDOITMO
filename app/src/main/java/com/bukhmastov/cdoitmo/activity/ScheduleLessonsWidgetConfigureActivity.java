@@ -34,7 +34,7 @@ import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.dialog.ColorPickerDialog;
-import com.bukhmastov.cdoitmo.util.CtxWrapper;
+import com.bukhmastov.cdoitmo.util.singleton.CtxWrapper;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
@@ -91,6 +91,8 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
 
     //@Inject
     private Log log = Log.instance();
+    //@Inject
+    private Thread thread = Thread.instance();
     //@Inject
     private Storage storage = Storage.instance();
     //@Inject
@@ -150,7 +152,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
     }
     private void initPartPreview() {
         log.v(TAG, "initPartPreview");
-        Thread.run(() -> {
+        thread.run(() -> {
             // Starting from Android 27 (8.1) there is no longer free access to current wallpaper
             // Getting wallpaper requires "dangerous" permission android.permission.READ_EXTERNAL_STORAGE
             // To avoid using this permission, we just not gonna use wallpaper for widget preview
@@ -164,7 +166,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                     if (wallpaperDrawable == null) {
                         throw new NullPointerException("WallpaperDrawable is null");
                     }
-                    Thread.runOnUI(() -> {
+                    thread.runOnUI(() -> {
                         ImageView part_preview_background = activity.findViewById(R.id.part_preview_background);
                         if (part_preview_background != null) {
                             part_preview_background.setImageDrawable(wallpaperDrawable);
@@ -181,7 +183,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
     }
     private void initPartSchedule() {
         log.v(TAG, "initPartSchedule");
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 ViewGroup part_schedule = activity.findViewById(R.id.part_schedule);
                 part_schedule.setOnClickListener(view -> {
@@ -206,7 +208,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
     }
     private void initPartTheme() {
         log.v(TAG, "initPartTheme");
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 ViewGroup part_theme = activity.findViewById(R.id.part_theme);
                 part_theme.setOnClickListener(view -> activatePartTheme());
@@ -219,7 +221,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
     }
     private void initPartUpdate() {
         log.v(TAG, "initPartUpdate");
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 ViewGroup part_update = activity.findViewById(R.id.part_update);
                 part_update.setOnClickListener(view -> activatePartUpdate());
@@ -232,7 +234,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
     }
     private void initPartDynamicShift() {
         log.v(TAG, "initPartDynamicShift");
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             try {
                 ViewGroup part_dynamic_shift = activity.findViewById(R.id.part_automatic_shift);
                 Switch part_dynamic_shift_switch = activity.findViewById(R.id.part_automatic_shift_switch);
@@ -251,7 +253,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
     }
     private void initFinishButton() {
         log.v(TAG, "initFinishButton");
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 Button add_button = activity.findViewById(R.id.add_button);
                 add_button.setOnClickListener(view -> activateFinish());
@@ -267,7 +269,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
     }
     private void activatePartSchedule(final String title) {
         log.v(TAG, "activatePartSchedule | scope=" + title);
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 final ViewGroup layout = (ViewGroup) inflate(R.layout.widget_configure_schedule_lessons_create_search);
                 final AlertDialog alertDialog = new AlertDialog.Builder(activity)
@@ -290,20 +292,20 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                     public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
                     @Override
                     public void afterTextChanged(Editable editable) {
-                        Thread.run(() -> {
+                        thread.run(() -> {
                             teacherPickerAdapter.clear();
                             search_text_view.dismissDropDown();
                         });
                     }
                 });
-                search_action.setOnClickListener(view -> Thread.run(() -> {
+                search_action.setOnClickListener(view -> thread.run(() -> {
                     final String query = search_text_view.getText().toString().trim();
                     log.v(TAG, "activatePartSchedule | search action | clicked | query=" + query);
                     if (!query.isEmpty()) {
                         new ScheduleLessons(new Schedule.Handler() {
                             @Override
                             public void onSuccess(final JSONObject json, final boolean fromCache) {
-                                Thread.run(() -> {
+                                thread.run(() -> {
                                     log.v(TAG, "activatePartSchedule | search action | onSuccess | json=" + (json == null ? "null" : "notnull"));
                                     search_loading.setVisibility(View.GONE);
                                     search_action.setVisibility(View.VISIBLE);
@@ -383,7 +385,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                             @Override
                             public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                                 log.v(TAG, "activatePartSchedule | search action | onFailure | state=" + state + " | statusCode=" + statusCode);
-                                Thread.run(() -> {
+                                thread.run(() -> {
                                     search_loading.setVisibility(View.GONE);
                                     search_action.setVisibility(View.VISIBLE);
                                     String text = activity.getString(R.string.schedule_not_found);
@@ -399,7 +401,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                             @Override
                             public void onProgress(final int state) {
                                 log.v(TAG, "activatePartSchedule | search action | onProgress | state=" + state);
-                                Thread.run(() -> {
+                                thread.run(() -> {
                                     search_loading.setVisibility(View.VISIBLE);
                                     search_action.setVisibility(View.GONE);
                                 });
@@ -417,7 +419,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                         }).search(activity, query);
                     }
                 }));
-                search_text_view.setOnItemClickListener((parent, view, position, id) -> Thread.run(() -> {
+                search_text_view.setOnItemClickListener((parent, view, position, id) -> thread.run(() -> {
                     try {
                         log.v(TAG, "activatePartSchedule | search list selected");
                         JSONObject item = teacherPickerAdapter.getItem(position);
@@ -447,7 +449,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
     }
     private void activatePartTheme() {
         log.v(TAG, "activatePartTheme");
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 // define variables
                 final ViewGroup layout = (ViewGroup) inflate(R.layout.widget_configure_schedule_lessons_create_theme);
@@ -481,7 +483,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
 
                 final AlertDialog alertDialog = new AlertDialog.Builder(activity)
                         .setView(layout)
-                        .setPositiveButton(R.string.apply, (dialogInterface, i) -> Thread.run(() -> {
+                        .setPositiveButton(R.string.apply, (dialogInterface, i) -> thread.run(() -> {
                             log.v(TAG, "activatePartTheme | apply");
                             try {
                                 String background = background_color_picker_value.getText().toString().trim();
@@ -518,7 +520,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                         .setNegativeButton(R.string.do_cancel, null)
                         .create();
 
-                default_theme_light.setOnClickListener(view -> Thread.run(() -> {
+                default_theme_light.setOnClickListener(view -> thread.run(() -> {
                     log.v(TAG, "activatePartTheme | light theme selected");
                     try {
                         Settings.Theme.text       = Default.Theme.Light.text;
@@ -538,7 +540,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                 default_theme_light_text.setText(activity.getString(R.string.text_color) + ": " + Default.Theme.Light.text);
                 default_theme_light_opacity.setText(activity.getString(R.string.background_opacity) + ": " + Default.Theme.Light.opacity);
 
-                default_theme_dark.setOnClickListener(view -> Thread.run(() -> {
+                default_theme_dark.setOnClickListener(view -> thread.run(() -> {
                     log.v(TAG, "activatePartTheme | dark theme selected");
                     try {
                         Settings.Theme.text       = Default.Theme.Dark.text;
@@ -558,12 +560,12 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                 default_theme_dark_text.setText(activity.getString(R.string.text_color) + ": " + Default.Theme.Dark.text);
                 default_theme_dark_opacity.setText(activity.getString(R.string.background_opacity) + ": " + Default.Theme.Dark.opacity);
 
-                background_color_picker.setOnClickListener(view -> Thread.run(() -> {
+                background_color_picker.setOnClickListener(view -> thread.run(() -> {
                     log.v(TAG, "activatePartTheme | background color picker clicked");
                     new ColorPickerDialog(activity, new ColorPickerDialog.ColorPickerCallback() {
                         @Override
                         public void result(final String hex) {
-                            Thread.run(() -> {
+                            thread.run(() -> {
                                 log.v(TAG, "activatePartTheme | background color picker | hex=" + hex);
                                 applyColor(hex, background_color_picker, background_color_picker_image, background_color_picker_value, background_color_picker_header, background_color_picker_hint);
                             });
@@ -577,12 +579,12 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                 }));
                 applyColor(Settings.Theme.background, background_color_picker, background_color_picker_image, background_color_picker_value, background_color_picker_header, background_color_picker_hint);
 
-                text_color_picker.setOnClickListener(view -> Thread.run(() -> {
+                text_color_picker.setOnClickListener(view -> thread.run(() -> {
                     log.v(TAG, "activatePartTheme | text color picker clicked");
                     new ColorPickerDialog(activity, new ColorPickerDialog.ColorPickerCallback() {
                         @Override
                         public void result(final String hex) {
-                            Thread.run(() -> {
+                            thread.run(() -> {
                                 log.v(TAG, "activatePartTheme | text color picker | hex=" + hex);
                                 applyColor(hex, text_color_picker, text_color_picker_image, text_color_picker_value, text_color_picker_header, text_color_picker_hint);
                             });
@@ -629,7 +631,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
     }
     private void activatePartUpdate() {
         log.v(TAG, "activatePartUpdate");
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 int select = 0;
                 switch (Settings.updateTime){
@@ -643,7 +645,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                         .setTitle(R.string.update_interval)
                         .setSingleChoiceItems(R.array.pref_widget_refresh_titles, select, (dialog, which) -> {
                             log.v(TAG, "activatePartUpdate | apply");
-                            Thread.run(() -> {
+                            thread.run(() -> {
                                 switch (which){
                                     case 0: Settings.updateTime = 0; break;
                                     case 1: Settings.updateTime = 12; break;
@@ -667,7 +669,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
     }
     private void activatePartDynamicShift(boolean checked) {
         log.v(TAG, "activatePartDynamicShift | checked=", checked);
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 Settings.useShiftAutomatic = checked;
             } catch (Exception e) {
@@ -678,7 +680,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
     }
     private void activateFinish() {
         log.v(TAG, "activateFinish");
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 if (Settings.Schedule.query == null || Settings.Schedule.query.trim().isEmpty()) {
                     BottomBar.snackBar(activity, activity.getString(R.string.need_to_choose_schedule));
@@ -716,7 +718,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
 
     private void updateDemo() {
         log.v(TAG, "updateDemo");
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             try {
                 int background = parseColor(Settings.Theme.background, Settings.Theme.opacity);
                 int text = parseColor(Settings.Theme.text);
@@ -753,7 +755,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
     }
     private void updateScheduleSummary() {
         log.v(TAG, "updateScheduleSummary");
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             try {
                 TextView part_schedule_summary = activity.findViewById(R.id.part_schedule_summary);
                 part_schedule_summary.setText(!Settings.Schedule.query.isEmpty() ? Settings.Schedule.title : getString(R.string.need_to_choose_schedule));
@@ -765,7 +767,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
     }
     private void updateThemeSummary() {
         log.v(TAG, "updateThemeSummary");
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             try {
                 TextView part_theme_summary = activity.findViewById(R.id.part_theme_summary);
                 String summary;
@@ -787,7 +789,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
     }
     private void updateUpdateSummary() {
         log.v(TAG, "updateUpdateSummary");
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             try {
                 TextView part_update_summary = activity.findViewById(R.id.part_update_summary);
                 String summary;

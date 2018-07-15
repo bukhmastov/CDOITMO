@@ -15,6 +15,8 @@ public class ScheduleExamsSearchActivity extends SearchActivity {
     //@Inject
     private Log log = Log.instance();
     //@Inject
+    private Thread thread = Thread.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     public ScheduleExamsSearchActivity() {
@@ -39,7 +41,7 @@ public class ScheduleExamsSearchActivity extends SearchActivity {
 
     @Override
     protected void onDone(final String query) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "onDone | query=", query);
             ScheduleExamsTabHostFragment.setQuery(query);
             ScheduleExamsTabHostFragment.invalidate();

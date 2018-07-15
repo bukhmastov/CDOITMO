@@ -15,6 +15,7 @@ import android.support.annotation.RequiresApi;
 
 import com.bukhmastov.cdoitmo.R;
 
+//TODO interface - impl
 public class Notifications extends ContextWrapper {
 
     public static final class CHANNELS {

@@ -1,6 +1,6 @@
 package com.bukhmastov.cdoitmo.converter.schedule.lessons;
 
-import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;

@@ -21,11 +21,11 @@ import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.BottomBar;
-import com.bukhmastov.cdoitmo.util.Color;
+import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
@@ -47,6 +47,8 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
 
     //@Inject
     private Log log = Log.instance();
+    //@Inject
+    private Thread thread = Thread.instance();
     //@Inject
     private Storage storage = Storage.instance();
     //@Inject
@@ -150,10 +152,10 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
     }
 
     private void load() {
-        Thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) ? Integer.parseInt(storagePref.get(activity, "pref_dynamic_refresh", "0")) : 0));
+        thread.run(() -> load(storagePref.get(activity, "pref_use_cache", true) ? Integer.parseInt(storagePref.get(activity, "pref_dynamic_refresh", "0")) : 0));
     }
     private void load(final int refresh_rate) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "load | refresh_rate=" + refresh_rate);
             if (storagePref.get(activity, "pref_use_cache", true)) {
                 String cache = storage.get(activity, Storage.CACHE, Storage.USER, "eregister#core").trim();
@@ -179,10 +181,10 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
         });
     }
     private void load(final boolean force) {
-        Thread.run(() -> load(force, ""));
+        thread.run(() -> load(force, ""));
     }
     private void load(final boolean force, final String cache) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "load | force=" + (force ? "true" : "false"));
             if ((!force || !Client.isOnline(activity)) && storagePref.get(activity, "pref_use_cache", true)) {
                 try {
@@ -202,7 +204,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                 deIfmoRestClient.get(activity, "eregister", null, new RestResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject responseObj, final JSONArray responseArr) {
-                        Thread.run(() -> {
+                        thread.run(() -> {
                             log.v(TAG, "load | success | statusCode=" + statusCode + " | responseObj=" + (responseObj == null ? "null" : "notnull"));
                             if (statusCode == 200 && responseObj != null) {
                                 new ERegisterConverter(responseObj, json -> {
@@ -223,7 +225,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                     }
                     @Override
                     public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                        Thread.runOnUI(() -> {
+                        thread.runOnUI(() -> {
                             log.v(TAG, "load | failure " + state);
                             switch (state) {
                                 case DeIfmoRestClient.FAILED_OFFLINE:
@@ -262,7 +264,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                     }
                     @Override
                     public void onProgress(final int state) {
-                        Thread.runOnUI(() -> {
+                        thread.runOnUI(() -> {
                             log.v(TAG, "load | progress " + state);
                             draw(R.layout.state_loading_text);
                             if (activity != null) {
@@ -281,7 +283,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                     }
                 });
             } else {
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     if (getData() != null) {
                         display();
                     } else {
@@ -298,7 +300,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
         });
     }
     private void loadFailed() {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             log.v(TAG, "loadFailed");
             try {
                 draw(R.layout.state_failed_button);
@@ -314,7 +316,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
         });
     }
     private void display() {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.v(TAG, "display");
             try {
                 if (getData() == null) throw new NullPointerException("data cannot be null");
@@ -344,18 +346,18 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                     }
                 }
                 final ERegisterSubjectsRVA adapter = new ERegisterSubjectsRVA(activity, subjectsList);
-                adapter.setOnElementClickListener(R.id.subject, (v, data) -> Thread.run(() -> {
+                adapter.setOnElementClickListener(R.id.subject, (v, data) -> thread.run(() -> {
                     try {
                         log.v(TAG, "erl_list_view clicked");
                         final Bundle extras = new Bundle();
                         extras.putString("data", data.get("data").toString());
-                        Thread.runOnUI(() -> activity.openActivityOrFragment(SubjectShowFragment.class, extras));
+                        thread.runOnUI(() -> activity.openActivityOrFragment(SubjectShowFragment.class, extras));
                     } catch (Exception e) {
                         log.exception(e);
                         BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 }));
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     try {
                         draw(R.layout.layout_eregister);
                         // set adapter to recycler view
@@ -392,7 +394,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                             spinner_group_blocker = true;
                             spinner_group.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                                 public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
-                                    Thread.run(() -> {
+                                    thread.run(() -> {
                                         if (spinner_group_blocker) {
                                             spinner_group_blocker = false;
                                             return;
@@ -433,7 +435,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                             spinner_period_blocker = true;
                             spinner_period.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                                 public void onItemSelected(final AdapterView<?> parent, final View item, final int position, final long selectedId) {
-                                    Thread.run(() -> {
+                                    thread.run(() -> {
                                         if (spinner_period_blocker) {
                                             spinner_period_blocker = false;
                                             return;

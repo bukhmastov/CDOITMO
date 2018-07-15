@@ -8,8 +8,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.util.Color;
-import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.singleton.Color;
 
 import org.json.JSONArray;
 import org.json.JSONObject;

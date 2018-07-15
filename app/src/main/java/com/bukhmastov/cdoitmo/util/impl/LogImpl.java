@@ -8,7 +8,7 @@ import android.support.v4.app.Fragment;
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.LogMetrics;
+import com.bukhmastov.cdoitmo.util.singleton.LogMetrics;
 
 import org.json.JSONArray;
 import org.json.JSONObject;

@@ -14,7 +14,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Static;
-import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
@@ -59,6 +59,8 @@ public class ThemeDialog extends Dialog {
 
     //@Inject
     private Log log = Log.instance();
+    //@Inject
+    private Thread thread = Thread.instance();
 
     public ThemeDialog(Context context, String value, Callback cb) {
         super(context);
@@ -108,9 +110,9 @@ public class ThemeDialog extends Dialog {
 
     public void show() {
         log.v(TAG, "show");
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             final ViewGroup theme_layout = (ViewGroup) inflate(R.layout.dialog_theme_picker);
-            Thread.run(() -> {
+            thread.run(() -> {
                 try {
                     final ViewGroup theme_container_static = theme_layout.findViewById(R.id.theme_container_static);
                     final ViewGroup theme_container_auto = theme_layout.findViewById(R.id.theme_container_auto);
@@ -145,7 +147,7 @@ public class ThemeDialog extends Dialog {
                         theme_container_auto.setVisibility(View.GONE);
                     }
                     // setup static theme selector
-                    Thread.runOnUI(() -> {
+                    thread.runOnUI(() -> {
                         for (int i = 0; i < pref_theme_titles.size(); i++) {
                             final RadioButton radioButton = (RadioButton) inflate(R.layout.dialog_theme_picker_static_item);
                             radioButton.setText(pref_theme_titles.get(i));
@@ -191,10 +193,10 @@ public class ThemeDialog extends Dialog {
                         t2_spinner.setText(pref_theme_titles.get(pref_theme_values.indexOf(t2_value)));
                     }));
                     // show picker
-                    Thread.runOnUI(() -> new AlertDialog.Builder(context)
+                    thread.runOnUI(() -> new AlertDialog.Builder(context)
                             .setTitle(R.string.theme)
                             .setView(theme_layout)
-                            .setPositiveButton(R.string.accept, (dialog, which) -> Thread.run(() -> {
+                            .setPositiveButton(R.string.accept, (dialog, which) -> thread.run(() -> {
                                 log.v(TAG, "show picker accepted");
                                 String theme;
                                 if (auto_enabled) {
@@ -213,7 +215,7 @@ public class ThemeDialog extends Dialog {
     }
 
     private void showThemePicker(final String value, final ThemePickerCallback callback) {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             log.v(TAG, "showThemePicker | " + value);
             new AlertDialog.Builder(context)
                     .setTitle(R.string.theme)
@@ -227,7 +229,7 @@ public class ThemeDialog extends Dialog {
     }
 
     private void showTimePicker(final int hours, final int minutes, final TimePickerCallback callback) {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             log.v(TAG, "showTimePicker | " + hours + " | " + minutes);
             new TimePickerDialog(context, (timePicker, hourOfDay, minute) -> callback.onDone(hourOfDay, minute), hours, minutes, true).show();
         });

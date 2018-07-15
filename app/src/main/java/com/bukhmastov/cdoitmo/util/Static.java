@@ -23,6 +23,9 @@ public class Static {
     private static Log log = Log.instance();
     //@Inject
     //TODO interface - impl: remove static
+    private static Thread thread = Thread.instance();
+    //@Inject
+    //TODO interface - impl: remove static
     private static StoragePref storagePref = StoragePref.instance();
     //@Inject
     //TODO interface - impl: remove static
@@ -75,7 +78,7 @@ public class Static {
     }
 
     public static void removeView(final View view) {
-        Thread.runOnUI(() -> {
+        thread.runOnUI(() -> {
             try {
                 ((ViewGroup) view.getParent()).removeView(view);
             } catch (Throwable e) {

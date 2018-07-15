@@ -25,7 +25,7 @@ import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Account;
 import com.bukhmastov.cdoitmo.util.Accounts;
 import com.bukhmastov.cdoitmo.util.BottomBar;
-import com.bukhmastov.cdoitmo.util.CtxWrapper;
+import com.bukhmastov.cdoitmo.util.singleton.CtxWrapper;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
@@ -54,6 +54,8 @@ public class LoginActivity extends ConnectedActivity {
 
     //@Inject
     private Log log = Log.instance();
+    //@Inject
+    private Thread thread = Thread.instance();
     //@Inject
     private Storage storage = Storage.instance();
     //@Inject
@@ -132,7 +134,7 @@ public class LoginActivity extends ConnectedActivity {
     }
 
     private void route(final int signal) {
-        Thread.run(() -> {
+        thread.run(() -> {
             log.i(TAG, "route | signal=", signal);
             App.OFFLINE_MODE = false;
             App.UNAUTHORIZED_MODE = false;
@@ -212,7 +214,7 @@ public class LoginActivity extends ConnectedActivity {
     }
 
     private void show() {
-        Thread.run(() -> {
+        thread.run(() -> {
             try {
                 log.v(TAG, "show");
                 firebaseAnalyticsProvider.logEvent(activity, FirebaseAnalyticsProvider.Event.LOGIN_REQUIRED);
@@ -235,7 +237,7 @@ public class LoginActivity extends ConnectedActivity {
                     appendAllUsersView(container);
                     appendAnonUserView(container);
                     // draw UI
-                    Thread.runOnUI(() -> draw(container));
+                    thread.runOnUI(() -> draw(container));
                 }
             } catch (Exception e) {
                 log.exception(e);
@@ -351,7 +353,7 @@ public class LoginActivity extends ConnectedActivity {
                                 break;
                             }
                             case R.id.change_password: {
-                                Thread.runOnUI(() -> {
+                                thread.runOnUI(() -> {
                                     try {
                                         final View layout = inflate(R.layout.preference_dialog_input);
                                         final EditText editText = layout.findViewById(R.id.edittext);
@@ -365,7 +367,7 @@ public class LoginActivity extends ConnectedActivity {
                                                     try {
                                                         final String value = editText.getText().toString().trim();
                                                         if (!value.isEmpty()) {
-                                                            Thread.run(() -> {
+                                                            thread.run(() -> {
                                                                 // unique situation, we need to modify account info in which we are not logged in
                                                                 // danger zone begins
                                                                 storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", acLogin);
@@ -411,7 +413,7 @@ public class LoginActivity extends ConnectedActivity {
             log.v(TAG, "anonymous_user_tile login clicked");
             String group = "";
             if (input_group != null) {
-                group = com.bukhmastov.cdoitmo.util.TextUtils.prettifyGroupNumber(input_group.getText().toString());
+                group = com.bukhmastov.cdoitmo.util.singleton.TextUtils.prettifyGroupNumber(input_group.getText().toString());
             }
             String[] groups = group.split(",\\s|\\s|,");
             // set anon user info
@@ -572,30 +574,30 @@ public class LoginActivity extends ConnectedActivity {
         });
     }
     private void displayRemoteMessage() {
-        Thread.run(() -> firebaseConfigProvider.getJson(FirebaseConfigProvider.MESSAGE_LOGIN, value -> Thread.run(() -> {
+        thread.run(() -> firebaseConfigProvider.getJson(FirebaseConfigProvider.MESSAGE_LOGIN, value -> thread.run(() -> {
             try {
                 if (value == null) return;
                 final int type = value.getInt("type");
                 final String message = value.getString("message");
                 if (message == null || message.trim().isEmpty()) return;
-                final String hash = com.bukhmastov.cdoitmo.util.TextUtils.crypt(message);
+                final String hash = com.bukhmastov.cdoitmo.util.singleton.TextUtils.crypt(message);
                 if (hash != null && hash.equals(storage.get(activity, Storage.PERMANENT, Storage.GLOBAL, "firebase#remote_message#login", ""))) {
                     return;
                 }
-                Thread.runOnUI(() -> {
+                thread.runOnUI(() -> {
                     final ViewGroup message_login = activity.findViewById(R.id.message_login);
                     final View layout = Message.getRemoteMessage(activity, type, message, (context, view) -> {
                         if (hash != null) {
-                            Thread.run(() -> {
+                            thread.run(() -> {
                                 if (storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "firebase#remote_message#login", hash)) {
-                                    Thread.runOnUI(() -> {
+                                    thread.runOnUI(() -> {
                                         if (message_login != null && view != null) {
                                             message_login.removeView(view);
                                         }
                                     });
-                                    BottomBar.snackBar(activity, activity.getString(R.string.notification_dismissed), activity.getString(R.string.undo), v -> Thread.run(() -> {
+                                    BottomBar.snackBar(activity, activity.getString(R.string.notification_dismissed), activity.getString(R.string.undo), v -> thread.run(() -> {
                                         if (storage.delete(activity, Storage.PERMANENT, Storage.GLOBAL, "firebase#remote_message#login")) {
-                                            Thread.runOnUI(() -> {
+                                            thread.runOnUI(() -> {
                                                 if (message_login != null && view != null) {
                                                     message_login.addView(view);
                                                 }
