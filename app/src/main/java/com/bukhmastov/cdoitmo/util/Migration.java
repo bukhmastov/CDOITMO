@@ -34,7 +34,7 @@ public class Migration {
     // Call migrate to initiate migration check
     // ----------------------------------------
 
-    public static void migrate(final Context context, final StorageProvider storageProvider) {
+    public static void migrate(final Context context, final StorageProvider storageProvider, final Log log) {
         try {
             int versionCode = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode;
             int lastVersionCode = storageProvider.getStoragePref().get(context, "last_version", 0);
@@ -49,14 +49,14 @@ public class Migration {
                         Class<?> migration = Class.forName("com.bukhmastov.cdoitmo.util.Migration");
                         for (int i = lastVersionCode + 1; i <= versionCode; i++) {
                             try {
-                                Method method = migration.getDeclaredMethod("migrate" + i, Context.class, StorageProvider.class);
-                                method.invoke(null, context, storageProvider);
-                                Log.i(TAG, "Migration applied for versionCode ", i);
+                                Method method = migration.getDeclaredMethod("migrate" + i, Context.class, StorageProvider.class, Log.class);
+                                method.invoke(null, context, storageProvider, log);
+                                log.i(TAG, "Migration applied for versionCode ", i);
                             } catch (NoSuchMethodException e) {
                                 // migration not needed
                             } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | ExceptionInInitializerError | SecurityException | NullPointerException e) {
                                 // migration failed
-                                Log.e(TAG, "Migration failed for versionCode ", i, " | ", e.getMessage());
+                                log.e(TAG, "Migration failed for versionCode ", i, " | ", e.getMessage());
                             }
                         }
                     } catch (Exception ignore) {
@@ -66,7 +66,7 @@ public class Migration {
                 storageProvider.getStoragePref().put(context, "last_version", versionCode);
             }
         } catch (PackageManager.NameNotFoundException e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
 
@@ -76,12 +76,12 @@ public class Migration {
     // -----------------------------------
 
     @Keep
-    private static void migrate115(final Context context, final StorageProvider storageProvider) {
+    private static void migrate115(final Context context, final StorageProvider storageProvider, final Log log) {
         Thread.run(Thread.BACKGROUND, () -> new ProtocolTracker(context).reset());
     }
 
     @Keep
-    private static void migrate111(final Context context, final StorageProvider storageProvider) {
+    private static void migrate111(final Context context, final StorageProvider storageProvider, final Log log) {
         ArrayList<String> appWidgetIds = storageProvider.getStorage().list(context, Storage.PERMANENT, Storage.GLOBAL, "widget_schedule_lessons");
         for (String appWidgetId : appWidgetIds) {
             String settings = storageProvider.getStorage().get(context, Storage.PERMANENT, Storage.GLOBAL, "widget_schedule_lessons#" + appWidgetId + "#settings", "");
@@ -94,7 +94,7 @@ public class Migration {
                         settingsJson.put("useShiftAutomatic", true);
                         storageProvider.getStorage().put(context, Storage.PERMANENT, Storage.GLOBAL, "widget_schedule_lessons#" + appWidgetId + "#settings", settingsJson.toString());
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                     }
                 } else {
                     storageProvider.getStorage().clear(context, Storage.PERMANENT, Storage.GLOBAL, "widget_schedule_lessons#" + appWidgetId);
@@ -106,7 +106,7 @@ public class Migration {
     }
 
     @Keep
-    private static void migrate109(final Context context, final StorageProvider storageProvider) {
+    private static void migrate109(final Context context, final StorageProvider storageProvider, final Log log) {
         try {
             final String rootPath = context.getFilesDir() + File.separator + "app_data";
             getUsersFolder(context, rootPath, (file, user) -> {
@@ -130,13 +130,13 @@ public class Migration {
     }
 
     @Keep
-    private static void migrate106(final Context context, final StorageProvider storageProvider) {
+    private static void migrate106(final Context context, final StorageProvider storageProvider, final Log log) {
         storageProvider.getStoragePref().put(context, "pref_notify_type", Build.VERSION.SDK_INT <= Build.VERSION_CODES.M ? "0" : "1");
         Thread.run(Thread.BACKGROUND, () -> new ProtocolTracker(context).reset());
     }
 
     @Keep
-    private static void migrate103(final Context context, final StorageProvider storageProvider) {
+    private static void migrate103(final Context context, final StorageProvider storageProvider, final Log log) {
         migrate103convertERegister(context);
         migrate103moveCacheToGeneral(context);
         String pref_e_journal_term = storageProvider.getStoragePref().get(context, "pref_e_journal_term", "0");
@@ -281,7 +281,7 @@ public class Migration {
     }
 
     @Keep
-    private static void migrate97(final Context context, final StorageProvider storageProvider) {
+    private static void migrate97(final Context context, final StorageProvider storageProvider, final Log log) {
         if (!first_launch) {
             storageProvider.getStoragePref().put(context, "pref_default_values_applied", true);
         }
@@ -594,7 +594,7 @@ public class Migration {
     }
 
     @Keep
-    private static void migrate93(final Context context, final StorageProvider storageProvider) {
+    private static void migrate93(final Context context, final StorageProvider storageProvider, final Log log) {
         // new theme
         final boolean dark_theme = storageProvider.getStoragePref().get(context, "pref_dark_theme", false);
         storageProvider.getStoragePref().delete(context, "pref_dark_theme");
@@ -692,14 +692,14 @@ public class Migration {
     }
 
     @Keep
-    private static void migrate90(final Context context, final StorageProvider storageProvider) {
+    private static void migrate90(final Context context, final StorageProvider storageProvider, final Log log) {
         boolean compact = storageProvider.getStoragePref().get(context, "pref_schedule_lessons_compact_view_of_reduced_lesson", true);
         storageProvider.getStoragePref().delete(context, "pref_schedule_lessons_compact_view_of_reduced_lesson");
         storageProvider.getStoragePref().put(context, "pref_schedule_lessons_view_of_reduced_lesson", compact ? "compact" : "full");
     }
 
     @Keep
-    private static void migrate83(final Context context, final StorageProvider storageProvider) {
+    private static void migrate83(final Context context, final StorageProvider storageProvider, final Log log) {
         ArrayList<String> appWidgetIds = storageProvider.getStorage().list(context, Storage.PERMANENT, Storage.GLOBAL, "widget_schedule_lessons");
         for (String appWidgetId : appWidgetIds) {
             String settings = storageProvider.getStorage().get(context, Storage.PERMANENT, Storage.GLOBAL, "widget_schedule_lessons#" + appWidgetId + "#settings", "");
@@ -711,7 +711,7 @@ public class Migration {
                         settingsJson.put("shift", 0);
                         storageProvider.getStorage().put(context, Storage.PERMANENT, Storage.GLOBAL, "widget_schedule_lessons#" + appWidgetId + "#settings", settingsJson.toString());
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                         storageProvider.getStorage().delete(context, Storage.PERMANENT, Storage.GLOBAL, "widget_schedule_lessons#" + appWidgetId + "#settings");
                     }
                 }
@@ -720,7 +720,7 @@ public class Migration {
     }
 
     @Keep
-    private static void migrate78(final Context context, final StorageProvider storageProvider) {
+    private static void migrate78(final Context context, final StorageProvider storageProvider, final Log log) {
         ArrayList<String> appWidgetIds = storageProvider.getStorage().list(context, Storage.PERMANENT, Storage.GLOBAL, "widget_schedule_lessons");
         for (String appWidgetId : appWidgetIds) {
             String settings = storageProvider.getStorage().get(context, Storage.PERMANENT, Storage.GLOBAL, "widget_schedule_lessons#" + appWidgetId + "#settings", "");
@@ -747,7 +747,7 @@ public class Migration {
                             storageProvider.getStorage().put(context, Storage.PERMANENT, Storage.GLOBAL, "widget_schedule_lessons#" + appWidgetId + "#settings", settingsJson.toString());
                         }
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                         storageProvider.getStorage().delete(context, Storage.PERMANENT, Storage.GLOBAL, "widget_schedule_lessons#" + appWidgetId + "#settings");
                     }
                 } else {
@@ -765,14 +765,14 @@ public class Migration {
     }
 
     @Keep
-    private static void migrate71(final Context context, final StorageProvider storageProvider) {
+    private static void migrate71(final Context context, final StorageProvider storageProvider, final Log log) {
         storageProvider.getStoragePref().delete(context, "pref_open_drawer_at_startup");
         storageProvider.getStoragePref().put(context, "pref_first_launch", storageProvider.getStorage().get(context, Storage.PERMANENT, Storage.GLOBAL, "users#list", "").trim().isEmpty());
         Thread.run(Thread.BACKGROUND, () -> new ProtocolTracker(context).reset());
     }
 
     @Keep
-    private static void migrate62(final Context context, final StorageProvider storageProvider) {
+    private static void migrate62(final Context context, final StorageProvider storageProvider, final Log log) {
         storageProvider.getStoragePref().put(context, "pref_dynamic_refresh", storageProvider.getStoragePref().get(context, "pref_tab_refresh", "0"));
         storageProvider.getStoragePref().put(context, "pref_static_refresh", storageProvider.getStoragePref().get(context, "pref_schedule_refresh", "168"));
         storageProvider.getStoragePref().delete(context, "pref_tab_refresh");
@@ -789,12 +789,12 @@ public class Migration {
     //}
 
     @Keep
-    private static void migrate29(final Context context, final StorageProvider storageProvider) {
+    private static void migrate29(final Context context, final StorageProvider storageProvider, final Log log) {
         storageProvider.getStorage().delete(context, Storage.CACHE, Storage.USER, "eregister#core");
     }
 
     @Keep
-    private static void migrate26(final Context context, final StorageProvider storageProvider) {
+    private static void migrate26(final Context context, final StorageProvider storageProvider, final Log log) {
         JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
         if (jobScheduler != null) {
             jobScheduler.cancelAll();

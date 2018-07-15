@@ -54,7 +54,6 @@ public class BottomBar {
     public static void toast(final Context context, final String text) {
         Thread.runOnUI(() -> {
             if (context == null) {
-                Log.w(TAG, "toast | context is null");
                 return;
             }
             Toast.makeText(context, text, Toast.LENGTH_SHORT).show();
@@ -75,7 +74,6 @@ public class BottomBar {
 
     public static void snackBar(Activity activity, @IdRes int layout, String text, int duration) {
         if (activity == null) {
-            Log.w(TAG, "snackBar | activity is null");
             return;
         }
         snackBar(activity, activity.findViewById(layout), text, duration);
@@ -87,7 +85,6 @@ public class BottomBar {
 
     public static void snackBar(Activity activity, String text, String action, int duration, View.OnClickListener onClickListener) {
         if (activity == null) {
-            Log.w(TAG, "snackBar | activity is null");
             return;
         }
         snackBar(activity, activity.findViewById(android.R.id.content), text, action, duration, onClickListener);
@@ -95,7 +92,6 @@ public class BottomBar {
 
     public static void snackBar(Activity activity, @IdRes int layout, String text, String action, int duration, View.OnClickListener onClickListener) {
         if (activity == null) {
-            Log.w(TAG, "snackBar | activity is null");
             return;
         }
         snackBar(activity, activity.findViewById(layout), text, action, duration, onClickListener);

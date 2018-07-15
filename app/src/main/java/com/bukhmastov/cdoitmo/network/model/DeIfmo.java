@@ -178,7 +178,7 @@ public abstract class DeIfmo extends Client {
             }
             return parsed;
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             return new JSONArray();
         }
     }
@@ -248,7 +248,7 @@ public abstract class DeIfmo extends Client {
             }
             return storedCookies;
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             return newCookies;
         }
     }

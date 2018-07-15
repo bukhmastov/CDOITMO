@@ -10,6 +10,7 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
+//TODO interface - impl
 public class Thread {
 
     private static final String TAG = "Thread";
@@ -20,6 +21,10 @@ public class Thread {
     public @interface TYPE {}
     public static final int FOREGROUND = 0;
     public static final int BACKGROUND = 1;
+
+    //@Inject
+    //TODO interface - impl: remove static
+    private static Log log = Log.instance();
 
     public static void run(final Runnable runnable) {
         run(FOREGROUND, runnable);
@@ -54,11 +59,11 @@ public class Thread {
                 try {
                     runnable.run();
                 } catch (Throwable throwable) {
-                    Log.exception("Run on " + hasThread.thread.getName() + " thread failed", throwable);
+                    log.exception("Run on " + hasThread.thread.getName() + " thread failed", throwable);
                 }
             });
         } catch (Throwable throwable) {
-            Log.exception("Run on " + hasThread.thread.getName() + " thread failed", throwable);
+            log.exception("Run on " + hasThread.thread.getName() + " thread failed", throwable);
         }
     }
 
@@ -71,7 +76,7 @@ public class Thread {
             try {
                 runnable.run();
             } catch (Throwable throwable) {
-                Log.exception("Run on main thread failed", throwable);
+                log.exception("Run on main thread failed", throwable);
             }
         } else {
             log("runOnUI | run with Handler.post");
@@ -80,11 +85,11 @@ public class Thread {
                     try {
                         runnable.run();
                     } catch (Throwable throwable) {
-                        Log.exception("Run on main thread failed", throwable);
+                        log.exception("Run on main thread failed", throwable);
                     }
                 });
             } catch (Throwable throwable) {
-                Log.exception("Run on main thread failed", throwable);
+                log.exception("Run on main thread failed", throwable);
             }
         }
     }

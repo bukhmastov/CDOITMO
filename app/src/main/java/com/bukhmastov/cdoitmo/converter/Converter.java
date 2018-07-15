@@ -16,6 +16,8 @@ public abstract class Converter implements Runnable {
     }
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private FirebasePerformanceProvider firebasePerformanceProvider = FirebasePerformanceProvider.instance();
 
     public Converter(Response delegate) {
@@ -35,7 +37,7 @@ public abstract class Converter implements Runnable {
         } catch (Throwable e) {
             firebasePerformanceProvider.putAttribute(trace, "state", "failed");
             firebasePerformanceProvider.putAttribute(trace, "exception", e.getMessage());
-            Log.exception(e);
+            log.exception(e);
             delegate.finish(null);
         } finally {
             firebasePerformanceProvider.stopTrace(trace);

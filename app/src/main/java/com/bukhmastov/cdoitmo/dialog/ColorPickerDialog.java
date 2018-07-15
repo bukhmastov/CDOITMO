@@ -56,6 +56,9 @@ public class ColorPickerDialog extends Dialog {
         void exception(Exception e);
     }
 
+    //@Inject
+    private Log log = Log.instance();
+
     public ColorPickerDialog(final Context context, final ColorPickerCallback callback) {
         super(context);
         this.callback = callback;
@@ -66,7 +69,7 @@ public class ColorPickerDialog extends Dialog {
     }
 
     public void show(String colorHex) {
-        Log.v(TAG, "show");
+        log.v(TAG, "show");
         Thread.runOnUI(() -> {
             try {
                 ViewGroup layout = (ViewGroup) inflate(R.layout.dialog_color_picker);
@@ -84,7 +87,7 @@ public class ColorPickerDialog extends Dialog {
                                     return;
                                 }
                                 String selected = selectedColorInput.getText().toString().trim();
-                                Log.v(TAG, "apply | selected=" + selected);
+                                log.v(TAG, "apply | selected=" + selected);
                                 if (selected.isEmpty() || selected.charAt(0) != '#') {
                                     return;
                                 }
@@ -114,7 +117,7 @@ public class ColorPickerDialog extends Dialog {
     }
 
     public void select(String colorHex) {
-        Log.v(TAG, "select | colorHex=", colorHex);
+        log.v(TAG, "select | colorHex=", colorHex);
         Thread.runOnUI(() -> {
             try {
                 try {
@@ -135,7 +138,7 @@ public class ColorPickerDialog extends Dialog {
     }
 
     public void close() {
-        Log.v(TAG, "close");
+        log.v(TAG, "close");
         Thread.runOnUI(() -> {
             try {
                 if (alertDialog != null && alertDialog.isShowing()) {
@@ -148,7 +151,7 @@ public class ColorPickerDialog extends Dialog {
     }
 
     private void displayColors(final int index) {
-        Log.v(TAG, "displayColors | index=" + index);
+        log.v(TAG, "displayColors | index=" + index);
         Thread.run(() -> {
             try {
                 final boolean modeAllColors = index < 0 || index > COLORS.length;
@@ -170,15 +173,15 @@ public class ColorPickerDialog extends Dialog {
                             container.setAdapter(gridAdapter);
                         }
                         container.setOnItemClickListener((adapterView, view, i, l) -> {
-                            Log.v(TAG, "color clicked | i=" + i);
+                            log.v(TAG, "color clicked | i=" + i);
                             Thread.run(() -> {
                                 try {
                                     String color = gridAdapter.getItem(i);
                                     if ("back".equals(color)) {
-                                        Log.v(TAG, "back clicked");
+                                        log.v(TAG, "back clicked");
                                         displayColors(-1);
                                     } else {
-                                        Log.v(TAG, "color selected | color=" + color);
+                                        log.v(TAG, "color selected | color=" + color);
                                         Thread.runOnUI(() -> {
                                             if (selectedColorInput != null) {
                                                 selectedColorInput.setText(color);

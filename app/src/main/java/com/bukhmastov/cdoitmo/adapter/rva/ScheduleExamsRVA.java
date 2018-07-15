@@ -69,7 +69,7 @@ public class ScheduleExamsRVA extends RVA {
             query = data.getString("query");
             addItems(json2dataset(activity, data));
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
 
@@ -149,7 +149,7 @@ public class ScheduleExamsRVA extends RVA {
                         popup.getMenuInflater().inflate(R.menu.schedule_exams, menu);
                         menu.findItem(cached ? R.id.add_to_cache : R.id.remove_from_cache).setVisible(false);
                         popup.setOnMenuItemClickListener(item1 -> {
-                            Log.v(TAG, "menu | popup item | clicked | " + item1.getTitle().toString());
+                            log.v(TAG, "menu | popup item | clicked | " + item1.getTitle().toString());
                             switch (item1.getItemId()) {
                                 case R.id.add_to_cache:
                                 case R.id.remove_from_cache: {
@@ -176,7 +176,7 @@ public class ScheduleExamsRVA extends RVA {
                                             }
                                         }
                                     } catch (Exception e) {
-                                        Log.exception(e);
+                                        log.exception(e);
                                         BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
                                     }
                                     break;
@@ -190,13 +190,13 @@ public class ScheduleExamsRVA extends RVA {
                         });
                         popup.show();
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                         BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 });
             }));
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private void bindExam(View container, Item item) {
@@ -241,7 +241,7 @@ public class ScheduleExamsRVA extends RVA {
             if (touch_icon_enabled) {
                 exam_touch_icon.setOnClickListener(view -> {
                     try {
-                        Log.v(TAG, "exam_touch_icon clicked");
+                        log.v(TAG, "exam_touch_icon clicked");
                         PopupMenu popup = new PopupMenu(activity, view);
                         Menu menu = popup.getMenu();
                         popup.getMenuInflater().inflate(R.menu.schedule_exams_item, menu);
@@ -265,7 +265,7 @@ public class ScheduleExamsRVA extends RVA {
                             }
                         }
                         popup.setOnMenuItemClickListener(item1 -> {
-                            Log.v(TAG, "popup.MenuItem clicked | " + item1.getTitle().toString());
+                            log.v(TAG, "popup.MenuItem clicked | " + item1.getTitle().toString());
                             switch (item1.getItemId()) {
                                 case R.id.open_group: if (group != null && !group.isEmpty()) callback.call(group); break;
                                 case R.id.open_teacher: {
@@ -281,7 +281,7 @@ public class ScheduleExamsRVA extends RVA {
                         });
                         popup.show();
                     } catch (Exception e){
-                        Log.exception(e);
+                        log.exception(e);
                     }
                 });
             }
@@ -363,7 +363,7 @@ public class ScheduleExamsRVA extends RVA {
             container.findViewById(R.id.separator_small).setVisibility((isAdviceExists && !isExamExists) || (!isAdviceExists && isExamExists) ? View.GONE : View.VISIBLE);
             container.findViewById(R.id.exam_info).setVisibility(isAdviceExists || isExamExists ? View.VISIBLE : View.GONE);
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private void bindUpdateTime(View container, Item item) {
@@ -371,7 +371,7 @@ public class ScheduleExamsRVA extends RVA {
             final String text = getString(item.data, "text");
             ((TextView) container.findViewById(R.id.update_time)).setText(text != null && !text.isEmpty() ? text : Static.GLITCH);
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private void bindNoExams(View container, Item item) {
@@ -385,7 +385,7 @@ public class ScheduleExamsRVA extends RVA {
             }
             ((TextView) container.findViewById(R.id.ntd_text)).setText((mode == 0 ? activity.getText(R.string.no_exams) : activity.getText(R.string.no_credits)) + info);
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private void bindPickerHeader(View container, Item item) {
@@ -399,7 +399,7 @@ public class ScheduleExamsRVA extends RVA {
             }
             ((TextView) container.findViewById(R.id.teacher_picker_header)).setText(text);
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private void bindPickerItem(View container, Item item) {
@@ -417,7 +417,7 @@ public class ScheduleExamsRVA extends RVA {
                 }
             });
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private void bindPickerNoTeachers(View container, Item item) {
@@ -431,7 +431,7 @@ public class ScheduleExamsRVA extends RVA {
             }
             ((TextView) container.findViewById(R.id.ntd_text)).setText(text);
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
 

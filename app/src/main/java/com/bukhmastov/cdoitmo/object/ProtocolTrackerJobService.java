@@ -39,6 +39,8 @@ public class ProtocolTrackerJobService extends JobService {
     private String trace = null;
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private Storage storage = Storage.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
@@ -49,7 +51,7 @@ public class ProtocolTrackerJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
-        Log.i(TAG, "Started");
+        log.i(TAG, "Started");
         this.params = params;
         this.attempt = 0;
         request();
@@ -58,7 +60,7 @@ public class ProtocolTrackerJobService extends JobService {
 
     @Override
     public boolean onStopJob(JobParameters params) {
-        Log.i(TAG, "Stopped");
+        log.i(TAG, "Stopped");
         if (requestHandle != null) requestHandle.cancel();
         firebasePerformanceProvider.stopTrace(trace);
         return true;
@@ -70,7 +72,7 @@ public class ProtocolTrackerJobService extends JobService {
             try {
                 attempt++;
                 if (attempt > maxAttempts) throw new Exception("Number of attempts exceeded the limit");
-                Log.v(TAG, "request | attempt #" + attempt);
+                log.v(TAG, "request | attempt #" + attempt);
                 deIfmoRestClient.get(getBaseContext(), "eregisterlog?days=2", null, new RestResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, Client.Headers headers, JSONObject responseObj, final JSONArray responseArr) {
@@ -82,7 +84,7 @@ public class ProtocolTrackerJobService extends JobService {
                                             try {
                                                 handle(json.getJSONArray("protocol"));
                                             } catch (Exception e) {
-                                                Log.w(TAG, "request | catch(onSuccess, Thread, ProtocolConverter) | " + e.getMessage());
+                                                log.w(TAG, "request | catch(onSuccess, Thread, ProtocolConverter) | " + e.getMessage());
                                                 finish();
                                             }
                                         }).run();
@@ -90,12 +92,12 @@ public class ProtocolTrackerJobService extends JobService {
                                         w8andRequest();
                                     }
                                 } catch (Exception e) {
-                                    Log.w(TAG, "request | catch(onSuccess, Thread) | " + e.getMessage());
+                                    log.w(TAG, "request | catch(onSuccess, Thread) | " + e.getMessage());
                                     finish();
                                 }
                             });
                         } catch (Exception e) {
-                            Log.w(TAG, "request | catch(onSuccess) | " + e.getMessage());
+                            log.w(TAG, "request | catch(onSuccess) | " + e.getMessage());
                             finish();
                         }
                     }
@@ -115,7 +117,7 @@ public class ProtocolTrackerJobService extends JobService {
                     }
                 });
             } catch (Exception e){
-                Log.w(TAG, "request | catch | " + e.getMessage());
+                log.w(TAG, "request | catch | " + e.getMessage());
                 finish();
             }
         });
@@ -125,7 +127,7 @@ public class ProtocolTrackerJobService extends JobService {
             firebasePerformanceProvider.stopTrace(trace);
             Thread.run(Thread.BACKGROUND, () -> {
                 try {
-                    Log.v(TAG, "w8andRequest");
+                    log.v(TAG, "w8andRequest");
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException ignore) {
@@ -133,12 +135,12 @@ public class ProtocolTrackerJobService extends JobService {
                     }
                     request();
                 } catch (Exception e) {
-                    Log.w(TAG, "w8andRequest | catch(Thread) | " + e.getMessage());
+                    log.w(TAG, "w8andRequest | catch(Thread) | " + e.getMessage());
                     finish();
                 }
             });
         } catch (Exception e) {
-            Log.w(TAG, "w8andRequest | catch | " + e.getMessage());
+            log.w(TAG, "w8andRequest | catch | " + e.getMessage());
             finish();
         }
     }
@@ -146,7 +148,7 @@ public class ProtocolTrackerJobService extends JobService {
         try {
             Thread.run(Thread.BACKGROUND, () -> {
                 try {
-                    Log.v(TAG, "handle");
+                    log.v(TAG, "handle");
                     if (protocol == null) throw new NullPointerException("json can't be null");
                     // step 1
                     // fetching previous protocol value
@@ -239,12 +241,12 @@ public class ProtocolTrackerJobService extends JobService {
                     // we are done
                     finish();
                 } catch (Exception e) {
-                    Log.w(TAG, "handle | catch(Thread) | " + e.getMessage());
+                    log.w(TAG, "handle | catch(Thread) | " + e.getMessage());
                     finish();
                 }
             });
         } catch (Exception e) {
-            Log.w(TAG, "handle | catch | " + e.getMessage());
+            log.w(TAG, "handle | catch | " + e.getMessage());
             finish();
         }
     }
@@ -252,7 +254,7 @@ public class ProtocolTrackerJobService extends JobService {
         try {
             Thread.run(() -> {
                 try {
-                    Log.v(TAG, "addNotification | title=" + title + " | text=" + text.replaceAll("\n", "\\n") + " | timestamp=" + timestamp + " | isSummary=" + (isSummary ? "true" : "false"));
+                    log.v(TAG, "addNotification | title=" + title + " | text=" + text.replaceAll("\n", "\\n") + " | timestamp=" + timestamp + " | isSummary=" + (isSummary ? "true" : "false"));
                     if (notificationId > Integer.MAX_VALUE - 10) notificationId = 0;
                     // prepare intent
                     Intent intent = new Intent(getBaseContext(), MainActivity.class);
@@ -263,11 +265,11 @@ public class ProtocolTrackerJobService extends JobService {
                     Notifications notifications = new Notifications(getBaseContext());
                     notifications.notify(notificationId++, notifications.getProtocol(getBaseContext(), title, text, timestamp, group, isSummary, pIntent));
                 } catch (Exception e) {
-                    Log.w(TAG, "addNotification | catch(Thread) | " + e.getMessage());
+                    log.w(TAG, "addNotification | catch(Thread) | " + e.getMessage());
                 }
             });
         } catch (Exception e) {
-            Log.w(TAG, "addNotification | catch | " + e.getMessage());
+            log.w(TAG, "addNotification | catch | " + e.getMessage());
         }
     }
     private void finish() {
@@ -275,24 +277,24 @@ public class ProtocolTrackerJobService extends JobService {
             firebasePerformanceProvider.stopTrace(trace);
             Thread.run(Thread.BACKGROUND, () -> {
                 try {
-                    Log.i(TAG, "Executed");
+                    log.i(TAG, "Executed");
                     if (requestHandle != null) requestHandle.cancel();
                 } catch (Exception e) {
-                    Log.w(TAG, "finish | catch(Thread) | " + e.getMessage());
+                    log.w(TAG, "finish | catch(Thread) | " + e.getMessage());
                 } finally {
                     if (params != null) {
                         jobFinished(params, false);
                     } else {
-                        Log.exception(TAG, new NullPointerException("JobService.params is null at the finish"));
+                        log.exception(TAG, new NullPointerException("JobService.params is null at the finish"));
                     }
                 }
             });
         } catch (Exception e) {
-            Log.w(TAG, "finish | catch | " + e.getMessage());
+            log.w(TAG, "finish | catch | " + e.getMessage());
             if (params != null) {
                 jobFinished(params, false);
             } else {
-                Log.exception(TAG, new NullPointerException("JobService.params is null at the finish"));
+                log.exception(TAG, new NullPointerException("JobService.params is null at the finish"));
             }
         }
     }

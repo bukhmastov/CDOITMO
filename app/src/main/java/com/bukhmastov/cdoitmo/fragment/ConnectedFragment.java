@@ -37,6 +37,9 @@ public abstract class ConnectedFragment extends Fragment {
     protected abstract @LayoutRes int getLayoutId();
     protected abstract @IdRes int getRootId();
 
+    //@Inject
+    private Log log = Log.instance();
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,7 +52,7 @@ public abstract class ConnectedFragment extends Fragment {
         try {
             activity = (ConnectedActivity) context;
         } catch (ClassCastException e) {
-            Log.wtf(TAG, context.toString(), " must implement ConnectedActivity");
+            log.wtf(TAG, context.toString(), " must implement ConnectedActivity");
         }
     }
 
@@ -71,7 +74,7 @@ public abstract class ConnectedFragment extends Fragment {
     }
 
     public void storeData(ConnectedFragment fragment, String data, String extra) {
-        Log.v(TAG, "storeData | activity=", activity, " | fragment=", fragment, " | data=", Log.lNull(data), " | extra=", Log.lNull(extra));
+        log.v(TAG, "storeData | activity=", activity, " | fragment=", fragment, " | data=", data, " | extra=", extra);
         if (fragment != null) {
             ConnectedActivity.storedFragmentName = fragment.getClass().getCanonicalName();
             ConnectedActivity.storedFragmentData = data;
@@ -80,7 +83,7 @@ public abstract class ConnectedFragment extends Fragment {
     }
 
     public String restoreData(ConnectedFragment fragment) {
-        Log.v(TAG, "restoreData | activity=", activity, " | fragment=", fragment);
+        log.v(TAG, "restoreData | activity=", activity, " | fragment=", fragment);
         if (fragment != null && ConnectedActivity.storedFragmentName != null && fragment.getClass().getCanonicalName().equals(ConnectedActivity.storedFragmentName)) {
             return ConnectedActivity.storedFragmentData;
         } else {
@@ -89,7 +92,7 @@ public abstract class ConnectedFragment extends Fragment {
     }
 
     public String restoreDataExtra(ConnectedFragment fragment) {
-        Log.v(TAG, "restoreDataExtra | activity=", activity, " | fragment=", fragment);
+        log.v(TAG, "restoreDataExtra | activity=", activity, " | fragment=", fragment);
         if (fragment != null && ConnectedActivity.storedFragmentName != null && fragment.getClass().getCanonicalName().equals(ConnectedActivity.storedFragmentName)) {
             return ConnectedActivity.storedFragmentExtra;
         } else {
@@ -107,19 +110,19 @@ public abstract class ConnectedFragment extends Fragment {
         try {
             View view = inflate(layout);
             if (view == null) {
-                Log.e(TAG, "Failed to draw layout, view is null");
+                log.e(TAG, "Failed to draw layout, view is null");
                 return;
             }
             draw(view);
         } catch (Exception e){
-            Log.exception(e);
+            log.exception(e);
         }
     }
 
     protected void draw(View view) {
         try {
             if (activity == null) {
-                Log.e(TAG, "Failed to draw layout, activity is null");
+                log.e(TAG, "Failed to draw layout, activity is null");
                 return;
             }
             ViewGroup vg = activity.findViewById(getRootId());
@@ -128,18 +131,18 @@ public abstract class ConnectedFragment extends Fragment {
                 vg.addView(view, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             }
         } catch (Exception e){
-            Log.exception(e);
+            log.exception(e);
         }
     }
 
     protected View inflate(@LayoutRes int layout) throws InflateException {
         if (activity == null) {
-            Log.e(TAG, "Failed to inflate layout, activity is null");
+            log.e(TAG, "Failed to inflate layout, activity is null");
             return null;
         }
         LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         if (inflater == null) {
-            Log.e(TAG, "Failed to inflate layout, inflater is null");
+            log.e(TAG, "Failed to inflate layout, inflater is null");
             return null;
         }
         return inflater.inflate(layout, null);
@@ -184,7 +187,6 @@ public abstract class ConnectedFragment extends Fragment {
         if (connectedFragment == AboutFragment.class) return new Data(connectedFragment, context.getString(R.string.about), R.drawable.ic_info_outline);
         if (connectedFragment == LogFragment.class) return new Data(connectedFragment, context.getString(R.string.log), R.drawable.ic_info_outline);
         if (connectedFragment == LinkedAccountsFragment.class) return new Data(connectedFragment, context.getString(R.string.linked_accounts), R.drawable.ic_account_box);
-        Log.wtf(TAG, "getData | fragment class (", connectedFragment.toString(), ") does not supported!");
         return null;
     }
 }

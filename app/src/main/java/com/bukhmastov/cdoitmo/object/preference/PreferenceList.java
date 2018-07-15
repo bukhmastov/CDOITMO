@@ -14,6 +14,7 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.util.StoragePref;
+import com.bukhmastov.cdoitmo.util.StorageProvider;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,7 +52,7 @@ public class PreferenceList extends Preference {
     }
 
     @Nullable
-    public static View getView(final ConnectedActivity activity, final PreferenceList preference, final StoragePref storagePref) {
+    public static View getView(final ConnectedActivity activity, final PreferenceList preference, final StorageProvider storageProvider) {
         final List<String> titles = preference.arrayTitles != 0 ? Arrays.asList(activity.getResources().getStringArray(preference.arrayTitles)) : new ArrayList<>();
         final List<String> values = preference.arrayValues != 0 ? Arrays.asList(activity.getResources().getStringArray(preference.arrayValues)) : new ArrayList<>();
         final List<String> descs = preference.arrayDesc != 0 ? Arrays.asList(activity.getResources().getStringArray(preference.arrayDesc)) : new ArrayList<>();
@@ -67,13 +68,13 @@ public class PreferenceList extends Preference {
         if (preference.summary != 0) {
             preference_list_summary.setText(preference.summary);
         } else {
-            preference_list_summary.setText(titles.get(values.indexOf(storagePref.get(activity, preference.key, preference.defaultValue == null ? "" : (String) preference.defaultValue))));
+            preference_list_summary.setText(titles.get(values.indexOf(storageProvider.getStoragePref().get(activity, preference.key, preference.defaultValue == null ? "" : (String) preference.defaultValue))));
         }
         preference_list.setOnClickListener(v -> {
             if (preference.isDisabled()) return;
             int checked = 0;
             if (preference.defaultValue != null) {
-                checked = values.indexOf(storagePref.get(activity, preference.key, (String) preference.defaultValue));
+                checked = values.indexOf(storageProvider.getStoragePref().get(activity, preference.key, (String) preference.defaultValue));
             }
             final View view = inflate(activity, R.layout.preference_list_single_choice);
             if (view == null) {
@@ -88,7 +89,7 @@ public class PreferenceList extends Preference {
             final OnCheckedChangeListener onCheckedChangeListener = (buttonView, isChecked, index) -> {
                 if (isChecked) {
                     String value = values.get(index);
-                    storagePref.put(activity, preference.key, value);
+                    storageProvider.getStoragePref().put(activity, preference.key, value);
                     preference.onPreferenceChanged(activity);
                     if (preference.changeSummary) {
                         preference_list_summary.setText(titles.get(index));

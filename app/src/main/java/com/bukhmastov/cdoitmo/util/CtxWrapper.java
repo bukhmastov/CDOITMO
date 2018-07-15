@@ -13,7 +13,7 @@ public class CtxWrapper extends ContextWrapper {
         super(base);
     }
 
-    public static ContextWrapper wrap(Context context, StoragePref storagePref) {
+    public static ContextWrapper wrap(Context context, StoragePref storagePref, Log log) {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 Locale locale = TextUtils.getLocale(context, storagePref);
@@ -23,7 +23,7 @@ public class CtxWrapper extends ContextWrapper {
                 context = context.createConfigurationContext(config);
             }
         } catch (Throwable e) {
-            Log.exception(e);
+            log.exception(e);
         }
         return new CtxWrapper(context);
     }

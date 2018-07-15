@@ -44,6 +44,8 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
     private TimeRemainingWidget.Data data = null;
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
@@ -58,7 +60,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
             case "black": setTheme(R.style.AppTheme_Popup_Black); break;
         }
         super.onCreate(savedInstanceState);
-        Log.i(TAG, "Activity created");
+        log.i(TAG, "Activity created");
         firebaseAnalyticsProvider.logCurrentScreen(this);
         setContentView(R.layout.activity_widget_remaining);
         try {
@@ -66,15 +68,15 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
             if (shortcut_data == null) throw new Exception("shortcut_data cannot be null");
             JSONObject json = new JSONObject(shortcut_data);
             query = json.getString("query");
-            Log.v(TAG, "query=" + query);
+            log.v(TAG, "query=" + query);
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             close();
         }
         View wr_container = findViewById(R.id.wr_container);
         if (wr_container != null) {
             wr_container.setOnClickListener(v -> {
-                Log.v(TAG, "wr_container clicked");
+                log.v(TAG, "wr_container clicked");
                 Intent intent = new Intent(getBaseContext(), MainActivity.class);
                 intent.addFlags(App.intentFlagRestart);
                 intent.putExtra("action", "schedule_lessons");
@@ -86,14 +88,14 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
         View wr_share = findViewById(R.id.wr_share);
         if (wr_share != null) {
             wr_share.setOnClickListener(v -> Thread.runOnUI(() -> {
-                Log.v(TAG, "wr_share clicked");
+                log.v(TAG, "wr_share clicked");
                 share();
             }));
         }
         View widget_remaining = findViewById(R.id.widget_remaining);
         if (widget_remaining != null) {
             widget_remaining.setOnClickListener(v -> {
-                Log.v(TAG, "widget_remaining clicked");
+                log.v(TAG, "widget_remaining clicked");
                 close();
             });
         }
@@ -102,13 +104,13 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.i(TAG, "Activity destroyed");
+        log.i(TAG, "Activity destroyed");
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        Log.v(TAG, "Activity resumed");
+        log.v(TAG, "Activity resumed");
         if (scheduleLessons == null) {
             scheduleLessons = new ScheduleLessons(this);
         }
@@ -116,7 +118,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
             if (query != null) {
                 scheduleLessons.search(activity, query, true);
             } else {
-                Log.w(TAG, "onResume | query is null");
+                log.w(TAG, "onResume | query is null");
                 close();
             }
         } else {
@@ -127,7 +129,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
     @Override
     protected void onPause() {
         super.onPause();
-        Log.v(TAG, "Activity paused");
+        log.v(TAG, "Activity paused");
         if (timeRemainingWidget != null) {
             timeRemainingWidget.stop();
             timeRemainingWidget = null;
@@ -136,12 +138,12 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
 
     @Override
     protected void attachBaseContext(Context context) {
-        super.attachBaseContext(CtxWrapper.wrap(context, storagePref));
+        super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log));
     }
 
     @Override
     public void onProgress(int state) {
-        Log.v(TAG, "progress " + state);
+        log.v(TAG, "progress " + state);
         message(activity.getString(R.string.loading));
     }
 
@@ -152,7 +154,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
 
     @Override
     public void onFailure(int statusCode, Client.Headers headers, int state) {
-        Log.v(TAG, "failure " + state);
+        log.v(TAG, "failure " + state);
         try {
             switch (state) {
                 case IfmoRestClient.FAILED_OFFLINE:
@@ -182,13 +184,13 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
                     break;
             }
         } catch (Exception e){
-            Log.exception(e);
+            log.exception(e);
         }
     }
 
     @Override
     public void onSuccess(JSONObject json, boolean fromCache) {
-        Log.v(TAG, "success");
+        log.v(TAG, "success");
         try {
             if (json == null) throw new NullPointerException("json cannot be null");
             String type = json.getString("type");
@@ -201,7 +203,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
             schedule = json;
             begin();
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             onFailure(ScheduleLessons.FAILED_LOAD);
         }
     }
@@ -265,14 +267,14 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
 
     @Override
     public void onCancelled() {
-        Log.v(TAG, "onCancelled");
+        log.v(TAG, "onCancelled");
         message(activity.getString(R.string.widget_stopped));
     }
 
     private void begin() {
         final TimeRemainingWidgetActivity self = this;
         Thread.run(() -> {
-            Log.v(TAG, "begin");
+            log.v(TAG, "begin");
             message(activity.getString(R.string.loaded));
             if (timeRemainingWidget != null) {
                 timeRemainingWidget.stop();
@@ -284,7 +286,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
     }
     private void close() {
         Thread.run(() -> {
-            Log.v(TAG, "close");
+            log.v(TAG, "close");
             if (requestHandle != null) {
                 requestHandle.cancel();
             }
@@ -408,7 +410,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
                 vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             }
         } catch (Exception e){
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private View inflate(int layoutId) throws InflateException {

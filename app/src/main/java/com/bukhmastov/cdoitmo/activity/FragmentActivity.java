@@ -30,6 +30,8 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
     private static final String TAG = "FragmentActivity";
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private Storage storage = Storage.instance();
     //@Inject
     private FirebaseConfigProvider firebaseConfigProvider = FirebaseConfigProvider.instance();
@@ -38,7 +40,7 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         Theme.applyActivityTheme(this);
         super.onCreate(savedInstanceState);
-        Log.i(TAG, "Activity created");
+        log.i(TAG, "Activity created");
         try {
             final Intent intent = getIntent();
             if (intent != null) {
@@ -82,7 +84,7 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
                 throw new NullPointerException("Intent cannot be null");
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             finish();
         }
     }
@@ -102,7 +104,7 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         if (layout_with_menu) {
-            Log.v(TAG, "NavigationItemSelected " + item.getTitle());
+            log.v(TAG, "NavigationItemSelected " + item.getTitle());
             DrawerLayout drawer_layout = findViewById(R.id.drawer_layout);
             if (drawer_layout != null) {
                 drawer_layout.closeDrawer(GravityCompat.START);
@@ -162,7 +164,7 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
         final FragmentActivity self = this;
         final FragmentManager fragmentManager = getSupportFragmentManager();
         Thread.runOnUI(() -> {
-            Log.v(TAG, "invoke | " + connectedFragmentClass.toString());
+            log.v(TAG, "invoke | " + connectedFragmentClass.toString());
             try {
                 ConnectedFragment.Data data = ConnectedFragment.getData(self, connectedFragmentClass);
                 if (data == null) {
@@ -186,7 +188,7 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
                     }
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
                 finish();
             }
         });

@@ -94,7 +94,7 @@ public class RatingRVA extends RVA {
                         dataset.add(getNewItem(TYPE_COMMON, new JSONObject().put("faculties", faculties)));
                     }
                 } catch (Exception e) {
-                    Log.exception(e);
+                    log.exception(e);
                 }
             } else {
                 dataset.add(getNewItem(
@@ -141,7 +141,7 @@ public class RatingRVA extends RVA {
                             }
                         }
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                     }
                 } else {
                     dataset.add(getNewItem(
@@ -151,7 +151,7 @@ public class RatingRVA extends RVA {
                 }
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
         return dataset;
     }
@@ -160,7 +160,7 @@ public class RatingRVA extends RVA {
         try {
             ((TextView) container.findViewById(R.id.title)).setText(item.data.getString("title"));
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private void bindCommon(View container, Item item) {
@@ -202,7 +202,7 @@ public class RatingRVA extends RVA {
                                             commonSelectedFaculty = faculties.getJSONObject(position).getString("depId");
                                             storage.put(context, Storage.CACHE, Storage.USER, "rating#choose#faculty", commonSelectedFaculty);
                                         } catch (Exception e) {
-                                            Log.exception(e);
+                                            log.exception(e);
                                         }
                                     });
                                 }
@@ -224,7 +224,7 @@ public class RatingRVA extends RVA {
                                             commonSelectedCourse = String.valueOf(position + 1);
                                             storage.put(context, Storage.CACHE, Storage.USER, "rating#choose#course", commonSelectedCourse);
                                         } catch (Exception e) {
-                                            Log.exception(e);
+                                            log.exception(e);
                                         }
                                     });
                                 }
@@ -242,16 +242,16 @@ public class RatingRVA extends RVA {
                                     );
                                     Thread.runOnUI(() -> onElementClickListeners.get(R.id.common_apply).onClick(v, extras));
                                 } catch (Exception e) {
-                                    Log.exception(e);
+                                    log.exception(e);
                                 }
                             }));
                         }
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                     }
                 });
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }
@@ -267,19 +267,19 @@ public class RatingRVA extends RVA {
                         final Map<String, Object> extras = getMap("data", item.data.has("extras") && !item.data.isNull("extras") ? item.data.getJSONObject("extras") : null);
                         Thread.runOnUI(() -> onElementClickListeners.get(R.id.own_apply).onClick(v, extras));
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                     }
                 }));
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private void bindEmpty(View container, Item item) {
         try {
             ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_data);
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private void bindFailed(View container, Item item) {
@@ -289,7 +289,7 @@ public class RatingRVA extends RVA {
                 ((TextView) container.findViewById(R.id.state_failed_compact_message)).setText(text);
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
 }

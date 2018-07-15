@@ -22,6 +22,8 @@ public class UniversityFragment extends ConnectedFragment implements ViewPager.O
     private String action_extra = null;
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
@@ -29,7 +31,7 @@ public class UniversityFragment extends ConnectedFragment implements ViewPager.O
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.v(TAG, "Fragment created");
+        log.v(TAG, "Fragment created");
         firebaseAnalyticsProvider.logCurrentScreen(activity, this);
         Activity activity = getActivity();
         if (activity != null) {
@@ -46,7 +48,7 @@ public class UniversityFragment extends ConnectedFragment implements ViewPager.O
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.v(TAG, "Fragment destroyed");
+        log.v(TAG, "Fragment destroyed");
         TabLayout scrollable_tabs = activity.findViewById(R.id.scrollable_tabs);
         if (scrollable_tabs != null) {
             scrollable_tabs.setVisibility(View.GONE);
@@ -95,7 +97,7 @@ public class UniversityFragment extends ConnectedFragment implements ViewPager.O
     @Override
     public void onResume() {
         super.onResume();
-        Log.v(TAG, "resumed");
+        log.v(TAG, "resumed");
         firebaseAnalyticsProvider.setCurrentScreen(activity, this);
         TabLayout scrollable_tabs = activity.findViewById(R.id.scrollable_tabs);
         if (scrollable_tabs != null) {
@@ -106,7 +108,7 @@ public class UniversityFragment extends ConnectedFragment implements ViewPager.O
     @Override
     public void onPause() {
         super.onPause();
-        Log.v(TAG, "paused");
+        log.v(TAG, "paused");
     }
 
     @Override

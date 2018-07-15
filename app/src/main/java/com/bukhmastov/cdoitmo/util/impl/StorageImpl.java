@@ -23,6 +23,8 @@ public class StorageImpl implements Storage {
     private static final String APP_FOLDER = "app_data";
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private StorageLocalCache storageLocalCache = StorageLocalCache.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
@@ -33,10 +35,10 @@ public class StorageImpl implements Storage {
     public synchronized boolean put(@NonNull Context context, @NonNull String mode, @NonNull String type, @NonNull String path, String data) {
         String trace = firebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.Storage.PUT);
         try {
-            Log.v(TAG, "put | mode=", mode, " | type=", type, " | path=", path);
+            log.v(TAG, "put | mode=", mode, " | type=", type, " | path=", path);
             firebasePerformanceProvider.putAttribute(trace, "path", mode, "#", type, "#", path);
             if (context == null) {
-                Log.v(TAG, "put | mode=", mode, " | type=", type, " | path=", path, " | context is null");
+                log.v(TAG, "put | mode=", mode, " | type=", type, " | path=", path, " | context is null");
                 return false;
             }
             if (CACHE.equals(mode) && !storagePref.get(context, "pref_use_cache", true)) {
@@ -68,10 +70,10 @@ public class StorageImpl implements Storage {
     public String get(@NonNull Context context, @NonNull String mode, @NonNull String type, @NonNull String path, String def) {
         String trace = firebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.Storage.GET);
         try {
-            Log.v(TAG, "get | mode=", mode, " | type=", type, " | path=", path);
+            log.v(TAG, "get | mode=", mode, " | type=", type, " | path=", path);
             firebasePerformanceProvider.putAttribute(trace, "path", mode, "#", type, "#", path);
             if (context == null) {
-                Log.v(TAG, "get | mode=", mode, " | type=", type, " | path=", path, " | context is null");
+                log.v(TAG, "get | mode=", mode, " | type=", type, " | path=", path, " | context is null");
                 return def;
             }
             File file = new File(getFileLocation(context, mode, type, path, true));
@@ -82,7 +84,7 @@ public class StorageImpl implements Storage {
             storageLocalCache.access(path);
             String cache = storageLocalCache.get(path);
             if (cache != null) {
-                Log.v(TAG, "get | mode=", mode, " | type=", type, " | path=", path, " | from local cache");
+                log.v(TAG, "get | mode=", mode, " | type=", type, " | path=", path, " | from local cache");
                 return cache;
             }
             FileReader fileReader = new FileReader(file);
@@ -106,10 +108,10 @@ public class StorageImpl implements Storage {
     public boolean exists(@NonNull Context context, @NonNull String mode, @NonNull String type, @NonNull String path) {
         String trace = firebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.Storage.EXISTS);
         try {
-            Log.v(TAG, "exists | mode=", mode, " | type=", type, " | path=", path);
+            log.v(TAG, "exists | mode=", mode, " | type=", type, " | path=", path);
             firebasePerformanceProvider.putAttribute(trace, "path", mode, "#", type, "#",  path);
             if (context == null) {
-                Log.v(TAG, "exists | mode=", mode, " | type=", type, " | path=", path, " | context is null");
+                log.v(TAG, "exists | mode=", mode, " | type=", type, " | path=", path, " | context is null");
                 return false;
             }
             File file = new File(getFileLocation(context, mode, type, path, true));
@@ -127,10 +129,10 @@ public class StorageImpl implements Storage {
     public synchronized boolean delete(@NonNull Context context, @NonNull String mode, @NonNull String type, @NonNull String path) {
         String trace = firebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.Storage.DELETE);
         try {
-            Log.v(TAG, "delete | mode=", mode, " | type=", type, " | path=", path);
+            log.v(TAG, "delete | mode=", mode, " | type=", type, " | path=", path);
             firebasePerformanceProvider.putAttribute(trace, "path", mode, "#", type, "#", path);
             if (context == null) {
-                Log.v(TAG, "delete | mode=", mode, " | type=", type, " | path=", path, " | context is null");
+                log.v(TAG, "delete | mode=", mode, " | type=", type, " | path=", path, " | context is null");
                 return false;
             }
             File file = new File(getFileLocation(context, mode, type, path, true));
@@ -152,10 +154,10 @@ public class StorageImpl implements Storage {
         }
         String trace = firebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.Storage.CLEAR);
         try {
-            Log.v(TAG, "clear | mode=", mode);
+            log.v(TAG, "clear | mode=", mode);
             firebasePerformanceProvider.putAttribute(trace, "path", mode);
             if (context == null) {
-                Log.v(TAG, "clear | mode=", mode, " | context is null");
+                log.v(TAG, "clear | mode=", mode, " | context is null");
                 return false;
             }
             File file = new File(getCoreLocation(context, mode));
@@ -175,10 +177,10 @@ public class StorageImpl implements Storage {
         }
         String trace = firebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.Storage.CLEAR);
         try {
-            Log.v(TAG, "clear | mode=", mode, " | type=", type);
+            log.v(TAG, "clear | mode=", mode, " | type=", type);
             firebasePerformanceProvider.putAttribute(trace, "path", mode, "#", type);
             if (context == null) {
-                Log.v(TAG, "clear | mode=", mode, " | type=", type, " | context is null");
+                log.v(TAG, "clear | mode=", mode, " | type=", type, " | context is null");
                 return false;
             }
             File file = new File(getLocation(context, mode, type));
@@ -198,10 +200,10 @@ public class StorageImpl implements Storage {
         }
         String trace = firebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.Storage.CLEAR);
         try {
-            Log.v(TAG, "clear | mode=", mode, " | type=", type, " | path=", path);
+            log.v(TAG, "clear | mode=", mode, " | type=", type, " | path=", path);
             firebasePerformanceProvider.putAttribute(trace, "path", mode, "#", type, "#", path);
             if (context == null) {
-                Log.v(TAG, "clear | mode=", mode, " | type=", type, " | path=", path, " | context is null");
+                log.v(TAG, "clear | mode=", mode, " | type=", type, " | path=", path, " | context is null");
                 return false;
             }
             File file = new File(getFileLocation(context, mode, type, path, false));
@@ -219,10 +221,10 @@ public class StorageImpl implements Storage {
         String trace = firebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.Storage.LIST);
         ArrayList<String> response = new ArrayList<>();
         try {
-            Log.v(TAG, "list | mode=", mode, " | type=", type, " | path=", path);
+            log.v(TAG, "list | mode=", mode, " | type=", type, " | path=", path);
             firebasePerformanceProvider.putAttribute(trace, "path", mode, "#", type, "#", path);
             if (context == null) {
-                Log.v(TAG, "list | mode=", mode, " | type=", type, " | path=", path, " | context is null");
+                log.v(TAG, "list | mode=", mode, " | type=", type, " | path=", path, " | context is null");
                 return response;
             }
             File dir = new File(getFileLocation(context, mode, type, path, false));
@@ -234,7 +236,7 @@ public class StorageImpl implements Storage {
             }
         } catch (Exception e) {
             firebasePerformanceProvider.putAttribute(trace, "exception", e.getMessage());
-            Log.exception(e);
+            log.exception(e);
         } finally {
             firebasePerformanceProvider.stopTrace(trace);
         }
@@ -245,10 +247,10 @@ public class StorageImpl implements Storage {
     public long getDirSize(@NonNull Context context, @NonNull String mode, @NonNull String type,@NonNull  String path) {
         String trace = firebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.Storage.SIZE);
         try {
-            Log.v(TAG, "size | mode=", mode, " | type=", type, " | path=", path);
+            log.v(TAG, "size | mode=", mode, " | type=", type, " | path=", path);
             firebasePerformanceProvider.putAttribute(trace, "path", mode, "#", type, "#", path);
             if (context == null) {
-                Log.v(TAG, "size | mode=", mode, " | type=", type, " | path=", path, " | context is null");
+                log.v(TAG, "size | mode=", mode, " | type=", type, " | path=", path, " | context is null");
                 return 0L;
             }
             File file = new File(getFileLocation(context, mode, type, path, false));
@@ -324,7 +326,7 @@ public class StorageImpl implements Storage {
 
     private String getCoreLocation(Context context, @Mode String mode) {
         if (context == null) {
-            Log.w(TAG, "file | getCoreLocation | context is null");
+            log.w(TAG, "file | getCoreLocation | context is null");
             return "";
         }
         return (CACHE.equals(mode) ? context.getCacheDir() : context.getFilesDir()) + File.separator + APP_FOLDER;

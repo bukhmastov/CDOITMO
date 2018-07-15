@@ -48,6 +48,8 @@ public abstract class UniversityRVA extends RecyclerView.Adapter<RecyclerView.Vi
     protected ArrayList<Item> dataset = new ArrayList<>();
 
     //@Inject
+    protected Log log = Log.instance();
+    //@Inject
     protected StoragePref storagePref = StoragePref.instance();
 
     public UniversityRVA(final Context context) {
@@ -81,7 +83,7 @@ public abstract class UniversityRVA extends RecyclerView.Adapter<RecyclerView.Vi
                 ((TextView) viewHolder.container.findViewById(R.id.update_time)).setText(title);
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
 

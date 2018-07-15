@@ -21,7 +21,8 @@ import java.util.UUID;
  *  storage [done]
  *  network [done]
  *  firebase [done]
- *  log
+ *  log [done]
+ *  thread
  *  objects
  *  utils
  *
@@ -62,6 +63,8 @@ public class App extends Application {
     private Locale locale;
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
@@ -72,15 +75,15 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
         try {
-            Log.setEnabled(storagePref.get(this, "pref_allow_collect_logs", false));
+            log.setEnabled(storagePref.get(this, "pref_allow_collect_logs", false));
             locale = TextUtils.getLocale(this, storagePref);
-            Log.i(TAG, "Language | locale=" + locale.toString());
+            log.i(TAG, "Language | locale=" + locale.toString());
             init();
             setUUID();
             setLocale();
             setFirebase();
         } catch (Throwable e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
 
@@ -90,7 +93,7 @@ public class App extends Application {
         try {
             setLocale();
         } catch (Throwable e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
 
@@ -100,7 +103,7 @@ public class App extends Application {
             App.versionName = pInfo.versionName;
             App.versionCode = pInfo.versionCode;
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
 

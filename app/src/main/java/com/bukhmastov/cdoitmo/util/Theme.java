@@ -7,9 +7,14 @@ import android.support.v7.widget.Toolbar;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.dialog.ThemeDialog;
 
+//TODO interface - impl
 public class Theme {
 
     private static String app_theme = null;
+
+    //@Inject
+    //TODO interface - impl: remove static
+    private static StoragePref storagePref = StoragePref.instance();
 
     public static String getAppTheme(final Context context) {
         if (app_theme == null) {
@@ -19,7 +24,7 @@ public class Theme {
     }
 
     public static void updateAppTheme(final Context context) {
-        app_theme = ThemeDialog.getTheme(context);
+        app_theme = ThemeDialog.getTheme(context, storagePref);
     }
 
     public static void applyActivityTheme(final Activity activity) {

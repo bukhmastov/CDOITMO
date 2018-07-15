@@ -16,9 +16,9 @@ public class SettingsScheduleLessons extends SettingsSchedule {
 
     @Override
     protected void search(final String q) {
-        Log.v(TAG, "search | query=" + q);
+        log.v(TAG, "search | query=" + q);
         search(q, (context, query, handler) -> {
-            Log.v(TAG, "search.onSearch | query=" + query);
+            log.v(TAG, "search.onSearch | query=" + query);
             new ScheduleLessons(handler).search(context, query);
         });
     }

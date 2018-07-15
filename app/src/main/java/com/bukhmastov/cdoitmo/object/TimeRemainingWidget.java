@@ -30,17 +30,20 @@ public class TimeRemainingWidget {
     private final response delegate;
     private Executor executor;
 
+    //@Inject
+    private Log log = Log.instance();
+
     public TimeRemainingWidget(response delegate) {
         this.delegate = delegate;
     }
 
     public void start(Context context, JSONObject schedule) {
-        Log.v(TAG, "start");
+        log.v(TAG, "start");
         executor = new Executor(context, schedule);
     }
 
     public void stop() {
-        Log.v(TAG, "stop");
+        log.v(TAG, "stop");
         if (executor != null) {
             executor.cancel();
         }
@@ -59,7 +62,7 @@ public class TimeRemainingWidget {
         private int weekday = -1;
 
         Executor(Context context, JSONObject full_schedule){
-            Log.i(TAG, "started");
+            log.i(TAG, "started");
             this.context = context;
             this.full_schedule = full_schedule;
             this.running = true;
@@ -71,7 +74,7 @@ public class TimeRemainingWidget {
                 try {
                     long ts = System.currentTimeMillis();
                     if (ts % 3600000L <= 1000 || first_init) {
-                        Log.v(TAG, "update data");
+                        log.v(TAG, "update data");
                         first_init = false;
                         week = Time.getWeek(context) % 2;
                         weekday = Time.getWeekDay();
@@ -135,7 +138,7 @@ public class TimeRemainingWidget {
                         break;
                     }
                 } catch (Exception e) {
-                    Log.exception(e);
+                    log.exception(e);
                     this.cancel();
                 }
             }
@@ -145,7 +148,7 @@ public class TimeRemainingWidget {
             running = false;
             interrupt();
             delegate.onCancelled();
-            Log.i(TAG, "interrupted");
+            log.i(TAG, "interrupted");
         }
         private String ts2date(long ts) {
             int time = (int) (ts / 1000L);

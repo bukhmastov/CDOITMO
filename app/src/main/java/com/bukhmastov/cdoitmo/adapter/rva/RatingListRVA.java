@@ -66,7 +66,7 @@ public class RatingListRVA extends RVA {
                 }
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
         return dataset;
     }
@@ -144,14 +144,14 @@ public class RatingListRVA extends RVA {
                 }
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private void bindNoRating(View container, Item item) {
         try {
             ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_rating);
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private int resolveColor(int reference) throws Exception {

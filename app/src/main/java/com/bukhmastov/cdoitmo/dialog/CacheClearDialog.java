@@ -25,6 +25,8 @@ public class CacheClearDialog extends Dialog {
     private final ConnectedActivity activity;
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private Storage storage = Storage.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
@@ -65,7 +67,7 @@ public class CacheClearDialog extends Dialog {
     }
 
     public void show() {
-        Log.v(TAG, "show");
+        log.v(TAG, "show");
         Thread.runOnUI(() -> {
             final ViewGroup layout = (ViewGroup) inflate(R.layout.dialog_storage_cache);
             if (layout == null) {
@@ -132,7 +134,7 @@ public class CacheClearDialog extends Dialog {
                     // calculate size
                     calculateCacheSize(cache_list);
                 } catch (Exception e) {
-                    Log.exception(e);
+                    log.exception(e);
                 }
             });
         });

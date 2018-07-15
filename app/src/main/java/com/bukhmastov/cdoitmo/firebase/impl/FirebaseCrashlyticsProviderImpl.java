@@ -25,6 +25,8 @@ public class FirebaseCrashlyticsProviderImpl implements FirebaseCrashlyticsProvi
     private boolean enabled = true;
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
@@ -50,9 +52,9 @@ public class FirebaseCrashlyticsProviderImpl implements FirebaseCrashlyticsProvi
                 Fabric.with(context, new Crashlytics());
                 Crashlytics.setUserIdentifier(Static.getUUID(context));
             }
-            Log.i(TAG, "Firebase Crashlytics " + (this.enabled ? "enabled" : "disabled"));
+            log.i(TAG, "Firebase Crashlytics " + (this.enabled ? "enabled" : "disabled"));
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
         return this.enabled;
     }
@@ -62,14 +64,14 @@ public class FirebaseCrashlyticsProviderImpl implements FirebaseCrashlyticsProvi
             if (enabled) {
                 this.enabled = true;
                 Fabric.with(activity, new Crashlytics());
-                Log.i(TAG, "Firebase Crashlytics enabled");
+                log.i(TAG, "Firebase Crashlytics enabled");
             } else {
                 BottomBar.snackBar(activity, activity.getString(R.string.changes_will_take_effect_next_startup));
-                Log.i(TAG, "Firebase Crashlytics will be disabled at the next start up");
+                log.i(TAG, "Firebase Crashlytics will be disabled at the next start up");
                 firebaseAnalyticsProvider.logBasicEvent(activity, "firebase_crash_disabled");
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
         return this.enabled;
     }

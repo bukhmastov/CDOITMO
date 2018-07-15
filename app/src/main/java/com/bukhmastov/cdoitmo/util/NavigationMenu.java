@@ -36,9 +36,7 @@ public class NavigationMenu {
                         nav_enable_offline_mode.setVisible(true);
                         nav_disable_offline_mode.setVisible(false);
                     }
-                } catch (Exception e) {
-                    Log.exception(e);
-                }
+                } catch (Exception ignore) {}
             }
         });
     }
@@ -107,9 +105,7 @@ public class NavigationMenu {
                                     try {
                                         storage.put(context, Storage.PERMANENT, Storage.USER, "user#group", groups.get(position));
                                         Thread.runOnUI(() -> displayUserData(context, storage, navigationView));
-                                    } catch (Exception e) {
-                                        Log.exception(e);
-                                    }
+                                    } catch (Exception ignore) {}
                                 }))
                                 .setNegativeButton(R.string.do_cancel, null)
                                 .create().show();
@@ -208,9 +204,7 @@ public class NavigationMenu {
                         }
                     }
                 }
-            } catch (Exception e) {
-                Log.exception(e);
-            }
+            } catch (Exception ignore) {}
         });
     }
 }

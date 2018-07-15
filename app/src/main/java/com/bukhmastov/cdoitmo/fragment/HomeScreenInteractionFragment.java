@@ -51,6 +51,8 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
     private Client.Request requestHandle = null;
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private Storage storage = Storage.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
@@ -103,7 +105,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.v(TAG, "Fragment created");
+        log.v(TAG, "Fragment created");
         firebaseAnalyticsProvider.logCurrentScreen(activity, this);
         Data data = getData(activity, this.getClass());
         if (data != null) {
@@ -130,7 +132,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.v(TAG, "Fragment destroyed");
+        log.v(TAG, "Fragment destroyed");
     }
 
     @Override
@@ -142,7 +144,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
     @Override
     public void onResume() {
         super.onResume();
-        Log.v(TAG, "Fragment resumed");
+        log.v(TAG, "Fragment resumed");
         firebaseAnalyticsProvider.setCurrentScreen(activity, this);
         if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O) {
             activity.registerReceiver(receiver, new IntentFilter(ShortcutReceiver.ACTION_INSTALL_SHORTCUT));
@@ -152,7 +154,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
     @Override
     public void onPause() {
         super.onPause();
-        Log.v(TAG, "Fragment paused");
+        log.v(TAG, "Fragment paused");
         if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O) {
             activity.unregisterReceiver(receiver);
         }
@@ -170,7 +172,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
 
     private void route(final @MODE String mode) {
         Thread.run(() -> {
-            Log.v(TAG, "route | mode=" + mode);
+            log.v(TAG, "route | mode=" + mode);
             switch (mode) {
                 case PICK: initPicker(false); break;
                 case WIDGETS: initWidgets(); break;
@@ -182,7 +184,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
 
     private void initPicker(final boolean first_launch) {
         Thread.runOnUI(() -> {
-            Log.v(TAG, "initPicker | first_launch=" + (first_launch ? "true" : "false"));
+            log.v(TAG, "initPicker | first_launch=" + (first_launch ? "true" : "false"));
             try {
                 // Переключаем режим отображения
                 toggleMode(false, !first_launch);
@@ -200,14 +202,14 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                     menu_shortcuts.setOnClickListener(view -> route(SHORTCUTS));
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
                 BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
     private void initWidgets() {
         Thread.run(() -> {
-            Log.v(TAG, "initWidgets");
+            log.v(TAG, "initWidgets");
             try {
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(activity);
@@ -224,14 +226,14 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                     showWidgetsHolder();
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
                 BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
     private void initApps() {
         Thread.runOnUI(() -> {
-            Log.v(TAG, "initApps");
+            log.v(TAG, "initApps");
             try {
                 // Переключаем режим отображения
                 toggleMode(true);
@@ -269,7 +271,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                     new JSONObject().put("label", title).put("query", query).toString()
                                             );
                                         } catch (Exception e) {
-                                            Log.exception(e);
+                                            log.exception(e);
                                             BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                         }
                                     });
@@ -283,7 +285,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                     new JSONObject().put("label", title).put("query", query).toString()
                                             );
                                         } catch (Exception e) {
-                                            Log.exception(e);
+                                            log.exception(e);
                                             BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                         }
                                     });
@@ -295,14 +297,14 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                     }
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
                 BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
     private void initShortcuts() {
         Thread.runOnUI(() -> {
-            Log.v(TAG, "initShortcuts");
+            log.v(TAG, "initShortcuts");
             try {
                 // Переключаем режим отображения
                 toggleMode(true);
@@ -334,7 +336,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                 View view = item.findViewById(R.id.desc);
                                 ((ViewGroup) view.getParent()).removeView(view);
                             } catch (Throwable e) {
-                                Log.exception(e);
+                                log.exception(e);
                             }
                         }
                         item.setOnClickListener(view -> Thread.run(() -> {
@@ -352,7 +354,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                     new JSONObject().put("label", title).put("query", query).toString()
                                             );
                                         } catch (Exception e) {
-                                            Log.exception(e);
+                                            log.exception(e);
                                             BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                         }
                                     });
@@ -367,7 +369,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                     new JSONObject().put("label", title).put("query", query).toString()
                                             );
                                         } catch (Exception e) {
-                                            Log.exception(e);
+                                            log.exception(e);
                                             BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                         }
                                     });
@@ -382,7 +384,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                     new JSONObject().put("label", title).put("query", query).toString()
                                             );
                                         } catch (Exception e) {
-                                            Log.exception(e);
+                                            log.exception(e);
                                             BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                         }
                                     });
@@ -413,7 +415,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                             new JSONObject().put("label", label).put("query", query).toString()
                                                     );
                                                 } catch (Exception e) {
-                                                    Log.exception(e);
+                                                    log.exception(e);
                                                     BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                                 }
                                             })
@@ -427,7 +429,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                     }
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
                 BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
@@ -439,7 +441,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
         Thread.runOnUI(new Runnable() {
             @Override
             public void run() {
-                Log.v(TAG, "toggleMode | hide=" + (hide ? "true" : "false") + " | animate=" + (animate ? "true" : "false"));
+                log.v(TAG, "toggleMode | hide=" + (hide ? "true" : "false") + " | animate=" + (animate ? "true" : "false"));
                 try {
                     final ViewGroup initial_picker = container.findViewById(R.id.initial_picker);
                     final ViewGroup content_area = container.findViewById(R.id.content_area);
@@ -518,7 +520,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                         }
                     }
                 } catch (Exception e) {
-                    Log.exception(e);
+                    log.exception(e);
                     BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 }
             }
@@ -526,7 +528,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
     }
     private void showWidgetsHolder() {
         Thread.runOnUI(() -> {
-            Log.v(TAG, "showWidgetsHolder");
+            log.v(TAG, "showWidgetsHolder");
             new AlertDialog.Builder(activity)
                     .setMessage(R.string.pin_app_widget_not_supported)
                     .setPositiveButton(R.string.close, null)
@@ -546,7 +548,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
     private void getSchedule(final String scope, final result callback, final Schedule.ScheduleSearchProvider scheduleSearchProvider) {
         Thread.run(() -> {
             try {
-                Log.v(TAG, "getSchedule | scope=" + scope);
+                log.v(TAG, "getSchedule | scope=" + scope);
                 final ViewGroup layout = (ViewGroup) inflate(R.layout.widget_configure_schedule_lessons_create_search);
                 final AlertDialog alertDialog = new AlertDialog.Builder(activity)
                         .setView(layout)
@@ -576,12 +578,12 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                 });
                 search_action.setOnClickListener(view -> Thread.run(() -> {
                     final String query = search_text_view.getText().toString().trim();
-                    Log.v(TAG, "getSchedule | search action | clicked | query=" + query);
+                    log.v(TAG, "getSchedule | search action | clicked | query=" + query);
                     if (!query.isEmpty()) {
                         scheduleSearchProvider.onSearch(activity, query, new Schedule.Handler() {
                             @Override
                             public void onSuccess(final JSONObject json, final boolean fromCache) {
-                                Log.v(TAG, "getSchedule | search action | onSuccess | json=" + (json == null ? "null" : "notnull"));
+                                log.v(TAG, "getSchedule | search action | onSuccess | json=" + (json == null ? "null" : "notnull"));
                                 Thread.run(() -> {
                                     search_loading.setVisibility(View.GONE);
                                     search_action.setVisibility(View.VISIBLE);
@@ -591,7 +593,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                         try {
                                             final String type = json.getString("type");
                                             final String query = json.getString("query");
-                                            Log.v(TAG, "getSchedule | search action | onSuccess | type=" + type);
+                                            log.v(TAG, "getSchedule | search action | onSuccess | type=" + type);
                                             switch (type) {
                                                 case "group": case "room": case "teacher": {
                                                     JSONArray schedule = json.getJSONArray("schedule");
@@ -599,7 +601,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                     if (type.equals("room")) {
                                                         title = activity.getString(R.string.room) + " " + title;
                                                     }
-                                                    Log.v(TAG, "getSchedule | search action | onSuccess | done | query=" + query + " | title=" + title);
+                                                    log.v(TAG, "getSchedule | search action | onSuccess | done | query=" + query + " | title=" + title);
                                                     if (schedule.length() > 0) {
                                                         if (alertDialog.isShowing()) {
                                                             alertDialog.cancel();
@@ -613,7 +615,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                 case "teachers": {
                                                     teacherPickerAdapter.clear();
                                                     final JSONArray teachers = json.getJSONArray("schedule");
-                                                    Log.v(TAG, "getSchedule | search action | onSuccess | type=" + type + " | length=" + teachers.length());
+                                                    log.v(TAG, "getSchedule | search action | onSuccess | type=" + type + " | length=" + teachers.length());
                                                     if (teachers.length() == 0) {
                                                         BottomBar.toast(activity, activity.getString(R.string.no_teachers));
                                                     } else if (teachers.length() == 1) {
@@ -621,7 +623,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                         if (teacher != null) {
                                                             String pid = teacher.getString("pid");
                                                             String title = teacher.getString("person");
-                                                            Log.v(TAG, "getSchedule | search action | onSuccess | done | query=" + pid + " | title=" + title);
+                                                            log.v(TAG, "getSchedule | search action | onSuccess | done | query=" + pid + " | title=" + title);
                                                             if (alertDialog.isShowing()) {
                                                                 alertDialog.cancel();
                                                             }
@@ -648,7 +650,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                 }
                                             }
                                         } catch (Exception e) {
-                                            Log.exception(e);
+                                            log.exception(e);
                                             BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
                                         }
                                     }
@@ -661,7 +663,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                             @Override
                             public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                                 Thread.run(() -> {
-                                    Log.v(TAG, "getSchedule | search action | onFailure | state=" + state);
+                                    log.v(TAG, "getSchedule | search action | onFailure | state=" + state);
                                     search_loading.setVisibility(View.GONE);
                                     search_action.setVisibility(View.VISIBLE);
                                     BottomBar.toast(activity, state == Client.FAILED_SERVER_ERROR ? Client.getFailureMessage(activity, statusCode) : activity.getString(R.string.schedule_not_found));
@@ -670,7 +672,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                             @Override
                             public void onProgress(final int state) {
                                 Thread.run(() -> {
-                                    Log.v(TAG, "getSchedule | search action | onProgress | state=" + state);
+                                    log.v(TAG, "getSchedule | search action | onProgress | state=" + state);
                                     search_loading.setVisibility(View.VISIBLE);
                                     search_action.setVisibility(View.GONE);
                                 });
@@ -690,12 +692,12 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                 }));
                 search_text_view.setOnItemClickListener((parent, view, position, id) -> Thread.run(() -> {
                     try {
-                        Log.v(TAG, "getSchedule | search list selected");
+                        log.v(TAG, "getSchedule | search list selected");
                         final JSONObject teacher = teacherPickerAdapter.getItem(position);
                         if (teacher != null) {
                             final String query = teacher.getString("pid");
                             final String title = teacher.getString("person");
-                            Log.v(TAG, "getSchedule | search list selected | query=" + query + " | title=" + title);
+                            log.v(TAG, "getSchedule | search list selected | query=" + query + " | title=" + title);
                             if (alertDialog.isShowing()) {
                                 alertDialog.cancel();
                             }
@@ -704,14 +706,14 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                             BottomBar.toast(activity, getString(R.string.something_went_wrong));
                         }
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                         BottomBar.toast(activity, getString(R.string.something_went_wrong));
                     }
                 }));
                 alertDialog.show();
                 search_action.setVisibility(View.VISIBLE);
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
                 BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
             }
         });
@@ -719,11 +721,12 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
 
     private void addShortcut(final String type, final String data) {
         Thread.run(() -> {
-            Log.v(TAG, "addShortcut | type=" + type + " | data=" + data);
+            log.v(TAG, "addShortcut | type=" + type + " | data=" + data);
             Intent intent = new Intent(ShortcutReceiver.ACTION_ADD_SHORTCUT);
             intent.putExtra(ShortcutReceiver.EXTRA_TYPE, type);
             intent.putExtra(ShortcutReceiver.EXTRA_DATA, data);
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                // TODO turn into context-registered receiver
                 new ShortcutReceiver().onReceive(activity, intent);
             } else {
                 activity.sendBroadcast(intent);

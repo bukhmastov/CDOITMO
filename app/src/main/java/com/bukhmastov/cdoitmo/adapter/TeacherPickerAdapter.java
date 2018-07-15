@@ -22,6 +22,9 @@ public class TeacherPickerAdapter extends ArrayAdapter<JSONObject> {
     private final Context context;
     private ArrayList<JSONObject> teachers;
 
+    //@Inject
+    private Log log = Log.instance();
+
     public TeacherPickerAdapter(Context context, ArrayList<JSONObject> teachers) {
         super(context, R.layout.spinner_teacher_picker, teachers);
         this.context = context;
@@ -74,7 +77,7 @@ public class TeacherPickerAdapter extends ArrayAdapter<JSONObject> {
             }
             return convertView;
         } catch (JSONException e) {
-            Log.exception(e);
+            log.exception(e);
             return super.getView(position, convertView, parent);
         }
     }

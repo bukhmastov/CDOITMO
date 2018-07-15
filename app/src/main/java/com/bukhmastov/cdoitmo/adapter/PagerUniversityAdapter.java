@@ -30,6 +30,9 @@ public class PagerUniversityAdapter extends FragmentStatePagerAdapter {
     }
     private final ArrayList<Element> tabs = new ArrayList<>();
 
+    //@Inject
+    private Log log = Log.instance();
+
     public PagerUniversityAdapter(FragmentManager fm, Context context) {
         super(fm);
         tabs.add(new Element(0, context.getString(R.string.persons), UniversityPersonsFragment.class));
@@ -48,7 +51,7 @@ public class PagerUniversityAdapter extends FragmentStatePagerAdapter {
                 try {
                     fragment = (Fragment) element.fragment.newInstance();
                 } catch (Exception e) {
-                    Log.exception(e);
+                    log.exception(e);
                 }
                 break;
             }

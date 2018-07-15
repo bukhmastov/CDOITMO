@@ -20,6 +20,9 @@ public class Static {
 
     //@Inject
     //TODO interface - impl: remove static
+    private static Log log = Log.instance();
+    //@Inject
+    //TODO interface - impl: remove static
     private static StoragePref storagePref = StoragePref.instance();
     //@Inject
     //TODO interface - impl: remove static
@@ -35,9 +38,9 @@ public class Static {
     }
 
     public static void reLaunch(Context context) {
-        Log.i(TAG, "reLaunch");
+        log.i(TAG, "reLaunch");
         if (context == null) {
-            Log.w(TAG, "reLaunch | context is null");
+            log.w(TAG, "reLaunch | context is null");
             return;
         }
         Intent intent = new Intent(context, MainActivity.class);
@@ -46,9 +49,9 @@ public class Static {
     }
 
     public static void hardReset(final Context context) {
-        Log.i(TAG, "hardReset");
+        log.i(TAG, "hardReset");
         if (context == null) {
-            Log.w(TAG, "hardReset | context is null");
+            log.w(TAG, "hardReset | context is null");
             return;
         }
         Account.logoutPermanently(context, () -> {
@@ -63,11 +66,11 @@ public class Static {
     public static void lockOrientation(Activity activity, boolean lock) {
         try {
             if (activity != null) {
-                Log.v(TAG, "lockOrientation | activity=", activity.getComponentName().getClassName(), " | lock=", lock);
+                log.v(TAG, "lockOrientation | activity=", activity.getComponentName().getClassName(), " | lock=", lock);
                 activity.setRequestedOrientation(lock ? ActivityInfo.SCREEN_ORIENTATION_LOCKED : ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
 
@@ -76,7 +79,7 @@ public class Static {
             try {
                 ((ViewGroup) view.getParent()).removeView(view);
             } catch (Throwable e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }

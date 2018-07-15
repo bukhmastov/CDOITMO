@@ -98,11 +98,11 @@ public class UniversityPersonsRVA extends UniversityRVA {
                     intent.putExtra("person", item.data.toString());
                     context.startActivity(intent);
                 } catch (Exception e) {
-                    Log.exception(e);
+                    log.exception(e);
                 }
             });
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private void bindState(RecyclerView.ViewHolder holder, Item item) {
@@ -121,7 +121,7 @@ public class UniversityPersonsRVA extends UniversityRVA {
                 viewHolder.container.setOnClickListener(onStateClickListener);
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
 

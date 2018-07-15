@@ -54,6 +54,8 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
     public static MenuItem selectedMenuItem = null;
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
     private Storage storage = Storage.instance();
@@ -70,24 +72,24 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
-        Log.i(TAG, "Activity created");
+        log.i(TAG, "Activity created");
         if (!initialized) {
             // initialize app
             super.onCreate(savedInstanceState);
             Thread.run(() -> {
                 try {
                     try {
-                        Log.i(TAG, "App | launched");
+                        log.i(TAG, "App | launched");
                         PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
-                        Log.i(TAG, "App | version code = ", pInfo.versionCode);
-                        Log.i(TAG, "App | sdk = ", Build.VERSION.SDK_INT);
-                        Log.i(TAG, "App | theme = ", Theme.getAppTheme(activity));
+                        log.i(TAG, "App | version code = ", pInfo.versionCode);
+                        log.i(TAG, "App | sdk = ", Build.VERSION.SDK_INT);
+                        log.i(TAG, "App | theme = ", Theme.getAppTheme(activity));
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                     }
                     Theme.applyActivityTheme(activity);
                     // apply compatibility changes
-                    Migration.migrate(activity, storageProvider);
+                    Migration.migrate(activity, storageProvider, log);
                     // set default preferences
                     SettingsFragment.applyDefaultValues(activity);
                     // enable/disable firebase
@@ -106,9 +108,9 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                     firebaseAnalyticsProvider.logEvent(activity, FirebaseAnalyticsProvider.Event.APP_OPEN);
                     firebaseAnalyticsProvider.setUserProperty(activity, FirebaseAnalyticsProvider.Property.THEME, Theme.getAppTheme(activity));
                 } catch (Exception e) {
-                    Log.exception(e);
+                    log.exception(e);
                 } finally {
-                    Log.i(TAG, "App | initialized");
+                    log.i(TAG, "App | initialized");
                     Thread.runOnUI(() -> {
                         // app initialization completed, going to recreate activity
                         initialized = true;
@@ -153,16 +155,16 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
             App.firstLaunch = false;
             App.isFirstLaunchEver = false;
             // do some logging
-            Log.i(TAG, "Device = ", (App.tablet ? "tablet" : "mobile"));
-            Log.i(TAG, "Mode = ", (App.OFFLINE_MODE ? "offline" : "online"));
+            log.i(TAG, "Device = ", (App.tablet ? "tablet" : "mobile"));
+            log.i(TAG, "Mode = ", (App.OFFLINE_MODE ? "offline" : "online"));
             // define section to be opened
             final String action = getIntent().getStringExtra("action");
             if (action == null && savedInstanceState != null && savedInstanceState.containsKey(STATE_SELECTED_SELECTION)) {
                 selectedSection = savedInstanceState.getInt(STATE_SELECTED_SELECTION);
-                Log.v(TAG, "Section selected from savedInstanceState");
+                log.v(TAG, "Section selected from savedInstanceState");
             } else {
                 String act = action == null ? storagePref.get(this, "pref_default_fragment", "e_journal") : action;
-                Log.v(TAG, "Section = ", act, " from ", (action == null ? "preference" : "intent's extras"));
+                log.v(TAG, "Section = ", act, " from ", (action == null ? "preference" : "intent's extras"));
                 switch (act) {
                     case "e_journal": selectedSection = R.id.nav_e_register; break;
                     case "protocol_changes": selectedSection = R.id.nav_protocol_changes; break;
@@ -173,7 +175,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                     case "room101": selectedSection = R.id.nav_room101; break;
                     case "university": selectedSection = R.id.nav_university; break;
                     default:
-                        Log.wtf(TAG, "unsupported act: '", act, "'. Going to select 'e_journal' instead");
+                        log.wtf(TAG, "unsupported act: '", act, "'. Going to select 'e_journal' instead");
                         selectedSection = R.id.nav_e_register;
                         break;
                 }
@@ -187,7 +189,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
     @Override
     protected void onResume() {
         super.onResume();
-        Log.v(TAG, "Activity resumed");
+        log.v(TAG, "Activity resumed");
         if (initialized) {
             final NavigationView navigationView = activity.findViewById(R.id.nav_view);
             NavigationMenu.displayEnableDisableOfflineButton(navigationView);
@@ -203,19 +205,19 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
     @Override
     protected void onPause() {
         super.onPause();
-        Log.v(TAG, "Activity paused");
+        log.v(TAG, "Activity paused");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.i(TAG, "Activity destroyed");
+        log.i(TAG, "Activity destroyed");
         loaded = false;
     }
 
     @Override
     public boolean onNavigationItemSelected(@NonNull final MenuItem item) {
-        Log.v(TAG, "NavigationItemSelected | item=", item.getTitle());
+        log.v(TAG, "NavigationItemSelected | item=", item.getTitle());
         DrawerLayout drawer_layout = findViewById(R.id.drawer_layout);
         if (drawer_layout != null) drawer_layout.closeDrawer(GravityCompat.START);
         selectSection(item.getItemId());
@@ -275,7 +277,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
     private void authorize(final int state) {
         Thread.run(() -> {
             try {
-                Log.v(TAG, "authorize | state=", state);
+                log.v(TAG, "authorize | state=", state);
                 loaded = false;
                 exitOfflineMode = false;
                 Intent intent = new Intent(activity, LoginActivity.class);
@@ -286,7 +288,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
     }
     private void authorized() {
         Thread.run(() -> {
-            Log.v(TAG, "authorized");
+            log.v(TAG, "authorized");
             if (!loaded) {
                 loaded = true;
                 Thread.run(Thread.BACKGROUND, () -> new ProtocolTracker(activity).check());
@@ -319,7 +321,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
             section = s;
         }
         Thread.run(() -> {
-            Log.v(TAG, "selectSection | section=", section);
+            log.v(TAG, "selectSection | section=", section);
             switch (section) {
                 case R.id.nav_e_register:
                 case R.id.nav_protocol_changes:

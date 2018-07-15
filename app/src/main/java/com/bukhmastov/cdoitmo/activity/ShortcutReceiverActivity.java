@@ -16,6 +16,8 @@ public class ShortcutReceiverActivity extends AppCompatActivity {
     private static final String TAG = "ShortcutReceiverActivity";
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private StoragePref storagePref = StoragePref.instance();
 
     @Override
@@ -26,7 +28,7 @@ public class ShortcutReceiverActivity extends AppCompatActivity {
         Intent remoteIntent = new Intent();
         remoteIntent.setAction(intent.getAction());
         if (extras != null) remoteIntent.putExtras(extras);
-        Log.v(TAG, "onCreate | action=" + remoteIntent.getAction() + " | " + remoteIntent.toString());
+        log.v(TAG, "onCreate | action=" + remoteIntent.getAction() + " | " + remoteIntent.toString());
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             new ShortcutReceiver().onReceive(this, remoteIntent);
         } else {
@@ -37,6 +39,6 @@ public class ShortcutReceiverActivity extends AppCompatActivity {
 
     @Override
     protected void attachBaseContext(Context context) {
-        super.attachBaseContext(CtxWrapper.wrap(context, storagePref));
+        super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log));
     }
 }

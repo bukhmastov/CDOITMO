@@ -19,6 +19,7 @@ import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
+import com.bukhmastov.cdoitmo.util.StorageProvider;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 
@@ -32,6 +33,8 @@ public abstract class Preference {
     public @StringRes int title = 0;
     public @StringRes int summary = 0;
 
+    //@Inject
+    protected Log log = Log.instance();
     //@Inject
     protected Storage storage = Storage.instance();
     //@Inject
@@ -86,6 +89,7 @@ public abstract class Preference {
         if (key == null) {
             return;
         }
+        log.d(TAG, "onPreferenceChanged | key=", key);
         switch (key) {
             case "pref_use_notifications":
             case "pref_notify_frequency":
@@ -94,7 +98,7 @@ public abstract class Preference {
                 break;
             case "pref_protocol_changes_track":
                 if (storagePref.get(activity, "pref_protocol_changes_track", true)) {
-                    ProtocolTracker.setup(activity, deIfmoRestClient, storagePref, 0);
+                    ProtocolTracker.setup(activity, deIfmoRestClient, storagePref, log, 0);
                 } else {
                     storage.clear(activity, Storage.CACHE, Storage.USER, "protocol#log");
                 }
@@ -127,27 +131,25 @@ public abstract class Preference {
     @Nullable
     protected static View inflate(final Context context, @LayoutRes final int layout) throws InflateException {
         if (context == null) {
-            Log.e(TAG, "Failed to inflate layout, context is null");
             return null;
         }
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         if (inflater == null) {
-            Log.e(TAG, "Failed to inflate layout, inflater is null");
             return null;
         }
         return inflater.inflate(layout, null);
     }
 
     @Nullable
-    public static View getView(final ConnectedActivity activity, final Preference preference, final StoragePref storagePref) {
+    public static View getView(final ConnectedActivity activity, final Preference preference, final StorageProvider storageProvider) {
         if (preference instanceof PreferenceList) {
-            return PreferenceList.getView(activity, (PreferenceList) preference, storagePref);
+            return PreferenceList.getView(activity, preference, storageProvider);
         } else if (preference instanceof PreferenceSwitch) {
-            return PreferenceSwitch.getView(activity, (PreferenceSwitch) preference, storagePref);
+            return PreferenceSwitch.getView(activity, preference, storageProvider);
         } else if (preference instanceof PreferenceEditText) {
-            return PreferenceEditText.getView(activity, (PreferenceEditText) preference, storagePref);
+            return PreferenceEditText.getView(activity, preference, storageProvider);
         } else if (preference instanceof PreferenceBasic) {
-            return PreferenceBasic.getView(activity, (PreferenceBasic) preference, storagePref);
+            return PreferenceBasic.getView(activity, preference, storageProvider);
         } else {
             return null;
         }

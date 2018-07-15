@@ -41,6 +41,9 @@ public class Account {
 
     //@Inject
     //TODO interface - impl: remove static
+    private static Log log = Log.instance();
+    //@Inject
+    //TODO interface - impl: remove static
     private static Storage storage = Storage.instance();
     //@Inject
     //TODO interface - impl: remove static
@@ -62,7 +65,7 @@ public class Account {
         final String trace = firebasePerformanceProvider.startTrace(FirebasePerformanceProvider.Trace.LOGIN);
         Thread.run(() -> {
             final boolean IS_USER_UNAUTHORIZED = USER_UNAUTHORIZED.equals(login);
-            Log.v(TAG, "login | login=", login, " | password.length()=", password.length(), " | role=", role, " | isNewUser=", isNewUser, " | IS_USER_UNAUTHORIZED=", IS_USER_UNAUTHORIZED, " | OFFLINE_MODE=", App.OFFLINE_MODE);
+            log.v(TAG, "login | login=", login, " | password.length()=", password.length(), " | role=", role, " | isNewUser=", isNewUser, " | IS_USER_UNAUTHORIZED=", IS_USER_UNAUTHORIZED, " | OFFLINE_MODE=", App.OFFLINE_MODE);
             if (login.isEmpty() || password.isEmpty()) {
                 Thread.runOnUI(() -> {
                     loginHandler.onFailure(context.getString(R.string.required_login_password));
@@ -71,7 +74,7 @@ public class Account {
                 return;
             }
             if ("general".equals(login)) {
-                Log.w(TAG, "login | got \"general\" login that does not supported");
+                log.w(TAG, "login | got \"general\" login that does not supported");
                 Thread.runOnUI(() -> {
                     loginHandler.onFailure(context.getString(R.string.wrong_login_general));
                     firebasePerformanceProvider.putAttributeAndStop(trace, "state", "failed_login_general");
@@ -119,7 +122,7 @@ public class Account {
                         Accounts.push(context, login);
                         if (isNewUser) {
                             firebaseAnalyticsProvider.logBasicEvent(context, "New user authorized");
-                            ProtocolTracker.setup(context, deIfmoRestClient, storagePref, 0);
+                            ProtocolTracker.setup(context, deIfmoRestClient, storagePref, log, 0);
                         }
                         Thread.runOnUI(() -> {
                             loginHandler.onSuccess();
@@ -223,9 +226,9 @@ public class Account {
         Thread.run(() -> {
             @NonNull final String cLogin = login != null ? login : storage.get(context, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
             final boolean IS_USER_UNAUTHORIZED = USER_UNAUTHORIZED.equals(cLogin);
-            Log.i(TAG, "logout | login=", cLogin, " | IS_USER_UNAUTHORIZED=", IS_USER_UNAUTHORIZED, " | OFFLINE_MODE=", App.OFFLINE_MODE);
+            log.i(TAG, "logout | login=", cLogin, " | IS_USER_UNAUTHORIZED=", IS_USER_UNAUTHORIZED, " | OFFLINE_MODE=", App.OFFLINE_MODE);
             if ("general".equals(login)) {
-                Log.w(TAG, "logout | got \"general\" login that does not supported");
+                log.w(TAG, "logout | got \"general\" login that does not supported");
                 Thread.runOnUI(() -> {
                     logoutHandler.onFailure(context.getString(R.string.wrong_login_general));
                     firebasePerformanceProvider.putAttributeAndStop(trace, "state", "failed_login_general");
@@ -244,7 +247,7 @@ public class Account {
             deIfmoClient.get(context, "servlet/distributedCDE?Rule=SYSTEM_EXIT", null, new ResponseHandler() {
                 @Override
                 public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
-                    Log.v(TAG, "logout | onSuccess");
+                    log.v(TAG, "logout | onSuccess");
                     logoutPermanently(context, cLogin, () -> {
                         logoutHandler.onSuccess();
                         firebasePerformanceProvider.putAttributeAndStop(trace, "state", "success");
@@ -252,7 +255,7 @@ public class Account {
                 }
                 @Override
                 public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                    Log.v(TAG, "logout | onFailure | statusCode=", statusCode, " | state=", state);
+                    log.v(TAG, "logout | onFailure | statusCode=", statusCode, " | state=", state);
                     logoutPermanently(context, cLogin, () -> {
                         logoutHandler.onSuccess();
                         firebasePerformanceProvider.putAttributeAndStop(trace, "state", "success");
@@ -277,7 +280,7 @@ public class Account {
             @NonNull final String cLogin = login != null ? login : storage.get(context, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
             final boolean IS_USER_UNAUTHORIZED = USER_UNAUTHORIZED.equals(cLogin);
             final boolean IS_LOGIN_EMPTY = cLogin.isEmpty();
-            Log.v(TAG, "logoutPermanently | login=", cLogin, " | IS_USER_UNAUTHORIZED=", IS_USER_UNAUTHORIZED);
+            log.v(TAG, "logoutPermanently | login=", cLogin, " | IS_USER_UNAUTHORIZED=", IS_USER_UNAUTHORIZED);
             if (!IS_LOGIN_EMPTY) {
                 storage.put(context, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", cLogin);
             }
@@ -308,7 +311,7 @@ public class Account {
         Thread.run(() -> {
             @NonNull final String cLogin = login != null ? login : storage.get(context, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
             final boolean IS_USER_UNAUTHORIZED = USER_UNAUTHORIZED.equals(cLogin);
-            Log.i(TAG, "logoutTemporarily | login=", cLogin, " | IS_USER_UNAUTHORIZED=", IS_USER_UNAUTHORIZED);
+            log.i(TAG, "logoutTemporarily | login=", cLogin, " | IS_USER_UNAUTHORIZED=", IS_USER_UNAUTHORIZED);
             final Callable cb = () -> {
                 storage.delete(context, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
                 storage.cacheReset();

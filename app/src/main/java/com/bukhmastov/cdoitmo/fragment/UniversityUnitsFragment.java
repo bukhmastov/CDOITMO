@@ -57,6 +57,8 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
     private long timestamp = 0;
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private Storage storage = Storage.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
@@ -68,7 +70,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.v(TAG, "Fragment created");
+        log.v(TAG, "Fragment created");
         activity = getActivity();
         firebaseAnalyticsProvider.logCurrentScreen(activity, this);
     }
@@ -76,13 +78,13 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.v(TAG, "Fragment destroyed");
+        log.v(TAG, "Fragment destroyed");
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        Log.v(TAG, "resumed");
+        log.v(TAG, "resumed");
         firebaseAnalyticsProvider.setCurrentScreen(activity, this);
         if (!loaded) {
             loaded = true;
@@ -93,7 +95,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
     @Override
     public void onPause() {
         super.onPause();
-        Log.v(TAG, "paused");
+        log.v(TAG, "paused");
         if (requestHandle != null && requestHandle.cancel()) {
             loaded = false;
         }
@@ -108,7 +110,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
 
     @Override
     public void onRefresh() {
-        Log.v(TAG, "refreshing");
+        log.v(TAG, "refreshing");
         load(true);
     }
 
@@ -119,7 +121,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
     }
     private void load(final int refresh_rate) {
         Thread.run(() -> {
-            Log.v(TAG, "load | refresh_rate=" + refresh_rate);
+            log.v(TAG, "load | refresh_rate=" + refresh_rate);
             String uid = stack.size() == 0 ? "0" : stack.get(stack.size() - 1);
             if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
                 String cache = storage.get(activity, Storage.CACHE, Storage.GLOBAL, "university#units#" + uid).trim();
@@ -133,7 +135,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                             load(false, cache);
                         }
                     } catch (JSONException e) {
-                        Log.exception(e);
+                        log.exception(e);
                         load(true, cache);
                     }
                 } else {
@@ -149,18 +151,18 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
     }
     private void load(final boolean force, final String cache) {
         Thread.run(() -> {
-            Log.v(TAG, "load | force=" + (force ? "true" : "false"));
+            log.v(TAG, "load | force=" + (force ? "true" : "false"));
             final String uid = stack.size() == 0 ? "0" : stack.get(stack.size() - 1);
             if (!force && history.containsKey(uid)) {
                 try {
-                    Log.v(TAG, "load | from local cache");
+                    log.v(TAG, "load | from local cache");
                     String local = history.get(uid);
                     JSONObject localObj = new JSONObject(local);
                     timestamp = Time.getCalendar().getTimeInMillis();
                     display(localObj);
                     return;
                 } catch (Exception e) {
-                    Log.v(TAG, "load | failed to load from local cache");
+                    log.v(TAG, "load | failed to load from local cache");
                     history.remove(uid);
                 }
             }
@@ -168,12 +170,12 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                 try {
                     String c = cache.isEmpty() ? storage.get(activity, Storage.CACHE, Storage.GLOBAL, "university#units#" + uid).trim() : cache;
                     if (!c.isEmpty()) {
-                        Log.v(TAG, "load | from cache");
+                        log.v(TAG, "load | from cache");
                         display(new JSONObject(c).getJSONObject("data"));
                         return;
                     }
                 } catch (Exception e) {
-                    Log.v(TAG, "load | failed to load from cache");
+                    log.v(TAG, "load | failed to load from cache");
                     storage.delete(activity, Storage.CACHE, Storage.GLOBAL, "university#units#" + uid);
                 }
             }
@@ -192,7 +194,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                                                 .toString()
                                         );
                                     } catch (JSONException e) {
-                                        Log.exception(e);
+                                        log.exception(e);
                                     }
                                 }
                                 timestamp = now;
@@ -208,7 +210,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                     @Override
                     public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                         Thread.runOnUI(() -> {
-                            Log.v(TAG, "forceLoad | failure " + state);
+                            log.v(TAG, "forceLoad | failure " + state);
                             switch (state) {
                                 case IfmoRestClient.FAILED_OFFLINE:
                                     draw(R.layout.state_offline_text);
@@ -243,7 +245,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                     @Override
                     public void onProgress(final int state) {
                         Thread.runOnUI(() -> {
-                            Log.v(TAG, "forceLoad | progress " + state);
+                            log.v(TAG, "forceLoad | progress " + state);
                             draw(R.layout.state_loading_text);
                             if (activity != null) {
                                 TextView loading_message = container.findViewById(R.id.loading_message);
@@ -274,7 +276,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
         });
     }
     private void loadProvider(RestResponseHandler handler) {
-        Log.v(TAG, "loadProvider");
+        log.v(TAG, "loadProvider");
         String unit_id = "";
         if (stack.size() > 0) {
             unit_id = stack.get(stack.size() - 1);
@@ -283,7 +285,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
     }
     private void loadFailed() {
         Thread.runOnUI(() -> {
-            Log.v(TAG, "loadFailed");
+            log.v(TAG, "loadFailed");
             try {
                 draw(R.layout.state_failed_button);
                 TextView try_again_message = container.findViewById(R.id.try_again_message);
@@ -293,7 +295,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                     try_again_reload.setOnClickListener(v -> load());
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }
@@ -367,7 +369,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                     mSwipeRefreshLayout.setOnRefreshListener(this);
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
                 loadFailed();
             }
         });
@@ -442,7 +444,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                     }
                 });
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
                 loadFailed();
             }
         });
@@ -523,7 +525,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                 vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             }
         } catch (Exception e){
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private View inflate(@LayoutRes int layoutId) throws InflateException {

@@ -86,7 +86,7 @@ public class ScheduleLessonsRVA extends RVA {
             query = data.getString("query");
             addItems(json2dataset(activity, data, weekday));
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
 
@@ -182,7 +182,7 @@ public class ScheduleLessonsRVA extends RVA {
                         popup.getMenuInflater().inflate(R.menu.schedule_lessons, menu);
                         menu.findItem(cached ? R.id.add_to_cache : R.id.remove_from_cache).setVisible(false);
                         popup.setOnMenuItemClickListener(item1 -> {
-                            Log.v(TAG, "menu | popup item | clicked | " + item1.getTitle().toString());
+                            log.v(TAG, "menu | popup item | clicked | " + item1.getTitle().toString());
                             switch (item1.getItemId()) {
                                 case R.id.add_to_cache:
                                 case R.id.remove_from_cache: {
@@ -209,7 +209,7 @@ public class ScheduleLessonsRVA extends RVA {
                                             }
                                         }
                                     } catch (Exception e) {
-                                        Log.exception(e);
+                                        log.exception(e);
                                         BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
                                     }
                                     break;
@@ -221,7 +221,7 @@ public class ScheduleLessonsRVA extends RVA {
                                                 BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                             }
                                         } catch (Exception e) {
-                                            Log.exception(e);
+                                            log.exception(e);
                                             BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                         }
                                     });
@@ -244,7 +244,7 @@ public class ScheduleLessonsRVA extends RVA {
                                                         ScheduleLessons.createLesson(activity, storage, query, position, new JSONObject().put("subject", "Кураторский час").put("type", "Военка").put("week", 2).put("timeStart", "16:45").put("timeEnd", "17:30").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
                                                         ScheduleLessonsTabHostFragment.invalidateOnDemand();
                                                     } catch (Exception e) {
-                                                        Log.exception(e);
+                                                        log.exception(e);
                                                         BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                                     }
                                                 }))
@@ -263,7 +263,7 @@ public class ScheduleLessonsRVA extends RVA {
                                             extras.putString("title", data.getString("title"));
                                             Thread.runOnUI(() -> activity.openActivityOrFragment(ScheduleLessonsShareFragment.class, extras));
                                         } catch (Exception e) {
-                                            Log.exception(e);
+                                            log.exception(e);
                                         }
                                     });
                                     break;
@@ -274,7 +274,7 @@ public class ScheduleLessonsRVA extends RVA {
                                             .setMessage(R.string.pref_schedule_lessons_clear_direct_additional_warning)
                                             .setIcon(R.drawable.ic_warning)
                                             .setPositiveButton(R.string.proceed, (dialog, which) -> Thread.run(() -> {
-                                                Log.v(TAG, "menu | popup item | remove_changes | dialog accepted");
+                                                log.v(TAG, "menu | popup item | remove_changes | dialog accepted");
                                                 if (!ScheduleLessons.clearChanges(activity, storage, query, ScheduleLessonsTabHostFragment::invalidateOnDemand)) {
                                                     BottomBar.snackBar(activity, activity.getString(R.string.no_changes));
                                                 }
@@ -292,13 +292,13 @@ public class ScheduleLessonsRVA extends RVA {
                         });
                         popup.show();
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                         BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 });
             }));
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private void bindDay(View container, Item item) {
@@ -306,7 +306,7 @@ public class ScheduleLessonsRVA extends RVA {
             final String text = getString(item.data, "text");
             ((TextView) container.findViewById(R.id.day_title)).setText(text != null && !text.isEmpty() ? text : Static.GLITCH);
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private void bindLesson(View container, Item item) {
@@ -334,7 +334,7 @@ public class ScheduleLessonsRVA extends RVA {
             container.findViewById(R.id.lesson_synthetic_icon).setVisibility(isSynthetic ? View.VISIBLE : View.GONE);
             container.findViewById(R.id.lesson_touch_icon).setOnClickListener(view -> {
                 try {
-                    Log.v(TAG, "lesson_touch_icon clicked");
+                    log.v(TAG, "lesson_touch_icon clicked");
                     final String group = getMenuTitle(lesson, "group");
                     final String teacher = getMenuTitle(lesson, "teacher");
                     final String teacher_id = getMenuTitle(lesson, "teacher", "teacher_id");
@@ -352,7 +352,7 @@ public class ScheduleLessonsRVA extends RVA {
                     bindMenuItem(menu, R.id.delete_lesson, cdoitmo_type.equals("synthetic") ? activity.getString(R.string.delete_lesson) : null);
                     bindMenuItem(menu, R.id.edit_lesson, cdoitmo_type.equals("synthetic") ? activity.getString(R.string.edit_lesson) : null);
                     popup.setOnMenuItemClickListener(item1 -> {
-                        Log.v(TAG, "lesson_touch_icon | popup.MenuItem clicked | " + item1.getTitle().toString());
+                        log.v(TAG, "lesson_touch_icon | popup.MenuItem clicked | " + item1.getTitle().toString());
                         switch (item1.getItemId()) {
                             case R.id.open_group: callback.call(group); break;
                             case R.id.open_teacher: callback.call(teacher_id); break;
@@ -392,7 +392,7 @@ public class ScheduleLessonsRVA extends RVA {
                                             BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                         }
                                     } catch (Exception e) {
-                                        Log.exception(e);
+                                        log.exception(e);
                                         BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                     }
                                 });
@@ -404,7 +404,7 @@ public class ScheduleLessonsRVA extends RVA {
                                             BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                         }
                                     } catch (Exception e) {
-                                        Log.exception(e);
+                                        log.exception(e);
                                         BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                     }
                                 });
@@ -414,7 +414,7 @@ public class ScheduleLessonsRVA extends RVA {
                     });
                     popup.show();
                 } catch (Exception e){
-                    Log.exception(e);
+                    log.exception(e);
                 }
             });
             // title and time
@@ -508,7 +508,7 @@ public class ScheduleLessonsRVA extends RVA {
                 lesson_meta.setText(meta);
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private void bindNotification(View container, Item item) {
@@ -516,7 +516,7 @@ public class ScheduleLessonsRVA extends RVA {
             final String text = getString(item.data, "text");
             ((TextView) container.findViewById(R.id.lessons_warning)).setText(text != null && !text.isEmpty() ? text : Static.GLITCH);
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private void bindUpdateTime(View container, Item item) {
@@ -524,14 +524,14 @@ public class ScheduleLessonsRVA extends RVA {
             final String text = getString(item.data, "text");
             ((TextView) container.findViewById(R.id.update_time)).setText(text != null && !text.isEmpty() ? text : Static.GLITCH);
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private void bindNoLessons(View container, Item item) {
         try {
             ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_lessons);
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private void bindPickerHeader(View container, Item item) {
@@ -545,7 +545,7 @@ public class ScheduleLessonsRVA extends RVA {
             }
             ((TextView) container.findViewById(R.id.teacher_picker_header)).setText(text);
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private void bindPickerItem(View container, Item item) {
@@ -563,7 +563,7 @@ public class ScheduleLessonsRVA extends RVA {
                 }
             });
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private void bindPickerNoTeachers(View container, Item item) {
@@ -577,7 +577,7 @@ public class ScheduleLessonsRVA extends RVA {
             }
             ((TextView) container.findViewById(R.id.ntd_text)).setText(text);
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
 

@@ -27,6 +27,9 @@ public class SuggestionsListView extends ArrayAdapter<Suggestion> {
     private final List<Suggestion> suggestions;
     private final OnClickCallback onClickCallback;
 
+    //@Inject
+    private Log log = Log.instance();
+
     public SuggestionsListView(@NonNull Context context, @NonNull List<Suggestion> suggestions) {
         this(context, suggestions, null);
     }
@@ -63,7 +66,7 @@ public class SuggestionsListView extends ArrayAdapter<Suggestion> {
             }
             return convertView;
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             return super.getView(position, convertView, parent);
         }
     }

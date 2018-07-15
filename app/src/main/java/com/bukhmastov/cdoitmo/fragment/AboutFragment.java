@@ -25,25 +25,27 @@ public class AboutFragment extends ConnectedFragment {
     private final int tapsToPika = 5;
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.v(TAG, "Fragment created");
+        log.v(TAG, "Fragment created");
         firebaseAnalyticsProvider.logCurrentScreen(activity, this);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.v(TAG, "Fragment destroyed");
+        log.v(TAG, "Fragment destroyed");
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        Log.v(TAG, "resumed");
+        log.v(TAG, "resumed");
         firebaseAnalyticsProvider.setCurrentScreen(activity, this);
     }
 
@@ -75,7 +77,7 @@ public class AboutFragment extends ConnectedFragment {
         View block_send_mail = container.findViewById(R.id.block_send_mail);
         if (block_send_mail != null) {
             block_send_mail.setOnClickListener(v -> {
-                Log.v(TAG, "send_mail clicked");
+                log.v(TAG, "send_mail clicked");
                 firebaseAnalyticsProvider.logBasicEvent(activity, "send mail clicked");
                 try {
                     Intent emailIntent = new Intent(Intent.ACTION_SEND);
@@ -91,7 +93,7 @@ public class AboutFragment extends ConnectedFragment {
         View block_send_vk = container.findViewById(R.id.block_send_vk);
         if (block_send_vk != null) {
             block_send_vk.setOnClickListener(v -> {
-                Log.v(TAG, "send_vk clicked");
+                log.v(TAG, "send_vk clicked");
                 firebaseAnalyticsProvider.logBasicEvent(activity, "send vk clicked");
                 try {
                     activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://vk.com/write9780714")));
@@ -104,7 +106,7 @@ public class AboutFragment extends ConnectedFragment {
         View block_rate = container.findViewById(R.id.block_rate);
         if (block_rate != null) {
             block_rate.setOnClickListener(v -> {
-                Log.v(TAG, "block_rate clicked");
+                log.v(TAG, "block_rate clicked");
                 firebaseAnalyticsProvider.logBasicEvent(activity, "app rate clicked");
                 try {
                     activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.bukhmastov.cdoitmo")));
@@ -121,7 +123,7 @@ public class AboutFragment extends ConnectedFragment {
         View block_github = container.findViewById(R.id.block_github);
         if (block_github != null) {
             block_github.setOnClickListener(v -> {
-                Log.v(TAG, "block_github clicked");
+                log.v(TAG, "block_github clicked");
                 firebaseAnalyticsProvider.logBasicEvent(activity, "view github clicked");
                 try {
                     activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/bukhmastov/cdoitmo")));
@@ -134,7 +136,7 @@ public class AboutFragment extends ConnectedFragment {
         View block_donate = container.findViewById(R.id.block_donate);
         if (block_donate != null) {
             block_donate.setOnClickListener(v -> {
-                Log.v(TAG, "block_donate clicked  ┬─┬ ノ( ゜-゜ノ)");
+                log.v(TAG, "block_donate clicked  ┬─┬ ノ( ゜-゜ノ)");
                 firebaseAnalyticsProvider.logBasicEvent(activity, "donate clicked");
                 try {
                     activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://yasobe.ru/na/cdoifmo")));

@@ -22,6 +22,8 @@ public class FirebasePerformanceProviderImpl implements FirebasePerformanceProvi
     private Map<String, com.google.firebase.perf.metrics.Trace> traceMap = new HashMap<>();
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private FirebaseConfigProvider firebaseConfigProvider = FirebaseConfigProvider.instance();
 
     private FirebasePerformance getFirebasePerformance() {
@@ -34,7 +36,7 @@ public class FirebasePerformanceProviderImpl implements FirebasePerformanceProvi
     @Override
     public void setEnabled(Context context) {
         Thread.run(() -> {
-            Log.i(TAG, "Firebase Performance fetching status");
+            log.i(TAG, "Firebase Performance fetching status");
             firebaseConfigProvider.getString(FirebaseConfigProvider.PERFORMANCE_ENABLED, value -> Thread.run(() -> setEnabled(context, "1".equals(value))));
         });
     }
@@ -47,9 +49,9 @@ public class FirebasePerformanceProviderImpl implements FirebasePerformanceProvi
                 stopAll();
             }
             getFirebasePerformance().setPerformanceCollectionEnabled(this.enabled);
-            Log.i(TAG, "Firebase Performance ", (this.enabled ? "enabled" : "disabled"));
+            log.i(TAG, "Firebase Performance ", (this.enabled ? "enabled" : "disabled"));
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
 
@@ -70,7 +72,7 @@ public class FirebasePerformanceProviderImpl implements FirebasePerformanceProvi
             trace.start();
             return key;
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             return null;
         }
     }
@@ -89,7 +91,7 @@ public class FirebasePerformanceProviderImpl implements FirebasePerformanceProvi
                 return false;
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             return false;
         }
     }
@@ -128,7 +130,7 @@ public class FirebasePerformanceProviderImpl implements FirebasePerformanceProvi
             }
             putAttribute(key, attr, sb.toString());
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     @Override
@@ -150,7 +152,7 @@ public class FirebasePerformanceProviderImpl implements FirebasePerformanceProvi
                 trace.putAttribute(attr, value);
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
 

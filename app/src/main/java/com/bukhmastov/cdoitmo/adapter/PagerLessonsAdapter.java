@@ -26,6 +26,9 @@ public class PagerLessonsAdapter extends FragmentPagerAdapter {
     }
     private final ArrayList<Element> tabs = new ArrayList<>();
 
+    //@Inject
+    private Log log = Log.instance();
+
     public PagerLessonsAdapter(FragmentManager fm, Context context) {
         super(fm);
         tabs.add(new Element(0, context.getString(R.string.tab_all), 2));
@@ -49,7 +52,7 @@ public class PagerLessonsAdapter extends FragmentPagerAdapter {
             fragment.setArguments(bundle);
             return fragment;
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             return null;
         }
     }

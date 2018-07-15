@@ -46,6 +46,8 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     protected final ConnectedActivity activity = this;
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     protected StoragePref storagePref = StoragePref.instance();
 
     @Retention(RetentionPolicy.SOURCE)
@@ -92,7 +94,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
         return openActivityOrFragment(new StackElement(type, connectedFragmentClass, extras));
     }
     public boolean openActivityOrFragment(StackElement stackElement) {
-        Log.v(TAG, "openActivityOrFragment | type=" + stackElement.type + " | class=" + stackElement.connectedFragmentClass.toString());
+        log.v(TAG, "openActivityOrFragment | type=" + stackElement.type + " | class=" + stackElement.connectedFragmentClass.toString());
         if (App.tablet) {
             return openFragment(stackElement);
         } else {
@@ -107,7 +109,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
         return openFragment(new StackElement(type, connectedFragmentClass, extras));
     }
     public boolean openFragment(StackElement stackElement) {
-        Log.v(TAG, "openFragment | type=" + stackElement.type + " | class=" + stackElement.connectedFragmentClass.toString());
+        log.v(TAG, "openFragment | type=" + stackElement.type + " | class=" + stackElement.connectedFragmentClass.toString());
         try {
             ConnectedFragment.Data data = ConnectedFragment.getData(this, stackElement.connectedFragmentClass);
             if (data == null) {
@@ -137,7 +139,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
                 return false;
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             return false;
         }
     }
@@ -149,7 +151,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
         return openActivity(new StackElement(type, connectedFragmentClass, extras));
     }
     public boolean openActivity(StackElement stackElement) {
-        Log.v(TAG, "openActivity | type=" + stackElement.type + " | class=" + stackElement.connectedFragmentClass.toString());
+        log.v(TAG, "openActivity | type=" + stackElement.type + " | class=" + stackElement.connectedFragmentClass.toString());
         /*
          * We don't care about type. This is a harsh life :c
          */
@@ -160,13 +162,13 @@ public abstract class ConnectedActivity extends AppCompatActivity {
             startActivity(intent);
             return true;
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             return false;
         }
     }
 
     public boolean back() {
-        Log.v(TAG, "back | stack.size=" + stack.size());
+        log.v(TAG, "back | stack.size=" + stack.size());
         if (stack.size() > 0) {
             int index = stack.size() - 1;
             if (stack.get(index).type.equals(TYPE.ROOT)) {
@@ -187,27 +189,27 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     }
 
     public void pushFragment(StackElement stackElement) {
-        Log.v(TAG, "pushFragment | type=" + stackElement.type + " | class=" + stackElement.connectedFragmentClass.toString());
+        log.v(TAG, "pushFragment | type=" + stackElement.type + " | class=" + stackElement.connectedFragmentClass.toString());
         if (stackElement.type.equals(TYPE.ROOT)) {
             stack.clear();
         }
         stack.add(stackElement);
-        Log.v(TAG, "stack.size() = " + stack.size());
+        log.v(TAG, "stack.size() = " + stack.size());
     }
     public void removeFragment(Class connectedFragmentClass) {
-        Log.v(TAG, "removeFragment | class=" + connectedFragmentClass.toString());
+        log.v(TAG, "removeFragment | class=" + connectedFragmentClass.toString());
         for (int i = stack.size() - 1; i >= 0; i--) {
             StackElement stackElement = stack.get(i);
             if (stackElement.connectedFragmentClass == connectedFragmentClass) {
                 if (!stackElement.type.equals(TYPE.ROOT)) {
                     stack.remove(stackElement);
                 } else {
-                    Log.e(TAG, "removeFragment | Root fragment removal from the stack prevented");
+                    log.e(TAG, "removeFragment | Root fragment removal from the stack prevented");
                 }
                 break;
             }
         }
-        Log.v(TAG, "stack.size() = " + stack.size());
+        log.v(TAG, "stack.size() = " + stack.size());
     }
 
     public void updateToolbar(final Context context, final String title, final Integer image) {
@@ -236,12 +238,12 @@ public abstract class ConnectedActivity extends AppCompatActivity {
 
     protected View inflate(@LayoutRes int layout) throws InflateException {
         if (activity == null) {
-            Log.e(TAG, "Failed to inflate layout, activity is null");
+            log.e(TAG, "Failed to inflate layout, activity is null");
             return null;
         }
         LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         if (inflater == null) {
-            Log.e(TAG, "Failed to inflate layout, inflater is null");
+            log.e(TAG, "Failed to inflate layout, inflater is null");
             return null;
         }
         return inflater.inflate(layout, null);
@@ -250,7 +252,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
         try {
             draw(inflate(layoutId));
         } catch (Exception e){
-            Log.exception(e);
+            log.exception(e);
         }
     }
     protected void draw(View view) {
@@ -261,7 +263,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
                 vg.addView(view);
             }
         } catch (Exception e){
-            Log.exception(e);
+            log.exception(e);
         }
     }
 
@@ -273,6 +275,6 @@ public abstract class ConnectedActivity extends AppCompatActivity {
 
     @Override
     protected void attachBaseContext(Context context) {
-        super.attachBaseContext(CtxWrapper.wrap(context, storagePref));
+        super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log));
     }
 }

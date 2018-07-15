@@ -7,7 +7,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
-import com.bukhmastov.cdoitmo.util.StoragePref;
+import com.bukhmastov.cdoitmo.util.StorageProvider;
 import com.bukhmastov.cdoitmo.util.Thread;
 
 public class PreferenceBasic extends Preference {
@@ -20,7 +20,7 @@ public class PreferenceBasic extends Preference {
     }
 
     public interface Callback {
-        void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final StoragePref storagePref, final OnPreferenceClickedCallback callback);
+        void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final StorageProvider storageProvider, final OnPreferenceClickedCallback callback);
         String onGetSummary(final ConnectedActivity activity, final String value);
     }
 
@@ -36,7 +36,7 @@ public class PreferenceBasic extends Preference {
     }
 
     @Nullable
-    public static View getView(final ConnectedActivity activity, final PreferenceBasic preference, final StoragePref storagePref) {
+    public static View getView(final ConnectedActivity activity, final PreferenceBasic preference, final StorageProvider storageProvider) {
         final View preference_layout = inflate(activity, R.layout.preference_basic);
         if (preference_layout == null) {
             return null;
@@ -51,14 +51,14 @@ public class PreferenceBasic extends Preference {
         } else {
             if (preference.changeSummary) {
                 preference_basic_summary.setVisibility(View.VISIBLE);
-                preference_basic_summary.setText(preference.callback.onGetSummary(activity, storagePref.get(activity, preference.key, preference.defaultValue == null ? "" : (String) preference.defaultValue)));
+                preference_basic_summary.setText(preference.callback.onGetSummary(activity, storageProvider.getStoragePref().get(activity, preference.key, preference.defaultValue == null ? "" : (String) preference.defaultValue)));
             } else {
                 preference_basic_summary.setVisibility(View.GONE);
             }
         }
         preference_basic.setOnClickListener(view -> {
             if (preference.isDisabled()) return;
-            preference.callback.onPreferenceClicked(activity, preference, storagePref, (a, v) -> Thread.runOnUI(() -> {
+            preference.callback.onPreferenceClicked(activity, preference, storageProvider, (a, v) -> Thread.runOnUI(() -> {
                 if (preference.changeSummary && v != null) {
                     final String summary = preference.callback.onGetSummary(a, v);
                     if (summary != null) {

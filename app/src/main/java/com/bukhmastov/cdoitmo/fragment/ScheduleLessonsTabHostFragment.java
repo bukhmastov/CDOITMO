@@ -34,6 +34,9 @@ public abstract class ScheduleLessonsTabHostFragment extends Fragment {
     protected boolean invalidate_refresh = false;
     protected int TYPE = DEFAULT_INVALID_TYPE;
 
+    //@Inject
+    private Log log = Log.instance();
+
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
@@ -44,8 +47,8 @@ public abstract class ScheduleLessonsTabHostFragment extends Fragment {
                 try {
                     activity = (ConnectedActivity) context;
                 } catch (Exception e1) {
-                    Log.exception(e);
-                    Log.exception(e1);
+                    log.exception(e);
+                    log.exception(e1);
                     activity = null;
                 }
             }
@@ -104,7 +107,6 @@ public abstract class ScheduleLessonsTabHostFragment extends Fragment {
     public static void invalidateOnDemand() {
         if (!isActive() || activity == null) return;
         Thread.run(() -> {
-            Log.v(TAG, "invalidateOnDemand");
             BottomBar.snackBar(activity, activity.findViewById(android.R.id.content), activity.getString(R.string.schedule_refresh), activity.getString(R.string.update), v -> {
                 setQuery(getQuery());
                 invalidate();
@@ -113,17 +115,15 @@ public abstract class ScheduleLessonsTabHostFragment extends Fragment {
     }
 
     public static void storeData(String data) {
-        Log.v(TAG, "storeData | activity=", activity, " | data=", data);
         if (activity != null) {
-            activity.storedFragmentName = FRAGMENT_NAME;
-            activity.storedFragmentData = data;
-            activity.storedFragmentExtra = null;
+            ConnectedActivity.storedFragmentName = FRAGMENT_NAME;
+            ConnectedActivity.storedFragmentData = data;
+            ConnectedActivity.storedFragmentExtra = null;
         }
     }
     public static String restoreData() {
-        Log.v(TAG, "restoreData | activity=", activity);
-        if (activity != null && activity.storedFragmentName != null && FRAGMENT_NAME.equals(activity.storedFragmentName)) {
-            return activity.storedFragmentData;
+        if (activity != null && ConnectedActivity.storedFragmentName != null && FRAGMENT_NAME.equals(ConnectedActivity.storedFragmentName)) {
+            return ConnectedActivity.storedFragmentData;
         } else {
             return null;
         }

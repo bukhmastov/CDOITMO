@@ -19,6 +19,9 @@ public class BottomSheetDialog extends android.support.design.widget.BottomSheet
     private final Context context;
     private OnEntryClickListener listener;
 
+    //@Inject
+    private Log log = Log.instance();
+
     public BottomSheetDialog(@NonNull Context context, @Nullable String header, @NonNull Entry ...entries) {
         super(context);
         this.context = context;
@@ -39,7 +42,7 @@ public class BottomSheetDialog extends android.support.design.widget.BottomSheet
     private void init(@Nullable String header, @NonNull Entry ...entries) {
         ViewGroup layout = (ViewGroup) inflate(R.layout.dialog_bottom_sheet);
         if (layout == null) {
-            Log.w(TAG, "init | layout = null");
+            log.w(TAG, "init | layout = null");
             return;
         }
 
@@ -94,12 +97,12 @@ public class BottomSheetDialog extends android.support.design.widget.BottomSheet
 
     private View inflate(@LayoutRes int layout) throws InflateException {
         if (context == null) {
-            Log.e(TAG, "Failed to inflate layout, context is null");
+            log.e(TAG, "Failed to inflate layout, context is null");
             return null;
         }
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         if (inflater == null) {
-            Log.e(TAG, "Failed to inflate layout, inflater is null");
+            log.e(TAG, "Failed to inflate layout, inflater is null");
             return null;
         }
         return inflater.inflate(layout, null);

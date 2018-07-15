@@ -21,6 +21,8 @@ public class PikaActivity extends AppCompatActivity {
     private boolean dimas = false;
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
@@ -28,12 +30,12 @@ public class PikaActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.v(TAG, "PIKA is no longer hiding");
+        log.v(TAG, "PIKA is no longer hiding");
         firebaseAnalyticsProvider.logCurrentScreen(this);
         setContentView(R.layout.activity_pika);
         overridePendingTransition(R.anim.zoom_bottom_in, R.anim.zoom_bottom_out);
         if (random.nextInt(6) % 6 == 0) {
-            Log.v(TAG, "LEGENDARY D1MA$ APPEARS, so pika went away");
+            log.v(TAG, "LEGENDARY D1MA$ APPEARS, so pika went away");
             dimas = true;
             ((ImageView) findViewById(R.id.image)).setImageDrawable(getDrawable(R.drawable.wuwari));
         }
@@ -50,14 +52,14 @@ public class PikaActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         if (dimas) {
-            Log.v(TAG, "D1MA$ left us to not to be late for some movies");
+            log.v(TAG, "D1MA$ left us to not to be late for some movies");
         } else {
-            Log.v(TAG, "PIKA left us to stream some games");
+            log.v(TAG, "PIKA left us to stream some games");
         }
     }
 
     @Override
     protected void attachBaseContext(Context context) {
-        super.attachBaseContext(CtxWrapper.wrap(context, storagePref));
+        super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log));
     }
 }

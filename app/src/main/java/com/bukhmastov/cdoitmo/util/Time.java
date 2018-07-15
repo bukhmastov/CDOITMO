@@ -18,6 +18,9 @@ public class Time {
 
     //@Inject
     //TODO interface - impl: remove static
+    private static Log log = Log.instance();
+    //@Inject
+    //TODO interface - impl: remove static
     private static Storage storage = Storage.instance();
     //@Inject
     //TODO interface - impl: remove static
@@ -86,7 +89,7 @@ public class Time {
 
     public static String getGenitiveMonth(Context context, String month) {
         if (context == null) {
-            Log.w(TAG, "getGenitiveMonth | context is null");
+            log.w(TAG, "getGenitiveMonth | context is null");
             return month;
         }
         switch (month) {
@@ -109,7 +112,7 @@ public class Time {
     public static String getGenitiveMonth(Context context, int month) {
         String m = "";
         if (context == null) {
-            Log.w(TAG, "getGenitiveMonth | context is null");
+            log.w(TAG, "getGenitiveMonth | context is null");
             return m;
         }
         switch (month) {

@@ -27,6 +27,9 @@ public class ScheduleLessons extends Schedule {
     public static final String TYPE = "lessons";
 
     //@Inject
+    //TODO interface - impl: remove static
+    private static Log log = Log.instance();
+    //@Inject
     private IfmoRestClient ifmoRestClient = IfmoRestClient.instance();
     //@Inject
     //TODO interface - impl: remove static
@@ -38,13 +41,13 @@ public class ScheduleLessons extends Schedule {
 
     @Override
     protected void searchMine(final Context context, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
-        Log.v(TAG, "searchMine | personal schedule is unavailable");
+        log.v(TAG, "searchMine | personal schedule is unavailable");
         invokePending("mine", withUserChanges, true, handler -> handler.onFailure(FAILED_INVALID_QUERY));
     }
     @Override
     protected void searchGroup(final Context context, final String group, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
         final @Source String source = getSource(context);
-        Log.v(TAG, "searchGroup | group=", group, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=" + source);
+        log.v(TAG, "searchGroup | group=", group, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=" + source);
         Thread.run(() -> searchByQuery(context, "group", group, refreshRate, withUserChanges, new SearchByQuery() {
             @Override
             public boolean isWebAvailable() {
@@ -84,7 +87,7 @@ public class ScheduleLessons extends Schedule {
     }
     @Override
     protected void searchRoom(final Context context, final String room, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
-        Log.v(TAG, "searchRoom | room=", room, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges);
+        log.v(TAG, "searchRoom | room=", room, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges);
         Thread.run(() -> searchByQuery(context, "room", room, refreshRate, withUserChanges, new SearchByQuery() {
             @Override
             public boolean isWebAvailable() {
@@ -119,7 +122,7 @@ public class ScheduleLessons extends Schedule {
     @Override
     protected void searchTeacher(final Context context, final String teacherId, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
         final @Source String source = getSource(context);
-        Log.v(TAG, "searchTeacher | teacherId=", teacherId, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=", source);
+        log.v(TAG, "searchTeacher | teacherId=", teacherId, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=", source);
         Thread.run(() -> searchByQuery(context, "teacher", teacherId, refreshRate, withUserChanges, new SearchByQuery() {
             @Override
             public boolean isWebAvailable() {
@@ -177,7 +180,7 @@ public class ScheduleLessons extends Schedule {
         Thread.run(() -> {
             try {
                 if (context == null || query == null || data == null) {
-                    Log.w(TAG, "onFound | some values are null | context=", context, " | query=", query, " | data=", data);
+                    log.w(TAG, "onFound | some values are null | context=", context, " | query=", query, " | data=", data);
                     if (query == null) {
                         return;
                     }
@@ -212,7 +215,7 @@ public class ScheduleLessons extends Schedule {
                     invokePending(query, withUserChanges, true, handler -> handler.onFailure(FAILED_NOT_FOUND));
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
                 invokePending(query, withUserChanges, true, handler -> handler.onFailure(FAILED_LOAD));
             }
         });
@@ -223,7 +226,7 @@ public class ScheduleLessons extends Schedule {
             if (context == null) throw new NullPointerException("context cannot be null");
             if (query == null) throw new NullPointerException("query cannot be null");
             if (query.isEmpty()) throw new IllegalArgumentException("query cannot be empty");
-            Log.v(TAG, "clearChanges | query=", query);
+            log.v(TAG, "clearChanges | query=", query);
             final String token = query.toLowerCase();
             boolean added = false;
             boolean reduced = false;
@@ -244,7 +247,7 @@ public class ScheduleLessons extends Schedule {
             }
             return added || reduced;
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             return false;
         }
     }
@@ -254,7 +257,7 @@ public class ScheduleLessons extends Schedule {
             if (query == null) throw new NullPointerException("query cannot be null");
             if (query.isEmpty()) throw new IllegalArgumentException("query cannot be empty");
             if (lesson == null) throw new NullPointerException("lesson cannot be null");
-            Log.v(TAG, "reduceLesson | query=", query, " | weekday=", weekday, " | lesson=", lesson.toString());
+            log.v(TAG, "reduceLesson | query=", query, " | weekday=", weekday, " | lesson=", lesson.toString());
             final String cdoitmo_type = lesson.getString("cdoitmo_type");
             if (!cdoitmo_type.equals("normal")) throw new Exception("wrong cdoitmo_type type: " + cdoitmo_type);
             final String token = query.toLowerCase();
@@ -294,7 +297,7 @@ public class ScheduleLessons extends Schedule {
             );
             return true;
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             return false;
         }
     }
@@ -304,7 +307,7 @@ public class ScheduleLessons extends Schedule {
             if (query == null) throw new NullPointerException("query cannot be null");
             if (query.isEmpty()) throw new IllegalArgumentException("query cannot be empty");
             if (lesson == null) throw new NullPointerException("lesson cannot be null");
-            Log.v(TAG, "restoreLesson | query=", query, " | weekday=", weekday, " | lesson=", lesson.toString());
+            log.v(TAG, "restoreLesson | query=", query, " | weekday=", weekday, " | lesson=", lesson.toString());
             final String cdoitmo_type = lesson.getString("cdoitmo_type");
             if (!cdoitmo_type.equals("reduced")) throw new Exception("wrong cdoitmo_type type: " + cdoitmo_type);
             final String token = query.toLowerCase();
@@ -339,7 +342,7 @@ public class ScheduleLessons extends Schedule {
             }
             return true;
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             return false;
         }
     }
@@ -351,7 +354,7 @@ public class ScheduleLessons extends Schedule {
             if (title == null) throw new NullPointerException("title cannot be null");
             if (type == null) throw new NullPointerException("type cannot be null");
             if (lesson == null) throw new NullPointerException("lesson cannot be null");
-            Log.v(TAG, "createLesson | open fragment | query=", query, " | weekday=", weekday, " | lesson=", lesson.toString());
+            log.v(TAG, "createLesson | open fragment | query=", query, " | weekday=", weekday, " | lesson=", lesson.toString());
             final Bundle extras = new Bundle();
             extras.putString("action_type", ScheduleLessonsModifyFragment.CREATE);
             extras.putString("query", query);
@@ -366,7 +369,7 @@ public class ScheduleLessons extends Schedule {
             });
             return true;
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             return false;
         }
     }
@@ -376,7 +379,7 @@ public class ScheduleLessons extends Schedule {
             if (query == null) throw new NullPointerException("query cannot be null");
             if (query.isEmpty()) throw new IllegalArgumentException("query cannot be empty");
             if (lesson == null) throw new NullPointerException("lesson cannot be null");
-            Log.v(TAG, "createLesson | query=", query, " | weekday=", weekday, " | lesson=", lesson.toString());
+            log.v(TAG, "createLesson | query=", query, " | weekday=", weekday, " | lesson=", lesson.toString());
             lesson.put("cdoitmo_type", "synthetic");
             final String subject = lesson.getString("subject");
             final String token = query.toLowerCase();
@@ -406,7 +409,7 @@ public class ScheduleLessons extends Schedule {
             }
             return true;
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             return false;
         }
     }
@@ -416,7 +419,7 @@ public class ScheduleLessons extends Schedule {
             if (query == null) throw new NullPointerException("query cannot be null");
             if (query.isEmpty()) throw new IllegalArgumentException("query cannot be empty");
             if (lesson == null) throw new NullPointerException("lesson cannot be null");
-            Log.v(TAG, "deleteLesson | query=", query, " | weekday=", weekday, " | lesson=", lesson.toString());
+            log.v(TAG, "deleteLesson | query=", query, " | weekday=", weekday, " | lesson=", lesson.toString());
             final String cdoitmo_type = lesson.getString("cdoitmo_type");
             if (!cdoitmo_type.equals("synthetic")) throw new Exception("wrong cdoitmo_type type: " + cdoitmo_type);
             final String hash = getLessonHash(lesson);
@@ -451,7 +454,7 @@ public class ScheduleLessons extends Schedule {
             }
             return true;
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             return false;
         }
     }
@@ -463,7 +466,7 @@ public class ScheduleLessons extends Schedule {
             if (title == null) throw new NullPointerException("title cannot be null");
             if (type == null) throw new NullPointerException("type cannot be null");
             if (lesson == null) throw new NullPointerException("lesson cannot be null");
-            Log.v(TAG, "editLesson | open fragment | query=", query, " | weekday=", weekday, " | lesson=", lesson.toString());
+            log.v(TAG, "editLesson | open fragment | query=", query, " | weekday=", weekday, " | lesson=", lesson.toString());
             final Bundle extras = new Bundle();
             extras.putString("action_type", ScheduleLessonsModifyFragment.EDIT);
             extras.putString("query", query);
@@ -478,7 +481,7 @@ public class ScheduleLessons extends Schedule {
             });
             return true;
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             return false;
         }
     }

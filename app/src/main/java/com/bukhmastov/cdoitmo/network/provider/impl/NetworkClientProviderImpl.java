@@ -33,6 +33,9 @@ public class NetworkClientProviderImpl implements NetworkClientProvider {
     private static final int READ_TIMEOUT = 30;
     private OkHttpClient client = null;
 
+    //@Inject
+    private Log log = Log.instance();
+
     @Override
     public OkHttpClient get() {
         if (client == null) {
@@ -55,8 +58,8 @@ public class NetworkClientProviderImpl implements NetworkClientProvider {
             SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
             builder.sslSocketFactory(sslSocketFactory, trustManager);
         } catch (Exception e) {
-            Log.w(TAG, "Failed to add trusted certificates");
-            Log.exception(e);
+            log.w(TAG, "Failed to add trusted certificates");
+            log.exception(e);
         }
         return builder;
     }
@@ -151,7 +154,7 @@ public class NetworkClientProviderImpl implements NetworkClientProvider {
         @Override
         public Response intercept(@NonNull Interceptor.Chain chain) throws IOException {
             okhttp3.Request request = chain.request();
-            Log.v(TAG,
+            log.v(TAG,
                     "interceptor | request | " +
                             request.method() + " | " +
                             request.url()
@@ -159,7 +162,7 @@ public class NetworkClientProviderImpl implements NetworkClientProvider {
             long t1 = System.nanoTime();
             Response response = chain.proceed(request);
             long t2 = System.nanoTime();
-            Log.v(TAG,
+            log.v(TAG,
                     "interceptor | response | " +
                             response.request().method() + " | " +
                             response.request().url() + " | " +

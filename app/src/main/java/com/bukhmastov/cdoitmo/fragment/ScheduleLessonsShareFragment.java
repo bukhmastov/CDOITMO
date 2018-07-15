@@ -64,6 +64,8 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
     private int colorScheduleFlagTEXT = -1, colorScheduleFlagCommonBG = -1, colorScheduleFlagPracticeBG = -1, colorScheduleFlagLectureBG = -1, colorScheduleFlagLabBG = -1, colorScheduleFlagIwsBG = -1;
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private Storage storage = Storage.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
@@ -79,7 +81,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
         super.onCreate(savedInstanceState);
         firebaseAnalyticsProvider.logCurrentScreen(activity, this);
         action = extras.getString("action");
-        Log.v(TAG, "Fragment created | action=" + action);
+        log.v(TAG, "Fragment created | action=" + action);
         if (action == null || !(action.equals("share") || action.equals("handle"))) {
             keepGoing = false;
             BottomBar.toast(activity, activity.getString(R.string.corrupted_data));
@@ -114,7 +116,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                 }
                 load(extras);
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
                 finish();
             }
         }
@@ -141,7 +143,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
     private void load(final Bundle extras) {
         Thread.run(() -> {
             try {
-                Log.v(TAG, "load | action=" + action);
+                log.v(TAG, "load | action=" + action);
                 switch (action) {
                     case "handle": loadHandle(extras); break;
                     case "share": loadShare(extras); break;
@@ -151,7 +153,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                 if (e.getMessage() != null && "corrupted file".equals(e.getMessage().toLowerCase())) {
                     BottomBar.toast(activity, activity.getString(R.string.corrupted_file));
                 } else {
-                    Log.exception(e);
+                    log.exception(e);
                     BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
                 }
                 finish();
@@ -201,7 +203,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                     share_title.setText(ScheduleLessons.getScheduleHeader(activity, content.getString("title"), content.getString("type")));
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
                 BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
                 finish();
             }
@@ -263,7 +265,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                     }));
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
                 BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
                 finish();
             }
@@ -273,7 +275,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
             public void onSuccess(final JSONObject json, final boolean fromCache) {
                 Thread.run(() -> {
                     try {
-                        Log.v(TAG, "loadShare | success | json=" + (json == null ? "null" : "notnull"));
+                        log.v(TAG, "loadShare | success | json=" + (json == null ? "null" : "notnull"));
                         if (json == null || json.getString("type").equals("teachers")) {
                             BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
                             finish();
@@ -334,7 +336,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                         }
                         display(null);
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                         BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
                         finish();
                     }
@@ -348,7 +350,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
             public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                 Thread.runOnUI(() -> {
                     try {
-                        Log.v(TAG, "loadShare | failure " + state);
+                        log.v(TAG, "loadShare | failure " + state);
                         ViewGroup share_content = container.findViewById(R.id.share_content);
                         if (share_content != null) {
                             share_content.removeAllViews();
@@ -380,14 +382,14 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                             }
                         }
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                     }
                 });
             }
             @Override
             public void onProgress(final int state) {
                 Thread.runOnUI(() -> {
-                    Log.v(TAG, "loadShare | progress " + state);
+                    log.v(TAG, "loadShare | progress " + state);
                     try {
                         ViewGroup share_content = container.findViewById(R.id.share_content);
                         if (share_content != null) {
@@ -395,7 +397,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                             share_content.addView(inflate(R.layout.state_loading_text_compact));
                         }
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                     }
                 });
             }
@@ -419,7 +421,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
     private void display(final String notification) {
         Thread.runOnUI(() -> {
             try {
-                Log.v(TAG, "display | action=" + action);
+                log.v(TAG, "display | action=" + action);
                 ViewGroup share_content = container.findViewById(R.id.share_content);
                 if (share_content == null) {
                     return;
@@ -471,7 +473,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                         content.addView(lesson);
                         share_content.addView(item);
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                     }
                 }
                 switch (action) {
@@ -498,7 +500,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                     }
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
                 BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
                 finish();
             }
@@ -507,7 +509,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
     private void execute() {
         Thread.run(() -> {
             try {
-                Log.v(TAG, "execute | action=" + action);
+                log.v(TAG, "execute | action=" + action);
                 boolean selected = false;
                 for (Change change : changes) {
                     if (change.enabled) {
@@ -525,7 +527,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                     default: executeShare(); break;
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
                 BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
@@ -728,14 +730,14 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
             bos.close();
             return temp;
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
             return null;
         }
     }
 
     private void finish() {
-        Log.v(TAG, "finish");
+        log.v(TAG, "finish");
         if ("handle".equals(action)) {
             activity.finish();
         } else {

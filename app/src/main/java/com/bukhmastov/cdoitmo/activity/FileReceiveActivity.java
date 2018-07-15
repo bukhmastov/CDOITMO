@@ -45,6 +45,8 @@ public class FileReceiveActivity extends ConnectedActivity {
     private static final String TAG = "FileReceiveActivity";
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private Storage storage = Storage.instance();
     //@Inject
     private NetworkUserAgentProvider networkUserAgentProvider = NetworkUserAgentProvider.instance();
@@ -55,7 +57,7 @@ public class FileReceiveActivity extends ConnectedActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         Theme.applyActivityTheme(this);
         super.onCreate(savedInstanceState);
-        Log.i(TAG, "Activity created");
+        log.i(TAG, "Activity created");
         firebaseAnalyticsProvider.logCurrentScreen(this);
         setContentView(R.layout.activity_file_receive);
         Toolbar toolbar = findViewById(R.id.toolbar_file);
@@ -78,7 +80,7 @@ public class FileReceiveActivity extends ConnectedActivity {
                 if (intent == null) {
                     throw new NullPointerException("Intent is null");
                 }
-                Log.v(TAG, "proceed | intent: " + intent.toString());
+                log.v(TAG, "proceed | intent: " + intent.toString());
                 final Uri uri = intent.getData();
                 if (uri == null) {
                     throw new NullPointerException("Intent's data (uri) is null");
@@ -102,16 +104,16 @@ public class FileReceiveActivity extends ConnectedActivity {
                     default: throw new MessageException(activity.getString(R.string.file_doesnot_supported));
                 }
             } catch (MessageException e) {
-                Log.v(TAG, "proceed | MessageException: " + e.getMessage());
+                log.v(TAG, "proceed | MessageException: " + e.getMessage());
                 failure(e.getMessage());
             } catch (Throwable throwable) {
-                Log.w(TAG, "proceed | Throwable: " + throwable.getMessage());
+                log.w(TAG, "proceed | Throwable: " + throwable.getMessage());
                 failure(activity.getString(R.string.failed_to_handle_file));
             }
         });
     }
     private String fileFromUri(final Context context, final Uri uri) throws Throwable {
-        Log.v(TAG, "fileFromUri | uri: " + uri.toString());
+        log.v(TAG, "fileFromUri | uri: " + uri.toString());
         Cursor cursor = null;
         try {
             cursor = getContentResolver().query(uri, null, null, null, null);
@@ -122,7 +124,7 @@ public class FileReceiveActivity extends ConnectedActivity {
             cursor.moveToFirst();
             final String filename = cursor.getString(nameIndex);
             if (!Pattern.compile("^.*\\.cdoitmo$").matcher(filename).find()) {
-                Log.v(TAG, "fileFromUri | filename does not match pattern | filename=" + filename);
+                log.v(TAG, "fileFromUri | filename does not match pattern | filename=" + filename);
                 throw new MessageException(context.getString(R.string.error_while_handle_file));
             }
         } finally {
@@ -145,7 +147,7 @@ public class FileReceiveActivity extends ConnectedActivity {
         }
     }
     private String fileFromWeb(final Context context, final Uri uri) throws Throwable {
-        Log.v(TAG, "fileFromWeb | uri: " + uri.toString());
+        log.v(TAG, "fileFromWeb | uri: " + uri.toString());
         HashMap<String, String> headers = new HashMap<>();
         headers.put("User-Agent", networkUserAgentProvider.get(context));
         Request request = new Request.Builder()
@@ -173,7 +175,7 @@ public class FileReceiveActivity extends ConnectedActivity {
         }
     }
     private String fileFromContent(final Context context, final Uri uri) throws Throwable {
-        Log.v(TAG, "fileFromContent | uri: " + uri.toString());
+        log.v(TAG, "fileFromContent | uri: " + uri.toString());
         InputStream in = context.getContentResolver().openInputStream(uri);
         if (in != null) {
             final byte[] buffer = new byte[1024];
@@ -191,7 +193,7 @@ public class FileReceiveActivity extends ConnectedActivity {
     private void share_schedule_of_lessons(final String file, final JSONObject object) {
         Thread.run(() -> {
             try {
-                Log.v(TAG, "share_schedule_of_lessons");
+                log.v(TAG, "share_schedule_of_lessons");
                 if (storage.get(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", "").trim().isEmpty()) {
                     throw new MessageException(activity.getString(R.string.file_requires_auth));
                 }
@@ -217,10 +219,10 @@ public class FileReceiveActivity extends ConnectedActivity {
                     }
                 });
             } catch (MessageException e) {
-                Log.v(TAG, "share_schedule_of_lessons | MessageException: " + e.getMessage());
+                log.v(TAG, "share_schedule_of_lessons | MessageException: " + e.getMessage());
                 failure(e.getMessage());
             } catch (Throwable throwable) {
-                Log.w(TAG, "share_schedule_of_lessons | Throwable: " + throwable.getMessage());
+                log.w(TAG, "share_schedule_of_lessons | Throwable: " + throwable.getMessage());
                 failure(activity.getString(R.string.failed_to_decode_file));
             }
         });
@@ -228,7 +230,7 @@ public class FileReceiveActivity extends ConnectedActivity {
 
     private void failure(final String message) {
         Thread.runOnUI(() -> {
-            Log.v(TAG, "failure | message=" + message);
+            log.v(TAG, "failure | message=" + message);
             View state_failed_without_align = inflate(R.layout.state_failed_text_compact);
             ((TextView) state_failed_without_align.findViewById(R.id.text)).setText(message);
             ViewGroup container = activity.findViewById(getRootViewId());

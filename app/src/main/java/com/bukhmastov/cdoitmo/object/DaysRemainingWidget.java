@@ -34,17 +34,20 @@ public class DaysRemainingWidget {
     private final response delegate;
     private Executor executor;
 
+    //@Inject
+    private Log log = Log.instance();
+
     public DaysRemainingWidget(response delegate) {
         this.delegate = delegate;
     }
 
     public void start(Context context, JSONObject schedule) {
-        Log.v(TAG, "start");
+        log.v(TAG, "start");
         executor = new Executor(schedule);
     }
 
     public void stop() {
-        Log.v(TAG, "stop");
+        log.v(TAG, "stop");
         if (executor != null) {
             executor.cancel();
         }
@@ -58,7 +61,7 @@ public class DaysRemainingWidget {
         private final JSONObject full_schedule;
 
         Executor(JSONObject full_schedule){
-            Log.i(TAG, "started");
+            log.i(TAG, "started");
             this.full_schedule = full_schedule;
             this.running = true;
             start();
@@ -139,7 +142,7 @@ public class DaysRemainingWidget {
                                 throw new Exception("Invalid date/time: " + date + "/" + time);
                             }
                         } catch (Exception e) {
-                            Log.e(TAG, e.getMessage());
+                            log.e(TAG, e.getMessage());
                         }
                     }
                     delegate.onAction(dataArray);
@@ -150,7 +153,7 @@ public class DaysRemainingWidget {
                         break;
                     }
                 } catch (Exception e) {
-                    Log.exception(e);
+                    log.exception(e);
                     this.cancel();
                 }
             }
@@ -160,7 +163,7 @@ public class DaysRemainingWidget {
             running = false;
             interrupt();
             delegate.onCancelled();
-            Log.i(TAG, "interrupted");
+            log.i(TAG, "interrupted");
         }
     }
     private Time ts2time(long ts) {

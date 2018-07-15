@@ -15,13 +15,16 @@ public class ScheduleLessonsWidgetStorage {
 
     //@Inject
     //TODO interface - impl: remove static
+    private static Log log = Log.instance();
+    //@Inject
+    //TODO interface - impl: remove static
     private static Storage storage = Storage.instance();
 
     public static String get(Context context, int appWidgetId, String type) {
-        Log.v(TAG, "get | appWidgetId=" + appWidgetId + " | type=" + type);
+        log.v(TAG, "get | appWidgetId=" + appWidgetId + " | type=" + type);
         String pref;
         if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
-            Log.w(TAG, "get | prevented due to invalid appwidget id");
+            log.w(TAG, "get | prevented due to invalid appwidget id");
             pref = "";
         } else {
             pref = storage.get(context, Storage.PERMANENT, Storage.GLOBAL, "widget_schedule_lessons#" + appWidgetId + "#" + type).trim();
@@ -29,7 +32,7 @@ public class ScheduleLessonsWidgetStorage {
         return pref.isEmpty() ? null : pref;
     }
     public static JSONObject getJson(Context context, int appWidgetId, String type) {
-        Log.v(TAG, "getJson | appWidgetId=" + appWidgetId + " | type=" + type);
+        log.v(TAG, "getJson | appWidgetId=" + appWidgetId + " | type=" + type);
         JSONObject pref;
         try {
             String tmp = get(context, appWidgetId, type);
@@ -41,25 +44,25 @@ public class ScheduleLessonsWidgetStorage {
         return pref;
     }
     public static void save(Context context, int appWidgetId, String type, String text) {
-        Log.v(TAG, "save | appWidgetId=" + appWidgetId + " | type=" + type);
+        log.v(TAG, "save | appWidgetId=" + appWidgetId + " | type=" + type);
         if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
-            Log.w(TAG, "save | prevented due to invalid appwidget id");
+            log.w(TAG, "save | prevented due to invalid appwidget id");
             return;
         }
         storage.put(context, Storage.PERMANENT, Storage.GLOBAL, "widget_schedule_lessons#" + appWidgetId + "#" + type, text);
     }
     public static void delete(Context context, int appWidgetId, String type) {
-        Log.v(TAG, "delete | appWidgetId=" + appWidgetId + " | type=" + type);
+        log.v(TAG, "delete | appWidgetId=" + appWidgetId + " | type=" + type);
         if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
-            Log.w(TAG, "delete | prevented due to invalid appwidget id");
+            log.w(TAG, "delete | prevented due to invalid appwidget id");
             return;
         }
         storage.delete(context, Storage.PERMANENT, Storage.GLOBAL, "widget_schedule_lessons#" + appWidgetId + "#" + type);
     }
     public static void delete(Context context, int appWidgetId) {
-        Log.v(TAG, "delete | appWidgetId=" + appWidgetId);
+        log.v(TAG, "delete | appWidgetId=" + appWidgetId);
         if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
-            Log.w(TAG, "delete | prevented due to invalid appwidget id");
+            log.w(TAG, "delete | prevented due to invalid appwidget id");
             return;
         }
         storage.clear(context, Storage.PERMANENT, Storage.GLOBAL, "widget_schedule_lessons#" + appWidgetId);

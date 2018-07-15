@@ -26,6 +26,9 @@ public class PagerExamsAdapter extends FragmentPagerAdapter {
     }
     private final ArrayList<Element> tabs = new ArrayList<>();
 
+    //@Inject
+    private Log log = Log.instance();
+
     public PagerExamsAdapter(FragmentManager fm, Context context) {
         super(fm);
         tabs.add(new Element(0, context.getString(R.string.exams), 0));
@@ -48,7 +51,7 @@ public class PagerExamsAdapter extends FragmentPagerAdapter {
             fragment.setArguments(bundle);
             return fragment;
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             return null;
         }
     }

@@ -13,6 +13,9 @@ public class NetworkUserAgentProviderImpl implements NetworkUserAgentProvider {
     private static final String USER_AGENT_TEMPLATE = "CDOITMO/{versionName}/{versionCode} Java/Android/{sdkInt}";
     private String USER_AGENT = null;
 
+    //@Inject
+    private Log log = Log.instance();
+
     @Override
     public String get(Context context) {
         try {
@@ -25,7 +28,7 @@ public class NetworkUserAgentProviderImpl implements NetworkUserAgentProvider {
             }
             return USER_AGENT;
         } catch (Exception e) {
-            Log.w(TAG, "Failed to provide user agent | ", e.getMessage());
+            log.w(TAG, "Failed to provide user agent | ", e.getMessage());
             return USER_AGENT_TEMPLATE
                     .replace("{versionName}", "-")
                     .replace("{versionCode}", "-")

@@ -57,6 +57,8 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     public static final String ACTION_WIDGET_CONTROLS_RESET = "com.bukhmastov.cdoitmo.ACTION_WIDGET_CONTROLS_RESET";
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Retention(RetentionPolicy.SOURCE)
@@ -93,7 +95,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     }
     public void updateAppWidget(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final boolean force, final boolean controls) {
         Thread.run(() -> {
-            Log.i(TAG, "update | appWidgetId=" + appWidgetId);
+            log.i(TAG, "update | appWidgetId=" + appWidgetId);
             try {
                 JSONObject settings = ScheduleLessonsWidgetStorage.getJson(context, appWidgetId, "settings");
                 JSONObject cache = ScheduleLessonsWidgetStorage.getJson(context, appWidgetId, "cache");
@@ -111,20 +113,20 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                     }
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }
     public void deleteAppWidget(final Context context, final int appWidgetId) {
         Thread.run(() -> {
-            Log.i(TAG, "delete | appWidgetId=" + appWidgetId);
+            log.i(TAG, "delete | appWidgetId=" + appWidgetId);
             ScheduleLessonsWidgetStorage.delete(context, appWidgetId);
         });
     }
 
     private void refresh(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final JSONObject settings) {
         Thread.run(() -> {
-            Log.i(TAG, "refresh | appWidgetId=" + appWidgetId);
+            log.i(TAG, "refresh | appWidgetId=" + appWidgetId);
             try {
                 new ScheduleLessons(new Schedule.Handler() {
                     @Override
@@ -140,7 +142,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                                     display(context, appWidgetManager, appWidgetId, false);
                                 }).run();
                             } catch (Exception e) {
-                                Log.exception(e);
+                                log.exception(e);
                                 failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_show_schedule));
                             }
                         });
@@ -176,14 +178,14 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                     }
                 }).search(context, settings.getString("query"), 0, false, false);
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
                 failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_load_schedule));
             }
         });
     }
     private void progress(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final JSONObject settings) {
         Thread.run(() -> {
-            Log.v(TAG, "progress | appWidgetId=" + appWidgetId);
+            log.v(TAG, "progress | appWidgetId=" + appWidgetId);
             final @SIZE int size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
             final Colors colors = getColors(settings);
             final RemoteViews layout = new RemoteViews(context.getPackageName(), getViewLayout(size));
@@ -226,7 +228,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     }
     private void display(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final boolean controls) {
         Thread.run(() -> {
-            Log.v(TAG, "display | appWidgetId=" + appWidgetId + " | controls=" + (controls ? "true" : "false"));
+            log.v(TAG, "display | appWidgetId=" + appWidgetId + " | controls=" + (controls ? "true" : "false"));
             JSONObject settings = ScheduleLessonsWidgetStorage.getJson(context, appWidgetId, "settings");
             JSONObject cache = ScheduleLessonsWidgetStorage.getJson(context, appWidgetId, "cache");
             try {
@@ -357,7 +359,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.slw_day_schedule);
             } catch (Exception e) {
                 if (!("settings cannot be null".equals(e.getMessage()) || "cache cannot be null".equals(e.getMessage()))) {
-                    Log.exception(e);
+                    log.exception(e);
                 }
                 failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_show_schedule));
             }
@@ -365,7 +367,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     }
     private void failed(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final JSONObject settings, final String text) {
         Thread.run(() -> {
-            Log.v(TAG, "failed | appWidgetId=" + appWidgetId + " | text=" + text);
+            log.v(TAG, "failed | appWidgetId=" + appWidgetId + " | text=" + text);
             final @SIZE int size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
             final Colors colors = getColors(settings);
             final RemoteViews layout = new RemoteViews(context.getPackageName(), getViewLayout(size));
@@ -413,7 +415,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     }
     private void needPreparations(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId) {
         Thread.run(() -> {
-            Log.v(TAG, "needPreparations | appWidgetId=" + appWidgetId);
+            log.v(TAG, "needPreparations | appWidgetId=" + appWidgetId);
             final @SIZE int size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
             final Colors colors = getColors();
             final RemoteViews layout = new RemoteViews(context.getPackageName(), getViewLayout(size));
@@ -650,7 +652,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         Thread.run(() -> {
             final String action = intent.getAction() != null ? intent.getAction() : "";
             final int appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
-            Log.v(TAG, "onReceive | action=" + action);
+            log.v(TAG, "onReceive | action=" + action);
             switch (action) {
                 case ACTION_WIDGET_UPDATE: {
                     logStatistic(context, "force_update");
@@ -716,7 +718,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                                 oIntent.putExtra("action_extra", new JSONObject(settings).getString("query"));
                             }
                         } catch (Exception e) {
-                            Log.exception(e);
+                            log.exception(e);
                         }
                         context.startActivity(oIntent);
                     });
@@ -759,7 +761,6 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
             canvas.drawBitmap(b, 0, 0, paint);
             return bitmap;
         } catch (Exception e) {
-            Log.exception(e);
             return null;
         }
     }

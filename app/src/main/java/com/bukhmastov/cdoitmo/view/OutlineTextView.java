@@ -25,6 +25,9 @@ public class OutlineTextView extends AppCompatTextView {
     private float mShadowDy;
     private int mShadowColor;
 
+    //@Inject
+    private Log log = Log.instance();
+
     public OutlineTextView(Context context) {
         super(context);
     }
@@ -69,8 +72,8 @@ public class OutlineTextView extends AppCompatTextView {
             a.recycle();
         }
 
-        Log.d("mOutlineSize = ", mOutlineSize);
-        Log.d("mOutlineColor = ", mOutlineColor);
+        log.d("mOutlineSize = ", mOutlineSize);
+        log.d("mOutlineColor = ", mOutlineColor);
     }
 
     private void setPaintToOutline(){

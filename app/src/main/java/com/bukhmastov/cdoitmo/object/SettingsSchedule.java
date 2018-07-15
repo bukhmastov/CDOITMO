@@ -47,6 +47,8 @@ public abstract class SettingsSchedule {
     protected ViewGroup lsp_search_selected = null;
 
     //@Inject
+    protected Log log = Log.instance();
+    //@Inject
     private StoragePref storagePref = StoragePref.instance();
 
     public SettingsSchedule(ConnectedActivity activity, Preference preference, Callback callback) {
@@ -91,7 +93,7 @@ public abstract class SettingsSchedule {
                 });
                 lsp_search_action.setOnClickListener(view -> Thread.run(() -> {
                     final String query = lsp_search.getText().toString().trim();
-                    Log.v(TAG, "show | search action | clicked | query=" + query);
+                    log.v(TAG, "show | search action | clicked | query=" + query);
                     if (!query.isEmpty()) {
                         if (requestHandle != null) {
                             requestHandle.cancel();
@@ -101,19 +103,19 @@ public abstract class SettingsSchedule {
                 }));
                 lsp_search.setOnItemClickListener((parent, view, position, id) -> Thread.run(() -> {
                     try {
-                        Log.v(TAG, "show | search list selected");
+                        log.v(TAG, "show | search list selected");
                         final JSONObject item = teacherPickerAdapter.getItem(position);
                         if (item != null) {
                             query = item.getString("pid");
                             title = item.getString("person");
-                            Log.v(TAG, "show | search list selected | query=" + query + " | title=" + title);
+                            log.v(TAG, "show | search list selected | query=" + query + " | title=" + title);
                             Thread.runOnUI(() -> lsp_search.setText(title));
                             toggleSearchState("selected");
                         } else {
                             BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                         }
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                         BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 }));
@@ -160,14 +162,14 @@ public abstract class SettingsSchedule {
                         }
                     }
                 } catch (Exception e) {
-                    Log.exception(e);
+                    log.exception(e);
                 }
                 // show dialog
                 new AlertDialog.Builder(activity)
                         .setTitle(R.string.default_schedule)
                         .setView(layout)
                         .setPositiveButton(R.string.accept, (dialog, which) -> Thread.run(() -> {
-                            Log.v(TAG, "show | onPositiveButton | query=" + query + " | title=" + title);
+                            log.v(TAG, "show | onPositiveButton | query=" + query + " | title=" + title);
                             try {
                                 if (callback != null && query != null && title != null) {
                                     if (query.isEmpty()) {
@@ -181,12 +183,12 @@ public abstract class SettingsSchedule {
                                     }
                                 }
                             } catch (Exception e) {
-                                Log.exception(e);
+                                log.exception(e);
                             }
                         }))
                         .create().show();
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }
@@ -196,7 +198,7 @@ public abstract class SettingsSchedule {
         Thread.run(() -> scheduleSearchProvider.onSearch(activity, q, new Schedule.Handler() {
             @Override
             public void onSuccess(final JSONObject json, final boolean fromCache) {
-                Log.v(TAG, "show | search action | onSuccess | json=" + (json == null ? "null" : "notnull"));
+                log.v(TAG, "show | search action | onSuccess | json=" + (json == null ? "null" : "notnull"));
                 toggleSearchState("action");
                 Thread.run(() -> {
                     if (json == null) {
@@ -205,7 +207,7 @@ public abstract class SettingsSchedule {
                         try {
                             String t = json.getString("type");
                             String q1 = json.getString("query");
-                            Log.v(TAG, "show | search action | onSuccess | type=" + t);
+                            log.v(TAG, "show | search action | onSuccess | type=" + t);
                             switch (t) {
                                 case "group": case "room": case "teacher": {
                                     if (json.getJSONArray("schedule").length() > 0) {
@@ -216,7 +218,7 @@ public abstract class SettingsSchedule {
                                         } else {
                                             title = ti;
                                         }
-                                        Log.v(TAG, "show | search action | onSuccess | done | query=" + query + " | title=" + title);
+                                        log.v(TAG, "show | search action | onSuccess | done | query=" + query + " | title=" + title);
                                         toggleSearchState("selected");
                                     }
                                     break;
@@ -224,13 +226,13 @@ public abstract class SettingsSchedule {
                                 case "teachers": {
                                     teacherPickerAdapter.clear();
                                     final JSONArray schedule = json.getJSONArray("schedule");
-                                    Log.v(TAG, "show | search action | onSuccess | type=" + t + " | length=" + schedule.length());
+                                    log.v(TAG, "show | search action | onSuccess | type=" + t + " | length=" + schedule.length());
                                     if (schedule.length() == 1) {
                                         JSONObject item = schedule.getJSONObject(0);
                                         if (item != null) {
                                             query = item.getString("pid");
                                             title = item.getString("person");
-                                            Log.v(TAG, "show | search action | onSuccess | done | query=" + query + " | title=" + title);
+                                            log.v(TAG, "show | search action | onSuccess | done | query=" + query + " | title=" + title);
                                             Thread.runOnUI(() -> lsp_search.setText(title));
                                             toggleSearchState("selected");
                                         } else {
@@ -257,7 +259,7 @@ public abstract class SettingsSchedule {
                                 }
                             }
                         } catch (Exception e) {
-                            Log.exception(e);
+                            log.exception(e);
                             BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                         }
                     }
@@ -269,7 +271,7 @@ public abstract class SettingsSchedule {
             }
             @Override
             public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                Log.v(TAG, "show | search action | onFailure | state=" + state);
+                log.v(TAG, "show | search action | onFailure | state=" + state);
                 toggleSearchState("action");
                 Thread.runOnUI(() -> {
                     switch (state) {
@@ -295,7 +297,7 @@ public abstract class SettingsSchedule {
             }
             @Override
             public void onProgress(int state) {
-                Log.v(TAG, "activatePartSchedule | search action | onProgress | state=" + state);
+                log.v(TAG, "activatePartSchedule | search action | onProgress | state=" + state);
                 toggleSearchState("loading");
             }
             @Override

@@ -27,14 +27,14 @@ public class IfmoClientImpl extends IfmoClient {
     @Override
     public void get(@NonNull final Context context, @NonNull final @Protocol String protocol, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final ResponseHandler responseHandler) {
         Thread.run(Thread.BACKGROUND, () -> {
-            Log.v(TAG, "get | url=", url);
+            log.v(TAG, "get | url=", url);
             if (Client.isOnline(context)) {
                 responseHandler.onProgress(STATE_HANDLING);
                 g(context, getAbsoluteUrl(protocol, url), query, new RawHandler() {
                     @Override
                     public void onDone(final int code, final okhttp3.Headers headers, final String response) {
                         Thread.run(Thread.BACKGROUND, () -> {
-                            Log.v(TAG, "get | url=", url, " | success | statusCode=", code);
+                            log.v(TAG, "get | url=", url, " | success | statusCode=", code);
                             if (code >= 400) {
                                 responseHandler.onFailure(code, new Headers(headers), FAILED_SERVER_ERROR);
                                 return;
@@ -45,7 +45,7 @@ public class IfmoClientImpl extends IfmoClient {
                     @Override
                     public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
                         Thread.run(Thread.BACKGROUND, () -> {
-                            Log.v(TAG, "get | url=", url, " | failure | statusCode=", code, " | throwable=", throwable);
+                            log.v(TAG, "get | url=", url, " | failure | statusCode=", code, " | throwable=", throwable);
                             responseHandler.onFailure(code, new Headers(headers), (code >= 400 ? FAILED_SERVER_ERROR : FAILED_TRY_AGAIN));
                         });
                     }
@@ -55,7 +55,7 @@ public class IfmoClientImpl extends IfmoClient {
                     }
                 });
             } else {
-                Log.v(TAG, "get | url=", url, " | offline");
+                log.v(TAG, "get | url=", url, " | offline");
                 responseHandler.onFailure(STATUS_CODE_EMPTY, new Headers(null), FAILED_OFFLINE);
             }
         });

@@ -24,6 +24,8 @@ public class ScheduleAttestations extends Schedule {
     public static final String TYPE = "attestations";
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
     private DeIfmoClient deIfmoClient = DeIfmoClient.instance();
@@ -34,7 +36,7 @@ public class ScheduleAttestations extends Schedule {
 
     @Override
     protected void searchGroup(Context context, String group, int refreshRate, boolean forceToCache, boolean withUserChanges) {
-        Log.v(TAG, "searchGroup | group=", group, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges);
+        log.v(TAG, "searchGroup | group=", group, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges);
         Thread.run(() -> searchByQuery(context, "group", group, refreshRate, withUserChanges, new SearchByQuery() {
             @Override
             public boolean isWebAvailable() {
@@ -70,7 +72,7 @@ public class ScheduleAttestations extends Schedule {
                         template.put("schedule", data.getJSONArray("schedule"));
                         onFound(query, template, true, false);
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                         invokePending(query, withUserChanges, true, handler -> handler.onFailure(FAILED_LOAD));
                     }
                 });
@@ -92,7 +94,7 @@ public class ScheduleAttestations extends Schedule {
                 Thread.run(() -> {
                     try {
                         if (context == null || query == null || data == null) {
-                            Log.w(TAG, "onFound | some values are null | context=", context, " | query=", query, " | data=", data);
+                            log.w(TAG, "onFound | some values are null | context=", context, " | query=", query, " | data=", data);
                             if (query == null) {
                                 return;
                             }
@@ -104,7 +106,7 @@ public class ScheduleAttestations extends Schedule {
                         }
                         invokePending(query, withUserChanges, true, handler -> handler.onSuccess(data, fromCache));
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                         invokePending(query, withUserChanges, true, handler -> handler.onFailure(FAILED_LOAD));
                     }
                 });
@@ -113,17 +115,17 @@ public class ScheduleAttestations extends Schedule {
     }
     @Override
     protected void searchMine(Context context, int refreshRate, boolean forceToCache, boolean withUserChanges) {
-        Log.v(TAG, "searchMine | personal schedule is unavailable at schedule of attestations");
+        log.v(TAG, "searchMine | personal schedule is unavailable at schedule of attestations");
         invokePending("mine", withUserChanges, true, handler -> handler.onFailure(FAILED_INVALID_QUERY));
     }
     @Override
     protected void searchRoom(Context context, String room, int refreshRate, boolean forceToCache, boolean withUserChanges) {
-        Log.v(TAG, "searchRoom | room schedule is unavailable at schedule of attestations");
+        log.v(TAG, "searchRoom | room schedule is unavailable at schedule of attestations");
         invokePending(room, withUserChanges, true, handler -> handler.onFailure(FAILED_INVALID_QUERY));
     }
     @Override
     protected void searchTeacher(Context context, String teacherId, int refreshRate, boolean forceToCache, boolean withUserChanges) {
-        Log.v(TAG, "searchTeacher | teacher schedule is unavailable at schedule of attestations");
+        log.v(TAG, "searchTeacher | teacher schedule is unavailable at schedule of attestations");
         invokePending(teacherId, withUserChanges, true, handler -> handler.onFailure(FAILED_INVALID_QUERY));
     }
     @Override

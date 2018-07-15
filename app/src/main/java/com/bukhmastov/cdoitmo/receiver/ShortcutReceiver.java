@@ -39,13 +39,15 @@ public class ShortcutReceiver extends BroadcastReceiver {
     public static final String EXTRA_DATA = "shortcut_data";
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     public void onReceive(final Context context, final Intent intent) {
         Thread.run(() -> {
             try {
                 String action = intent.getAction();
-                Log.i(TAG, "onReceive | action=" + action);
+                log.i(TAG, "onReceive | action=" + action);
                 switch (action != null ? action : "") {
                     case ACTION_ADD_SHORTCUT: {
                         Bundle extras = intent.getExtras();
@@ -76,19 +78,19 @@ public class ShortcutReceiver extends BroadcastReceiver {
                         break;
                     }
                     default: {
-                        Log.e(TAG, "unsupported intent action: " + action);
+                        log.e(TAG, "unsupported intent action: " + action);
                         break;
                     }
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }
 
     private void resolve(final Context context, final String shortcut_type, final String shortcut_data) {
         Thread.run(() -> {
-            Log.v(TAG, "resolve | shortcut_type=" + shortcut_type + " | shortcut_data=" + shortcut_data);
+            log.v(TAG, "resolve | shortcut_type=" + shortcut_type + " | shortcut_data=" + shortcut_data);
             try {
                 firebaseAnalyticsProvider.logEvent(
                         context,
@@ -145,14 +147,14 @@ public class ShortcutReceiver extends BroadcastReceiver {
                     }
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }
 
     private void addShortcut(final Context context, final String type, final String data) {
         Thread.run(() -> {
-            Log.v(TAG, "addShortcut | type=" + type + " | data=" + data);
+            log.v(TAG, "addShortcut | type=" + type + " | data=" + data);
             try {
                 switch (type) {
                     case "offline": {
@@ -212,7 +214,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
                     }
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }
@@ -220,7 +222,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
     @SuppressWarnings("deprecation")
     private void installShortcut(final Context context, final String type, final String data, final String label, @DrawableRes final int icon) {
         Thread.run(() -> {
-            Log.v(TAG, "installShortcut | type=" + type + " | data=" + data);
+            log.v(TAG, "installShortcut | type=" + type + " | data=" + data);
             try {
                 Intent shortcutIntent = new Intent(context, ShortcutReceiverActivity.class);
                 shortcutIntent.setAction(ShortcutReceiver.ACTION_CLICK_SHORTCUT);
@@ -255,7 +257,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
                         firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.SHORTCUT_TYPE, type)
                 );
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }

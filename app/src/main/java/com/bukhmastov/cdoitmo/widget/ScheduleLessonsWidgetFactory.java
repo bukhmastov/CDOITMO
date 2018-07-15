@@ -24,6 +24,9 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
     private int week = -1;
     private JSONArray lessons;
 
+    //@Inject
+    private Log log = Log.instance();
+
     ScheduleLessonsWidgetFactory(Context context, Intent intent) {
         this.context = context;
         this.appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
@@ -69,12 +72,12 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
                     this.lessons = new JSONArray();
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
                 this.lessons = new JSONArray();
             }
         } catch (Exception e) {
             if (!("settings cannot be null".equals(e.getMessage()) || "content cannot be null".equals(e.getMessage()))) {
-                Log.exception(e);
+                log.exception(e);
             }
             this.lessons = new JSONArray();
         }
@@ -166,7 +169,7 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
             }
             return layout;
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             return null;
         }
     }

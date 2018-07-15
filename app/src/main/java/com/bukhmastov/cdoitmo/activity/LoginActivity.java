@@ -53,6 +53,8 @@ public class LoginActivity extends ConnectedActivity {
     public static boolean auto_logout = false;
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private Storage storage = Storage.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
@@ -63,7 +65,7 @@ public class LoginActivity extends ConnectedActivity {
     protected void onCreate(Bundle savedInstanceState) {
         Theme.applyActivityTheme(this);
         super.onCreate(savedInstanceState);
-        Log.i(TAG, "Activity created");
+        log.i(TAG, "Activity created");
         firebaseAnalyticsProvider.logCurrentScreen(this);
         setContentView(R.layout.activity_login);
         // Show introducing activity
@@ -99,7 +101,7 @@ public class LoginActivity extends ConnectedActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.i(TAG, "Activity destroyed");
+        log.i(TAG, "Activity destroyed");
     }
 
     @Override
@@ -121,7 +123,7 @@ public class LoginActivity extends ConnectedActivity {
 
     @Override
     protected void attachBaseContext(Context context) {
-        super.attachBaseContext(CtxWrapper.wrap(context, storagePref));
+        super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log));
     }
 
     @Override
@@ -131,7 +133,7 @@ public class LoginActivity extends ConnectedActivity {
 
     private void route(final int signal) {
         Thread.run(() -> {
-            Log.i(TAG, "route | signal=", signal);
+            log.i(TAG, "route | signal=", signal);
             App.OFFLINE_MODE = false;
             App.UNAUTHORIZED_MODE = false;
             switch (signal) {
@@ -201,7 +203,7 @@ public class LoginActivity extends ConnectedActivity {
                     break;
                 }
                 default: {
-                    Log.wtf(TAG, "route | unsupported signal: signal=", signal, " | going to use signal=SIGNAL_LOGIN");
+                    log.wtf(TAG, "route | unsupported signal: signal=", signal, " | going to use signal=SIGNAL_LOGIN");
                     route(SIGNAL_LOGIN);
                     break;
                 }
@@ -212,7 +214,7 @@ public class LoginActivity extends ConnectedActivity {
     private void show() {
         Thread.run(() -> {
             try {
-                Log.v(TAG, "show");
+                log.v(TAG, "show");
                 firebaseAnalyticsProvider.logEvent(activity, FirebaseAnalyticsProvider.Event.LOGIN_REQUIRED);
                 String cLogin = "", cPassword = "", cRole = "";
                 if (!storage.get(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", "").isEmpty()) {
@@ -236,7 +238,7 @@ public class LoginActivity extends ConnectedActivity {
                     Thread.runOnUI(() -> draw(container));
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
                 BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
@@ -246,7 +248,7 @@ public class LoginActivity extends ConnectedActivity {
         final EditText input_login = new_user_tile.findViewById(R.id.input_login);
         final EditText input_password = new_user_tile.findViewById(R.id.input_password);
         new_user_tile.findViewById(R.id.login).setOnClickListener(v -> {
-            Log.v(TAG, "new_user_tile login clicked");
+            log.v(TAG, "new_user_tile login clicked");
             String login = "";
             String password = "";
             if (input_login != null) {
@@ -282,7 +284,7 @@ public class LoginActivity extends ConnectedActivity {
                 // unique situation, we need to grab info about accounts in which we are not logged in
                 // danger zone begins
                 final String acLogin = accounts.getString(i);
-                Log.v(TAG, "show | account in accounts | login=", acLogin);
+                log.v(TAG, "show | account in accounts | login=", acLogin);
                 storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", acLogin);
                 final String login = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#login");
                 final String password = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#password");
@@ -323,16 +325,16 @@ public class LoginActivity extends ConnectedActivity {
                     }
                 }
                 user_tile.findViewById(R.id.auth).setOnClickListener(v -> {
-                    Log.v(TAG, "user_tile login clicked");
+                    log.v(TAG, "user_tile login clicked");
                     login(login, password, role, false);
                 });
                 user_tile.findViewById(R.id.expand_auth_menu).setOnClickListener(view -> {
-                    Log.v(TAG, "user_tile expand_auth_menu clicked");
+                    log.v(TAG, "user_tile expand_auth_menu clicked");
                     final PopupMenu popup = new PopupMenu(activity, view);
                     final Menu menu = popup.getMenu();
                     popup.getMenuInflater().inflate(R.menu.auth_expanded_menu, menu);
                     popup.setOnMenuItemClickListener(item -> {
-                        Log.v(TAG, "auth_expanded_menu | popup.MenuItem clicked | ", item.getTitle().toString());
+                        log.v(TAG, "auth_expanded_menu | popup.MenuItem clicked | ", item.getTitle().toString());
                         switch (item.getItemId()) {
                             case R.id.offline: {
                                 storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", login);
@@ -374,13 +376,13 @@ public class LoginActivity extends ConnectedActivity {
                                                             });
                                                         }
                                                     } catch (Exception e) {
-                                                        Log.exception(e);
+                                                        log.exception(e);
                                                     }
                                                 })
                                                 .setNegativeButton(R.string.cancel, null)
                                                 .create().show();
                                     } catch (Exception e) {
-                                        Log.exception(e);
+                                        log.exception(e);
                                     }
                                 });
                                 break;
@@ -392,7 +394,7 @@ public class LoginActivity extends ConnectedActivity {
                 });
                 container.addView(user_tile);
             } catch (JSONException e) {
-                Log.exception(e);
+                log.exception(e);
             }
         }
     }
@@ -406,7 +408,7 @@ public class LoginActivity extends ConnectedActivity {
         storage.delete(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
         // not really danger zone ends
         anonymous_user_tile.findViewById(R.id.login).setOnClickListener(view -> {
-            Log.v(TAG, "anonymous_user_tile login clicked");
+            log.v(TAG, "anonymous_user_tile login clicked");
             String group = "";
             if (input_group != null) {
                 group = com.bukhmastov.cdoitmo.util.TextUtils.prettifyGroupNumber(input_group.getText().toString());
@@ -435,12 +437,12 @@ public class LoginActivity extends ConnectedActivity {
             login(Account.USER_UNAUTHORIZED, Account.USER_UNAUTHORIZED, "anonymous", false);
         });
         anonymous_user_tile.findViewById(R.id.expand_auth_menu).setOnClickListener(view -> {
-            Log.v(TAG, "anonymous_user_tile expand_auth_menu clicked");
+            log.v(TAG, "anonymous_user_tile expand_auth_menu clicked");
             final PopupMenu popup = new PopupMenu(activity, view);
             final Menu menu = popup.getMenu();
             popup.getMenuInflater().inflate(R.menu.auth_anonymous_expanded_menu, menu);
             popup.setOnMenuItemClickListener(item -> {
-                Log.v(TAG, "auth_expanded_menu | popup.MenuItem clicked | ", item.getTitle().toString());
+                log.v(TAG, "auth_expanded_menu | popup.MenuItem clicked | ", item.getTitle().toString());
                 switch (item.getItemId()) {
                     case R.id.offline: {
                         storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", Account.USER_UNAUTHORIZED);
@@ -470,24 +472,24 @@ public class LoginActivity extends ConnectedActivity {
     }
 
     private void login(final String login, final String password, final String role, final boolean isNewUser) {
-        Log.v(TAG, "login | login=", login, " | role=", role, " | isNewUser=", isNewUser);
+        log.v(TAG, "login | login=", login, " | role=", role, " | isNewUser=", isNewUser);
         Static.lockOrientation(activity, true);
         Account.login(activity, login, password, role, isNewUser, new Account.LoginHandler() {
             @Override
             public void onSuccess() {
-                Log.v(TAG, "login | onSuccess");
+                log.v(TAG, "login | onSuccess");
                 finish();
                 Static.lockOrientation(activity, false);
             }
             @Override
             public void onOffline() {
-                Log.v(TAG, "login | onOffline");
+                log.v(TAG, "login | onOffline");
                 finish();
                 Static.lockOrientation(activity, false);
             }
             @Override
             public void onInterrupted() {
-                Log.v(TAG, "login | onInterrupted");
+                log.v(TAG, "login | onInterrupted");
                 firebaseAnalyticsProvider.logBasicEvent(activity, "login interrupted");
                 storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", login);
                 route(SIGNAL_GO_OFFLINE);
@@ -495,14 +497,14 @@ public class LoginActivity extends ConnectedActivity {
             }
             @Override
             public void onFailure(String text) {
-                Log.v(TAG, "login | onFailure | text=", text);
+                log.v(TAG, "login | onFailure | text=", text);
                 BottomBar.snackBar(activity, text);
                 show();
                 Static.lockOrientation(activity, false);
             }
             @Override
             public void onProgress(String text) {
-                Log.v(TAG, "login | onProgress | text=", text);
+                log.v(TAG, "login | onProgress | text=", text);
                 draw(R.layout.state_auth);
                 if (isNewUser) {
                     View interrupt_auth_container = findViewById(R.id.interrupt_auth_container);
@@ -513,9 +515,9 @@ public class LoginActivity extends ConnectedActivity {
                     View interrupt_auth = findViewById(R.id.interrupt_auth);
                     if (interrupt_auth != null) {
                         interrupt_auth.setOnClickListener(v -> {
-                            Log.v(TAG, "login | onProgress | login interrupt clicked");
+                            log.v(TAG, "login | onProgress | login interrupt clicked");
                             if (requestHandle != null && requestHandle.cancel()) {
-                                Log.v(TAG, "login | onProgress | login interrupted");
+                                log.v(TAG, "login | onProgress | login interrupted");
                             }
                         });
                     }
@@ -527,32 +529,32 @@ public class LoginActivity extends ConnectedActivity {
             }
             @Override
             public void onNewRequest(Client.Request request) {
-                Log.v(TAG, "login | onNewRequest");
+                log.v(TAG, "login | onNewRequest");
                 requestHandle = request;
             }
         });
     }
     private void logout(final String login) {
-        Log.v(TAG, "logout | login=", login);
+        log.v(TAG, "logout | login=", login);
         Static.lockOrientation(activity, true);
         Account.logout(activity, login, new Account.LogoutHandler() {
             @Override
             public void onSuccess() {
-                Log.v(TAG, "logout | onSuccess");
+                log.v(TAG, "logout | onSuccess");
                 BottomBar.snackBar(activity, activity.getString(R.string.logged_out));
                 show();
                 Static.lockOrientation(activity, false);
             }
             @Override
             public void onFailure(String text) {
-                Log.v(TAG, "logout | onFailure | text=", text);
+                log.v(TAG, "logout | onFailure | text=", text);
                 BottomBar.snackBar(activity, text);
                 show();
                 Static.lockOrientation(activity, false);
             }
             @Override
             public void onProgress(String text) {
-                Log.v(TAG, "logout | onProgress | text=", text);
+                log.v(TAG, "logout | onProgress | text=", text);
                 draw(R.layout.state_auth);
                 View interrupt_auth_container = findViewById(R.id.interrupt_auth_container);
                 if (interrupt_auth_container != null) {

@@ -22,6 +22,8 @@ public class FirebaseAnalyticsProviderImpl implements FirebaseAnalyticsProvider 
     private FirebaseAnalytics firebaseAnalytics = null;
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private StoragePref storagePref = StoragePref.instance();
 
     private FirebaseAnalytics getFirebaseAnalytics(Context context) {
@@ -49,9 +51,9 @@ public class FirebaseAnalyticsProviderImpl implements FirebaseAnalyticsProvider 
             FirebaseAnalytics firebaseAnalytics = getFirebaseAnalytics(context);
             firebaseAnalytics.setAnalyticsCollectionEnabled(this.enabled);
             firebaseAnalytics.setUserId(Static.getUUID(context));
-            Log.i(TAG, "Firebase Analytics ", (this.enabled ? "enabled" : "disabled"));
+            log.i(TAG, "Firebase Analytics ", (this.enabled ? "enabled" : "disabled"));
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
         return this.enabled;
     }
@@ -84,7 +86,7 @@ public class FirebaseAnalyticsProviderImpl implements FirebaseAnalyticsProvider 
                 }
                 getFirebaseAnalytics(activity).setCurrentScreen(activity, vs, null);
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }
@@ -119,7 +121,7 @@ public class FirebaseAnalyticsProviderImpl implements FirebaseAnalyticsProvider 
                     getBundle(FirebaseAnalyticsProvider.Param.APP_VIEW_SCREEN, view_screen)
             );
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
 
@@ -168,7 +170,7 @@ public class FirebaseAnalyticsProviderImpl implements FirebaseAnalyticsProvider 
             }
             setUserProperty(context, Property.GROUP, group);
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     @Override
@@ -178,7 +180,7 @@ public class FirebaseAnalyticsProviderImpl implements FirebaseAnalyticsProvider 
                 if (!enabled) return;
                 getFirebaseAnalytics(context).setUserProperty(property, value);
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }
@@ -194,7 +196,7 @@ public class FirebaseAnalyticsProviderImpl implements FirebaseAnalyticsProvider 
                 if (!enabled) return;
                 getFirebaseAnalytics(context).logEvent(name, params);
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }
@@ -208,7 +210,7 @@ public class FirebaseAnalyticsProviderImpl implements FirebaseAnalyticsProvider 
                         getBundle(Param.EVENT_EXTRA, content)
                 );
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }

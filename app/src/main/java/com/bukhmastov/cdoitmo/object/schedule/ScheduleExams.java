@@ -21,6 +21,8 @@ public class ScheduleExams extends Schedule {
     public static final String TYPE = "exams";
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private IfmoClient ifmoClient = IfmoClient.instance();
 
     public ScheduleExams(Handler handler) {
@@ -29,13 +31,13 @@ public class ScheduleExams extends Schedule {
 
     @Override
     protected void searchMine(final Context context, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
-        Log.v(TAG, "searchMine | personal schedule is unavailable");
+        log.v(TAG, "searchMine | personal schedule is unavailable");
         invokePending("mine", withUserChanges, true, handler -> handler.onFailure(FAILED_INVALID_QUERY));
     }
     @Override
     protected void searchGroup(final Context context, final String group, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
         final @Source String source = getSource(context);
-        Log.v(TAG, "searchGroup | group=", group, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=" + source);
+        log.v(TAG, "searchGroup | group=", group, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=" + source);
         Thread.run(() -> searchByQuery(context, "group", group, refreshRate, withUserChanges, new SearchByQuery() {
             @Override
             public boolean isWebAvailable() {
@@ -92,13 +94,13 @@ public class ScheduleExams extends Schedule {
     }
     @Override
     protected void searchRoom(final Context context, final String room, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
-        Log.v(TAG, "searchRoom | actually, rooms unavailable at schedule of exams");
+        log.v(TAG, "searchRoom | actually, rooms unavailable at schedule of exams");
         invokePending(room, withUserChanges, true, handler -> handler.onFailure(FAILED_INVALID_QUERY));
     }
     @Override
     protected void searchTeacher(final Context context, final String teacherId, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
         final @Source String source = getSource(context);
-        Log.v(TAG, "searchTeacher | teacherId=", teacherId, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=" + source);
+        log.v(TAG, "searchTeacher | teacherId=", teacherId, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges, " | source=" + source);
         Thread.run(() -> searchByQuery(context, "teacher", teacherId, refreshRate, withUserChanges, new SearchByQuery() {
             @Override
             public boolean isWebAvailable() {
@@ -173,7 +175,7 @@ public class ScheduleExams extends Schedule {
         Thread.run(() -> {
             try {
                 if (context == null || query == null || data == null) {
-                    Log.w(TAG, "onFound | some values are null | context=", context, " | query=", query, " | data=", data);
+                    log.w(TAG, "onFound | some values are null | context=", context, " | query=", query, " | data=", data);
                     if (query == null) {
                         return;
                     }
@@ -189,7 +191,7 @@ public class ScheduleExams extends Schedule {
                     invokePending(query, withUserChanges, true, handler -> handler.onSuccess(data, fromCache));
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
                 invokePending(query, withUserChanges, true, handler -> handler.onFailure(FAILED_LOAD));
             }
         });

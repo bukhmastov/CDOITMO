@@ -12,6 +12,9 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
 
     private final GestureDetector gestureDetector;
 
+    //@Inject
+    private Log log = Log.instance();
+
     public OnSwipeTouchListener (Context context) {
         gestureDetector = new GestureDetector(context, new GestureListener());
     }
@@ -58,7 +61,7 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
                     result = true;
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
             return result;
         }

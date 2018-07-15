@@ -39,6 +39,8 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
     private int pid = -1;
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private IfmoRestClient ifmoRestClient = IfmoRestClient.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
@@ -53,7 +55,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
             case "black": setTheme(R.style.AppTheme_Black_TransparentStatusBar); break;
         }
         super.onCreate(savedInstanceState);
-        Log.i(TAG, "Activity created");
+        log.i(TAG, "Activity created");
         try {
             Intent intent = getIntent();
             if (intent == null) throw new NullPointerException("intent is null");
@@ -91,13 +93,13 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.v(TAG, "Fragment destroyed");
+        log.v(TAG, "Fragment destroyed");
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        Log.v(TAG, "resumed");
+        log.v(TAG, "resumed");
         firebaseAnalyticsProvider.setCurrentScreen(this);
         if (!loaded) {
             loaded = true;
@@ -108,7 +110,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
     @Override
     public void onPause() {
         super.onPause();
-        Log.v(TAG, "paused");
+        log.v(TAG, "paused");
         if (requestHandle != null && requestHandle.cancel()) {
             loaded = false;
         }
@@ -116,7 +118,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
 
     @Override
     public void onRefresh() {
-        Log.v(TAG, "refreshing");
+        log.v(TAG, "refreshing");
         person = null;
         load();
     }
@@ -164,7 +166,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                 @Override
                 public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                     Thread.runOnUI(() -> {
-                        Log.v(TAG, "load | statusCode = " + statusCode + " | failure " + state);
+                        log.v(TAG, "load | statusCode = " + statusCode + " | failure " + state);
                         SwipeRefreshLayout mSwipeRefreshLayout = findViewById(R.id.person_swipe);
                         if (mSwipeRefreshLayout != null) {
                             mSwipeRefreshLayout.setRefreshing(false);
@@ -203,7 +205,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                 @Override
                 public void onProgress(final int state) {
                     Thread.runOnUI(() -> {
-                        Log.v(TAG, "load | progress " + state);
+                        log.v(TAG, "load | progress " + state);
                         if (first_load) {
                             draw(R.layout.state_loading_text);
                             TextView loading_message = findViewById(R.id.loading_message);
@@ -225,12 +227,12 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
         });
     }
     private void loadProvider(RestResponseHandler handler) {
-        Log.v(TAG, "loadProvider");
+        log.v(TAG, "loadProvider");
         ifmoRestClient.get(activity, "person/" + pid, null, handler);
     }
     private void loadFailed() {
         Thread.runOnUI(() -> {
-            Log.v(TAG, "loadFailed");
+            log.v(TAG, "loadFailed");
             try {
                 draw(R.layout.state_failed_button);
                 TextView try_again_message = findViewById(R.id.try_again_message);
@@ -240,18 +242,18 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                     try_again_reload.setOnClickListener(v -> load());
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }
     private void loadNotFound() {
         Thread.runOnUI(() -> {
-            Log.v(TAG, "loadNotFound");
+            log.v(TAG, "loadNotFound");
             try {
                 draw(R.layout.state_nothing_to_display_person);
                 findViewById(R.id.web).setOnClickListener(view -> activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ifmo.ru/ru/viewperson/" + pid + "/"))));
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }
@@ -344,7 +346,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                     mSwipeRefreshLayout.setOnRefreshListener(this);
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }

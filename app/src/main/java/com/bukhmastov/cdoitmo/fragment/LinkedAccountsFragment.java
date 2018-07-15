@@ -19,6 +19,8 @@ public class LinkedAccountsFragment extends ConnectedFragment {
     private static final String TAG = "LinkedAccountsFragment";
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private Storage storage = Storage.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
@@ -26,27 +28,27 @@ public class LinkedAccountsFragment extends ConnectedFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.v(TAG, "Fragment created");
+        log.v(TAG, "Fragment created");
         firebaseAnalyticsProvider.logCurrentScreen(activity, this);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.v(TAG, "Fragment destroyed");
+        log.v(TAG, "Fragment destroyed");
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        Log.v(TAG, "resumed");
+        log.v(TAG, "resumed");
         firebaseAnalyticsProvider.setCurrentScreen(activity, this);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        Log.v(TAG, "paused");
+        log.v(TAG, "paused");
     }
 
     @Override
@@ -56,7 +58,7 @@ public class LinkedAccountsFragment extends ConnectedFragment {
             final View account_cdo_info = container.findViewById(R.id.account_cdo_info);
             if (account_cdo_link != null) {
                 account_cdo_link.setOnClickListener(v -> {
-                    Log.v(TAG, "account_cdo_link clicked");
+                    log.v(TAG, "account_cdo_link clicked");
                     try {
                         activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://de.ifmo.ru")));
                     } catch (Exception e) {
@@ -73,7 +75,7 @@ public class LinkedAccountsFragment extends ConnectedFragment {
                 });
             });
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
 

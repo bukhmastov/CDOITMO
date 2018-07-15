@@ -50,6 +50,8 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
     private boolean block_time_end = false;
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private Storage storage = Storage.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
@@ -83,12 +85,12 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                 case EDIT: activity.updateToolbar(activity, activity.getString(R.string.lesson_editing), R.drawable.ic_schedule_lessons); break;
                 default:
                     Exception exception = new Exception("got wrong type from arguments bundle: " + type);
-                    Log.wtf(exception);
+                    log.wtf(exception);
                     throw exception;
             }
             display();
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             close();
         }
     }
@@ -409,7 +411,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                 lesson_teacher.setText(lesson.teacher);
                                 lesson_teacher.dismissDropDown();
                             } catch (Exception e) {
-                                Log.exception(e);
+                                log.exception(e);
                                 BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                             }
                         });
@@ -449,14 +451,14 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                         }
                         lesson_create_button.setOnClickListener(v -> Thread.run(() -> {
                             try {
-                                Log.v(TAG, "create_button clicked");
+                                log.v(TAG, "create_button clicked");
                                 if (lesson.subject == null || lesson.subject.isEmpty()) {
-                                    Log.v(TAG, "lessonUnit.title required");
+                                    log.v(TAG, "lessonUnit.title required");
                                     BottomBar.snackBar(activity, activity.getString(R.string.lesson_title_required));
                                     return;
                                 }
                                 if (lesson.timeStart == null || lesson.timeStart.isEmpty()) {
-                                    Log.v(TAG, "lessonUnit.timeStart required");
+                                    log.v(TAG, "lessonUnit.timeStart required");
                                     BottomBar.snackBar(activity, activity.getString(R.string.lesson_time_start_required));
                                     return;
                                 }
@@ -472,7 +474,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                             ScheduleLessonsTabHostFragment.invalidateOnDemand();
                                             close();
                                         } else {
-                                            Log.w(TAG, "failed to create lesson");
+                                            log.w(TAG, "failed to create lesson");
                                             BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                         }
                                         break;
@@ -482,26 +484,26 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                             ScheduleLessonsTabHostFragment.invalidateOnDemand();
                                             close();
                                         } else {
-                                            Log.w(TAG, "failed to create lesson");
+                                            log.w(TAG, "failed to create lesson");
                                             BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                         }
                                         break;
                                     }
                                 }
                             } catch (Exception e) {
-                                Log.exception(e);
+                                log.exception(e);
                                 BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                 close();
                             }
                         }));
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                         BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                         close();
                     }
                 });
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
                 BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 close();
             }
@@ -631,7 +633,6 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
     }
     private static class TeacherSearch {
 
-        private static final String TAG = "SLModifyFragment.TS";
         interface response {
             void onPermitted();
             void onSuccess(JSONObject json);
@@ -659,13 +660,11 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                     Thread.runOnUI(() -> progressBar.setVisibility(View.GONE));
                     return;
                 }
-                Log.v(TAG, "search | query=" + query);
                 delegate.onPermitted();
                 Thread.runOnUI(() -> progressBar.setVisibility(View.VISIBLE));
                 new ScheduleLessons(new Schedule.Handler() {
                     @Override
                     public void onSuccess(JSONObject json, boolean fromCache) {
-                        Log.v(TAG, "search | onSuccess");
                         Thread.runOnUI(() -> progressBar.setVisibility(View.GONE));
                         delegate.onSuccess(json);
                     }
@@ -675,13 +674,10 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                     }
                     @Override
                     public void onFailure(int statusCode, Client.Headers headers, int state) {
-                        Log.v(TAG, "search | onFailure | statusCode=" + statusCode + " | state=" + state);
                         Thread.runOnUI(() -> progressBar.setVisibility(View.GONE));
                     }
                     @Override
-                    public void onProgress(int state) {
-                        Log.v(TAG, "search | onProgress | state=" + state);
-                    }
+                    public void onProgress(int state) {}
                     @Override
                     public void onNewRequest(Client.Request request) {
                         requestHandle = request;

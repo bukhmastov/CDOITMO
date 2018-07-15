@@ -10,6 +10,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.bukhmastov.cdoitmo.util.Log;
+
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -35,6 +37,9 @@ public abstract class RVA extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             this.container = container;
         }
     }
+
+    //@Inject
+    protected Log log = Log.instance();
 
     @Override
     public int getItemCount() {

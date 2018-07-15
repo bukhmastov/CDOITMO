@@ -19,26 +19,28 @@ public abstract class SettingsTemplateHeadersFragment extends ConnectedFragment 
     private boolean loaded = false;
 
     //@Inject
+    protected Log log = Log.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.v(getTAG(), "Fragment created");
+        log.v(getTAG(), "Fragment created");
         firebaseAnalyticsProvider.logCurrentScreen(activity, getSelf());
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.v(getTAG(), "Fragment destroyed");
+        log.v(getTAG(), "Fragment destroyed");
         loaded = false;
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        Log.v(getTAG(), "resumed");
+        log.v(getTAG(), "resumed");
         firebaseAnalyticsProvider.setCurrentScreen(activity, getSelf());
         if (!loaded) {
             load();
@@ -48,7 +50,7 @@ public abstract class SettingsTemplateHeadersFragment extends ConnectedFragment 
     @Override
     public void onPause() {
         super.onPause();
-        Log.v(getTAG(), "paused");
+        log.v(getTAG(), "paused");
     }
 
     @Override
@@ -72,7 +74,7 @@ public abstract class SettingsTemplateHeadersFragment extends ConnectedFragment 
                 loaded = true;
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             failed();
         }
     }
@@ -89,11 +91,11 @@ public abstract class SettingsTemplateHeadersFragment extends ConnectedFragment 
                         load();
                     }
                 } catch (Exception e) {
-                    Log.exception(e);
+                    log.exception(e);
                 }
             });
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
 

@@ -13,6 +13,7 @@ import com.bukhmastov.cdoitmo.object.preference.Preference;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.StoragePref;
+import com.bukhmastov.cdoitmo.util.StorageProvider;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,28 +23,30 @@ public abstract class SettingsTemplatePreferencesFragment extends ConnectedFragm
     private boolean loaded = false;
 
     //@Inject
-    protected StoragePref storagePref = StoragePref.instance();
+    protected Log log = Log.instance();
+    //@Inject
+    protected StorageProvider storageProvider = StorageProvider.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.v(getTAG(), "Fragment created");
+        log.v(getTAG(), "Fragment created");
         firebaseAnalyticsProvider.logCurrentScreen(activity, getSelf());
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.v(getTAG(), "Fragment destroyed");
+        log.v(getTAG(), "Fragment destroyed");
         loaded = false;
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        Log.v(getTAG(), "resumed");
+        log.v(getTAG(), "resumed");
         firebaseAnalyticsProvider.setCurrentScreen(activity, getSelf());
         if (!loaded) {
             load();
@@ -53,7 +56,7 @@ public abstract class SettingsTemplatePreferencesFragment extends ConnectedFragm
     @Override
     public void onPause() {
         super.onPause();
-        Log.v(getTAG(), "paused");
+        log.v(getTAG(), "paused");
     }
 
     @Override
@@ -72,14 +75,14 @@ public abstract class SettingsTemplatePreferencesFragment extends ConnectedFragm
             if (settings_container != null) {
                 settings_container.removeAllViews();
                 for (Preference preference : getPreferences()) {
-                    settings_container.addView(Preference.getView(activity, preference, storagePref));
+                    settings_container.addView(Preference.getView(activity, preference, storageProvider));
                 }
                 for (Preference preference : getPreferences()) {
                     if (preference instanceof PreferenceSwitch) {
                         final PreferenceSwitch preferenceSwitch = (PreferenceSwitch) preference;
                         final ArrayList<String> dependencies = preferenceSwitch.getDependencies();
                         if (dependencies.size() > 0) {
-                            PreferenceSwitch.toggleDependencies(activity, preferenceSwitch, storagePref.get(activity, preference.key, (Boolean) preference.defaultValue));
+                            PreferenceSwitch.toggleDependencies(activity, preferenceSwitch, storageProvider.getStoragePref().get(activity, preference.key, (Boolean) preference.defaultValue));
                             for (Preference pref : getPreferences()) {
                                 if (dependencies.contains(pref.key)) {
                                     pref.setPreferenceDependency(preferenceSwitch);
@@ -91,7 +94,7 @@ public abstract class SettingsTemplatePreferencesFragment extends ConnectedFragm
                 loaded = true;
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             failed();
         }
     }
@@ -108,11 +111,11 @@ public abstract class SettingsTemplatePreferencesFragment extends ConnectedFragm
                         load();
                     }
                 } catch (Exception e) {
-                    Log.exception(e);
+                    log.exception(e);
                 }
             });
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
 

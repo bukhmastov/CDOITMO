@@ -54,7 +54,7 @@ public class ScheduleAttestationsRVA extends RVA {
             query = data.getString("query");
             addItems(json2dataset(activity, data, weekday));
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
 
@@ -126,7 +126,7 @@ public class ScheduleAttestationsRVA extends RVA {
                 dataset.add(new Item(TYPE_UPDATE_TIME, new JSONObject().put("text", context.getString(R.string.update_date) + " " + Time.getUpdateTime(context, data.getLong("timestamp")))));
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
         return dataset;
     }
@@ -157,7 +157,7 @@ public class ScheduleAttestationsRVA extends RVA {
                         popup.getMenuInflater().inflate(R.menu.schedule_attestations, menu);
                         menu.findItem(cached ? R.id.add_to_cache : R.id.remove_from_cache).setVisible(false);
                         popup.setOnMenuItemClickListener(item1 -> {
-                            Log.v(TAG, "menu | popup item | clicked | " + item1.getTitle().toString());
+                            log.v(TAG, "menu | popup item | clicked | " + item1.getTitle().toString());
                             switch (item1.getItemId()) {
                                 case R.id.add_to_cache:
                                 case R.id.remove_from_cache: {
@@ -184,7 +184,7 @@ public class ScheduleAttestationsRVA extends RVA {
                                             }
                                         }
                                     } catch (Exception e) {
-                                        Log.exception(e);
+                                        log.exception(e);
                                         BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
                                     }
                                     break;
@@ -198,13 +198,13 @@ public class ScheduleAttestationsRVA extends RVA {
                         });
                         popup.show();
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                         BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 });
             }));
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private void bindSubject(View container, Item item) {
@@ -212,7 +212,7 @@ public class ScheduleAttestationsRVA extends RVA {
             ((TextView) container.findViewById(R.id.title)).setText(item.data.getString("name"));
             ((TextView) container.findViewById(R.id.desc)).setText(item.data.getString("term"));
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private void bindAttestation(View container, Item item) {
@@ -220,7 +220,7 @@ public class ScheduleAttestationsRVA extends RVA {
             ((TextView) container.findViewById(R.id.name)).setText(item.data.getString("name"));
             ((TextView) container.findViewById(R.id.desc)).setText(item.data.getString("week"));
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private void bindUpdateTime(View container, Item item) {
@@ -228,14 +228,14 @@ public class ScheduleAttestationsRVA extends RVA {
             final String text = getString(item.data, "text");
             ((TextView) container.findViewById(R.id.update_time)).setText(text != null && !text.isEmpty() ? text : Static.GLITCH);
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private void bindNoAttestations(View container, Item item) {
         try {
             ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_attestations);
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     protected String getString(JSONObject json, String key) throws JSONException {

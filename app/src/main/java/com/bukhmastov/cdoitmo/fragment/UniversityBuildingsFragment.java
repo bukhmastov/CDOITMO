@@ -72,6 +72,8 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     private long timestamp = 0;
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private Storage storage = Storage.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
@@ -83,7 +85,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.v(TAG, "Fragment created");
+        log.v(TAG, "Fragment created");
         activity = getActivity();
         firebaseAnalyticsProvider.logCurrentScreen(activity, this);
         markers_campus = storagePref.get(activity, "pref_university_buildings_campus", true);
@@ -98,7 +100,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
             SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.buildings_map);
             mapFragment.getMapAsync(this);
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             failed();
             load();
         }
@@ -130,20 +132,20 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.v(TAG, "Fragment destroyed");
+        log.v(TAG, "Fragment destroyed");
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        Log.v(TAG, "resumed");
+        log.v(TAG, "resumed");
         firebaseAnalyticsProvider.setCurrentScreen(activity, this);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        Log.v(TAG, "paused");
+        log.v(TAG, "paused");
         if (requestHandle != null) {
             requestHandle.cancel();
         }
@@ -156,7 +158,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     }
     private void load(final int refresh_rate) {
         Thread.run(() -> {
-            Log.v(TAG, "load | refresh_rate=" + refresh_rate);
+            log.v(TAG, "load | refresh_rate=" + refresh_rate);
             if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
                 String cache = storage.get(activity, Storage.CACHE, Storage.GLOBAL, "university#buildings").trim();
                 if (!cache.isEmpty()) {
@@ -170,7 +172,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                             load(false);
                         }
                     } catch (JSONException e) {
-                        Log.exception(e);
+                        log.exception(e);
                         load(true);
                     }
                 } else {
@@ -183,7 +185,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     }
     private void load(final boolean force) {
         Thread.run(() -> {
-            Log.v(TAG, "load | force=" + (force ? "true" : "false"));
+            log.v(TAG, "load | force=" + (force ? "true" : "false"));
             if ((!force || !Client.isOnline(activity)) && building_map != null) {
                 display();
                 return;
@@ -203,7 +205,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                                                 .toString()
                                         );
                                     } catch (JSONException e) {
-                                        Log.exception(e);
+                                        log.exception(e);
                                     }
                                 }
                                 building_map = json;
@@ -217,7 +219,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                     @Override
                     public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                         Thread.run(() -> {
-                            Log.v(TAG, "forceLoad | failure " + state);
+                            log.v(TAG, "forceLoad | failure " + state);
                             switch (state) {
                                 case IfmoRestClient.FAILED_OFFLINE:
                                     loadOffline();
@@ -233,7 +235,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                     @Override
                     public void onProgress(final int state) {
                         Thread.run(() -> {
-                            Log.v(TAG, "forceLoad | progress " + state);
+                            log.v(TAG, "forceLoad | progress " + state);
                             loading();
                         });
                     }
@@ -248,7 +250,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
         });
     }
     private void loadProvider(RestResponseHandler handler) {
-        Log.v(TAG, "loadProvider");
+        log.v(TAG, "loadProvider");
         ifmoRestClient.get(activity, "building_map", null, handler);
     }
     private void display() {
@@ -294,7 +296,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
             zoomToMarker(marker);
             return openMarkerInfo(building);
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             return false;
         }
     }
@@ -346,16 +348,16 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                                     marker.setTag(building);
                                     markers.add(marker);
                                 } catch (Exception e) {
-                                    Log.exception(e);
+                                    log.exception(e);
                                 }
                             });
                         } catch (Exception e) {
-                            Log.exception(e);
+                            log.exception(e);
                         }
                     }
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }
@@ -389,7 +391,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
             }
             return true;
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             return false;
         }
     }
@@ -404,7 +406,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                     }
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }
@@ -448,13 +450,13 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                             });
                             list_container.addView(item);
                         } catch (Exception e) {
-                            Log.exception(e);
+                            log.exception(e);
                         }
                     }
                     marker_info_container.addView(layout_university_buildings_list);
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }
@@ -469,7 +471,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                     }
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }
@@ -502,7 +504,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                 text = android.text.Html.fromHtml(text).toString();
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
         return text.trim();
     }
@@ -516,7 +518,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                     vg.addView(inflate(R.layout.layout_university_buildings_status_loading));
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }
@@ -533,7 +535,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                     vg.addView(view);
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }
@@ -549,7 +551,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                     vg.addView(view);
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }
@@ -561,7 +563,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                     vg.removeAllViews();
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }
@@ -577,7 +579,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                     vg.addView(view);
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }

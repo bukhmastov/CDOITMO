@@ -399,7 +399,7 @@
     <string name="add_lesson">Добавить занятие</string>
     <string name="share_changes">Поделиться изменениями</string>
     <string name="remove_changes">Очистить изменения</string>
-    <string name="share_changes_info">Вы можете поделиться изменениями своего расписания (добавленные и скрытые занятия) со своими друзьями. Для этого выберите занятия, которыми хотите поделиться, и затем отправьте изменения нужному человеку.</string>
+    <string name="share_changes_info">Вы можете поделиться изменениями своего расписания (добавленные и скрытые занятия) со своими друзьями. Для этого выберите занятия которыми хотите поделиться, затем отправьте изменения нужному человеку.</string>
     <string name="added_lessons">Добавленные занятия</string>
     <string name="reduced_lessons">Скрытые занятия</string>
     <string name="nothing_to_share">Изменений не найдено</string>
@@ -407,9 +407,9 @@
     <string name="homescreen_apps">Приложения домашнего экрана</string>
     <string name="homescreen_shortcuts">Ярлыки домашнего экрана</string>
     <string name="time_remaining_widget">Время до конца пары</string>
-    <string name="time_remaining_widget_desc">Данное приложение подскажет, сколько осталось времени до конца текущей пары, начала следующей и конца учебного дня</string>
+    <string name="time_remaining_widget_desc">Данное приложение подскажет сколько осталось времени до конца текущей пары, начала следующей и конца учебного дня</string>
     <string name="days_remaining_widget">Время до экзаменов</string>
-    <string name="days_remaining_widget_desc">Данное приложение подскажет, сколько времени осталось до ближайшего экзамена</string>
+    <string name="days_remaining_widget_desc">Данное приложение подскажет сколько времени осталось до ближайшего экзамена</string>
     <string name="need_to_choose_type">Необходимо выбрать тип</string>
     <string name="pin_app_widget_not_supported">Создание виджетов в приложении не поддерживается. Создание виджетов доступно в Вашем лаунчере.</string>
     <string name="open_settings">Открыть настройки</string>
@@ -426,7 +426,7 @@
     <string name="failed_to_decode_file">Не удалось разобрать файл</string>
     <string name="failed_to_display_file">Ошибка отображения файла</string>
     <string name="corrupted_file">Файл имеет поврежденный контент</string>
-    <string name="file_requires_auth">Для обработки файла, Вам необходимо произвести авторизацию в приложении</string>
+    <string name="file_requires_auth">Для обработки файла Вам необходимо произвести авторизацию в приложении</string>
     <string name="failed_to_share_file">Не удалось поделиться файлом</string>
     <string name="server_error">Серверу не удалось обработать запрос</string>
     <string name="server_maintenance">На сервере проводятся технические работы</string>

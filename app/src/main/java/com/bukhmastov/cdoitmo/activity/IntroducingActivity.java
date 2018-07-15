@@ -30,6 +30,8 @@ public class IntroducingActivity extends ConnectedActivity {
     private static final String colorIndicatorInActive = "#88FFFFFF";
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     private class Screen {
@@ -58,7 +60,7 @@ public class IntroducingActivity extends ConnectedActivity {
             case "black": setTheme(R.style.AppTheme_Black_TransparentStatusBar); break;
         }
         super.onCreate(savedInstanceState);
-        Log.i(TAG, "Activity created");
+        log.i(TAG, "Activity created");
         firebaseAnalyticsProvider.logCurrentScreen(this);
         setContentView(R.layout.activity_introducing);
         findViewById(R.id.content).setPadding(0, getStatusBarHeight(), 0, 0);
@@ -71,7 +73,7 @@ public class IntroducingActivity extends ConnectedActivity {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.v(TAG, "Fragment destroyed");
+        log.v(TAG, "Fragment destroyed");
     }
 
     @Override
@@ -88,7 +90,7 @@ public class IntroducingActivity extends ConnectedActivity {
             screens.add(new Screen(R.string.intro_title_4, R.string.intro_desc_4, R.drawable.image_intro_4, "#00bcd4", "#cddc39"));
             screens.add(new Screen(R.string.intro_title_5, R.string.intro_desc_5, R.drawable.image_intro_5, "#1946ba", "#ff5722"));
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             close();
         }
     }
@@ -102,7 +104,7 @@ public class IntroducingActivity extends ConnectedActivity {
                 indicators.addView(indicator);
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             close();
         }
     }
@@ -117,7 +119,7 @@ public class IntroducingActivity extends ConnectedActivity {
                 }
             });
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             close();
         }
     }
@@ -145,7 +147,7 @@ public class IntroducingActivity extends ConnectedActivity {
                 close();
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             close();
         }
     }
@@ -160,7 +162,7 @@ public class IntroducingActivity extends ConnectedActivity {
             colorAnimation.addUpdateListener(animatorUpdateListener);
             colorAnimation.start();
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             close();
         }
     }

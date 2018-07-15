@@ -15,6 +15,9 @@ public class Accounts {
 
     //@Inject
     //TODO interface - impl: remove static
+    private static Log log = Log.instance();
+    //@Inject
+    //TODO interface - impl: remove static
     private static Storage storage = Storage.instance();
     //@Inject
     //TODO interface - impl: remove static
@@ -24,7 +27,7 @@ public class Accounts {
         if (Account.USER_UNAUTHORIZED.equals(login)) return;
         Thread.run(() -> {
             try {
-                Log.v(TAG, "push | login=", login);
+                log.v(TAG, "push | login=", login);
                 boolean isNewAuthorization = true;
                 // save login on top of the list of authorized users
                 JSONArray list = get(context);
@@ -49,7 +52,7 @@ public class Accounts {
                         bundle
                 );
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }
@@ -57,7 +60,7 @@ public class Accounts {
         if (Account.USER_UNAUTHORIZED.equals(login)) return;
         Thread.run(() -> {
             try {
-                Log.v(TAG, "remove | login=", login);
+                log.v(TAG, "remove | login=", login);
                 // remove login from the list of authorized users
                 JSONArray list = get(context);
                 for (int i = 0; i < list.length(); i++) {
@@ -74,20 +77,20 @@ public class Accounts {
                         firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.LOGIN_COUNT, list.length())
                 );
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }
     public static JSONArray get(@NonNull Context context) {
         try {
-            Log.v(TAG, "get");
+            log.v(TAG, "get");
             try {
                 return TextUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.GLOBAL, "users#list", ""));
             } catch (Exception e) {
                 return new JSONArray();
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             return new JSONArray();
         }
     }

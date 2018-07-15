@@ -36,15 +36,15 @@ public class DeIfmoRestClientImpl extends DeIfmoRestClient {
     @Override
     public void get(@NonNull final Context context, @NonNull final @Client.Protocol String protocol, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final RestResponseHandler responseHandler) {
         Thread.run(Thread.BACKGROUND, () -> {
-            Log.v(TAG, "get | url=", url);
+            log.v(TAG, "get | url=", url);
             if (Client.isOnline(context)) {
                 if (App.UNAUTHORIZED_MODE) {
-                    Log.v(TAG, "get | UNAUTHORIZED_MODE | failed");
+                    log.v(TAG, "get | UNAUTHORIZED_MODE | failed");
                     responseHandler.onFailure(STATUS_CODE_EMPTY, new Client.Headers(null), FAILED_UNAUTHORIZED_MODE);
                     return;
                 }
                 if (checkJsessionId(context)) {
-                    Log.v(TAG, "get | auth required");
+                    log.v(TAG, "get | auth required");
                     deIfmoClient.authorize(context, new ResponseHandler() {
                         @Override
                         public void onSuccess(int statusCode, Client.Headers headers, String response) {
@@ -87,7 +87,7 @@ public class DeIfmoRestClientImpl extends DeIfmoRestClient {
                     @Override
                     public void onDone(final int code, final okhttp3.Headers headers, final String response, final JSONObject responseObj, final JSONArray responseArr) {
                         Thread.run(Thread.BACKGROUND, () -> {
-                            Log.v(TAG, "get | url=", url, " | success | statusCode=", code);
+                            log.v(TAG, "get | url=", url, " | success | statusCode=", code);
                             if (code >= 400) {
                                 responseHandler.onFailure(code, new Client.Headers(headers), FAILED_SERVER_ERROR);
                                 return;
@@ -98,7 +98,7 @@ public class DeIfmoRestClientImpl extends DeIfmoRestClient {
                     @Override
                     public void onError(final int code, final okhttp3.Headers headers, final Throwable throwable) {
                         Thread.run(Thread.BACKGROUND, () -> {
-                            Log.v(TAG, "get | url=", url, " | failure | statusCode=", code, " | throwable=", throwable);
+                            log.v(TAG, "get | url=", url, " | failure | statusCode=", code, " | throwable=", throwable);
                             responseHandler.onFailure(code, new Client.Headers(headers), isInterrupted(throwable) ? FAILED_INTERRUPTED : (code >= 400 ? FAILED_SERVER_ERROR : (isCorruptedJson(throwable) ? FAILED_CORRUPTED_JSON : FAILED_TRY_AGAIN)));
                         });
                     }
@@ -108,7 +108,7 @@ public class DeIfmoRestClientImpl extends DeIfmoRestClient {
                     }
                 });
             } else {
-                Log.v(TAG, "get | url=", url, " | offline");
+                log.v(TAG, "get | url=", url, " | offline");
                 responseHandler.onFailure(STATUS_CODE_EMPTY, new Client.Headers(null), FAILED_OFFLINE);
             }
         });

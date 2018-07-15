@@ -27,6 +27,8 @@ public class ScheduleExamsFragment extends ConnectedFragment implements ViewPage
     private int activeTab = -1;
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
     private StorageProvider storageProvider = StorageProvider.instance();
@@ -36,7 +38,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements ViewPage
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.v(TAG, "Fragment created");
+        log.v(TAG, "Fragment created");
         firebaseAnalyticsProvider.logCurrentScreen(activity, this);
         // define query
         String scope = ScheduleExamsTabHostFragment.restoreData();
@@ -57,7 +59,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements ViewPage
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.v(TAG, "Fragment destroyed");
+        log.v(TAG, "Fragment destroyed");
         try {
             final TabLayout fixed_tabs = activity.findViewById(R.id.fixed_tabs);
             if (fixed_tabs != null) {
@@ -66,36 +68,36 @@ public class ScheduleExamsFragment extends ConnectedFragment implements ViewPage
             if (activity.toolbar != null) {
                 MenuItem action_search = activity.toolbar.findItem(R.id.action_search);
                 if (action_search != null && action_search.isVisible()) {
-                    Log.v(TAG, "Hiding action_search");
+                    log.v(TAG, "Hiding action_search");
                     action_search.setVisible(false);
                     action_search.setOnMenuItemClickListener(null);
                 }
             }
         } catch (Exception e){
-            Log.exception(e);
+            log.exception(e);
         }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        Log.v(TAG, "resumed");
+        log.v(TAG, "resumed");
         firebaseAnalyticsProvider.setCurrentScreen(activity, this);
         try {
             if (activity.toolbar != null) {
                 MenuItem action_search = activity.toolbar.findItem(R.id.action_search);
                 if (action_search != null && !action_search.isVisible()) {
-                    Log.v(TAG, "Revealing action_search");
+                    log.v(TAG, "Revealing action_search");
                     action_search.setVisible(true);
                     action_search.setOnMenuItemClickListener(item -> {
-                        Log.v(TAG, "action_search clicked");
+                        log.v(TAG, "action_search clicked");
                         activity.startActivity(new Intent(activity, ScheduleExamsSearchActivity.class));
                         return false;
                     });
                 }
             }
         } catch (Exception e){
-            Log.exception(e);
+            log.exception(e);
         }
         if (!loaded) {
             loaded = true;
@@ -106,7 +108,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements ViewPage
     @Override
     public void onPause() {
         super.onPause();
-        Log.v(TAG, "paused");
+        log.v(TAG, "paused");
     }
 
     @Override
@@ -134,7 +136,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements ViewPage
         final FragmentManager fragmentManager = getChildFragmentManager();
         Thread.run(() -> {
             if (activity == null) {
-                Log.w(TAG, "load | activity is null");
+                log.w(TAG, "load | activity is null");
                 return;
             }
             if (ScheduleLessonsTabHostFragment.getQuery() == null) {
@@ -143,7 +145,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements ViewPage
             Thread.runOnUI(() -> {
                 try {
                     if (activity == null) {
-                        Log.w(TAG, "load | activity is null");
+                        log.w(TAG, "load | activity is null");
                         return;
                     }
                     // setup pager adapter
@@ -175,12 +177,12 @@ public class ScheduleExamsFragment extends ConnectedFragment implements ViewPage
                     }
                     if (tab != null) tab.select();
                 } catch (Exception e) {
-                    Log.exception(e);
+                    log.exception(e);
                     try {
                         failed(activity);
                     } catch (Exception e1) {
                         loaded = false;
-                        Log.exception(e1);
+                        log.exception(e1);
                     }
                 }
             });
@@ -189,14 +191,14 @@ public class ScheduleExamsFragment extends ConnectedFragment implements ViewPage
     private void failed(Activity activity) {
         try {
             if (activity == null) {
-                Log.w(TAG, "failed | activity is null");
+                log.w(TAG, "failed | activity is null");
                 return;
             }
             View state_try_again = inflate(R.layout.state_failed_button);
             state_try_again.findViewById(R.id.try_again_reload).setOnClickListener(view -> load());
             draw(state_try_again);
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
 }

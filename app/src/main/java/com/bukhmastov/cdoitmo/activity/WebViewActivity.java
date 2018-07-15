@@ -34,13 +34,15 @@ public class WebViewActivity extends AppCompatActivity {
     private SwipeRefreshLayout swipe = null;
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Theme.applyActivityTheme(this);
         super.onCreate(savedInstanceState);
-        Log.i(TAG, "Activity created");
+        log.i(TAG, "Activity created");
         try {
             Intent intent = getIntent();
             if (intent == null) throw new NullPointerException("intent is null");
@@ -123,7 +125,7 @@ public class WebViewActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.i(TAG, "Activity destroyed");
+        log.i(TAG, "Activity destroyed");
     }
 
     @Override

@@ -47,6 +47,8 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
     private String mineFaculty = "";
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private Storage storage = Storage.instance();
     //@Inject
     private DeIfmoClient deIfmoClient = DeIfmoClient.instance();
@@ -84,12 +86,12 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                 int month = now.get(Calendar.MONTH);
                 years = month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year;
             }
-            Log.v(TAG, "faculty=" + faculty + " | course=" + course + " | years=" + years);
+            log.v(TAG, "faculty=" + faculty + " | course=" + course + " | years=" + years);
             if (faculty == null || faculty.isEmpty() || course == null || course.isEmpty()) {
-                throw new Exception("wrong extras provided | faculty=" + Log.lString(faculty) + " | course=" + Log.lString(course));
+                throw new Exception("wrong extras provided | faculty=" + (faculty == null ? "<null>" : faculty) + " | course=" + (course == null ? "<null>" : course));
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             activity.back();
         }
     }
@@ -97,7 +99,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
     @Override
     public void onResume() {
         super.onResume();
-        Log.v(TAG, "Fragment resumed");
+        log.v(TAG, "Fragment resumed");
         firebaseAnalyticsProvider.setCurrentScreen(activity, this);
         if (!loaded) {
             loaded = true;
@@ -109,7 +111,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                     load();
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
                 load();
             }
         }
@@ -118,7 +120,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
     @Override
     public void onPause() {
         super.onPause();
-        Log.v(TAG, "Fragment paused");
+        log.v(TAG, "Fragment paused");
         if (requestHandle != null && requestHandle.cancel()) {
             loaded = false;
         }
@@ -141,14 +143,14 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
 
     private void load() {
         Thread.run(() -> {
-            Log.v(TAG, "load");
+            log.v(TAG, "load");
             activity.updateToolbar(activity, activity.getString(R.string.top_rating), R.drawable.ic_rating);
             minePosition = -1;
             mineFaculty = "";
             hideShareButton();
             if (!App.OFFLINE_MODE) {
                 if (faculty == null || faculty.isEmpty() || course == null || course.isEmpty() || years == null || years.isEmpty()) {
-                    Log.w(TAG, "load | some data is empty | faculty=", faculty, " | course=", course, " | years=", years);
+                    log.w(TAG, "load | some data is empty | faculty=", faculty, " | course=", course, " | years=", years);
                     loadFailed();
                     return;
                 }
@@ -156,7 +158,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                         Thread.run(() -> {
-                            Log.v(TAG, "load | success | statusCode=" + statusCode);
+                            log.v(TAG, "load | success | statusCode=" + statusCode);
                             if (statusCode == 200) {
                                 new RatingTopListParse(response, storage.get(activity, Storage.PERMANENT, Storage.USER, "user#name"), json -> {
                                     if (json != null) {
@@ -172,7 +174,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                     @Override
                     public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                         Thread.runOnUI(() -> {
-                            Log.v(TAG, "load | failure " + state);
+                            log.v(TAG, "load | failure " + state);
                             switch (state) {
                                 case DeIfmoClient.FAILED_OFFLINE:
                                     draw(R.layout.state_offline_text);
@@ -201,7 +203,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                     @Override
                     public void onProgress(final int state) {
                         Thread.runOnUI(() -> {
-                            Log.v(TAG, "load | progress " + state);
+                            log.v(TAG, "load | progress " + state);
                             draw(R.layout.state_loading_text);
                             TextView loading_message = container.findViewById(R.id.loading_message);
                             if (loading_message != null) {
@@ -228,7 +230,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                             offline_reload.setOnClickListener(v -> load());
                         }
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                     }
                 });
             }
@@ -236,7 +238,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
     }
     private void loadFailed() {
         Thread.runOnUI(() -> {
-            Log.v(TAG, "loadFailed");
+            log.v(TAG, "loadFailed");
             try {
                 draw(R.layout.state_failed_button);
                 View try_again_reload = container.findViewById(R.id.try_again_reload);
@@ -244,13 +246,13 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                     try_again_reload.setOnClickListener(v -> load());
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }
     private void display(final JSONObject data) {
         Thread.run(() -> {
-            Log.v(TAG, "display");
+            log.v(TAG, "display");
             try {
                 if (data == null) throw new SilentException();
                 final String title = TextUtils.capitalizeFirstLetter(data.getString("header"));
@@ -309,14 +311,14 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                             swipe_container.setOnRefreshListener(this);
                         }
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                         loadFailed();
                     }
                 });
             } catch (SilentException ignore) {
                 loadFailed();
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
                 loadFailed();
             }
         });
@@ -335,7 +337,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                                         .replace("%faculty%", mineFaculty.isEmpty() ? "факультета" : mineFaculty)
                                 );
                             } catch (Exception e) {
-                                Log.exception(e);
+                                log.exception(e);
                                 BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                             }
                             return false;
@@ -343,7 +345,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                     }
                 }
             } catch (Exception e){
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }
@@ -355,13 +357,13 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                     if (action_share != null) action_share.setVisible(false);
                 }
             } catch (Exception e){
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }
     private void share(final String title) throws Exception {
         Thread.runOnUI(() -> {
-            Log.v(TAG, "share | " + title);
+            log.v(TAG, "share | " + title);
             Intent intent = new Intent(Intent.ACTION_SEND);
             intent.setType("text/plain");
             intent.putExtra(Intent.EXTRA_TEXT, title);

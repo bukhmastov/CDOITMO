@@ -14,6 +14,9 @@ public class FirebaseMessagingServiceProvider extends FirebaseMessagingService {
 
     private static final String TAG = "FirebaseMessagingServiceProvider";
 
+    //@Inject
+    private Log log = Log.instance();
+
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         try {
@@ -21,13 +24,13 @@ public class FirebaseMessagingServiceProvider extends FirebaseMessagingService {
             if (notification == null) return;
             String title = notification.getTitle() == null ? "" : notification.getTitle().trim();
             String text = notification.getBody() == null ? "" : notification.getBody().trim();
-            Log.v(TAG, "-- Got FCM message --");
-            Log.v(TAG, "Title: ", title);
-            Log.v(TAG, "Text: ", text);
-            Log.v(TAG, "---------------------");
+            log.v(TAG, "-- Got FCM message --");
+            log.v(TAG, "Title: ", title);
+            log.v(TAG, "Text: ", text);
+            log.v(TAG, "---------------------");
             handleNotification(title, text, remoteMessage.getSentTime());
         } catch (Throwable e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
 
@@ -35,10 +38,10 @@ public class FirebaseMessagingServiceProvider extends FirebaseMessagingService {
         Thread.run(() -> {
             try {
                 if (title.isEmpty() || text.isEmpty()) {
-                    Log.w(TAG, "Got FCM message with empty title/text | title=", title, " | text=", text);
+                    log.w(TAG, "Got FCM message with empty title/text | title=", title, " | text=", text);
                     return;
                 }
-                Log.v(TAG, "handleNotification | title=", title, " | text=", text);
+                log.v(TAG, "handleNotification | title=", title, " | text=", text);
                 // prepare intent
                 Intent intent = new Intent(getBaseContext(), MainActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -47,7 +50,7 @@ public class FirebaseMessagingServiceProvider extends FirebaseMessagingService {
                 Notifications notifications = new Notifications(getBaseContext());
                 notifications.notify(-1, notifications.getSystem(getBaseContext(), title, text, timestamp, true, pendingIntent));
             } catch (Throwable e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }

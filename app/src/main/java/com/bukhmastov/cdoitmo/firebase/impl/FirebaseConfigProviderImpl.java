@@ -20,6 +20,9 @@ public class FirebaseConfigProviderImpl implements FirebaseConfigProvider {
         void onComplete(boolean successful);
     }
 
+    //@Inject
+    private Log log = Log.instance();
+
     private FirebaseRemoteConfig getFirebaseRemoteConfig() {
         FirebaseRemoteConfig firebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
         if (DEBUG) {
@@ -33,21 +36,21 @@ public class FirebaseConfigProviderImpl implements FirebaseConfigProvider {
 
     @Override
     public void getString(final String key, final Result result) {
-        Log.v(TAG, "getString | key=" + key);
+        log.v(TAG, "getString | key=" + key);
         fetch(successful -> {
             String value = getFirebaseRemoteConfig().getString(key);
-            Log.v(TAG, "getString | onComplete | key=" + key + " | value=" + value);
+            log.v(TAG, "getString | onComplete | key=" + key + " | value=" + value);
             result.onResult(value);
         });
     }
 
     @Override
     public void getJson(final String key, final ResultJson result) {
-        Log.v(TAG, "getJson | key=" + key);
+        log.v(TAG, "getJson | key=" + key);
         fetch(successful -> {
             try {
                 String value = getFirebaseRemoteConfig().getString(key);
-                Log.v(TAG, "getJson | onComplete | key=" + key + " | value=" + value);
+                log.v(TAG, "getJson | onComplete | key=" + key + " | value=" + value);
                 if (value == null || value.isEmpty()) {
                     result.onResult(null);
                     return;
@@ -66,11 +69,11 @@ public class FirebaseConfigProviderImpl implements FirebaseConfigProvider {
 
     private void fetch(final Callback callback) {
         Thread.run(() -> {
-            Log.v(TAG, "fetch");
+            log.v(TAG, "fetch");
             getFirebaseRemoteConfig().fetch(DEBUG ? 0 : cacheExpiration)
                     .addOnCompleteListener(task -> Thread.run(() -> {
                         boolean successful = task.isSuccessful();
-                        Log.v(TAG, "fetch | onComplete | successful=", successful);
+                        log.v(TAG, "fetch | onComplete | successful=", successful);
                         if (successful) {
                             getFirebaseRemoteConfig().activateFetched();
                         }

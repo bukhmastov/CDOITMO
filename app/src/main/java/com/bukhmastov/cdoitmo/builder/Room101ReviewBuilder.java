@@ -37,6 +37,9 @@ public class Room101ReviewBuilder implements Runnable {
     public static final int STATE_LOADING = 1;
     public static final int STATE_DONE = 2;
 
+    //@Inject
+    private Log log = Log.instance();
+
     public Room101ReviewBuilder(Activity activity, register register, JSONArray sessions, response delegate) {
         this.activity = activity;
         this.register = register;
@@ -46,11 +49,11 @@ public class Room101ReviewBuilder implements Runnable {
     }
     public void run() {
         try {
-            Log.v(TAG, "started");
+            log.v(TAG, "started");
             delegate.state(STATE_LOADING, inflate(R.layout.state_loading_compact));
             if (sessions.length() > 0) {
                 LinearLayout container = (LinearLayout) inflate(R.layout.layout_room101_review_requests);
-                Log.v(TAG, "sessions.length() == " + sessions.length());
+                log.v(TAG, "sessions.length() == " + sessions.length());
                 LinearLayout review_requests_container = container.findViewById(R.id.review_requests_container);
                 for (int i = sessions.length() - 1; i >= 0; i--) {
                     JSONObject request = sessions.getJSONObject(i);
@@ -63,7 +66,7 @@ public class Room101ReviewBuilder implements Runnable {
                     final String statusText = request.getString("status");
                     if (reid != 0) {
                         requestLayout.findViewById(R.id.request_deny_button).setOnClickListener(v -> {
-                            Log.v(TAG, "request_deny_button clicked");
+                            log.v(TAG, "request_deny_button clicked");
                             register.onDenyRequest(reid, "удовлетворена".equals(statusText.toLowerCase()) ? 1 : 0);
                         });
                     } else {
@@ -79,16 +82,16 @@ public class Room101ReviewBuilder implements Runnable {
                 }
                 delegate.state(STATE_DONE, container);
             } else {
-                Log.v(TAG, "sessions.length() == 0");
+                log.v(TAG, "sessions.length() == 0");
                 View view = inflate(R.layout.state_nothing_to_display_compact);
                 ((TextView) view.findViewById(R.id.ntd_text)).setText(activity.getString(R.string.no_requests));
                 delegate.state(STATE_DONE, view);
             }
         } catch (Exception e){
-            Log.exception(e);
+            log.exception(e);
             delegate.state(STATE_FAILED, null);
         }
-        Log.v(TAG, "finished");
+        log.v(TAG, "finished");
     }
 
     private View inflate(int layout) throws InflateException {

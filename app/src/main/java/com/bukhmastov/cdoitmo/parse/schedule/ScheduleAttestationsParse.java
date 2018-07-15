@@ -52,7 +52,7 @@ public class ScheduleAttestationsParse extends Parse {
                     );
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         }
         return new JSONObject().put("schedule", schedule);

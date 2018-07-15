@@ -49,6 +49,8 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
     protected boolean forbidden = false;
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private Storage storage = Storage.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
@@ -60,10 +62,10 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.v(TAG, "Fragment created");
+        log.v(TAG, "Fragment created");
         if (App.UNAUTHORIZED_MODE) {
             forbidden = true;
-            Log.w(TAG, "Fragment created | UNAUTHORIZED_MODE not allowed, closing fragment...");
+            log.w(TAG, "Fragment created | UNAUTHORIZED_MODE not allowed, closing fragment...");
             close();
             return;
         }
@@ -83,13 +85,13 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.v(TAG, "Fragment destroyed");
+        log.v(TAG, "Fragment destroyed");
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        Log.v(TAG, "resumed");
+        log.v(TAG, "resumed");
         if (forbidden) {
             return;
         }
@@ -107,7 +109,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
     @Override
     public void onPause() {
         super.onPause();
-        Log.v(TAG, "paused");
+        log.v(TAG, "paused");
         if (requestHandle != null && requestHandle.cancel()) {
             loaded = false;
         }
@@ -115,7 +117,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
 
     @Override
     public void onRefresh() {
-        Log.v(TAG, "refreshing");
+        log.v(TAG, "refreshing");
         load(true);
     }
 
@@ -132,9 +134,9 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
     @Override
     public void onDenyRequest(final int reid, final int status) {
         Thread.runOnUI(() -> {
-            Log.v(TAG, "onDenyRequest | reid=" + reid + " | status=" + status);
+            log.v(TAG, "onDenyRequest | reid=" + reid + " | status=" + status);
             if (App.OFFLINE_MODE) {
-                Log.v(TAG, "onDenyRequest rejected: offline mode");
+                log.v(TAG, "onDenyRequest rejected: offline mode");
                 BottomBar.snackBar(activity, R.id.room101_review_swipe, activity.getString(R.string.device_offline_action_refused));
             } else {
                 (new AlertDialog.Builder(activity)
@@ -153,7 +155,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
     }
     private void denyRequest(final int reid, final int status) {
         Thread.run(() -> {
-            Log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status);
+            log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status);
             Static.lockOrientation(activity, true);
             HashMap<String, String> params = new HashMap<>();
             switch (status) {
@@ -168,14 +170,14 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                 public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                     Thread.runOnUI(() -> {
                         if (statusCode == 302) {
-                            Log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status + " | success | statusCode=" + statusCode);
+                            log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status + " | success | statusCode=" + statusCode);
                             load(true);
                             firebaseAnalyticsProvider.logEvent(
                                     activity,
                                     FirebaseAnalyticsProvider.Event.ROOM101_REQUEST_DENIED
                             );
                         } else {
-                            Log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status + " | success(not really) | statusCode=" + statusCode);
+                            log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status + " | success(not really) | statusCode=" + statusCode);
                             draw(R.layout.state_failed_button);
                             TextView try_again_message = container.findViewById(R.id.try_again_message);
                             if (try_again_message != null) try_again_message.setText(R.string.wrong_response_from_server);
@@ -190,7 +192,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                 @Override
                 public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                     Thread.runOnUI(() -> {
-                        Log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status + " | failure | statusCode=" + statusCode);
+                        log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status + " | failure | statusCode=" + statusCode);
                         draw(R.layout.state_failed_button);
                         TextView try_again_message = container.findViewById(R.id.try_again_message);
                         if (try_again_message != null) {
@@ -210,7 +212,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                 @Override
                 public void onProgress(final int state) {
                     Thread.runOnUI(() -> {
-                        Log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status + " | progress " + state);
+                        log.v(TAG, "denyRequest | reid=" + reid + " | status=" + status + " | progress " + state);
                         draw(R.layout.state_loading_text);
                         TextView loading_message = container.findViewById(R.id.loading_message);
                         if (loading_message != null) {
@@ -230,9 +232,9 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
 
     private void addRequest() {
         Thread.runOnUI(() -> {
-            Log.v(TAG, "addRequest");
+            log.v(TAG, "addRequest");
             if (App.OFFLINE_MODE) {
-                Log.v(TAG, "addRequest rejected: offline mode");
+                log.v(TAG, "addRequest rejected: offline mode");
                 BottomBar.snackBar(activity, R.id.room101_review_swipe, activity.getString(R.string.device_offline_action_refused));
             } else {
                 draw(R.layout.layout_room101_add_request);
@@ -287,7 +289,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                                         break;
                                 }
                             } catch (Exception e){
-                                Log.exception(e);
+                                log.exception(e);
                                 BottomBar.snackBar(activity, R.id.room101_review_swipe, activity.getString(R.string.error_occurred_while_room101_request));
                                 load(false);
                             }
@@ -308,7 +310,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                                     vg.addView(view);
                                 }
                             } catch (Exception e){
-                                Log.exception(e);
+                                log.exception(e);
                                 BottomBar.snackBar(activity, R.id.room101_review_swipe, activity.getString(R.string.error_occurred));
                                 load(false);
                             }
@@ -327,19 +329,19 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                 });
                 if (room101_close_add_request != null) {
                     room101_close_add_request.setOnClickListener(v -> {
-                        Log.v(TAG, "room101_close_add_request clicked");
+                        log.v(TAG, "room101_close_add_request clicked");
                         room101AddRequest.close(false);
                     });
                 }
                 if (room101_back != null) {
                     room101_back.setOnClickListener(v -> {
-                        Log.v(TAG, "room101_back clicked");
+                        log.v(TAG, "room101_back clicked");
                         room101AddRequest.back();
                     });
                 }
                 if (room101_forward != null) {
                     room101_forward.setOnClickListener(v -> {
-                        Log.v(TAG, "room101_forward clicked");
+                        log.v(TAG, "room101_forward clicked");
                         room101AddRequest.forward();
                     });
                 }
@@ -347,9 +349,9 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
         });
     }
 
-    public static void execute(final Context context, final Room101Client room101Client, final Storage storage, final String scope, final ResponseHandler responseHandler) {
+    public static void execute(final Context context, final Room101Client room101Client, final Storage storage, final Log log, final String scope, final ResponseHandler responseHandler) {
         Thread.run(Thread.BACKGROUND, () -> {
-            Log.v(TAG, "execute | scope=" + scope);
+            log.v(TAG, "execute | scope=" + scope);
             HashMap<String, String> params = new HashMap<>();
             params.put("getFunc", "isLoginPassword");
             params.put("view", scope);
@@ -363,7 +365,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                         @Override
                         public void run() {
                             if (statusCode == 302) {
-                                Log.v(TAG, "execute | scope=" + scope + " | success | statusCode=" + statusCode);
+                                log.v(TAG, "execute | scope=" + scope + " | success | statusCode=" + statusCode);
                                 String location = headers.getValue("Location");
                                 if (location != null && !location.trim().isEmpty()) {
                                     room101Client.get(context, location, null, new ResponseHandler() {
@@ -388,7 +390,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                                     responseHandler.onFailure(statusCode, headers, Room101.FAILED_EXPECTED_REDIRECTION);
                                 }
                             } else {
-                                Log.v(TAG, "execute | scope=" + scope + " | success(not really) | statusCode=" + statusCode);
+                                log.v(TAG, "execute | scope=" + scope + " | success(not really) | statusCode=" + statusCode);
                                 if (response.contains("Доступ запрещен") || (response.contains("Неверный") && response.contains("логин/пароль"))) {
                                     responseHandler.onFailure(statusCode, headers, Room101.FAILED_AUTH);
                                 } else {
@@ -405,7 +407,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                 @Override
                 public void onProgress(final int state) {
                     Thread.run(() -> {
-                        Log.v(TAG, "execute | scope=" + scope + " | progress " + state);
+                        log.v(TAG, "execute | scope=" + scope + " | progress " + state);
                         responseHandler.onProgress(state);
                     });
                 }
@@ -422,7 +424,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
     }
     private void load(final int refresh_rate) {
         Thread.run(() -> {
-            Log.v(TAG, "load | refresh_rate=" + refresh_rate);
+            log.v(TAG, "load | refresh_rate=" + refresh_rate);
             if (storagePref.get(activity, "pref_use_cache", true)) {
                 String cache = storage.get(activity, Storage.CACHE, Storage.USER, "room101#core").trim();
                 if (!cache.isEmpty()) {
@@ -434,7 +436,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                             load(false, cache);
                         }
                     } catch (JSONException e) {
-                        Log.exception(e);
+                        log.exception(e);
                         load(true, cache);
                     }
                 } else {
@@ -450,27 +452,27 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
     }
     private void load(final boolean force, final String cache) {
         Thread.run(() -> {
-            Log.v(TAG, "load | force=" + (force ? "true" : "false"));
+            log.v(TAG, "load | force=" + (force ? "true" : "false"));
             if ((!force || !Client.isOnline(activity)) && storagePref.get(activity, "pref_use_cache", true)) {
                 try {
                     String c = cache.isEmpty() ? storage.get(activity, Storage.CACHE, Storage.USER, "room101#core").trim() : cache;
                     if (!c.isEmpty()) {
-                        Log.v(TAG, "load | from cache");
+                        log.v(TAG, "load | from cache");
                         setData(new JSONObject(c));
                         display();
                         return;
                     }
                 } catch (Exception e) {
-                    Log.v(TAG, "load | failed to load from cache");
+                    log.v(TAG, "load | failed to load from cache");
                     storage.delete(activity, Storage.CACHE, Storage.USER, "room101#core");
                 }
             }
             if (!App.OFFLINE_MODE) {
-                execute(activity, room101Client, storage, "delRequest", new ResponseHandler() {
+                execute(activity, room101Client, storage, log, "delRequest", new ResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                         Thread.run(() -> {
-                            Log.v(TAG, "load | success | statusCode=" + statusCode);
+                            log.v(TAG, "load | success | statusCode=" + statusCode);
                             if (statusCode == 200) {
                                 new Room101ViewRequestParse(activity, response, json -> {
                                     if (json != null) {
@@ -484,7 +486,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                                             setData(json);
                                             display();
                                         } catch (JSONException e) {
-                                            Log.exception(e);
+                                            log.exception(e);
                                             if (getData() != null) {
                                                 display();
                                             } else {
@@ -511,7 +513,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                     @Override
                     public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                         Thread.runOnUI(() -> {
-                            Log.v(TAG, "load | failure " + state);
+                            log.v(TAG, "load | failure " + state);
                             switch (state) {
                                 case Room101Client.FAILED_OFFLINE:
                                     if (getData() != null) {
@@ -562,7 +564,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                     @Override
                     public void onProgress(final int state) {
                         Thread.runOnUI(() -> {
-                            Log.v(TAG, "load | progress " + state);
+                            log.v(TAG, "load | progress " + state);
                             draw(R.layout.state_loading_text);
                             if (activity != null) {
                                 TextView loading_message = container.findViewById(R.id.loading_message);
@@ -600,7 +602,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
     }
     private void loadFailed() {
         Thread.runOnUI(() -> {
-            Log.v(TAG, "loadFailed");
+            log.v(TAG, "loadFailed");
             try {
                 draw(R.layout.state_failed_button);
                 View try_again_reload = container.findViewById(R.id.try_again_reload);
@@ -608,13 +610,13 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                     try_again_reload.setOnClickListener(v -> load(true));
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }
     private void display() {
         Thread.runOnUI(() -> {
-            Log.v(TAG, "display");
+            log.v(TAG, "display");
             try {
                 if (getData() == null) throw new NullPointerException("data cannot be null");
                 JSONObject viewRequest = getData().getJSONObject("data");
@@ -647,7 +649,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                             }
                         }
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                         loadFailed();
                     }
                 })));
@@ -662,13 +664,13 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                 FloatingActionButton fab = container.findViewById(R.id.fab);
                 if (fab != null) {
                     fab.setOnClickListener(v -> {
-                        Log.v(TAG, "fab button clicked");
+                        log.v(TAG, "fab button clicked");
                         addRequest();
                     });
                 }
                 BottomBar.showUpdateTime(activity, R.id.room101_review_swipe, viewRequest.getLong("timestamp"));
             } catch (Exception e){
-                Log.exception(e);
+                log.exception(e);
                 loadFailed();
             }
         });
@@ -689,7 +691,7 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                 return data;
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
         return null;
     }

@@ -246,7 +246,7 @@ public class UniversityFacultiesRVA extends UniversityRVA {
                 }
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private void bindDivisions(RecyclerView.ViewHolder holder, Item item) {
@@ -282,7 +282,7 @@ public class UniversityFacultiesRVA extends UniversityRVA {
                 }
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
 

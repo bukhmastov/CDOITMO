@@ -69,6 +69,8 @@ public class Room101AddRequest {
     private String pick_time_end = null;
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private Storage storage = Storage.instance();
     //@Inject
     private Room101Client room101Client = Room101Client.instance();
@@ -83,7 +85,7 @@ public class Room101AddRequest {
     }
 
     public void back() {
-        Log.v(TAG, "back");
+        log.v(TAG, "back");
         switch (CURRENT_STAGE) {
             case STAGE_PICK_DATE_LOAD:
             case STAGE_PICK_TIME_START_LOAD:
@@ -102,7 +104,7 @@ public class Room101AddRequest {
         }
     }
     public void forward() {
-        Log.v(TAG, "forward");
+        log.v(TAG, "forward");
         switch (CURRENT_STAGE) {
             case STAGE_PICK_DATE_LOAD:
             case STAGE_PICK_TIME_START_LOAD:
@@ -138,7 +140,7 @@ public class Room101AddRequest {
         proceedStage();
     }
     public void close(boolean done) {
-        Log.v(TAG, "close | done=" + (done ? "true" : "false"));
+        log.v(TAG, "close | done=" + (done ? "true" : "false"));
         if (requestHandle != null) requestHandle.cancel();
         if (done) {
             callback.onDone();
@@ -147,7 +149,7 @@ public class Room101AddRequest {
         }
     }
     private void proceedStage() {
-        Log.v(TAG, "proceedStage | CURRENT_STAGE=" + CURRENT_STAGE);
+        log.v(TAG, "proceedStage | CURRENT_STAGE=" + CURRENT_STAGE);
         callback.onProgress(CURRENT_STAGE);
         switch (CURRENT_STAGE){
             case STAGE_PICK_DATE_LOAD: loadDatePick(0); break;
@@ -165,12 +167,12 @@ public class Room101AddRequest {
 
     private void loadDatePick(final int stage) {
         Thread.run(() -> {
-            Log.v(TAG, "loadDatePick | stage=" + stage);
+            log.v(TAG, "loadDatePick | stage=" + stage);
             if (stage == 0) {
                 callback.onDraw(getLoadingLayout(activity.getString(R.string.data_loading)));
                 data = null;
                 pick_date = null;
-                Room101Fragment.execute(activity, room101Client, storage, "newRequest", new ResponseHandler() {
+                Room101Fragment.execute(activity, room101Client, storage, log, "newRequest", new ResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                         Thread.run(() -> {
@@ -224,7 +226,7 @@ public class Room101AddRequest {
                                                 for (int i = 0; i < jsonArrayNew.length(); i++) jsonArray.put(jsonArrayNew.getJSONObject(i));
                                                 data.put("data", jsonArray);
                                             } catch (Exception e) {
-                                                Log.exception(e);
+                                                log.exception(e);
                                                 data = json;
                                             }
                                         }
@@ -259,7 +261,7 @@ public class Room101AddRequest {
     }
     private void loadTimeStartPick() {
         Thread.run(() -> {
-            Log.v(TAG, "loadTimeStartPick");
+            log.v(TAG, "loadTimeStartPick");
             callback.onDraw(getLoadingLayout(activity.getString(R.string.data_handling)));
             data = null;
             pick_time_start = null;
@@ -308,7 +310,7 @@ public class Room101AddRequest {
     }
     private void loadTimeEndPick() {
         Thread.run(() -> {
-            Log.v(TAG, "loadTimeEndPick");
+            log.v(TAG, "loadTimeEndPick");
             callback.onDraw(getLoadingLayout(activity.getString(R.string.data_handling)));
             data = null;
             pick_time_end = null;
@@ -357,7 +359,7 @@ public class Room101AddRequest {
     }
     private void loadConfirmation() {
         Thread.run(() -> {
-            Log.v(TAG, "loadConfirmation");
+            log.v(TAG, "loadConfirmation");
             data = null;
             CURRENT_STAGE++;
             proceedStage();
@@ -365,7 +367,7 @@ public class Room101AddRequest {
     }
     private void create() {
         Thread.run(() -> {
-            Log.v(TAG, "create");
+            log.v(TAG, "create");
             callback.onDraw(getLoadingLayout(activity.getString(R.string.add_request)));
             data = null;
             HashMap<String, String> params = new HashMap<>();
@@ -384,7 +386,7 @@ public class Room101AddRequest {
                         CURRENT_STAGE++;
                         proceedStage();
                     } catch (JSONException e) {
-                        Log.exception(e);
+                        log.exception(e);
                         failed();
                     }
                 }
@@ -397,7 +399,7 @@ public class Room101AddRequest {
                         CURRENT_STAGE++;
                         proceedStage();
                     } catch (JSONException e) {
-                        Log.exception(e);
+                        log.exception(e);
                         failed();
                     }
                 }
@@ -413,7 +415,7 @@ public class Room101AddRequest {
 
     private void datePick() {
         Thread.run(() -> {
-            Log.v(TAG, "datePick | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
+            log.v(TAG, "datePick | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
             try {
                 if (data == null) throw new NullPointerException("data cannot be null");
                 if (!"date_pick".equals(data.getString("type"))) throw new Exception("Wrong data.type. Expected 'date_pick', got '" + data.getString("type") + "'");
@@ -425,7 +427,7 @@ public class Room101AddRequest {
                             try {
                                 pick_date = buttonView.getText().toString().trim();
                             } catch (Exception e) {
-                                Log.exception(e);
+                                log.exception(e);
                                 failed();
                             }
                         }
@@ -434,14 +436,14 @@ public class Room101AddRequest {
                     callback.onDraw(getEmptyLayout(activity.getString(R.string.no_date_to_peek)));
                 }
             } catch (Exception e){
-                Log.exception(e);
+                log.exception(e);
                 failed();
             }
         });
     }
     private void timeStartPick() {
         Thread.run(() -> {
-            Log.v(TAG, "timeStartPick | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
+            log.v(TAG, "timeStartPick | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
             try {
                 if (data == null) throw new NullPointerException("data cannot be null");
                 if (!"time_start_pick".equals(data.getString("type"))) throw new Exception("Wrong data.type. Expected 'time_start_pick', got '" + data.getString("type") + "'");
@@ -458,7 +460,7 @@ public class Room101AddRequest {
                                 }
                                 pick_time_start = value + ":00";
                             } catch (Exception e) {
-                                Log.exception(e);
+                                log.exception(e);
                                 failed();
                             }
                         }
@@ -467,14 +469,14 @@ public class Room101AddRequest {
                     callback.onDraw(getEmptyLayout(activity.getString(R.string.no_time_to_peek)));
                 }
             } catch (Exception e){
-                Log.exception(e);
+                log.exception(e);
                 failed();
             }
         });
     }
     private void timeEndPick() {
         Thread.run(() -> {
-            Log.v(TAG, "timeEndPick | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
+            log.v(TAG, "timeEndPick | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
             try {
                 if (data == null) throw new NullPointerException("data cannot be null");
                 if (!"time_end_pick".equals(data.getString("type"))) throw new Exception("Wrong data.type. Expected 'time_end_pick', got '" + data.getString("type") + "'");
@@ -491,7 +493,7 @@ public class Room101AddRequest {
                                 }
                                 pick_time_end = value + ":00";
                             } catch (Exception e) {
-                                Log.exception(e);
+                                log.exception(e);
                                 failed();
                             }
                         }
@@ -500,28 +502,28 @@ public class Room101AddRequest {
                     callback.onDraw(getEmptyLayout(activity.getString(R.string.no_time_to_peek)));
                 }
             } catch (Exception e){
-                Log.exception(e);
+                log.exception(e);
                 failed();
             }
         });
     }
     private void confirmation() {
         Thread.run(() -> {
-            Log.v(TAG, "confirmation | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
+            log.v(TAG, "confirmation | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
             try {
                 if (pick_date == null) throw new NullPointerException("pick_date cannot be null");
                 if (pick_time_start == null) throw new NullPointerException("pick_time_start cannot be null");
                 if (pick_time_end == null) throw new NullPointerException("pick_time_end cannot be null");
                 callback.onDraw(getChooserLayout(activity.getString(R.string.attention), activity.getString(R.string.room101_warning), null, null));
             } catch (Exception e){
-                Log.exception(e);
+                log.exception(e);
                 failed();
             }
         });
     }
     private void done() {
         Thread.run(() -> {
-            Log.v(TAG, "done | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
+            log.v(TAG, "done | pick_date=" + pick_date + " | pick_time_start=" + pick_time_start + " | pick_time_end=" + pick_time_end);
             try {
                 if (data == null) throw new NullPointerException("data cannot be null");
                 if (!data.has("done")) throw new Exception("Empty data.done");
@@ -544,7 +546,7 @@ public class Room101AddRequest {
                     );
                 }
             } catch (Exception e){
-                Log.exception(e);
+                log.exception(e);
                 failed();
             }
         });
@@ -554,7 +556,7 @@ public class Room101AddRequest {
         failed(activity.getString(R.string.error_occurred));
     }
     private void failed(String message) {
-        Log.v(TAG, "failed | " + message);
+        log.v(TAG, "failed | " + message);
         BottomBar.snackBar(activity, message);
         close(false);
     }
@@ -603,7 +605,7 @@ public class Room101AddRequest {
                     radioButton.setOnCheckedChangeListener(onCheckedChangeListener);
                     radioGroup.addView(radioButton);
                 } catch (Exception e) {
-                    Log.exception(e);
+                    log.exception(e);
                 }
             }
         }

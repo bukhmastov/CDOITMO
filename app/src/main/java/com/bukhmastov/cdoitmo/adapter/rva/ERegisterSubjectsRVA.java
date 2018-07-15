@@ -94,7 +94,7 @@ public class ERegisterSubjectsRVA extends RVA {
                 }
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
         return dataset;
     }
@@ -109,14 +109,14 @@ public class ERegisterSubjectsRVA extends RVA {
                 container.findViewById(R.id.subject).setOnClickListener(v -> onElementClickListeners.get(R.id.subject).onClick(v, getMap("data", data)));
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private void bindNoSubjects(View container, Item item) {
         try {
             ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_subjects);
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private String double2string(Double value) {

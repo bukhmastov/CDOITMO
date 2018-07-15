@@ -126,7 +126,7 @@ public class UniversityEventsRVA extends UniversityRVA {
                 });
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private void bindState(RecyclerView.ViewHolder holder, Item item) {
@@ -145,7 +145,7 @@ public class UniversityEventsRVA extends UniversityRVA {
                 viewHolder.container.setOnClickListener(onStateClickListener);
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
 }

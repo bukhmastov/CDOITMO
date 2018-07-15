@@ -31,6 +31,8 @@ public class ProtocolTracker {
     private final int jobID = 0;
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private Storage storage = Storage.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
@@ -48,7 +50,7 @@ public class ProtocolTracker {
         return check(null);
     }
     public ProtocolTracker check(@Nullable final Callable callback) {
-        Log.v(TAG, "check");
+        log.v(TAG, "check");
         boolean enabled = storagePref.get(context, "pref_use_notifications", true);
         boolean running = "1".equals(storage.get(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#job_service_running", "0"));
         if (enabled && !running) {
@@ -62,7 +64,7 @@ public class ProtocolTracker {
                     callback.call();
                 }
             } catch (Exception e) {
-                Log.w(TAG, e.getMessage());
+                log.w(TAG, e.getMessage());
                 restart(callback);
             }
         } else {
@@ -77,7 +79,7 @@ public class ProtocolTracker {
         return restart(null);
     }
     public ProtocolTracker restart(@Nullable final Callable callback) {
-        Log.v(TAG, "restart");
+        log.v(TAG, "restart");
         stop(() -> start(callback));
         return this;
     }
@@ -86,16 +88,16 @@ public class ProtocolTracker {
         return start(null);
     }
     private ProtocolTracker start(@Nullable final Callable callback) {
-        Log.v(TAG, "start");
+        log.v(TAG, "start");
         if (App.UNAUTHORIZED_MODE) {
-            Log.v(TAG, "start | UNAUTHORIZED_MODE");
+            log.v(TAG, "start | UNAUTHORIZED_MODE");
             stop(callback);
             return this;
         }
         boolean enabled = storagePref.get(context, "pref_use_notifications", true);
         boolean running = "1".equals(storage.get(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#job_service_running", "0"));
         if (enabled && !running) {
-            Log.v(TAG, "Starting");
+            log.v(TAG, "Starting");
             try {
                 int frequency = Integer.parseInt(storagePref.get(context, "pref_notify_frequency", "30"));
                 boolean network_unmetered = storagePref.get(context, "pref_notify_network_unmetered", false);
@@ -106,13 +108,13 @@ public class ProtocolTracker {
                 jobScheduler.schedule(builder.build());
                 storage.put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#job_service_running", "1");
                 storage.put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#protocol", "");
-                Log.i(TAG, "Started | user = " + storage.get(context, Storage.PERMANENT, Storage.GLOBAL, "users#current_login") + " | frequency = " + frequency);
+                log.i(TAG, "Started | user = " + storage.get(context, Storage.PERMANENT, Storage.GLOBAL, "users#current_login") + " | frequency = " + frequency);
                 if (callback != null) {
                     callback.call();
                 }
             } catch (Exception e){
-                Log.e(TAG, "Failed to schedule job");
-                Log.exception(e);
+                log.e(TAG, "Failed to schedule job");
+                log.exception(e);
                 stop(callback);
             }
         } else {
@@ -127,14 +129,14 @@ public class ProtocolTracker {
         return stop(null);
     }
     public ProtocolTracker stop(@Nullable final Callable callback) {
-        Log.v(TAG, "stop");
+        log.v(TAG, "stop");
         boolean running = "1".equals(storage.get(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#job_service_running", "0"));
         if (running) {
-            Log.v(TAG, "Stopping");
+            log.v(TAG, "Stopping");
             jobScheduler.cancel(jobID);
             storage.put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#job_service_running", "0");
             storage.put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#protocol", "");
-            Log.i(TAG, "Stopped");
+            log.i(TAG, "Stopped");
         }
         if (callback != null) {
             callback.call();
@@ -146,7 +148,7 @@ public class ProtocolTracker {
         return reset(null);
     }
     public ProtocolTracker reset(@Nullable final Callable callback) {
-        Log.v(TAG, "reset");
+        log.v(TAG, "reset");
         jobScheduler.cancelAll();
         storage.put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#job_service_running", "0");
         storage.put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#protocol", "");
@@ -154,11 +156,11 @@ public class ProtocolTracker {
         return this;
     }
 
-    public static void setup(final Context context, final DeIfmoRestClient deIfmoRestClient, final StoragePref storagePref, final int attempt) {
+    public static void setup(final Context context, final DeIfmoRestClient deIfmoRestClient, final StoragePref storagePref, final Log log, final int attempt) {
         Thread.run(Thread.BACKGROUND, () -> {
-            Log.v(TAG, "setup | attempt=" + attempt);
+            log.v(TAG, "setup | attempt=" + attempt);
             if (!storagePref.get(context, "pref_protocol_changes_track", true)) {
-                Log.v(TAG, "setup | pref_protocol_changes_track=false");
+                log.v(TAG, "setup | pref_protocol_changes_track=false");
                 return;
             }
             if (attempt < 3) {
@@ -167,15 +169,15 @@ public class ProtocolTracker {
                     public void onSuccess(final int statusCode, Client.Headers headers, JSONObject responseObj, final JSONArray responseArr) {
                         Thread.run(Thread.BACKGROUND, () -> {
                             if (statusCode == 200 && responseArr != null) {
-                                new ProtocolConverter(context, responseArr, 18, json -> Log.i(TAG, "setup | uploaded")).run();
+                                new ProtocolConverter(context, responseArr, 18, json -> log.i(TAG, "setup | uploaded")).run();
                             } else {
-                                setup(context, deIfmoRestClient, storagePref, attempt + 1);
+                                setup(context, deIfmoRestClient, storagePref, log, attempt + 1);
                             }
                         });
                     }
                     @Override
                     public void onFailure(int statusCode, Client.Headers headers, int state) {
-                        Thread.run(Thread.BACKGROUND, () -> setup(context, deIfmoRestClient, storagePref, attempt + 1));
+                        Thread.run(Thread.BACKGROUND, () -> setup(context, deIfmoRestClient, storagePref, log, attempt + 1));
                     }
                     @Override
                     public void onProgress(int state) {}

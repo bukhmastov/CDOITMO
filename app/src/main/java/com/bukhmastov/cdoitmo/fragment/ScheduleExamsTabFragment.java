@@ -37,6 +37,9 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
     private Client.Request requestHandle = null;
     private View container = null;
 
+    //@Inject
+    private Log log = Log.instance();
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,12 +47,12 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
         if (bundle != null && bundle.containsKey("type")) {
             TYPE = bundle.getInt("type");
         } else {
-            Log.w(TAG, "onCreate | UNDEFINED TYPE, going to use TYPE=", DEFAULT_TYPE);
+            log.w(TAG, "onCreate | UNDEFINED TYPE, going to use TYPE=", DEFAULT_TYPE);
             TYPE = DEFAULT_TYPE;
         }
-        Log.v(TAG, "Fragment created | TYPE=", TYPE);
+        log.v(TAG, "Fragment created | TYPE=", TYPE);
         tabs.put(TYPE, refresh -> {
-            Log.v(TAG, "onInvalidate | TYPE=", TYPE, " | refresh=", refresh);
+            log.v(TAG, "onInvalidate | TYPE=", TYPE, " | refresh=", refresh);
             if (isResumed()) {
                 invalidate = false;
                 invalidate_refresh = false;
@@ -63,7 +66,7 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
 
     @Override
     public void onDestroy() {
-        Log.v(TAG, "Fragment destroyed | TYPE=", TYPE);
+        log.v(TAG, "Fragment destroyed | TYPE=", TYPE);
         tabs.remove(TYPE);
         scroll.remove(TYPE);
         super.onDestroy();
@@ -84,7 +87,7 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
     @Override
     public void onResume() {
         super.onResume();
-        Log.v(TAG, "resumed | TYPE=", TYPE, " | loaded=", loaded, " | invalidate=", invalidate, " | invalidate_refresh=", invalidate_refresh);
+        log.v(TAG, "resumed | TYPE=", TYPE, " | loaded=", loaded, " | invalidate=", invalidate, " | invalidate_refresh=", invalidate_refresh);
         if (invalidate) {
             invalidate = false;
             loaded = true;
@@ -99,9 +102,9 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
     @Override
     public void onPause() {
         super.onPause();
-        Log.v(TAG, "paused | TYPE=", TYPE);
+        log.v(TAG, "paused | TYPE=", TYPE);
         if (requestHandle != null && requestHandle.cancel()) {
-            Log.v(TAG, "paused | TYPE=", TYPE, " | paused and requested reload");
+            log.v(TAG, "paused | TYPE=", TYPE, " | paused and requested reload");
             loaded = false;
         }
     }
@@ -109,7 +112,7 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
     private void load(final boolean refresh) {
         Thread.runOnUI(() -> {
             if (activity == null) {
-                Log.w(TAG, "load | activity is null");
+                log.w(TAG, "load | activity is null");
                 failed(getContext());
                 return;
             }
@@ -117,7 +120,7 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
             Thread.run(() -> {
                 try {
                     if (activity == null || getQuery() == null) {
-                        Log.w(TAG, "load | some values are null | activity=", activity, " | getQuery()=", getQuery());
+                        log.w(TAG, "load | some values are null | activity=", activity, " | getQuery()=", getQuery());
                         failed(activity);
                         return;
                     }
@@ -130,7 +133,7 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
                         getScheduleExams(activity).search(activity, getQuery());
                     }
                 } catch (Exception e) {
-                    Log.exception(e);
+                    log.exception(e);
                     failed(activity);
                 }
             });
@@ -212,12 +215,12 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
                             } catch (SilentException ignore) {
                                 failed(activity);
                             } catch (Exception e) {
-                                Log.exception(e);
+                                log.exception(e);
                                 failed(activity);
                             }
                         });
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                         failed(activity);
                     }
                 });
@@ -230,7 +233,7 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
             public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                 Thread.runOnUI(() -> {
                     try {
-                        Log.v(TAG, "onFailure | statusCode=", statusCode, " | state=", state);
+                        log.v(TAG, "onFailure | statusCode=", statusCode, " | state=", state);
                         switch (state) {
                             case Client.FAILED_OFFLINE:
                             case Schedule.FAILED_OFFLINE: {
@@ -279,7 +282,7 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
                             }
                         }
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                     }
                 });
             }
@@ -287,12 +290,12 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
             public void onProgress(final int state) {
                 Thread.runOnUI(() -> {
                     try {
-                        Log.v(TAG, "onProgress | state=", state);
+                        log.v(TAG, "onProgress | state=", state);
                         final ViewGroup view = (ViewGroup) inflate(activity, R.layout.state_loading_text);
                         ((TextView) view.findViewById(R.id.loading_message)).setText(R.string.loading);
                         draw(view);
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                     }
                 });
             }
@@ -312,14 +315,14 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
     private void failed(Context context) {
         try {
             if (context == null) {
-                Log.w(TAG, "failed | context is null");
+                log.w(TAG, "failed | context is null");
                 return;
             }
             View state_try_again = inflate(context, R.layout.state_failed_button);
             state_try_again.findViewById(R.id.try_again_reload).setOnClickListener(view -> load(false));
             draw(state_try_again);
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
 
@@ -331,14 +334,14 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
                 vg.addView(view, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             }
         } catch (Exception e){
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private void draw(Context context, int layoutId) {
         try {
             draw(inflate(context, layoutId));
         } catch (Exception e){
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private View inflate(Context context, int layoutId) throws InflateException {

@@ -25,6 +25,8 @@ public class Notifications extends ContextWrapper {
     private NotificationManager manager;
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private StoragePref storagePref = StoragePref.instance();
 
     public Notifications(@NonNull Context context) {
@@ -120,7 +122,7 @@ public class Notifications extends ContextWrapper {
                 getManager().createNotificationChannel(channel);
             }
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
     private NotificationManager getManager() {

@@ -53,6 +53,8 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
     private boolean invalidate_refresh = false;
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private StorageProvider storageProvider = StorageProvider.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
@@ -79,7 +81,7 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.v(TAG, "Fragment created");
+        log.v(TAG, "Fragment created");
         firebaseAnalyticsProvider.logCurrentScreen(activity, this);
         // define query
         String scope = restoreData(this);
@@ -100,18 +102,18 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
 
     @Override
     public void onDestroy() {
-        Log.v(TAG, "Fragment destroyed");
+        log.v(TAG, "Fragment destroyed");
         try {
             if (activity.toolbar != null) {
                 MenuItem action_search = activity.toolbar.findItem(R.id.action_search);
                 if (action_search != null && action_search.isVisible()) {
-                    Log.v(TAG, "Hiding action_search");
+                    log.v(TAG, "Hiding action_search");
                     action_search.setVisible(false);
                     action_search.setOnMenuItemClickListener(null);
                 }
             }
         } catch (Exception e){
-            Log.exception(e);
+            log.exception(e);
         }
         tab = null;
         scroll = null;
@@ -121,27 +123,27 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
     @Override
     public void onResume() {
         super.onResume();
-        Log.v(TAG, "resumed");
+        log.v(TAG, "resumed");
         firebaseAnalyticsProvider.setCurrentScreen(activity, this);
         try {
             if (activity.toolbar != null) {
                 MenuItem action_search = activity.toolbar.findItem(R.id.action_search);
                 if (action_search != null && !action_search.isVisible()) {
-                    Log.v(TAG, "Revealing action_search");
+                    log.v(TAG, "Revealing action_search");
                     action_search.setVisible(true);
                     action_search.setOnMenuItemClickListener(item -> {
-                        Log.v(TAG, "action_search clicked");
+                        log.v(TAG, "action_search clicked");
                         activity.startActivity(new Intent(activity, ScheduleAttestationsSearchActivity.class));
                         return false;
                     });
                 }
             }
         } catch (Exception e){
-            Log.exception(e);
+            log.exception(e);
         }
         if (tab == null) {
             tab = refresh -> {
-                Log.v(TAG, "onInvalidate | refresh=", refresh);
+                log.v(TAG, "onInvalidate | refresh=", refresh);
                 storeData(this, getQuery());
                 if (isResumed()) {
                     invalidate = false;
@@ -167,7 +169,7 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
     @Override
     public void onPause() {
         super.onPause();
-        Log.v(TAG, "paused");
+        log.v(TAG, "paused");
         if (requestHandle != null && requestHandle.cancel()) {
             loaded = false;
         }
@@ -186,7 +188,7 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
     private void load(final boolean refresh) {
         Thread.runOnUI(() -> {
             if (activity == null) {
-                Log.w(TAG, "load | activity is null");
+                log.w(TAG, "load | activity is null");
                 failed(getContext());
                 return;
             }
@@ -194,7 +196,7 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
             Thread.run(() -> {
                 try {
                     if (activity == null || getQuery() == null) {
-                        Log.w(TAG, "load | some values are null | activity=" + Log.lNull(activity) + " | getQuery()=" + Log.lNull(getQuery()));
+                        log.w(TAG, "load | some values are null | activity=", activity, " | getQuery()=", getQuery());
                         failed(getContext());
                         return;
                     }
@@ -208,7 +210,7 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
                         getScheduleAttestations(activity).search(activity, getQuery());
                     }
                 } catch (Exception e) {
-                    Log.exception(e);
+                    log.exception(e);
                     failed(activity);
                 }
             });
@@ -260,12 +262,12 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
                             } catch (SilentException ignore) {
                                 failed(activity);
                             } catch (Exception e) {
-                                Log.exception(e);
+                                log.exception(e);
                                 failed(activity);
                             }
                         });
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                         failed(activity);
                     }
                 });
@@ -278,7 +280,7 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
             public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
                 Thread.runOnUI(() -> {
                     try {
-                        Log.v(TAG, "onFailure | statusCode=" + statusCode + " | state=" + state);
+                        log.v(TAG, "onFailure | statusCode=" + statusCode + " | state=" + state);
                         switch (state) {
                             case Client.FAILED_OFFLINE:
                             case Schedule.FAILED_OFFLINE: {
@@ -325,7 +327,7 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
                             }
                         }
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                     }
                 });
             }
@@ -333,12 +335,12 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
             public void onProgress(final int state) {
                 Thread.runOnUI(() -> {
                     try {
-                        Log.v(TAG, "onProgress | state=" + state);
+                        log.v(TAG, "onProgress | state=" + state);
                         final ViewGroup view = (ViewGroup) inflate(R.layout.state_loading_text);
                         ((TextView) view.findViewById(R.id.loading_message)).setText(R.string.loading);
                         draw(view);
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                     }
                 });
             }
@@ -358,14 +360,14 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
     private void failed(Context context) {
         try {
             if (context == null) {
-                Log.w(TAG, "failed | context is null");
+                log.w(TAG, "failed | context is null");
                 return;
             }
             View state_try_again = inflate(R.layout.state_failed_button);
             state_try_again.findViewById(R.id.try_again_reload).setOnClickListener(view -> load(false));
             draw(state_try_again);
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
         }
     }
 }

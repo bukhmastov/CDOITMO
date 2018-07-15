@@ -59,6 +59,8 @@ public abstract class Client {
     public static final String HTTPS = "https";
 
     //@Inject
+    protected Log log = Log.instance();
+    //@Inject
     protected Storage storage = Storage.instance();
     //@Inject
     protected StoragePref storagePref = StoragePref.instance();
@@ -239,7 +241,7 @@ public abstract class Client {
     private void execute(@NonNull final HttpUrl url, @Nullable final okhttp3.Headers headers, @Nullable final RequestBody requestBody, @NonNull final RawHandler rawHandler) {
         Thread.run(Thread.BACKGROUND, () -> {
             try {
-                Log.v(TAG,
+                log.v(TAG,
                         "execute | load | " +
                         "url=" + url.toString() + " | " +
                         "headers=" + getLogHeaders(headers) + " | " +
@@ -280,7 +282,7 @@ public abstract class Client {
                 // it's all over..
                 final int code = response.code();
                 final okhttp3.Headers responseHeaders = response.headers();
-                Log.v(TAG,
+                log.v(TAG,
                         "execute | done | " +
                         "url=" + url.toString() + " | " +
                         "code=" + code + " | " +
@@ -303,7 +305,7 @@ public abstract class Client {
         }
         Matcher m = Pattern.compile("(\\\\u)([0-9a-f]{3})[^0-9a-f]").matcher(response);
         if (m.find()) {
-            Log.v(TAG, "Found and fixed invalid json response");
+            log.v(TAG, "Found and fixed invalid json response");
             response = m.replaceAll(m.group(1) + "0" + m.group(2));
         }
         return response;
@@ -315,7 +317,7 @@ public abstract class Client {
             case HTTPS: return "https://";
             default:
                 @Protocol String p = HTTP;
-                Log.wtf(TAG, "getProtocol | undefined protocol, going to use " + p);
+                log.wtf(TAG, "getProtocol | undefined protocol, going to use " + p);
                 return getProtocol(p);
         }
     }
@@ -336,14 +338,14 @@ public abstract class Client {
                     if (cookie.length != 2) continue;
                     String cookieName = cookie[0].trim();
                     String cookieValue = cookie[1].trim();
-                    //Log.v(TAG, "parseCookies | cookie: " + cookieName + "=" + cookieValue);
+                    //log.v(TAG, "parseCookies | cookie: " + cookieName + "=" + cookieValue);
                     JSONArray attrs = new JSONArray();
                     for (int i = 1; i < attributes.length; i++) {
                         String[] attribute = attributes[i].split("=");
                         if (attribute.length != 2) continue;
                         String attrName = attribute[0].trim().toLowerCase();
                         String attrValue = attribute[1].trim();
-                        //Log.v(TAG, "parseCookies |    attr: " + attrName + "=" + attrValue);
+                        //log.v(TAG, "parseCookies |    attr: " + attrName + "=" + attrValue);
                         attrs.put(new JSONObject()
                                 .put("name", attrName)
                                 .put("value", attrValue)
@@ -358,7 +360,7 @@ public abstract class Client {
             }
             return parsed;
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             return new JSONArray();
         }
     }
@@ -421,13 +423,11 @@ public abstract class Client {
         return context.getString(R.string.server_error) + (statusCode > 0 ? "\n[status code: " + statusCode + "]" : "");
     }
     public static boolean isOnline(@NonNull final Context context) {
-        Log.v(TAG, "isOnline");
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         if (connectivityManager != null) {
             NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
             return (networkInfo != null && networkInfo.isConnected());
         } else {
-            Log.v(TAG, "isOnline | connectivity manager is null");
             return true;
         }
     }
@@ -439,7 +439,7 @@ public abstract class Client {
         }
         public boolean cancel() {
             if (call != null && !call.isCanceled()) {
-                Log.v(TAG, "request cancelled | url=" + call.request().url());
+                log.v(TAG, "request cancelled | url=" + call.request().url());
                 call.cancel();
                 return true;
             } else {

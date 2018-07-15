@@ -8,7 +8,6 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.util.Log;
 
 public class Message {
 
@@ -42,19 +41,16 @@ public class Message {
             layout.setOnClickListener(v -> callback.dismiss(context, layout));
             return layout;
         } catch (Exception e) {
-            Log.exception(e);
             return null;
         }
     }
 
     private static View inflate(Context context, @LayoutRes int layout) throws InflateException {
         if (context == null) {
-            Log.e(TAG, "Failed to inflate layout, context is null");
             return null;
         }
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         if (inflater == null) {
-            Log.e(TAG, "Failed to inflate layout, inflater is null");
             return null;
         }
         return inflater.inflate(layout, null);

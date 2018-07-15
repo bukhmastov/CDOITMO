@@ -203,11 +203,11 @@ public class TextUtils {
                     hash = crypt(value, "MD5");
                     break;
                 case "MD5":
-                    Log.exception(e);
+                    hash = Transliterate.cyr2lat(value);
                     break;
             }
         } catch (UnsupportedEncodingException e) {
-            Log.exception(e);
+            hash = Transliterate.cyr2lat(value);
         }
         return hash;
     }

@@ -39,6 +39,8 @@ public class SubjectShowFragment extends ConnectedFragment {
     }
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Override
@@ -57,7 +59,7 @@ public class SubjectShowFragment extends ConnectedFragment {
             }
             this.data = new JSONObject(data);
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             this.data = null;
             activity.back();
         }
@@ -72,7 +74,7 @@ public class SubjectShowFragment extends ConnectedFragment {
                 if (action_share != null) action_share.setVisible(false);
             }
         } catch (Exception e){
-            Log.exception(e);
+            log.exception(e);
         }
     }
 
@@ -110,7 +112,7 @@ public class SubjectShowFragment extends ConnectedFragment {
         if (data == null) return;
         Thread.run(() -> {
             try {
-                Log.v(TAG, "display");
+                log.v(TAG, "display");
                 final JSONObject subject = data.getJSONObject("subject");
                 final int term = data.getInt("term");
                 final ERegisterSubjectViewRVA adapter = new ERegisterSubjectViewRVA(activity, subject, term);
@@ -128,12 +130,12 @@ public class SubjectShowFragment extends ConnectedFragment {
                     } catch (SilentException e) {
                         activity.back();
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                         activity.back();
                     }
                 });
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
                 activity.back();
             }
         });
@@ -182,7 +184,7 @@ public class SubjectShowFragment extends ConnectedFragment {
                                                 try {
                                                     share(shareEntities.get(position).text);
                                                 } catch (Exception e) {
-                                                    Log.exception(e);
+                                                    log.exception(e);
                                                     BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                                 }
                                             })
@@ -190,18 +192,18 @@ public class SubjectShowFragment extends ConnectedFragment {
                                             .create().show();
                                 }
                             } catch (Exception e) {
-                                Log.exception(e);
+                                log.exception(e);
                                 BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                             }
                             return false;
                         });
                     } catch (Exception e) {
-                        Log.exception(e);
+                        log.exception(e);
                         BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 });
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
                 BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
@@ -259,13 +261,13 @@ public class SubjectShowFragment extends ConnectedFragment {
                     .replace("%subject%", sbj)
                     .replace("%attestation%", attestation);
         } else {
-            Log.w(TAG, "Failed to build text to share (mine subject progress) | subject=" + sbj + " | points=" + shareEntity.value.toString() + " | mark=" + shareEntity.mark);
+            log.w(TAG, "Failed to build text to share (mine subject progress) | subject=" + sbj + " | points=" + shareEntity.value.toString() + " | mark=" + shareEntity.mark);
             return "";
         }
     }
     private void share(final String title) {
         Thread.runOnUI(() -> {
-            Log.v(TAG, "share | " + title);
+            log.v(TAG, "share | " + title);
             Intent intent = new Intent(Intent.ACTION_SEND);
             intent.setType("text/plain");
             intent.putExtra(Intent.EXTRA_TEXT, title);

@@ -69,6 +69,8 @@ public abstract class Schedule {
     public static final int FAILED_NOT_FOUND = 105;
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private Storage storage = Storage.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
@@ -119,7 +121,7 @@ public abstract class Schedule {
     public void search(final Context context, final String query, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
         Thread.run(() -> {
             String q = query.trim();
-            Log.v(TAG, "search | query=", q, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges);
+            log.v(TAG, "search | query=", q, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges);
             if (q.isEmpty()) {
                 handler.onFailure(FAILED_EMPTY_QUERY);
                 return;
@@ -129,7 +131,7 @@ public abstract class Schedule {
                 q = q.split(" ")[0].trim();
             }
             if (addPending(q, withUserChanges, handler)) {
-                Log.v(TAG, "search | query=", q, " | initialized the pending stack | starting the search procedure");
+                log.v(TAG, "search | query=", q, " | initialized the pending stack | starting the search procedure");
                 if (q.equals("mine")) {
                     searchMine(context, refreshRate, forceToCache, withUserChanges);
                 } else if (q.matches("^[0-9]{6}$")) {
@@ -145,11 +147,11 @@ public abstract class Schedule {
                     q = q.toLowerCase();
                     searchTeachers(context, q, refreshRate, forceToCache, withUserChanges);
                 } else {
-                    Log.v(TAG, "search | got invalid query: " + q);
+                    log.v(TAG, "search | got invalid query: " + q);
                     invokePending(q, withUserChanges, true, handler -> handler.onFailure(FAILED_INVALID_QUERY));
                 }
             } else {
-                Log.v(TAG, "search | query=", q, " | added to the pending stack");
+                log.v(TAG, "search | query=", q, " | added to the pending stack");
             }
         });
     }
@@ -161,7 +163,7 @@ public abstract class Schedule {
         void invoke(Handler handler);
     }
     protected boolean addPending(String query, boolean withUserChanges, Handler handler) {
-        Log.v(TAG, "addPending | query=", query, " | withUserChanges=", withUserChanges);
+        log.v(TAG, "addPending | query=", query, " | withUserChanges=", withUserChanges);
         final String token = getType() + "_" + query.toLowerCase() + "_" + (withUserChanges ? "t" : "f");
         if (Schedule.pending.containsKey(token)) {
             Schedule.pending.get(token).add(handler);
@@ -181,14 +183,14 @@ public abstract class Schedule {
         }
     }
     protected void invokePending(String query, boolean withUserChanges, boolean remove, Pending pending) {
-        Log.v(TAG, "invokePending | query=", query, " | withUserChanges=", withUserChanges, " | remove=", remove);
+        log.v(TAG, "invokePending | query=", query, " | withUserChanges=", withUserChanges, " | remove=", remove);
         final String token = getType() + "_" + query.toLowerCase() + "_" + (withUserChanges ? "t" : "f");
         final ArrayList<Handler> handlers = Schedule.pending.get(token);
         if (handlers != null) {
             for (int i = handlers.size() - 1; i >= 0; i--) {
                 Handler handler = handlers.get(i);
                 if (handler != null) {
-                    Log.v(TAG, "invokePending | query=", query, " | invoke");
+                    log.v(TAG, "invokePending | query=", query, " | invoke");
                     pending.invoke(handler);
                 }
             }
@@ -209,9 +211,9 @@ public abstract class Schedule {
     protected abstract boolean searchTeachersAvailable();
     protected void searchTeachers(final Context context, final String teacherName, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
         // Teachers search is the same for lessons and exams
-        Log.v(TAG, "searchTeachers | teacherName=", teacherName, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges);
+        log.v(TAG, "searchTeachers | teacherName=", teacherName, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges);
         if (!searchTeachersAvailable()) {
-            Log.v(TAG, "searchTeachers | not available");
+            log.v(TAG, "searchTeachers | not available");
             invokePending(teacherName, withUserChanges, true, handler -> handler.onFailure(FAILED_INVALID_QUERY));
             return;
         }
@@ -253,7 +255,7 @@ public abstract class Schedule {
     // Private functions to proceed search and get schedule from cache
     protected void searchByQuery(final Context context, final String type, final String query, final int refreshRate, final boolean withUserChanges, final SearchByQuery search) {
         Thread.run(() -> {
-            Log.v(TAG, "searchByQuery | type=", type, " | query=", query, " | refreshRate=", refreshRate);
+            log.v(TAG, "searchByQuery | type=", type, " | query=", query, " | refreshRate=", refreshRate);
             final String cache = getCache(context, query);
             if (!App.OFFLINE_MODE) {
                 if (search.isWebAvailable()) {
@@ -261,7 +263,7 @@ public abstract class Schedule {
                         @Override
                         public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject data, final JSONArray responseArr) {
                             Thread.run(() -> {
-                                Log.v(TAG, "searchByQuery | type=", type, " | query=", query, " || onSuccess | statusCode=", statusCode, " | data=", data);
+                                log.v(TAG, "searchByQuery | type=", type, " | query=", query, " || onSuccess | statusCode=", statusCode, " | data=", data);
                                 if (statusCode == 200 && data != null) {
                                     final JSONObject template = getTemplate(query, type);
                                     if (template == null) {
@@ -285,7 +287,7 @@ public abstract class Schedule {
                         }
                         @Override
                         public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                            Log.v(TAG, "searchByQuery | type=", type, " | query=", query, " || onFailure | statusCode=", statusCode, " | state=", state);
+                            log.v(TAG, "searchByQuery | type=", type, " | query=", query, " || onFailure | statusCode=", statusCode, " | state=", state);
                             searchFromCache(context, type, cache, query, new SearchFromCache() {
                                 @Override
                                 public void onDone(final String q, final JSONObject d) {
@@ -299,7 +301,7 @@ public abstract class Schedule {
                         }
                         @Override
                         public void onProgress(final int state) {
-                            Log.v(TAG, "searchByQuery | type=", type, " | query=", query, " || onProgress | state=", state);
+                            log.v(TAG, "searchByQuery | type=", type, " | query=", query, " || onProgress | state=", state);
                             search.onWebRequestProgress(state);
                         }
                         @Override
@@ -308,7 +310,7 @@ public abstract class Schedule {
                         }
                     };
                     if (isForceRefresh(cache, refreshRate)) {
-                        Log.v(TAG, "searchByQuery | type=", type, " | query=", query, " | force refresh");
+                        log.v(TAG, "searchByQuery | type=", type, " | query=", query, " | force refresh");
                         search.onWebRequest(query, cache, restResponseHandler);
                     } else {
                         searchFromCache(context, type, cache, query, new SearchFromCache() {
@@ -338,7 +340,7 @@ public abstract class Schedule {
         });
     }
     protected void searchFromCache(final Context context, final String type, String cache, final String query, final SearchFromCache searchFromCache) {
-        Log.v(TAG, "searchFromCache | type=", type, " | query=", query, " | cache=", (cache == null || cache.isEmpty() ? "<empty>" : "<string>"));
+        log.v(TAG, "searchFromCache | type=", type, " | query=", query, " | cache=", (cache == null || cache.isEmpty() ? "<empty>" : "<string>"));
         JSONObject cacheJson = null;
         if (cache == null) {
             cache = getCache(context, query);
@@ -347,13 +349,13 @@ public abstract class Schedule {
             try {
                 cacheJson = new JSONObject(cache);
             } catch (Exception e) {
-                Log.v(TAG, "searchFromCache | type=", type, " | got invalid cache, going to remove it...");
+                log.v(TAG, "searchFromCache | type=", type, " | got invalid cache, going to remove it...");
                 removeCache(context, query);
                 cacheJson = null;
             }
         }
         if (cacheJson == null) {
-            Log.v(TAG, "searchFromCache | type=", type, " | empty cache");
+            log.v(TAG, "searchFromCache | type=", type, " | empty cache");
             searchFromCache.onEmpty(query);
         } else {
             searchFromCache.onDone(query, cacheJson);
@@ -366,7 +368,7 @@ public abstract class Schedule {
     private static final int LOCAL_CACHE_THRESHOLD = 3;
     protected String getCache(Context context, String token) {
         token = token.toLowerCase();
-        Log.v(TAG, "getCache | token=", token);
+        log.v(TAG, "getCache | token=", token);
         String cache = null;
         synchronized (Schedule.localCache) {
             final String memoizeKey = getType() + "_" + token;
@@ -381,18 +383,18 @@ public abstract class Schedule {
     }
     protected void putCache(Context context, String token, String value, boolean forceToCache) {
         if (value != null && !value.isEmpty()) {
-            Log.v(TAG, "putCache | token=", token, " | forceToCache=", forceToCache);
+            log.v(TAG, "putCache | token=", token, " | forceToCache=", forceToCache);
             token = token.toLowerCase();
             putLocalCache(token, value);
             if (forceToCache || token.equals(getDefaultScope(context).toLowerCase()) || storage.exists(context, Storage.CACHE, Storage.GLOBAL, "schedule_" + getType() + "#lessons#" + token)) {
-                Log.v(TAG, "putCache | token=", token, " | proceed");
+                log.v(TAG, "putCache | token=", token, " | proceed");
                 storage.put(context, Storage.CACHE, Storage.GLOBAL, "schedule_" + getType() + "#lessons#" + token, value);
             }
         }
     }
     protected void putLocalCache(String token, String value) {
         if (value != null && !value.isEmpty()) {
-            Log.v(TAG, "putLocalCache | token=", token);
+            log.v(TAG, "putLocalCache | token=", token);
             token = token.toLowerCase();
             synchronized (localCache) {
                 if (localCache.size() > LOCAL_CACHE_THRESHOLD - 1) {
@@ -409,7 +411,7 @@ public abstract class Schedule {
     }
     protected void removeCache(Context context, String token) {
         token = token.toLowerCase();
-        Log.v(TAG, "removeCache | token=", token);
+        log.v(TAG, "removeCache | token=", token);
         synchronized (localCache) {
             final String memoizeKey = getType() + "_" + token;
             if (localCache.containsKey(memoizeKey)) {
@@ -452,14 +454,14 @@ public abstract class Schedule {
             template.put("schedule", new JSONArray());
             return template;
         } catch (JSONException e) {
-            Log.exception(e);
+            log.exception(e);
             return null;
         }
     }
 
     // Returns the number of hours after which the schedule is considered to be overdue
     protected int getRefreshRate(final Context context) {
-        Log.v(TAG, "getRefreshRate");
+        log.v(TAG, "getRefreshRate");
         try {
             return storagePref.get(context, "pref_use_cache", true) ? Integer.parseInt(storagePref.get(context, "pref_static_refresh", "168")) : 0;
         } catch (Exception e) {
@@ -469,7 +471,7 @@ public abstract class Schedule {
 
     // Returns a flag indicating that the schedule has expired and needs to be updated
     protected boolean isForceRefresh(final String cache, final int refreshRate) {
-        Log.v(TAG, "isForceUpdate | cache=", (cache == null || cache.isEmpty() ? "<empty>" : "<string>"), " | refreshRate=", refreshRate);
+        log.v(TAG, "isForceUpdate | cache=", (cache == null || cache.isEmpty() ? "<empty>" : "<string>"), " | refreshRate=", refreshRate);
         if (refreshRate == 0 || cache == null || cache.isEmpty()) {
             return true;
         } else if (refreshRate > 0) {
@@ -488,7 +490,6 @@ public abstract class Schedule {
         return getDefaultScope(context, storageProvider, getType());
     }
     public static String getDefaultScope(final Context context, final StorageProvider storageProvider, final String type) {
-        Log.v(TAG, "getDefaultScope | type=", type);
         final String pref = storageProvider.getStoragePref().get(context, "pref_schedule_" + type + "_default", "").trim();
         String scope;
         if (pref.isEmpty()) {

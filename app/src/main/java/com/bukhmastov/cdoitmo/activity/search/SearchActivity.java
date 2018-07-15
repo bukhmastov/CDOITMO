@@ -52,6 +52,8 @@ public abstract class SearchActivity extends AppCompatActivity {
     protected boolean saveCurrentSuggestion = true;
 
     //@Inject
+    private Log log = Log.instance();
+    //@Inject
     private Storage storage = Storage.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
@@ -82,16 +84,16 @@ public abstract class SearchActivity extends AppCompatActivity {
             case "black": setTheme(R.style.AppTheme_Search_Black); break;
         }
         super.onCreate(savedInstanceState);
-        Log.i(TAG, "Activity created | type=", getType());
+        log.i(TAG, "Activity created | type=", getType());
         setContentView(R.layout.activity_search);
     }
 
     @Override
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        Log.v(TAG, "onPostCreate | type=", getType());
+        log.v(TAG, "onPostCreate | type=", getType());
         findViewById(R.id.search_close).setOnClickListener(v -> {
-            Log.v(TAG, "type=", getType(), " | search_close clicked");
+            log.v(TAG, "type=", getType(), " | search_close clicked");
             finish();
         });
         search_edit_text = findViewById(R.id.search_edittext);
@@ -105,17 +107,17 @@ public abstract class SearchActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.i(TAG, "Activity destroyed | type=", getType());
+        log.i(TAG, "Activity destroyed | type=", getType());
     }
 
     @Override
     protected void attachBaseContext(Context context) {
-        super.attachBaseContext(CtxWrapper.wrap(context, storagePref));
+        super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log));
     }
 
     private void setMode(final @EXTRA_ACTION_MODE String mode) {
         Thread.runOnUI(() -> {
-            Log.v(TAG, "setMode | type=", getType(), " | mode=", mode);
+            log.v(TAG, "setMode | type=", getType(), " | mode=", mode);
             final ViewGroup search_extra_action = findViewById(R.id.search_extra_action);
             final ImageView search_extra_action_image = findViewById(R.id.search_extra_action_image);
             if (search_extra_action != null) {
@@ -124,7 +126,7 @@ public abstract class SearchActivity extends AppCompatActivity {
                     switch (mode) {
                         case SPEECH_RECOGNITION: {
                             if (checkVoiceRecognition()) {
-                                Log.v(TAG, "type=", getType(), " | voice recognition not supported");
+                                log.v(TAG, "type=", getType(), " | voice recognition not supported");
                                 setMode(NONE);
                                 return;
                             }
@@ -132,7 +134,7 @@ public abstract class SearchActivity extends AppCompatActivity {
                                 search_extra_action_image.setImageDrawable(getDrawable(R.drawable.ic_keyboard_voice));
                             }
                             search_extra_action.setOnClickListener(v -> {
-                                Log.v(TAG, "type=", getType(), " | speech_recognition clicked");
+                                log.v(TAG, "type=", getType(), " | speech_recognition clicked");
                                 startRecognition();
                             });
                             break;
@@ -142,7 +144,7 @@ public abstract class SearchActivity extends AppCompatActivity {
                                 search_extra_action_image.setImageDrawable(getDrawable(R.drawable.ic_close));
                             }
                             search_extra_action.setOnClickListener(v -> {
-                                Log.v(TAG, "type=", getType(), " | clear clicked");
+                                log.v(TAG, "type=", getType(), " | clear clicked");
                                 search_edit_text.setText("");
                             });
                             break;
@@ -159,7 +161,7 @@ public abstract class SearchActivity extends AppCompatActivity {
     }
     private void setSuggestions(final List<Suggestion> suggestions) {
         Thread.runOnUI(() -> {
-            Log.v(TAG, "setSuggestions | type=", getType());
+            log.v(TAG, "setSuggestions | type=", getType());
             try {
                 ListView search_suggestions = findViewById(R.id.search_suggestions);
                 if (search_suggestions != null) {
@@ -193,12 +195,12 @@ public abstract class SearchActivity extends AppCompatActivity {
                     search_suggestions.setOnItemClickListener((parent, view, position, id) -> done(suggestions.get(position).query, suggestions.get(position).title));
                 }
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
             }
         });
     }
     private List<Suggestion> getSuggestions(String query) {
-        Log.v(TAG, "getSuggestions | type=", getType(), " | query=", query);
+        log.v(TAG, "getSuggestions | type=", getType(), " | query=", query);
         try {
             List<Suggestion> suggestions = new ArrayList<>();
             currentNumberOfSuggestions = 0;
@@ -217,13 +219,13 @@ public abstract class SearchActivity extends AppCompatActivity {
             });
             return suggestions;
         } catch (Exception e) {
-            Log.exception(e);
+            log.exception(e);
             return null;
         }
     }
     private void done(String query, String title) {
         Thread.run(() -> {
-            Log.v(TAG, "done | type=", getType(), " | query=", query, " | title=", title);
+            log.v(TAG, "done | type=", getType(), " | query=", query, " | title=", title);
             try {
                 JSONArray recent = TextUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent", ""));
                 for (int i = 0; i < recent.length(); i++) {
@@ -254,7 +256,7 @@ public abstract class SearchActivity extends AppCompatActivity {
                 }
                 storage.put(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent", recent.toString());
             } catch (Exception e) {
-                Log.exception(e);
+                log.exception(e);
                 storage.delete(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent");
             }
             onDone(query);
@@ -269,7 +271,7 @@ public abstract class SearchActivity extends AppCompatActivity {
     }
 
     private boolean checkVoiceRecognition() {
-        Log.v(TAG, "checkVoiceRecognition");
+        log.v(TAG, "checkVoiceRecognition");
         try {
             return getPackageManager().queryIntentActivities(new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH), 0).size() == 0;
         } catch (Exception e) {
@@ -277,7 +279,7 @@ public abstract class SearchActivity extends AppCompatActivity {
         }
     }
     private void startRecognition() {
-        Log.v(TAG, "startRecognition");
+        log.v(TAG, "startRecognition");
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
@@ -285,7 +287,7 @@ public abstract class SearchActivity extends AppCompatActivity {
         try {
             startActivityForResult(intent, REQ_CODE_SPEECH_INPUT);
         } catch (ActivityNotFoundException a) {
-            Log.v(TAG, "voice recognition not supported");
+            log.v(TAG, "voice recognition not supported");
             BottomBar.toast(context, R.string.speech_recognition_is_not_supported);
         }
     }
@@ -295,11 +297,11 @@ public abstract class SearchActivity extends AppCompatActivity {
         Thread.runOnUI(() -> {
             switch (requestCode) {
                 case REQ_CODE_SPEECH_INPUT: {
-                    Log.v(TAG, "doneRecognition");
+                    log.v(TAG, "doneRecognition");
                     if (resultCode == RESULT_OK && data != null) {
                         ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                         if (result.size() > 0) {
-                            Log.v(TAG, "resultRecognition | " + result.get(0));
+                            log.v(TAG, "resultRecognition | " + result.get(0));
                             search_edit_text.setText(result.get(0));
                         }
                     }
@@ -338,7 +340,7 @@ public abstract class SearchActivity extends AppCompatActivity {
                         }
                     }
                 } catch (Exception e) {
-                    Log.exception(e);
+                    log.exception(e);
                 }
             }
         }
