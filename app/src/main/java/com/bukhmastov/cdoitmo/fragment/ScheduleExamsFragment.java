@@ -17,7 +17,6 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleExams;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.provider.StorageProvider;
 import com.bukhmastov.cdoitmo.util.Thread;
 
 public class ScheduleExamsFragment extends ConnectedFragment implements ViewPager.OnPageChangeListener {
@@ -31,9 +30,9 @@ public class ScheduleExamsFragment extends ConnectedFragment implements ViewPage
     //@Inject
     private Thread thread = Thread.instance();
     //@Inject
-    private StoragePref storagePref = StoragePref.instance();
+    private ScheduleExams scheduleExams = ScheduleExams.instance();
     //@Inject
-    private StorageProvider storageProvider = StorageProvider.instance();
+    private StoragePref storagePref = StoragePref.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
@@ -45,7 +44,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements ViewPage
         // define query
         String scope = ScheduleExamsTabHostFragment.restoreData();
         if (scope == null) {
-            scope = ScheduleExams.getDefaultScope(activity, storageProvider, ScheduleExams.TYPE);
+            scope = scheduleExams.getDefaultScope(activity);
         }
         final Intent intent = activity.getIntent();
         if (intent != null && intent.hasExtra("action_extra")) {
@@ -142,7 +141,7 @@ public class ScheduleExamsFragment extends ConnectedFragment implements ViewPage
                 return;
             }
             if (ScheduleLessonsTabHostFragment.getQuery() == null) {
-                ScheduleLessonsTabHostFragment.setQuery(ScheduleExams.getDefaultScope(activity, storageProvider, ScheduleExams.TYPE));
+                ScheduleLessonsTabHostFragment.setQuery(scheduleExams.getDefaultScope(activity));
             }
             thread.runOnUI(() -> {
                 try {

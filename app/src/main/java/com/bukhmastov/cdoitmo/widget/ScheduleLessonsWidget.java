@@ -61,6 +61,8 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     //@Inject
     private Thread thread = Thread.instance();
     //@Inject
+    private ScheduleLessons scheduleLessons = ScheduleLessons.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Retention(RetentionPolicy.SOURCE)
@@ -130,7 +132,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         thread.run(() -> {
             log.i(TAG, "refresh | appWidgetId=" + appWidgetId);
             try {
-                new ScheduleLessons(new Schedule.Handler() {
+                scheduleLessons.init(new Schedule.Handler() {
                     @Override
                     public void onSuccess(final JSONObject json, final boolean fromCache) {
                         thread.run(() -> {

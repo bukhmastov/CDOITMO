@@ -33,7 +33,6 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
 
     private static final String TAG = "SLTabFragment";
     private boolean loaded = false;
-    private ScheduleExams scheduleExams = null;
     private Client.Request requestHandle = null;
     private View container = null;
 
@@ -41,6 +40,8 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
     private Log log = Log.instance();
     //@Inject
     private Thread thread = Thread.instance();
+    //@Inject
+    private ScheduleExams scheduleExams = ScheduleExams.instance();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -142,7 +143,7 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
         });
     }
     private @NonNull ScheduleExams getScheduleExams(final ConnectedActivity activity) {
-        if (scheduleExams == null) scheduleExams = new ScheduleExams(new Schedule.Handler() {
+        scheduleExams.init(new Schedule.Handler() {
             @Override
             public void onSuccess(final JSONObject json, final boolean fromCache) {
                 thread.run(() -> {

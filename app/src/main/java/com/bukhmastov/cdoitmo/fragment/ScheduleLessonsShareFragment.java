@@ -19,6 +19,7 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
+import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessonsHelper;
 import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.Log;
@@ -67,6 +68,10 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
     private Log log = Log.instance();
     //@Inject
     private Thread thread = Thread.instance();
+    //@Inject
+    private ScheduleLessons scheduleLessons = ScheduleLessons.instance();
+    //@Inject
+    private ScheduleLessonsHelper scheduleLessonsHelper = ScheduleLessonsHelper.instance();
     //@Inject
     private Storage storage = Storage.instance();
     //@Inject
@@ -202,7 +207,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
             try {
                 TextView share_title = container.findViewById(R.id.share_title);
                 if (share_title != null) {
-                    share_title.setText(ScheduleLessons.getScheduleHeader(activity, content.getString("title"), content.getString("type")));
+                    share_title.setText(scheduleLessons.getScheduleHeader(activity, content.getString("title"), content.getString("type")));
                 }
             } catch (Exception e) {
                 log.exception(e);
@@ -252,7 +257,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
             try {
                 TextView share_title = container.findViewById(R.id.share_title);
                 if (share_title != null) {
-                    share_title.setText(ScheduleLessons.getScheduleHeader(activity, title, type));
+                    share_title.setText(scheduleLessons.getScheduleHeader(activity, title, type));
                 }
                 ViewGroup share_info = container.findViewById(R.id.share_info);
                 if (share_info != null) {
@@ -272,7 +277,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                 finish();
             }
         });
-        new ScheduleLessons(new Schedule.Handler() {
+        scheduleLessons.init(new Schedule.Handler() {
             @Override
             public void onSuccess(final JSONObject json, final boolean fromCache) {
                 thread.run(() -> {
@@ -320,7 +325,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                                                 JSONArray lessonsOriginal = dayOriginal.getJSONArray("lessons");
                                                 for (int a = 0; a < lessonsOriginal.length(); a++) {
                                                     JSONObject lessonOriginal = lessonsOriginal.getJSONObject(a);
-                                                    String hashOriginal = ScheduleLessons.getLessonHash(lessonOriginal);
+                                                    String hashOriginal = scheduleLessonsHelper.getLessonHash(lessonOriginal);
                                                     if (hashOriginal.equals(hash)) {
                                                         lessonOriginal.put("hash", hash);
                                                         changes.add(new Change(REDUCED, true, weekday, lessonOriginal));

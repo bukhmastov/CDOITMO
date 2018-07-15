@@ -62,6 +62,8 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
     //@Inject
     private Room101Client room101Client = Room101Client.instance();
     //@Inject
+    private Room101AddRequest room101AddRequest = Room101AddRequest.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Override
@@ -250,12 +252,12 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
                 final TextView room101_back_text = container.findViewById(R.id.room101_back_text);
                 final TextView room101_forward_text = container.findViewById(R.id.room101_forward_text);
                 final ProgressBar progressBar = container.findViewById(R.id.room101_progress_bar);
-                final Room101AddRequest room101AddRequest = new Room101AddRequest(activity, new Room101AddRequest.callback() {
+                room101AddRequest.start(activity, new Room101AddRequest.Callback() {
                     @Override
-                    public void onProgress(final int stage) {
+                    public void onProgress(@Room101AddRequest.Stage final int stage) {
                         thread.runOnUI(() -> {
                             try {
-                                progressBar.setProgress((stage * 100) / Room101AddRequest.STAGES_COUNT);
+                                progressBar.setProgress((stage * 100) / Room101AddRequest.STAGE_TOTAL);
                                 room101_back.setAlpha(1f);
                                 room101_forward.setAlpha(1f);
                                 switch (stage) {

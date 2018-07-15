@@ -44,7 +44,7 @@ public abstract class Preference {
     //@Inject
     private DeIfmoRestClient deIfmoRestClient = DeIfmoRestClient.instance();
     //@Inject
-    private InjectProvider injectProvider = InjectProvider.instance();
+    private ProtocolTracker protocolTracker = ProtocolTracker.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
     //@Inject
@@ -98,11 +98,11 @@ public abstract class Preference {
             case "pref_use_notifications":
             case "pref_notify_frequency":
             case "pref_notify_network_unmetered":
-                thread.run(Thread.BACKGROUND, () -> new ProtocolTracker(activity).restart());
+                thread.run(Thread.BACKGROUND, () -> protocolTracker.restart(activity));
                 break;
             case "pref_protocol_changes_track":
                 if (storagePref.get(activity, "pref_protocol_changes_track", true)) {
-                    ProtocolTracker.setup(activity, deIfmoRestClient, injectProvider, 0);
+                    protocolTracker.setup(activity, deIfmoRestClient, 0);
                 } else {
                     storage.clear(activity, Storage.CACHE, Storage.USER, "protocol#log");
                 }

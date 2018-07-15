@@ -7,7 +7,6 @@ import android.os.Build;
 import android.support.annotation.Keep;
 
 import com.bukhmastov.cdoitmo.activity.ScheduleLessonsWidgetConfigureActivity;
-import com.bukhmastov.cdoitmo.object.ProtocolTracker;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleExams;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.provider.InjectProvider;
@@ -79,7 +78,7 @@ public class Migration {
 
     @Keep
     private static void migrate115(final Context context, final InjectProvider injectProvider, final Log log) {
-        injectProvider.getThread().run(Thread.BACKGROUND, () -> new ProtocolTracker(context).reset());
+        injectProvider.getThread().run(Thread.BACKGROUND, () -> injectProvider.getProtocolTracker().reset(context));
     }
 
     @Keep
@@ -134,7 +133,7 @@ public class Migration {
     @Keep
     private static void migrate106(final Context context, final InjectProvider injectProvider, final Log log) {
         injectProvider.getStoragePref().put(context, "pref_notify_type", Build.VERSION.SDK_INT <= Build.VERSION_CODES.M ? "0" : "1");
-        injectProvider.getThread().run(Thread.BACKGROUND, () -> new ProtocolTracker(context).reset());
+        injectProvider.getThread().run(Thread.BACKGROUND, () -> injectProvider.getProtocolTracker().reset(context));
     }
 
     @Keep
@@ -770,7 +769,7 @@ public class Migration {
     private static void migrate71(final Context context, final InjectProvider injectProvider, final Log log) {
         injectProvider.getStoragePref().delete(context, "pref_open_drawer_at_startup");
         injectProvider.getStoragePref().put(context, "pref_first_launch", injectProvider.getStorage().get(context, Storage.PERMANENT, Storage.GLOBAL, "users#list", "").trim().isEmpty());
-        injectProvider.getThread().run(Thread.BACKGROUND, () -> new ProtocolTracker(context).reset());
+        injectProvider.getThread().run(Thread.BACKGROUND, () -> injectProvider.getProtocolTracker().reset(context));
     }
 
     @Keep

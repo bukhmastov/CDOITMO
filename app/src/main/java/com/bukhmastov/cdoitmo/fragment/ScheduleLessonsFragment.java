@@ -17,7 +17,6 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.provider.StorageProvider;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
@@ -32,9 +31,9 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
     //@Inject
     private Thread thread = Thread.instance();
     //@Inject
-    private StoragePref storagePref = StoragePref.instance();
+    private ScheduleLessons scheduleLessons = ScheduleLessons.instance();
     //@Inject
-    private StorageProvider storageProvider = StorageProvider.instance();
+    private StoragePref storagePref = StoragePref.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
@@ -46,7 +45,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
         // define query
         String scope = ScheduleLessonsTabHostFragment.restoreData();
         if (scope == null) {
-            scope = ScheduleLessons.getDefaultScope(activity, storageProvider, ScheduleLessons.TYPE);
+            scope = scheduleLessons.getDefaultScope(activity);
         }
         final Intent intent = activity.getIntent();
         if (intent != null && intent.hasExtra("action_extra")) {
@@ -144,7 +143,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
             }
             final int week = Time.getWeek(activity);
             if (ScheduleLessonsTabHostFragment.getQuery() == null) {
-                ScheduleLessonsTabHostFragment.setQuery(ScheduleLessons.getDefaultScope(activity, storageProvider, ScheduleLessons.TYPE));
+                ScheduleLessonsTabHostFragment.setQuery(scheduleLessons.getDefaultScope(activity));
             }
             thread.runOnUI(() -> {
                 try {

@@ -22,6 +22,7 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
+import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessonsHelper;
 import com.bukhmastov.cdoitmo.util.BottomBar;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
@@ -53,6 +54,10 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
     private Log log = Log.instance();
     //@Inject
     private Thread thread = Thread.instance();
+    //@Inject
+    private ScheduleLessons scheduleLessons = ScheduleLessons.instance();
+    //@Inject
+    private ScheduleLessonsHelper scheduleLessonsHelper = ScheduleLessonsHelper.instance();
     //@Inject
     private Storage storage = Storage.instance();
     //@Inject
@@ -132,10 +137,10 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                         TextView slc_title = container.findViewById(R.id.slc_title);
                         TextView slc_desc = container.findViewById(R.id.slc_desc);
                         if (slc_title != null) {
-                            slc_title.setText(ScheduleLessons.getScheduleHeader(activity, title, type_lesson));
+                            slc_title.setText(scheduleLessons.getScheduleHeader(activity, title, type_lesson));
                         }
                         if (slc_desc != null) {
-                            slc_desc.setText(ScheduleLessons.getScheduleWeek(activity, storagePref, week));
+                            slc_desc.setText(scheduleLessons.getScheduleWeek(activity, week));
                         }
                         // ---------
                         TextInputEditText lesson_title = container.findViewById(R.id.lesson_title);
@@ -370,7 +375,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                 teacherPickerAdapter.clear();
                                 lesson_teacher.dismissDropDown();
                                 if (!query1.isEmpty()) {
-                                    TeacherSearch.search(activity, thread, query1, lesson_teacher_bar, new TeacherSearch.response() {
+                                    TeacherSearch.search(activity, thread, scheduleLessons, query1, lesson_teacher_bar, new TeacherSearch.response() {
                                         @Override
                                         public void onPermitted() {
                                             lesson.teacher = query1;
@@ -472,7 +477,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                 }
                                 switch (type) {
                                     case CREATE: {
-                                        if (ScheduleLessons.createLesson(activity, storage, query, lesson.weekday, convertLessonUnit2Json(lesson), null)) {
+                                        if (scheduleLessonsHelper.createLesson(activity, storage, query, lesson.weekday, convertLessonUnit2Json(lesson), null)) {
                                             ScheduleLessonsTabHostFragment.invalidateOnDemand(thread);
                                             close();
                                         } else {
@@ -482,7 +487,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                                         break;
                                     }
                                     case EDIT: {
-                                        if (ScheduleLessons.deleteLesson(activity, storage, query, weekday, lessonOriginal, null) && ScheduleLessons.createLesson(activity, storage, query, lesson.weekday, convertLessonUnit2Json(lesson), null)) {
+                                        if (scheduleLessonsHelper.deleteLesson(activity, storage, query, weekday, lessonOriginal, null) && scheduleLessonsHelper.createLesson(activity, storage, query, lesson.weekday, convertLessonUnit2Json(lesson), null)) {
                                             ScheduleLessonsTabHostFragment.invalidateOnDemand(thread);
                                             close();
                                         } else {
@@ -643,7 +648,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
         static boolean blocked = false;
         private static String lastQuery = "";
 
-        public static void search(final Context context, final Thread thread, final String query, final ProgressBar progressBar, final response delegate) {
+        public static void search(final Context context, final Thread thread, final ScheduleLessons scheduleLessons, final String query, final ProgressBar progressBar, final response delegate) {
             thread.run(() -> {
                 if (requestHandle != null) {
                     requestHandle.cancel();
@@ -664,7 +669,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
                 }
                 delegate.onPermitted();
                 thread.runOnUI(() -> progressBar.setVisibility(View.VISIBLE));
-                new ScheduleLessons(new Schedule.Handler() {
+                scheduleLessons.init(new Schedule.Handler() {
                     @Override
                     public void onSuccess(JSONObject json, boolean fromCache) {
                         thread.runOnUI(() -> progressBar.setVisibility(View.GONE));

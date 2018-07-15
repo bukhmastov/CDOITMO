@@ -31,12 +31,10 @@ import org.json.JSONObject;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class TimeRemainingWidgetActivity extends AppCompatActivity implements ScheduleLessons.Handler, TimeRemainingWidget.response {
+public class TimeRemainingWidgetActivity extends AppCompatActivity implements ScheduleLessons.Handler, TimeRemainingWidget.Delegate {
 
     private static final String TAG = "TRWidgetActivity";
     private final Activity activity = this;
-    private TimeRemainingWidget timeRemainingWidget = null;
-    private ScheduleLessons scheduleLessons = null;
     private String query = null;
     private JSONObject schedule = null;
     private Client.Request requestHandle = null;
@@ -48,7 +46,11 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
     //@Inject
     private Thread thread = Thread.instance();
     //@Inject
+    private ScheduleLessons scheduleLessons = ScheduleLessons.instance();
+    //@Inject
     private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private TimeRemainingWidget timeRemainingWidget = TimeRemainingWidget.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
@@ -113,12 +115,9 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
     protected void onResume() {
         super.onResume();
         log.v(TAG, "Activity resumed");
-        if (scheduleLessons == null) {
-            scheduleLessons = new ScheduleLessons(this);
-        }
         if (schedule == null) {
             if (query != null) {
-                scheduleLessons.search(activity, query, true);
+                scheduleLessons.init(this).search(activity, query, true);
             } else {
                 log.w(TAG, "onResume | query is null");
                 close();
@@ -132,10 +131,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
     protected void onPause() {
         super.onPause();
         log.v(TAG, "Activity paused");
-        if (timeRemainingWidget != null) {
-            timeRemainingWidget.stop();
-            timeRemainingWidget = null;
-        }
+        timeRemainingWidget.stop();
     }
 
     @Override
@@ -274,16 +270,11 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
     }
 
     private void begin() {
-        final TimeRemainingWidgetActivity self = this;
         thread.run(() -> {
             log.v(TAG, "begin");
             message(activity.getString(R.string.loaded));
-            if (timeRemainingWidget != null) {
-                timeRemainingWidget.stop();
-                timeRemainingWidget = null;
-            }
-            timeRemainingWidget = new TimeRemainingWidget(self);
-            timeRemainingWidget.start(self, schedule);
+            timeRemainingWidget.stop();
+            timeRemainingWidget.start(this, this, schedule);
         });
     }
     private void close() {

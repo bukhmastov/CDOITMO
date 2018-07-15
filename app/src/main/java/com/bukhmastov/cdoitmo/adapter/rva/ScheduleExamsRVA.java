@@ -49,6 +49,8 @@ public class ScheduleExamsRVA extends RVA {
     //@Inject
     private Thread thread = Thread.instance();
     //@Inject
+    private ScheduleExams scheduleExams = ScheduleExams.instance();
+    //@Inject
     private Storage storage = Storage.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
@@ -458,8 +460,8 @@ public class ScheduleExamsRVA extends RVA {
             // regular schedule mode
             // header
             dataset.add(new Item(TYPE_HEADER, new JSONObject()
-                    .put("title", ScheduleExams.getScheduleHeader(activity, json.getString("title"), json.getString("type")))
-                    .put("week", ScheduleExams.getScheduleWeek(activity, storagePref, -1))
+                    .put("title", scheduleExams.getScheduleHeader(activity, json.getString("title"), json.getString("type")))
+                    .put("week", scheduleExams.getScheduleWeek(activity, -1))
             ));
             // schedule
             final JSONArray exams = json.getJSONArray("schedule");

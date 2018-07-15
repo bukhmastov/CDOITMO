@@ -51,16 +51,13 @@ public class Account {
     private static Storage storage = Storage.instance();
     //@Inject
     //TODO interface - impl: remove static
-    private static StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    //TODO interface - impl: remove static
     private static DeIfmoClient deIfmoClient = DeIfmoClient.instance();
     //@Inject
     //TODO interface - impl: remove static
     private static DeIfmoRestClient deIfmoRestClient = DeIfmoRestClient.instance();
     //@Inject
     //TODO interface - impl: remove static
-    private static InjectProvider injectProvider = InjectProvider.instance();
+    private static ProtocolTracker protocolTracker = ProtocolTracker.instance();
     //@Inject
     //TODO interface - impl: remove static
     private static FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
@@ -129,7 +126,7 @@ public class Account {
                         Accounts.push(context, login);
                         if (isNewUser) {
                             firebaseAnalyticsProvider.logBasicEvent(context, "New user authorized");
-                            ProtocolTracker.setup(context, deIfmoRestClient, injectProvider, 0);
+                            protocolTracker.setup(context, deIfmoRestClient, 0);
                         }
                         thread.runOnUI(() -> {
                             loginHandler.onSuccess();
@@ -307,7 +304,7 @@ public class Account {
             if (IS_USER_UNAUTHORIZED || IS_LOGIN_EMPTY) {
                 cb.call();
             } else {
-                new ProtocolTracker(context).stop(cb);
+                protocolTracker.stop(context, cb);
             }
         });
     }
@@ -331,7 +328,7 @@ public class Account {
             if (IS_USER_UNAUTHORIZED) {
                 cb.call();
             } else {
-                new ProtocolTracker(context).stop(cb);
+                protocolTracker.stop(context, cb);
             }
         });
     }

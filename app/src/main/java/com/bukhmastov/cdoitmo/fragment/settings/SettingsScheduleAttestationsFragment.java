@@ -27,10 +27,10 @@ public class SettingsScheduleAttestationsFragment extends SettingsTemplatePrefer
         preferences.add(new PreferenceBasic("pref_schedule_attestations_default", "{\"query\":\"auto\",\"title\":\"\"}", R.string.default_schedule, true, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final InjectProvider injectProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                new SettingsScheduleAttestations(activity, preference, value -> injectProvider.getThread().run(() -> {
+                injectProvider.getSettingsScheduleAttestations().show(activity, preference, value -> injectProvider.getThread().run(() -> {
                     injectProvider.getStoragePref().put(activity, "pref_schedule_attestations_default", value);
                     callback.onSetSummary(activity, value);
-                })).show();
+                }));
             }
             @Override
             public String onGetSummary(ConnectedActivity activity, String value) {

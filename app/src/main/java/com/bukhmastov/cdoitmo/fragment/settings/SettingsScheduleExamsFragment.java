@@ -27,10 +27,10 @@ public class SettingsScheduleExamsFragment extends SettingsTemplatePreferencesFr
         preferences.add(new PreferenceBasic("pref_schedule_exams_default", "{\"query\":\"auto\",\"title\":\"\"}", R.string.default_schedule, true, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final InjectProvider injectProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                new SettingsScheduleExams(activity, preference, value -> injectProvider.getThread().run(() -> {
+                injectProvider.getSettingsScheduleExams().show(activity, preference, value -> injectProvider.getThread().run(() -> {
                     injectProvider.getStoragePref().put(activity, "pref_schedule_exams_default", value);
                     callback.onSetSummary(activity, value);
-                })).show();
+                }));
             }
             @Override
             public String onGetSummary(ConnectedActivity activity, String value) {

@@ -1,6 +1,7 @@
-package com.bukhmastov.cdoitmo.object;
+package com.bukhmastov.cdoitmo.object.impl;
 
 import android.content.Context;
+import android.support.annotation.LayoutRes;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -27,17 +28,16 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-//TODO interface - impl
 public abstract class SettingsSchedule {
 
     private static final String TAG = "SettingsSchedule";
     public interface Callback {
         void onDone(String value);
     }
+    protected ConnectedActivity activity;
+    protected Callback callback;
+    protected Preference preference;
     protected static Client.Request requestHandle = null;
-    protected final ConnectedActivity activity;
-    protected final Callback callback;
-    protected final Preference preference;
     protected String query = null;
     protected String title = null;
     protected AutoCompleteTextView lsp_search = null;
@@ -53,13 +53,13 @@ public abstract class SettingsSchedule {
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
 
-    public SettingsSchedule(ConnectedActivity activity, Preference preference, Callback callback) {
+    protected abstract void search(final String query);
+    protected abstract String getHint();
+
+    protected void show(ConnectedActivity activity, Preference preference, Callback callback) {
         this.activity = activity;
         this.preference = preference;
         this.callback = callback;
-    }
-
-    public void show() {
         thread.runOnUI(() -> {
             try {
                 final String value = storagePref.get(activity, preference.key, (String) preference.defaultValue);
@@ -194,8 +194,7 @@ public abstract class SettingsSchedule {
             }
         });
     }
-    protected abstract void search(final String query);
-    protected abstract String getHint();
+
     protected void search(final String q, final Schedule.ScheduleSearchProvider scheduleSearchProvider) {
         thread.run(() -> scheduleSearchProvider.onSearch(activity, q, new Schedule.Handler() {
             @Override
@@ -314,6 +313,7 @@ public abstract class SettingsSchedule {
             }
         }));
     }
+
     protected void toggleSearchState(final String state) {
         thread.runOnUI(() -> {
             switch (state) {
@@ -340,7 +340,16 @@ public abstract class SettingsSchedule {
         });
     }
 
-    protected View inflate(int layoutId) throws InflateException {
-        return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
+    protected View inflate(@LayoutRes int layout) throws InflateException {
+        if (activity == null) {
+            log.e(TAG, "Failed to inflate layout, activity is null");
+            return null;
+        }
+        LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        if (inflater == null) {
+            log.e(TAG, "Failed to inflate layout, inflater is null");
+            return null;
+        }
+        return inflater.inflate(layout, null);
     }
 }

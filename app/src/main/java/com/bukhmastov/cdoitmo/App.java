@@ -23,7 +23,7 @@ import java.util.UUID;
  *  firebase [done]
  *  log [done]
  *  thread [done]
- *  objects
+ *  objects [done]
  *  utils
  *
  * 2. Избавление от оставшихся статичных методов и полей

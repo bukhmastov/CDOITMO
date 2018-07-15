@@ -37,7 +37,6 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
 
     private static final String TAG = "SLTabFragment";
     private boolean loaded = false;
-    private ScheduleLessons scheduleLessons = null;
     private Client.Request requestHandle = null;
     private View container = null;
 
@@ -45,6 +44,8 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
     private Log log = Log.instance();
     //@Inject
     private Thread thread = Thread.instance();
+    //@Inject
+    private ScheduleLessons scheduleLessons = ScheduleLessons.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
 
@@ -148,7 +149,7 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
         });
     }
     private @NonNull ScheduleLessons getScheduleLessons(final ConnectedActivity activity) {
-        if (scheduleLessons == null) scheduleLessons = new ScheduleLessons(new Schedule.Handler() {
+        scheduleLessons.init(new Schedule.Handler() {
             @Override
             public void onSuccess(final JSONObject json, final boolean fromCache) {
                 thread.run(() -> {

@@ -5,6 +5,7 @@ import android.content.Context;
 import com.bukhmastov.cdoitmo.exception.SilentException;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
+import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessonsHelper;
 import com.bukhmastov.cdoitmo.util.Storage;
 
 import org.json.JSONArray;
@@ -18,6 +19,8 @@ public class ScheduleLessonsAdditionalConverter extends ScheduleConverter {
 
     //@Inject
     private Storage storage = Storage.instance();
+    //@Inject
+    private ScheduleLessonsHelper scheduleLessonsHelper = ScheduleLessonsHelper.instance();
 
     public ScheduleLessonsAdditionalConverter(Context context, JSONObject data, Response delegate) {
         super(delegate);
@@ -47,7 +50,7 @@ public class ScheduleLessonsAdditionalConverter extends ScheduleConverter {
                 if (scheduleReduced.length() > 0 && lessons.length() > 0) {
                     for (int j = 0; j < lessons.length(); j++) {
                         final JSONObject lesson = lessons.getJSONObject(j);
-                        final String signature = ScheduleLessons.getLessonHash(lesson);
+                        final String signature = scheduleLessonsHelper.getLessonHash(lesson);
                         for (int k = 0; k < scheduleReduced.length(); k++) {
                             final JSONObject dayReduced = scheduleReduced.getJSONObject(k);
                             if (dayReduced.getInt("weekday") != weekday) continue;

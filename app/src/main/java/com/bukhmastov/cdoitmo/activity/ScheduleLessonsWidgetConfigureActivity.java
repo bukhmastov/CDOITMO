@@ -94,6 +94,8 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
     //@Inject
     private Thread thread = Thread.instance();
     //@Inject
+    private ScheduleLessons scheduleLessons = ScheduleLessons.instance();
+    //@Inject
     private Storage storage = Storage.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
@@ -302,7 +304,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                     final String query = search_text_view.getText().toString().trim();
                     log.v(TAG, "activatePartSchedule | search action | clicked | query=" + query);
                     if (!query.isEmpty()) {
-                        new ScheduleLessons(new Schedule.Handler() {
+                        scheduleLessons.init(new Schedule.Handler() {
                             @Override
                             public void onSuccess(final JSONObject json, final boolean fromCache) {
                                 thread.run(() -> {

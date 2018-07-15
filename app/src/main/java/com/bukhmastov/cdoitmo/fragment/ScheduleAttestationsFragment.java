@@ -23,11 +23,10 @@ import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleAttestationsFrag
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleAttestations;
-import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.provider.StorageProvider;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
+import com.bukhmastov.cdoitmo.util.singleton.Color;
 
 import org.json.JSONObject;
 
@@ -42,7 +41,6 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
         public int offset = 0;
     }
     private boolean loaded = false;
-    private ScheduleAttestations scheduleAttestations = null;
     private Client.Request requestHandle = null;
     private static String lastQuery = null;
     private static String query = null;
@@ -57,7 +55,7 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
     //@Inject
     private Thread thread = Thread.instance();
     //@Inject
-    private StorageProvider storageProvider = StorageProvider.instance();
+    private ScheduleAttestations scheduleAttestations = ScheduleAttestations.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
@@ -88,7 +86,7 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
         // define query
         String scope = restoreData(this);
         if (scope == null) {
-            scope = ScheduleAttestations.getDefaultScope(activity, storageProvider, ScheduleAttestations.TYPE);
+            scope = scheduleAttestations.getDefaultScope(activity);
         }
         final Intent intent = activity.getIntent();
         if (intent != null && intent.hasExtra("action_extra")) {
@@ -219,7 +217,7 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
         });
     }
     private @NonNull ScheduleAttestations getScheduleAttestations(final ConnectedActivity activity) {
-        if (scheduleAttestations == null) scheduleAttestations = new ScheduleAttestations(new Schedule.Handler() {
+        scheduleAttestations.init(new Schedule.Handler() {
             @Override
             public void onSuccess(final JSONObject json, final boolean fromCache) {
                 thread.run(() -> {

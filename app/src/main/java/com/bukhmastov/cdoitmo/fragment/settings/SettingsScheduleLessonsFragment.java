@@ -28,10 +28,10 @@ public class SettingsScheduleLessonsFragment extends SettingsTemplatePreferences
         preferences.add(new PreferenceBasic("pref_schedule_lessons_default", "{\"query\":\"auto\",\"title\":\"\"}", R.string.default_schedule, true, new PreferenceBasic.Callback() {
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final InjectProvider injectProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
-                new SettingsScheduleLessons(activity, preference, value -> injectProvider.getThread().run(() -> {
+                injectProvider.getSettingsScheduleLessons().show(activity, preference, value -> injectProvider.getThread().run(() -> {
                     injectProvider.getStoragePref().put(activity, "pref_schedule_lessons_default", value);
                     callback.onSetSummary(activity, value);
-                })).show();
+                }));
             }
             @Override
             public String onGetSummary(ConnectedActivity activity, String value) {

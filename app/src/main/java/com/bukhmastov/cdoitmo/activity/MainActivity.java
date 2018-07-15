@@ -63,6 +63,8 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
     //@Inject
     private Storage storage = Storage.instance();
     //@Inject
+    private ProtocolTracker protocolTracker = ProtocolTracker.instance();
+    //@Inject
     private InjectProvider injectProvider = InjectProvider.instance();
     //@Inject
     private FirebaseCrashlyticsProvider firebaseCrashlyticsProvider = FirebaseCrashlyticsProvider.instance();
@@ -294,7 +296,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
             log.v(TAG, "authorized");
             if (!loaded) {
                 loaded = true;
-                thread.run(thread.BACKGROUND, () -> new ProtocolTracker(activity).check());
+                thread.run(thread.BACKGROUND, () -> protocolTracker.check(activity));
                 selectSection(selectedSection);
                 NavigationMenu.displayUserData(activity, storage, findViewById(R.id.nav_view));
                 NavigationMenu.displayRemoteMessage(activity, firebaseConfigProvider, storage);

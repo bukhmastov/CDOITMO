@@ -28,12 +28,10 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-public class DaysRemainingWidgetActivity extends AppCompatActivity implements ScheduleExams.Handler, DaysRemainingWidget.response {
+public class DaysRemainingWidgetActivity extends AppCompatActivity implements ScheduleExams.Handler, DaysRemainingWidget.Delegate {
 
     private static final String TAG = "DRWidgetActivity";
     private final AppCompatActivity activity = this;
-    private DaysRemainingWidget daysRemainingWidget = null;
-    private ScheduleExams scheduleExams = null;
     private String query = null;
     private JSONObject schedule = null;
     private Client.Request requestHandle = null;
@@ -48,7 +46,11 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
     //@Inject
     private Thread thread = Thread.instance();
     //@Inject
+    private ScheduleExams scheduleExams = ScheduleExams.instance();
+    //@Inject
     private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private DaysRemainingWidget daysRemainingWidget = DaysRemainingWidget.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
@@ -113,12 +115,9 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
     protected void onResume() {
         super.onResume();
         log.v(TAG, "Activity resumed");
-        if (scheduleExams == null) {
-            scheduleExams = new ScheduleExams(this);
-        }
         if (schedule == null) {
             if (query != null) {
-                scheduleExams.search(activity, query, true);
+                scheduleExams.init(this).search(activity, query, true);
             } else {
                 log.w(TAG, "onResume | query is null");
                 close();
@@ -132,10 +131,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
     protected void onPause() {
         super.onPause();
         log.v(TAG, "Activity paused");
-        if (daysRemainingWidget != null) {
-            daysRemainingWidget.stop();
-            daysRemainingWidget = null;
-        }
+        daysRemainingWidget.stop();
     }
 
     @Override
@@ -248,12 +244,8 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
         thread.run(() -> {
             log.v(TAG, "begin");
             message(activity.getString(R.string.loaded));
-            if (daysRemainingWidget != null) {
-                daysRemainingWidget.stop();
-                daysRemainingWidget = null;
-            }
-            daysRemainingWidget = new DaysRemainingWidget(this);
-            daysRemainingWidget.start(this, schedule);
+            daysRemainingWidget.stop();
+            daysRemainingWidget.start(this, this, schedule);
         });
     }
     private void close() {

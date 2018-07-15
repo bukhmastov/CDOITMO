@@ -14,10 +14,8 @@ import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleAttestationsFragment;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleAttestations;
 import com.bukhmastov.cdoitmo.util.BottomBar;
-import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
-import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
@@ -41,9 +39,9 @@ public class ScheduleAttestationsRVA extends RVA {
     //@Inject
     private Thread thread = Thread.instance();
     //@Inject
-    private Storage storage = Storage.instance();
+    private ScheduleAttestations scheduleAttestations = ScheduleAttestations.instance();
     //@Inject
-    private StoragePref storagePref = StoragePref.instance();
+    private Storage storage = Storage.instance();
 
     private final ConnectedActivity activity;
     private final JSONObject data;
@@ -96,8 +94,8 @@ public class ScheduleAttestationsRVA extends RVA {
             }
             // header
             dataset.add(getNewItem(TYPE_HEADER, new JSONObject()
-                    .put("title", ScheduleAttestations.getScheduleHeader(context, data.getString("title"), data.getString("type")))
-                    .put("week", ScheduleAttestations.getScheduleWeek(context, storagePref, weekday))
+                    .put("title", scheduleAttestations.getScheduleHeader(context, data.getString("title"), data.getString("type")))
+                    .put("week", scheduleAttestations.getScheduleWeek(context, weekday))
             ));
             // schedule
             final JSONArray schedule = data.getJSONArray("schedule");

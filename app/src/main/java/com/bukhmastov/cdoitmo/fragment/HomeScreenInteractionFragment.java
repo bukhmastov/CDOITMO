@@ -57,6 +57,12 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
     //@Inject
     private Storage storage = Storage.instance();
     //@Inject
+    private ScheduleLessons scheduleLessons = ScheduleLessons.instance();
+    //@Inject
+    private ScheduleExams scheduleExams = ScheduleExams.instance();
+    //@Inject
+    private ScheduleAttestations scheduleAttestations = ScheduleAttestations.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     private interface result {
@@ -539,13 +545,13 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
     }
 
     private void getScheduleLessons(final String scope, final result callback) {
-        getSchedule(scope, callback, (context, query, handler) -> new ScheduleLessons(handler).search(context, query));
+        getSchedule(scope, callback, (context, query, handler) -> scheduleLessons.init(handler).search(context, query));
     }
     private void getScheduleExams(final String scope, final result callback) {
-        getSchedule(scope, callback, (context, query, handler) -> new ScheduleExams(handler).search(context, query));
+        getSchedule(scope, callback, (context, query, handler) -> scheduleExams.init(handler).search(context, query));
     }
     private void getScheduleAttestations(final String scope, final result callback) {
-        getSchedule(scope, callback, (context, query, handler) -> new ScheduleAttestations(handler).search(context, query));
+        getSchedule(scope, callback, (context, query, handler) -> scheduleAttestations.init(handler).search(context, query));
     }
     private void getSchedule(final String scope, final result callback, final Schedule.ScheduleSearchProvider scheduleSearchProvider) {
         thread.run(() -> {
