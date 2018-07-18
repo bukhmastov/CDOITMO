@@ -3,6 +3,8 @@ package com.bukhmastov.cdoitmo.converter;
 import com.bukhmastov.cdoitmo.exception.SilentException;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.Time;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -16,7 +18,11 @@ public abstract class Converter implements Runnable {
     }
 
     //@Inject
-    private Log log = Log.instance();
+    protected Log log = Log.instance();
+    //@Inject
+    protected Time time = Time.instance();
+    //@Inject
+    protected TextUtils textUtils = TextUtils.instance();
     //@Inject
     private FirebasePerformanceProvider firebasePerformanceProvider = FirebasePerformanceProvider.instance();
 

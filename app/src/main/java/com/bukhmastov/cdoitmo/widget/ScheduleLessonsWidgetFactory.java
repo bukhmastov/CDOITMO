@@ -26,13 +26,17 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
 
     //@Inject
     private Log log = Log.instance();
+    //@Inject
+    private Time time = Time.instance();
+    //@Inject
+    private ScheduleLessonsWidgetStorage scheduleLessonsWidgetStorage = ScheduleLessonsWidgetStorage.instance();
 
     ScheduleLessonsWidgetFactory(Context context, Intent intent) {
         this.context = context;
         this.appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
         this.lessons = new JSONArray();
         try {
-            JSONObject settings = ScheduleLessonsWidgetStorage.getJson(context, appWidgetId, "settings");
+            JSONObject settings = scheduleLessonsWidgetStorage.getJson(context, appWidgetId, "settings");
             if (settings == null) throw new NullPointerException("settings cannot be null");
             colors = ScheduleLessonsWidget.getColors(settings);
         } catch (Exception e) {
@@ -46,8 +50,8 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
     @Override
     public void onDataSetChanged() {
         try {
-            JSONObject content = ScheduleLessonsWidgetStorage.getJson(context, appWidgetId, "cache_converted");
-            JSONObject settings = ScheduleLessonsWidgetStorage.getJson(context, appWidgetId, "settings");
+            JSONObject content = scheduleLessonsWidgetStorage.getJson(context, appWidgetId, "cache_converted");
+            JSONObject settings = scheduleLessonsWidgetStorage.getJson(context, appWidgetId, "settings");
             if (content == null) throw new NullPointerException("content cannot be null");
             if (settings == null) throw new NullPointerException("settings cannot be null");
             try {
@@ -58,15 +62,15 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
                     settings.put("shiftAutomatic", 0);
                 }
                 final int shift = settings.getInt("shift") + settings.getInt("shiftAutomatic");
-                final Calendar calendar = Time.getCalendar();
+                final Calendar calendar = time.getCalendar();
                 if (shift != 0) {
                     calendar.add(Calendar.HOUR, shift * 24);
                 }
-                this.week = Time.getWeek(context, calendar) % 2;
+                this.week = time.getWeek(context, calendar) % 2;
                 this.type = content.getString("type");
                 final JSONArray schedule = content.getJSONArray("schedule");
                 if (schedule != null) {
-                    final int weekday = Time.getWeekDay(calendar);
+                    final int weekday = time.getWeekDay(calendar);
                     this.lessons = ScheduleLessonsWidget.getLessonsForWeekday(schedule, week, weekday);
                 } else {
                     this.lessons = new JSONArray();

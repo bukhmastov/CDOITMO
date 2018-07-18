@@ -63,6 +63,10 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     //@Inject
     private ScheduleLessons scheduleLessons = ScheduleLessons.instance();
     //@Inject
+    private Time time = Time.instance();
+    //@Inject
+    private ScheduleLessonsWidgetStorage scheduleLessonsWidgetStorage = ScheduleLessonsWidgetStorage.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Retention(RetentionPolicy.SOURCE)
@@ -101,8 +105,8 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         thread.run(() -> {
             log.i(TAG, "update | appWidgetId=" + appWidgetId);
             try {
-                JSONObject settings = ScheduleLessonsWidgetStorage.getJson(context, appWidgetId, "settings");
-                JSONObject cache = ScheduleLessonsWidgetStorage.getJson(context, appWidgetId, "cache");
+                JSONObject settings = scheduleLessonsWidgetStorage.getJson(context, appWidgetId, "settings");
+                JSONObject cache = scheduleLessonsWidgetStorage.getJson(context, appWidgetId, "cache");
                 if (settings == null) {
                     needPreparations(context, appWidgetManager, appWidgetId);
                 } else if (cache == null || force) {
@@ -110,7 +114,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 } else {
                     long timestamp = cache.getLong("timestamp");
                     long shift = settings.getInt("updateTime") * 3600000L;
-                    if (shift != 0 && timestamp + shift < Time.getCalendar().getTimeInMillis()) {
+                    if (shift != 0 && timestamp + shift < time.getCalendar().getTimeInMillis()) {
                         refresh(context, appWidgetManager, appWidgetId, settings);
                     } else {
                         display(context, appWidgetManager, appWidgetId, controls);
@@ -124,7 +128,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     public void deleteAppWidget(final Context context, final int appWidgetId) {
         thread.run(() -> {
             log.i(TAG, "delete | appWidgetId=" + appWidgetId);
-            ScheduleLessonsWidgetStorage.delete(context, appWidgetId);
+            scheduleLessonsWidgetStorage.delete(context, appWidgetId);
         });
     }
 
@@ -138,11 +142,11 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                         thread.run(() -> {
                             try {
                                 JSONObject jsonObject = new JSONObject();
-                                jsonObject.put("timestamp", Time.getCalendar().getTimeInMillis());
+                                jsonObject.put("timestamp", time.getCalendar().getTimeInMillis());
                                 jsonObject.put("content", json);
-                                ScheduleLessonsWidgetStorage.save(context, appWidgetId, "cache", jsonObject.toString());
+                                scheduleLessonsWidgetStorage.save(context, appWidgetId, "cache", jsonObject.toString());
                                 new ScheduleLessonsAdditionalConverter(context, json, content -> {
-                                    ScheduleLessonsWidgetStorage.save(context, appWidgetId, "cache_converted", content.toString());
+                                    scheduleLessonsWidgetStorage.save(context, appWidgetId, "cache_converted", content.toString());
                                     display(context, appWidgetManager, appWidgetId, false);
                                 }).run();
                             } catch (Exception e) {
@@ -233,8 +237,8 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     private void display(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId, final boolean controls) {
         thread.run(() -> {
             log.v(TAG, "display | appWidgetId=" + appWidgetId + " | controls=" + (controls ? "true" : "false"));
-            JSONObject settings = ScheduleLessonsWidgetStorage.getJson(context, appWidgetId, "settings");
-            JSONObject cache = ScheduleLessonsWidgetStorage.getJson(context, appWidgetId, "cache");
+            JSONObject settings = scheduleLessonsWidgetStorage.getJson(context, appWidgetId, "settings");
+            JSONObject cache = scheduleLessonsWidgetStorage.getJson(context, appWidgetId, "cache");
             try {
                 if (settings == null) {
                     needPreparations(context, appWidgetManager, appWidgetId);
@@ -250,12 +254,12 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 final @SIZE int size = getSize(appWidgetManager.getAppWidgetOptions(appWidgetId));
                 final Colors colors = getColors(settings);
                 final JSONObject json = cache.getJSONObject("content");
-                final Calendar calendar = Time.getCalendar();
+                final Calendar calendar = time.getCalendar();
                 final int[] shift = getShiftBasedOnTime(context, appWidgetId, settings, calendar);
                 if (shift[0] + shift[1] != 0) {
                     calendar.add(Calendar.HOUR, (shift[0] + shift[1]) * 24);
                 }
-                final int week = Time.getWeek(context, calendar) % 2;
+                final int week = time.getWeek(context, calendar) % 2;
                 final RemoteViews layout = new RemoteViews(context.getPackageName(), getViewLayout(size));
                 // цвет
                 layout.setInt(R.id.widget_content, "setBackgroundColor", colors.background);
@@ -271,7 +275,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                                 (shift[0] != 0 ? ((shift[0] > 0 ? "+" : "") + String.valueOf(shift[0]) + " ") : "") +
                                 (shift[1] != 0 ? ("(" + (shift[1] > 0 ? "+" : "") + String.valueOf(shift[1] + ") ")) : "")
                         ) +
-                        Time.getDay(context, calendar.get(Calendar.DAY_OF_WEEK)) +
+                        time.getDay(context, calendar.get(Calendar.DAY_OF_WEEK)) +
                         (week == 0 ? " (" + context.getString(R.string.tab_even) + ")" : (week == 1 ? " (" + context.getString(R.string.tab_odd) + ")" : ""))
                 );
                 // кнопки управления
@@ -578,7 +582,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         // calculate new auto shift from schedule
         try {
             // fetch current schedule
-            final JSONObject content = ScheduleLessonsWidgetStorage.getJson(context, appWidgetId, "cache_converted");
+            final JSONObject content = scheduleLessonsWidgetStorage.getJson(context, appWidgetId, "cache_converted");
             if (content == null) {
                 return new int[] {shift, shiftAutomatic};
             }
@@ -590,13 +594,13 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
             // to set new shiftAutomatic variable value
             // seek only for 14 days starting today
             final Calendar seek = (Calendar) calendar.clone();
-            final Pattern time = Pattern.compile("^(\\d{1,2}):(\\d{2})$");
+            final Pattern pattern = Pattern.compile("^(\\d{1,2}):(\\d{2})$");
             days_loop: for (int day = 0; day < 14; day++) {
                 if (day > 0) {
                     seek.add(Calendar.HOUR, 24);
                 }
-                final int week = Time.getWeek(context, seek) % 2;
-                final int weekday = Time.getWeekDay(seek);
+                final int week = time.getWeek(context, seek) % 2;
+                final int weekday = time.getWeekDay(seek);
                 final JSONArray lessons = getLessonsForWeekday(schedule, week, weekday);
                 // if this day contains lessons
                 if (lessons.length() > 0) {
@@ -605,7 +609,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                         // seek for last lesson that contains proper timeEnd value
                         for (int i = lessons.length() - 1; i >= 0 ; i--) {
                             final JSONObject lesson = lessons.getJSONObject(i);
-                            final Matcher lessonTimeEnd = time.matcher(lesson.getString("timeEnd"));
+                            final Matcher lessonTimeEnd = pattern.matcher(lesson.getString("timeEnd"));
                             if (lessonTimeEnd.find()) {
                                 Calendar calendarLTE = (Calendar) seek.clone();
                                 calendarLTE.set(Calendar.HOUR_OF_DAY, Integer.parseInt(lessonTimeEnd.group(1)));
@@ -642,7 +646,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         if (delta != 0) {
             try {
                 settings.put("shiftAutomatic", oldShift);
-                ScheduleLessonsWidgetStorage.save(context, appWidgetId, "settings", settings.toString());
+                scheduleLessonsWidgetStorage.save(context, appWidgetId, "settings", settings.toString());
             } catch (Exception e) {
                 // failed to save new shifts, restore to previous ones
                 oldShift -= delta;
@@ -682,7 +686,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                             case ACTION_WIDGET_CONTROLS_BEFORE: logStatistic(context, "shift_before"); break;
                             case ACTION_WIDGET_CONTROLS_RESET: logStatistic(context, "shift_reset"); break;
                         }
-                        JSONObject settings = ScheduleLessonsWidgetStorage.getJson(context, appWidgetId, "settings");
+                        JSONObject settings = scheduleLessonsWidgetStorage.getJson(context, appWidgetId, "settings");
                         if (settings != null) {
                             int shift;
                             try {
@@ -701,7 +705,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                             }
                             try {
                                 settings.put("shift", shift);
-                                ScheduleLessonsWidgetStorage.save(context, appWidgetId, "settings", settings.toString());
+                                scheduleLessonsWidgetStorage.save(context, appWidgetId, "settings", settings.toString());
                             } catch (JSONException ignore) {
                                 // ignore
                             }
@@ -717,7 +721,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                         oIntent.addFlags(App.intentFlagRestart);
                         oIntent.putExtra("action", "schedule_lessons");
                         try {
-                            String settings = ScheduleLessonsWidgetStorage.get(context, appWidgetId, "settings");
+                            String settings = scheduleLessonsWidgetStorage.get(context, appWidgetId, "settings");
                             if (settings != null) {
                                 oIntent.putExtra("action_extra", new JSONObject(settings).getString("query"));
                             }

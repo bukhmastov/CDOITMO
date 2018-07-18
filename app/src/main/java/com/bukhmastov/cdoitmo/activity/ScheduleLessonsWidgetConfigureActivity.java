@@ -32,8 +32,9 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
-import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.dialog.ColorPickerDialog;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.singleton.CtxWrapper;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
@@ -100,13 +101,21 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
+    private NotificationMessage notificationMessage = NotificationMessage.instance();
+    //@Inject
+    private Theme theme = Theme.instance();
+    //@Inject
+    private TextUtils textUtils = TextUtils.instance();
+    //@Inject
+    private ScheduleLessonsWidgetStorage scheduleLessonsWidgetStorage = ScheduleLessonsWidgetStorage.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Override
     public void onCreate(Bundle icicle) {
-        Theme.applyActivityTheme(this);
-        final String theme = Theme.getAppTheme(this);
-        isDarkTheme = "dark".equals(theme) || "black".equals(theme);
+        theme.applyActivityTheme(this);
+        final String th = theme.getAppTheme(this);
+        isDarkTheme = "dark".equals(th) || "black".equals(th);
         super.onCreate(icicle);
         log.i(TAG, "Activity created");
         firebaseAnalyticsProvider.logCurrentScreen(this);
@@ -114,7 +123,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
         setContentView(R.layout.widget_configure_schedule_lessons);
         Toolbar toolbar = findViewById(R.id.toolbar_widget);
         if (toolbar != null) {
-            Theme.applyToolbarTheme(this, toolbar);
+            theme.applyToolbarTheme(this, toolbar);
             toolbar.setTitle(R.string.configure_schedule_widget);
             setSupportActionBar(toolbar);
         }
@@ -141,7 +150,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
 
     @Override
     protected void attachBaseContext(Context context) {
-        super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log));
+        super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log, textUtils));
     }
 
     private void init() {
@@ -204,7 +213,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                 updateScheduleSummary();
             } catch (Exception e) {
                 log.exception(e);
-                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
@@ -217,7 +226,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                 updateThemeSummary();
             } catch (Exception e) {
                 log.exception(e);
-                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
@@ -230,7 +239,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                 updateUpdateSummary();
             } catch (Exception e) {
                 log.exception(e);
-                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
@@ -249,7 +258,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                 });
             } catch (Exception e) {
                 log.exception(e);
-                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
@@ -261,7 +270,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                 add_button.setOnClickListener(view -> activateFinish());
             } catch (Exception e) {
                 log.exception(e);
-                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
@@ -312,7 +321,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                                     search_loading.setVisibility(View.GONE);
                                     search_action.setVisibility(View.VISIBLE);
                                     if (json == null) {
-                                        BottomBar.snackBar(activity, activity.getString(R.string.schedule_not_found));
+                                        notificationMessage.snackBar(activity, activity.getString(R.string.schedule_not_found));
                                     } else {
                                         try {
                                             final String type = json.getString("type");
@@ -353,7 +362,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                                                             }
                                                             updateScheduleSummary();
                                                         } else {
-                                                            BottomBar.snackBar(activity, getString(R.string.something_went_wrong));
+                                                            notificationMessage.snackBar(activity, getString(R.string.something_went_wrong));
                                                         }
                                                     } else {
                                                         ArrayList<JSONObject> arrayList = new ArrayList<>();
@@ -369,13 +378,13 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                                                     break;
                                                 }
                                                 default: {
-                                                    BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                                    notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                                     break;
                                                 }
                                             }
                                         } catch (Exception e) {
                                             log.exception(e);
-                                            BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                         }
                                     }
                                 });
@@ -397,7 +406,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                                         case Client.FAILED_SERVER_ERROR: text = Client.getFailureMessage(activity, statusCode); break;
                                         case Client.FAILED_CORRUPTED_JSON: text = activity.getString(R.string.server_provided_corrupted_json); break;
                                     }
-                                    BottomBar.snackBar(activity, text);
+                                    notificationMessage.snackBar(activity, text);
                                 });
                             }
                             @Override
@@ -434,18 +443,18 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                             }
                             updateScheduleSummary();
                         } else {
-                            BottomBar.snackBar(activity, getString(R.string.something_went_wrong));
+                            notificationMessage.snackBar(activity, getString(R.string.something_went_wrong));
                         }
                     } catch (Exception e) {
                         log.exception(e);
-                        BottomBar.snackBar(activity, getString(R.string.something_went_wrong));
+                        notificationMessage.snackBar(activity, getString(R.string.something_went_wrong));
                     }
                 }));
                 alertDialog.show();
                 search_action.setVisibility(View.VISIBLE);
             } catch (Exception e) {
                 log.exception(e);
-                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
@@ -535,7 +544,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                         updateThemeSummary();
                     } catch (Exception e) {
                         log.exception(e);
-                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 }));
                 default_theme_light_background.setText(activity.getString(R.string.background_color) + ": " + Default.Theme.Light.background);
@@ -555,7 +564,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                         updateThemeSummary();
                     } catch (Exception e) {
                         log.exception(e);
-                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 }));
                 default_theme_dark_background.setText(activity.getString(R.string.background_color) + ": " + Default.Theme.Dark.background);
@@ -575,7 +584,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                         @Override
                         public void exception(Exception e) {
                             log.exception(e);
-                            BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                         }
                     }).show(Settings.Theme.background);
                 }));
@@ -594,7 +603,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                         @Override
                         public void exception(Exception e) {
                             log.exception(e);
-                            BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                         }
                     }).show(Settings.Theme.text);
                 }));
@@ -615,7 +624,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                             background_opacity_picker.getBackground().setAlpha((int) ((double) (255 - progress) * 0.5));
                         } catch (Exception e) {
                             log.exception(e);
-                            BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                         }
                     }
                     @Override
@@ -627,7 +636,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                 alertDialog.show();
             } catch (Exception e) {
                 log.exception(e);
-                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
@@ -665,7 +674,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                 alertDialog.show();
             } catch (Exception e) {
                 log.exception(e);
-                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
@@ -676,7 +685,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                 Settings.useShiftAutomatic = checked;
             } catch (Exception e) {
                 log.exception(e);
-                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
@@ -685,7 +694,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
         thread.run(() -> {
             try {
                 if (Settings.Schedule.query == null || Settings.Schedule.query.trim().isEmpty()) {
-                    BottomBar.snackBar(activity, activity.getString(R.string.need_to_choose_schedule));
+                    notificationMessage.snackBar(activity, activity.getString(R.string.need_to_choose_schedule));
                     return;
                 }
                 JSONObject theme = new JSONObject();
@@ -700,7 +709,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                 settings.put("shiftAutomatic", 0);
                 settings.put("useShiftAutomatic", Settings.useShiftAutomatic);
                 log.v(TAG, "activateFinish | settings=" + settings.toString());
-                ScheduleLessonsWidgetStorage.save(activity, mAppWidgetId, "settings", settings.toString());
+                scheduleLessonsWidgetStorage.save(activity, mAppWidgetId, "settings", settings.toString());
                 (new ScheduleLessonsWidget()).updateAppWidget(activity, AppWidgetManager.getInstance(activity), mAppWidgetId, false);
                 Intent resultValue = new Intent();
                 resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
@@ -713,7 +722,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
             } catch (Exception e) {
                 log.w(TAG, "activateFinish | failed to create widget");
                 log.exception(e);
-                BottomBar.snackBar(activity, activity.getString(R.string.failed_to_create_widget));
+                notificationMessage.snackBar(activity, activity.getString(R.string.failed_to_create_widget));
             }
         });
     }
@@ -763,7 +772,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                 part_schedule_summary.setText(!Settings.Schedule.query.isEmpty() ? Settings.Schedule.title : getString(R.string.need_to_choose_schedule));
             } catch (Exception e) {
                 log.exception(e);
-                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
@@ -785,7 +794,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                 part_theme_summary.setText(summary);
             } catch (Exception e) {
                 log.exception(e);
-                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
@@ -806,7 +815,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
                 part_update_summary.setText(summary);
             } catch (Exception e) {
                 log.exception(e);
-                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }

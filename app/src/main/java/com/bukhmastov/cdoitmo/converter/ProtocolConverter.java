@@ -5,7 +5,7 @@ import android.content.Context;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Storage;
-import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Time;
 
 import org.json.JSONArray;
@@ -25,6 +25,10 @@ public class ProtocolConverter extends Converter {
     private Storage storage = Storage.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private Time time = Time.instance();
+    //@Inject
+    private TextUtils textUtils = TextUtils.instance();
 
     public ProtocolConverter(Context context, JSONArray protocol, int number_of_weeks, Response delegate) {
         super(delegate);
@@ -37,7 +41,7 @@ public class ProtocolConverter extends Converter {
     protected JSONObject convert() throws Throwable {
         for (int i = 0; i < protocol.length(); i++) {
             JSONObject item = markConvert(protocol.getJSONObject(i));
-            String hash = TextUtils.crypt(getCast(item));
+            String hash = textUtils.crypt(getCast(item));
             Double value, oldValue, delta, oldDelta;
             if (storagePref.get(context, "pref_protocol_changes_track_title", true)) {
                 String changeLogItemString = storage.get(context, Storage.CACHE, Storage.USER, "protocol#log#" + hash, null);
@@ -77,7 +81,7 @@ public class ProtocolConverter extends Converter {
             protocol.put(i, item);
         }
         return new JSONObject()
-                .put("timestamp", Time.getCalendar().getTimeInMillis())
+                .put("timestamp", time.getCalendar().getTimeInMillis())
                 .put("number_of_weeks", number_of_weeks)
                 .put("protocol", protocol);
     }

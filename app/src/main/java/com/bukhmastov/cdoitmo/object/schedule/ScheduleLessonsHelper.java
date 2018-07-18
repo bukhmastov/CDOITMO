@@ -1,20 +1,12 @@
 package com.bukhmastov.cdoitmo.object.schedule;
 
 import android.content.Context;
-import android.os.Bundle;
 
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
-import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsModifyFragment;
 import com.bukhmastov.cdoitmo.interfaces.Callable;
-import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.object.schedule.impl.ScheduleLessonsHelperImpl;
-import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
-import com.bukhmastov.cdoitmo.util.Thread;
-import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 

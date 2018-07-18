@@ -20,7 +20,7 @@ import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessonsHelper;
-import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
@@ -75,6 +75,8 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
     //@Inject
     private Storage storage = Storage.instance();
     //@Inject
+    private NotificationMessage notificationMessage = NotificationMessage.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Retention(RetentionPolicy.SOURCE)
@@ -91,7 +93,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
         log.v(TAG, "Fragment created | action=" + action);
         if (action == null || !(action.equals("share") || action.equals("handle"))) {
             keepGoing = false;
-            BottomBar.toast(activity, activity.getString(R.string.corrupted_data));
+            notificationMessage.toast(activity, activity.getString(R.string.corrupted_data));
             finish();
         }
         switch (action) {
@@ -158,10 +160,10 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                 }
             } catch (Exception e) {
                 if (e.getMessage() != null && "corrupted file".equals(e.getMessage().toLowerCase())) {
-                    BottomBar.toast(activity, activity.getString(R.string.corrupted_file));
+                    notificationMessage.toast(activity, activity.getString(R.string.corrupted_file));
                 } else {
                     log.exception(e);
-                    BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
+                    notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
                 }
                 finish();
             }
@@ -211,7 +213,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                 }
             } catch (Exception e) {
                 log.exception(e);
-                BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
+                notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
                 finish();
             }
         });
@@ -273,7 +275,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                 }
             } catch (Exception e) {
                 log.exception(e);
-                BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
+                notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
                 finish();
             }
         });
@@ -284,7 +286,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                     try {
                         log.v(TAG, "loadShare | success | json=" + (json == null ? "null" : "notnull"));
                         if (json == null || json.getString("type").equals("teachers")) {
-                            BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
+                            notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
                             finish();
                             return;
                         }
@@ -344,7 +346,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                         display(null);
                     } catch (Exception e) {
                         log.exception(e);
-                        BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
+                        notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
                         finish();
                     }
                 });
@@ -508,7 +510,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                 }
             } catch (Exception e) {
                 log.exception(e);
-                BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
+                notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
                 finish();
             }
         });
@@ -525,7 +527,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                     }
                 }
                 if (!selected) {
-                    BottomBar.snackBar(activity, activity.getString(R.string.nothing_to_share));
+                    notificationMessage.snackBar(activity, activity.getString(R.string.nothing_to_share));
                     return;
                 }
                 switch (action) {
@@ -535,7 +537,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                 }
             } catch (Exception e) {
                 log.exception(e);
-                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
@@ -594,7 +596,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                 FirebaseAnalyticsProvider.Event.RECEIVE,
                 firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "schedule_lessons")
         );
-        BottomBar.toast(activity, getString(R.string.changes_applied));
+        notificationMessage.toast(activity, getString(R.string.changes_applied));
         finish();
     }
     private void executeShare() throws Exception {
@@ -630,7 +632,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
                         firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "schedule_lessons")
                 );
             } catch (Exception ignore) {
-                BottomBar.toast(activity, activity.getString(R.string.failed_to_share_file));
+                notificationMessage.toast(activity, activity.getString(R.string.failed_to_share_file));
             }
         }
     }
@@ -738,7 +740,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
             return temp;
         } catch (Exception e) {
             log.exception(e);
-            BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
+            notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
             return null;
         }
     }

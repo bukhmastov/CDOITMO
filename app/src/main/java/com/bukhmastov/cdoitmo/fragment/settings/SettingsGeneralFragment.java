@@ -14,7 +14,7 @@ import com.bukhmastov.cdoitmo.object.preference.PreferenceEditText;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceList;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
 import com.bukhmastov.cdoitmo.provider.InjectProvider;
-import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.util.Time;
@@ -39,9 +39,9 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
                     new ThemeDialog(activity, theme, (theme1, desc) -> injectProvider.getThread().run(() -> {
                         injectProvider.getStoragePref().put(activity, "pref_theme", theme1);
                         callback.onSetSummary(activity, desc);
-                        BottomBar.snackBar(activity, activity.getString(R.string.restart_required), activity.getString(R.string.restart), view -> {
-                            Theme.updateAppTheme(activity);
-                            Static.reLaunch(activity);
+                        injectProvider.getNotificationMessage().snackBar(activity, activity.getString(R.string.restart_required), activity.getString(R.string.restart), view -> {
+                            injectProvider.getTheme().updateAppTheme(activity);
+                            injectProvider.getStaticUtil().reLaunch(activity);
                         });
                     })).show();
                 });
@@ -56,7 +56,7 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
         preferences.add(new PreferenceEditText("pref_group_force_override", "", R.string.pref_group_force_override, R.string.pref_group_force_override_summary, R.string.pref_group_force_override_message, R.string.pref_group_force_override_hint, false, null));
         preferences.add(new PreferenceEditText("pref_week_force_override", "", R.string.pref_week_force_override, R.string.pref_week_force_override_summary, R.string.pref_week_force_override_message, R.string.pref_week_force_override_hint, false, new PreferenceEditText.Callback() {
             @Override
-            public String onSetText(Context context, String value) {
+            public String onSetText(Context context, InjectProvider injectProvider, String value) {
                 try {
                     if (value.isEmpty()) {
                         return value;
@@ -65,7 +65,7 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
                     if (v.length == 2) {
                         final int week = Integer.parseInt(v[0]);
                         final long ts = Long.parseLong(v[1]);
-                        final Calendar today = Time.getCalendar();
+                        final Calendar today = injectProvider.getTime().getCalendar();
                         final Calendar past = (Calendar) today.clone();
                         past.setTimeInMillis(ts);
                         value = String.valueOf(week + (today.get(Calendar.WEEK_OF_YEAR) - past.get(Calendar.WEEK_OF_YEAR)));
@@ -78,13 +78,13 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
                 return value;
             }
             @Override
-            public String onGetText(Context context, String value) {
+            public String onGetText(Context context, InjectProvider injectProvider, String value) {
                 try {
                     if (value.isEmpty()) {
                         return value;
                     }
                     final int week = Integer.parseInt(value);
-                    final long ts = Time.getCalendar().getTimeInMillis();
+                    final long ts = injectProvider.getTime().getCalendar().getTimeInMillis();
                     if (week > 0) {
                         value = String.valueOf(week) + "#" + String.valueOf(ts);
                     }
@@ -110,7 +110,7 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
                             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                             activity.startActivity(intent);
                         } catch (Exception ignore) {
-                            BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                            injectProvider.getNotificationMessage().snackBar(activity, activity.getString(R.string.something_went_wrong));
                         }
                     }
                 });
@@ -128,7 +128,7 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
                             .setTitle(R.string.pref_reset_application_summary)
                             .setMessage(R.string.pref_reset_application_warning)
                             .setIcon(R.drawable.ic_warning)
-                            .setPositiveButton(R.string.proceed, (dialog, which) -> Static.hardReset(activity))
+                            .setPositiveButton(R.string.proceed, (dialog, which) -> injectProvider.getStaticUtil().hardReset(activity))
                             .setNegativeButton(R.string.cancel, null)
                             .create().show();
                 });

@@ -67,6 +67,10 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
     //@Inject
     private IfmoRestClient ifmoRestClient = IfmoRestClient.instance();
     //@Inject
+    private Static staticUtil = Static.instance();
+    //@Inject
+    private Time time = Time.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Override
@@ -131,7 +135,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                     try {
                         JSONObject cacheJson = new JSONObject(cache);
                         timestamp = cacheJson.getLong("timestamp");
-                        if (timestamp + refresh_rate * 3600000L < Time.getCalendar().getTimeInMillis()) {
+                        if (timestamp + refresh_rate * 3600000L < time.getCalendar().getTimeInMillis()) {
                             load(true, cache);
                         } else {
                             load(false, cache);
@@ -160,7 +164,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                     log.v(TAG, "load | from local cache");
                     String local = history.get(uid);
                     JSONObject localObj = new JSONObject(local);
-                    timestamp = Time.getCalendar().getTimeInMillis();
+                    timestamp = time.getCalendar().getTimeInMillis();
                     display(localObj);
                     return;
                 } catch (Exception e) {
@@ -187,7 +191,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                     public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject json, final JSONArray responseArr) {
                         thread.run(() -> {
                             if (statusCode == 200) {
-                                long now = Time.getCalendar().getTimeInMillis();
+                                long now = time.getCalendar().getTimeInMillis();
                                 if (json != null && storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
                                     try {
                                         storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#units#" + uid, new JSONObject()
@@ -312,7 +316,7 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                     ((ImageView) ((ViewGroup) container.findViewById(R.id.back)).getChildAt(0)).setImageResource(R.drawable.ic_refresh);
                     container.findViewById(R.id.back).setOnClickListener(v -> load(true));
                     ((TextView) container.findViewById(R.id.title)).setText(R.string.unit_general);
-                    Static.removeView(container.findViewById(R.id.web));
+                    staticUtil.removeView(container.findViewById(R.id.web));
                 } else {
                     container.findViewById(R.id.back).setOnClickListener(v -> {
                         stack.remove(stack.size() - 1);
@@ -322,14 +326,14 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                     if (name != null && !name.trim().isEmpty()) {
                         ((TextView) container.findViewById(R.id.title)).setText(name.trim());
                     } else {
-                        Static.removeView(container.findViewById(R.id.title));
+                        staticUtil.removeView(container.findViewById(R.id.title));
                     }
                     final int unit_id = stack.size() > 0 ? getInt(unit, "unit_id") : -1;
                     final String link = isValid(unit_id) ? "http://www.ifmo.ru/ru/viewunit/" + unit_id + "/" : null;
                     if (link != null) {
                         container.findViewById(R.id.web).setOnClickListener(view -> activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(link.trim()))));
                     } else {
-                        Static.removeView(container.findViewById(R.id.web));
+                        staticUtil.removeView(container.findViewById(R.id.web));
                     }
                 }
                 // список
@@ -341,10 +345,10 @@ public class UniversityUnitsFragment extends Fragment implements SwipeRefreshLay
                     finite_list.addOnScrollListener(new RecyclerViewOnScrollListener(container));
                 }
                 displayContent(unit, divisions);
-                if (timestamp > 0 && timestamp + 5000 < Time.getCalendar().getTimeInMillis()) {
+                if (timestamp > 0 && timestamp + 5000 < time.getCalendar().getTimeInMillis()) {
                     UniversityRVA.Item item = new UniversityRVA.Item();
                     item.type = UniversityRVA.TYPE_INFO_ABOUT_UPDATE_TIME;
-                    item.data = new JSONObject().put("title", activity.getString(R.string.update_date) + " " + Time.getUpdateTime(activity, timestamp));
+                    item.data = new JSONObject().put("title", activity.getString(R.string.update_date) + " " + time.getUpdateTime(activity, timestamp));
                     facultiesRecyclerViewAdapter.addItem(item);
                 }
                 // добавляем отступ

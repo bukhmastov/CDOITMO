@@ -12,11 +12,11 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleExamsFragment;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleExams;
-import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.interfaces.CallableString;
 import com.bukhmastov.cdoitmo.util.Thread;
@@ -54,6 +54,12 @@ public class ScheduleExamsRVA extends RVA {
     private Storage storage = Storage.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private NotificationMessage notificationMessage = NotificationMessage.instance();
+    //@Inject
+    private Time time = Time.instance();
+    //@Inject
+    private TextUtils textUtils = TextUtils.instance();
 
     private final ConnectedActivity activity;
     private final JSONObject data;
@@ -158,29 +164,29 @@ public class ScheduleExamsRVA extends RVA {
                                 case R.id.remove_from_cache: {
                                     try {
                                         if (cache_token == null) {
-                                            BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
+                                            notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
                                         } else {
                                             if (storage.exists(activity, Storage.CACHE, Storage.GLOBAL, "schedule_exams#lessons#" + cache_token)) {
                                                 if (storage.delete(activity, Storage.CACHE, Storage.GLOBAL, "schedule_exams#lessons#" + cache_token)) {
-                                                    BottomBar.snackBar(activity, activity.getString(R.string.cache_false));
+                                                    notificationMessage.snackBar(activity, activity.getString(R.string.cache_false));
                                                 } else {
-                                                    BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
+                                                    notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
                                                 }
                                             } else {
                                                 if (data == null) {
-                                                    BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
+                                                    notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
                                                 } else {
                                                     if (storage.put(activity, Storage.CACHE, Storage.GLOBAL, "schedule_exams#lessons#" + cache_token, data.toString())) {
-                                                        BottomBar.snackBar(activity, activity.getString(R.string.cache_true));
+                                                        notificationMessage.snackBar(activity, activity.getString(R.string.cache_true));
                                                     } else {
-                                                        BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
+                                                        notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
                                                     }
                                                 }
                                             }
                                         }
                                     } catch (Exception e) {
                                         log.exception(e);
-                                        BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
+                                        notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
                                     }
                                     break;
                                 }
@@ -194,7 +200,7 @@ public class ScheduleExamsRVA extends RVA {
                         popup.show();
                     } catch (Exception e) {
                         log.exception(e);
-                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 });
             }));
@@ -380,7 +386,7 @@ public class ScheduleExamsRVA extends RVA {
     private void bindNoExams(View container, Item item) {
         try {
             String info = "";
-            Calendar calendar = Time.getCalendar();
+            Calendar calendar = time.getCalendar();
             int month = calendar.get(Calendar.MONTH);
             int day = calendar.get(Calendar.DAY_OF_MONTH);
             if ((month >= Calendar.SEPTEMBER && (month <= Calendar.DECEMBER && day < 20)) || (month >= Calendar.FEBRUARY && (month <= Calendar.MAY && day < 20))) {
@@ -475,18 +481,18 @@ public class ScheduleExamsRVA extends RVA {
                 dataset.add(new Item(TYPE_NO_EXAMS, null));
             } else {
                 // update time
-                dataset.add(new Item(TYPE_UPDATE_TIME, new JSONObject().put("text", activity.getString(R.string.update_date) + " " + Time.getUpdateTime(activity, json.getLong("timestamp")))));
+                dataset.add(new Item(TYPE_UPDATE_TIME, new JSONObject().put("text", activity.getString(R.string.update_date) + " " + time.getUpdateTime(activity, json.getLong("timestamp")))));
             }
         }
         // that's all
         return dataset;
     }
 
-    protected static String cuteDate(Context context, StoragePref storagePref, String date, String date_format_append) {
+    protected String cuteDate(Context context, StoragePref storagePref, String date, String date_format_append) {
         try {
             String date_format = "dd.MM.yyyy" + date_format_append;
             if (isValidFormat(context, storagePref, date, date_format)) {
-                date = TextUtils.cuteDate(context, storagePref, date_format, date);
+                date = textUtils.cuteDate(context, storagePref, date_format, date);
             } else {
                 Matcher m = patternBrokenDate.matcher(date);
                 if (m.find()) {
@@ -514,23 +520,23 @@ public class ScheduleExamsRVA extends RVA {
         } catch (Exception ignore) {/* ignore */}
         return date;
     }
-    protected static String cuteDateWOYear(Context context, StoragePref storagePref, String date_format, String date_string) throws Exception {
-        SimpleDateFormat format_input = new SimpleDateFormat(date_format, TextUtils.getLocale(context, storagePref));
-        Calendar date = Time.getCalendar();
+    protected String cuteDateWOYear(Context context, StoragePref storagePref, String date_format, String date_string) throws Exception {
+        SimpleDateFormat format_input = new SimpleDateFormat(date_format, textUtils.getLocale(context, storagePref));
+        Calendar date = time.getCalendar();
         date.setTime(format_input.parse(date_string));
         return (new StringBuilder())
                 .append(date.get(Calendar.DATE))
                 .append(" ")
-                .append(Time.getGenitiveMonth(context, date.get(Calendar.MONTH)))
+                .append(time.getGenitiveMonth(context, date.get(Calendar.MONTH)))
                 .append(" ")
-                .append(TextUtils.ldgZero(date.get(Calendar.HOUR_OF_DAY)))
+                .append(textUtils.ldgZero(date.get(Calendar.HOUR_OF_DAY)))
                 .append(":")
-                .append(TextUtils.ldgZero(date.get(Calendar.MINUTE)))
+                .append(textUtils.ldgZero(date.get(Calendar.MINUTE)))
                 .toString();
     }
-    protected static boolean isValidFormat(Context context, StoragePref storagePref, String value, String format) {
+    protected boolean isValidFormat(Context context, StoragePref storagePref, String value, String format) {
         try {
-            SimpleDateFormat sdf = new SimpleDateFormat(format, TextUtils.getLocale(context, storagePref));
+            SimpleDateFormat sdf = new SimpleDateFormat(format, textUtils.getLocale(context, storagePref));
             Date date = sdf.parse(value);
             if (!value.equals(sdf.format(date))) {
                 date = null;

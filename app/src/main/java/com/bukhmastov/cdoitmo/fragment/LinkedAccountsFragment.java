@@ -9,7 +9,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
@@ -24,6 +24,8 @@ public class LinkedAccountsFragment extends ConnectedFragment {
     private Thread thread = Thread.instance();
     //@Inject
     private Storage storage = Storage.instance();
+    //@Inject
+    private NotificationMessage notificationMessage = NotificationMessage.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
@@ -64,7 +66,7 @@ public class LinkedAccountsFragment extends ConnectedFragment {
                     try {
                         activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://de.ifmo.ru")));
                     } catch (Exception e) {
-                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 });
             }

@@ -6,7 +6,7 @@ import android.util.SparseArray;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
-import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Thread;
 
@@ -104,10 +104,10 @@ public abstract class ScheduleLessonsTabHostFragment extends Fragment {
             }
         }
     }
-    public static void invalidateOnDemand(Thread thread) {
+    public static void invalidateOnDemand(Thread thread, NotificationMessage notificationMessage) {
         if (!isActive() || activity == null) return;
         thread.run(() -> {
-            BottomBar.snackBar(activity, activity.findViewById(android.R.id.content), activity.getString(R.string.schedule_refresh), activity.getString(R.string.update), v -> {
+            notificationMessage.snackBar(activity, activity.findViewById(android.R.id.content), activity.getString(R.string.schedule_refresh), activity.getString(R.string.update), v -> {
                 setQuery(getQuery());
                 invalidate();
             });

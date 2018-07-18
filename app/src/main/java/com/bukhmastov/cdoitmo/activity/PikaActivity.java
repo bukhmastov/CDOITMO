@@ -8,6 +8,7 @@ import android.widget.ImageView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.singleton.CtxWrapper;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.StoragePref;
@@ -24,6 +25,8 @@ public class PikaActivity extends AppCompatActivity {
     private Log log = Log.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private TextUtils textUtils = TextUtils.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
@@ -60,6 +63,6 @@ public class PikaActivity extends AppCompatActivity {
 
     @Override
     protected void attachBaseContext(Context context) {
-        super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log));
+        super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log, textUtils));
     }
 }

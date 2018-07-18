@@ -27,6 +27,8 @@ public class FirebaseAnalyticsProviderImpl implements FirebaseAnalyticsProvider 
     private Thread thread = Thread.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private Static staticUtil = Static.instance();
 
     private FirebaseAnalytics getFirebaseAnalytics(Context context) {
         if (firebaseAnalytics == null) {
@@ -52,7 +54,7 @@ public class FirebaseAnalyticsProviderImpl implements FirebaseAnalyticsProvider 
             this.enabled = enabled;
             FirebaseAnalytics firebaseAnalytics = getFirebaseAnalytics(context);
             firebaseAnalytics.setAnalyticsCollectionEnabled(this.enabled);
-            firebaseAnalytics.setUserId(Static.getUUID(context));
+            firebaseAnalytics.setUserId(staticUtil.getUUID(context));
             log.i(TAG, "Firebase Analytics ", (this.enabled ? "enabled" : "disabled"));
         } catch (Exception e) {
             log.exception(e);

@@ -3,16 +3,8 @@ package com.bukhmastov.cdoitmo.object;
 import android.content.Context;
 
 import com.bukhmastov.cdoitmo.object.impl.TimeRemainingWidgetImpl;
-import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
-import com.bukhmastov.cdoitmo.util.Time;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.util.Calendar;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public interface TimeRemainingWidget {
 

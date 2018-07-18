@@ -142,7 +142,7 @@ public class ERegisterConverter extends Converter {
         }
         return new JSONObject()
                 .put("groups", groups)
-                .put("timestamp", Time.getCalendar().getTimeInMillis());
+                .put("timestamp", time.getCalendar().getTimeInMillis());
     }
 
     @Override

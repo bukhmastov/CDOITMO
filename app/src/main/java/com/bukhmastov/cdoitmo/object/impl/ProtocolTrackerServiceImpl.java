@@ -52,6 +52,8 @@ public class ProtocolTrackerServiceImpl implements ProtocolTrackerService {
     //@Inject
     private DeIfmoRestClient deIfmoRestClient = DeIfmoRestClient.instance();
     //@Inject
+    private Notifications notifications = Notifications.instance();
+    //@Inject
     private FirebasePerformanceProvider firebasePerformanceProvider = FirebasePerformanceProvider.instance();
 
     @Override
@@ -267,8 +269,7 @@ public class ProtocolTrackerServiceImpl implements ProtocolTrackerService {
                     intent.putExtra("action", "protocol_changes");
                     PendingIntent pIntent = PendingIntent.getActivity(context, (int) System.currentTimeMillis(), intent, 0);
                     // prepare and send notification
-                    Notifications notifications = new Notifications(context);
-                    notifications.notify(notificationId++, notifications.getProtocol(context, title, text, timestamp, group, isSummary, pIntent));
+                    notifications.init(context).notify(context, notificationId++, notifications.getProtocol(context, title, text, timestamp, group, isSummary, pIntent));
                 } catch (Exception e) {
                     log.w(TAG, "addNotification | catch(Thread) | " + e.getMessage());
                 }

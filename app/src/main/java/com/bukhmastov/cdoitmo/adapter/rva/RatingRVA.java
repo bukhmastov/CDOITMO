@@ -43,6 +43,8 @@ public class RatingRVA extends RVA {
     private Thread thread = Thread.instance();
     //@Inject
     private Storage storage = Storage.instance();
+    //@Inject
+    private Time time = Time.instance();
 
     public RatingRVA(@NonNull Context context, @NonNull ArrayMap<String, RatingFragment.Info> data) {
         this.commonSelectedFaculty = storage.get(context, Storage.CACHE, Storage.USER, "rating#choose#faculty");
@@ -124,7 +126,7 @@ public class RatingRVA extends RVA {
                                     JSONObject faculty = faculties.getJSONObject(j);
                                     if (faculty.getString("name").contains(f)) {
                                         int course_delta = (max_course - c);
-                                        Calendar now = Time.getCalendar();
+                                        Calendar now = time.getCalendar();
                                         int year = now.get(Calendar.YEAR) - course_delta;
                                         int month = now.get(Calendar.MONTH);
                                         String years = month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year;

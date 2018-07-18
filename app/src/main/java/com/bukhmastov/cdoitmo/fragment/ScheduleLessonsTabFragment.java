@@ -48,6 +48,8 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
     private ScheduleLessons scheduleLessons = ScheduleLessons.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private Time time = Time.instance();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -166,7 +168,7 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
                         } catch (Exception ignore) {
                             // ignore
                         }
-                        final int week = Time.getWeek(activity);
+                        final int week = time.getWeek(activity);
                         final ScheduleLessonsRVA adapter = new ScheduleLessonsRVA(activity, TYPE, json, week, data -> {
                             setQuery(data);
                             invalidate(false);
@@ -211,7 +213,7 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
                                 } else {
                                     if (storagePref.get(activity, "pref_schedule_lessons_scroll_to_day", true)) {
                                         int position = -1;
-                                        switch (Time.getCalendar().get(Calendar.DAY_OF_WEEK)) {
+                                        switch (time.getCalendar().get(Calendar.DAY_OF_WEEK)) {
                                             case Calendar.MONDAY: position = adapter.getDayPosition(0); if (position >= 0) break;
                                             case Calendar.TUESDAY: position = adapter.getDayPosition(1); if (position >= 0) break;
                                             case Calendar.WEDNESDAY: position = adapter.getDayPosition(2); if (position >= 0) break;

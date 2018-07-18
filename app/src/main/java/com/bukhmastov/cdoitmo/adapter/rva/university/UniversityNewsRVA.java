@@ -12,8 +12,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.WebViewActivity;
-import com.bukhmastov.cdoitmo.util.Static;
-import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
@@ -110,16 +109,16 @@ public class UniversityNewsRVA extends UniversityRVA {
                                     public void onSuccess() {}
                                     @Override
                                     public void onError() {
-                                        Static.removeView(news_image_container);
+                                        staticUtil.removeView(news_image_container);
                                     }
                                 });
                     }
                 } else {
-                    Static.removeView(news_image_container);
+                    staticUtil.removeView(news_image_container);
                 }
             }
             if (titleView != null) {
-                ((TextView) titleView).setText(TextUtils.escapeString(title));
+                ((TextView) titleView).setText(textUtils.escapeString(title));
             }
             if (categoriesView != null) {
                 boolean category_parent_exists = category_parent != null && !category_parent.trim().isEmpty();
@@ -146,17 +145,17 @@ public class UniversityNewsRVA extends UniversityRVA {
                             categories.setTextColor(Color.parseColor(color_hex));
                         }
                     } else {
-                        Static.removeView(categoriesView);
+                        staticUtil.removeView(categoriesView);
                     }
                 } else {
-                    Static.removeView(categoriesView);
+                    staticUtil.removeView(categoriesView);
                 }
             }
             if (anonsView != null) {
                 if (anons != null && !anons.trim().isEmpty()) {
-                    ((TextView) anonsView).setText(TextUtils.escapeString(anons));
+                    ((TextView) anonsView).setText(textUtils.escapeString(anons));
                 } else {
-                    Static.removeView(anonsView);
+                    staticUtil.removeView(anonsView);
                 }
             }
             boolean date_exists = date != null && !date.trim().isEmpty();
@@ -164,9 +163,9 @@ public class UniversityNewsRVA extends UniversityRVA {
             if (date_exists || count_exists) {
                 if (dateView != null) {
                     if (date_exists) {
-                        ((TextView) dateView).setText(TextUtils.cuteDate(context, storagePref, "yyyy-MM-dd HH:mm:ss", date));
+                        ((TextView) dateView).setText(textUtils.cuteDate(context, storagePref, "yyyy-MM-dd HH:mm:ss", date));
                     } else {
-                        Static.removeView(dateView);
+                        staticUtil.removeView(dateView);
                     }
                 }
                 if (count_exists) {
@@ -175,12 +174,12 @@ public class UniversityNewsRVA extends UniversityRVA {
                     }
                 } else {
                     if (countViewContainerView != null) {
-                        Static.removeView(countViewContainerView);
+                        staticUtil.removeView(countViewContainerView);
                     }
                 }
             } else {
                 if (infoContainerView != null) {
-                    Static.removeView(infoContainerView);
+                    staticUtil.removeView(infoContainerView);
                 }
             }
             if (webview != null && !webview.trim().isEmpty()) {
@@ -234,16 +233,16 @@ public class UniversityNewsRVA extends UniversityRVA {
                                     public void onSuccess() {}
                                     @Override
                                     public void onError() {
-                                        Static.removeView(news_image_container);
+                                        staticUtil.removeView(news_image_container);
                                     }
                                 });
                     }
                 } else {
-                    Static.removeView(news_image_container);
+                    staticUtil.removeView(news_image_container);
                 }
             }
             if (titleView != null) {
-                ((TextView) titleView).setText(TextUtils.escapeString(title));
+                ((TextView) titleView).setText(textUtils.escapeString(title));
             }
             if (categoriesView != null) {
                 boolean category_parent_exists = category_parent != null && !category_parent.trim().isEmpty();
@@ -270,10 +269,10 @@ public class UniversityNewsRVA extends UniversityRVA {
                             categories.setTextColor(Color.parseColor(color_hex));
                         }
                     } else {
-                        Static.removeView(categoriesView);
+                        staticUtil.removeView(categoriesView);
                     }
                 } else {
-                    Static.removeView(categoriesView);
+                    staticUtil.removeView(categoriesView);
                 }
             }
             boolean date_exists = date != null && !date.trim().isEmpty();
@@ -281,9 +280,9 @@ public class UniversityNewsRVA extends UniversityRVA {
             if (date_exists || count_exists) {
                 if (dateView != null) {
                     if (date_exists) {
-                        ((TextView) dateView).setText(TextUtils.cuteDate(context, storagePref, "yyyy-MM-dd HH:mm:ss", date));
+                        ((TextView) dateView).setText(textUtils.cuteDate(context, storagePref, "yyyy-MM-dd HH:mm:ss", date));
                     } else {
-                        Static.removeView(dateView);
+                        staticUtil.removeView(dateView);
                     }
                 }
                 if (count_exists) {
@@ -292,12 +291,12 @@ public class UniversityNewsRVA extends UniversityRVA {
                     }
                 } else {
                     if (countViewContainerView != null) {
-                        Static.removeView(countViewContainerView);
+                        staticUtil.removeView(countViewContainerView);
                     }
                 }
             } else {
                 if (infoContainerView != null) {
-                    Static.removeView(infoContainerView);
+                    staticUtil.removeView(infoContainerView);
                 }
             }
             if (webview != null && !webview.trim().isEmpty()) {

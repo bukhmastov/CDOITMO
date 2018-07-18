@@ -12,7 +12,7 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
-import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.singleton.LogMetrics;
 import com.bukhmastov.cdoitmo.util.StoragePref;
@@ -31,6 +31,8 @@ public class LogFragment extends ConnectedFragment {
     private Thread thread = Thread.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private NotificationMessage notificationMessage = NotificationMessage.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
     //@Inject
@@ -149,7 +151,7 @@ public class LogFragment extends ConnectedFragment {
                             }
                         } catch (Exception e) {
                             log.exception(e);
-                            BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
+                            notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
                         }
                     }));
                 }
@@ -167,7 +169,7 @@ public class LogFragment extends ConnectedFragment {
                             }
                         } catch (Exception e) {
                             log.exception(e);
-                            BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
+                            notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
                         }
                     }));
                 }
@@ -208,7 +210,7 @@ public class LogFragment extends ConnectedFragment {
             return temp;
         } catch (Exception e) {
             log.exception(e);
-            BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
+            notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
             return null;
         }
     }

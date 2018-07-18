@@ -82,6 +82,12 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     //@Inject
     private IfmoRestClient ifmoRestClient = IfmoRestClient.instance();
     //@Inject
+    private Static staticUtil = Static.instance();
+    //@Inject
+    private Theme theme = Theme.instance();
+    //@Inject
+    private Time time = Time.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Override
@@ -168,7 +174,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                         JSONObject cacheJson = new JSONObject(cache);
                         building_map = cacheJson.getJSONObject("data");
                         timestamp = cacheJson.getLong("timestamp");
-                        if (timestamp + refresh_rate * 3600000L < Time.getCalendar().getTimeInMillis()) {
+                        if (timestamp + refresh_rate * 3600000L < time.getCalendar().getTimeInMillis()) {
                             load(true);
                         } else {
                             load(false);
@@ -198,7 +204,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                     public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject json, final JSONArray responseArr) {
                         thread.run(() -> {
                             if (statusCode == 200) {
-                                long now = Time.getCalendar().getTimeInMillis();
+                                long now = time.getCalendar().getTimeInMillis();
                                 if (json != null && storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
                                     try {
                                         storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#buildings", new JSONObject()
@@ -268,7 +274,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
     public void onMapReady(final GoogleMap gMap) {
         thread.run(() -> {
             final MapStyleOptions mapStyleOptions;
-            switch (Theme.getAppTheme(activity)) {
+            switch (theme.getAppTheme(activity)) {
                 case "light":
                 default: mapStyleOptions = MapStyleOptions.loadRawResourceStyle(activity, R.raw.google_map_light); break;
                 case "dark": mapStyleOptions = MapStyleOptions.loadRawResourceStyle(activity, R.raw.google_map_dark); break;
@@ -404,7 +410,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                 if (marker_info_container != null) {
                     View marker_info = marker_info_container.findViewById(R.id.marker_info);
                     if (marker_info != null) {
-                        Static.removeView(marker_info);
+                        staticUtil.removeView(marker_info);
                     }
                 }
             } catch (Exception e) {
@@ -469,7 +475,7 @@ public class UniversityBuildingsFragment extends Fragment implements OnMapReadyC
                 if (marker_info_container != null) {
                     View list = marker_info_container.findViewById(R.id.list);
                     if (list != null) {
-                        Static.removeView(list);
+                        staticUtil.removeView(list);
                     }
                 }
             } catch (Exception e) {

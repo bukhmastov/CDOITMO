@@ -7,13 +7,11 @@ import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsModifyFragment;
 import com.bukhmastov.cdoitmo.interfaces.Callable;
-import com.bukhmastov.cdoitmo.object.schedule.Schedule;
-import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessonsHelper;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
-import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -27,6 +25,8 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
     private Log log = Log.instance();
     //@Inject
     private Thread thread = Thread.instance();
+    //@Inject
+    private TextUtils textUtils = TextUtils.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
@@ -74,7 +74,7 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
             if (!cdoitmo_type.equals("normal")) throw new Exception("wrong cdoitmo_type type: " + cdoitmo_type);
             final String token = query.toLowerCase();
             final String hash = getLessonHash(lesson);
-            final JSONArray reduced = TextUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token, ""));
+            final JSONArray reduced = textUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token, ""));
             boolean found = false;
             for (int i = 0; i < reduced.length(); i++) {
                 final JSONObject day = reduced.getJSONObject(i);
@@ -126,7 +126,7 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
             if (!cdoitmo_type.equals("reduced")) throw new Exception("wrong cdoitmo_type type: " + cdoitmo_type);
             final String token = query.toLowerCase();
             final String hash = getLessonHash(lesson);
-            final JSONArray reduced = TextUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token, ""));
+            final JSONArray reduced = textUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token, ""));
             for (int i = 0; i < reduced.length(); i++) {
                 final JSONObject day = reduced.getJSONObject(i);
                 if (day.getInt("weekday") == weekday) {
@@ -201,7 +201,7 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
             lesson.put("cdoitmo_type", "synthetic");
             final String subject = lesson.getString("subject");
             final String token = query.toLowerCase();
-            final JSONArray added = TextUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token, ""));
+            final JSONArray added = textUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token, ""));
             boolean found = false;
             for (int i = 0; i < added.length(); i++) {
                 final JSONObject day = added.getJSONObject(i);
@@ -244,7 +244,7 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
             if (!cdoitmo_type.equals("synthetic")) throw new Exception("wrong cdoitmo_type type: " + cdoitmo_type);
             final String hash = getLessonHash(lesson);
             final String token = query.toLowerCase();
-            final JSONArray added = TextUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token, ""));
+            final JSONArray added = textUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token, ""));
             for (int i = 0; i < added.length(); i++) {
                 final JSONObject day = added.getJSONObject(i);
                 if (day.getInt("weekday") == weekday) {
@@ -310,7 +310,7 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
 
     @Override
     public String getLessonHash(JSONObject lesson) throws JSONException {
-        return TextUtils.crypt(getLessonSignature(lesson));
+        return textUtils.crypt(getLessonSignature(lesson));
     }
 
     @Override

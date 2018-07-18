@@ -20,12 +20,12 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
-import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
@@ -55,6 +55,12 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
     private DeIfmoRestClient deIfmoRestClient = DeIfmoRestClient.instance();
+    //@Inject
+    private NotificationMessage notificationMessage = NotificationMessage.instance();
+    //@Inject
+    private Time time = Time.instance();
+    //@Inject
+    private TextUtils textUtils = TextUtils.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
@@ -163,7 +169,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                     try {
                         JSONObject data = new JSONObject(cache);
                         setData(data);
-                        if (data.getLong("timestamp") + refresh_rate * 3600000L < Time.getCalendar().getTimeInMillis()) {
+                        if (data.getLong("timestamp") + refresh_rate * 3600000L < time.getCalendar().getTimeInMillis()) {
                             load(true, cache);
                         } else {
                             load(false, cache);
@@ -354,7 +360,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                         thread.runOnUI(() -> activity.openActivityOrFragment(SubjectShowFragment.class, extras));
                     } catch (Exception e) {
                         log.exception(e);
-                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 }));
                 thread.runOnUI(() -> {
@@ -449,7 +455,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
                             });
                         }
                         // show update time
-                        BottomBar.showUpdateTime(activity, getData().getLong("timestamp"), BottomBar.LENGTH_MOMENTUM, true);
+                        notificationMessage.showUpdateTime(activity, getData().getLong("timestamp"), NotificationMessage.LENGTH_MOMENTUM, true);
                     } catch (Exception e) {
                         log.exception(e);
                         loadFailed();
@@ -463,7 +469,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
     }
     private void checkData(JSONObject data) throws Exception {
         log.v(TAG, "checkData");
-        final Calendar now = Time.getCalendar();
+        final Calendar now = time.getCalendar();
         final int year = now.get(Calendar.YEAR);
         final int month = now.get(Calendar.MONTH);
         String currentGroup = "";
@@ -544,7 +550,7 @@ public class ERegisterFragment extends ConnectedFragment implements SwipeRefresh
         try {
             String stored = restoreData(this);
             if (stored != null && !stored.isEmpty()) {
-                return TextUtils.string2json(stored);
+                return textUtils.string2json(stored);
             }
         } catch (Exception e) {
             log.exception(e);

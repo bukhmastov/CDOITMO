@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 
 import com.bukhmastov.cdoitmo.receiver.ShortcutReceiver;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.singleton.CtxWrapper;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.StoragePref;
@@ -19,6 +20,8 @@ public class ShortcutReceiverActivity extends AppCompatActivity {
     private Log log = Log.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private TextUtils textUtils = TextUtils.instance();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -39,6 +42,6 @@ public class ShortcutReceiverActivity extends AppCompatActivity {
 
     @Override
     protected void attachBaseContext(Context context) {
-        super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log));
+        super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log, textUtils));
     }
 }

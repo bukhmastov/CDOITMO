@@ -57,6 +57,8 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
     //@Inject
     private ScheduleAttestations scheduleAttestations = ScheduleAttestations.instance();
     //@Inject
+    private Time time = Time.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     public static void setQuery(String query) {
@@ -222,7 +224,7 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
             public void onSuccess(final JSONObject json, final boolean fromCache) {
                 thread.run(() -> {
                     try {
-                        final int week = Time.getWeek(activity);
+                        final int week = time.getWeek(activity);
                         final ScheduleAttestationsRVA adapter = new ScheduleAttestationsRVA(activity, json, week);
                         thread.runOnUI(() -> {
                             try {

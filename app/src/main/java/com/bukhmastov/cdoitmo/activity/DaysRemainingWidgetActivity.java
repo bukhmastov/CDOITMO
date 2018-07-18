@@ -17,7 +17,8 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.DaysRemainingWidget;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleExams;
-import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.singleton.CtxWrapper;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.StoragePref;
@@ -52,11 +53,17 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
     //@Inject
     private DaysRemainingWidget daysRemainingWidget = DaysRemainingWidget.instance();
     //@Inject
+    private NotificationMessage notificationMessage = NotificationMessage.instance();
+    //@Inject
+    private Theme theme = Theme.instance();
+    //@Inject
+    private TextUtils textUtils = TextUtils.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        switch (Theme.getAppTheme(activity)) {
+        switch (theme.getAppTheme(activity)) {
             case "light":
             default: setTheme(R.style.AppTheme_Popup); break;
             case "dark": setTheme(R.style.AppTheme_Popup_Dark); break;
@@ -136,7 +143,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
 
     @Override
     protected void attachBaseContext(Context context) {
-        super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log));
+        super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log, textUtils));
     }
 
     @Override
@@ -310,7 +317,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
     private void share() {
         thread.runOnUI(() -> {
             if (data == null) {
-                BottomBar.snackBar(activity, activity.getString(R.string.share_unable));
+                notificationMessage.snackBar(activity, activity.getString(R.string.share_unable));
                 return;
             }
             if (data.size() == 0) {
@@ -319,7 +326,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
             }
             DaysRemainingWidget.Data currentData = data.get(0);
             if (currentData.subject == null || currentData.time == null || (currentData.time.day == null && currentData.time.hour == null && currentData.time.min == null && currentData.time.sec == null)) {
-                BottomBar.snackBar(activity, activity.getString(R.string.share_unable));
+                notificationMessage.snackBar(activity, activity.getString(R.string.share_unable));
                 return;
             }
             String time = "";

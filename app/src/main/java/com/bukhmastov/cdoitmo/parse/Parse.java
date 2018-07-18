@@ -3,6 +3,7 @@ package com.bukhmastov.cdoitmo.parse;
 import com.bukhmastov.cdoitmo.exception.SilentException;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.Time;
 
 import org.htmlcleaner.HtmlCleaner;
 import org.htmlcleaner.TagNode;
@@ -19,6 +20,8 @@ public abstract class Parse implements Runnable {
 
     //@Inject
     protected Log log = Log.instance();
+    //@Inject
+    protected Time time = Time.instance();
     //@Inject
     private FirebasePerformanceProvider firebasePerformanceProvider = FirebasePerformanceProvider.instance();
 

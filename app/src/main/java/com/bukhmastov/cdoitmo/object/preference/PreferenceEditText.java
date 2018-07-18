@@ -20,8 +20,8 @@ public class PreferenceEditText extends Preference {
     public Callback callback = null;
 
     public interface Callback {
-        String onSetText(final Context context, final String value);
-        String onGetText(final Context context, final String value);
+        String onSetText(final Context context, final InjectProvider injectProvider, final String value);
+        String onGetText(final Context context, final InjectProvider injectProvider, final String value);
     }
 
     public PreferenceEditText(String key, Object defaultValue, @StringRes int title, @StringRes int summary, @StringRes int message, @StringRes int hint, boolean changeSummary, @Nullable Callback callback) {
@@ -55,7 +55,7 @@ public class PreferenceEditText extends Preference {
         } else {
             String value = injectProvider.getStoragePref().get(activity, preference.key, (String) preference.defaultValue);
             if (preference.callback != null) {
-                value = preference.callback.onSetText(activity, value);
+                value = preference.callback.onSetText(activity, injectProvider, value);
             }
             if (preference.changeSummary && !value.isEmpty()) {
                 preference_basic_summary.setVisibility(View.VISIBLE);
@@ -71,7 +71,7 @@ public class PreferenceEditText extends Preference {
             final EditText edittext = view.findViewById(R.id.edittext);
             String value = injectProvider.getStoragePref().get(activity, preference.key, preference.defaultValue == null ? "" : (String) preference.defaultValue);
             if (preference.callback != null) {
-                value = preference.callback.onSetText(activity, value);
+                value = preference.callback.onSetText(activity, injectProvider, value);
             }
             edittext.setText(value);
             if (preference.hint != 0) {
@@ -87,7 +87,7 @@ public class PreferenceEditText extends Preference {
                     .setPositiveButton(R.string.accept, (dialog, which) -> {
                         String val = edittext.getText().toString().trim();
                         if (preference.callback != null) {
-                            val = preference.callback.onGetText(activity, val);
+                            val = preference.callback.onGetText(activity, injectProvider, val);
                         }
                         injectProvider.getStoragePref().put(activity, preference.key, val);
                         preference.onPreferenceChanged(activity);

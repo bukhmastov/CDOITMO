@@ -16,7 +16,7 @@ import com.bukhmastov.cdoitmo.object.preference.PreferenceBasic;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceList;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
 import com.bukhmastov.cdoitmo.provider.InjectProvider;
-import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 
 import java.util.ArrayList;
@@ -106,7 +106,7 @@ public class SettingsNotificationsFragment extends SettingsTemplatePreferencesFr
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         activity.startActivity(intent);
                     } catch (Exception e) {
-                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        injectProvider.getNotificationMessage().snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 });
             }

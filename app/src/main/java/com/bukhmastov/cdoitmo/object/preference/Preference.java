@@ -15,12 +15,12 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.object.ProtocolTracker;
 import com.bukhmastov.cdoitmo.provider.InjectProvider;
-import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.util.ArrayList;
@@ -45,6 +45,12 @@ public abstract class Preference {
     private DeIfmoRestClient deIfmoRestClient = DeIfmoRestClient.instance();
     //@Inject
     private ProtocolTracker protocolTracker = ProtocolTracker.instance();
+    //@Inject
+    private NotificationMessage notificationMessage = NotificationMessage.instance();
+    //@Inject
+    private Static staticUtil = Static.instance();
+    //@Inject
+    private TextUtils textUtils = TextUtils.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
     //@Inject
@@ -124,10 +130,10 @@ public abstract class Preference {
                 }
                 break;
             case "pref_group_force_override":
-                storagePref.put(activity, "pref_group_force_override", TextUtils.prettifyGroupNumber(storagePref.get(activity, "pref_group_force_override", "")));
+                storagePref.put(activity, "pref_group_force_override", textUtils.prettifyGroupNumber(storagePref.get(activity, "pref_group_force_override", "")));
                 break;
             case "pref_lang":
-                BottomBar.snackBar(activity, activity.getString(R.string.restart_required), activity.getString(R.string.restart), v -> Static.reLaunch(activity));
+                notificationMessage.snackBar(activity, activity.getString(R.string.restart_required), activity.getString(R.string.restart), v -> staticUtil.reLaunch(activity));
                 break;
         }
     }

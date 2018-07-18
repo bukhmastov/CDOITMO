@@ -20,12 +20,12 @@ import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.parse.rating.RatingListParse;
 import com.bukhmastov.cdoitmo.parse.rating.RatingParse;
-import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
@@ -52,6 +52,12 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
     private DeIfmoClient deIfmoClient = DeIfmoClient.instance();
+    //@Inject
+    private NotificationMessage notificationMessage = NotificationMessage.instance();
+    //@Inject
+    private Time time = Time.instance();
+    //@Inject
+    private TextUtils textUtils = TextUtils.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
@@ -104,8 +110,8 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
             try {
                 String storedData = restoreData(this);
                 String storedExtra = restoreDataExtra(this);
-                JSONObject storedCommon = storedData != null && !storedData.isEmpty() ? TextUtils.string2json(storedData) : null;
-                JSONObject storedOwn = storedExtra != null && !storedExtra.isEmpty() ? TextUtils.string2json(storedExtra) : null;
+                JSONObject storedCommon = storedData != null && !storedData.isEmpty() ? textUtils.string2json(storedData) : null;
+                JSONObject storedOwn = storedExtra != null && !storedExtra.isEmpty() ? textUtils.string2json(storedExtra) : null;
                 if (storedCommon != null) {
                     data.put(COMMON, new Info(LOADED, storedCommon));
                 }
@@ -184,7 +190,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                 if (!cache.isEmpty()) {
                     try {
                         data.get(type).data = new JSONObject(cache);
-                        if (data.get(type).data.getLong("timestamp") + refresh_rate * 3600000L < Time.getCalendar().getTimeInMillis()) {
+                        if (data.get(type).data.getLong("timestamp") + refresh_rate * 3600000L < time.getCalendar().getTimeInMillis()) {
                             load(type, true, cache);
                         } else {
                             load(type, false, cache);
@@ -281,7 +287,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                                             if (json != null) {
                                                 try {
                                                     json = new JSONObject()
-                                                            .put("timestamp", Time.getCalendar().getTimeInMillis())
+                                                            .put("timestamp", time.getCalendar().getTimeInMillis())
                                                             .put("rating", json);
                                                     if (storagePref.get(activity, "pref_use_cache", true)) {
                                                         storage.put(activity, Storage.CACHE, Storage.USER, "rating#list", json.toString());
@@ -313,7 +319,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                                             if (json != null) {
                                                 try {
                                                     json = new JSONObject()
-                                                            .put("timestamp", Time.getCalendar().getTimeInMillis())
+                                                            .put("timestamp", time.getCalendar().getTimeInMillis())
                                                             .put("rating", json);
                                                     if (storagePref.get(activity, "pref_use_cache", true)) {
                                                         storage.put(activity, Storage.CACHE, Storage.USER, "rating#core", json.toString());
@@ -461,12 +467,12 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                                 activity.openActivityOrFragment(RatingListFragment.class, extras);
                             } catch (Exception e) {
                                 log.exception(e);
-                                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                             }
                         });
                     } catch (Exception e) {
                         log.exception(e);
-                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 }));
                 adapter.setOnElementClickListener(R.id.own_apply, (v, data) -> thread.run(() -> {
@@ -487,7 +493,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                                     activity.openActivityOrFragment(RatingListFragment.class, extras);
                                 } catch (Exception e) {
                                     log.exception(e);
-                                    BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                    notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                 }
                             });
                         } else {
@@ -495,7 +501,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
                         }
                     } catch (Exception e) {
                         log.exception(e);
-                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 }));
                 thread.runOnUI(() -> {

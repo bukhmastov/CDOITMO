@@ -3,7 +3,6 @@ package com.bukhmastov.cdoitmo.network.impl;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.text.TextUtils;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
@@ -13,6 +12,7 @@ import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.parse.UserDataParse;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Time;
 
 import org.json.JSONObject;
@@ -27,6 +27,10 @@ public class DeIfmoClientImpl extends DeIfmoClient {
     private static final String DEFAULT_PROTOCOL = HTTPS;
     private static final boolean DEFAULT_RE_AUTH = true;
 
+    //@Inject
+    private Time time = Time.instance();
+    //@Inject
+    private TextUtils textUtils = TextUtils.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
@@ -68,9 +72,9 @@ public class DeIfmoClientImpl extends DeIfmoClient {
                             thread.run(thread.BACKGROUND, () -> new UserDataParse(response, result -> {
                                 if (result != null) {
                                     log.v(TAG, "check | success | parsed");
-                                    String name = com.bukhmastov.cdoitmo.util.singleton.TextUtils.getStringSafely(result, "name", "");
-                                    String avatar = com.bukhmastov.cdoitmo.util.singleton.TextUtils.getStringSafely(result, "avatar", "");
-                                    String group = com.bukhmastov.cdoitmo.util.singleton.TextUtils.getStringSafely(result, "group", "");
+                                    String name = textUtils.getStringSafely(result, "name", "");
+                                    String avatar = textUtils.getStringSafely(result, "avatar", "");
+                                    String group = textUtils.getStringSafely(result, "group", "");
                                     String pref_group_force_override = storagePref.get(context, "pref_group_force_override", "");
                                     if (pref_group_force_override == null) {
                                         pref_group_force_override = "";
@@ -91,12 +95,12 @@ public class DeIfmoClientImpl extends DeIfmoClient {
                                     }
                                     storage.put(context, Storage.PERMANENT, Storage.USER, "user#name", name);
                                     storage.put(context, Storage.PERMANENT, Storage.USER, "user#group", g);
-                                    storage.put(context, Storage.PERMANENT, Storage.USER, "user#groups", TextUtils.join(", ", groups));
+                                    storage.put(context, Storage.PERMANENT, Storage.USER, "user#groups", android.text.TextUtils.join(", ", groups));
                                     storage.put(context, Storage.PERMANENT, Storage.USER, "user#avatar", avatar);
                                     try {
                                         storage.put(context, Storage.PERMANENT, Storage.GLOBAL, "user#week", new JSONObject()
                                                 .put("week", Integer.parseInt(result.getString("week")))
-                                                .put("timestamp", Time.getCalendar().getTimeInMillis())
+                                                .put("timestamp", time.getCalendar().getTimeInMillis())
                                                 .toString()
                                         );
                                     } catch (Exception e) {

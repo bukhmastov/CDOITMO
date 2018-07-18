@@ -16,7 +16,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapter.rva.ERegisterSubjectViewRVA;
 import com.bukhmastov.cdoitmo.exception.SilentException;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Thread;
 
@@ -42,6 +42,8 @@ public class SubjectShowFragment extends ConnectedFragment {
     private Log log = Log.instance();
     //@Inject
     private Thread thread = Thread.instance();
+    //@Inject
+    private NotificationMessage notificationMessage = NotificationMessage.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
@@ -187,7 +189,7 @@ public class SubjectShowFragment extends ConnectedFragment {
                                                     share(shareEntities.get(position).text);
                                                 } catch (Exception e) {
                                                     log.exception(e);
-                                                    BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                                    notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                                 }
                                             })
                                             .setNegativeButton(R.string.do_cancel, null)
@@ -195,18 +197,18 @@ public class SubjectShowFragment extends ConnectedFragment {
                                 }
                             } catch (Exception e) {
                                 log.exception(e);
-                                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                             }
                             return false;
                         });
                     } catch (Exception e) {
                         log.exception(e);
-                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 });
             } catch (Exception e) {
                 log.exception(e);
-                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }

@@ -7,7 +7,6 @@ import android.net.Uri;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.LayoutRes;
 import android.support.v7.widget.RecyclerView;
-import android.text.TextUtils;
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,9 +16,9 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.UniversityPersonCardActivity;
-import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.view.CircularTransformation;
-import com.bukhmastov.cdoitmo.util.Static;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
@@ -32,6 +31,11 @@ import java.util.regex.Pattern;
 public class UniversityFacultiesRVA extends UniversityRVA {
 
     private final Pattern working_hours_pattern = Pattern.compile("(\\D*/.*\\|?)+");
+
+    //@Inject
+    private NotificationMessage notificationMessage = NotificationMessage.instance();
+    //@Inject
+    private TextUtils textUtils = TextUtils.instance();
 
     public UniversityFacultiesRVA(final Context context) {
         super(context, null);
@@ -83,9 +87,9 @@ public class UniversityFacultiesRVA extends UniversityRVA {
             removeFirstSeparator(viewHolder.container);
             String header = item.data.getString("header");
             if (header != null) {
-                ((TextView) viewHolder.container.findViewById(R.id.structure_header)).setText(com.bukhmastov.cdoitmo.util.singleton.TextUtils.capitalizeFirstLetter(header.trim()));
+                ((TextView) viewHolder.container.findViewById(R.id.structure_header)).setText(textUtils.capitalizeFirstLetter(header.trim()));
             } else {
-                Static.removeView(viewHolder.container.findViewById(R.id.structure_header));
+                staticUtil.removeView(viewHolder.container.findViewById(R.id.structure_header));
             }
             ViewGroup structure_container = viewHolder.container.findViewById(R.id.structure_container);
             if (structure_container == null) {
@@ -103,7 +107,7 @@ public class UniversityFacultiesRVA extends UniversityRVA {
                         try {
                             context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + address)));
                         } catch (ActivityNotFoundException e) {
-                            BottomBar.toast(context, context.getString(R.string.failed_to_start_geo_activity));
+                            notificationMessage.toast(context, context.getString(R.string.failed_to_start_geo_activity));
                         }
                     }));
                     is_first_container = false;
@@ -157,7 +161,7 @@ public class UniversityFacultiesRVA extends UniversityRVA {
                             }
                             days_new.add(time);
                         }
-                        wh = TextUtils.join("\n", days_new).trim();
+                        wh = android.text.TextUtils.join("\n", days_new).trim();
                     }
                     structure_container.addView(getConnectContainer(R.drawable.ic_access_time, wh, is_first_container, null));
                     is_first_container = true;
@@ -173,7 +177,7 @@ public class UniversityFacultiesRVA extends UniversityRVA {
                         try {
                             context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + deanery_address)));
                         } catch (ActivityNotFoundException e) {
-                            BottomBar.toast(context, context.getString(R.string.failed_to_start_geo_activity));
+                            notificationMessage.toast(context, context.getString(R.string.failed_to_start_geo_activity));
                         }
                     }));
                     is_first_container = false;
@@ -215,7 +219,7 @@ public class UniversityFacultiesRVA extends UniversityRVA {
                     if (head_degree != null && !head_degree.trim().isEmpty()) {
                         ((TextView) layout_university_persons_list_item.findViewById(R.id.post)).setText(head_degree);
                     } else {
-                        Static.removeView(layout_university_persons_list_item.findViewById(R.id.post));
+                        staticUtil.removeView(layout_university_persons_list_item.findViewById(R.id.post));
                     }
                     if (head_avatar != null && !head_avatar.trim().isEmpty()) {
                         Picasso.with(context)
@@ -254,9 +258,9 @@ public class UniversityFacultiesRVA extends UniversityRVA {
             removeFirstSeparator(viewHolder.container);
             String header = getString(item.data, "header");
             if (header != null) {
-                ((TextView) viewHolder.container.findViewById(R.id.structure_header)).setText(com.bukhmastov.cdoitmo.util.singleton.TextUtils.capitalizeFirstLetter(header.trim()));
+                ((TextView) viewHolder.container.findViewById(R.id.structure_header)).setText(textUtils.capitalizeFirstLetter(header.trim()));
             } else {
-                Static.removeView(viewHolder.container.findViewById(R.id.structure_header));
+                staticUtil.removeView(viewHolder.container.findViewById(R.id.structure_header));
             }
             ViewGroup structure_container = viewHolder.container.findViewById(R.id.structure_container);
             if (structure_container == null) {
@@ -299,7 +303,7 @@ public class UniversityFacultiesRVA extends UniversityRVA {
             first_block = false;
             View structure_separator = structure_container.findViewById(R.id.structure_separator);
             if (structure_separator != null) {
-                Static.removeView(structure_separator);
+                staticUtil.removeView(structure_separator);
             }
         }
     }
@@ -312,7 +316,7 @@ public class UniversityFacultiesRVA extends UniversityRVA {
             layout_university_connect.setOnClickListener(listener);
         }
         if (is_first_container) {
-            Static.removeView(layout_university_connect.findViewById(R.id.separator));
+            staticUtil.removeView(layout_university_connect.findViewById(R.id.separator));
         }
         return layout_university_connect;
     }

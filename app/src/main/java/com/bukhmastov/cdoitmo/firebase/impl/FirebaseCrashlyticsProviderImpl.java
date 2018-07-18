@@ -7,7 +7,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
-import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.StoragePref;
@@ -31,6 +31,10 @@ public class FirebaseCrashlyticsProviderImpl implements FirebaseCrashlyticsProvi
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
+    private NotificationMessage notificationMessage = NotificationMessage.instance();
+    //@Inject
+    private Static staticUtil = Static.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Retention(RetentionPolicy.SOURCE)
@@ -52,7 +56,7 @@ public class FirebaseCrashlyticsProviderImpl implements FirebaseCrashlyticsProvi
             this.enabled = enabled;
             if (this.enabled) {
                 Fabric.with(context, new Crashlytics());
-                Crashlytics.setUserIdentifier(Static.getUUID(context));
+                Crashlytics.setUserIdentifier(staticUtil.getUUID(context));
             }
             log.i(TAG, "Firebase Crashlytics " + (this.enabled ? "enabled" : "disabled"));
         } catch (Exception e) {
@@ -68,7 +72,7 @@ public class FirebaseCrashlyticsProviderImpl implements FirebaseCrashlyticsProvi
                 Fabric.with(activity, new Crashlytics());
                 log.i(TAG, "Firebase Crashlytics enabled");
             } else {
-                BottomBar.snackBar(activity, activity.getString(R.string.changes_will_take_effect_next_startup));
+                notificationMessage.snackBar(activity, activity.getString(R.string.changes_will_take_effect_next_startup));
                 log.i(TAG, "Firebase Crashlytics will be disabled at the next start up");
                 firebaseAnalyticsProvider.logBasicEvent(activity, "firebase_crash_disabled");
             }

@@ -18,7 +18,7 @@ import android.widget.ProgressBar;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Theme;
@@ -36,11 +36,15 @@ public class WebViewActivity extends AppCompatActivity {
     //@Inject
     private Log log = Log.instance();
     //@Inject
+    private NotificationMessage notificationMessage = NotificationMessage.instance();
+    //@Inject
+    private Theme theme = Theme.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Theme.applyActivityTheme(this);
+        theme.applyActivityTheme(this);
         super.onCreate(savedInstanceState);
         log.i(TAG, "Activity created");
         try {
@@ -58,7 +62,7 @@ public class WebViewActivity extends AppCompatActivity {
         setContentView(R.layout.activity_webview);
         Toolbar toolbar = findViewById(R.id.toolbar_webview);
         if (toolbar != null) {
-            Theme.applyToolbarTheme(activity, toolbar);
+            theme.applyToolbarTheme(activity, toolbar);
             setSupportActionBar(toolbar);
         }
         ActionBar actionBar = getSupportActionBar();
@@ -93,7 +97,7 @@ public class WebViewActivity extends AppCompatActivity {
                     try {
                         activity.startActivity(new Intent(Intent.ACTION_VIEW, request.getUrl()));
                     } catch (Exception e) {
-                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                     return true;
                 }

@@ -4,13 +4,12 @@ import android.support.v4.app.Fragment;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
-import com.bukhmastov.cdoitmo.object.SettingsScheduleExams;
 import com.bukhmastov.cdoitmo.object.preference.Preference;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceBasic;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceList;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
 import com.bukhmastov.cdoitmo.provider.InjectProvider;
-import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Storage;
 
 import org.json.JSONObject;
@@ -56,7 +55,7 @@ public class SettingsScheduleExamsFragment extends SettingsTemplatePreferencesFr
                 injectProvider.getThread().run(() -> {
                     if (activity != null) {
                         boolean success = injectProvider.getStorage().clear(activity, Storage.CACHE, Storage.GLOBAL, "schedule_exams");
-                        BottomBar.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
+                        injectProvider.getNotificationMessage().snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
                     }
                 });
             }

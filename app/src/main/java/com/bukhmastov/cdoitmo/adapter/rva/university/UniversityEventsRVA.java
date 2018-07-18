@@ -12,8 +12,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.WebViewActivity;
-import com.bukhmastov.cdoitmo.util.Static;
-import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 
 import java.util.ArrayList;
 
@@ -80,7 +79,7 @@ public class UniversityEventsRVA extends UniversityRVA {
             View newsImageContainerView = viewHolder.container.findViewById(R.id.news_image_container);
             View countViewContainerView = viewHolder.container.findViewById(R.id.count_view_container);
             if (titleView != null) {
-                ((TextView) titleView).setText(TextUtils.escapeString(title));
+                ((TextView) titleView).setText(textUtils.escapeString(title));
             }
             if (categoriesView != null) {
                 if (type != null && !type.trim().isEmpty()) {
@@ -88,7 +87,7 @@ public class UniversityEventsRVA extends UniversityRVA {
                     categories.setText("● " + type);
                     categories.setTextColor(Color.parseColor(color_hex));
                 } else {
-                    Static.removeView(categoriesView);
+                    staticUtil.removeView(categoriesView);
                 }
             }
             if (dateView != null) {
@@ -97,22 +96,22 @@ public class UniversityEventsRVA extends UniversityRVA {
                 if (date_begin_exists || date_end_exists) {
                     String date = null;
                     if (date_begin_exists && date_end_exists) {
-                        date = TextUtils.cuteDate(context, storagePref, "yyyy-MM-dd HH:mm:ss", date_begin, date_end);
+                        date = textUtils.cuteDate(context, storagePref, "yyyy-MM-dd HH:mm:ss", date_begin, date_end);
                     } else if (date_begin_exists) {
-                        date = TextUtils.cuteDate(context, storagePref, "yyyy-MM-dd HH:mm:ss", date_begin);
+                        date = textUtils.cuteDate(context, storagePref, "yyyy-MM-dd HH:mm:ss", date_begin);
                     } else if (date_end_exists) {
-                        date = TextUtils.cuteDate(context, storagePref, "yyyy-MM-dd HH:mm:ss", date_end);
+                        date = textUtils.cuteDate(context, storagePref, "yyyy-MM-dd HH:mm:ss", date_end);
                     }
                     ((TextView) dateView).setText(date);
                 } else {
-                    Static.removeView(dateView);
+                    staticUtil.removeView(dateView);
                 }
             }
             if (newsImageContainerView != null) {
-                Static.removeView(newsImageContainerView);
+                staticUtil.removeView(newsImageContainerView);
             }
             if (countViewContainerView != null) {
-                Static.removeView(countViewContainerView);
+                staticUtil.removeView(countViewContainerView);
             }
             if (webview != null && !webview.trim().isEmpty()) {
                 viewHolder.container.findViewById(R.id.news_click).setOnClickListener(v -> {

@@ -18,7 +18,7 @@ import com.bukhmastov.cdoitmo.adapter.TeacherPickerAdapter;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.preference.Preference;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
-import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
@@ -52,6 +52,8 @@ public abstract class SettingsSchedule {
     private Thread thread = Thread.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private NotificationMessage notificationMessage = NotificationMessage.instance();
 
     protected abstract void search(final String query);
     protected abstract String getHint();
@@ -114,11 +116,11 @@ public abstract class SettingsSchedule {
                             thread.runOnUI(() -> lsp_search.setText(title));
                             toggleSearchState("selected");
                         } else {
-                            BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                         }
                     } catch (Exception e) {
                         log.exception(e);
-                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 }));
                 lsp_radio_group.setOnCheckedChangeListener((group, checkedId) -> thread.runOnUI(() -> {
@@ -175,7 +177,7 @@ public abstract class SettingsSchedule {
                             try {
                                 if (callback != null && query != null && title != null) {
                                     if (query.isEmpty()) {
-                                        BottomBar.snackBar(activity, activity.getString(R.string.need_to_choose_schedule));
+                                        notificationMessage.snackBar(activity, activity.getString(R.string.need_to_choose_schedule));
                                     } else {
                                         callback.onDone(new JSONObject()
                                                 .put("query", query)
@@ -203,7 +205,7 @@ public abstract class SettingsSchedule {
                 toggleSearchState("action");
                 thread.run(() -> {
                     if (json == null) {
-                        BottomBar.snackBar(activity, activity.getString(R.string.schedule_not_found));
+                        notificationMessage.snackBar(activity, activity.getString(R.string.schedule_not_found));
                     } else {
                         try {
                             String t = json.getString("type");
@@ -237,7 +239,7 @@ public abstract class SettingsSchedule {
                                             thread.runOnUI(() -> lsp_search.setText(title));
                                             toggleSearchState("selected");
                                         } else {
-                                            BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                         }
                                     } else {
                                         final ArrayList<JSONObject> arrayList = new ArrayList<>();
@@ -255,13 +257,13 @@ public abstract class SettingsSchedule {
                                     break;
                                 }
                                 default: {
-                                    BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                    notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                     break;
                                 }
                             }
                         } catch (Exception e) {
                             log.exception(e);
-                            BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                         }
                     }
                 });
@@ -278,19 +280,19 @@ public abstract class SettingsSchedule {
                     switch (state) {
                         case Client.FAILED_OFFLINE:
                         case Schedule.FAILED_OFFLINE: {
-                            BottomBar.snackBar(activity, activity.getString(R.string.offline_mode_on));
+                            notificationMessage.snackBar(activity, activity.getString(R.string.offline_mode_on));
                             break;
                         }
                         case Client.FAILED_SERVER_ERROR: {
-                            BottomBar.snackBar(activity, Client.getFailureMessage(activity, statusCode));
+                            notificationMessage.snackBar(activity, Client.getFailureMessage(activity, statusCode));
                             break;
                         }
                         case Client.FAILED_CORRUPTED_JSON: {
-                            BottomBar.snackBar(activity, activity.getString(R.string.server_provided_corrupted_json));
+                            notificationMessage.snackBar(activity, activity.getString(R.string.server_provided_corrupted_json));
                             break;
                         }
                         default: {
-                            BottomBar.snackBar(activity, activity.getString(R.string.schedule_not_found));
+                            notificationMessage.snackBar(activity, activity.getString(R.string.schedule_not_found));
                             break;
                         }
                     }

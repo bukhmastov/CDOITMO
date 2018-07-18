@@ -20,6 +20,7 @@ import android.view.ViewGroup;
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.singleton.CtxWrapper;
 import com.bukhmastov.cdoitmo.util.Log;
@@ -51,6 +52,8 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     private Thread thread = Thread.instance();
     //@Inject
     protected StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private TextUtils textUtils = TextUtils.instance();
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({TYPE.ROOT, TYPE.STACKABLE})
@@ -277,6 +280,6 @@ public abstract class ConnectedActivity extends AppCompatActivity {
 
     @Override
     protected void attachBaseContext(Context context) {
-        super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log));
+        super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log, textUtils));
     }
 }

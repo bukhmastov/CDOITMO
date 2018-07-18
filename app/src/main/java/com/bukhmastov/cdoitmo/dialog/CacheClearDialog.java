@@ -8,11 +8,11 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
-import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.util.ArrayList;
@@ -32,6 +32,10 @@ public class CacheClearDialog extends Dialog {
     private Storage storage = Storage.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private TextUtils textUtils = TextUtils.instance();
+    //@Inject
+    private NotificationMessage notificationMessage = NotificationMessage.instance();
 
     private class Entry {
         String title;
@@ -106,7 +110,7 @@ public class CacheClearDialog extends Dialog {
                             if ("_mem_".equals(item.path)) {
                                 storage.cacheReset();
                                 ConnectedActivity.clearStore();
-                                BottomBar.snackBar(activity, activity.getString(R.string.cache_cleared));
+                                notificationMessage.snackBar(activity, activity.getString(R.string.cache_cleared));
                                 return;
                             } else {
                                 if (item.bytes <= 0L) {
@@ -122,7 +126,7 @@ public class CacheClearDialog extends Dialog {
                                     }
                                 }
                             }
-                            BottomBar.snackBar(activity, activity.getString(R.string.cache_cleared));
+                            notificationMessage.snackBar(activity, activity.getString(R.string.cache_cleared));
                             calculateCacheSize(cache_list);
                         }));
                         cache_list.addView(layout_item);
@@ -184,7 +188,7 @@ public class CacheClearDialog extends Dialog {
                         cache_item_size.setText(R.string.empty);
                         cache_item_size_container.setVisibility(View.VISIBLE);
                     } else {
-                        cache_item_size.setText(TextUtils.bytes2readable(activity, storagePref, size));
+                        cache_item_size.setText(textUtils.bytes2readable(activity, storagePref, size));
                         cache_item_size_container.setVisibility(View.VISIBLE);
                     }
                     cache_item_size_container.invalidate();

@@ -24,7 +24,7 @@ import com.bukhmastov.cdoitmo.fragment.AboutFragment;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.Account;
 import com.bukhmastov.cdoitmo.util.Accounts;
-import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.singleton.CtxWrapper;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
@@ -59,13 +59,25 @@ public class LoginActivity extends ConnectedActivity {
     //@Inject
     private Storage storage = Storage.instance();
     //@Inject
+    private Account account = Account.instance();
+    //@Inject
+    private Accounts accounts = Accounts.instance();
+    //@Inject
+    private NotificationMessage notificationMessage = NotificationMessage.instance();
+    //@Inject
+    private Static staticUtil = Static.instance();
+    //@Inject
+    private Theme theme = Theme.instance();
+    //@Inject
+    private com.bukhmastov.cdoitmo.util.TextUtils textUtils = com.bukhmastov.cdoitmo.util.TextUtils.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
     //@Inject
     private FirebaseConfigProvider firebaseConfigProvider = FirebaseConfigProvider.instance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Theme.applyActivityTheme(this);
+        theme.applyActivityTheme(this);
         super.onCreate(savedInstanceState);
         log.i(TAG, "Activity created");
         firebaseAnalyticsProvider.logCurrentScreen(this);
@@ -78,7 +90,7 @@ public class LoginActivity extends ConnectedActivity {
         // setup toolbar
         Toolbar toolbar = findViewById(R.id.toolbar_login);
         if (toolbar != null) {
-            Theme.applyToolbarTheme(activity, toolbar);
+            theme.applyToolbarTheme(activity, toolbar);
             setSupportActionBar(toolbar);
         }
         ActionBar actionBar = getSupportActionBar();
@@ -125,7 +137,7 @@ public class LoginActivity extends ConnectedActivity {
 
     @Override
     protected void attachBaseContext(Context context) {
-        super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log));
+        super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log, textUtils));
     }
 
     @Override
@@ -144,7 +156,7 @@ public class LoginActivity extends ConnectedActivity {
                     break;
                 }
                 case SIGNAL_RECONNECT: {
-                    Account.authorized = false;
+                    account.setAuthorized(false);
                     show();
                     break;
                 }
@@ -156,7 +168,7 @@ public class LoginActivity extends ConnectedActivity {
                 case SIGNAL_CHANGE_ACCOUNT: {
                     String current_login = storage.get(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
                     if (!current_login.isEmpty()) {
-                        Account.logoutTemporarily(activity, this::show);
+                        account.logoutTemporarily(activity, this::show);
                     } else {
                         show();
                     }
@@ -183,8 +195,8 @@ public class LoginActivity extends ConnectedActivity {
                     String current_login = storage.get(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
                     if (!current_login.isEmpty()) {
                         storage.delete(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#cookies");
-                        Account.logoutTemporarily(activity, () -> {
-                            BottomBar.snackBar(activity, activity.getString(R.string.required_login_password));
+                        account.logoutTemporarily(activity, () -> {
+                            notificationMessage.snackBar(activity, activity.getString(R.string.required_login_password));
                             show();
                         });
                     }
@@ -196,8 +208,8 @@ public class LoginActivity extends ConnectedActivity {
                     if (!current_login.isEmpty()) {
                         storage.delete(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#cookies");
                         storage.delete(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#password");
-                        Account.logoutTemporarily(activity, () -> {
-                            BottomBar.snackBar(activity, activity.getString(R.string.invalid_login_password));
+                        account.logoutTemporarily(activity, () -> {
+                            notificationMessage.snackBar(activity, activity.getString(R.string.invalid_login_password));
                             show();
                         });
                     }
@@ -241,7 +253,7 @@ public class LoginActivity extends ConnectedActivity {
                 }
             } catch (Exception e) {
                 log.exception(e);
-                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
@@ -280,12 +292,12 @@ public class LoginActivity extends ConnectedActivity {
         container.addView(new_user_tile);
     }
     private void appendAllUsersView(final ViewGroup container) throws Exception {
-        final JSONArray accounts = Accounts.get(activity);
-        for (int i = 0; i < accounts.length(); i++) {
+        final JSONArray acs = accounts.get(activity);
+        for (int i = 0; i < acs.length(); i++) {
             try {
                 // unique situation, we need to grab info about accounts in which we are not logged in
                 // danger zone begins
-                final String acLogin = accounts.getString(i);
+                final String acLogin = acs.getString(i);
                 log.v(TAG, "show | account in accounts | login=", acLogin);
                 storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", acLogin);
                 final String login = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#login");
@@ -323,7 +335,7 @@ public class LoginActivity extends ConnectedActivity {
                         ((TextView) nameView).setText(desc);
                     }
                     if (descView != null) {
-                        Static.removeView(descView);
+                        staticUtil.removeView(descView);
                     }
                 }
                 user_tile.findViewById(R.id.auth).setOnClickListener(v -> {
@@ -349,7 +361,7 @@ public class LoginActivity extends ConnectedActivity {
                                 break;
                             }
                             case R.id.logout: {
-                                Account.logoutConfirmation(activity, () -> logout(login));
+                                account.logoutConfirmation(activity, () -> logout(login));
                                 break;
                             }
                             case R.id.change_password: {
@@ -374,7 +386,7 @@ public class LoginActivity extends ConnectedActivity {
                                                                 storage.put(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#password", value);
                                                                 storage.delete(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
                                                                 // danger zone ends
-                                                                BottomBar.snackBar(activity, activity.getString(R.string.password_changed));
+                                                                notificationMessage.snackBar(activity, activity.getString(R.string.password_changed));
                                                             });
                                                         }
                                                     } catch (Exception e) {
@@ -413,7 +425,7 @@ public class LoginActivity extends ConnectedActivity {
             log.v(TAG, "anonymous_user_tile login clicked");
             String group = "";
             if (input_group != null) {
-                group = com.bukhmastov.cdoitmo.util.singleton.TextUtils.prettifyGroupNumber(input_group.getText().toString());
+                group = textUtils.prettifyGroupNumber(input_group.getText().toString());
             }
             String[] groups = group.split(",\\s|\\s|,");
             // set anon user info
@@ -475,19 +487,19 @@ public class LoginActivity extends ConnectedActivity {
 
     private void login(final String login, final String password, final String role, final boolean isNewUser) {
         log.v(TAG, "login | login=", login, " | role=", role, " | isNewUser=", isNewUser);
-        Static.lockOrientation(activity, true);
-        Account.login(activity, login, password, role, isNewUser, new Account.LoginHandler() {
+        staticUtil.lockOrientation(activity, true);
+        account.login(activity, login, password, role, isNewUser, new Account.LoginHandler() {
             @Override
             public void onSuccess() {
                 log.v(TAG, "login | onSuccess");
                 finish();
-                Static.lockOrientation(activity, false);
+                staticUtil.lockOrientation(activity, false);
             }
             @Override
             public void onOffline() {
                 log.v(TAG, "login | onOffline");
                 finish();
-                Static.lockOrientation(activity, false);
+                staticUtil.lockOrientation(activity, false);
             }
             @Override
             public void onInterrupted() {
@@ -495,14 +507,14 @@ public class LoginActivity extends ConnectedActivity {
                 firebaseAnalyticsProvider.logBasicEvent(activity, "login interrupted");
                 storage.put(activity, Storage.PERMANENT, Storage.GLOBAL, "users#current_login", login);
                 route(SIGNAL_GO_OFFLINE);
-                Static.lockOrientation(activity, false);
+                staticUtil.lockOrientation(activity, false);
             }
             @Override
             public void onFailure(String text) {
                 log.v(TAG, "login | onFailure | text=", text);
-                BottomBar.snackBar(activity, text);
+                notificationMessage.snackBar(activity, text);
                 show();
-                Static.lockOrientation(activity, false);
+                staticUtil.lockOrientation(activity, false);
             }
             @Override
             public void onProgress(String text) {
@@ -538,21 +550,21 @@ public class LoginActivity extends ConnectedActivity {
     }
     private void logout(final String login) {
         log.v(TAG, "logout | login=", login);
-        Static.lockOrientation(activity, true);
-        Account.logout(activity, login, new Account.LogoutHandler() {
+        staticUtil.lockOrientation(activity, true);
+        account.logout(activity, login, new Account.LogoutHandler() {
             @Override
             public void onSuccess() {
                 log.v(TAG, "logout | onSuccess");
-                BottomBar.snackBar(activity, activity.getString(R.string.logged_out));
+                notificationMessage.snackBar(activity, activity.getString(R.string.logged_out));
                 show();
-                Static.lockOrientation(activity, false);
+                staticUtil.lockOrientation(activity, false);
             }
             @Override
             public void onFailure(String text) {
                 log.v(TAG, "logout | onFailure | text=", text);
-                BottomBar.snackBar(activity, text);
+                notificationMessage.snackBar(activity, text);
                 show();
-                Static.lockOrientation(activity, false);
+                staticUtil.lockOrientation(activity, false);
             }
             @Override
             public void onProgress(String text) {
@@ -580,7 +592,7 @@ public class LoginActivity extends ConnectedActivity {
                 final int type = value.getInt("type");
                 final String message = value.getString("message");
                 if (message == null || message.trim().isEmpty()) return;
-                final String hash = com.bukhmastov.cdoitmo.util.singleton.TextUtils.crypt(message);
+                final String hash = textUtils.crypt(message);
                 if (hash != null && hash.equals(storage.get(activity, Storage.PERMANENT, Storage.GLOBAL, "firebase#remote_message#login", ""))) {
                     return;
                 }
@@ -595,7 +607,7 @@ public class LoginActivity extends ConnectedActivity {
                                             message_login.removeView(view);
                                         }
                                     });
-                                    BottomBar.snackBar(activity, activity.getString(R.string.notification_dismissed), activity.getString(R.string.undo), v -> thread.run(() -> {
+                                    notificationMessage.snackBar(activity, activity.getString(R.string.notification_dismissed), activity.getString(R.string.undo), v -> thread.run(() -> {
                                         if (storage.delete(activity, Storage.PERMANENT, Storage.GLOBAL, "firebase#remote_message#login")) {
                                             thread.runOnUI(() -> {
                                                 if (message_login != null && view != null) {

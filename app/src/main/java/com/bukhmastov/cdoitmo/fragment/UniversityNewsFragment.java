@@ -66,6 +66,8 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
     //@Inject
     private IfmoRestClient ifmoRestClient = IfmoRestClient.instance();
     //@Inject
+    private Time time = Time.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Override
@@ -133,7 +135,7 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                         JSONObject cacheJson = new JSONObject(cache);
                         news = cacheJson.getJSONObject("data");
                         timestamp = cacheJson.getLong("timestamp");
-                        if (timestamp + refresh_rate * 3600000L < Time.getCalendar().getTimeInMillis()) {
+                        if (timestamp + refresh_rate * 3600000L < time.getCalendar().getTimeInMillis()) {
                             load(search, true);
                         } else {
                             load(search, false);
@@ -165,7 +167,7 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                     public void onSuccess(final int statusCode, final Client.Headers headers, final JSONObject json, final JSONArray responseArr) {
                         thread.run(() -> {
                             if (statusCode == 200) {
-                                long now = Time.getCalendar().getTimeInMillis();
+                                long now = time.getCalendar().getTimeInMillis();
                                 if (json != null && storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
                                     try {
                                         storage.put(activity, Storage.CACHE, Storage.GLOBAL, "university#news", new JSONObject()
@@ -326,7 +328,7 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                                         for (int i = 0; i < list1.length(); i++) {
                                             list_original.put(list1.getJSONObject(i));
                                         }
-                                        long now = Time.getCalendar().getTimeInMillis();
+                                        long now = time.getCalendar().getTimeInMillis();
                                         timestamp = now;
                                         if (storagePref.get(activity, "pref_use_cache", true) && storagePref.get(activity, "pref_use_university_cache", false)) {
                                             try {
@@ -358,10 +360,10 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
                             }
                         }));
                     });
-                    if (timestamp > 0 && timestamp + 5000 < Time.getCalendar().getTimeInMillis()) {
+                    if (timestamp > 0 && timestamp + 5000 < time.getCalendar().getTimeInMillis()) {
                         UniversityRVA.Item item = new UniversityRVA.Item();
                         item.type = UniversityRVA.TYPE_INFO_ABOUT_UPDATE_TIME;
-                        item.data = new JSONObject().put("title", activity.getString(R.string.update_date) + " " + Time.getUpdateTime(activity, timestamp));
+                        item.data = new JSONObject().put("title", activity.getString(R.string.update_date) + " " + time.getUpdateTime(activity, timestamp));
                         newsRecyclerViewAdapter.addItem(item);
                     }
                     displayContent(list);

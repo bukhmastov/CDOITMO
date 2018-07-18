@@ -6,7 +6,7 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
-import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.google.firebase.perf.FirebasePerformance;
 
@@ -25,6 +25,10 @@ public class FirebasePerformanceProviderImpl implements FirebasePerformanceProvi
     private Log log = Log.instance();
     //@Inject
     private Thread thread = Thread.instance();
+    //@Inject
+    private Static staticUtil = Static.instance();
+    //@Inject
+    private TextUtils textUtils = TextUtils.instance();
     //@Inject
     private FirebaseConfigProvider firebaseConfigProvider = FirebaseConfigProvider.instance();
 
@@ -46,7 +50,7 @@ public class FirebasePerformanceProviderImpl implements FirebasePerformanceProvi
     public void setEnabled(Context context, boolean enabled) {
         try {
             this.enabled = enabled;
-            this.uuid = Static.getUUID(context);
+            this.uuid = staticUtil.getUUID(context);
             if (!enabled) {
                 stopAll();
             }
@@ -66,7 +70,7 @@ public class FirebasePerformanceProviderImpl implements FirebasePerformanceProvi
             name = name != null ? name : Trace.UNKNOWN;
             String key;
             do {
-                key = name + "_" + TextUtils.getRandomString(8);
+                key = name + "_" + textUtils.getRandomString(8);
             } while (traceMap.containsKey(key));
             com.google.firebase.perf.metrics.Trace trace = getFirebasePerformance().newTrace(name);
             traceMap.put(key, trace);

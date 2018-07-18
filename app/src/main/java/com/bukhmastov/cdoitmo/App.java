@@ -9,7 +9,7 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 
 import java.util.Locale;
 import java.util.UUID;
@@ -24,7 +24,7 @@ import java.util.UUID;
  *  log [done]
  *  thread [done]
  *  objects [done]
- *  utils
+ *  utils [done]
  *
  * 2. Избавление от оставшихся статичных методов и полей
  *
@@ -67,6 +67,8 @@ public class App extends Application {
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
+    private TextUtils textUtils = TextUtils.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
     //@Inject
     private FirebaseCrashlyticsProvider firebaseCrashlyticsProvider = FirebaseCrashlyticsProvider.instance();
@@ -76,7 +78,7 @@ public class App extends Application {
         super.onCreate();
         try {
             log.setEnabled(storagePref.get(this, "pref_allow_collect_logs", false));
-            locale = TextUtils.getLocale(this, storagePref);
+            locale = textUtils.getLocale(this, storagePref);
             log.i(TAG, "Language | locale=" + locale.toString());
             init();
             setUUID();

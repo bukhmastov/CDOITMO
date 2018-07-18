@@ -25,7 +25,7 @@ import com.bukhmastov.cdoitmo.parse.room101.Room101DatePickParse;
 import com.bukhmastov.cdoitmo.parse.room101.Room101TimeEndPickParse;
 import com.bukhmastov.cdoitmo.parse.room101.Room101TimeStartPickParse;
 import com.bukhmastov.cdoitmo.provider.InjectProvider;
-import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
@@ -63,6 +63,10 @@ public class Room101AddRequestImpl implements Room101AddRequest {
     private InjectProvider injectProvider = InjectProvider.instance();
     //@Inject
     private Room101Client room101Client = Room101Client.instance();
+    //@Inject
+    private NotificationMessage notificationMessage = NotificationMessage.instance();
+    //@Inject
+    private Static staticUtil = Static.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
@@ -109,19 +113,19 @@ public class Room101AddRequestImpl implements Room101AddRequest {
         switch (CURRENT_STAGE) {
             case STAGE_PICK_DATE:
                 if (pick_date == null) {
-                    BottomBar.snackBar(activity, activity.getString(R.string.need_to_peek_date));
+                    notificationMessage.snackBar(activity, activity.getString(R.string.need_to_peek_date));
                     return;
                 }
                 break;
             case STAGE_PICK_TIME_START:
                 if (pick_time_start == null) {
-                    BottomBar.snackBar(activity, activity.getString(R.string.need_to_peek_time_start));
+                    notificationMessage.snackBar(activity, activity.getString(R.string.need_to_peek_time_start));
                     return;
                 }
                 break;
             case STAGE_PICK_TIME_END:
                 if (pick_time_end == null) {
-                    BottomBar.snackBar(activity, activity.getString(R.string.need_to_peek_time_end));
+                    notificationMessage.snackBar(activity, activity.getString(R.string.need_to_peek_time_end));
                     return;
                 }
                 break;
@@ -553,7 +557,7 @@ public class Room101AddRequestImpl implements Room101AddRequest {
     }
     private void failed(String message) {
         log.v(TAG, "failed | " + message);
-        BottomBar.snackBar(activity, message);
+        notificationMessage.snackBar(activity, message);
         close(false);
     }
 
@@ -625,7 +629,7 @@ public class Room101AddRequestImpl implements Room101AddRequest {
         });
     }
     private void removeView(View view, int layout) {
-        Static.removeView(view.findViewById(layout));
+        staticUtil.removeView(view.findViewById(layout));
     }
     private View inflate(@LayoutRes int layout) throws InflateException {
         if (activity == null) {

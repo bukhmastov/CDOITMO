@@ -32,6 +32,8 @@ public class IntroducingActivity extends ConnectedActivity {
     //@Inject
     private Log log = Log.instance();
     //@Inject
+    private Theme theme = Theme.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     private class Screen {
@@ -52,7 +54,7 @@ public class IntroducingActivity extends ConnectedActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        switch (Theme.getAppTheme(activity)) {
+        switch (theme.getAppTheme(activity)) {
             case "light":
             default: setTheme(R.style.AppTheme_TransparentStatusBar); break;
             case "dark": setTheme(R.style.AppTheme_Dark_TransparentStatusBar); break;

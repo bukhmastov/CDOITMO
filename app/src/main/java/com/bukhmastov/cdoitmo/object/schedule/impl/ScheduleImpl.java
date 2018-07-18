@@ -17,7 +17,7 @@ import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
-import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -52,6 +52,10 @@ public abstract class ScheduleImpl implements Schedule {
     private StorageProvider storageProvider = StorageProvider.instance();
     //@Inject
     private IfmoRestClient ifmoRestClient = IfmoRestClient.instance();
+    //@Inject
+    private Time time = Time.instance();
+    //@Inject
+    private TextUtils textUtils = TextUtils.instance();
     //@Inject
     private FirebasePerformanceProvider firebasePerformanceProvider = FirebasePerformanceProvider.instance();
 
@@ -430,7 +434,7 @@ public abstract class ScheduleImpl implements Schedule {
             // Заголовок расписания: "K3320", "336", "Зинчик Александр Адольфович"
             template.put("title", "");
             // Текущее время
-            template.put("timestamp", Time.getCalendar().getTimeInMillis());
+            template.put("timestamp", time.getCalendar().getTimeInMillis());
             // Расписание собственной персоной
             template.put("schedule", new JSONArray());
             return template;
@@ -457,7 +461,7 @@ public abstract class ScheduleImpl implements Schedule {
             return true;
         } else if (refreshRate > 0) {
             try {
-                return new JSONObject(cache).getLong("timestamp") + refreshRate * 3600000L < Time.getCalendar().getTimeInMillis();
+                return new JSONObject(cache).getLong("timestamp") + refreshRate * 3600000L < time.getCalendar().getTimeInMillis();
             } catch (JSONException e) {
                 return true;
             }
@@ -504,9 +508,9 @@ public abstract class ScheduleImpl implements Schedule {
             return week + " " + context.getString(R.string.school_week);
         } else {
             String pattern = "dd.MM.yyyy";
-            String date = new SimpleDateFormat(pattern, Locale.ROOT).format(new Date(Time.getCalendar().getTimeInMillis()));
+            String date = new SimpleDateFormat(pattern, Locale.ROOT).format(new Date(time.getCalendar().getTimeInMillis()));
             try {
-                return TextUtils.cuteDateWithoutTime(context, storagePref, pattern, date);
+                return textUtils.cuteDateWithoutTime(context, storagePref, pattern, date);
             } catch (ParseException e) {
                 return date;
             }

@@ -36,11 +36,15 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
     //@Inject
     private Storage storage = Storage.instance();
     //@Inject
+    private NavigationMenu navigationMenu = NavigationMenu.instance();
+    //@Inject
+    private Theme theme = Theme.instance();
+    //@Inject
     private FirebaseConfigProvider firebaseConfigProvider = FirebaseConfigProvider.instance();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        Theme.applyActivityTheme(this);
+        theme.applyActivityTheme(this);
         super.onCreate(savedInstanceState);
         log.i(TAG, "Activity created");
         try {
@@ -70,7 +74,7 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
                 setContentView(layout_with_menu ? R.layout.activity_fragment : R.layout.activity_fragment_without_menu);
                 final Toolbar toolbar = findViewById(R.id.toolbar_fragment);
                 if (toolbar != null) {
-                    Theme.applyToolbarTheme(this, toolbar);
+                    theme.applyToolbarTheme(this, toolbar);
                     setSupportActionBar(toolbar);
                 }
                 final ActionBar actionBar = getSupportActionBar();
@@ -96,10 +100,10 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
         super.onResume();
         if (layout_with_menu) {
             NavigationView navigationView = findViewById(R.id.nav_view);
-            NavigationMenu.displayEnableDisableOfflineButton(navigationView);
-            NavigationMenu.hideIfUnauthorizedMode(navigationView);
-            NavigationMenu.displayUserData(this, storage, navigationView);
-            NavigationMenu.displayRemoteMessage(this, firebaseConfigProvider, storage);
+            navigationMenu.displayEnableDisableOfflineButton(navigationView);
+            navigationMenu.hideIfUnauthorizedMode(navigationView);
+            navigationMenu.displayUserData(this, storage, navigationView);
+            navigationMenu.displayRemoteMessage(this, firebaseConfigProvider, storage);
         }
     }
 
@@ -126,7 +130,7 @@ public class FragmentActivity extends ConnectedActivity implements NavigationVie
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.toolbar, menu);
         toolbar = menu;
-        NavigationMenu.toggleOfflineIcon(toolbar);
+        navigationMenu.toggleOfflineIcon(toolbar);
         return true;
     }
 

@@ -20,11 +20,11 @@ import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.parse.rating.RatingTopListParse;
-import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
-import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
@@ -55,6 +55,12 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
     //@Inject
     private DeIfmoClient deIfmoClient = DeIfmoClient.instance();
     //@Inject
+    private NotificationMessage notificationMessage = NotificationMessage.instance();
+    //@Inject
+    private Time time = Time.instance();
+    //@Inject
+    private TextUtils textUtils = TextUtils.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Override
@@ -83,7 +89,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
             course = extras.getString("course");
             years = extras.getString("years");
             if (years == null || years.isEmpty()) {
-                Calendar now = Time.getCalendar();
+                Calendar now = time.getCalendar();
                 int year = now.get(Calendar.YEAR);
                 int month = now.get(Calendar.MONTH);
                 years = month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year;
@@ -108,7 +114,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
             try {
                 String stored = restoreData(this);
                 if (stored != null && !stored.isEmpty()) {
-                    display(TextUtils.string2json(stored));
+                    display(textUtils.string2json(stored));
                 } else {
                     load();
                 }
@@ -225,7 +231,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
             } else {
                 thread.runOnUI(() -> {
                     try {
-                        BottomBar.snackBar(activity, activity.getString(R.string.offline_mode_on));
+                        notificationMessage.snackBar(activity, activity.getString(R.string.offline_mode_on));
                         draw(R.layout.state_offline_text);
                         View offline_reload = container.findViewById(R.id.offline_reload);
                         if (offline_reload != null) {
@@ -257,7 +263,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
             log.v(TAG, "display");
             try {
                 if (data == null) throw new SilentException();
-                final String title = TextUtils.capitalizeFirstLetter(data.getString("header"));
+                final String title = textUtils.capitalizeFirstLetter(data.getString("header"));
                 activity.updateToolbar(activity, title, R.drawable.ic_rating);
                 minePosition = -1;
                 mineFaculty = "";
@@ -340,7 +346,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
                                 );
                             } catch (Exception e) {
                                 log.exception(e);
-                                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                             }
                             return false;
                         });

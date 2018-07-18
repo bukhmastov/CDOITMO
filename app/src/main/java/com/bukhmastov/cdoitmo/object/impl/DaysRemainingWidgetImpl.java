@@ -20,6 +20,8 @@ public class DaysRemainingWidgetImpl implements DaysRemainingWidget {
 
     //@Inject
     private Log log = Log.instance();
+    //@Inject
+    private com.bukhmastov.cdoitmo.util.Time timeUtil = com.bukhmastov.cdoitmo.util.Time.instance();
 
     @Override
     public void start(Context context, Delegate delegate, JSONObject schedule) {
@@ -95,7 +97,7 @@ public class DaysRemainingWidgetImpl implements DaysRemainingWidget {
                             Matcher dateMatcher = Pattern.compile("^(\\d{1,2})\\.(\\d{2})(\\.(\\d{4}))?$").matcher(date);
                             if (timeMatcher.find() && dateMatcher.find()) {
                                 // build calendar instance
-                                final Calendar calendar = com.bukhmastov.cdoitmo.util.Time.getCalendar();
+                                final Calendar calendar = timeUtil.getCalendar();
                                 int year = calendar.get(Calendar.YEAR);
                                 int month = Integer.parseInt(dateMatcher.group(2));
                                 String yearStr = dateMatcher.groupCount() == 4 ? dateMatcher.group(4) : null;

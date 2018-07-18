@@ -18,7 +18,7 @@ import com.bukhmastov.cdoitmo.activity.MainActivity;
 import com.bukhmastov.cdoitmo.activity.ShortcutReceiverActivity;
 import com.bukhmastov.cdoitmo.activity.TimeRemainingWidgetActivity;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
@@ -42,6 +42,10 @@ public class ShortcutReceiver extends BroadcastReceiver {
     private Log log = Log.instance();
     //@Inject
     private Thread thread = Thread.instance();
+    //@Inject
+    private NotificationMessage notificationMessage = NotificationMessage.instance();
+    //@Inject
+    private Time time = Time.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
@@ -76,7 +80,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
                     }
                     case ACTION_INSTALL_SHORTCUT:
                     case ACTION_SHORTCUT_INSTALLED: {
-                        BottomBar.toast(context, context.getString(R.string.shortcut_created));
+                        notificationMessage.toast(context, context.getString(R.string.shortcut_created));
                         break;
                     }
                     default: {
@@ -233,7 +237,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     ShortcutManager shortcutManager = context.getSystemService(ShortcutManager.class);
                     if (shortcutManager != null && shortcutManager.isRequestPinShortcutSupported()) {
-                        ShortcutInfo pinShortcutInfo = new ShortcutInfo.Builder(context, "synthetic-" + Time.getCalendar().getTimeInMillis())
+                        ShortcutInfo pinShortcutInfo = new ShortcutInfo.Builder(context, "synthetic-" + time.getCalendar().getTimeInMillis())
                             .setIcon(Icon.createWithResource(context, icon))
                             .setShortLabel(label)
                             .setIntent(shortcutIntent)
@@ -243,7 +247,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
                         IntentSender pinnedShortcutCallbackPendingIntentSender = PendingIntent.getBroadcast(context, 0, pinnedShortcutCallbackIntent, 0).getIntentSender();
                         shortcutManager.requestPinShortcut(pinShortcutInfo, pinnedShortcutCallbackPendingIntentSender);
                     } else {
-                        BottomBar.toast(context, context.getString(R.string.pin_shortcut_not_supported));
+                        notificationMessage.toast(context, context.getString(R.string.pin_shortcut_not_supported));
                     }
                 } else {
                     Intent addIntent = new Intent(ShortcutReceiver.ACTION_INSTALL_SHORTCUT);

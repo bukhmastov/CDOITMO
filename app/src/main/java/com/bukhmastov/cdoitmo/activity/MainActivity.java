@@ -33,14 +33,13 @@ import com.bukhmastov.cdoitmo.fragment.settings.SettingsFragment;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.provider.InjectProvider;
 import com.bukhmastov.cdoitmo.util.Account;
-import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.object.ProtocolTracker;
 import com.bukhmastov.cdoitmo.util.NavigationMenu;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.Migration;
-import com.bukhmastov.cdoitmo.provider.StorageProvider;
+import com.bukhmastov.cdoitmo.util.singleton.Migration;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.util.Thread;
 
@@ -65,6 +64,14 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
     //@Inject
     private ProtocolTracker protocolTracker = ProtocolTracker.instance();
     //@Inject
+    private Account account = Account.instance();
+    //@Inject
+    private NotificationMessage notificationMessage = NotificationMessage.instance();
+    //@Inject
+    private NavigationMenu navigationMenu = NavigationMenu.instance();
+    //@Inject
+    private Theme theme = Theme.instance();
+    //@Inject
     private InjectProvider injectProvider = InjectProvider.instance();
     //@Inject
     private FirebaseCrashlyticsProvider firebaseCrashlyticsProvider = FirebaseCrashlyticsProvider.instance();
@@ -88,11 +95,11 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                         PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
                         log.i(TAG, "App | version code = ", pInfo.versionCode);
                         log.i(TAG, "App | sdk = ", Build.VERSION.SDK_INT);
-                        log.i(TAG, "App | theme = ", Theme.getAppTheme(activity));
+                        log.i(TAG, "App | theme = ", theme.getAppTheme(activity));
                     } catch (Exception e) {
                         log.exception(e);
                     }
-                    Theme.applyActivityTheme(activity);
+                    theme.applyActivityTheme(activity);
                     // apply compatibility changes
                     Migration.migrate(activity, injectProvider);
                     // set default preferences
@@ -111,7 +118,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                     }
                     // firebase events and properties
                     firebaseAnalyticsProvider.logEvent(activity, FirebaseAnalyticsProvider.Event.APP_OPEN);
-                    firebaseAnalyticsProvider.setUserProperty(activity, FirebaseAnalyticsProvider.Property.THEME, Theme.getAppTheme(activity));
+                    firebaseAnalyticsProvider.setUserProperty(activity, FirebaseAnalyticsProvider.Property.THEME, theme.getAppTheme(activity));
                 } catch (Exception e) {
                     log.exception(e);
                 } finally {
@@ -125,14 +132,14 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
             });
         } else {
             // regular app's runtime
-            Theme.applyActivityTheme(activity);
+            theme.applyActivityTheme(activity);
             super.onCreate(savedInstanceState);
             setContentView(R.layout.activity_main);
             // setup toolbar and drawer layout
             final Toolbar toolbar = findViewById(R.id.toolbar_main);
             final DrawerLayout drawer_layout = findViewById(R.id.drawer_layout);
             if (toolbar != null) {
-                Theme.applyToolbarTheme(activity, toolbar);
+                theme.applyToolbarTheme(activity, toolbar);
                 setSupportActionBar(toolbar);
             }
             if (drawer_layout != null) {
@@ -197,9 +204,9 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
         log.v(TAG, "Activity resumed");
         if (initialized) {
             final NavigationView navigationView = activity.findViewById(R.id.nav_view);
-            NavigationMenu.displayEnableDisableOfflineButton(navigationView);
-            NavigationMenu.hideIfUnauthorizedMode(navigationView);
-            if (!exitOfflineMode && (App.OFFLINE_MODE || Account.authorized)) {
+            navigationMenu.displayEnableDisableOfflineButton(navigationView);
+            navigationMenu.hideIfUnauthorizedMode(navigationView);
+            if (!exitOfflineMode && (App.OFFLINE_MODE || account.isAuthorized())) {
                 authorized();
             } else {
                 authorize(LoginActivity.SIGNAL_LOGIN);
@@ -253,8 +260,8 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.toolbar, menu);
         toolbar = menu;
-        BottomBar.snackBarOffline(this);
-        NavigationMenu.toggleOfflineIcon(toolbar);
+        notificationMessage.snackBarOffline(this);
+        navigationMenu.toggleOfflineIcon(toolbar);
         return true;
     }
 
@@ -298,10 +305,10 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                 loaded = true;
                 thread.run(thread.BACKGROUND, () -> protocolTracker.check(activity));
                 selectSection(selectedSection);
-                NavigationMenu.displayUserData(activity, storage, findViewById(R.id.nav_view));
-                NavigationMenu.displayRemoteMessage(activity, firebaseConfigProvider, storage);
-                BottomBar.snackBarOffline(activity);
-                NavigationMenu.toggleOfflineIcon(toolbar);
+                navigationMenu.displayUserData(activity, storage, findViewById(R.id.nav_view));
+                navigationMenu.displayRemoteMessage(activity, firebaseConfigProvider, storage);
+                notificationMessage.snackBarOffline(activity);
+                navigationMenu.toggleOfflineIcon(toolbar);
             } else if (selectedMenuItem != null) {
                 try {
                     selectSection(selectedMenuItem.getItemId());
@@ -353,7 +360,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                             ((NavigationView) findViewById(R.id.nav_view)).setCheckedItem(section);
                             selectedSection = section;
                         } else {
-                            BottomBar.snackBar(activity, activity.getString(R.string.failed_to_open_fragment), activity.getString(R.string.redo), view -> selectSection(section));
+                            notificationMessage.snackBar(activity, activity.getString(R.string.failed_to_open_fragment), activity.getString(R.string.redo), view -> selectSection(section));
                         }
                     });
                     break;
@@ -373,7 +380,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                                 selectedSection = section;
                             }
                         } else {
-                            BottomBar.snackBar(activity, activity.getString(R.string.failed_to_open_fragment), activity.getString(R.string.redo), view -> selectSection(section));
+                            notificationMessage.snackBar(activity, activity.getString(R.string.failed_to_open_fragment), activity.getString(R.string.redo), view -> selectSection(section));
                         }
                     });
                     break;
@@ -394,7 +401,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                         case R.id.nav_disable_offline_mode: authorize(LoginActivity.SIGNAL_RECONNECT); break;
                         case R.id.nav_change_account: authorize(LoginActivity.SIGNAL_CHANGE_ACCOUNT); break;
                         case R.id.nav_do_clean_auth: authorize(LoginActivity.SIGNAL_DO_CLEAN_AUTH); break;
-                        case R.id.nav_logout: Account.logoutConfirmation(activity, () -> authorize(LoginActivity.SIGNAL_LOGOUT)); break;
+                        case R.id.nav_logout: account.logoutConfirmation(activity, () -> authorize(LoginActivity.SIGNAL_LOGOUT)); break;
                     }
                     break;
                 }

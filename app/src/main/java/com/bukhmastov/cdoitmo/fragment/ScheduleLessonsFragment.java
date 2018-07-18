@@ -35,6 +35,8 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
+    private Time time = Time.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Override
@@ -141,7 +143,7 @@ public class ScheduleLessonsFragment extends ConnectedFragment implements ViewPa
                 log.w(TAG, "load | activity is null");
                 return;
             }
-            final int week = Time.getWeek(activity);
+            final int week = time.getWeek(activity);
             if (ScheduleLessonsTabHostFragment.getQuery() == null) {
                 ScheduleLessonsTabHostFragment.setQuery(scheduleLessons.getDefaultScope(activity));
             }

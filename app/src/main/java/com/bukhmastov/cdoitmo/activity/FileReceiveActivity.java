@@ -53,18 +53,20 @@ public class FileReceiveActivity extends ConnectedActivity {
     //@Inject
     private NetworkUserAgentProvider networkUserAgentProvider = NetworkUserAgentProvider.instance();
     //@Inject
+    private Theme theme = Theme.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        Theme.applyActivityTheme(this);
+        theme.applyActivityTheme(this);
         super.onCreate(savedInstanceState);
         log.i(TAG, "Activity created");
         firebaseAnalyticsProvider.logCurrentScreen(this);
         setContentView(R.layout.activity_file_receive);
         Toolbar toolbar = findViewById(R.id.toolbar_file);
         if (toolbar != null) {
-            Theme.applyToolbarTheme(activity, toolbar);
+            theme.applyToolbarTheme(activity, toolbar);
             setSupportActionBar(toolbar);
         }
         ActionBar actionBar = getSupportActionBar();

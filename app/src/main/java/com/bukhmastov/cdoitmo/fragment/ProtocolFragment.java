@@ -19,12 +19,12 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
-import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
@@ -55,6 +55,12 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
     private DeIfmoRestClient deIfmoRestClient = DeIfmoRestClient.instance();
+    //@Inject
+    private NotificationMessage notificationMessage = NotificationMessage.instance();
+    //@Inject
+    private Time time = Time.instance();
+    //@Inject
+    private TextUtils textUtils = TextUtils.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
@@ -171,7 +177,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                     try {
                         JSONObject data = new JSONObject(cache);
                         setData(data);
-                        if (data.getLong("timestamp") + refresh_rate * 3600000L < Time.getCalendar().getTimeInMillis()) {
+                        if (data.getLong("timestamp") + refresh_rate * 3600000L < time.getCalendar().getTimeInMillis()) {
                             load(true, cache);
                         } else {
                             load(false, cache);
@@ -403,7 +409,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
                             });
                         }
                         // show update time
-                        BottomBar.showUpdateTime(activity, getData().getLong("timestamp"));
+                        notificationMessage.showUpdateTime(activity, getData().getLong("timestamp"));
                     } catch (Exception e) {
                         log.exception(e);
                         loadFailed();
@@ -427,7 +433,7 @@ public class ProtocolFragment extends ConnectedFragment implements SwipeRefreshL
         try {
             String stored = restoreData(this);
             if (stored != null && !stored.isEmpty()) {
-                data = TextUtils.string2json(stored);
+                data = textUtils.string2json(stored);
                 return data;
             }
         } catch (Exception e) {

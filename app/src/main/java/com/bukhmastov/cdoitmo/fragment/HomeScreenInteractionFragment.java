@@ -31,7 +31,7 @@ import com.bukhmastov.cdoitmo.object.schedule.ScheduleAttestations;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleExams;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.receiver.ShortcutReceiver;
-import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
@@ -62,6 +62,8 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
     private ScheduleExams scheduleExams = ScheduleExams.instance();
     //@Inject
     private ScheduleAttestations scheduleAttestations = ScheduleAttestations.instance();
+    //@Inject
+    private NotificationMessage notificationMessage = NotificationMessage.instance();
     //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
@@ -211,7 +213,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                 }
             } catch (Exception e) {
                 log.exception(e);
-                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
@@ -235,7 +237,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                 }
             } catch (Exception e) {
                 log.exception(e);
-                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
@@ -280,7 +282,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                             );
                                         } catch (Exception e) {
                                             log.exception(e);
-                                            BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                         }
                                     });
                                     break;
@@ -294,7 +296,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                             );
                                         } catch (Exception e) {
                                             log.exception(e);
-                                            BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                         }
                                     });
                                     break;
@@ -306,7 +308,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                 }
             } catch (Exception e) {
                 log.exception(e);
-                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
@@ -363,7 +365,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                             );
                                         } catch (Exception e) {
                                             log.exception(e);
-                                            BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                         }
                                     });
                                     break;
@@ -378,7 +380,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                             );
                                         } catch (Exception e) {
                                             log.exception(e);
-                                            BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                         }
                                     });
                                     break;
@@ -393,7 +395,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                             );
                                         } catch (Exception e) {
                                             log.exception(e);
-                                            BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                         }
                                     });
                                     break;
@@ -424,7 +426,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                     );
                                                 } catch (Exception e) {
                                                     log.exception(e);
-                                                    BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                                    notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                                 }
                                             })
                                             .setNegativeButton(R.string.do_cancel, null)
@@ -438,7 +440,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                 }
             } catch (Exception e) {
                 log.exception(e);
-                BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }
@@ -529,7 +531,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                     }
                 } catch (Exception e) {
                     log.exception(e);
-                    BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                    notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                 }
             }
         });
@@ -596,7 +598,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                     search_loading.setVisibility(View.GONE);
                                     search_action.setVisibility(View.VISIBLE);
                                     if (json == null) {
-                                        BottomBar.toast(activity, activity.getString(R.string.schedule_not_found));
+                                        notificationMessage.toast(activity, activity.getString(R.string.schedule_not_found));
                                     } else {
                                         try {
                                             final String type = json.getString("type");
@@ -616,7 +618,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                         }
                                                         callback.done(title, query);
                                                     } else {
-                                                        BottomBar.toast(activity, activity.getString(R.string.schedule_not_found));
+                                                        notificationMessage.toast(activity, activity.getString(R.string.schedule_not_found));
                                                     }
                                                     break;
                                                 }
@@ -625,7 +627,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                     final JSONArray teachers = json.getJSONArray("schedule");
                                                     log.v(TAG, "getSchedule | search action | onSuccess | type=" + type + " | length=" + teachers.length());
                                                     if (teachers.length() == 0) {
-                                                        BottomBar.toast(activity, activity.getString(R.string.no_teachers));
+                                                        notificationMessage.toast(activity, activity.getString(R.string.no_teachers));
                                                     } else if (teachers.length() == 1) {
                                                         JSONObject teacher = teachers.getJSONObject(0);
                                                         if (teacher != null) {
@@ -637,7 +639,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                             }
                                                             callback.done(title, pid);
                                                         } else {
-                                                            BottomBar.toast(activity, getString(R.string.something_went_wrong));
+                                                            notificationMessage.toast(activity, getString(R.string.something_went_wrong));
                                                         }
                                                     } else {
                                                         ArrayList<JSONObject> arrayList = new ArrayList<>();
@@ -653,13 +655,13 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                                     break;
                                                 }
                                                 default: {
-                                                    BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
+                                                    notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
                                                     break;
                                                 }
                                             }
                                         } catch (Exception e) {
                                             log.exception(e);
-                                            BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
+                                            notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
                                         }
                                     }
                                 });
@@ -674,7 +676,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                                     log.v(TAG, "getSchedule | search action | onFailure | state=" + state);
                                     search_loading.setVisibility(View.GONE);
                                     search_action.setVisibility(View.VISIBLE);
-                                    BottomBar.toast(activity, state == Client.FAILED_SERVER_ERROR ? Client.getFailureMessage(activity, statusCode) : activity.getString(R.string.schedule_not_found));
+                                    notificationMessage.toast(activity, state == Client.FAILED_SERVER_ERROR ? Client.getFailureMessage(activity, statusCode) : activity.getString(R.string.schedule_not_found));
                                 });
                             }
                             @Override
@@ -711,18 +713,18 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
                             }
                             callback.done(title, query);
                         } else {
-                            BottomBar.toast(activity, getString(R.string.something_went_wrong));
+                            notificationMessage.toast(activity, getString(R.string.something_went_wrong));
                         }
                     } catch (Exception e) {
                         log.exception(e);
-                        BottomBar.toast(activity, getString(R.string.something_went_wrong));
+                        notificationMessage.toast(activity, getString(R.string.something_went_wrong));
                     }
                 }));
                 alertDialog.show();
                 search_action.setVisibility(View.VISIBLE);
             } catch (Exception e) {
                 log.exception(e);
-                BottomBar.toast(activity, activity.getString(R.string.something_went_wrong));
+                notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
             }
         });
     }

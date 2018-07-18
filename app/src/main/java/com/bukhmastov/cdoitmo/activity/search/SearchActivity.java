@@ -20,12 +20,12 @@ import android.widget.ListView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapter.SuggestionsListView;
 import com.bukhmastov.cdoitmo.object.entity.Suggestion;
-import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.singleton.CtxWrapper;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.singleton.Transliterate;
@@ -59,6 +59,12 @@ public abstract class SearchActivity extends AppCompatActivity {
     private Storage storage = Storage.instance();
     //@Inject
     private StoragePref storagePref = StoragePref.instance();
+    //@Inject
+    private NotificationMessage notificationMessage = NotificationMessage.instance();
+    //@Inject
+    private Theme theme = Theme.instance();
+    //@Inject
+    private TextUtils textUtils = TextUtils.instance();
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({SPEECH_RECOGNITION, CLEAR, NONE})
@@ -78,7 +84,7 @@ public abstract class SearchActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        switch (Theme.getAppTheme(this)) {
+        switch (theme.getAppTheme(this)) {
             case "light":
             default: setTheme(R.style.AppTheme_Search); break;
             case "dark": setTheme(R.style.AppTheme_Search_Dark); break;
@@ -114,7 +120,7 @@ public abstract class SearchActivity extends AppCompatActivity {
 
     @Override
     protected void attachBaseContext(Context context) {
-        super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log));
+        super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log, textUtils));
     }
 
     private void setMode(final @EXTRA_ACTION_MODE String mode) {
@@ -178,7 +184,7 @@ public abstract class SearchActivity extends AppCompatActivity {
                         public void onRemove(Suggestion suggestion) {
                             try {
                                 if (suggestion.removable) {
-                                    JSONArray recent = TextUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent", ""));
+                                    JSONArray recent = textUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent", ""));
                                     for (int i = 0; i < recent.length(); i++) {
                                         String item = recent.getString(i);
                                         if (SearchActivity.equals(item, suggestion.query) || SearchActivity.equals(item, suggestion.title)) {
@@ -229,7 +235,7 @@ public abstract class SearchActivity extends AppCompatActivity {
         thread.run(() -> {
             log.v(TAG, "done | type=", getType(), " | query=", query, " | title=", title);
             try {
-                JSONArray recent = TextUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent", ""));
+                JSONArray recent = textUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent", ""));
                 for (int i = 0; i < recent.length(); i++) {
                     String item = recent.getString(i);
                     if (equals(item, query) || equals(item, title)) {
@@ -290,7 +296,7 @@ public abstract class SearchActivity extends AppCompatActivity {
             startActivityForResult(intent, REQ_CODE_SPEECH_INPUT);
         } catch (ActivityNotFoundException a) {
             log.v(TAG, "voice recognition not supported");
-            BottomBar.toast(context, R.string.speech_recognition_is_not_supported);
+            notificationMessage.toast(context, R.string.speech_recognition_is_not_supported);
         }
     }
     @Override
@@ -320,7 +326,7 @@ public abstract class SearchActivity extends AppCompatActivity {
         boolean onIterate(String query, String title);
     }
     protected void recentSchedulesIterator(String type, RecentSchedulesIterator recentSchedulesIterator) throws JSONException {
-        JSONArray recent = TextUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_" + type + "#recent", ""));
+        JSONArray recent = textUtils.string2jsonArray(storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_" + type + "#recent", ""));
         for (int i = 0; i < recent.length(); i++) {
             if (recentSchedulesIterator.onIterate(recent.getString(i))) {
                 break;
@@ -369,7 +375,7 @@ public abstract class SearchActivity extends AppCompatActivity {
     private final View.OnKeyListener onKeyListener = new View.OnKeyListener() {
         public boolean onKey(View v, int keyCode, KeyEvent event) {
             if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
-                String query = TextUtils.prettifyGroupNumber(search_edit_text.getText().toString().trim());
+                String query = textUtils.prettifyGroupNumber(search_edit_text.getText().toString().trim());
                 if (!query.isEmpty()) {
                     done(query, query);
                     return true;

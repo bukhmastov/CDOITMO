@@ -81,7 +81,7 @@ public class UniversityPersonsRVA extends UniversityRVA {
                 if (!degree.isEmpty()) {
                         ((TextView) postView).setText(degree.substring(0, 1).toUpperCase() + degree.substring(1));
                 } else {
-                    Static.removeView(viewHolder.container.findViewById(R.id.post));
+                    staticUtil.removeView(viewHolder.container.findViewById(R.id.post));
                 }
             }
             if (avatarView != null) {

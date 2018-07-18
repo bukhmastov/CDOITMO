@@ -5,13 +5,12 @@ import android.support.v7.app.AlertDialog;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
-import com.bukhmastov.cdoitmo.object.SettingsScheduleLessons;
 import com.bukhmastov.cdoitmo.object.preference.Preference;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceBasic;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceList;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
 import com.bukhmastov.cdoitmo.provider.InjectProvider;
-import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Storage;
 
 import org.json.JSONObject;
@@ -59,7 +58,7 @@ public class SettingsScheduleLessonsFragment extends SettingsTemplatePreferences
                 injectProvider.getThread().run(() -> {
                     if (activity != null) {
                         boolean success = injectProvider.getStorage().clear(activity, Storage.CACHE, Storage.GLOBAL, "schedule_lessons");
-                        BottomBar.snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
+                        injectProvider.getNotificationMessage().snackBar(activity, activity.getString(success ? R.string.cache_cleared : R.string.something_went_wrong));
                     }
                 });
             }
@@ -79,7 +78,7 @@ public class SettingsScheduleLessonsFragment extends SettingsTemplatePreferences
                                 .setIcon(R.drawable.ic_warning)
                                 .setPositiveButton(R.string.proceed, (dialog, which) -> injectProvider.getThread().run(() -> {
                                     boolean success = injectProvider.getStorage().clear(activity, Storage.CACHE, Storage.USER, "schedule_lessons");
-                                    BottomBar.snackBar(activity, activity.getString(success ? R.string.changes_cleared : R.string.something_went_wrong));
+                                    injectProvider.getNotificationMessage().snackBar(activity, activity.getString(success ? R.string.changes_cleared : R.string.something_went_wrong));
                                 }))
                                 .setNegativeButton(R.string.cancel, null)
                                 .create().show();

@@ -17,7 +17,7 @@ import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
-import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.view.CircularTransformation;
 import com.bukhmastov.cdoitmo.util.Log;
@@ -45,11 +45,17 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
     //@Inject
     private IfmoRestClient ifmoRestClient = IfmoRestClient.instance();
     //@Inject
+    private Static staticUtil = Static.instance();
+    //@Inject
+    private Theme theme = Theme.instance();
+    //@Inject
+    private TextUtils textUtils = TextUtils.instance();
+    //@Inject
     private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        switch (Theme.getAppTheme(activity)) {
+        switch (theme.getAppTheme(activity)) {
             case "light":
             default: setTheme(R.style.AppTheme_TransparentStatusBar); break;
             case "dark": setTheme(R.style.AppTheme_Dark_TransparentStatusBar); break;
@@ -273,7 +279,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                 if (persons_id != null && !persons_id.trim().isEmpty()) {
                     findViewById(R.id.web).setOnClickListener(view -> activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ifmo.ru/ru/viewperson/" + persons_id.trim() + "/"))));
                 } else {
-                    Static.removeView(findViewById(R.id.web));
+                    staticUtil.removeView(findViewById(R.id.web));
                 }
                 // заголовок
                 final String name = (person.getString("title_l") + " " + person.getString("title_f") + " " + person.getString("title_m")).trim();
@@ -281,9 +287,9 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                 final String image = person.getString("image");
                 ((TextView) findViewById(R.id.name)).setText(name);
                 if (!degree.isEmpty()) {
-                    ((TextView) findViewById(R.id.degree)).setText(TextUtils.capitalizeFirstLetter(degree));
+                    ((TextView) findViewById(R.id.degree)).setText(textUtils.capitalizeFirstLetter(degree));
                 } else {
-                    Static.removeView(findViewById(R.id.degree));
+                    staticUtil.removeView(findViewById(R.id.degree));
                 }
                 Picasso.with(this)
                         .load(image)
@@ -331,10 +337,10 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
                     final String post = person.getString("post").trim();
                     final String bio = person.getString("text").trim();
                     if (!rank.isEmpty()) {
-                        info_about_container.addView(getAboutContainer(activity.getString(R.string.person_rank), TextUtils.capitalizeFirstLetter(rank)));
+                        info_about_container.addView(getAboutContainer(activity.getString(R.string.person_rank), textUtils.capitalizeFirstLetter(rank)));
                     }
                     if (!post.isEmpty()) {
-                        info_about_container.addView(getAboutContainer(activity.getString(R.string.person_post), TextUtils.capitalizeFirstLetter(post)));
+                        info_about_container.addView(getAboutContainer(activity.getString(R.string.person_post), textUtils.capitalizeFirstLetter(post)));
                     }
                     if (!bio.isEmpty()) {
                         info_about_container.addView(getAboutContainer(activity.getString(R.string.person_bio), bio));
@@ -360,7 +366,7 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
             activity_university_person_card_connect.setOnClickListener(listener);
         }
         if (!first_block) {
-            Static.removeView(activity_university_person_card_connect.findViewById(R.id.separator));
+            staticUtil.removeView(activity_university_person_card_connect.findViewById(R.id.separator));
         }
         return activity_university_person_card_connect;
     }

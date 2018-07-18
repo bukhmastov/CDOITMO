@@ -1,6 +1,6 @@
 package com.bukhmastov.cdoitmo.converter.schedule.lessons;
 
-import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -50,11 +50,11 @@ public class ScheduleLessonsConverterIfmo extends ScheduleLessonsConverter {
     protected JSONObject getConvertedLesson(JSONObject lesson, String group_name) throws Exception {
         JSONObject lessonConverted = new JSONObject();
         // title
-        String subject = TextUtils.escapeString(getString(lesson, "title"));
+        String subject = textUtils.escapeString(getString(lesson, "title"));
         String note = getString(lesson, "note", null);
         if (note != null && subject != null) {
             if (!subject.isEmpty()) subject += ": ";
-            subject += TextUtils.escapeString(note.trim());
+            subject += textUtils.escapeString(note.trim());
         }
         lessonConverted.put("subject", subject);
         // type

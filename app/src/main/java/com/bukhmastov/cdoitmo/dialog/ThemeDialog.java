@@ -14,7 +14,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Static;
-import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
@@ -61,6 +61,8 @@ public class ThemeDialog extends Dialog {
     private Log log = Log.instance();
     //@Inject
     private Thread thread = Thread.instance();
+    //@Inject
+    private TextUtils textUtils = TextUtils.instance();
 
     public ThemeDialog(Context context, String value, Callback cb) {
         super(context);
@@ -163,22 +165,22 @@ public class ThemeDialog extends Dialog {
                         }
                     });
                     // setup automatic theme selector
-                    t1_time.setText(t1_hour + ":" + TextUtils.ldgZero(t1_minutes));
+                    t1_time.setText(t1_hour + ":" + textUtils.ldgZero(t1_minutes));
                     t1_time.setOnClickListener(view -> {
                         log.v(TAG, "t1_time clicked");
                         showTimePicker(t1_hour, t1_minutes, (hours, minutes) -> {
                             log.v(TAG, "t1_time showTimePicker done | " + hours + " | " + minutes);
                             t1_hour = hours;
                             t1_minutes = minutes;
-                            t1_time.setText(t1_hour + ":" + TextUtils.ldgZero(t1_minutes));
+                            t1_time.setText(t1_hour + ":" + textUtils.ldgZero(t1_minutes));
                         });
                     });
-                    t2_time.setText(t2_hour + ":" + TextUtils.ldgZero(t2_minutes));
+                    t2_time.setText(t2_hour + ":" + textUtils.ldgZero(t2_minutes));
                     t2_time.setOnClickListener(view -> showTimePicker(t2_hour, t2_minutes, (hours, minutes) -> {
                         log.v(TAG, "t2_time showTimePicker done | " + hours + " | " + minutes);
                         t2_hour = hours;
                         t2_minutes = minutes;
-                        t2_time.setText(t2_hour + ":" + TextUtils.ldgZero(t2_minutes));
+                        t2_time.setText(t2_hour + ":" + textUtils.ldgZero(t2_minutes));
                     }));
                     t1_spinner.setText(pref_theme_titles.get(pref_theme_values.indexOf(t1_value)));
                     t1_spinner.setOnClickListener(view -> showThemePicker(t1_value, theme -> {
@@ -200,7 +202,7 @@ public class ThemeDialog extends Dialog {
                                 log.v(TAG, "show picker accepted");
                                 String theme;
                                 if (auto_enabled) {
-                                    theme = t1_hour + ":" + TextUtils.ldgZero(t1_minutes) + "#" + t1_value + "#" + t2_hour + ":" + TextUtils.ldgZero(t2_minutes) + "#" + t2_value;
+                                    theme = t1_hour + ":" + textUtils.ldgZero(t1_minutes) + "#" + t1_value + "#" + t2_hour + ":" + textUtils.ldgZero(t2_minutes) + "#" + t2_value;
                                 } else {
                                     theme = static_value;
                                 }
@@ -235,7 +237,7 @@ public class ThemeDialog extends Dialog {
         });
     }
 
-    public static String getTheme(final Context context, final StoragePref storagePref) {
+    public static String getTheme(final Context context, final StoragePref storagePref, final Time time) {
         final String theme = storagePref.get(context, "pref_theme", DEFAULT_THEME);
         if (theme.contains("#")) {
             try {
@@ -255,7 +257,7 @@ public class ThemeDialog extends Dialog {
                 final int t2_hour = Integer.parseInt(t2_values[0]);
                 final int t2_minutes = Integer.parseInt(t2_values[1]);
                 if (t1_hour < 0 || t1_hour > 23 || t1_minutes < 0 || t1_minutes > 59 || t2_hour < 0 || t2_hour > 23 || t2_minutes < 0 || t2_minutes > 59) throw new Exception("Invalid value");
-                final Calendar calendar = Time.getCalendar();
+                final Calendar calendar = time.getCalendar();
                 final int now_hours = calendar.get(Calendar.HOUR_OF_DAY);
                 final int now_minutes = calendar.get(Calendar.MINUTE);
                 if (t1_hour == t2_hour) {

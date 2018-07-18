@@ -18,6 +18,8 @@ public class FirebaseMessagingServiceProvider extends FirebaseMessagingService {
     private Log log = Log.instance();
     //@Inject
     private Thread thread = Thread.instance();
+    //@Inject
+    private Notifications notifications = Notifications.instance();
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
@@ -49,8 +51,7 @@ public class FirebaseMessagingServiceProvider extends FirebaseMessagingService {
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 PendingIntent pendingIntent = PendingIntent.getActivity(getBaseContext(), 0, intent, PendingIntent.FLAG_ONE_SHOT);
                 // prepare and send notification
-                Notifications notifications = new Notifications(getBaseContext());
-                notifications.notify(-1, notifications.getSystem(getBaseContext(), title, text, timestamp, true, pendingIntent));
+                notifications.init(getBaseContext()).notify(getBaseContext(), -1, notifications.getSystem(getBaseContext(), title, text, timestamp, true, pendingIntent));
             } catch (Throwable e) {
                 log.exception(e);
             }

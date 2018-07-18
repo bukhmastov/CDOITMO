@@ -12,7 +12,7 @@ import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
-import com.bukhmastov.cdoitmo.util.singleton.TextUtils;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 
 import org.json.JSONObject;
 
@@ -30,6 +30,10 @@ public class ScheduleAttestationsImpl extends ScheduleImpl implements ScheduleAt
     private StoragePref storagePref = StoragePref.instance();
     //@Inject
     private DeIfmoClient deIfmoClient = DeIfmoClient.instance();
+    //@Inject
+    private Time time = Time.instance();
+    //@Inject
+    private TextUtils textUtils = TextUtils.instance();
 
     @Override
     protected void searchGroup(Context context, String group, int refreshRate, boolean forceToCache, boolean withUserChanges) {
@@ -42,7 +46,7 @@ public class ScheduleAttestationsImpl extends ScheduleImpl implements ScheduleAt
             @Override
             public void onWebRequest(final String query, final String cache, final RestResponseHandler restResponseHandler) {
                 final int term = getTerm(context);
-                deIfmoClient.get(context, "index.php?node=schedule&index=sched&semiId=" + String.valueOf(term) + "&group=" + TextUtils.prettifyGroupNumber(group), null, new ResponseHandler() {
+                deIfmoClient.get(context, "index.php?node=schedule&index=sched&semiId=" + String.valueOf(term) + "&group=" + textUtils.prettifyGroupNumber(group), null, new ResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                         thread.run(new ScheduleAttestationsParse(response, term, json -> restResponseHandler.onSuccess(statusCode, headers, json, null)));
@@ -65,7 +69,7 @@ public class ScheduleAttestationsImpl extends ScheduleImpl implements ScheduleAt
             public void onWebRequestSuccess(final String query, final JSONObject data, final JSONObject template) {
                 thread.run(() -> {
                     try {
-                        template.put("title", TextUtils.prettifyGroupNumber(group));
+                        template.put("title", textUtils.prettifyGroupNumber(group));
                         template.put("schedule", data.getJSONArray("schedule"));
                         onFound(query, template, true, false);
                     } catch (Exception e) {
@@ -143,7 +147,7 @@ public class ScheduleAttestationsImpl extends ScheduleImpl implements ScheduleAt
         try {
             term = Integer.parseInt(storagePref.get(context, "pref_schedule_attestations_term", "0"));
             if (term == 0) {
-                int month = Time.getCalendar().get(Calendar.MONTH);
+                int month = time.getCalendar().get(Calendar.MONTH);
                 if (month >= Calendar.SEPTEMBER || month == Calendar.JANUARY) {
                     term = 1;
                 } else {

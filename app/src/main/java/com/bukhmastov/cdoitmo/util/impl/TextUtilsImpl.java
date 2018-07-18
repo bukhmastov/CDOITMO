@@ -1,11 +1,13 @@
-package com.bukhmastov.cdoitmo.util.singleton;
+package com.bukhmastov.cdoitmo.util.impl;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Build;
 
 import com.bukhmastov.cdoitmo.util.StoragePref;
+import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Time;
+import com.bukhmastov.cdoitmo.util.singleton.Transliterate;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -22,10 +24,14 @@ import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class TextUtils {
+public class TextUtilsImpl implements TextUtils {
 
+    //@Inject
+    private Time time = Time.instance();
+
+    @Override
     @SuppressWarnings("deprecation")
-    public static Locale getLocale(Context context, StoragePref storagePref) {
+    public Locale getLocale(Context context, StoragePref storagePref) {
         Locale locale;
         String lang = storagePref.get(context, "pref_lang", "default");
         switch (lang) {
@@ -45,12 +51,14 @@ public class TextUtils {
         return locale;
     }
 
-    public static String capitalizeFirstLetter(String text) {
+    @Override
+    public String capitalizeFirstLetter(String text) {
         return text.substring(0, 1).toUpperCase() + text.substring(1);
     }
 
+    @Override
     @SuppressWarnings("deprecation")
-    public static String escapeString(String text) {
+    public String escapeString(String text) {
         if (text == null) return null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             return android.text.Html.fromHtml(text, android.text.Html.FROM_HTML_MODE_LEGACY).toString().trim();
@@ -59,14 +67,15 @@ public class TextUtils {
         }
     }
 
-    public static String cuteDate(Context context, StoragePref storagePref, String date_format, String date_string) throws ParseException {
+    @Override
+    public String cuteDate(Context context, StoragePref storagePref, String date_format, String date_string) throws ParseException {
         SimpleDateFormat format_input = new SimpleDateFormat(date_format, getLocale(context, storagePref));
-        Calendar date = Time.getCalendar();
+        Calendar date = time.getCalendar();
         date.setTime(format_input.parse(date_string));
         return (new StringBuilder())
                 .append(date.get(Calendar.DATE))
                 .append(" ")
-                .append(Time.getGenitiveMonth(context, date.get(Calendar.MONTH)))
+                .append(time.getGenitiveMonth(context, date.get(Calendar.MONTH)))
                 .append(" ")
                 .append(date.get(Calendar.YEAR))
                 .append(" ")
@@ -76,10 +85,11 @@ public class TextUtils {
                 .toString();
     }
 
-    public static String cuteDate(Context context, StoragePref storagePref, String date_format, String date_start, String date_end) throws ParseException {
+    @Override
+    public String cuteDate(Context context, StoragePref storagePref, String date_format, String date_start, String date_end) throws ParseException {
         SimpleDateFormat format_input = new SimpleDateFormat(date_format, getLocale(context, storagePref));
-        Calendar calendar_start = Time.getCalendar();
-        Calendar calendar_end = Time.getCalendar();
+        Calendar calendar_start = time.getCalendar();
+        Calendar calendar_end = time.getCalendar();
         calendar_start.setTime(format_input.parse(date_start));
         calendar_end.setTime(format_input.parse(date_end));
         boolean diff_days = calendar_start.get(Calendar.DATE) != calendar_end.get(Calendar.DATE);
@@ -90,7 +100,7 @@ public class TextUtils {
             sb.append(calendar_start.get(Calendar.DATE));
         }
         if (diff_months || diff_years) {
-            sb.append(" ").append(Time.getGenitiveMonth(context, calendar_start.get(Calendar.MONTH)));
+            sb.append(" ").append(time.getGenitiveMonth(context, calendar_start.get(Calendar.MONTH)));
         }
         if (diff_years) {
             sb.append(" ").append(calendar_start.get(Calendar.YEAR));
@@ -98,29 +108,32 @@ public class TextUtils {
         if (diff_days || diff_months || diff_years) {
             sb.append(" - ");
         }
-        sb.append(calendar_end.get(Calendar.DATE)).append(" ").append(Time.getGenitiveMonth(context, calendar_end.get(Calendar.MONTH))).append(" ").append(calendar_end.get(Calendar.YEAR));
+        sb.append(calendar_end.get(Calendar.DATE)).append(" ").append(time.getGenitiveMonth(context, calendar_end.get(Calendar.MONTH))).append(" ").append(calendar_end.get(Calendar.YEAR));
         return sb.toString();
     }
 
-    public static String cuteDateWithoutTime(Context context, StoragePref storagePref, String date_format, String date_string) throws ParseException {
+    @Override
+    public String cuteDateWithoutTime(Context context, StoragePref storagePref, String date_format, String date_string) throws ParseException {
         SimpleDateFormat format_input = new SimpleDateFormat(date_format, getLocale(context, storagePref));
-        Calendar date = Time.getCalendar();
+        Calendar date = time.getCalendar();
         date.setTime(format_input.parse(date_string));
         return (new StringBuilder())
                 .append(date.get(Calendar.DATE))
                 .append(" ")
-                .append(Time.getGenitiveMonth(context, date.get(Calendar.MONTH)))
+                .append(time.getGenitiveMonth(context, date.get(Calendar.MONTH)))
                 .append(" ")
                 .append(date.get(Calendar.YEAR))
                 .toString();
     }
 
+    @Override
     @SuppressLint("DefaultLocale")
-    public static String ldgZero(int number) {
+    public String ldgZero(int number) {
         return String.format("%02d", number);
     }
 
-    public static JSONArray string2jsonArray(String text) throws JSONException {
+    @Override
+    public JSONArray string2jsonArray(String text) throws JSONException {
         JSONArray json;
         if (text == null || text.isEmpty()) {
             json = new JSONArray();
@@ -130,7 +143,8 @@ public class TextUtils {
         return json;
     }
 
-    public static JSONObject string2json(String text) throws JSONException {
+    @Override
+    public JSONObject string2json(String text) throws JSONException {
         JSONObject json;
         if (text == null || text.isEmpty()) {
             json = new JSONObject();
@@ -140,7 +154,8 @@ public class TextUtils {
         return json;
     }
 
-    public static String prettifyGroupNumber(String group) {
+    @Override
+    public String prettifyGroupNumber(String group) {
         if (group != null && !group.isEmpty()) {
             Matcher m;
             m = Pattern.compile("(.*)([a-zа-яё])(\\d{4}[a-zа-яё]?)(.*)", Pattern.CASE_INSENSITIVE).matcher(group);
@@ -155,7 +170,8 @@ public class TextUtils {
         return group;
     }
 
-    public static String getRandomString(int length) {
+    @Override
+    public String getRandomString(int length) {
         String alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
         Random rnd = new Random();
         StringBuilder string = new StringBuilder();
@@ -165,7 +181,8 @@ public class TextUtils {
         return string.toString();
     }
 
-    public static String getStringSafely(JSONObject json, String key, String def) {
+    @Override
+    public String getStringSafely(JSONObject json, String key, String def) {
         try {
             return json.getString(key);
         } catch (Exception e) {
@@ -173,7 +190,8 @@ public class TextUtils {
         }
     }
 
-    public static String bytes2readable(Context context, StoragePref storagePref, long bytes) {
+    @Override
+    public String bytes2readable(Context context, StoragePref storagePref, long bytes) {
         int unit = 1024;
         if (bytes < unit) return bytes + " B";
         int exp = (int) (Math.log(bytes) / Math.log(unit));
@@ -181,11 +199,13 @@ public class TextUtils {
         return String.format(getLocale(context, storagePref), "%.1f %sB", bytes / Math.pow(unit, exp), pre);
     }
 
-    public static String crypt(String value) {
+    @Override
+    public String crypt(String value) {
         return crypt(value, "SHA-256");
     }
 
-    public static String crypt(String value, String algorithm) {
+    @Override
+    public String crypt(String value, String algorithm) {
         String hash = null;
         try {
             MessageDigest md = MessageDigest.getInstance(algorithm);

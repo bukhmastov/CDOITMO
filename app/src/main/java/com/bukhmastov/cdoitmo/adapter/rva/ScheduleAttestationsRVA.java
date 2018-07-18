@@ -13,7 +13,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleAttestationsFragment;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleAttestations;
-import com.bukhmastov.cdoitmo.util.BottomBar;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
@@ -42,6 +42,10 @@ public class ScheduleAttestationsRVA extends RVA {
     private ScheduleAttestations scheduleAttestations = ScheduleAttestations.instance();
     //@Inject
     private Storage storage = Storage.instance();
+    //@Inject
+    private NotificationMessage notificationMessage = NotificationMessage.instance();
+    //@Inject
+    private Time time = Time.instance();
 
     private final ConnectedActivity activity;
     private final JSONObject data;
@@ -123,7 +127,7 @@ public class ScheduleAttestationsRVA extends RVA {
                 dataset.add(getNewItem(TYPE_NO_ATTESTATIONS, null));
             } else {
                 // update time
-                dataset.add(new Item(TYPE_UPDATE_TIME, new JSONObject().put("text", context.getString(R.string.update_date) + " " + Time.getUpdateTime(context, data.getLong("timestamp")))));
+                dataset.add(new Item(TYPE_UPDATE_TIME, new JSONObject().put("text", context.getString(R.string.update_date) + " " + time.getUpdateTime(context, data.getLong("timestamp")))));
             }
         } catch (Exception e) {
             log.exception(e);
@@ -163,29 +167,29 @@ public class ScheduleAttestationsRVA extends RVA {
                                 case R.id.remove_from_cache: {
                                     try {
                                         if (cache_token == null) {
-                                            BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
+                                            notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
                                         } else {
                                             if (storage.exists(activity, Storage.CACHE, Storage.GLOBAL, "schedule_attestations#lessons#" + cache_token)) {
                                                 if (storage.delete(activity, Storage.CACHE, Storage.GLOBAL, "schedule_attestations#lessons#" + cache_token)) {
-                                                    BottomBar.snackBar(activity, activity.getString(R.string.cache_false));
+                                                    notificationMessage.snackBar(activity, activity.getString(R.string.cache_false));
                                                 } else {
-                                                    BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
+                                                    notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
                                                 }
                                             } else {
                                                 if (data == null) {
-                                                    BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
+                                                    notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
                                                 } else {
                                                     if (storage.put(activity, Storage.CACHE, Storage.GLOBAL, "schedule_attestations#lessons#" + cache_token, data.toString())) {
-                                                        BottomBar.snackBar(activity, activity.getString(R.string.cache_true));
+                                                        notificationMessage.snackBar(activity, activity.getString(R.string.cache_true));
                                                     } else {
-                                                        BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
+                                                        notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
                                                     }
                                                 }
                                             }
                                         }
                                     } catch (Exception e) {
                                         log.exception(e);
-                                        BottomBar.snackBar(activity, activity.getString(R.string.cache_failed));
+                                        notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
                                     }
                                     break;
                                 }
@@ -199,7 +203,7 @@ public class ScheduleAttestationsRVA extends RVA {
                         popup.show();
                     } catch (Exception e) {
                         log.exception(e);
-                        BottomBar.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }
                 });
             }));
