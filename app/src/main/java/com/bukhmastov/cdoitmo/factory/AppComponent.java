@@ -44,6 +44,7 @@ import com.bukhmastov.cdoitmo.dialog.ColorPickerDialog;
 import com.bukhmastov.cdoitmo.dialog.Dialog;
 import com.bukhmastov.cdoitmo.dialog.ThemeDialog;
 import com.bukhmastov.cdoitmo.factory.module.AppModule;
+import com.bukhmastov.cdoitmo.factory.module.EventBusModule;
 import com.bukhmastov.cdoitmo.factory.module.FirebaseModule;
 import com.bukhmastov.cdoitmo.factory.module.NetworkModule;
 import com.bukhmastov.cdoitmo.factory.module.ObjectModule;
@@ -143,7 +144,7 @@ import dagger.Component;
 
 @Singleton
 @Component(modules = {
-        AppModule.class,
+        AppModule.class, EventBusModule.class,
         UtilsModule.class, ObjectModule.class,
         NetworkModule.class, WidgetModule.class,
         FirebaseModule.class, ProviderModule.class

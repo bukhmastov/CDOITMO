@@ -36,6 +36,8 @@ ext {
     htmlcleanerVersion = "2.18"
     picassoVersion = "2.5.2"
     daggerVersion = "2.16"
+    rxJavaVersion = "2.1.16"
+    rxAndroidVersion = "2.0.2"
 }
 
 dependencies {
@@ -60,6 +62,9 @@ dependencies {
     implementation "com.google.dagger:dagger-android-support:${daggerVersion}"
     annotationProcessor "com.google.dagger:dagger-compiler:${daggerVersion}"
     annotationProcessor "com.google.dagger:dagger-android-processor:${daggerVersion}"
+    // RxAndroid
+    implementation "io.reactivex.rxjava2:rxandroid:${rxAndroidVersion}"
+    implementation "io.reactivex.rxjava2:rxjava:${rxJavaVersion}"
     // others
     implementation "com.squareup.okhttp3:okhttp:${okhttpVersion}"
     implementation "net.sourceforge.htmlcleaner:htmlcleaner:${htmlcleanerVersion}"
