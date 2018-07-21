@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.bukhmastov.cdoitmo.App;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.RawJsonHandler;
@@ -19,14 +20,25 @@ import org.json.JSONObject;
 
 import java.util.Map;
 
+import javax.inject.Inject;
+
 public class DeIfmoRestClientImpl extends DeIfmoRestClient {
 
     private static final String TAG = "DeIfmoRestClient";
     private static final String BASE_URL = "de.ifmo.ru/api/private";
     private static final String DEFAULT_PROTOCOL = HTTPS;
 
-    //@Inject
-    private DeIfmoClient deIfmoClient = DeIfmoClient.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    DeIfmoClient deIfmoClient;
+
+    public DeIfmoRestClientImpl() {
+        super();
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     @Override
     public void get(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final RestResponseHandler responseHandler) {

@@ -4,18 +4,25 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.network.handlers.RawHandler;
 import com.bukhmastov.cdoitmo.network.handlers.RawJsonHandler;
 import com.bukhmastov.cdoitmo.network.provider.NetworkUserAgentProvider;
-import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.inject.Inject;
+
 public abstract class Ifmo extends Client {
 
-    //@Inject
-    private NetworkUserAgentProvider networkUserAgentProvider = NetworkUserAgentProvider.instance();
+    @Inject
+    NetworkUserAgentProvider networkUserAgentProvider;
+
+    public Ifmo() {
+        super();
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     /**
      * Performs GET request

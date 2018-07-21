@@ -5,7 +5,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
-import com.bukhmastov.cdoitmo.network.impl.DeIfmoClientImpl;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.network.model.DeIfmo;
 
@@ -13,13 +12,8 @@ import java.util.Map;
 
 public abstract class DeIfmoClient extends DeIfmo {
 
-    // future: replace with DI factory
-    private static DeIfmoClient instance = null;
-    public static DeIfmoClient instance() {
-        if (instance == null) {
-            instance = new DeIfmoClientImpl();
-        }
-        return instance;
+    public DeIfmoClient() {
+        super();
     }
 
     abstract public void check(@NonNull Context context, @NonNull ResponseHandler responseHandler);

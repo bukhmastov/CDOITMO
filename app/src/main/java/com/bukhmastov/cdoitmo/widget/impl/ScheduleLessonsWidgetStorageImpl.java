@@ -3,20 +3,27 @@ package com.bukhmastov.cdoitmo.widget.impl;
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
 
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.widget.ScheduleLessonsWidgetStorage;
 
 import org.json.JSONObject;
 
+import javax.inject.Inject;
+
 public class ScheduleLessonsWidgetStorageImpl implements ScheduleLessonsWidgetStorage {
 
     private final String TAG = "SLWidget";
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Storage storage = Storage.instance();
+    @Inject
+    Log log;
+    @Inject
+    Storage storage;
+
+    public ScheduleLessonsWidgetStorageImpl() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     @Override
     public String get(Context context, int appWidgetId, String type) {

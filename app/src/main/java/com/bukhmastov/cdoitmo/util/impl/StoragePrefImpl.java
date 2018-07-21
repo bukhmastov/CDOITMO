@@ -5,23 +5,32 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import javax.inject.Inject;
+
+import dagger.Lazy;
+
 public class StoragePrefImpl implements StoragePref {
 
     private static final String TAG = "StoragePref";
 
-    //@Inject
-    private Log log = Log.instance();
+    @Inject
+    Lazy<Log> log;
+
+    public StoragePrefImpl() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     @Override
     public synchronized void put(@NonNull Context context, @NonNull String key, String value) {
         if (context == null) {
-            log.w(TAG, "put | key=", key, " | context is null");
+            log.get().w(TAG, "put | key=", key, " | context is null");
             return;
         }
         PreferenceManager.getDefaultSharedPreferences(context).edit().putString(key, value).apply();
@@ -30,7 +39,7 @@ public class StoragePrefImpl implements StoragePref {
     @Override
     public synchronized void put(@NonNull Context context, @NonNull String key, int value) {
         if (context == null) {
-            log.w(TAG, "put | key=", key, " | context is null");
+            log.get().w(TAG, "put | key=", key, " | context is null");
             return;
         }
         PreferenceManager.getDefaultSharedPreferences(context).edit().putInt(key, value).apply();
@@ -39,7 +48,7 @@ public class StoragePrefImpl implements StoragePref {
     @Override
     public synchronized void put(@NonNull Context context, @NonNull String key, boolean value) {
         if (context == null) {
-            log.w(TAG, "put | key=", key, " | context is null");
+            log.get().w(TAG, "put | key=", key, " | context is null");
             return;
         }
         PreferenceManager.getDefaultSharedPreferences(context).edit().putBoolean(key, value).apply();
@@ -53,7 +62,7 @@ public class StoragePrefImpl implements StoragePref {
     @Override
     public String get(@NonNull Context context, @NonNull String key, String def) {
         if (context == null) {
-            log.w(TAG, "get | key=", key, " | context is null");
+            log.get().w(TAG, "get | key=", key, " | context is null");
             return def;
         }
         return PreferenceManager.getDefaultSharedPreferences(context).getString(key, def);
@@ -62,7 +71,7 @@ public class StoragePrefImpl implements StoragePref {
     @Override
     public int get(@NonNull Context context, @NonNull String key, int def) {
         if (context == null) {
-            log.w(TAG, "get | key=", key, " | context is null");
+            log.get().w(TAG, "get | key=", key, " | context is null");
             return def;
         }
         return PreferenceManager.getDefaultSharedPreferences(context).getInt(key, def);
@@ -71,7 +80,7 @@ public class StoragePrefImpl implements StoragePref {
     @Override
     public boolean get(@NonNull Context context, @NonNull String key, boolean def) {
         if (context == null) {
-            log.w(TAG, "get | key=", key, " | context is null");
+            log.get().w(TAG, "get | key=", key, " | context is null");
             return def;
         }
         return PreferenceManager.getDefaultSharedPreferences(context).getBoolean(key, def);
@@ -80,7 +89,7 @@ public class StoragePrefImpl implements StoragePref {
     @Override
     public boolean exists(@NonNull Context context, @NonNull String key) {
         if (context == null) {
-            log.w(TAG, "exists | key=", key, " | context is null");
+            log.get().w(TAG, "exists | key=", key, " | context is null");
             return false;
         }
         return PreferenceManager.getDefaultSharedPreferences(context).contains(key);
@@ -89,7 +98,7 @@ public class StoragePrefImpl implements StoragePref {
     @Override
     public synchronized void delete(@NonNull Context context, @NonNull String key) {
         if (context == null) {
-            log.w(TAG, "delete | key=", key, " | context is null");
+            log.get().w(TAG, "delete | key=", key, " | context is null");
             return;
         }
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
@@ -111,7 +120,7 @@ public class StoragePrefImpl implements StoragePref {
     @Override
     public synchronized void clear(@NonNull Context context, @NonNull Pattern pattern) {
         if (context == null) {
-            log.w(TAG, "clear | context is null");
+            log.get().w(TAG, "clear | context is null");
             return;
         }
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);

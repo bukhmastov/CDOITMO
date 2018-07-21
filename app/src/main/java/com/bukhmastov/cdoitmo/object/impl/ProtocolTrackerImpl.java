@@ -10,6 +10,7 @@ import android.support.annotation.Nullable;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.converter.ProtocolConverter;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.interfaces.Callable;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
@@ -23,6 +24,8 @@ import com.bukhmastov.cdoitmo.util.Thread;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import javax.inject.Inject;
 
 public class ProtocolTrackerImpl implements ProtocolTracker {
 
@@ -40,14 +43,18 @@ public class ProtocolTrackerImpl implements ProtocolTracker {
         return jobScheduler;
     }
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private Storage storage = Storage.instance();
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    Storage storage;
+    @Inject
+    StoragePref storagePref;
+
+    public ProtocolTrackerImpl() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     @Override
     public ProtocolTracker check(@NonNull Context context) {

@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.res.Configuration;
 
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
 import com.bukhmastov.cdoitmo.util.Log;
@@ -14,10 +15,12 @@ import com.bukhmastov.cdoitmo.util.TextUtils;
 import java.util.Locale;
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 /**
  * Roadmap 2k18
  *
- * 1. Подготовка к DI: абстракция (TODO interface - impl):
+ * 1. Подготовка к DI: абстракция [done]
  *  storage [done]
  *  network [done]
  *  firebase [done]
@@ -28,18 +31,17 @@ import java.util.UUID;
  *
  * 2. Избавление от оставшихся статичных методов и полей
  *
- * 3. Добавление объектов данных / оставление все в json представлениях
+ * 3. Добавление объектов данных / оставление все в json представлениях [delayed]
  *
- * 4. DI:
- *  app
- *  activity
- *  fragment
- *  view/widget
- *  storage
- *  network
- *  firebase
- *  objects
- *  utils
+ * 4. DI: [done]
+ *  app [done]
+ *  widget [done]
+ *  network [done]
+ *  firebase [done]
+ *  objects [done]
+ *  utils, storage [done]
+ *
+ * 4.1. ? Разбивка AppComponent на основной AppComponent и подкомпоненты
  *
  * ???
  *
@@ -62,21 +64,22 @@ public class App extends Application {
     public static boolean showIntroducingActivity = false;
     private Locale locale;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    private TextUtils textUtils = TextUtils.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
-    //@Inject
-    private FirebaseCrashlyticsProvider firebaseCrashlyticsProvider = FirebaseCrashlyticsProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    StoragePref storagePref;
+    @Inject
+    TextUtils textUtils;
+    @Inject
+    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
+    @Inject
+    FirebaseCrashlyticsProvider firebaseCrashlyticsProvider;
 
     @Override
     public void onCreate() {
         super.onCreate();
         try {
+            AppComponentProvider.getComponent().inject(this);
             log.setEnabled(storagePref.get(this, "pref_allow_collect_logs", false));
             locale = textUtils.getLocale(this, storagePref);
             log.i(TAG, "Language | locale=" + locale.toString());

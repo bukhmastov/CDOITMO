@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.StoragePref;
@@ -18,6 +19,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+
+import javax.inject.Inject;
 
 public abstract class UniversityRVA extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -49,19 +52,20 @@ public abstract class UniversityRVA extends RecyclerView.Adapter<RecyclerView.Vi
     protected final Context context;
     protected ArrayList<Item> dataset = new ArrayList<>();
 
-    //@Inject
-    protected Log log = Log.instance();
-    //@Inject
-    protected StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    protected Static staticUtil = Static.instance();
-    //@Inject
-    protected TextUtils textUtils = TextUtils.instance();
+    @Inject
+    Log log;
+    @Inject
+    StoragePref storagePref;
+    @Inject
+    Static staticUtil;
+    @Inject
+    TextUtils textUtils;
 
     public UniversityRVA(final Context context) {
         this(context, null);
     }
     public UniversityRVA(final Context context, final ArrayList<Item> dataset) {
+        AppComponentProvider.getComponent().inject(this);
         this.context = context;
         if (dataset != null) {
             this.dataset = new ArrayList<>();
@@ -179,7 +183,7 @@ public abstract class UniversityRVA extends RecyclerView.Adapter<RecyclerView.Vi
             return null;
         }
     }
-    protected int getInt(JSONObject json, String key) throws JSONException {
+    protected int getInt(JSONObject json, String key) {
         if (json.has(key)) {
             try {
                 return json.getInt(key);

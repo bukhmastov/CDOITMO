@@ -24,6 +24,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapter.rva.university.UniversityNewsRVA;
 import com.bukhmastov.cdoitmo.adapter.rva.RecyclerViewOnScrollListener;
 import com.bukhmastov.cdoitmo.adapter.rva.university.UniversityRVA;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
@@ -41,6 +42,8 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
+import javax.inject.Inject;
+
 public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "UniversityNewsFragment";
@@ -55,23 +58,24 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
     private UniversityNewsRVA newsRecyclerViewAdapter = null;
     private long timestamp = 0;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private Storage storage = Storage.instance();
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    private IfmoRestClient ifmoRestClient = IfmoRestClient.instance();
-    //@Inject
-    private Time time = Time.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    Storage storage;
+    @Inject
+    StoragePref storagePref;
+    @Inject
+    IfmoRestClient ifmoRestClient;
+    @Inject
+    Time time;
+    @Inject
+    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        AppComponentProvider.getComponent().inject(this);
         super.onCreate(savedInstanceState);
         log.v(TAG, "Fragment created");
         activity = getActivity();
@@ -436,7 +440,7 @@ public class UniversityNewsFragment extends Fragment implements SwipeRefreshLayo
         });
     }
 
-    private boolean getBoolean(JSONObject json, String key) throws JSONException {
+    private boolean getBoolean(JSONObject json, String key) {
         if (json.has(key)) {
             try {
                 return json.getBoolean(key);

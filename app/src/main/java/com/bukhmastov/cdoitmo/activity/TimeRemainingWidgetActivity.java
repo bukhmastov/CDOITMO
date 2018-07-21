@@ -14,6 +14,7 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.dialog.BottomSheetDialog;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.model.Client;
@@ -32,6 +33,8 @@ import org.json.JSONObject;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.inject.Inject;
+
 public class TimeRemainingWidgetActivity extends AppCompatActivity implements ScheduleLessons.Handler, TimeRemainingWidget.Delegate {
 
     private static final String TAG = "TRWidgetActivity";
@@ -42,27 +45,34 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
     private boolean is_message_displaying = false;
     private TimeRemainingWidget.Data data = null;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private ScheduleLessons scheduleLessons = ScheduleLessons.instance();
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    private TimeRemainingWidget timeRemainingWidget = TimeRemainingWidget.instance();
-    //@Inject
-    private NotificationMessage notificationMessage = NotificationMessage.instance();
-    //@Inject
-    private Theme theme = Theme.instance();
-    //@Inject
-    private TextUtils textUtils = TextUtils.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    ScheduleLessons scheduleLessons;
+    @Inject
+    StoragePref storagePref;
+    @Inject
+    TimeRemainingWidget timeRemainingWidget;
+    @Inject
+    NotificationMessage notificationMessage;
+    @Inject
+    Theme theme;
+    @Inject
+    TextUtils textUtils;
+    @Inject
+    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
+
+    private void inject() {
+        if (thread == null) {
+            AppComponentProvider.getComponent().inject(this);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        inject();
         switch (theme.getAppTheme(activity)) {
             case "light":
             default: setTheme(R.style.AppTheme_Popup); break;
@@ -143,6 +153,7 @@ public class TimeRemainingWidgetActivity extends AppCompatActivity implements Sc
 
     @Override
     protected void attachBaseContext(Context context) {
+        inject();
         super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log, textUtils));
     }
 

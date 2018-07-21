@@ -5,7 +5,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.bukhmastov.cdoitmo.network.handlers.RawHandler;
-import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.util.Map;
 
@@ -13,6 +12,10 @@ public abstract class Room101 extends DeIfmo {
 
     public static final int FAILED_AUTH = 10;
     public static final int FAILED_EXPECTED_REDIRECTION = 11;
+
+    public Room101() {
+        super();
+    }
 
     @Override
     protected void g(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final RawHandler rawHandler) {

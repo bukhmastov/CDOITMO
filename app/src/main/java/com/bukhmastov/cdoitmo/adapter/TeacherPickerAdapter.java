@@ -10,6 +10,7 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 
 import org.json.JSONException;
@@ -17,16 +18,19 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
+import javax.inject.Inject;
+
 public class TeacherPickerAdapter extends ArrayAdapter<JSONObject> {
 
     private final Context context;
     private ArrayList<JSONObject> teachers;
 
-    //@Inject
-    private Log log = Log.instance();
+    @Inject
+    Log log;
 
     public TeacherPickerAdapter(Context context, ArrayList<JSONObject> teachers) {
         super(context, R.layout.spinner_teacher_picker, teachers);
+        AppComponentProvider.getComponent().inject(this);
         this.context = context;
         this.teachers = teachers;
     }

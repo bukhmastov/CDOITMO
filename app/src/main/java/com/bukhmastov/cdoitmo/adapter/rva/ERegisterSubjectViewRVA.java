@@ -8,7 +8,6 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 
 import org.json.JSONArray;
@@ -28,6 +27,7 @@ public class ERegisterSubjectViewRVA extends RVA {
     private static Pattern patternHighlight = Pattern.compile("^.*зач[её]т$|^экзамен$|^модуль\\s\\d+$|^промежуточная\\sаттестация$|^защита\\s(кп/кр|кп|кр|курсового\\sпроекта|курсовой\\sработы|курсового\\sпроекта/курсовой\\sработы)$", Pattern.CASE_INSENSITIVE);
 
     public ERegisterSubjectViewRVA(@NonNull Context context, @NonNull JSONObject subject, int term) {
+        super();
         addItems(json2dataset(context, subject, term));
     }
 
@@ -181,7 +181,7 @@ public class ERegisterSubjectViewRVA extends RVA {
             log.exception(e);
         }
     }
-    private void setTextToTextView(View container, @IdRes int id, String text) throws Exception {
+    private void setTextToTextView(View container, @IdRes int id, String text) {
         TextView tv = container.findViewById(id);
         if (!text.isEmpty()) {
             tv.setText(text);

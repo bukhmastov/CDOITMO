@@ -4,6 +4,7 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.RawJsonHandler;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
@@ -16,11 +17,23 @@ import org.json.JSONObject;
 
 import java.util.Map;
 
+import javax.inject.Inject;
+
 public class IfmoRestClientImpl extends IfmoRestClient {
 
     private static final String TAG = "IfmoRestClient";
     private static final String BASE_URL = "mountain.ifmo.ru/api.ifmo.ru/public/v1";
     private static final String DEFAULT_PROTOCOL = HTTP;
+
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+
+    public IfmoRestClientImpl() {
+        super();
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     @Override
     public void get(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final RestResponseHandler responseHandler) {

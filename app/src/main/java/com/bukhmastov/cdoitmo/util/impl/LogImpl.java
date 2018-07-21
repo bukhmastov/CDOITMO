@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 
 import com.bukhmastov.cdoitmo.App;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.singleton.LogMetrics;
@@ -16,6 +17,10 @@ import org.json.JSONObject;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Locale;
+
+import javax.inject.Inject;
+
+import dagger.Lazy;
 
 public class LogImpl implements Log {
 
@@ -53,8 +58,12 @@ public class LogImpl implements Log {
     private ArrayList<LogItem> logList = null;
     private boolean enabled = false;
 
-    //@Inject
-    private FirebaseCrashlyticsProvider firebaseCrashlyticsProvider = FirebaseCrashlyticsProvider.instance();
+    @Inject
+    Lazy<FirebaseCrashlyticsProvider> firebaseCrashlyticsProvider;
+
+    public LogImpl() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     @Override
     public void setEnabled(boolean enabled) {
@@ -67,7 +76,7 @@ public class LogImpl implements Log {
     @Override
     public int v(String TAG, Object... log) {
         String l = wrapLog(joinObjects(log));
-        firebaseCrashlyticsProvider.v(TAG, l);
+        firebaseCrashlyticsProvider.get().v(TAG, l);
         if (enabled) {
             addLog(new LogItem(VERBOSE, TAG, l));
             return android.util.Log.v(TAG, l);
@@ -79,7 +88,7 @@ public class LogImpl implements Log {
     @Override
     public int d(Object... log) {
         String l = wrapLog(joinObjects(log));
-        firebaseCrashlyticsProvider.d(TAGD, l);
+        firebaseCrashlyticsProvider.get().d(TAGD, l);
         if (enabled) {
             addLog(new LogItem(DEBUG, TAGD, l));
             return android.util.Log.d(TAGD, l);
@@ -91,7 +100,7 @@ public class LogImpl implements Log {
     @Override
     public int i(String TAG, Object... log) {
         String l = wrapLog(joinObjects(log));
-        firebaseCrashlyticsProvider.i(TAG, l);
+        firebaseCrashlyticsProvider.get().i(TAG, l);
         if (enabled) {
             addLog(new LogItem(INFO, TAG, l));
             return android.util.Log.i(TAG, l);
@@ -104,7 +113,7 @@ public class LogImpl implements Log {
     public int w(String TAG, Object... log) {
         LogMetrics.warn++;
         String l = wrapLog(joinObjects(log));
-        firebaseCrashlyticsProvider.w(TAG, l);
+        firebaseCrashlyticsProvider.get().w(TAG, l);
         if (enabled) {
             addLog(new LogItem(WARN, TAG, l));
             return android.util.Log.w(TAG, l);
@@ -117,7 +126,7 @@ public class LogImpl implements Log {
     public int e(String TAG, Object... log) {
         LogMetrics.error++;
         String l = wrapLog(joinObjects(log));
-        firebaseCrashlyticsProvider.e(TAG, l);
+        firebaseCrashlyticsProvider.get().e(TAG, l);
         if (enabled) {
             addLog(new LogItem(ERROR, TAG, l));
             return android.util.Log.e(TAG, l);
@@ -130,7 +139,7 @@ public class LogImpl implements Log {
     public int wtf(String TAG, Object... log) {
         LogMetrics.wtf++;
         String l = wrapLog(joinObjects(log));
-        firebaseCrashlyticsProvider.wtf(TAG, l);
+        firebaseCrashlyticsProvider.get().wtf(TAG, l);
         if (enabled) {
             addLog(new LogItem(WTF, TAG, l));
             return android.util.Log.wtf(TAG, l);
@@ -142,7 +151,7 @@ public class LogImpl implements Log {
     @Override
     public int wtf(Throwable throwable) {
         LogMetrics.wtf++;
-        firebaseCrashlyticsProvider.wtf(throwable);
+        firebaseCrashlyticsProvider.get().wtf(throwable);
         if (enabled) {
             addLog(new LogItem(WTF_EXCEPTION, throwable));
             return android.util.Log.wtf("Assert", wrapLog(null), throwable);
@@ -160,7 +169,7 @@ public class LogImpl implements Log {
     public int exception(String msg, Throwable throwable) {
         LogMetrics.exception++;
         msg = wrapLog(msg);
-        firebaseCrashlyticsProvider.exception(throwable);
+        firebaseCrashlyticsProvider.get().exception(throwable);
         if (enabled) {
             addLog(new LogItem(EXCEPTION, throwable));
             return android.util.Log.e("Exception", msg, throwable);
@@ -170,11 +179,13 @@ public class LogImpl implements Log {
     }
 
     @NonNull
+    @Override
     public String getLog() {
         return getLog(true);
     }
 
     @NonNull
+    @Override
     public String getLog(boolean reverse) {
         if (logList == null) {
             logList = new ArrayList<>();
@@ -266,15 +277,5 @@ public class LogImpl implements Log {
             }
         }
         return sb.toString();
-    }
-
-    @NonNull
-    public static String lString(String str) {
-        return str == null ? "<null>" : str;
-    }
-
-    @NonNull
-    public static String lNull(Object o) {
-        return o == null ? "<null>" : "<notnull>";
     }
 }

@@ -2,6 +2,7 @@ package com.bukhmastov.cdoitmo.object.impl;
 
 import android.content.Context;
 
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.object.DaysRemainingWidget;
 import com.bukhmastov.cdoitmo.util.Log;
 
@@ -13,15 +14,21 @@ import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.inject.Inject;
+
 public class DaysRemainingWidgetImpl implements DaysRemainingWidget {
 
     private static final String TAG = "DRWidget";
     private Executor executor;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private com.bukhmastov.cdoitmo.util.Time timeUtil = com.bukhmastov.cdoitmo.util.Time.instance();
+    @Inject
+    Log log;
+    @Inject
+    com.bukhmastov.cdoitmo.util.Time timeUtil;
+
+    public DaysRemainingWidgetImpl() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     @Override
     public void start(Context context, Delegate delegate, JSONObject schedule) {

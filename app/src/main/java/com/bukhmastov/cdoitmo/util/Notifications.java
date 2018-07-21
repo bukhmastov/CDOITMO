@@ -8,15 +8,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 
-import com.bukhmastov.cdoitmo.util.impl.NotificationsImpl;
-
 public interface Notifications {
-
-    // future: replace with DI factory
-    Notifications instance = new NotificationsImpl();
-    static Notifications instance() {
-        return instance;
-    }
 
     Notifications init(@NonNull Context context);
 

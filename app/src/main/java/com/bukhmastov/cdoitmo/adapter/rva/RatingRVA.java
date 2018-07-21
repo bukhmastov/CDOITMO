@@ -12,9 +12,9 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.fragment.RatingFragment;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
-import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
@@ -25,6 +25,8 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Map;
+
+import javax.inject.Inject;
 
 public class RatingRVA extends RVA {
 
@@ -39,14 +41,16 @@ public class RatingRVA extends RVA {
     private String commonSelectedFaculty;
     private String commonSelectedCourse;
 
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private Storage storage = Storage.instance();
-    //@Inject
-    private Time time = Time.instance();
+    @Inject
+    Thread thread;
+    @Inject
+    Storage storage;
+    @Inject
+    Time time;
 
     public RatingRVA(@NonNull Context context, @NonNull ArrayMap<String, RatingFragment.Info> data) {
+        super();
+        AppComponentProvider.getComponent().inject(this);
         this.commonSelectedFaculty = storage.get(context, Storage.CACHE, Storage.USER, "rating#choose#faculty");
         this.commonSelectedCourse = storage.get(context, Storage.CACHE, Storage.USER, "rating#choose#course");
         addItems(map2dataset(context, data));

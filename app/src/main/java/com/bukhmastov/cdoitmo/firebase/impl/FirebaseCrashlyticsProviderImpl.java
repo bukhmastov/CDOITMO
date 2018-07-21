@@ -5,6 +5,7 @@ import android.support.annotation.StringDef;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
@@ -17,6 +18,9 @@ import com.crashlytics.android.Crashlytics;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
+import javax.inject.Inject;
+
+import dagger.Lazy;
 import io.fabric.sdk.android.Fabric;
 
 public class FirebaseCrashlyticsProviderImpl implements FirebaseCrashlyticsProvider {
@@ -24,18 +28,18 @@ public class FirebaseCrashlyticsProviderImpl implements FirebaseCrashlyticsProvi
     private static final String TAG = "FirebaseCrashlyticsProvider";
     private boolean enabled = true;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    private NotificationMessage notificationMessage = NotificationMessage.instance();
-    //@Inject
-    private Static staticUtil = Static.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    Lazy<StoragePref> storagePref;
+    @Inject
+    Lazy<NotificationMessage> notificationMessage;
+    @Inject
+    Lazy<Static> staticUtil;
+    @Inject
+    Lazy<FirebaseAnalyticsProvider> firebaseAnalyticsProvider;
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({VERBOSE, DEBUG, INFO, WARN, ERROR})
@@ -46,9 +50,13 @@ public class FirebaseCrashlyticsProviderImpl implements FirebaseCrashlyticsProvi
     private static final String WARN = "WARN";
     private static final String ERROR = "ERROR";
 
+    public FirebaseCrashlyticsProviderImpl() {
+        AppComponentProvider.getComponent().inject(this);
+    }
+
     @Override
     public boolean setEnabled(Context context) {
-        return setEnabled(context, storagePref.get(context, "pref_allow_send_reports", true));
+        return setEnabled(context, storagePref.get().get(context, "pref_allow_send_reports", true));
     }
     @Override
     public boolean setEnabled(Context context, boolean enabled) {
@@ -56,7 +64,7 @@ public class FirebaseCrashlyticsProviderImpl implements FirebaseCrashlyticsProvi
             this.enabled = enabled;
             if (this.enabled) {
                 Fabric.with(context, new Crashlytics());
-                Crashlytics.setUserIdentifier(staticUtil.getUUID(context));
+                Crashlytics.setUserIdentifier(staticUtil.get().getUUID(context));
             }
             log.i(TAG, "Firebase Crashlytics " + (this.enabled ? "enabled" : "disabled"));
         } catch (Exception e) {
@@ -72,9 +80,9 @@ public class FirebaseCrashlyticsProviderImpl implements FirebaseCrashlyticsProvi
                 Fabric.with(activity, new Crashlytics());
                 log.i(TAG, "Firebase Crashlytics enabled");
             } else {
-                notificationMessage.snackBar(activity, activity.getString(R.string.changes_will_take_effect_next_startup));
+                notificationMessage.get().snackBar(activity, activity.getString(R.string.changes_will_take_effect_next_startup));
                 log.i(TAG, "Firebase Crashlytics will be disabled at the next start up");
-                firebaseAnalyticsProvider.logBasicEvent(activity, "firebase_crash_disabled");
+                firebaseAnalyticsProvider.get().logBasicEvent(activity, "firebase_crash_disabled");
             }
         } catch (Exception e) {
             log.exception(e);

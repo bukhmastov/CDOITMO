@@ -17,6 +17,7 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.builder.Room101ReviewBuilder;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.Room101Client;
 import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
@@ -40,6 +41,8 @@ import org.json.JSONObject;
 
 import java.util.HashMap;
 
+import javax.inject.Inject;
+
 public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLayout.OnRefreshListener, Room101ReviewBuilder.register {
 
     private static final String TAG = "Room101Fragment";
@@ -49,33 +52,34 @@ public class Room101Fragment extends ConnectedFragment implements SwipeRefreshLa
     private String action_extra = null;
     protected boolean forbidden = false;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private Storage storage = Storage.instance();
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    private InjectProvider injectProvider = InjectProvider.instance();
-    //@Inject
-    private Room101Client room101Client = Room101Client.instance();
-    //@Inject
-    private Room101AddRequest room101AddRequest = Room101AddRequest.instance();
-    //@Inject
-    private NotificationMessage notificationMessage = NotificationMessage.instance();
-    //@Inject
-    private Static staticUtil = Static.instance();
-    //@Inject
-    private Time time = Time.instance();
-    //@Inject
-    private TextUtils textUtils = TextUtils.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    Storage storage;
+    @Inject
+    StoragePref storagePref;
+    @Inject
+    InjectProvider injectProvider;
+    @Inject
+    Room101Client room101Client;
+    @Inject
+    Room101AddRequest room101AddRequest;
+    @Inject
+    NotificationMessage notificationMessage;
+    @Inject
+    Static staticUtil;
+    @Inject
+    Time time;
+    @Inject
+    TextUtils textUtils;
+    @Inject
+    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        AppComponentProvider.getComponent().inject(this);
         super.onCreate(savedInstanceState);
         log.v(TAG, "Fragment created");
         if (App.UNAUTHORIZED_MODE) {

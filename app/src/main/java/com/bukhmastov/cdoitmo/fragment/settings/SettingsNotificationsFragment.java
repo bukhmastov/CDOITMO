@@ -5,23 +5,26 @@ import android.content.Intent;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.text.TextUtils;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.object.preference.Preference;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceBasic;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceList;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
 import com.bukhmastov.cdoitmo.provider.InjectProvider;
-import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import javax.inject.Inject;
 
 public class SettingsNotificationsFragment extends SettingsTemplatePreferencesFragment {
 
@@ -117,8 +120,14 @@ public class SettingsNotificationsFragment extends SettingsTemplatePreferencesFr
         }));
     }
 
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
+    @Inject
+    StoragePref storagePref;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        AppComponentProvider.getComponent().inject(this);
+        super.onCreate(savedInstanceState);
+    }
 
     @Override
     protected List<Preference> getPreferences() {

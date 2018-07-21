@@ -6,6 +6,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.fragment.UniversityBuildingsFragment;
 import com.bukhmastov.cdoitmo.fragment.UniversityEventsFragment;
 import com.bukhmastov.cdoitmo.fragment.UniversityFacultiesFragment;
@@ -15,6 +16,8 @@ import com.bukhmastov.cdoitmo.fragment.UniversityUnitsFragment;
 import com.bukhmastov.cdoitmo.util.Log;
 
 import java.util.ArrayList;
+
+import javax.inject.Inject;
 
 public class PagerUniversityAdapter extends FragmentStatePagerAdapter {
 
@@ -30,11 +33,12 @@ public class PagerUniversityAdapter extends FragmentStatePagerAdapter {
     }
     private final ArrayList<Element> tabs = new ArrayList<>();
 
-    //@Inject
-    private Log log = Log.instance();
+    @Inject
+    Log log;
 
     public PagerUniversityAdapter(FragmentManager fm, Context context) {
         super(fm);
+        AppComponentProvider.getComponent().inject(this);
         tabs.add(new Element(0, context.getString(R.string.persons), UniversityPersonsFragment.class));
         tabs.add(new Element(1, context.getString(R.string.faculties), UniversityFacultiesFragment.class));
         tabs.add(new Element(2, context.getString(R.string.units), UniversityUnitsFragment.class));

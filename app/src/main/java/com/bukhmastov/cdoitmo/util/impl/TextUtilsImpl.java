@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Build;
 
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Time;
@@ -24,10 +25,18 @@ import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.inject.Inject;
+
+import dagger.Lazy;
+
 public class TextUtilsImpl implements TextUtils {
 
-    //@Inject
-    private Time time = Time.instance();
+    @Inject
+    Lazy<Time> time;
+
+    public TextUtilsImpl() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     @Override
     @SuppressWarnings("deprecation")
@@ -70,12 +79,12 @@ public class TextUtilsImpl implements TextUtils {
     @Override
     public String cuteDate(Context context, StoragePref storagePref, String date_format, String date_string) throws ParseException {
         SimpleDateFormat format_input = new SimpleDateFormat(date_format, getLocale(context, storagePref));
-        Calendar date = time.getCalendar();
+        Calendar date = time.get().getCalendar();
         date.setTime(format_input.parse(date_string));
         return (new StringBuilder())
                 .append(date.get(Calendar.DATE))
                 .append(" ")
-                .append(time.getGenitiveMonth(context, date.get(Calendar.MONTH)))
+                .append(time.get().getGenitiveMonth(context, date.get(Calendar.MONTH)))
                 .append(" ")
                 .append(date.get(Calendar.YEAR))
                 .append(" ")
@@ -88,8 +97,8 @@ public class TextUtilsImpl implements TextUtils {
     @Override
     public String cuteDate(Context context, StoragePref storagePref, String date_format, String date_start, String date_end) throws ParseException {
         SimpleDateFormat format_input = new SimpleDateFormat(date_format, getLocale(context, storagePref));
-        Calendar calendar_start = time.getCalendar();
-        Calendar calendar_end = time.getCalendar();
+        Calendar calendar_start = time.get().getCalendar();
+        Calendar calendar_end = time.get().getCalendar();
         calendar_start.setTime(format_input.parse(date_start));
         calendar_end.setTime(format_input.parse(date_end));
         boolean diff_days = calendar_start.get(Calendar.DATE) != calendar_end.get(Calendar.DATE);
@@ -100,7 +109,7 @@ public class TextUtilsImpl implements TextUtils {
             sb.append(calendar_start.get(Calendar.DATE));
         }
         if (diff_months || diff_years) {
-            sb.append(" ").append(time.getGenitiveMonth(context, calendar_start.get(Calendar.MONTH)));
+            sb.append(" ").append(time.get().getGenitiveMonth(context, calendar_start.get(Calendar.MONTH)));
         }
         if (diff_years) {
             sb.append(" ").append(calendar_start.get(Calendar.YEAR));
@@ -108,19 +117,19 @@ public class TextUtilsImpl implements TextUtils {
         if (diff_days || diff_months || diff_years) {
             sb.append(" - ");
         }
-        sb.append(calendar_end.get(Calendar.DATE)).append(" ").append(time.getGenitiveMonth(context, calendar_end.get(Calendar.MONTH))).append(" ").append(calendar_end.get(Calendar.YEAR));
+        sb.append(calendar_end.get(Calendar.DATE)).append(" ").append(time.get().getGenitiveMonth(context, calendar_end.get(Calendar.MONTH))).append(" ").append(calendar_end.get(Calendar.YEAR));
         return sb.toString();
     }
 
     @Override
     public String cuteDateWithoutTime(Context context, StoragePref storagePref, String date_format, String date_string) throws ParseException {
         SimpleDateFormat format_input = new SimpleDateFormat(date_format, getLocale(context, storagePref));
-        Calendar date = time.getCalendar();
+        Calendar date = time.get().getCalendar();
         date.setTime(format_input.parse(date_string));
         return (new StringBuilder())
                 .append(date.get(Calendar.DATE))
                 .append(" ")
-                .append(time.getGenitiveMonth(context, date.get(Calendar.MONTH)))
+                .append(time.get().getGenitiveMonth(context, date.get(Calendar.MONTH)))
                 .append(" ")
                 .append(date.get(Calendar.YEAR))
                 .toString();

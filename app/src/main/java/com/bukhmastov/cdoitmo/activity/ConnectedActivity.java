@@ -19,6 +19,7 @@ import android.view.ViewGroup;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
@@ -30,6 +31,8 @@ import com.bukhmastov.cdoitmo.util.Thread;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
+
+import javax.inject.Inject;
 
 public abstract class ConnectedActivity extends AppCompatActivity {
 
@@ -46,14 +49,14 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     public static String storedFragmentExtra = null;
     protected final ConnectedActivity activity = this;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    protected StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    private TextUtils textUtils = TextUtils.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    StoragePref storagePref;
+    @Inject
+    TextUtils textUtils;
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({TYPE.ROOT, TYPE.STACKABLE})
@@ -72,6 +75,18 @@ public abstract class ConnectedActivity extends AppCompatActivity {
             this.extras = extras;
             this.type = type;
         }
+    }
+
+    private void inject() {
+        if (thread == null) {
+            AppComponentProvider.getComponent().inject(this);
+        }
+    }
+
+    @Override
+    protected void onCreate(final Bundle savedInstanceState) {
+        inject();
+        super.onCreate(savedInstanceState);
     }
 
     @Override
@@ -280,6 +295,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
 
     @Override
     protected void attachBaseContext(Context context) {
+        inject();
         super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log, textUtils));
     }
 }

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
@@ -15,20 +16,28 @@ import com.google.firebase.analytics.FirebaseAnalytics;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.inject.Inject;
+
+import dagger.Lazy;
+
 public class FirebaseAnalyticsProviderImpl implements FirebaseAnalyticsProvider {
 
     private static final String TAG = "FirebaseAnalyticsProvider";
     private boolean enabled = true;
     private FirebaseAnalytics firebaseAnalytics = null;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    private Static staticUtil = Static.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    Lazy<StoragePref> storagePref;
+    @Inject
+    Lazy<Static> staticUtil;
+
+    public FirebaseAnalyticsProviderImpl() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     private FirebaseAnalytics getFirebaseAnalytics(Context context) {
         if (firebaseAnalytics == null) {
@@ -39,7 +48,7 @@ public class FirebaseAnalyticsProviderImpl implements FirebaseAnalyticsProvider 
 
     @Override
     public boolean setEnabled(Context context) {
-        return setEnabled(context, storagePref.get(context, "pref_allow_collect_analytics", true));
+        return setEnabled(context, storagePref.get().get(context, "pref_allow_collect_analytics", true));
     }
     @Override
     public boolean setEnabled(Context context, boolean enabled) {
@@ -54,7 +63,7 @@ public class FirebaseAnalyticsProviderImpl implements FirebaseAnalyticsProvider 
             this.enabled = enabled;
             FirebaseAnalytics firebaseAnalytics = getFirebaseAnalytics(context);
             firebaseAnalytics.setAnalyticsCollectionEnabled(this.enabled);
-            firebaseAnalytics.setUserId(staticUtil.getUUID(context));
+            firebaseAnalytics.setUserId(staticUtil.get().getUUID(context));
             log.i(TAG, "Firebase Analytics ", (this.enabled ? "enabled" : "disabled"));
         } catch (Exception e) {
             log.exception(e);

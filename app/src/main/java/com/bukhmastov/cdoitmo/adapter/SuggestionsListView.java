@@ -11,10 +11,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.object.entity.Suggestion;
 import com.bukhmastov.cdoitmo.util.Log;
 
 import java.util.List;
+
+import javax.inject.Inject;
 
 public class SuggestionsListView extends ArrayAdapter<Suggestion> {
 
@@ -27,14 +30,15 @@ public class SuggestionsListView extends ArrayAdapter<Suggestion> {
     private final List<Suggestion> suggestions;
     private final OnClickCallback onClickCallback;
 
-    //@Inject
-    private Log log = Log.instance();
+    @Inject
+    Log log;
 
     public SuggestionsListView(@NonNull Context context, @NonNull List<Suggestion> suggestions) {
         this(context, suggestions, null);
     }
     public SuggestionsListView(@NonNull Context context, @NonNull List<Suggestion> suggestions, @Nullable OnClickCallback onClickCallback) {
         super(context, R.layout.search_suggestion, suggestions);
+        AppComponentProvider.getComponent().inject(this);
         this.context = context;
         this.suggestions = suggestions;
         this.onClickCallback = onClickCallback;

@@ -3,21 +3,24 @@ package com.bukhmastov.cdoitmo.activity.search;
 import android.os.Bundle;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsTabHostFragment;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Thread;
 
+import javax.inject.Inject;
+
 public class ScheduleLessonsSearchActivity extends SearchActivity {
 
     private static final String TAG = "SLSearchActivity";
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     public ScheduleLessonsSearchActivity() {
         super(3, 100);
@@ -25,6 +28,7 @@ public class ScheduleLessonsSearchActivity extends SearchActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        AppComponentProvider.getComponent().inject(this);
         super.onCreate(savedInstanceState);
         firebaseAnalyticsProvider.logCurrentScreen(this);
     }

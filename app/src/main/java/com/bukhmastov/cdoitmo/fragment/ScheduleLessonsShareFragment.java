@@ -15,6 +15,7 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
@@ -37,6 +38,8 @@ import java.io.FileOutputStream;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
+
+import javax.inject.Inject;
 
 public class ScheduleLessonsShareFragment extends ConnectedFragment {
 
@@ -64,20 +67,20 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
     private Client.Request requestHandle = null;
     private int colorScheduleFlagTEXT = -1, colorScheduleFlagCommonBG = -1, colorScheduleFlagPracticeBG = -1, colorScheduleFlagLectureBG = -1, colorScheduleFlagLabBG = -1, colorScheduleFlagIwsBG = -1;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private ScheduleLessons scheduleLessons = ScheduleLessons.instance();
-    //@Inject
-    private ScheduleLessonsHelper scheduleLessonsHelper = ScheduleLessonsHelper.instance();
-    //@Inject
-    private Storage storage = Storage.instance();
-    //@Inject
-    private NotificationMessage notificationMessage = NotificationMessage.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    ScheduleLessons scheduleLessons;
+    @Inject
+    ScheduleLessonsHelper scheduleLessonsHelper;
+    @Inject
+    Storage storage;
+    @Inject
+    NotificationMessage notificationMessage;
+    @Inject
+    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({ADDED, REDUCED})
@@ -87,6 +90,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        AppComponentProvider.getComponent().inject(this);
         super.onCreate(savedInstanceState);
         firebaseAnalyticsProvider.logCurrentScreen(activity, this);
         action = extras.getString("action");
@@ -248,7 +252,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
         }
         display(notification);
     }
-    private void loadShare(final Bundle extras) throws Exception {
+    private void loadShare(final Bundle extras) {
         query = extras.getString("query");
         title = extras.getString("title");
         type = extras.getString("type");
@@ -715,7 +719,7 @@ public class ScheduleLessonsShareFragment extends ConnectedFragment {
             viewGroup.addView(getFlag(week == 0 ? activity.getString(R.string.tab_even) : activity.getString(R.string.tab_odd), colorScheduleFlagTEXT, colorScheduleFlagCommonBG));
         }
     }
-    private FrameLayout getFlag(String text, int textColor, int backgroundColor) throws Exception {
+    private FrameLayout getFlag(String text, int textColor, int backgroundColor) {
         FrameLayout flagContainer = (FrameLayout) inflate(R.layout.layout_schedule_lessons_flag);
         TextView flag_content = flagContainer.findViewById(R.id.flag_content);
         flag_content.setText(text);

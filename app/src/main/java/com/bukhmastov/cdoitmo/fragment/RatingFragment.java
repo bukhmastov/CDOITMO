@@ -14,6 +14,7 @@ import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.LoginActivity;
 import com.bukhmastov.cdoitmo.adapter.rva.RatingRVA;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
@@ -35,6 +36,8 @@ import org.json.JSONObject;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
+import javax.inject.Inject;
+
 public class RatingFragment extends ConnectedFragment implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "RatingFragment";
@@ -42,24 +45,24 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
     private Client.Request requestHandle = null;
     private final ArrayMap<String, Info> data = new ArrayMap<>();
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private Storage storage = Storage.instance();
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    private DeIfmoClient deIfmoClient = DeIfmoClient.instance();
-    //@Inject
-    private NotificationMessage notificationMessage = NotificationMessage.instance();
-    //@Inject
-    private Time time = Time.instance();
-    //@Inject
-    private TextUtils textUtils = TextUtils.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    Storage storage;
+    @Inject
+    StoragePref storagePref;
+    @Inject
+    DeIfmoClient deIfmoClient;
+    @Inject
+    NotificationMessage notificationMessage;
+    @Inject
+    Time time;
+    @Inject
+    TextUtils textUtils;
+    @Inject
+    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({COMMON, OWN})
@@ -87,6 +90,7 @@ public class RatingFragment extends ConnectedFragment implements SwipeRefreshLay
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        AppComponentProvider.getComponent().inject(this);
         super.onCreate(savedInstanceState);
         log.v(TAG, "Fragment created");
         firebaseAnalyticsProvider.logCurrentScreen(activity, this);

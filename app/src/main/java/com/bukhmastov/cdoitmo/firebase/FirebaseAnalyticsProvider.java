@@ -5,15 +5,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 
-import com.bukhmastov.cdoitmo.firebase.impl.FirebaseAnalyticsProviderImpl;
-
 public interface FirebaseAnalyticsProvider {
-
-    // future: replace with DI factory
-    FirebaseAnalyticsProvider instance = new FirebaseAnalyticsProviderImpl();
-    static FirebaseAnalyticsProvider instance() {
-        return instance;
-    }
 
     class Event {
         // 500 different types of Events | 40 characters long

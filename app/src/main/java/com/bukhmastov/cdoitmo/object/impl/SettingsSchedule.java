@@ -15,6 +15,7 @@ import android.widget.RadioGroup;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.adapter.TeacherPickerAdapter;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.preference.Preference;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
@@ -27,6 +28,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+
+import javax.inject.Inject;
 
 public abstract class SettingsSchedule {
 
@@ -46,14 +49,18 @@ public abstract class SettingsSchedule {
     protected ViewGroup lsp_search_loading = null;
     protected ViewGroup lsp_search_selected = null;
 
-    //@Inject
-    protected Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    private NotificationMessage notificationMessage = NotificationMessage.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    StoragePref storagePref;
+    @Inject
+    NotificationMessage notificationMessage;
+
+    public SettingsSchedule() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     protected abstract void search(final String query);
     protected abstract String getHint();

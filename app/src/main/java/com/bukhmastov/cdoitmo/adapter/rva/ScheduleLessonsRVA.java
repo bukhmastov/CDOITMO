@@ -20,6 +20,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsShareFragment;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsTabHostFragment;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleLessonsFragment;
@@ -43,6 +44,8 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 
+import javax.inject.Inject;
+
 public class ScheduleLessonsRVA extends RVA {
 
     private static final String TAG = "ScheduleLessonsRVA";
@@ -60,20 +63,20 @@ public class ScheduleLessonsRVA extends RVA {
     private static final int TYPE_PICKER_ITEM = 10;
     private static final int TYPE_PICKER_NO_TEACHERS = 11;
 
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private ScheduleLessons scheduleLessons = ScheduleLessons.instance();
-    //@Inject
-    private Storage storage = Storage.instance();
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    private ScheduleLessonsHelper scheduleLessonsHelper = ScheduleLessonsHelper.instance();
-    //@Inject
-    private NotificationMessage notificationMessage = NotificationMessage.instance();
-    //@Inject
-    private Time time = Time.instance();
+    @Inject
+    Thread thread;
+    @Inject
+    ScheduleLessons scheduleLessons;
+    @Inject
+    Storage storage;
+    @Inject
+    StoragePref storagePref;
+    @Inject
+    ScheduleLessonsHelper scheduleLessonsHelper;
+    @Inject
+    NotificationMessage notificationMessage;
+    @Inject
+    Time time;
 
     private final ConnectedActivity activity;
     private final int TYPE;
@@ -86,6 +89,8 @@ public class ScheduleLessonsRVA extends RVA {
     private int colorScheduleFlagTEXT = -1, colorScheduleFlagCommonBG = -1, colorScheduleFlagPracticeBG = -1, colorScheduleFlagLectureBG = -1, colorScheduleFlagLabBG = -1, colorScheduleFlagIwsBG = -1;
 
     public ScheduleLessonsRVA(final ConnectedActivity activity, int TYPE, JSONObject data, int weekday, final CallableString callback) {
+        super();
+        AppComponentProvider.getComponent().inject(this);
         this.activity = activity;
         this.TYPE = TYPE;
         this.data = data;
@@ -732,7 +737,7 @@ public class ScheduleLessonsRVA extends RVA {
             return null;
         }
     }
-    protected int getInt(JSONObject json, String key) throws JSONException {
+    protected int getInt(JSONObject json, String key) {
         if (json.has(key)) {
             try {
                 return json.getInt(key);
@@ -743,7 +748,7 @@ public class ScheduleLessonsRVA extends RVA {
             return -1;
         }
     }
-    private FrameLayout getFlag(String text, int textColor, int backgroundColor) throws Exception {
+    private FrameLayout getFlag(String text, int textColor, int backgroundColor) {
         FrameLayout flagContainer = (FrameLayout) inflate(R.layout.layout_schedule_lessons_flag);
         TextView flag_content = flagContainer.findViewById(R.id.flag_content);
         flag_content.setText(text);

@@ -16,6 +16,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsShareFragment;
 import com.bukhmastov.cdoitmo.network.provider.NetworkUserAgentProvider;
@@ -35,6 +36,8 @@ import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import javax.inject.Inject;
+
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -44,21 +47,22 @@ public class FileReceiveActivity extends ConnectedActivity {
 
     private static final String TAG = "FileReceiveActivity";
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private Storage storage = Storage.instance();
-    //@Inject
-    private NetworkUserAgentProvider networkUserAgentProvider = NetworkUserAgentProvider.instance();
-    //@Inject
-    private Theme theme = Theme.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    Storage storage;
+    @Inject
+    NetworkUserAgentProvider networkUserAgentProvider;
+    @Inject
+    Theme theme;
+    @Inject
+    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+        AppComponentProvider.getComponent().inject(this);
         theme.applyActivityTheme(this);
         super.onCreate(savedInstanceState);
         log.i(TAG, "Activity created");

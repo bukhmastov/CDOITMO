@@ -18,6 +18,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
 import com.bukhmastov.cdoitmo.fragment.AboutFragment;
@@ -36,6 +37,8 @@ import com.bukhmastov.cdoitmo.view.Message;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import javax.inject.Inject;
+
 public class LoginActivity extends ConnectedActivity {
 
     private static final String TAG = "LoginActivity";
@@ -52,31 +55,38 @@ public class LoginActivity extends ConnectedActivity {
     private Client.Request requestHandle = null;
     public static boolean auto_logout = false;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private Storage storage = Storage.instance();
-    //@Inject
-    private Account account = Account.instance();
-    //@Inject
-    private Accounts accounts = Accounts.instance();
-    //@Inject
-    private NotificationMessage notificationMessage = NotificationMessage.instance();
-    //@Inject
-    private Static staticUtil = Static.instance();
-    //@Inject
-    private Theme theme = Theme.instance();
-    //@Inject
-    private com.bukhmastov.cdoitmo.util.TextUtils textUtils = com.bukhmastov.cdoitmo.util.TextUtils.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
-    //@Inject
-    private FirebaseConfigProvider firebaseConfigProvider = FirebaseConfigProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    Storage storage;
+    @Inject
+    Account account;
+    @Inject
+    Accounts accounts;
+    @Inject
+    NotificationMessage notificationMessage;
+    @Inject
+    Static staticUtil;
+    @Inject
+    Theme theme;
+    @Inject
+    com.bukhmastov.cdoitmo.util.TextUtils textUtils;
+    @Inject
+    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
+    @Inject
+    FirebaseConfigProvider firebaseConfigProvider;
+
+    private void inject() {
+        if (thread == null) {
+            AppComponentProvider.getComponent().inject(this);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        inject();
         theme.applyActivityTheme(this);
         super.onCreate(savedInstanceState);
         log.i(TAG, "Activity created");
@@ -137,6 +147,7 @@ public class LoginActivity extends ConnectedActivity {
 
     @Override
     protected void attachBaseContext(Context context) {
+        inject();
         super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log, textUtils));
     }
 
@@ -257,7 +268,7 @@ public class LoginActivity extends ConnectedActivity {
             }
         });
     }
-    private void appendNewUserView(final ViewGroup container) throws Exception {
+    private void appendNewUserView(final ViewGroup container) {
         final ViewGroup new_user_tile = (ViewGroup) inflate(R.layout.layout_login_new_user_tile);
         final EditText input_login = new_user_tile.findViewById(R.id.input_login);
         final EditText input_password = new_user_tile.findViewById(R.id.input_password);
@@ -291,7 +302,7 @@ public class LoginActivity extends ConnectedActivity {
         });
         container.addView(new_user_tile);
     }
-    private void appendAllUsersView(final ViewGroup container) throws Exception {
+    private void appendAllUsersView(final ViewGroup container) {
         final JSONArray acs = accounts.get(activity);
         for (int i = 0; i < acs.length(); i++) {
             try {
@@ -412,7 +423,7 @@ public class LoginActivity extends ConnectedActivity {
             }
         }
     }
-    private void appendAnonUserView(final ViewGroup container) throws Exception {
+    private void appendAnonUserView(final ViewGroup container) {
         final ViewGroup anonymous_user_tile = (ViewGroup) inflate(R.layout.layout_login_anonymous_user_tile);
         final EditText input_group = anonymous_user_tile.findViewById(R.id.input_group);
         // grab current groups of anon user

@@ -5,18 +5,10 @@ import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.view.View;
 
-import com.bukhmastov.cdoitmo.object.impl.Room101AddRequestImpl;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 public interface Room101AddRequest {
-
-    // future: replace with DI factory
-    Room101AddRequest instance = new Room101AddRequestImpl();
-    static Room101AddRequest instance() {
-        return instance;
-    }
 
     interface Callback {
         void onProgress(@Stage int stage);

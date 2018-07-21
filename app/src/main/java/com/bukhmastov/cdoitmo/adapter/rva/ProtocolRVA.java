@@ -27,6 +27,7 @@ public class ProtocolRVA extends RVA {
     private int colorPositiveTrend;
 
     public ProtocolRVA(@NonNull Context context, @NonNull JSONArray protocol, boolean advancedMode) {
+        super();
         addItems(json2dataset(context, protocol, advancedMode));
         try {
             colorPositiveTrend = Color.resolve(context, R.attr.colorPositiveTrend);

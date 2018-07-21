@@ -1,7 +1,6 @@
 package com.bukhmastov.cdoitmo.util.singleton;
 
 import android.content.Context;
-import android.util.SparseArray;
 import android.util.TypedValue;
 
 public class Color {

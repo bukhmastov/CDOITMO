@@ -5,17 +5,21 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.Log;
+
+import javax.inject.Inject;
 
 @SuppressWarnings("EmptyMethod")
 public class OnSwipeTouchListener implements View.OnTouchListener {
 
     private final GestureDetector gestureDetector;
 
-    //@Inject
-    private Log log = Log.instance();
+    @Inject
+    Log log;
 
     public OnSwipeTouchListener (Context context) {
+        AppComponentProvider.getComponent().inject(this);
         gestureDetector = new GestureDetector(context, new GestureListener());
     }
 

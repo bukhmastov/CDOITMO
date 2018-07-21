@@ -6,12 +6,11 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.network.handlers.RawHandler;
 import com.bukhmastov.cdoitmo.network.handlers.RawJsonHandler;
 import com.bukhmastov.cdoitmo.network.provider.NetworkUserAgentProvider;
-import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
-import com.bukhmastov.cdoitmo.util.Thread;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -22,6 +21,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+
+import javax.inject.Inject;
 
 public abstract class DeIfmo extends Client {
 
@@ -35,8 +36,13 @@ public abstract class DeIfmo extends Client {
     public static final int FAILED_AUTH_CREDENTIALS_FAILED = 12;
     public static final int FAILED_UNAUTHORIZED_MODE = 13;
 
-    //@Inject
-    private NetworkUserAgentProvider networkUserAgentProvider = NetworkUserAgentProvider.instance();
+    @Inject
+    NetworkUserAgentProvider networkUserAgentProvider;
+
+    public DeIfmo() {
+        super();
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     /**
      * Performs GET request

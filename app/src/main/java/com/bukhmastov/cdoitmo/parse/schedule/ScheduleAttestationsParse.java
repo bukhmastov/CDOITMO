@@ -1,6 +1,7 @@
 package com.bukhmastov.cdoitmo.parse.schedule;
 
 import com.bukhmastov.cdoitmo.exception.SilentException;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.parse.Parse;
 import com.bukhmastov.cdoitmo.util.Log;
@@ -9,12 +10,18 @@ import org.htmlcleaner.TagNode;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import javax.inject.Inject;
+
 public class ScheduleAttestationsParse extends Parse {
 
     private final int term;
 
+    @Inject
+    Log log;
+
     public ScheduleAttestationsParse(String data, int term, Response delegate) {
         super(data, delegate);
+        AppComponentProvider.getComponent().inject(this);
         this.term = term;
     }
 

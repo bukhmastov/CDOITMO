@@ -28,6 +28,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapter.TeacherPickerAdapter;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
@@ -48,6 +49,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+
+import javax.inject.Inject;
 
 public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
 
@@ -90,29 +93,36 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
         private static boolean useShiftAutomatic = true;
     }
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private ScheduleLessons scheduleLessons = ScheduleLessons.instance();
-    //@Inject
-    private Storage storage = Storage.instance();
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    private NotificationMessage notificationMessage = NotificationMessage.instance();
-    //@Inject
-    private Theme theme = Theme.instance();
-    //@Inject
-    private TextUtils textUtils = TextUtils.instance();
-    //@Inject
-    private ScheduleLessonsWidgetStorage scheduleLessonsWidgetStorage = ScheduleLessonsWidgetStorage.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    ScheduleLessons scheduleLessons;
+    @Inject
+    Storage storage;
+    @Inject
+    StoragePref storagePref;
+    @Inject
+    NotificationMessage notificationMessage;
+    @Inject
+    Theme theme;
+    @Inject
+    TextUtils textUtils;
+    @Inject
+    ScheduleLessonsWidgetStorage scheduleLessonsWidgetStorage;
+    @Inject
+    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
+
+    private void inject() {
+        if (thread == null) {
+            AppComponentProvider.getComponent().inject(this);
+        }
+    }
 
     @Override
     public void onCreate(Bundle icicle) {
+        inject();
         theme.applyActivityTheme(this);
         final String th = theme.getAppTheme(this);
         isDarkTheme = "dark".equals(th) || "black".equals(th);
@@ -150,6 +160,7 @@ public class ScheduleLessonsWidgetConfigureActivity extends AppCompatActivity {
 
     @Override
     protected void attachBaseContext(Context context) {
+        inject();
         super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log, textUtils));
     }
 

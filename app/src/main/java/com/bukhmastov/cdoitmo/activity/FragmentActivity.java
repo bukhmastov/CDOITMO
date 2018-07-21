@@ -17,6 +17,7 @@ import android.view.MenuItem;
 import android.view.ViewGroup;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.util.Log;
@@ -25,25 +26,28 @@ import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.util.Thread;
 
+import javax.inject.Inject;
+
 public class FragmentActivity extends ConnectedActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "FragmentActivity";
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private Storage storage = Storage.instance();
-    //@Inject
-    private NavigationMenu navigationMenu = NavigationMenu.instance();
-    //@Inject
-    private Theme theme = Theme.instance();
-    //@Inject
-    private FirebaseConfigProvider firebaseConfigProvider = FirebaseConfigProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    Storage storage;
+    @Inject
+    NavigationMenu navigationMenu;
+    @Inject
+    Theme theme;
+    @Inject
+    FirebaseConfigProvider firebaseConfigProvider;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+        AppComponentProvider.getComponent().inject(this);
         theme.applyActivityTheme(this);
         super.onCreate(savedInstanceState);
         log.i(TAG, "Activity created");

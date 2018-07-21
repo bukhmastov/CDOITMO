@@ -10,6 +10,7 @@ import android.view.View;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
@@ -25,6 +26,8 @@ import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.util.ArrayList;
 
+import javax.inject.Inject;
+
 public abstract class Preference {
 
     protected static final String TAG = "Preference";
@@ -33,41 +36,41 @@ public abstract class Preference {
     public @StringRes int title = 0;
     public @StringRes int summary = 0;
 
-    //@Inject
-    protected Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    protected Storage storage = Storage.instance();
-    //@Inject
-    protected StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    private DeIfmoRestClient deIfmoRestClient = DeIfmoRestClient.instance();
-    //@Inject
-    private ProtocolTracker protocolTracker = ProtocolTracker.instance();
-    //@Inject
-    private NotificationMessage notificationMessage = NotificationMessage.instance();
-    //@Inject
-    private Static staticUtil = Static.instance();
-    //@Inject
-    private TextUtils textUtils = TextUtils.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
-    //@Inject
-    private FirebaseCrashlyticsProvider firebaseCrashlyticsProvider = FirebaseCrashlyticsProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    Storage storage;
+    @Inject
+    StoragePref storagePref;
+    @Inject
+    DeIfmoRestClient deIfmoRestClient;
+    @Inject
+    ProtocolTracker protocolTracker;
+    @Inject
+    NotificationMessage notificationMessage;
+    @Inject
+    Static staticUtil;
+    @Inject
+    TextUtils textUtils;
+    @Inject
+    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
+    @Inject
+    FirebaseCrashlyticsProvider firebaseCrashlyticsProvider;
 
     protected final ArrayList<PreferenceSwitch> preferenceDependencies = new ArrayList<>();
 
+    public Preference(String key, Object defaultValue, @StringRes int title) {
+        this(key, defaultValue, title, 0);
+    }
+    
     public Preference(String key, Object defaultValue, @StringRes int title, @StringRes int summary) {
+        AppComponentProvider.getComponent().inject(this);
         this.key = key;
         this.defaultValue = defaultValue;
         this.title = title;
         this.summary = summary;
-    }
-    public Preference(String key, Object defaultValue, @StringRes int title) {
-        this.key = key;
-        this.defaultValue = defaultValue;
-        this.title = title;
     }
 
     public void setPreferenceDependency(PreferenceSwitch preferenceDependency) {
@@ -153,13 +156,13 @@ public abstract class Preference {
     @Nullable
     public static View getView(final ConnectedActivity activity, final Preference preference, final InjectProvider injectProvider) {
         if (preference instanceof PreferenceList) {
-            return PreferenceList.getView(activity, preference, injectProvider);
+            return PreferenceList.getView(activity, (PreferenceList) preference, injectProvider);
         } else if (preference instanceof PreferenceSwitch) {
-            return PreferenceSwitch.getView(activity, preference, injectProvider);
+            return PreferenceSwitch.getView(activity, (PreferenceSwitch) preference, injectProvider);
         } else if (preference instanceof PreferenceEditText) {
-            return PreferenceEditText.getView(activity, preference, injectProvider);
+            return PreferenceEditText.getView(activity, (PreferenceEditText) preference, injectProvider);
         } else if (preference instanceof PreferenceBasic) {
-            return PreferenceBasic.getView(activity, preference, injectProvider);
+            return PreferenceBasic.getView(activity, (PreferenceBasic) preference, injectProvider);
         } else {
             return null;
         }

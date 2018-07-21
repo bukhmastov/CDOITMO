@@ -6,16 +6,25 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Process;
 
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Thread;
+
+import javax.inject.Inject;
+
+import dagger.Lazy;
 
 public class ThreadImpl implements Thread {
 
     private static final String TAG = "Thread";
     private static final boolean DEBUG = false;
 
-    //@Inject
-    private Log log = Log.instance();
+    @Inject
+    Lazy<Log> log;
+
+    public ThreadImpl() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     @Override
     public void run(final Runnable runnable) {
@@ -52,11 +61,11 @@ public class ThreadImpl implements Thread {
                 try {
                     runnable.run();
                 } catch (Throwable throwable) {
-                    log.exception("Run on " + hasThread.thread.getName() + " thread failed", throwable);
+                    log.get().exception("Run on " + hasThread.thread.getName() + " thread failed", throwable);
                 }
             });
         } catch (Throwable throwable) {
-            log.exception("Run on " + hasThread.thread.getName() + " thread failed", throwable);
+            log.get().exception("Run on " + hasThread.thread.getName() + " thread failed", throwable);
         }
     }
 
@@ -70,7 +79,7 @@ public class ThreadImpl implements Thread {
             try {
                 runnable.run();
             } catch (Throwable throwable) {
-                log.exception("Run on main thread failed", throwable);
+                log.get().exception("Run on main thread failed", throwable);
             }
         } else {
             log("runOnUI | run with Handler.post");
@@ -79,11 +88,11 @@ public class ThreadImpl implements Thread {
                     try {
                         runnable.run();
                     } catch (Throwable throwable) {
-                        log.exception("Run on main thread failed", throwable);
+                        log.get().exception("Run on main thread failed", throwable);
                     }
                 });
             } catch (Throwable throwable) {
-                log.exception("Run on main thread failed", throwable);
+                log.get().exception("Run on main thread failed", throwable);
             }
         }
     }

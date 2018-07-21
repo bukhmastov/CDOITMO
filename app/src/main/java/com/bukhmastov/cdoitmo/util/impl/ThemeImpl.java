@@ -6,18 +6,25 @@ import android.support.v7.widget.Toolbar;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.dialog.ThemeDialog;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.util.Time;
+
+import javax.inject.Inject;
 
 public class ThemeImpl implements Theme {
 
     private String app_theme = null;
 
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    private Time time = Time.instance();
+    @Inject
+    StoragePref storagePref;
+    @Inject
+    Time time;
+
+    public ThemeImpl() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     @Override
     public String getAppTheme(final Context context) {

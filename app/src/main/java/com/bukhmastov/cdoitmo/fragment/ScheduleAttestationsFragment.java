@@ -18,6 +18,7 @@ import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.activity.search.ScheduleAttestationsSearchActivity;
 import com.bukhmastov.cdoitmo.adapter.rva.ScheduleAttestationsRVA;
 import com.bukhmastov.cdoitmo.exception.SilentException;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleAttestationsFragment;
 import com.bukhmastov.cdoitmo.network.model.Client;
@@ -29,6 +30,8 @@ import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
 
 import org.json.JSONObject;
+
+import javax.inject.Inject;
 
 public class ScheduleAttestationsFragment extends ConnectedFragment {
 
@@ -50,16 +53,16 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
     private boolean invalidate = false;
     private boolean invalidate_refresh = false;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private ScheduleAttestations scheduleAttestations = ScheduleAttestations.instance();
-    //@Inject
-    private Time time = Time.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    ScheduleAttestations scheduleAttestations;
+    @Inject
+    Time time;
+    @Inject
+    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     public static void setQuery(String query) {
         ScheduleAttestationsFragment.lastQuery = ScheduleAttestationsFragment.query;
@@ -82,6 +85,7 @@ public class ScheduleAttestationsFragment extends ConnectedFragment {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        AppComponentProvider.getComponent().inject(this);
         super.onCreate(savedInstanceState);
         log.v(TAG, "Fragment created");
         firebaseAnalyticsProvider.logCurrentScreen(activity, this);

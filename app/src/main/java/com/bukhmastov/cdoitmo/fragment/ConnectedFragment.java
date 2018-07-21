@@ -14,6 +14,7 @@ import android.view.ViewGroup;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsCacheFragment;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsERegisterFragment;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsExtendedFragment;
@@ -27,6 +28,8 @@ import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsSystemsFragment;
 import com.bukhmastov.cdoitmo.util.Log;
 
+import javax.inject.Inject;
+
 public abstract class ConnectedFragment extends Fragment {
 
     private static final String TAG = "ConnectedFragment";
@@ -37,23 +40,24 @@ public abstract class ConnectedFragment extends Fragment {
     protected abstract @LayoutRes int getLayoutId();
     protected abstract @IdRes int getRootId();
 
-    //@Inject
-    private Log log = Log.instance();
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        extras = getArguments();
-    }
+    @Inject
+    Log log;
 
     @Override
     public void onAttach(Context context) {
+        AppComponentProvider.getComponent().inject(this);
         super.onAttach(context);
         try {
             activity = (ConnectedActivity) context;
         } catch (ClassCastException e) {
             log.wtf(TAG, context.toString(), " must implement ConnectedActivity");
         }
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        extras = getArguments();
     }
 
     @Override

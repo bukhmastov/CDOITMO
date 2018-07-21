@@ -1,7 +1,6 @@
 package com.bukhmastov.cdoitmo.object.impl;
 
 import android.app.PendingIntent;
-import android.app.job.JobParameters;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
@@ -11,6 +10,7 @@ import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.MainActivity;
 import com.bukhmastov.cdoitmo.converter.ProtocolConverter;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.interfaces.Callable;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
@@ -31,6 +31,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.inject.Inject;
+
+import dagger.Lazy;
+
 public class ProtocolTrackerServiceImpl implements ProtocolTrackerService {
 
     private static final String TAG = "ProtocolTrackerService";
@@ -41,20 +45,24 @@ public class ProtocolTrackerServiceImpl implements ProtocolTrackerService {
     private static final int maxAttempts = 3;
     private String trace = null;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private Storage storage = Storage.instance();
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    private DeIfmoRestClient deIfmoRestClient = DeIfmoRestClient.instance();
-    //@Inject
-    private Notifications notifications = Notifications.instance();
-    //@Inject
-    private FirebasePerformanceProvider firebasePerformanceProvider = FirebasePerformanceProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    Lazy<Storage> storage;
+    @Inject
+    Lazy<StoragePref> storagePref;
+    @Inject
+    DeIfmoRestClient deIfmoRestClient;
+    @Inject
+    Lazy<Notifications> notifications;
+    @Inject
+    FirebasePerformanceProvider firebasePerformanceProvider;
+
+    public ProtocolTrackerServiceImpl() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     @Override
     public void request(@NonNull final Context context, Callable callback) {
@@ -163,14 +171,14 @@ public class ProtocolTrackerServiceImpl implements ProtocolTrackerService {
                     JSONArray previousProtocol = new JSONArray();
                     boolean firstInit = false;
                     try {
-                        final String previousProtocolValue = storage.get(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#protocol");
+                        final String previousProtocolValue = storage.get().get(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#protocol");
                         if (previousProtocolValue.isEmpty()) {
                             firstInit = true;
                         } else {
                             previousProtocol = new JSONArray(previousProtocolValue);
                         }
                     } catch (Exception ignore) {/* ignore */}
-                    storage.put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#protocol", protocol.toString());
+                    storage.get().put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#protocol", protocol.toString());
                     if (firstInit) {
                         finish();
                         return;
@@ -199,7 +207,7 @@ public class ProtocolTrackerServiceImpl implements ProtocolTrackerService {
                     // creating notifications for existing new changes
                     if (changes.size() > 0) {
                         final long timestamp = System.currentTimeMillis();
-                        final String pref_notify_type = storagePref.get(context, "pref_notify_type", Build.VERSION.SDK_INT <= Build.VERSION_CODES.M ? "0" : "1");
+                        final String pref_notify_type = storagePref.get().get(context, "pref_notify_type", Build.VERSION.SDK_INT <= Build.VERSION_CODES.M ? "0" : "1");
                         if ("0".equals(pref_notify_type)) {
                             // show single notification per subject that contains all changes related to that subject
                             // best suitable: android <= 6.0 and android == 8.0
@@ -269,7 +277,13 @@ public class ProtocolTrackerServiceImpl implements ProtocolTrackerService {
                     intent.putExtra("action", "protocol_changes");
                     PendingIntent pIntent = PendingIntent.getActivity(context, (int) System.currentTimeMillis(), intent, 0);
                     // prepare and send notification
-                    notifications.init(context).notify(context, notificationId++, notifications.getProtocol(context, title, text, timestamp, group, isSummary, pIntent));
+                    notifications.get()
+                            .init(context)
+                            .notify(
+                                    context,
+                                    notificationId++,
+                                    notifications.get().getProtocol(context, title, text, timestamp, group, isSummary, pIntent)
+                            );
                 } catch (Exception e) {
                     log.w(TAG, "addNotification | catch(Thread) | " + e.getMessage());
                 }

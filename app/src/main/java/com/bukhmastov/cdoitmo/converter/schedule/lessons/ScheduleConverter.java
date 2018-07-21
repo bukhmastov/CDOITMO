@@ -1,6 +1,7 @@
 package com.bukhmastov.cdoitmo.converter.schedule.lessons;
 
 import com.bukhmastov.cdoitmo.converter.Converter;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.Time;
 
 import org.json.JSONArray;
@@ -11,10 +12,16 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 
+import javax.inject.Inject;
+
 public abstract class ScheduleConverter extends Converter {
+
+    @Inject
+    Time time;
 
     public ScheduleConverter(Response delegate) {
         super(delegate);
+        AppComponentProvider.getComponent().inject(this);
     }
 
     protected JSONArray sortLessonsByTime(JSONArray lessons) throws Exception {

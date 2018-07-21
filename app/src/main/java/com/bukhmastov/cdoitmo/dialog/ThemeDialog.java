@@ -11,6 +11,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Static;
@@ -21,6 +22,8 @@ import com.bukhmastov.cdoitmo.util.Time;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
+
+import javax.inject.Inject;
 
 public class ThemeDialog extends Dialog {
 
@@ -57,15 +60,16 @@ public class ThemeDialog extends Dialog {
     private int t2_hour = 23;
     private int t2_minutes = 0;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private TextUtils textUtils = TextUtils.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    TextUtils textUtils;
 
     public ThemeDialog(Context context, String value, Callback cb) {
         super(context);
+        AppComponentProvider.getComponent().inject(this);
         this.pref_theme_titles = Arrays.asList(context.getResources().getStringArray(R.array.pref_theme_titles));
         this.pref_theme_values = Arrays.asList(context.getResources().getStringArray(R.array.pref_theme_values));
         this.cb = cb;

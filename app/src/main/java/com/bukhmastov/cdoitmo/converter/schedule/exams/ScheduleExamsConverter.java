@@ -1,6 +1,7 @@
 package com.bukhmastov.cdoitmo.converter.schedule.exams;
 
 import com.bukhmastov.cdoitmo.converter.Converter;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.util.Time;
 
@@ -12,6 +13,8 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 
+import javax.inject.Inject;
+
 public abstract class ScheduleExamsConverter extends Converter {
 
     protected final JSONObject data;
@@ -19,8 +22,12 @@ public abstract class ScheduleExamsConverter extends Converter {
     protected String templateType = "";
     protected String templateTitle = null;
 
+    @Inject
+    Time time;
+
     public ScheduleExamsConverter(JSONObject data, JSONObject template, Response delegate) {
         super(delegate);
+        AppComponentProvider.getComponent().inject(this);
         this.data = data;
         this.template = template;
     }

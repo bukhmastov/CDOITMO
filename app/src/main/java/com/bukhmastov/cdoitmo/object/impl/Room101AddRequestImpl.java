@@ -15,6 +15,7 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.Room101Fragment;
 import com.bukhmastov.cdoitmo.network.Room101Client;
@@ -40,6 +41,8 @@ import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.inject.Inject;
+
 public class Room101AddRequestImpl implements Room101AddRequest {
 
     private static final String TAG = "Room101AddRequest";
@@ -53,22 +56,26 @@ public class Room101AddRequestImpl implements Room101AddRequest {
     private String pick_time_start = null;
     private String pick_time_end = null;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private Storage storage = Storage.instance();
-    //@Inject
-    private InjectProvider injectProvider = InjectProvider.instance();
-    //@Inject
-    private Room101Client room101Client = Room101Client.instance();
-    //@Inject
-    private NotificationMessage notificationMessage = NotificationMessage.instance();
-    //@Inject
-    private Static staticUtil = Static.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    Storage storage;
+    @Inject
+    InjectProvider injectProvider;
+    @Inject
+    Room101Client room101Client;
+    @Inject
+    NotificationMessage notificationMessage;
+    @Inject
+    Static staticUtil;
+    @Inject
+    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
+
+    public Room101AddRequestImpl() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     @Override
     public void start(@NonNull Activity activity, @NonNull Callback callback) {
@@ -571,7 +578,7 @@ public class Room101AddRequestImpl implements Room101AddRequest {
         ((TextView) view.findViewById(R.id.ntd_text)).setText(text);
         return view;
     }
-    private View getChooserLayout(String header, String desc, JSONArray array, CompoundButton.OnCheckedChangeListener onCheckedChangeListener) throws Exception {
+    private View getChooserLayout(String header, String desc, JSONArray array, CompoundButton.OnCheckedChangeListener onCheckedChangeListener) {
         View view = inflate(R.layout.layout_room101_add_request_state);
         if (view == null) {
             return null;

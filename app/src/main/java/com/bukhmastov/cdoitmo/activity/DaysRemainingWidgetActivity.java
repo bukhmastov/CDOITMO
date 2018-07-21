@@ -13,6 +13,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.DaysRemainingWidget;
@@ -29,6 +30,8 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
+import javax.inject.Inject;
+
 public class DaysRemainingWidgetActivity extends AppCompatActivity implements ScheduleExams.Handler, DaysRemainingWidget.Delegate {
 
     private static final String TAG = "DRWidgetActivity";
@@ -42,27 +45,34 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
     private final LinearLayout.LayoutParams showMatch = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
     private ArrayList<DaysRemainingWidget.Data> data = null;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private ScheduleExams scheduleExams = ScheduleExams.instance();
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    private DaysRemainingWidget daysRemainingWidget = DaysRemainingWidget.instance();
-    //@Inject
-    private NotificationMessage notificationMessage = NotificationMessage.instance();
-    //@Inject
-    private Theme theme = Theme.instance();
-    //@Inject
-    private TextUtils textUtils = TextUtils.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    ScheduleExams scheduleExams;
+    @Inject
+    StoragePref storagePref;
+    @Inject
+    DaysRemainingWidget daysRemainingWidget;
+    @Inject
+    NotificationMessage notificationMessage;
+    @Inject
+    Theme theme;
+    @Inject
+    TextUtils textUtils;
+    @Inject
+    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
+
+    private void inject() {
+        if (thread == null) {
+            AppComponentProvider.getComponent().inject(this);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        inject();
         switch (theme.getAppTheme(activity)) {
             case "light":
             default: setTheme(R.style.AppTheme_Popup); break;
@@ -143,6 +153,7 @@ public class DaysRemainingWidgetActivity extends AppCompatActivity implements Sc
 
     @Override
     protected void attachBaseContext(Context context) {
+        inject();
         super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log, textUtils));
     }
 

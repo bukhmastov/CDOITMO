@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.provider;
 
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.object.ProtocolTracker;
 import com.bukhmastov.cdoitmo.object.SettingsScheduleAttestations;
 import com.bukhmastov.cdoitmo.object.SettingsScheduleExams;
@@ -14,90 +15,92 @@ import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
+import javax.inject.Inject;
+
+import dagger.Lazy;
+
 public class InjectProvider {
 
-    // future: replace with DI factory
-    private static InjectProvider instance = new InjectProvider();
-    public static InjectProvider instance() {
-        return instance;
+    @Inject
+    Lazy<Log> log;
+    @Inject
+    Lazy<Thread> thread;
+    @Inject
+    Lazy<Storage> storage;
+    @Inject
+    Lazy<StoragePref> storagePref;
+    @Inject
+    Lazy<ProtocolTracker> protocolTracker;
+    @Inject
+    Lazy<SettingsScheduleLessons> settingsScheduleLessons;
+    @Inject
+    Lazy<SettingsScheduleExams> settingsScheduleExams;
+    @Inject
+    Lazy<SettingsScheduleAttestations> settingsScheduleAttestations;
+    @Inject
+    Lazy<Account> account;
+    @Inject
+    Lazy< NotificationMessage> notificationMessage;
+    @Inject
+    Lazy<Static> staticUtil;
+    @Inject
+    Lazy<Theme> theme;
+    @Inject
+    Lazy<Time> time;
+
+    public InjectProvider() {
+        AppComponentProvider.getComponent().inject(this);
     }
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private Storage storage = Storage.instance();
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    private ProtocolTracker protocolTracker = ProtocolTracker.instance();
-    //@Inject
-    private SettingsScheduleLessons settingsScheduleLessons = SettingsScheduleLessons.instance();
-    //@Inject
-    private SettingsScheduleExams settingsScheduleExams = SettingsScheduleExams.instance();
-    //@Inject
-    private SettingsScheduleAttestations settingsScheduleAttestations = SettingsScheduleAttestations.instance();
-    //@Inject
-    private Account account = Account.instance();
-    //@Inject
-    private NotificationMessage notificationMessage = NotificationMessage.instance();
-    //@Inject
-    private Static staticUtil = Static.instance();
-    //@Inject
-    private Theme theme = Theme.instance();
-    //@Inject
-    private Time time = Time.instance();
-
     public Log getLog() {
-        return log;
+        return log.get();
     }
 
     public Thread getThread() {
-        return thread;
+        return thread.get();
     }
 
     public Storage getStorage() {
-        return storage;
+        return storage.get();
     }
 
     public StoragePref getStoragePref() {
-        return storagePref;
+        return storagePref.get();
     }
 
     public ProtocolTracker getProtocolTracker() {
-        return protocolTracker;
+        return protocolTracker.get();
     }
 
     public SettingsScheduleLessons getSettingsScheduleLessons() {
-        return settingsScheduleLessons;
+        return settingsScheduleLessons.get();
     }
 
     public SettingsScheduleExams getSettingsScheduleExams() {
-        return settingsScheduleExams;
+        return settingsScheduleExams.get();
     }
 
     public SettingsScheduleAttestations getSettingsScheduleAttestations() {
-        return settingsScheduleAttestations;
+        return settingsScheduleAttestations.get();
     }
 
     public Account getAccount() {
-        return account;
+        return account.get();
     }
 
     public NotificationMessage getNotificationMessage() {
-        return notificationMessage;
+        return notificationMessage.get();
     }
 
     public Static getStaticUtil() {
-        return staticUtil;
+        return staticUtil.get();
     }
 
     public Theme getTheme() {
-        return theme;
+        return theme.get();
     }
 
     public Time getTime() {
-        return time;
+        return time.get();
     }
 }

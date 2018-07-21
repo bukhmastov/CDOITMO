@@ -15,6 +15,7 @@ import android.widget.ArrayAdapter;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapter.rva.ERegisterSubjectViewRVA;
 import com.bukhmastov.cdoitmo.exception.SilentException;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Log;
@@ -25,6 +26,8 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.regex.Pattern;
+
+import javax.inject.Inject;
 
 public class SubjectShowFragment extends ConnectedFragment {
 
@@ -38,17 +41,18 @@ public class SubjectShowFragment extends ConnectedFragment {
         public String text = "";
     }
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private NotificationMessage notificationMessage = NotificationMessage.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    NotificationMessage notificationMessage;
+    @Inject
+    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        AppComponentProvider.getComponent().inject(this);
         setHasOptionsMenu(true);
         super.onCreate(savedInstanceState);
         firebaseAnalyticsProvider.logCurrentScreen(activity, this);
@@ -212,7 +216,7 @@ public class SubjectShowFragment extends ConnectedFragment {
             }
         });
     }
-    private String getShareText(String sbj, ShareEntity shareEntity) throws Exception {
+    private String getShareText(String sbj, ShareEntity shareEntity) {
         // prettify points value
         String points = "";
         int iValue = shareEntity.value.intValue();

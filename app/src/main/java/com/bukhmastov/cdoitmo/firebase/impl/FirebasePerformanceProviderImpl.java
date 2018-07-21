@@ -2,6 +2,7 @@ package com.bukhmastov.cdoitmo.firebase.impl;
 
 import android.content.Context;
 
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.util.Log;
@@ -13,6 +14,10 @@ import com.google.firebase.perf.FirebasePerformance;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.inject.Inject;
+
+import dagger.Lazy;
+
 public class FirebasePerformanceProviderImpl implements FirebasePerformanceProvider {
 
     private static final String TAG = "FirebasePerformanceProvider";
@@ -21,16 +26,20 @@ public class FirebasePerformanceProviderImpl implements FirebasePerformanceProvi
     private String uuid = null;
     private Map<String, com.google.firebase.perf.metrics.Trace> traceMap = new HashMap<>();
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private Static staticUtil = Static.instance();
-    //@Inject
-    private TextUtils textUtils = TextUtils.instance();
-    //@Inject
-    private FirebaseConfigProvider firebaseConfigProvider = FirebaseConfigProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    Lazy<Static> staticUtil;
+    @Inject
+    Lazy<TextUtils> textUtils;
+    @Inject
+    Lazy<FirebaseConfigProvider> firebaseConfigProvider;
+
+    public FirebasePerformanceProviderImpl() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     private FirebasePerformance getFirebasePerformance() {
         if (firebasePerformance == null) {
@@ -43,14 +52,14 @@ public class FirebasePerformanceProviderImpl implements FirebasePerformanceProvi
     public void setEnabled(Context context) {
         thread.run(() -> {
             log.i(TAG, "Firebase Performance fetching status");
-            firebaseConfigProvider.getString(FirebaseConfigProvider.PERFORMANCE_ENABLED, value -> thread.run(() -> setEnabled(context, "1".equals(value))));
+            firebaseConfigProvider.get().getString(FirebaseConfigProvider.PERFORMANCE_ENABLED, value -> thread.run(() -> setEnabled(context, "1".equals(value))));
         });
     }
     @Override
     public void setEnabled(Context context, boolean enabled) {
         try {
             this.enabled = enabled;
-            this.uuid = staticUtil.getUUID(context);
+            this.uuid = staticUtil.get().getUUID(context);
             if (!enabled) {
                 stopAll();
             }
@@ -70,7 +79,7 @@ public class FirebasePerformanceProviderImpl implements FirebasePerformanceProvi
             name = name != null ? name : Trace.UNKNOWN;
             String key;
             do {
-                key = name + "_" + textUtils.getRandomString(8);
+                key = name + "_" + textUtils.get().getRandomString(8);
             } while (traceMap.containsKey(key));
             com.google.firebase.perf.metrics.Trace trace = getFirebasePerformance().newTrace(name);
             traceMap.put(key, trace);

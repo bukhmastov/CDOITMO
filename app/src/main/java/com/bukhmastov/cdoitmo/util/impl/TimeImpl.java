@@ -3,6 +3,7 @@ package com.bukhmastov.cdoitmo.util.impl;
 import android.content.Context;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
@@ -15,16 +16,24 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
+import javax.inject.Inject;
+
+import dagger.Lazy;
+
 public class TimeImpl implements Time {
 
     private static final String TAG = "Time";
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Storage storage = Storage.instance();
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
+    @Inject
+    Lazy<Log> log;
+    @Inject
+    Lazy<Storage> storage;
+    @Inject
+    Lazy<StoragePref> storagePref;
+
+    public TimeImpl() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     @Override
     public Calendar getCalendar() {
@@ -41,7 +50,7 @@ public class TimeImpl implements Time {
         int week = -1;
         long ts = 0;
         try {
-            final String override = storagePref.get(context, "pref_week_force_override", "");
+            final String override = storagePref.get().get(context, "pref_week_force_override", "");
             if (!override.isEmpty()) {
                 try {
                     String[] v = override.split("#");
@@ -52,14 +61,14 @@ public class TimeImpl implements Time {
                 } catch (Exception ignore) {/* ignore */}
             }
             if (week < 0) {
-                final String stored = storage.get(context, Storage.PERMANENT, Storage.GLOBAL, "user#week").trim();
+                final String stored = storage.get().get(context, Storage.PERMANENT, Storage.GLOBAL, "user#week").trim();
                 if (!stored.isEmpty()) {
                     try {
                         JSONObject json = new JSONObject(stored);
                         week = json.getInt("week");
                         ts = json.getLong("timestamp");
                     } catch (Exception e) {
-                        storage.delete(context, Storage.PERMANENT, Storage.GLOBAL, "user#week");
+                        storage.get().delete(context, Storage.PERMANENT, Storage.GLOBAL, "user#week");
                     }
                 }
             }
@@ -95,7 +104,7 @@ public class TimeImpl implements Time {
     @Override
     public String getGenitiveMonth(Context context, String month) {
         if (context == null) {
-            log.w(TAG, "getGenitiveMonth | context is null");
+            log.get().w(TAG, "getGenitiveMonth | context is null");
             return month;
         }
         switch (month) {
@@ -119,7 +128,7 @@ public class TimeImpl implements Time {
     public String getGenitiveMonth(Context context, int month) {
         String m = "";
         if (context == null) {
-            log.w(TAG, "getGenitiveMonth | context is null");
+            log.get().w(TAG, "getGenitiveMonth | context is null");
             return m;
         }
         switch (month) {

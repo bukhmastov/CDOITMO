@@ -10,6 +10,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
@@ -21,25 +22,28 @@ import com.bukhmastov.cdoitmo.util.Thread;
 import java.io.File;
 import java.io.FileWriter;
 
+import javax.inject.Inject;
+
 public class LogFragment extends ConnectedFragment {
 
     private static final String TAG = "LogFragment";
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    private NotificationMessage notificationMessage = NotificationMessage.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
-    //@Inject
-    private FirebaseCrashlyticsProvider firebaseCrashlyticsProvider = FirebaseCrashlyticsProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    StoragePref storagePref;
+    @Inject
+    NotificationMessage notificationMessage;
+    @Inject
+    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
+    @Inject
+    FirebaseCrashlyticsProvider firebaseCrashlyticsProvider;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        AppComponentProvider.getComponent().inject(this);
         super.onCreate(savedInstanceState);
         log.v(TAG, "Fragment created");
         firebaseAnalyticsProvider.logCurrentScreen(activity, this);

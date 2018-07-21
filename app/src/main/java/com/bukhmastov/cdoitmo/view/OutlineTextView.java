@@ -10,7 +10,10 @@ import android.support.v7.widget.AppCompatTextView;
 import android.util.AttributeSet;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.Log;
+
+import javax.inject.Inject;
 
 public class OutlineTextView extends AppCompatTextView {
 
@@ -25,20 +28,23 @@ public class OutlineTextView extends AppCompatTextView {
     private float mShadowDy;
     private int mShadowColor;
 
-    //@Inject
-    private Log log = Log.instance();
+    @Inject
+    Log log;
 
     public OutlineTextView(Context context) {
         super(context);
+        AppComponentProvider.getComponent().inject(this);
     }
 
     public OutlineTextView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
+        AppComponentProvider.getComponent().inject(this);
         setAttributes(attrs);
     }
 
     public OutlineTextView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        AppComponentProvider.getComponent().inject(this);
         setAttributes(attrs);
     }
 

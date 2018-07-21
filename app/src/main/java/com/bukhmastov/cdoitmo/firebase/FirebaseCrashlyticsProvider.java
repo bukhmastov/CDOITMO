@@ -3,15 +3,8 @@ package com.bukhmastov.cdoitmo.firebase;
 import android.content.Context;
 
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
-import com.bukhmastov.cdoitmo.firebase.impl.FirebaseCrashlyticsProviderImpl;
 
 public interface FirebaseCrashlyticsProvider {
-
-    // future: replace with DI factory
-    FirebaseCrashlyticsProvider instance = new FirebaseCrashlyticsProviderImpl();
-    static FirebaseCrashlyticsProvider instance() {
-        return instance;
-    }
 
     boolean setEnabled(Context context);
     boolean setEnabled(Context context, boolean enabled);

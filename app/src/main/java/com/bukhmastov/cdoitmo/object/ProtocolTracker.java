@@ -6,15 +6,8 @@ import android.support.annotation.Nullable;
 
 import com.bukhmastov.cdoitmo.interfaces.Callable;
 import com.bukhmastov.cdoitmo.network.DeIfmoRestClient;
-import com.bukhmastov.cdoitmo.object.impl.ProtocolTrackerImpl;
 
 public interface ProtocolTracker {
-
-    // future: replace with DI factory
-    ProtocolTracker instance = new ProtocolTrackerImpl();
-    static ProtocolTracker instance() {
-        return instance;
-    }
 
     ProtocolTracker check(@NonNull final Context context);
 

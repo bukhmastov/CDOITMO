@@ -10,17 +10,26 @@ import android.widget.Toast;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
 
+import javax.inject.Inject;
+
+import dagger.Lazy;
+
 public class NotificationMessageImpl implements NotificationMessage {
 
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private Time time = Time.instance();
+    @Inject
+    Thread thread;
+    @Inject
+    Lazy<Time> time;
+
+    public NotificationMessageImpl() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     @Override
     public void showUpdateTime(Activity activity, long time) {
@@ -49,8 +58,8 @@ public class NotificationMessageImpl implements NotificationMessage {
 
     @Override
     public void showUpdateTime(Activity activity, @IdRes int layout, long t, int duration, boolean force) {
-        String message = time.getUpdateTime(activity, t);
-        int shift = (int) ((time.getCalendar().getTimeInMillis() - t) / 1000L);
+        String message = time.get().getUpdateTime(activity, t);
+        int shift = (int) ((time.get().getCalendar().getTimeInMillis() - t) / 1000L);
         if (force || shift > 4) {
             snackBar(activity, layout, activity.getString(R.string.update_date) + " " + message, duration);
         }

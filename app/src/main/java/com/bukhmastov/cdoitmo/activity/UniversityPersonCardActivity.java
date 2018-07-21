@@ -12,6 +12,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
@@ -28,6 +29,8 @@ import com.squareup.picasso.Picasso;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import javax.inject.Inject;
+
 public class UniversityPersonCardActivity extends ConnectedActivity implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "UniversityPersonCard";
@@ -38,23 +41,24 @@ public class UniversityPersonCardActivity extends ConnectedActivity implements S
     private JSONObject person = null;
     private int pid = -1;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private IfmoRestClient ifmoRestClient = IfmoRestClient.instance();
-    //@Inject
-    private Static staticUtil = Static.instance();
-    //@Inject
-    private Theme theme = Theme.instance();
-    //@Inject
-    private TextUtils textUtils = TextUtils.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    IfmoRestClient ifmoRestClient;
+    @Inject
+    Static staticUtil;
+    @Inject
+    Theme theme;
+    @Inject
+    TextUtils textUtils;
+    @Inject
+    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        AppComponentProvider.getComponent().inject(this);
         switch (theme.getAppTheme(activity)) {
             case "light":
             default: setTheme(R.style.AppTheme_TransparentStatusBar); break;

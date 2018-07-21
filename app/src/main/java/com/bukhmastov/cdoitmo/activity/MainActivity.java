@@ -16,6 +16,7 @@ import android.view.MenuItem;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
@@ -43,6 +44,8 @@ import com.bukhmastov.cdoitmo.util.singleton.Migration;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.util.Thread;
 
+import javax.inject.Inject;
+
 public class MainActivity extends ConnectedActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "MainActivity";
@@ -53,37 +56,38 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
     public static int selectedSection = -1;
     public static MenuItem selectedMenuItem = null;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    private Storage storage = Storage.instance();
-    //@Inject
-    private ProtocolTracker protocolTracker = ProtocolTracker.instance();
-    //@Inject
-    private Account account = Account.instance();
-    //@Inject
-    private NotificationMessage notificationMessage = NotificationMessage.instance();
-    //@Inject
-    private NavigationMenu navigationMenu = NavigationMenu.instance();
-    //@Inject
-    private Theme theme = Theme.instance();
-    //@Inject
-    private InjectProvider injectProvider = InjectProvider.instance();
-    //@Inject
-    private FirebaseCrashlyticsProvider firebaseCrashlyticsProvider = FirebaseCrashlyticsProvider.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
-    //@Inject
-    private FirebasePerformanceProvider firebasePerformanceProvider = FirebasePerformanceProvider.instance();
-    //@Inject
-    private FirebaseConfigProvider firebaseConfigProvider = FirebaseConfigProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    StoragePref storagePref;
+    @Inject
+    Storage storage;
+    @Inject
+    ProtocolTracker protocolTracker;
+    @Inject
+    Account account;
+    @Inject
+    NotificationMessage notificationMessage;
+    @Inject
+    NavigationMenu navigationMenu;
+    @Inject
+    Theme theme;
+    @Inject
+    InjectProvider injectProvider;
+    @Inject
+    FirebaseCrashlyticsProvider firebaseCrashlyticsProvider;
+    @Inject
+    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
+    @Inject
+    FirebasePerformanceProvider firebasePerformanceProvider;
+    @Inject
+    FirebaseConfigProvider firebaseConfigProvider;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
+        AppComponentProvider.getComponent().inject(this);
         log.i(TAG, "Activity created");
         if (!initialized) {
             // initialize app
@@ -103,7 +107,7 @@ public class MainActivity extends ConnectedActivity implements NavigationView.On
                     // apply compatibility changes
                     Migration.migrate(activity, injectProvider);
                     // set default preferences
-                    SettingsFragment.applyDefaultValues(activity);
+                    SettingsFragment.applyDefaultValues(activity, storagePref);
                     // enable/disable firebase
                     firebaseCrashlyticsProvider.setEnabled(activity);
                     firebaseAnalyticsProvider.setEnabled(activity);

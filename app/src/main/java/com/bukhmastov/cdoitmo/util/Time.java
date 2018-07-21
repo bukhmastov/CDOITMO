@@ -2,17 +2,9 @@ package com.bukhmastov.cdoitmo.util;
 
 import android.content.Context;
 
-import com.bukhmastov.cdoitmo.util.impl.TimeImpl;
-
 import java.util.Calendar;
 
 public interface Time {
-
-    // future: replace with DI factory
-    Time instance = new TimeImpl();
-    static Time instance() {
-        return instance;
-    }
 
     Calendar getCalendar();
 

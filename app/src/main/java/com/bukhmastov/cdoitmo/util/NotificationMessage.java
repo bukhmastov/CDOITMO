@@ -4,22 +4,9 @@ import android.app.Activity;
 import android.content.Context;
 import android.support.annotation.IdRes;
 import android.support.annotation.StringRes;
-import android.support.design.widget.Snackbar;
 import android.view.View;
-import android.widget.Toast;
-
-import com.bukhmastov.cdoitmo.App;
-import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.util.impl.NotificationMessageImpl;
-import com.bukhmastov.cdoitmo.util.singleton.Color;
 
 public interface NotificationMessage {
-
-    // future: replace with DI factory
-    NotificationMessage instance = new NotificationMessageImpl();
-    static NotificationMessage instance() {
-        return instance;
-    }
 
     int LENGTH_MOMENTUM = 600;
     int LENGTH_SHORT = 1500;

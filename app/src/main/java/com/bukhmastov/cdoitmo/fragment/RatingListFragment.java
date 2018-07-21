@@ -15,6 +15,7 @@ import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapter.rva.RatingListRVA;
 import com.bukhmastov.cdoitmo.exception.SilentException;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
@@ -35,6 +36,8 @@ import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.inject.Inject;
+
 public class RatingListFragment extends ConnectedFragment implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = "RatingListFragment";
@@ -46,25 +49,26 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
     private int minePosition = -1;
     private String mineFaculty = "";
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private Storage storage = Storage.instance();
-    //@Inject
-    private DeIfmoClient deIfmoClient = DeIfmoClient.instance();
-    //@Inject
-    private NotificationMessage notificationMessage = NotificationMessage.instance();
-    //@Inject
-    private Time time = Time.instance();
-    //@Inject
-    private TextUtils textUtils = TextUtils.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    Storage storage;
+    @Inject
+    DeIfmoClient deIfmoClient;
+    @Inject
+    NotificationMessage notificationMessage;
+    @Inject
+    Time time;
+    @Inject
+    TextUtils textUtils;
+    @Inject
+    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        AppComponentProvider.getComponent().inject(this);
         setHasOptionsMenu(true);
         super.onCreate(savedInstanceState);
         firebaseAnalyticsProvider.logCurrentScreen(activity, this);
@@ -369,7 +373,7 @@ public class RatingListFragment extends ConnectedFragment implements SwipeRefres
             }
         });
     }
-    private void share(final String title) throws Exception {
+    private void share(final String title) {
         thread.runOnUI(() -> {
             log.v(TAG, "share | " + title);
             Intent intent = new Intent(Intent.ACTION_SEND);

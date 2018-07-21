@@ -2,6 +2,7 @@ package com.bukhmastov.cdoitmo.converter;
 
 import android.content.Context;
 
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Storage;
@@ -15,23 +16,26 @@ import org.json.JSONObject;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.inject.Inject;
+
 public class ProtocolConverter extends Converter {
 
     private final Context context;
     private final JSONArray protocol;
     private final int number_of_weeks;
 
-    //@Inject
-    private Storage storage = Storage.instance();
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    private Time time = Time.instance();
-    //@Inject
-    private TextUtils textUtils = TextUtils.instance();
+    @Inject
+    Storage storage;
+    @Inject
+    StoragePref storagePref;
+    @Inject
+    Time time;
+    @Inject
+    TextUtils textUtils;
 
     public ProtocolConverter(Context context, JSONArray protocol, int number_of_weeks, Response delegate) {
         super(delegate);
+        AppComponentProvider.getComponent().inject(this);
         this.context = context;
         this.protocol = protocol;
         this.number_of_weeks = number_of_weeks;

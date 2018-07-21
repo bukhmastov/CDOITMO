@@ -18,6 +18,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.adapter.rva.ScheduleLessonsRVA;
 import com.bukhmastov.cdoitmo.exception.SilentException;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
@@ -33,6 +34,8 @@ import org.json.JSONObject;
 
 import java.util.Calendar;
 
+import javax.inject.Inject;
+
 public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
 
     private static final String TAG = "SLTabFragment";
@@ -40,19 +43,20 @@ public class ScheduleLessonsTabFragment extends ScheduleLessonsTabHostFragment {
     private Client.Request requestHandle = null;
     private View container = null;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private ScheduleLessons scheduleLessons = ScheduleLessons.instance();
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    private Time time = Time.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    ScheduleLessons scheduleLessons;
+    @Inject
+    StoragePref storagePref;
+    @Inject
+    Time time;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        AppComponentProvider.getComponent().inject(this);
         super.onCreate(savedInstanceState);
         final Bundle bundle = getArguments();
         if (bundle != null && bundle.containsKey("type")) {

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Bundle;
 
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsModifyFragment;
 import com.bukhmastov.cdoitmo.interfaces.Callable;
@@ -17,18 +18,24 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import javax.inject.Inject;
+
 public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
 
     private static final String TAG = "ScheduleLessonsHelper";
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private TextUtils textUtils = TextUtils.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    TextUtils textUtils;
+    @Inject
+    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
+
+    public ScheduleLessonsHelperImpl() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     @Override
     public boolean clearChanges(final Context context, final Storage storage, final String query, final Callable callback) {

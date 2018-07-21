@@ -18,6 +18,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.adapter.rva.ScheduleExamsRVA;
 import com.bukhmastov.cdoitmo.exception.SilentException;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleExamsFragment;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
@@ -29,6 +30,8 @@ import com.bukhmastov.cdoitmo.util.Thread;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import javax.inject.Inject;
+
 public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
 
     private static final String TAG = "SLTabFragment";
@@ -36,15 +39,16 @@ public class ScheduleExamsTabFragment extends ScheduleExamsTabHostFragment {
     private Client.Request requestHandle = null;
     private View container = null;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private ScheduleExams scheduleExams = ScheduleExams.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    ScheduleExams scheduleExams;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        AppComponentProvider.getComponent().inject(this);
         super.onCreate(savedInstanceState);
         final Bundle bundle = getArguments();
         if (bundle != null && bundle.containsKey("type")) {

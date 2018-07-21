@@ -19,6 +19,7 @@ import android.widget.ListView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapter.SuggestionsListView;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.object.entity.Suggestion;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.singleton.CtxWrapper;
@@ -40,6 +41,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import javax.inject.Inject;
+
 public abstract class SearchActivity extends AppCompatActivity {
 
     private static final String TAG = "SearchActivity";
@@ -51,20 +54,20 @@ public abstract class SearchActivity extends AppCompatActivity {
     protected int currentNumberOfSuggestions = 0;
     protected boolean saveCurrentSuggestion = true;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private Storage storage = Storage.instance();
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    private NotificationMessage notificationMessage = NotificationMessage.instance();
-    //@Inject
-    private Theme theme = Theme.instance();
-    //@Inject
-    private TextUtils textUtils = TextUtils.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    Storage storage;
+    @Inject
+    StoragePref storagePref;
+    @Inject
+    NotificationMessage notificationMessage;
+    @Inject
+    Theme theme;
+    @Inject
+    TextUtils textUtils;
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({SPEECH_RECOGNITION, CLEAR, NONE})
@@ -77,6 +80,12 @@ public abstract class SearchActivity extends AppCompatActivity {
     abstract protected String getHint();
     abstract protected void onDone(String query);
 
+    private void inject() {
+        if (thread == null) {
+            AppComponentProvider.getComponent().inject(this);
+        }
+    }
+
     public SearchActivity(int numberOfSuggestions, int maxCountOfSuggestionsToStore) {
         this.numberOfSuggestions = numberOfSuggestions;
         this.maxCountOfSuggestionsToStore = maxCountOfSuggestionsToStore;
@@ -84,6 +93,7 @@ public abstract class SearchActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        inject();
         switch (theme.getAppTheme(this)) {
             case "light":
             default: setTheme(R.style.AppTheme_Search); break;
@@ -120,6 +130,7 @@ public abstract class SearchActivity extends AppCompatActivity {
 
     @Override
     protected void attachBaseContext(Context context) {
+        inject();
         super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log, textUtils));
     }
 

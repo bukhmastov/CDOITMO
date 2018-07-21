@@ -11,7 +11,10 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.Log;
+
+import javax.inject.Inject;
 
 public class BottomSheetDialog extends android.support.design.widget.BottomSheetDialog implements View.OnClickListener {
 
@@ -19,17 +22,19 @@ public class BottomSheetDialog extends android.support.design.widget.BottomSheet
     private final Context context;
     private OnEntryClickListener listener;
 
-    //@Inject
-    private Log log = Log.instance();
+    @Inject
+    Log log;
 
     public BottomSheetDialog(@NonNull Context context, @Nullable String header, @NonNull Entry ...entries) {
         super(context);
+        AppComponentProvider.getComponent().inject(this);
         this.context = context;
         init(header, entries);
     }
 
     public BottomSheetDialog(@NonNull Context context, int theme, @Nullable String header, @NonNull Entry ...entries) {
         super(context, theme);
+        AppComponentProvider.getComponent().inject(this);
         this.context = context;
         init(header, entries);
     }

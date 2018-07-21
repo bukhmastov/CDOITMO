@@ -14,10 +14,6 @@ import com.bukhmastov.cdoitmo.object.preference.PreferenceEditText;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceList;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
 import com.bukhmastov.cdoitmo.provider.InjectProvider;
-import com.bukhmastov.cdoitmo.util.NotificationMessage;
-import com.bukhmastov.cdoitmo.util.Static;
-import com.bukhmastov.cdoitmo.util.Theme;
-import com.bukhmastov.cdoitmo.util.Time;
 
 import java.util.ArrayList;
 import java.util.Calendar;

@@ -3,6 +3,7 @@ package com.bukhmastov.cdoitmo.object.schedule.impl;
 import android.content.Context;
 
 import com.bukhmastov.cdoitmo.converter.schedule.exams.ScheduleExamsConverterIfmo;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.network.IfmoClient;
 import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
@@ -15,16 +16,22 @@ import com.bukhmastov.cdoitmo.util.Thread;
 
 import org.json.JSONObject;
 
+import javax.inject.Inject;
+
 public class ScheduleExamsImpl extends ScheduleImpl implements ScheduleExams {
 
     private static final String TAG = "ScheduleExams";
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private IfmoClient ifmoClient = IfmoClient.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    IfmoClient ifmoClient;
+
+    public ScheduleExamsImpl() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     @Override
     protected void searchMine(final Context context, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {

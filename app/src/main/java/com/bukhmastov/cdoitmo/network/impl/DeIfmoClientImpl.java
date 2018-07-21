@@ -5,20 +5,28 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.bukhmastov.cdoitmo.App;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.handlers.RawHandler;
 import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.parse.UserDataParse;
+import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
 import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.inject.Inject;
+
+import dagger.Lazy;
 
 public class DeIfmoClientImpl extends DeIfmoClient {
 
@@ -27,12 +35,25 @@ public class DeIfmoClientImpl extends DeIfmoClient {
     private static final String DEFAULT_PROTOCOL = HTTPS;
     private static final boolean DEFAULT_RE_AUTH = true;
 
-    //@Inject
-    private Time time = Time.instance();
-    //@Inject
-    private TextUtils textUtils = TextUtils.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    Storage storage;
+    @Inject
+    StoragePref storagePref;
+    @Inject
+    Lazy<Time> time;
+    @Inject
+    Lazy<TextUtils> textUtils;
+    @Inject
+    Lazy<FirebaseAnalyticsProvider> firebaseAnalyticsProvider;
+
+    public DeIfmoClientImpl() {
+        super();
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     @Override
     public void check(@NonNull final Context context, @NonNull final ResponseHandler responseHandler) {
@@ -72,9 +93,9 @@ public class DeIfmoClientImpl extends DeIfmoClient {
                             thread.run(thread.BACKGROUND, () -> new UserDataParse(response, result -> {
                                 if (result != null) {
                                     log.v(TAG, "check | success | parsed");
-                                    String name = textUtils.getStringSafely(result, "name", "");
-                                    String avatar = textUtils.getStringSafely(result, "avatar", "");
-                                    String group = textUtils.getStringSafely(result, "group", "");
+                                    String name = textUtils.get().getStringSafely(result, "name", "");
+                                    String avatar = textUtils.get().getStringSafely(result, "avatar", "");
+                                    String group = textUtils.get().getStringSafely(result, "group", "");
                                     String pref_group_force_override = storagePref.get(context, "pref_group_force_override", "");
                                     if (pref_group_force_override == null) {
                                         pref_group_force_override = "";
@@ -100,14 +121,14 @@ public class DeIfmoClientImpl extends DeIfmoClient {
                                     try {
                                         storage.put(context, Storage.PERMANENT, Storage.GLOBAL, "user#week", new JSONObject()
                                                 .put("week", Integer.parseInt(result.getString("week")))
-                                                .put("timestamp", time.getCalendar().getTimeInMillis())
+                                                .put("timestamp", time.get().getCalendar().getTimeInMillis())
                                                 .toString()
                                         );
                                     } catch (Exception e) {
                                         log.exception(e);
                                         storage.delete(context, Storage.PERMANENT, Storage.GLOBAL, "user#week");
                                     }
-                                    firebaseAnalyticsProvider.setUserProperties(context, group);
+                                    firebaseAnalyticsProvider.get().setUserProperties(context, group);
                                     responseHandler.onSuccess(200, headers, "");
                                 } else {
                                     log.v(TAG, "check | success | not parsed");

@@ -7,6 +7,7 @@ import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Time;
 
@@ -15,7 +16,9 @@ import org.json.JSONObject;
 
 import java.util.Calendar;
 
-class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFactory {
+import javax.inject.Inject;
+
+public class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFactory {
 
     private final Context context;
     private final int appWidgetId;
@@ -24,14 +27,15 @@ class ScheduleLessonsWidgetFactory implements RemoteViewsService.RemoteViewsFact
     private int week = -1;
     private JSONArray lessons;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Time time = Time.instance();
-    //@Inject
-    private ScheduleLessonsWidgetStorage scheduleLessonsWidgetStorage = ScheduleLessonsWidgetStorage.instance();
+    @Inject
+    Log log;
+    @Inject
+    Time time;
+    @Inject
+    ScheduleLessonsWidgetStorage scheduleLessonsWidgetStorage;
 
     ScheduleLessonsWidgetFactory(Context context, Intent intent) {
+        AppComponentProvider.getComponent().inject(this);
         this.context = context;
         this.appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
         this.lessons = new JSONArray();

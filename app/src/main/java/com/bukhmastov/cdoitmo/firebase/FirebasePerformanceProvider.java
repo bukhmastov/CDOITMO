@@ -3,18 +3,10 @@ package com.bukhmastov.cdoitmo.firebase;
 import android.content.Context;
 import android.support.annotation.StringDef;
 
-import com.bukhmastov.cdoitmo.firebase.impl.FirebasePerformanceProviderImpl;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 public interface FirebasePerformanceProvider {
-
-    // future: replace with DI factory
-    FirebasePerformanceProvider instance = new FirebasePerformanceProviderImpl();
-    static FirebasePerformanceProvider instance() {
-        return instance;
-    }
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({

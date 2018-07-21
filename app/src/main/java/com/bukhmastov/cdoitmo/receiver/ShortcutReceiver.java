@@ -17,6 +17,7 @@ import com.bukhmastov.cdoitmo.activity.DaysRemainingWidgetActivity;
 import com.bukhmastov.cdoitmo.activity.MainActivity;
 import com.bukhmastov.cdoitmo.activity.ShortcutReceiverActivity;
 import com.bukhmastov.cdoitmo.activity.TimeRemainingWidgetActivity;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Log;
@@ -24,6 +25,8 @@ import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 
 import org.json.JSONObject;
+
+import javax.inject.Inject;
 
 public class ShortcutReceiver extends BroadcastReceiver {
 
@@ -38,18 +41,25 @@ public class ShortcutReceiver extends BroadcastReceiver {
     public static final String EXTRA_TYPE = "shortcut_type";
     public static final String EXTRA_DATA = "shortcut_data";
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private NotificationMessage notificationMessage = NotificationMessage.instance();
-    //@Inject
-    private Time time = Time.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    NotificationMessage notificationMessage;
+    @Inject
+    Time time;
+    @Inject
+    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
+
+    private void inject() {
+        if (thread == null) {
+            AppComponentProvider.getComponent().inject(this);
+        }
+    }
 
     public void onReceive(final Context context, final Intent intent) {
+        inject();
         thread.run(() -> {
             try {
                 String action = intent.getAction();

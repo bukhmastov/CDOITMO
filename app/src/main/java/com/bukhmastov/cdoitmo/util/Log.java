@@ -2,15 +2,7 @@ package com.bukhmastov.cdoitmo.util;
 
 import android.support.annotation.NonNull;
 
-import com.bukhmastov.cdoitmo.util.impl.LogImpl;
-
 public interface Log {
-
-    // future: replace with DI factory
-    Log instance = new LogImpl();
-    static Log instance() {
-        return instance;
-    }
 
     void setEnabled(boolean enabled);
 

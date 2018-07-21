@@ -17,11 +17,14 @@ import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Theme;
+
+import javax.inject.Inject;
 
 public class WebViewActivity extends AppCompatActivity {
 
@@ -33,17 +36,18 @@ public class WebViewActivity extends AppCompatActivity {
     private ProgressBar webviewProgressBar = null;
     private SwipeRefreshLayout swipe = null;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private NotificationMessage notificationMessage = NotificationMessage.instance();
-    //@Inject
-    private Theme theme = Theme.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    NotificationMessage notificationMessage;
+    @Inject
+    Theme theme;
+    @Inject
+    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        AppComponentProvider.getComponent().inject(this);
         theme.applyActivityTheme(this);
         super.onCreate(savedInstanceState);
         log.i(TAG, "Activity created");

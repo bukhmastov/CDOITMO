@@ -2,16 +2,23 @@ package com.bukhmastov.cdoitmo.object.impl;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.object.SettingsScheduleExams;
 import com.bukhmastov.cdoitmo.object.preference.Preference;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleExams;
+
+import javax.inject.Inject;
 
 public class SettingsScheduleExamsImpl extends SettingsSchedule implements SettingsScheduleExams {
 
     private static final String TAG = "SettingsSE";
 
-    //@Inject
-    private ScheduleExams scheduleExams = ScheduleExams.instance();
+    @Inject
+    ScheduleExams scheduleExams;
+
+    public SettingsScheduleExamsImpl() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     @Override
     public void show(ConnectedActivity activity, Preference preference, Callback callback) {

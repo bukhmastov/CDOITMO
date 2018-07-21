@@ -1,7 +1,6 @@
 package com.bukhmastov.cdoitmo.converter;
 
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
-import com.bukhmastov.cdoitmo.util.Time;
 
 import org.json.JSONArray;
 import org.json.JSONException;

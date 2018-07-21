@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.singleton.CtxWrapper;
@@ -15,23 +16,32 @@ import com.bukhmastov.cdoitmo.util.StoragePref;
 
 import java.util.Random;
 
+import javax.inject.Inject;
+
 public class PikaActivity extends AppCompatActivity {
 
     private static final String TAG = "PikaActivity";
     private final Random random = new Random();
     private boolean dimas = false;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    private TextUtils textUtils = TextUtils.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    StoragePref storagePref;
+    @Inject
+    TextUtils textUtils;
+    @Inject
+    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
+
+    private void inject() {
+        if (log == null) {
+            AppComponentProvider.getComponent().inject(this);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        inject();
         super.onCreate(savedInstanceState);
         log.v(TAG, "PIKA is no longer hiding");
         firebaseAnalyticsProvider.logCurrentScreen(this);
@@ -63,6 +73,7 @@ public class PikaActivity extends AppCompatActivity {
 
     @Override
     protected void attachBaseContext(Context context) {
+        inject();
         super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log, textUtils));
     }
 }

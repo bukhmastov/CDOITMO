@@ -16,8 +16,11 @@ import android.widget.GridView;
 import android.widget.ImageView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Thread;
+
+import javax.inject.Inject;
 
 public class ColorPickerDialog extends Dialog {
 
@@ -56,13 +59,14 @@ public class ColorPickerDialog extends Dialog {
         void exception(Exception e);
     }
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
 
     public ColorPickerDialog(final Context context, final ColorPickerCallback callback) {
         super(context);
+        AppComponentProvider.getComponent().inject(this);
         this.callback = callback;
     }
 

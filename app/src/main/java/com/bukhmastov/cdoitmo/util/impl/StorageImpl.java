@@ -4,6 +4,7 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.StorageLocalCache;
@@ -17,19 +18,25 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 public class StorageImpl implements Storage {
 
     private static final String TAG = "Storage";
     private static final String APP_FOLDER = "app_data";
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private StorageLocalCache storageLocalCache = StorageLocalCache.instance();
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    private FirebasePerformanceProvider firebasePerformanceProvider = FirebasePerformanceProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    StorageLocalCache storageLocalCache;
+    @Inject
+    StoragePref storagePref;
+    @Inject
+    FirebasePerformanceProvider firebasePerformanceProvider;
+
+    public StorageImpl() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     @Override
     public synchronized boolean put(@NonNull Context context, @NonNull String mode, @NonNull String type, @NonNull String path, String data) {

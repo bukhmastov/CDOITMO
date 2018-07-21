@@ -8,6 +8,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
@@ -18,24 +19,26 @@ import com.bukhmastov.cdoitmo.util.Thread;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 public class CacheClearDialog extends Dialog {
 
     private static final String TAG = "CacheClearDialog";
     private static final String TAG_PREFIX = "cache_clear_";
     private final ConnectedActivity activity;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private Storage storage = Storage.instance();
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    private TextUtils textUtils = TextUtils.instance();
-    //@Inject
-    private NotificationMessage notificationMessage = NotificationMessage.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    Storage storage;
+    @Inject
+    StoragePref storagePref;
+    @Inject
+    TextUtils textUtils;
+    @Inject
+    NotificationMessage notificationMessage;
 
     private class Entry {
         String title;
@@ -58,6 +61,7 @@ public class CacheClearDialog extends Dialog {
 
     public CacheClearDialog(ConnectedActivity activity) {
         super(activity);
+        AppComponentProvider.getComponent().inject(this);
         this.activity = activity;
         items.clear();
         items.add(new Entry(activity.getString(R.string.cache_mem), activity.getString(R.string.cache_mem_desc), "_mem_", Storage.USER));

@@ -4,19 +4,12 @@ import android.content.Context;
 
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.interfaces.Callable;
-import com.bukhmastov.cdoitmo.object.schedule.impl.ScheduleLessonsHelperImpl;
 import com.bukhmastov.cdoitmo.util.Storage;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 public interface ScheduleLessonsHelper {
-
-    // future: replace with DI factory
-    ScheduleLessonsHelper instance = new ScheduleLessonsHelperImpl();
-    static ScheduleLessonsHelper instance() {
-        return instance;
-    }
 
     boolean clearChanges(final Context context, final Storage storage, final String query, final Callable callback);
 

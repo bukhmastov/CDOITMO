@@ -18,6 +18,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapter.TeacherPickerAdapter;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
@@ -42,6 +43,8 @@ import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.inject.Inject;
+
 public class ScheduleLessonsModifyFragment extends ConnectedFragment {
 
     private static final String TAG = "SLModifyFragment";
@@ -49,24 +52,24 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
     private boolean block_time_start = false;
     private boolean block_time_end = false;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private ScheduleLessons scheduleLessons = ScheduleLessons.instance();
-    //@Inject
-    private ScheduleLessonsHelper scheduleLessonsHelper = ScheduleLessonsHelper.instance();
-    //@Inject
-    private Storage storage = Storage.instance();
-    //@Inject
-    private NotificationMessage notificationMessage = NotificationMessage.instance();
-    //@Inject
-    private Time time = Time.instance();
-    //@Inject
-    private TextUtils textUtils = TextUtils.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    ScheduleLessons scheduleLessons;
+    @Inject
+    ScheduleLessonsHelper scheduleLessonsHelper;
+    @Inject
+    Storage storage;
+    @Inject
+    NotificationMessage notificationMessage;
+    @Inject
+    Time time;
+    @Inject
+    TextUtils textUtils;
+    @Inject
+    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({CREATE, EDIT})
@@ -76,6 +79,7 @@ public class ScheduleLessonsModifyFragment extends ConnectedFragment {
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        AppComponentProvider.getComponent().inject(this);
         super.onCreate(savedInstanceState);
         firebaseAnalyticsProvider.logCurrentScreen(activity, this);
     }

@@ -2,8 +2,6 @@ package com.bukhmastov.cdoitmo.util;
 
 import android.content.Context;
 
-import com.bukhmastov.cdoitmo.util.impl.TextUtilsImpl;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -12,12 +10,6 @@ import java.text.ParseException;
 import java.util.Locale;
 
 public interface TextUtils {
-
-    // future: replace with DI factory
-    TextUtils instance = new TextUtilsImpl();
-    static TextUtils instance() {
-        return instance;
-    }
 
     Locale getLocale(Context context, StoragePref storagePref);
 

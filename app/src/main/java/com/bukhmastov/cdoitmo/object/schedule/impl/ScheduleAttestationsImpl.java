@@ -2,6 +2,7 @@ package com.bukhmastov.cdoitmo.object.schedule.impl;
 
 import android.content.Context;
 
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
@@ -18,22 +19,28 @@ import org.json.JSONObject;
 
 import java.util.Calendar;
 
+import javax.inject.Inject;
+
 public class ScheduleAttestationsImpl extends ScheduleImpl implements ScheduleAttestations {
 
     private static final String TAG = "ScheduleExams";
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    private DeIfmoClient deIfmoClient = DeIfmoClient.instance();
-    //@Inject
-    private Time time = Time.instance();
-    //@Inject
-    private TextUtils textUtils = TextUtils.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    StoragePref storagePref;
+    @Inject
+    DeIfmoClient deIfmoClient;
+    @Inject
+    Time time;
+    @Inject
+    TextUtils textUtils;
+
+    public ScheduleAttestationsImpl() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     @Override
     protected void searchGroup(Context context, String group, int refreshRate, boolean forceToCache, boolean withUserChanges) {

@@ -26,6 +26,7 @@ import com.bukhmastov.cdoitmo.activity.MainActivity;
 import com.bukhmastov.cdoitmo.activity.PikaActivity;
 import com.bukhmastov.cdoitmo.activity.ScheduleLessonsWidgetConfigureActivity;
 import com.bukhmastov.cdoitmo.converter.schedule.lessons.ScheduleLessonsAdditionalConverter;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.model.Client;
@@ -45,6 +46,8 @@ import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.inject.Inject;
+
 public class ScheduleLessonsWidget extends AppWidgetProvider {
 
     private static final String TAG = "SLWidget";
@@ -56,18 +59,18 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     public static final String ACTION_WIDGET_CONTROLS_BEFORE = "com.bukhmastov.cdoitmo.ACTION_WIDGET_CONTROLS_BEFORE";
     public static final String ACTION_WIDGET_CONTROLS_RESET = "com.bukhmastov.cdoitmo.ACTION_WIDGET_CONTROLS_RESET";
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private ScheduleLessons scheduleLessons = ScheduleLessons.instance();
-    //@Inject
-    private Time time = Time.instance();
-    //@Inject
-    private ScheduleLessonsWidgetStorage scheduleLessonsWidgetStorage = ScheduleLessonsWidgetStorage.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    ScheduleLessons scheduleLessons;
+    @Inject
+    Time time;
+    @Inject
+    ScheduleLessonsWidgetStorage scheduleLessonsWidgetStorage;
+    @Inject
+    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({NARROW, REGULAR, WIDE})
@@ -78,8 +81,19 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
 
     private Client.Request requestHandler = null;
 
+    private void inject() {
+        if (thread == null) {
+            AppComponentProvider.getComponent().inject(this);
+        }
+    }
+
+    public ScheduleLessonsWidget() {
+        inject();
+    }
+
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+        inject();
         for (int appWidgetId : appWidgetIds) {
             updateAppWidget(context, appWidgetManager, appWidgetId, false);
         }
@@ -87,6 +101,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
 
     @Override
     public void onDeleted(Context context, int[] appWidgetIds) {
+        inject();
         for (int appWidgetId : appWidgetIds) {
             deleteAppWidget(context, appWidgetId);
         }
@@ -94,6 +109,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
 
     @Override
     public void onAppWidgetOptionsChanged(Context context, AppWidgetManager appWidgetManager, int appWidgetId, Bundle options) {
+        inject();
         super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, options);
         display(context, appWidgetManager, appWidgetId, false);
     }
@@ -655,7 +671,9 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         return oldShift;
     }
 
+    @Override
     public void onReceive(final Context context, final Intent intent) {
+        inject();
         super.onReceive(context, intent);
         thread.run(() -> {
             final String action = intent.getAction() != null ? intent.getAction() : "";
@@ -772,7 +790,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
             return null;
         }
     }
-    public static Bitmap res2Bitmap(Context context, @DrawableRes int drawableRes) throws Exception {
+    public static Bitmap res2Bitmap(Context context, @DrawableRes int drawableRes) {
         Drawable drawable = context.getResources().getDrawable(drawableRes, context.getTheme());
         Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);

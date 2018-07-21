@@ -11,6 +11,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleAttestationsFragment;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleAttestations;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
@@ -25,6 +26,8 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
+import javax.inject.Inject;
+
 public class ScheduleAttestationsRVA extends RVA {
 
     private static final String TAG = "ScheduleAttestationsRVA";
@@ -36,22 +39,24 @@ public class ScheduleAttestationsRVA extends RVA {
     private static final int TYPE_UPDATE_TIME = 4;
     private static final int TYPE_NO_ATTESTATIONS = 5;
 
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private ScheduleAttestations scheduleAttestations = ScheduleAttestations.instance();
-    //@Inject
-    private Storage storage = Storage.instance();
-    //@Inject
-    private NotificationMessage notificationMessage = NotificationMessage.instance();
-    //@Inject
-    private Time time = Time.instance();
+    @Inject
+    Thread thread;
+    @Inject
+    ScheduleAttestations scheduleAttestations;
+    @Inject
+    Storage storage;
+    @Inject
+    NotificationMessage notificationMessage;
+    @Inject
+    Time time;
 
     private final ConnectedActivity activity;
     private final JSONObject data;
     private String query = null;
 
     public ScheduleAttestationsRVA(final ConnectedActivity activity, JSONObject data, int weekday) {
+        super();
+        AppComponentProvider.getComponent().inject(this);
         this.activity = activity;
         this.data = data;
         try {
@@ -259,7 +264,7 @@ public class ScheduleAttestationsRVA extends RVA {
             return null;
         }
     }
-    protected int getInt(JSONObject json, String key) throws JSONException {
+    protected int getInt(JSONObject json, String key) {
         if (json.has(key)) {
             try {
                 return json.getInt(key);

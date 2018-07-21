@@ -3,21 +3,25 @@ package com.bukhmastov.cdoitmo.object;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
 
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.interfaces.Callable;
 import com.bukhmastov.cdoitmo.util.Log;
+
+import javax.inject.Inject;
 
 public class ProtocolTrackerJobService extends JobService implements Callable {
 
     private static final String TAG = "ProtocolTrackerJS";
     private JobParameters params = null;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private ProtocolTrackerService protocolTrackerService = ProtocolTrackerService.instance();
+    @Inject
+    Log log;
+    @Inject
+    ProtocolTrackerService protocolTrackerService;
 
     @Override
     public boolean onStartJob(JobParameters params) {
+        AppComponentProvider.getComponent().inject(this);
         log.i(TAG, "onStartJob");
         this.params = params;
         protocolTrackerService.request(getBaseContext(), this);

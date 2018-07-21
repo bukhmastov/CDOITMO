@@ -1,6 +1,7 @@
 package com.bukhmastov.cdoitmo.firebase.impl;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Thread;
@@ -9,6 +10,8 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 
 import org.json.JSONObject;
 import org.json.JSONTokener;
+
+import javax.inject.Inject;
 
 public class FirebaseConfigProviderImpl implements FirebaseConfigProvider {
 
@@ -20,10 +23,14 @@ public class FirebaseConfigProviderImpl implements FirebaseConfigProvider {
         void onComplete(boolean successful);
     }
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+
+    public FirebaseConfigProviderImpl() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     private FirebaseRemoteConfig getFirebaseRemoteConfig() {
         FirebaseRemoteConfig firebaseRemoteConfig = FirebaseRemoteConfig.getInstance();

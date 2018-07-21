@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.activity.MainActivity;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.Account;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
@@ -18,27 +19,35 @@ import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.util.UUID;
 
+import javax.inject.Inject;
+
+import dagger.Lazy;
+
 public class StaticImpl implements Static {
 
     private static final String TAG = "Static";
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    private Storage storage = Storage.instance();
-    //@Inject
-    private Account account = Account.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    Lazy<StoragePref> storagePref;
+    @Inject
+    Lazy<Storage> storage;
+    @Inject
+    Lazy<Account> account;
+
+    public StaticImpl() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     @Override
     public String getUUID(Context context) {
-        String uuid = storagePref.get(context, "pref_uuid", "");
+        String uuid = storagePref.get().get(context, "pref_uuid", "");
         if (uuid.isEmpty()) {
             uuid = UUID.randomUUID().toString();
-            storagePref.put(context, "pref_uuid", uuid);
+            storagePref.get().put(context, "pref_uuid", uuid);
         }
         return uuid;
     }
@@ -62,8 +71,8 @@ public class StaticImpl implements Static {
             log.w(TAG, "hardReset | context is null");
             return;
         }
-        account.logoutPermanently(context, () -> {
-            storage.clear(context, null);
+        account.get().logoutPermanently(context, () -> {
+            storage.get().clear(context, null);
             App.firstLaunch = true;
             App.OFFLINE_MODE = false;
             MainActivity.loaded = false;

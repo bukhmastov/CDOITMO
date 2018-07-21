@@ -1,26 +1,29 @@
 package com.bukhmastov.cdoitmo.provider;
 
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 
+import javax.inject.Inject;
+
+import dagger.Lazy;
+
 public class StorageProvider {
 
-    // future: replace with DI factory
-    private static StorageProvider instance = new StorageProvider();
-    public static StorageProvider instance() {
-        return instance;
+    @Inject
+    Lazy<Storage> storage;
+    @Inject
+    Lazy<StoragePref> storagePref;
+
+    public StorageProvider() {
+        AppComponentProvider.getComponent().inject(this);
     }
 
-    //@Inject
-    private Storage storage = Storage.instance();
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
-
     public Storage getStorage() {
-        return storage;
+        return storage.get();
     }
 
     public StoragePref getStoragePref() {
-        return storagePref;
+        return storagePref.get();
     }
 }

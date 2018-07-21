@@ -2,6 +2,7 @@ package com.bukhmastov.cdoitmo.network.provider.impl;
 
 import android.support.annotation.NonNull;
 
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.network.provider.NetworkClientProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 
@@ -14,6 +15,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
+import javax.inject.Inject;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -21,6 +23,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
+import dagger.Lazy;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
@@ -33,8 +36,12 @@ public class NetworkClientProviderImpl implements NetworkClientProvider {
     private static final int READ_TIMEOUT = 30;
     private OkHttpClient client = null;
 
-    //@Inject
-    private Log log = Log.instance();
+    @Inject
+    Lazy<Log> log;
+
+    public NetworkClientProviderImpl() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     @Override
     public OkHttpClient get() {
@@ -58,8 +65,8 @@ public class NetworkClientProviderImpl implements NetworkClientProvider {
             SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
             builder.sslSocketFactory(sslSocketFactory, trustManager);
         } catch (Exception e) {
-            log.w(TAG, "Failed to add trusted certificates");
-            log.exception(e);
+            log.get().w(TAG, "Failed to add trusted certificates");
+            log.get().exception(e);
         }
         return builder;
     }
@@ -154,7 +161,7 @@ public class NetworkClientProviderImpl implements NetworkClientProvider {
         @Override
         public Response intercept(@NonNull Interceptor.Chain chain) throws IOException {
             okhttp3.Request request = chain.request();
-            log.v(TAG,
+            log.get().v(TAG,
                     "interceptor | request | " +
                             request.method() + " | " +
                             request.url()
@@ -162,7 +169,7 @@ public class NetworkClientProviderImpl implements NetworkClientProvider {
             long t1 = System.nanoTime();
             Response response = chain.proceed(request);
             long t2 = System.nanoTime();
-            log.v(TAG,
+            log.get().v(TAG,
                     "interceptor | response | " +
                             response.request().method() + " | " +
                             response.request().url() + " | " +

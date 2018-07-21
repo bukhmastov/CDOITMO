@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.bukhmastov.cdoitmo.converter.schedule.lessons.ScheduleLessonsAdditionalConverter;
 import com.bukhmastov.cdoitmo.converter.schedule.lessons.ScheduleLessonsConverterIfmo;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
@@ -14,16 +15,22 @@ import com.bukhmastov.cdoitmo.util.Thread;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import javax.inject.Inject;
+
 public class ScheduleLessonsImpl extends ScheduleImpl implements ScheduleLessons {
 
     private static final String TAG = "ScheduleLessons";
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private IfmoRestClient ifmoRestClient = IfmoRestClient.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    IfmoRestClient ifmoRestClient;
+
+    public ScheduleLessonsImpl() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     @Override
     protected void searchMine(final Context context, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {

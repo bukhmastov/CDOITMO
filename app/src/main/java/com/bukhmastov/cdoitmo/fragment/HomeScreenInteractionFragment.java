@@ -24,6 +24,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapter.TeacherPickerAdapter;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
@@ -44,28 +45,30 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import javax.inject.Inject;
+
 public class HomeScreenInteractionFragment extends ConnectedFragment {
 
     private static final String TAG = "ShortcutCreateFragment";
     private final ShortcutReceiver receiver = new ShortcutReceiver();
     private Client.Request requestHandle = null;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private Storage storage = Storage.instance();
-    //@Inject
-    private ScheduleLessons scheduleLessons = ScheduleLessons.instance();
-    //@Inject
-    private ScheduleExams scheduleExams = ScheduleExams.instance();
-    //@Inject
-    private ScheduleAttestations scheduleAttestations = ScheduleAttestations.instance();
-    //@Inject
-    private NotificationMessage notificationMessage = NotificationMessage.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    Storage storage;
+    @Inject
+    ScheduleLessons scheduleLessons;
+    @Inject
+    ScheduleExams scheduleExams;
+    @Inject
+    ScheduleAttestations scheduleAttestations;
+    @Inject
+    NotificationMessage notificationMessage;
+    @Inject
+    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     private interface result {
         void done(String title, String query);
@@ -114,6 +117,7 @@ public class HomeScreenInteractionFragment extends ConnectedFragment {
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        AppComponentProvider.getComponent().inject(this);
         super.onCreate(savedInstanceState);
         log.v(TAG, "Fragment created");
         firebaseAnalyticsProvider.logCurrentScreen(activity, this);

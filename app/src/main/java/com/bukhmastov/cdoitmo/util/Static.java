@@ -4,15 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.view.View;
 
-import com.bukhmastov.cdoitmo.util.impl.StaticImpl;
-
 public interface Static {
-
-    // future: replace with DI factory
-    Static instance = new StaticImpl();
-    static Static instance() {
-        return instance;
-    }
 
     String GLITCH = "%*<@?!";
 

@@ -7,10 +7,13 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsTabFragment;
 import com.bukhmastov.cdoitmo.util.Log;
 
 import java.util.ArrayList;
+
+import javax.inject.Inject;
 
 public class PagerLessonsAdapter extends FragmentPagerAdapter {
 
@@ -26,11 +29,12 @@ public class PagerLessonsAdapter extends FragmentPagerAdapter {
     }
     private final ArrayList<Element> tabs = new ArrayList<>();
 
-    //@Inject
-    private Log log = Log.instance();
+    @Inject
+    Log log;
 
     public PagerLessonsAdapter(FragmentManager fm, Context context) {
         super(fm);
+        AppComponentProvider.getComponent().inject(this);
         tabs.add(new Element(0, context.getString(R.string.tab_all), 2));
         tabs.add(new Element(1, context.getString(R.string.tab_even), 0));
         tabs.add(new Element(2, context.getString(R.string.tab_odd), 1));

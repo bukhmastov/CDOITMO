@@ -1,14 +1,21 @@
 package com.bukhmastov.cdoitmo.converter.schedule.lessons;
 
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import javax.inject.Inject;
+
 public class ScheduleLessonsConverterIfmo extends ScheduleLessonsConverter {
+
+    @Inject
+    TextUtils textUtils;
 
     public ScheduleLessonsConverterIfmo(JSONObject data, JSONObject template, Response delegate) {
         super(data, template, delegate);
+        AppComponentProvider.getComponent().inject(this);
     }
 
     @Override

@@ -11,11 +11,14 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import javax.inject.Inject;
 
 public class Room101ReviewBuilder implements Runnable {
 
@@ -37,10 +40,11 @@ public class Room101ReviewBuilder implements Runnable {
     public static final int STATE_LOADING = 1;
     public static final int STATE_DONE = 2;
 
-    //@Inject
-    private Log log = Log.instance();
+    @Inject
+    Log log;
 
     public Room101ReviewBuilder(Activity activity, register register, JSONArray sessions, response delegate) {
+        AppComponentProvider.getComponent().inject(this);
         this.activity = activity;
         this.register = register;
         this.delegate = delegate;

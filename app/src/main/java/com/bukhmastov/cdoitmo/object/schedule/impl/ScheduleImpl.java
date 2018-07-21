@@ -6,6 +6,7 @@ import android.support.annotation.StringDef;
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.converter.schedule.ScheduleTeachersConverter;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
@@ -34,30 +35,36 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import javax.inject.Inject;
+
 public abstract class ScheduleImpl implements Schedule {
 
     private static final String TAG = "Schedule";
 
     private Handler handler;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private Storage storage = Storage.instance();
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    private StorageProvider storageProvider = StorageProvider.instance();
-    //@Inject
-    private IfmoRestClient ifmoRestClient = IfmoRestClient.instance();
-    //@Inject
-    private Time time = Time.instance();
-    //@Inject
-    private TextUtils textUtils = TextUtils.instance();
-    //@Inject
-    private FirebasePerformanceProvider firebasePerformanceProvider = FirebasePerformanceProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    Storage storage;
+    @Inject
+    StoragePref storagePref;
+    @Inject
+    StorageProvider storageProvider;
+    @Inject
+    IfmoRestClient ifmoRestClient;
+    @Inject
+    Time time;
+    @Inject
+    TextUtils textUtils;
+    @Inject
+    FirebasePerformanceProvider firebasePerformanceProvider;
+
+    public ScheduleImpl() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     // Remote source of schedules to be downloaded from
     @Retention(RetentionPolicy.SOURCE)

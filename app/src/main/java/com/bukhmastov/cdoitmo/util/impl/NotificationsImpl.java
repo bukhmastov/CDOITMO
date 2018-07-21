@@ -13,9 +13,14 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Notifications;
 import com.bukhmastov.cdoitmo.util.StoragePref;
+
+import javax.inject.Inject;
+
+import dagger.Lazy;
 
 public class NotificationsImpl implements Notifications {
 
@@ -32,10 +37,14 @@ public class NotificationsImpl implements Notifications {
         return manager;
     }
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
+    @Inject
+    Lazy<Log> log;
+    @Inject
+    StoragePref storagePref;
+
+    public NotificationsImpl() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     @Override
     public Notifications init(@NonNull Context context) {
@@ -144,7 +153,7 @@ public class NotificationsImpl implements Notifications {
                 getManager(context).createNotificationChannel(channel);
             }
         } catch (Exception e) {
-            log.exception(e);
+            log.get().exception(e);
         }
     }
 }

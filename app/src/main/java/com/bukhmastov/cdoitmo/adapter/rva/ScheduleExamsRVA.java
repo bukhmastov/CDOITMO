@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleExamsFragment;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleExams;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
@@ -32,6 +33,8 @@ import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.inject.Inject;
+
 public class ScheduleExamsRVA extends RVA {
 
     private static final String TAG = "ScheduleExamsRVA";
@@ -46,20 +49,20 @@ public class ScheduleExamsRVA extends RVA {
 
     private static Pattern patternBrokenDate = Pattern.compile("^(\\d{1,2})(\\s\\S*)(.*)$", Pattern.CASE_INSENSITIVE);
 
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private ScheduleExams scheduleExams = ScheduleExams.instance();
-    //@Inject
-    private Storage storage = Storage.instance();
-    //@Inject
-    private StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    private NotificationMessage notificationMessage = NotificationMessage.instance();
-    //@Inject
-    private Time time = Time.instance();
-    //@Inject
-    private TextUtils textUtils = TextUtils.instance();
+    @Inject
+    Thread thread;
+    @Inject
+    ScheduleExams scheduleExams;
+    @Inject
+    Storage storage;
+    @Inject
+    StoragePref storagePref;
+    @Inject
+    NotificationMessage notificationMessage;
+    @Inject
+    Time time;
+    @Inject
+    TextUtils textUtils;
 
     private final ConnectedActivity activity;
     private final JSONObject data;
@@ -69,6 +72,8 @@ public class ScheduleExamsRVA extends RVA {
     private String query = null;
 
     public ScheduleExamsRVA(final ConnectedActivity activity, JSONObject data, int mode, final CallableString callback) {
+        super();
+        AppComponentProvider.getComponent().inject(this);
         this.activity = activity;
         this.data = data;
         this.mode = mode;
@@ -563,7 +568,7 @@ public class ScheduleExamsRVA extends RVA {
             return null;
         }
     }
-    protected int getInt(JSONObject json, String key) throws JSONException {
+    protected int getInt(JSONObject json, String key) {
         if (json.has(key)) {
             try {
                 return json.getInt(key);

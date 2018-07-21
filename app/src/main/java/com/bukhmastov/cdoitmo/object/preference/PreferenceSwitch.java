@@ -9,10 +9,13 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.provider.InjectProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 
 import java.util.ArrayList;
+
+import javax.inject.Inject;
 
 public class PreferenceSwitch extends Preference {
 
@@ -27,11 +30,12 @@ public class PreferenceSwitch extends Preference {
     private ArrayList<String> dependencies = new ArrayList<>();
     public boolean enabled = false;
 
-    //@Inject
-    private Log log = Log.instance();
+    @Inject
+    Log log;
 
     public PreferenceSwitch(String key, Object defaultValue, @StringRes int title, @StringRes int summary, ArrayList<String> dependencies, Callback callback) {
         super(key, defaultValue, title, summary);
+        AppComponentProvider.getComponent().inject(this);
         this.callback = callback;
         if (dependencies != null) {
             this.dependencies = dependencies;
@@ -42,6 +46,7 @@ public class PreferenceSwitch extends Preference {
     }
     public PreferenceSwitch(String key, Object defaultValue, @StringRes int title, ArrayList<String> dependencies, Callback callback) {
         super(key, defaultValue, title);
+        AppComponentProvider.getComponent().inject(this);
         this.callback = callback;
         if (dependencies != null) {
             this.dependencies = dependencies;

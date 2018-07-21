@@ -4,25 +4,35 @@ import android.app.PendingIntent;
 import android.content.Intent;
 
 import com.bukhmastov.cdoitmo.activity.MainActivity;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Notifications;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
+import javax.inject.Inject;
+
 public class FirebaseMessagingServiceProvider extends FirebaseMessagingService {
 
     private static final String TAG = "FirebaseMessagingServiceProvider";
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private Notifications notifications = Notifications.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    Notifications notifications;
+
+    private void inject() {
+        if (thread == null) {
+            AppComponentProvider.getComponent().inject(this);
+        }
+    }
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
+        inject();
         try {
             RemoteMessage.Notification notification = remoteMessage.getNotification();
             if (notification == null) return;

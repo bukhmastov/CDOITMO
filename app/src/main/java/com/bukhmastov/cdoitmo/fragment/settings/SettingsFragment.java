@@ -43,9 +43,7 @@ public class SettingsFragment extends SettingsTemplateHeadersFragment {
         return this;
     }
 
-    public static void applyDefaultValues(final Context context) {
-        //@Inject static method arg
-        StoragePref storagePref = StoragePref.instance();
+    public static void applyDefaultValues(final Context context, final StoragePref storagePref) {
         if (!storagePref.get(context, "pref_default_values_applied", false)) {
             storagePref.put(context, "pref_default_values_applied", true);
             for (Preference preference : SettingsGeneralFragment.preferences) preference.applyDefaultValue(context);

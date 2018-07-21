@@ -1,13 +1,15 @@
 package com.bukhmastov.cdoitmo.converter;
 
 import com.bukhmastov.cdoitmo.exception.SilentException;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Time;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import javax.inject.Inject;
 
 public abstract class Converter implements Runnable {
 
@@ -17,16 +19,15 @@ public abstract class Converter implements Runnable {
         void finish(JSONObject json);
     }
 
-    //@Inject
-    protected Log log = Log.instance();
-    //@Inject
-    protected Time time = Time.instance();
-    //@Inject
-    protected TextUtils textUtils = TextUtils.instance();
-    //@Inject
-    private FirebasePerformanceProvider firebasePerformanceProvider = FirebasePerformanceProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Time time;
+    @Inject
+    FirebasePerformanceProvider firebasePerformanceProvider;
 
     public Converter(Response delegate) {
+        AppComponentProvider.getComponent().inject(this);
         this.delegate = delegate;
     }
 

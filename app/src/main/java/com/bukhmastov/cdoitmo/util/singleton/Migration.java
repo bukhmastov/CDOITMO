@@ -814,7 +814,7 @@ public class Migration {
         void onUserFolder(final File file, String user);
     }
     @Keep
-    private static void getUsersFolder(final Context context, final String rootPath, final Callback callback) throws Exception {
+    private static void getUsersFolder(final Context context, final String rootPath, final Callback callback) {
         File root = new File(rootPath);
         if (root.exists() && root.isDirectory()) {
             File[] users = root.listFiles();

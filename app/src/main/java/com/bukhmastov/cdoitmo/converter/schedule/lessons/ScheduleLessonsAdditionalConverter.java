@@ -3,8 +3,8 @@ package com.bukhmastov.cdoitmo.converter.schedule.lessons;
 import android.content.Context;
 
 import com.bukhmastov.cdoitmo.exception.SilentException;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
-import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessonsHelper;
 import com.bukhmastov.cdoitmo.util.Storage;
 
@@ -12,18 +12,21 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import javax.inject.Inject;
+
 public class ScheduleLessonsAdditionalConverter extends ScheduleConverter {
 
     private final Context context;
     private final JSONObject data;
 
-    //@Inject
-    private Storage storage = Storage.instance();
-    //@Inject
-    private ScheduleLessonsHelper scheduleLessonsHelper = ScheduleLessonsHelper.instance();
+    @Inject
+    Storage storage;
+    @Inject
+    ScheduleLessonsHelper scheduleLessonsHelper;
 
     public ScheduleLessonsAdditionalConverter(Context context, JSONObject data, Response delegate) {
         super(delegate);
+        AppComponentProvider.getComponent().inject(this);
         this.context = context;
         this.data = data;
     }

@@ -13,6 +13,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseConfigProvider;
 import com.bukhmastov.cdoitmo.util.NavigationMenu;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
@@ -24,14 +25,22 @@ import com.bukhmastov.cdoitmo.view.Message;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
+import dagger.Lazy;
+
 public class NavigationMenuImpl implements NavigationMenu {
 
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private NotificationMessage notificationMessage = NotificationMessage.instance();
-    //@Inject
-    private TextUtils textUtils = TextUtils.instance();
+    @Inject
+    Thread thread;
+    @Inject
+    Lazy<NotificationMessage> notificationMessage;
+    @Inject
+    Lazy<TextUtils> textUtils;
+
+    public NavigationMenuImpl() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     @Override
     public void displayEnableDisableOfflineButton(final NavigationView navigationView) {
@@ -87,7 +96,7 @@ public class NavigationMenuImpl implements NavigationMenu {
                 final int type = value.getInt("type");
                 final String message = value.getString("message");
                 if (message == null || message.trim().isEmpty()) return;
-                final String hash = textUtils.crypt(message);
+                final String hash = textUtils.get().crypt(message);
                 if (hash != null && hash.equals(storage.get(activity, Storage.PERMANENT, Storage.GLOBAL, "firebase#remote_message#menu", ""))) {
                     return;
                 }
@@ -103,7 +112,7 @@ public class NavigationMenuImpl implements NavigationMenu {
                                         message_menu_separator.setVisibility(View.GONE);
                                     }
                                 }
-                                notificationMessage.snackBar(activity, activity.getString(R.string.notification_dismissed), activity.getString(R.string.undo), v -> thread.run(() -> {
+                                notificationMessage.get().snackBar(activity, activity.getString(R.string.notification_dismissed), activity.getString(R.string.undo), v -> thread.run(() -> {
                                     if (storage.delete(activity, Storage.PERMANENT, Storage.GLOBAL, "firebase#remote_message#menu")) {
                                         thread.runOnUI(() -> {
                                             if (message_menu != null && view != null) {

@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.LayoutRes;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.InflateException;
 import android.view.LayoutInflater;
@@ -16,6 +17,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.UniversityPersonCardActivity;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.view.CircularTransformation;
@@ -28,28 +30,33 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.inject.Inject;
+
 public class UniversityFacultiesRVA extends UniversityRVA {
 
     private final Pattern working_hours_pattern = Pattern.compile("(\\D*/.*\\|?)+");
 
-    //@Inject
-    private NotificationMessage notificationMessage = NotificationMessage.instance();
-    //@Inject
-    private TextUtils textUtils = TextUtils.instance();
+    @Inject
+    NotificationMessage notificationMessage;
+    @Inject
+    TextUtils textUtils;
 
     public UniversityFacultiesRVA(final Context context) {
         super(context, null);
     }
     public UniversityFacultiesRVA(final Context context, final ArrayList<Item> dataset) {
         super(context, dataset);
+        AppComponentProvider.getComponent().inject(this);
     }
 
+    @NonNull
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         switch (viewType) {
             case TYPE_INFO_ABOUT_UPDATE_TIME: {
                 return new ViewHolder((ViewGroup) LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_university_update_time, parent, false));
             }
+            default:
             case TYPE_UNIT_STRUCTURE_COMMON:
             case TYPE_UNIT_STRUCTURE_DEANERY:
             case TYPE_UNIT_STRUCTURE_HEAD:
@@ -57,11 +64,10 @@ public class UniversityFacultiesRVA extends UniversityRVA {
                 return new ViewHolder((ViewGroup) LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_university_faculties_structure_unit, parent, false));
             }
         }
-        return null;
     }
 
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         Item item = dataset.get(position);
         switch (item.type) {
             case TYPE_INFO_ABOUT_UPDATE_TIME: {

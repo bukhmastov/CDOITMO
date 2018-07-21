@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 
 import org.json.JSONObject;
@@ -17,6 +18,8 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.inject.Inject;
 
 public abstract class RVA extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -38,8 +41,12 @@ public abstract class RVA extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         }
     }
 
-    //@Inject
-    protected Log log = Log.instance();
+    @Inject
+    Log log;
+
+    public RVA() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     @Override
     public int getItemCount() {
@@ -51,17 +58,19 @@ public abstract class RVA extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         return dataset.get(position).type;
     }
 
+    @NonNull
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         try {
             return new ViewHolder(LayoutInflater.from(parent.getContext()).inflate(onGetLayout(viewType), parent, false));
-        } catch (NullPointerException e) {
-            return null;
+        } catch (NullPointerException npe) {
+            log.exception(npe);
+            throw npe;
         }
     }
 
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         onBind(((ViewHolder) holder).container, dataset.get(position));
     }
 

@@ -6,15 +6,8 @@ import android.support.annotation.Nullable;
 
 import com.bukhmastov.cdoitmo.interfaces.Callable;
 import com.bukhmastov.cdoitmo.network.model.Client;
-import com.bukhmastov.cdoitmo.util.impl.AccountImpl;
 
 public interface Account {
-
-    // future: replace with DI factory
-    Account instance = new AccountImpl();
-    static Account instance() {
-        return instance;
-    }
 
     String USER_UNAUTHORIZED = "unauthorized";
 

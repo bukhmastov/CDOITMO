@@ -7,6 +7,7 @@ import android.support.v7.app.AlertDialog;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.interfaces.Callable;
@@ -22,29 +23,35 @@ import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
 
+import javax.inject.Inject;
+
 public class AccountImpl implements Account {
 
     private static final String TAG = "Account";
     public boolean authorized = false;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Thread thread = Thread.instance();
-    //@Inject
-    private Storage storage = Storage.instance();
-    //@Inject
-    private DeIfmoClient deIfmoClient = DeIfmoClient.instance();
-    //@Inject
-    private DeIfmoRestClient deIfmoRestClient = DeIfmoRestClient.instance();
-    //@Inject
-    private ProtocolTracker protocolTracker = ProtocolTracker.instance();
-    //@Inject
-    private Accounts accounts = Accounts.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
-    //@Inject
-    private FirebasePerformanceProvider firebasePerformanceProvider = FirebasePerformanceProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    Storage storage;
+    @Inject
+    DeIfmoClient deIfmoClient;
+    @Inject
+    DeIfmoRestClient deIfmoRestClient;
+    @Inject
+    ProtocolTracker protocolTracker;
+    @Inject
+    Accounts accounts;
+    @Inject
+    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
+    @Inject
+    FirebasePerformanceProvider firebasePerformanceProvider;
+
+    public AccountImpl() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     @Override
     public void login(@NonNull final Context context, @NonNull final String login, @NonNull final String password, @NonNull final String role, final boolean isNewUser, @NonNull final LoginHandler loginHandler) {

@@ -3,6 +3,7 @@ package com.bukhmastov.cdoitmo.parse.room101;
 import android.content.Context;
 
 import com.bukhmastov.cdoitmo.exception.SilentException;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
 import com.bukhmastov.cdoitmo.parse.Parse;
 import com.bukhmastov.cdoitmo.util.Time;
@@ -14,12 +15,18 @@ import org.json.JSONObject;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.inject.Inject;
+
 public class Room101ViewRequestParse extends Parse {
 
     private final Context context;
 
+    @Inject
+    Time time;
+
     public Room101ViewRequestParse(Context context, String data, Response delegate) {
         super(data, delegate);
+        AppComponentProvider.getComponent().inject(this);
         this.context = context;
     }
 

@@ -28,6 +28,7 @@ public class RatingListRVA extends RVA {
     private final SparseIntArray colors = new SparseIntArray();
 
     public RatingListRVA(@NonNull Context context, @NonNull JSONArray data) {
+        super();
         this.context = context;
         addItems(json2dataset(context, data));
     }
@@ -153,7 +154,7 @@ public class RatingListRVA extends RVA {
             log.exception(e);
         }
     }
-    private int resolveColor(int reference) throws Exception {
+    private int resolveColor(int reference) {
         int saved = colors.get(reference, -1);
         if (saved != -1) {
             return saved;

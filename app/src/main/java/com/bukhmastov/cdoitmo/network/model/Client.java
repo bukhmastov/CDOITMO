@@ -8,6 +8,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.StringDef;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.network.handlers.RawHandler;
 import com.bukhmastov.cdoitmo.network.handlers.RawJsonHandler;
 import com.bukhmastov.cdoitmo.network.provider.NetworkClientProvider;
@@ -28,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.inject.Inject;
 
 import okhttp3.Call;
 import okhttp3.FormBody;
@@ -58,16 +61,20 @@ public abstract class Client {
     public static final String HTTP = "http";
     public static final String HTTPS = "https";
 
-    //@Inject
-    protected Log log = Log.instance();
-    //@Inject
-    protected Thread thread = Thread.instance();
-    //@Inject
-    protected Storage storage = Storage.instance();
-    //@Inject
-    protected StoragePref storagePref = StoragePref.instance();
-    //@Inject
-    private NetworkClientProvider networkClientProvider = NetworkClientProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+    @Inject
+    Storage storage;
+    @Inject
+    StoragePref storagePref;
+    @Inject
+    NetworkClientProvider networkClientProvider;
+
+    public Client() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     /**
      * Performs GET request

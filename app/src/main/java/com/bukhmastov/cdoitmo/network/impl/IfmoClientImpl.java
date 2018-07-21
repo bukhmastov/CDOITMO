@@ -4,6 +4,7 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.network.IfmoClient;
 import com.bukhmastov.cdoitmo.network.handlers.RawHandler;
 import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
@@ -13,11 +14,23 @@ import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.util.Map;
 
+import javax.inject.Inject;
+
 public class IfmoClientImpl extends IfmoClient {
 
     private static final String TAG = "IfmoClient";
     private static final String BASE_URL = "www.ifmo.ru";
     private static final String DEFAULT_PROTOCOL = HTTP;
+
+    @Inject
+    Log log;
+    @Inject
+    Thread thread;
+
+    public IfmoClientImpl() {
+        super();
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     @Override
     public void get(@NonNull final Context context, @NonNull final String url, @Nullable final Map<String, String> query, @NonNull final ResponseHandler responseHandler) {

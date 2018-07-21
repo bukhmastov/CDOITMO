@@ -14,12 +14,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Theme;
 import com.bukhmastov.cdoitmo.view.OnSwipeTouchListener;
 
 import java.util.ArrayList;
+
+import javax.inject.Inject;
 
 public class IntroducingActivity extends ConnectedActivity {
 
@@ -29,12 +32,12 @@ public class IntroducingActivity extends ConnectedActivity {
     private static final String colorIndicatorActive = "#FFFFFFFF";
     private static final String colorIndicatorInActive = "#88FFFFFF";
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Theme theme = Theme.instance();
-    //@Inject
-    private FirebaseAnalyticsProvider firebaseAnalyticsProvider = FirebaseAnalyticsProvider.instance();
+    @Inject
+    Log log;
+    @Inject
+    Theme theme;
+    @Inject
+    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     private class Screen {
         public final String title;
@@ -54,6 +57,7 @@ public class IntroducingActivity extends ConnectedActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+        AppComponentProvider.getComponent().inject(this);
         switch (theme.getAppTheme(activity)) {
             case "light":
             default: setTheme(R.style.AppTheme_TransparentStatusBar); break;

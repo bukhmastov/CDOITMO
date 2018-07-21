@@ -7,7 +7,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -24,6 +24,8 @@ public class ERegisterSubjectsRVA extends RVA {
     private static Pattern patternExamOrCredit = Pattern.compile("^.*зач[её]т$|^экзамен$", Pattern.CASE_INSENSITIVE);
 
     public ERegisterSubjectsRVA(@NonNull Context context, @NonNull JSONArray subjects) {
+        super();
+        AppComponentProvider.getComponent().inject(this);
         addItems(json2dataset(context, subjects));
     }
 

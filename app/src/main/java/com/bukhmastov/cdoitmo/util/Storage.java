@@ -5,8 +5,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringDef;
 
-import com.bukhmastov.cdoitmo.util.impl.StorageImpl;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
@@ -24,12 +22,6 @@ public interface Storage {
     @interface Type {}
     String USER = "user";
     String GLOBAL = "general";
-
-    // future: replace with DI factory
-    Storage instance = new StorageImpl();
-    static Storage instance() {
-        return instance;
-    }
 
     boolean put(@NonNull Context context, @Mode @NonNull String mode, @Type @NonNull String type, @NonNull String path, String data);
 

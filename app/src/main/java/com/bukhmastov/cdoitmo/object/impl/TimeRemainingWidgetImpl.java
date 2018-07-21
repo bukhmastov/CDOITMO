@@ -2,6 +2,7 @@ package com.bukhmastov.cdoitmo.object.impl;
 
 import android.content.Context;
 
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.object.TimeRemainingWidget;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Time;
@@ -14,17 +15,23 @@ import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.inject.Inject;
+
 public class TimeRemainingWidgetImpl implements TimeRemainingWidget {
 
     private static final String TAG = "TRWidget";
     private Executor executor;
 
-    //@Inject
-    private Log log = Log.instance();
-    //@Inject
-    private Time time = Time.instance();
-    //@Inject
-    private TextUtils textUtils = TextUtils.instance();
+    @Inject
+    Log log;
+    @Inject
+    Time time;
+    @Inject
+    TextUtils textUtils;
+
+    public TimeRemainingWidgetImpl() {
+        AppComponentProvider.getComponent().inject(this);
+    }
 
     @Override
     public void start(Context context, Delegate delegate, JSONObject schedule) {

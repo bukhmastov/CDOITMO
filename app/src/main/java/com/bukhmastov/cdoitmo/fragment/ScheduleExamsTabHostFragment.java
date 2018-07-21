@@ -6,9 +6,12 @@ import android.util.SparseArray;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Thread;
+
+import javax.inject.Inject;
 
 public abstract class ScheduleExamsTabHostFragment extends Fragment {
 
@@ -34,11 +37,12 @@ public abstract class ScheduleExamsTabHostFragment extends Fragment {
     protected boolean invalidate_refresh = false;
     protected int TYPE = DEFAULT_INVALID_TYPE;
 
-    //@Inject
-    private Log log = Log.instance();
+    @Inject
+    Log log;
 
     @Override
     public void onAttach(Context context) {
+        AppComponentProvider.getComponent().inject(this);
         super.onAttach(context);
         if (activity == null) {
             try {
