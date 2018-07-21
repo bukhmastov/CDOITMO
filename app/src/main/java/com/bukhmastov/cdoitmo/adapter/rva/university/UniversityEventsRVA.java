@@ -19,7 +19,7 @@ import java.util.ArrayList;
 public class UniversityEventsRVA extends UniversityRVA {
 
     public UniversityEventsRVA(final Context context) {
-        super(context, null);
+        this(context, null);
     }
     public UniversityEventsRVA(final Context context, final ArrayList<Item> dataset) {
         super(context, dataset);

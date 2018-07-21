@@ -42,7 +42,7 @@ public class UniversityFacultiesRVA extends UniversityRVA {
     TextUtils textUtils;
 
     public UniversityFacultiesRVA(final Context context) {
-        super(context, null);
+        this(context, null);
     }
     public UniversityFacultiesRVA(final Context context, final ArrayList<Item> dataset) {
         super(context, dataset);

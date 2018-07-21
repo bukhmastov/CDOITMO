@@ -22,7 +22,7 @@ import java.util.Objects;
 public class UniversityNewsRVA extends UniversityRVA {
 
     public UniversityNewsRVA(final Context context) {
-        super(context, null);
+        this(context, null);
     }
     public UniversityNewsRVA(final Context context, final ArrayList<Item> dataset) {
         super(context, dataset);
