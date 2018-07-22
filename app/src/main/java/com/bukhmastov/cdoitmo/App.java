@@ -5,6 +5,9 @@ import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.res.Configuration;
 
+import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
+import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
@@ -17,39 +20,6 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
-/**
- * Roadmap 2k18
- *
- * 1. Подготовка к DI: абстракция [done]
- *  storage [done]
- *  network [done]
- *  firebase [done]
- *  log [done]
- *  thread [done]
- *  objects [done]
- *  utils [done]
- *
- * 2. Избавление от оставшихся статичных методов и полей
- *
- * 3. Добавление объектов данных / оставление все в json представлениях [delayed]
- *
- * 4. DI: [done]
- *  app [done]
- *  widget [done]
- *  network [done]
- *  firebase [done]
- *  objects [done]
- *  utils, storage [done]
- *
- * 4.1. ? Разбивка AppComponent на основной AppComponent и подкомпоненты
- *
- * ???
- *
- * 5. Профит (Столько не живут)
- *
- * 6. ИСУ (попытка номер два)
- *
- */
 public class App extends Application {
 
     private static final String TAG = "Application";
@@ -67,6 +37,8 @@ public class App extends Application {
     @Inject
     Log log;
     @Inject
+    EventBus eventBus;
+    @Inject
     StoragePref storagePref;
     @Inject
     TextUtils textUtils;
@@ -80,6 +52,7 @@ public class App extends Application {
         super.onCreate();
         try {
             AppComponentProvider.getComponent().inject(this);
+            eventBus.register(this);
             log.setEnabled(storagePref.get(this, "pref_allow_collect_logs", false));
             locale = textUtils.getLocale(this, storagePref);
             log.i(TAG, "Language | locale=" + locale.toString());
@@ -99,6 +72,23 @@ public class App extends Application {
             setLocale();
         } catch (Throwable e) {
             log.exception(e);
+        }
+    }
+
+    @Event
+    public void onOpenActivityEvent(OpenActivityEvent event) {
+        try {
+            log.v(TAG, "onOpenActivityEvent | activity=", event.getActivity().getCanonicalName());
+            Intent intent = new Intent(this, event.getActivity());
+            if (event.getExtras() != null) {
+                intent.putExtras(event.getExtras());
+            }
+            if (event.getFlags() != null) {
+                intent.addFlags(event.getFlags());
+            }
+            startActivity(intent);
+        } catch (Throwable t) {
+            log.e(TAG, "Failed to open activity | throwable=", t.getMessage());
         }
     }
 

@@ -24,7 +24,7 @@ import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.MainActivity;
 import com.bukhmastov.cdoitmo.activity.PikaActivity;
-import com.bukhmastov.cdoitmo.activity.ScheduleLessonsWidgetConfigureActivity;
+import com.bukhmastov.cdoitmo.activity.presenter.ScheduleLessonsWidgetConfigureActivityPresenter;
 import com.bukhmastov.cdoitmo.converter.schedule.lessons.ScheduleLessonsAdditionalConverter;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
@@ -772,9 +772,9 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     }
     public static Colors getColors() {
         Colors colors = new Colors();
-        colors.text = Color.parseColor(ScheduleLessonsWidgetConfigureActivity.Default.Theme.Dark.text);
-        colors.background = Color.parseColor(ScheduleLessonsWidgetConfigureActivity.Default.Theme.Dark.background);
-        colors.background = Color.argb(ScheduleLessonsWidgetConfigureActivity.Default.Theme.Dark.opacity, Color.red(colors.background), Color.green(colors.background), Color.blue(colors.background));
+        colors.text = Color.parseColor(ScheduleLessonsWidgetConfigureActivityPresenter.Default.Theme.Dark.text);
+        colors.background = Color.parseColor(ScheduleLessonsWidgetConfigureActivityPresenter.Default.Theme.Dark.background);
+        colors.background = Color.argb(ScheduleLessonsWidgetConfigureActivityPresenter.Default.Theme.Dark.opacity, Color.red(colors.background), Color.green(colors.background), Color.blue(colors.background));
         return colors;
     }
     public static Bitmap getBitmap(Context context, @DrawableRes int drawableRes, int color) {

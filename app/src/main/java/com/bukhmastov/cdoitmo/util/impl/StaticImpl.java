@@ -9,6 +9,8 @@ import android.view.ViewGroup;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.activity.MainActivity;
+import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.events.MainActivityEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.Account;
 import com.bukhmastov.cdoitmo.util.Log;
@@ -31,6 +33,8 @@ public class StaticImpl implements Static {
     Log log;
     @Inject
     Thread thread;
+    @Inject
+    EventBus eventBus;
     @Inject
     Lazy<StoragePref> storagePref;
     @Inject
@@ -75,7 +79,7 @@ public class StaticImpl implements Static {
             storage.get().clear(context, null);
             App.firstLaunch = true;
             App.OFFLINE_MODE = false;
-            MainActivity.loaded = false;
+            eventBus.fire(new MainActivityEvent.UnloadEvent());
             reLaunch(context);
         });
     }

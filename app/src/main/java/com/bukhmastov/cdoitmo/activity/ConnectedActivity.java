@@ -1,7 +1,6 @@
 package com.bukhmastov.cdoitmo.activity;
 
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.IdRes;
@@ -19,6 +18,8 @@ import android.view.ViewGroup;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.util.TextUtils;
@@ -42,7 +43,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     private static final String STATE_STORED_FRAGMENT_DATA = "storedFragmentData";
     private static final String STATE_STORED_FRAGMENT_EXTRA = "storedFragmentExtra";
     public final static String ACTIVITY_WITH_MENU = "connected_activity_with_align";
-    protected boolean layout_with_menu = true;
+    public boolean layout_with_menu = true;
     public Menu toolbar = null;
     public static String storedFragmentName = null;
     public static String storedFragmentData = null;
@@ -53,6 +54,8 @@ public abstract class ConnectedActivity extends AppCompatActivity {
     Log log;
     @Inject
     Thread thread;
+    @Inject
+    EventBus eventBus;
     @Inject
     StoragePref storagePref;
     @Inject
@@ -66,7 +69,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
         public static final String STACKABLE = "stackable";
     }
 
-    protected class StackElement {
+    public static class StackElement {
         public final Class connectedFragmentClass;
         public final Bundle extras;
         public final @Type String type;
@@ -77,15 +80,9 @@ public abstract class ConnectedActivity extends AppCompatActivity {
         }
     }
 
-    private void inject() {
-        if (thread == null) {
-            AppComponentProvider.getComponent().inject(this);
-        }
-    }
-
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
-        inject();
+        AppComponentProvider.getComponent().inject(this);
         super.onCreate(savedInstanceState);
     }
 
@@ -105,7 +102,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
         storedFragmentExtra = savedInstanceState.getString(STATE_STORED_FRAGMENT_EXTRA);
     }
 
-    protected abstract @IdRes int getRootViewId();
+    public abstract @IdRes int getRootViewId();
 
     public boolean openActivityOrFragment(Class connectedFragmentClass, Bundle extras) {
         return openActivityOrFragment(TYPE.STACKABLE, connectedFragmentClass, extras);
@@ -176,10 +173,10 @@ public abstract class ConnectedActivity extends AppCompatActivity {
          * We don't care about type. This is a harsh life :c
          */
         try {
-            Intent intent = new Intent(this, FragmentActivity.class);
-            intent.putExtra("class", stackElement.connectedFragmentClass);
-            intent.putExtra("extras", stackElement.extras);
-            startActivity(intent);
+            Bundle bundle = new Bundle();
+            bundle.putSerializable("class", stackElement.connectedFragmentClass);
+            bundle.putBundle("extras", stackElement.extras);
+            eventBus.fire(new OpenActivityEvent(FragmentActivity.class, bundle));
             return true;
         } catch (Exception e) {
             log.exception(e);
@@ -256,7 +253,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
         });
     }
 
-    protected View inflate(@LayoutRes int layout) throws InflateException {
+    public View inflate(@LayoutRes int layout) throws InflateException {
         if (activity == null) {
             log.e(TAG, "Failed to inflate layout, activity is null");
             return null;
@@ -268,14 +265,14 @@ public abstract class ConnectedActivity extends AppCompatActivity {
         }
         return inflater.inflate(layout, null);
     }
-    protected void draw(int layoutId) {
+    public void draw(int layoutId) {
         try {
             draw(inflate(layoutId));
         } catch (Exception e){
             log.exception(e);
         }
     }
-    protected void draw(View view) {
+    public void draw(View view) {
         try {
             ViewGroup vg = findViewById(getRootViewId());
             if (vg != null) {
@@ -295,7 +292,7 @@ public abstract class ConnectedActivity extends AppCompatActivity {
 
     @Override
     protected void attachBaseContext(Context context) {
-        inject();
+        AppComponentProvider.getComponent().inject(this);
         super.attachBaseContext(CtxWrapper.wrap(context, storagePref, log, textUtils));
     }
 }

@@ -14,6 +14,18 @@ import com.bukhmastov.cdoitmo.activity.ShortcutReceiverActivity;
 import com.bukhmastov.cdoitmo.activity.TimeRemainingWidgetActivity;
 import com.bukhmastov.cdoitmo.activity.UniversityPersonCardActivity;
 import com.bukhmastov.cdoitmo.activity.WebViewActivity;
+import com.bukhmastov.cdoitmo.activity.presenter.impl.DaysRemainingWidgetActivityPresenterImpl;
+import com.bukhmastov.cdoitmo.activity.presenter.impl.FileReceiveActivityPresenterImpl;
+import com.bukhmastov.cdoitmo.activity.presenter.impl.FragmentActivityPresenterImpl;
+import com.bukhmastov.cdoitmo.activity.presenter.impl.IntroducingActivityPresenterImpl;
+import com.bukhmastov.cdoitmo.activity.presenter.impl.LoginActivityPresenterImpl;
+import com.bukhmastov.cdoitmo.activity.presenter.impl.MainActivityPresenterImpl;
+import com.bukhmastov.cdoitmo.activity.presenter.impl.PikaActivityPresenterImpl;
+import com.bukhmastov.cdoitmo.activity.presenter.impl.ScheduleLessonsWidgetConfigureActivityPresenterImpl;
+import com.bukhmastov.cdoitmo.activity.presenter.impl.ShortcutReceiverActivityPresenterImpl;
+import com.bukhmastov.cdoitmo.activity.presenter.impl.TimeRemainingWidgetActivityPresenterImpl;
+import com.bukhmastov.cdoitmo.activity.presenter.impl.UniversityPersonCardActivityPresenterImpl;
+import com.bukhmastov.cdoitmo.activity.presenter.impl.WebViewActivityPresenterImpl;
 import com.bukhmastov.cdoitmo.activity.search.ScheduleAttestationsSearchActivity;
 import com.bukhmastov.cdoitmo.activity.search.ScheduleExamsSearchActivity;
 import com.bukhmastov.cdoitmo.activity.search.ScheduleLessonsSearchActivity;
@@ -48,6 +60,7 @@ import com.bukhmastov.cdoitmo.factory.module.EventBusModule;
 import com.bukhmastov.cdoitmo.factory.module.FirebaseModule;
 import com.bukhmastov.cdoitmo.factory.module.NetworkModule;
 import com.bukhmastov.cdoitmo.factory.module.ObjectModule;
+import com.bukhmastov.cdoitmo.factory.module.ActivityPresenterModule;
 import com.bukhmastov.cdoitmo.factory.module.ProviderModule;
 import com.bukhmastov.cdoitmo.factory.module.UtilsModule;
 import com.bukhmastov.cdoitmo.factory.module.WidgetModule;
@@ -145,6 +158,7 @@ import dagger.Component;
 @Singleton
 @Component(modules = {
         AppModule.class, EventBusModule.class,
+        ActivityPresenterModule.class,
         UtilsModule.class, ObjectModule.class,
         NetworkModule.class, WidgetModule.class,
         FirebaseModule.class, ProviderModule.class
@@ -172,6 +186,19 @@ public interface AppComponent {
     void inject(ScheduleLessonsSearchActivity scheduleLessonsSearchActivity);
     void inject(ScheduleExamsSearchActivity scheduleExamsSearchActivity);
     void inject(ScheduleAttestationsSearchActivity scheduleAttestationsSearchActivity);
+    // Activity presenters
+    void inject(MainActivityPresenterImpl mainActivityPresenter);
+    void inject(LoginActivityPresenterImpl loginActivityPresenter);
+    void inject(FragmentActivityPresenterImpl fragmentActivityPresenter);
+    void inject(IntroducingActivityPresenterImpl introducingActivityModel);
+    void inject(FileReceiveActivityPresenterImpl fileReceiveActivityPresenter);
+    void inject(PikaActivityPresenterImpl pikaActivityPresenter);
+    void inject(WebViewActivityPresenterImpl webViewActivityPresenter);
+    void inject(UniversityPersonCardActivityPresenterImpl universityPersonCardActivityPresenter);
+    void inject(ShortcutReceiverActivityPresenterImpl shortcutReceiverActivityPresenter);
+    void inject(ScheduleLessonsWidgetConfigureActivityPresenterImpl scheduleLessonsWidgetConfigureActivityPresenter);
+    void inject(DaysRemainingWidgetActivityPresenterImpl daysRemainingWidgetActivityPresenter);
+    void inject(TimeRemainingWidgetActivityPresenterImpl timeRemainingWidgetActivityPresenter);
 
     // Fragments
     void inject(ConnectedFragment connectedFragment);

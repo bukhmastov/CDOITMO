@@ -6,7 +6,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.support.annotation.Keep;
 
-import com.bukhmastov.cdoitmo.activity.ScheduleLessonsWidgetConfigureActivity;
+import com.bukhmastov.cdoitmo.activity.presenter.ScheduleLessonsWidgetConfigureActivityPresenter;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleExams;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.provider.InjectProvider;
@@ -736,13 +736,13 @@ public class Migration {
                             boolean darkTheme = settingsJson.getBoolean("darkTheme");
                             JSONObject theme = new JSONObject();
                             if (darkTheme) {
-                                theme.put("background", ScheduleLessonsWidgetConfigureActivity.Default.Theme.Dark.background);
-                                theme.put("text", ScheduleLessonsWidgetConfigureActivity.Default.Theme.Dark.text);
-                                theme.put("opacity", ScheduleLessonsWidgetConfigureActivity.Default.Theme.Dark.opacity);
+                                theme.put("background", ScheduleLessonsWidgetConfigureActivityPresenter.Default.Theme.Dark.background);
+                                theme.put("text", ScheduleLessonsWidgetConfigureActivityPresenter.Default.Theme.Dark.text);
+                                theme.put("opacity", ScheduleLessonsWidgetConfigureActivityPresenter.Default.Theme.Dark.opacity);
                             } else {
-                                theme.put("background", ScheduleLessonsWidgetConfigureActivity.Default.Theme.Light.background);
-                                theme.put("text", ScheduleLessonsWidgetConfigureActivity.Default.Theme.Light.text);
-                                theme.put("opacity", ScheduleLessonsWidgetConfigureActivity.Default.Theme.Light.opacity);
+                                theme.put("background", ScheduleLessonsWidgetConfigureActivityPresenter.Default.Theme.Light.background);
+                                theme.put("text", ScheduleLessonsWidgetConfigureActivityPresenter.Default.Theme.Light.text);
+                                theme.put("opacity", ScheduleLessonsWidgetConfigureActivityPresenter.Default.Theme.Light.opacity);
                             }
                             settingsJson.remove("darkTheme");
                             settingsJson.put("theme", theme);

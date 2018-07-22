@@ -53,7 +53,7 @@ public class EventBusImpl implements EventBus {
             Set<SubscriberEvent> foundSubscribers = foundSubscribersMap.get(type);
 
             if (!subscribers.addAll(foundSubscribers)) {
-                throw new IllegalArgumentException("Object already subscribed");
+                // Object already subscribed
             }
         }
     }
@@ -70,7 +70,7 @@ public class EventBusImpl implements EventBus {
             Collection<SubscriberEvent> eventMethodsInListener = entry.getValue();
 
             if (currentSubscribers == null || !currentSubscribers.containsAll(eventMethodsInListener)) {
-                throw new IllegalArgumentException("Missing event subscriber for an annotated method. Is " + object.getClass() + " subscribed?");
+                // Object not subscribed
             }
 
             for (SubscriberEvent subscriber : currentSubscribers) {
