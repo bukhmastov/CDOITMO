@@ -10,8 +10,6 @@ import com.bukhmastov.cdoitmo.activity.presenter.ShortcutReceiverActivityPresent
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.receiver.ShortcutReceiver;
 import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.StoragePref;
-import com.bukhmastov.cdoitmo.util.TextUtils;
 
 import javax.inject.Inject;
 

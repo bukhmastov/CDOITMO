@@ -7,6 +7,7 @@ import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsModifyFragment;
+import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsModifyFragmentPresenter;
 import com.bukhmastov.cdoitmo.interfaces.Callable;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessonsHelper;
 import com.bukhmastov.cdoitmo.util.Log;
@@ -179,7 +180,7 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
             if (lesson == null) throw new NullPointerException("lesson cannot be null");
             log.v(TAG, "createLesson | open fragment | query=", query, " | weekday=", weekday, " | lesson=", lesson.toString());
             final Bundle extras = new Bundle();
-            extras.putString("action_type", ScheduleLessonsModifyFragment.CREATE);
+            extras.putString("action_type", ScheduleLessonsModifyFragmentPresenter.CREATE);
             extras.putString("query", query);
             extras.putString("type", type);
             extras.putString("title", title);
@@ -297,7 +298,7 @@ public class ScheduleLessonsHelperImpl implements ScheduleLessonsHelper {
             if (lesson == null) throw new NullPointerException("lesson cannot be null");
             log.v(TAG, "editLesson | open fragment | query=", query, " | weekday=", weekday, " | lesson=", lesson.toString());
             final Bundle extras = new Bundle();
-            extras.putString("action_type", ScheduleLessonsModifyFragment.EDIT);
+            extras.putString("action_type", ScheduleLessonsModifyFragmentPresenter.EDIT);
             extras.putString("query", query);
             extras.putString("type", type);
             extras.putString("title", title);

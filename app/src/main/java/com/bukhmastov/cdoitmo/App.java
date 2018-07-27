@@ -8,6 +8,7 @@ import android.content.res.Configuration;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
 import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
+import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
@@ -89,6 +90,16 @@ public class App extends Application {
             startActivity(intent);
         } catch (Throwable t) {
             log.e(TAG, "Failed to open activity | throwable=", t.getMessage());
+        }
+    }
+
+    @Event
+    public void onOpenIntentEvent(OpenIntentEvent event) {
+        try {
+            log.v(TAG, "onOpenActivityEvent | intent=", event.getIntent().toString());
+            startActivity(event.getIntent());
+        } catch (Throwable t) {
+            log.e(TAG, "Failed to open intent | throwable=", t.getMessage());
         }
     }
 

@@ -73,6 +73,18 @@ public abstract class ConnectedFragment extends Fragment {
 
     public void onViewCreated() {}
 
+    public ConnectedActivity activity() {
+        return activity;
+    }
+
+    public View container() {
+        return container;
+    }
+
+    public Bundle extras() {
+        return extras;
+    }
+
     public void storeData(ConnectedFragment fragment, String data) {
         storeData(fragment, data, null);
     }
@@ -104,13 +116,13 @@ public abstract class ConnectedFragment extends Fragment {
         }
     }
 
-    protected void close() {
+    public void close() {
         if (activity != null && activity.back()) {
             activity.finish();
         }
     }
 
-    protected void draw(@LayoutRes int layout) {
+    public void draw(@LayoutRes int layout) {
         try {
             View view = inflate(layout);
             if (view == null) {
@@ -123,7 +135,7 @@ public abstract class ConnectedFragment extends Fragment {
         }
     }
 
-    protected void draw(View view) {
+    public void draw(View view) {
         try {
             if (activity == null) {
                 log.e(TAG, "Failed to draw layout, activity is null");
@@ -139,7 +151,7 @@ public abstract class ConnectedFragment extends Fragment {
         }
     }
 
-    protected View inflate(@LayoutRes int layout) throws InflateException {
+    public View inflate(@LayoutRes int layout) throws InflateException {
         if (activity == null) {
             log.e(TAG, "Failed to inflate layout, activity is null");
             return null;

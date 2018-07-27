@@ -20,7 +20,7 @@ public class SubscribersFinder {
 
     private static final ConcurrentMap<Class<?>, Map<EventType, Set<Method>>> subscribersCache = new ConcurrentHashMap<>();
 
-    public static Map<EventType, Set<SubscriberEvent>> findAllSubscribers(@NonNull Object listener) {
+    public static Map<EventType, Set<SubscriberEvent>> findAllSubscribers(@NonNull Object listener) throws IllegalArgumentException {
 
         Class<?> listenerClass = listener.getClass();
         Map<EventType, Set<SubscriberEvent>> subscribersInMethod = new HashMap<>();
@@ -44,7 +44,7 @@ public class SubscribersFinder {
         return subscribersInMethod;
     }
 
-    private static void loadAnnotatedMethods(@NonNull Class<?> listenerClass, @NonNull Map<EventType, Set<Method>> subscriberMethods) {
+    private static void loadAnnotatedMethods(@NonNull Class<?> listenerClass, @NonNull Map<EventType, Set<Method>> subscriberMethods) throws IllegalArgumentException {
 
         for (Method method : listenerClass.getDeclaredMethods()) {
 

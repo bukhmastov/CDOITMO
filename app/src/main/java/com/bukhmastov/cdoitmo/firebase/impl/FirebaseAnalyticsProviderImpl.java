@@ -11,7 +11,6 @@ import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
-import com.google.firebase.analytics.FirebaseAnalytics;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

@@ -22,7 +22,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsShareFragment;
-import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsTabHostFragment;
+import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsTabHostFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessonsHelper;
@@ -67,6 +67,8 @@ public class ScheduleLessonsRVA extends RVA {
     Thread thread;
     @Inject
     ScheduleLessons scheduleLessons;
+    @Inject
+    ScheduleLessonsTabHostFragmentPresenter tabHostPresenter;
     @Inject
     Storage storage;
     @Inject
@@ -257,7 +259,7 @@ public class ScheduleLessonsRVA extends RVA {
                                                         scheduleLessonsHelper.createLesson(activity, storage, query, position, new JSONObject().put("subject", "4 пара").put("type", "Военка").put("week", 2).put("timeStart", "14:50").put("timeEnd", "16:10").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
                                                         scheduleLessonsHelper.createLesson(activity, storage, query, position, new JSONObject().put("subject", "Строевая подготовка").put("type", "Военка").put("week", 2).put("timeStart", "16:20").put("timeEnd", "16:35").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
                                                         scheduleLessonsHelper.createLesson(activity, storage, query, position, new JSONObject().put("subject", "Кураторский час").put("type", "Военка").put("week", 2).put("timeStart", "16:45").put("timeEnd", "17:30").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
-                                                        ScheduleLessonsTabHostFragment.invalidateOnDemand(thread, notificationMessage);
+                                                        tabHostPresenter.invalidateOnDemand();
                                                     } catch (Exception e) {
                                                         log.exception(e);
                                                         notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
@@ -290,7 +292,7 @@ public class ScheduleLessonsRVA extends RVA {
                                             .setIcon(R.drawable.ic_warning)
                                             .setPositiveButton(R.string.proceed, (dialog, which) -> thread.run(() -> {
                                                 log.v(TAG, "menu | popup item | remove_changes | dialog accepted");
-                                                if (!scheduleLessonsHelper.clearChanges(activity, storage, query, () -> ScheduleLessonsTabHostFragment.invalidateOnDemand(thread, notificationMessage))) {
+                                                if (!scheduleLessonsHelper.clearChanges(activity, storage, query, () -> tabHostPresenter.invalidateOnDemand())) {
                                                     notificationMessage.snackBar(activity, activity.getString(R.string.no_changes));
                                                 }
                                             }))
@@ -381,21 +383,21 @@ public class ScheduleLessonsRVA extends RVA {
                                 break;
                             case R.id.reduce_lesson:
                                 thread.run(() -> {
-                                    if (!scheduleLessonsHelper.reduceLesson(activity, storage, query, weekday, lesson, () -> ScheduleLessonsTabHostFragment.invalidateOnDemand(thread, notificationMessage))) {
+                                    if (!scheduleLessonsHelper.reduceLesson(activity, storage, query, weekday, lesson, () -> tabHostPresenter.invalidateOnDemand())) {
                                         notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                     }
                                 });
                                 break;
                             case R.id.restore_lesson:
                                 thread.run(() -> {
-                                    if (!scheduleLessonsHelper.restoreLesson(activity, storage, query, weekday, lesson, () -> ScheduleLessonsTabHostFragment.invalidateOnDemand(thread, notificationMessage))) {
+                                    if (!scheduleLessonsHelper.restoreLesson(activity, storage, query, weekday, lesson, () -> tabHostPresenter.invalidateOnDemand())) {
                                         notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                     }
                                 });
                                 break;
                             case R.id.delete_lesson:
                                 thread.run(() -> {
-                                    if (!scheduleLessonsHelper.deleteLesson(activity, storage, query, weekday, lesson, () -> ScheduleLessonsTabHostFragment.invalidateOnDemand(thread, notificationMessage))) {
+                                    if (!scheduleLessonsHelper.deleteLesson(activity, storage, query, weekday, lesson, () -> tabHostPresenter.invalidateOnDemand())) {
                                         notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
                                     }
                                 });

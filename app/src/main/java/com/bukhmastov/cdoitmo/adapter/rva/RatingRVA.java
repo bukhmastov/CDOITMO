@@ -13,7 +13,7 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
-import com.bukhmastov.cdoitmo.fragment.RatingFragment;
+import com.bukhmastov.cdoitmo.fragment.presenter.RatingFragmentPresenter;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
@@ -48,7 +48,7 @@ public class RatingRVA extends RVA {
     @Inject
     Time time;
 
-    public RatingRVA(@NonNull Context context, @NonNull ArrayMap<String, RatingFragment.Info> data) {
+    public RatingRVA(@NonNull Context context, @NonNull ArrayMap<String, RatingFragmentPresenter.Info> data) {
         super();
         AppComponentProvider.getComponent().inject(this);
         this.commonSelectedFaculty = storage.get(context, Storage.CACHE, Storage.USER, "rating#choose#faculty");
@@ -85,15 +85,15 @@ public class RatingRVA extends RVA {
         }
     }
 
-    private ArrayList<Item> map2dataset(@NonNull final Context context, @NonNull final ArrayMap<String, RatingFragment.Info> data) {
+    private ArrayList<Item> map2dataset(@NonNull final Context context, @NonNull final ArrayMap<String, RatingFragmentPresenter.Info> data) {
         final ArrayList<Item> dataset = new ArrayList<>();
         try {
-            final RatingFragment.Info common = data.get(RatingFragment.COMMON);
-            final RatingFragment.Info own    = data.get(RatingFragment.OWN);
+            final RatingFragmentPresenter.Info common = data.get(RatingFragmentPresenter.COMMON);
+            final RatingFragmentPresenter.Info own    = data.get(RatingFragmentPresenter.OWN);
             // setup common part
             JSONArray faculties = new JSONArray();
             dataset.add(getNewItem(TYPE_HEADER, new JSONObject().put("title", context.getString(R.string.detailed_rating))));
-            if (common.status.equals(RatingFragment.LOADED) && common.data != null) {
+            if (common.status.equals(RatingFragmentPresenter.LOADED) && common.data != null) {
                 try {
                     faculties = common.data.getJSONObject("rating").getJSONArray("faculties");
                     if (faculties.length() == 0) {
@@ -106,14 +106,14 @@ public class RatingRVA extends RVA {
                 }
             } else {
                 dataset.add(getNewItem(
-                        common.status.equals(RatingFragment.OFFLINE) ? TYPE_OFFLINE : TYPE_FAILED,
-                        new JSONObject().put("text", common.status.equals(RatingFragment.SERVER_ERROR) ? DeIfmoClient.getFailureMessage(context, -1) : "")
+                        common.status.equals(RatingFragmentPresenter.OFFLINE) ? TYPE_OFFLINE : TYPE_FAILED,
+                        new JSONObject().put("text", common.status.equals(RatingFragmentPresenter.SERVER_ERROR) ? DeIfmoClient.getFailureMessage(context, -1) : "")
                 ));
             }
             // setup own mode
             if (!App.UNAUTHORIZED_MODE) {
                 dataset.add(getNewItem(TYPE_HEADER, new JSONObject().put("title", context.getString(R.string.your_rating))));
-                if (own.status.equals(RatingFragment.LOADED) && own.data != null) {
+                if (own.status.equals(RatingFragmentPresenter.LOADED) && own.data != null) {
                     try {
                         final JSONArray courses = own.data.getJSONObject("rating").getJSONArray("courses");
                         final int max_course = own.data.getJSONObject("rating").getInt("max_course");
@@ -153,8 +153,8 @@ public class RatingRVA extends RVA {
                     }
                 } else {
                     dataset.add(getNewItem(
-                            own.status.equals(RatingFragment.OFFLINE) ? TYPE_OFFLINE : TYPE_FAILED,
-                            new JSONObject().put("text", own.status.equals(RatingFragment.SERVER_ERROR) ? DeIfmoClient.getFailureMessage(context, -1) : "")
+                            own.status.equals(RatingFragmentPresenter.OFFLINE) ? TYPE_OFFLINE : TYPE_FAILED,
+                            new JSONObject().put("text", own.status.equals(RatingFragmentPresenter.SERVER_ERROR) ? DeIfmoClient.getFailureMessage(context, -1) : "")
                     ));
                 }
             }

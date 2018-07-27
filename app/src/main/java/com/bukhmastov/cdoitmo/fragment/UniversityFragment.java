@@ -1,118 +1,48 @@
 package com.bukhmastov.cdoitmo.fragment;
 
-import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.design.widget.TabLayout;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.view.ViewPager;
-import android.view.View;
 
 import com.bukhmastov.cdoitmo.R;
-import com.bukhmastov.cdoitmo.adapter.PagerUniversityAdapter;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
-import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.util.Log;
-import com.bukhmastov.cdoitmo.util.StoragePref;
+import com.bukhmastov.cdoitmo.fragment.presenter.UniversityFragmentPresenter;
 
 import javax.inject.Inject;
 
-public class UniversityFragment extends ConnectedFragment implements ViewPager.OnPageChangeListener {
-
-    private static final String TAG = "UniversityFragment";
-    private static int tabSelected = -1;
-    private String action_extra = null;
+public class UniversityFragment extends ConnectedFragment {
 
     @Inject
-    Log log;
-    @Inject
-    StoragePref storagePref;
-    @Inject
-    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
+    UniversityFragmentPresenter presenter;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         AppComponentProvider.getComponent().inject(this);
+        presenter.setFragment(this);
         super.onCreate(savedInstanceState);
-        log.v(TAG, "Fragment created");
-        firebaseAnalyticsProvider.logCurrentScreen(activity, this);
-        Activity activity = getActivity();
-        if (activity != null) {
-            Intent intent = activity.getIntent();
-            if (intent != null) {
-                action_extra = intent.getStringExtra("action_extra");
-                if (action_extra != null) {
-                    intent.removeExtra("action_extra");
-                }
-            }
-        }
+        presenter.onCreate(savedInstanceState);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        log.v(TAG, "Fragment destroyed");
-        TabLayout scrollable_tabs = activity.findViewById(R.id.scrollable_tabs);
-        if (scrollable_tabs != null) {
-            scrollable_tabs.setVisibility(View.GONE);
-        }
+        presenter.onDestroy();
     }
 
     @Override
     public void onViewCreated() {
-        TabLayout main_tabs = activity.findViewById(R.id.scrollable_tabs);
-        ViewPager pager = container.findViewById(R.id.pager);
-        FragmentManager fragmentManager = getChildFragmentManager();
-        if (pager != null) {
-            pager.setAdapter(new PagerUniversityAdapter(fragmentManager, activity));
-            pager.addOnPageChangeListener(this);
-            main_tabs.setupWithViewPager(pager);
-        }
-        TabLayout.Tab tab = null;
-        try {
-            if (action_extra != null) {
-                switch (action_extra) {
-                    case "persons": tab = main_tabs.getTabAt(0); break;
-                    case "faculties": tab = main_tabs.getTabAt(1); break;
-                    case "units": tab = main_tabs.getTabAt(2); break;
-                    case "ubuildings": tab = main_tabs.getTabAt(3); break;
-                    case "news": tab = main_tabs.getTabAt(4); break;
-                    case "events": tab = main_tabs.getTabAt(5); break;
-                }
-                action_extra = null;
-            }
-            if (tab == null) {
-                if (tabSelected == -1) {
-                    int pref = storagePref.get(activity, "pref_university_tab", -1);
-                    tab = main_tabs.getTabAt(pref < 0 ? 0 : pref);
-                } else {
-                    tab = main_tabs.getTabAt(tabSelected);
-                }
-            }
-        } catch (Exception e) {
-            tab = null;
-        }
-        if (tab != null) {
-            tab.select();
-        }
+        presenter.onViewCreated();
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        log.v(TAG, "resumed");
-        firebaseAnalyticsProvider.setCurrentScreen(activity, this);
-        TabLayout scrollable_tabs = activity.findViewById(R.id.scrollable_tabs);
-        if (scrollable_tabs != null) {
-            scrollable_tabs.setVisibility(View.VISIBLE);
-        }
+        presenter.onResume();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        log.v(TAG, "paused");
+        presenter.onPause();
     }
 
     @Override
@@ -124,16 +54,4 @@ public class UniversityFragment extends ConnectedFragment implements ViewPager.O
     protected int getRootId() {
         return 0;
     }
-
-    @Override
-    public void onPageSelected(int position) {
-        tabSelected = position;
-        storagePref.put(activity, "pref_university_tab", tabSelected);
-    }
-
-    @Override
-    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
-
-    @Override
-    public void onPageScrollStateChanged(int state) {}
 }

@@ -21,7 +21,7 @@ public class ERegisterSubjectsRVA extends RVA {
     private static final int TYPE_SUBJECT_PASSED = 1;
     private static final int TYPE_NO_SUBJECTS = 2;
 
-    private static Pattern patternExamOrCredit = Pattern.compile("^.*зач[её]т$|^экзамен$", Pattern.CASE_INSENSITIVE);
+    private static Pattern patternExamOrCredit = Pattern.compile("^.*зач[её]т$|^экзамен$|^тестирование$", Pattern.CASE_INSENSITIVE);
 
     public ERegisterSubjectsRVA(@NonNull Context context, @NonNull JSONArray subjects) {
         super();

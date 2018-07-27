@@ -15,9 +15,9 @@ public class ERegisterConverter extends Converter {
 
     private final JSONObject eregister;
 
-    private static Pattern patternExamOrCredit = Pattern.compile("^.*зач[её]т$|^экзамен$", Pattern.CASE_INSENSITIVE); // |^дифференцированный\sзач[её]т$|^дифф\.\sзач[её]т$
+    private static Pattern patternExamOrCredit = Pattern.compile("^.*зач[её]т$|^экзамен$|^тестирование$", Pattern.CASE_INSENSITIVE); // |^дифференцированный\sзач[её]т$|^дифф\.\sзач[её]т$
     private static Pattern patternSkipCriteria = Pattern.compile("^другие\\sвиды\\sработ$", Pattern.CASE_INSENSITIVE);
-    private static Pattern patternSubjectSummary = Pattern.compile("^семестр\\s\\d+$", Pattern.CASE_INSENSITIVE);
+    private static Pattern patternSubjectSummary = Pattern.compile("^семестр\\s\\d+$|^общий\\sрейтинг$|^тесты$", Pattern.CASE_INSENSITIVE);
     private static Pattern patternAttestations = Pattern.compile("^семестр\\s\\d+$|^курсовая\\sработа$|^курсовой\\sпроект$|^КР$|^КП$", Pattern.CASE_INSENSITIVE);
     private static Pattern patternCutNameOfCriteria = Pattern.compile("^(.*)\\(мод(уль)?\\.?.?\\d+\\)(.*)$", Pattern.CASE_INSENSITIVE);
 

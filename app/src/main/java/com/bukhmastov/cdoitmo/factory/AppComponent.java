@@ -55,9 +55,11 @@ import com.bukhmastov.cdoitmo.dialog.CacheClearDialog;
 import com.bukhmastov.cdoitmo.dialog.ColorPickerDialog;
 import com.bukhmastov.cdoitmo.dialog.Dialog;
 import com.bukhmastov.cdoitmo.dialog.ThemeDialog;
+import com.bukhmastov.cdoitmo.event.bus.impl.EventBusImpl;
 import com.bukhmastov.cdoitmo.factory.module.AppModule;
 import com.bukhmastov.cdoitmo.factory.module.EventBusModule;
 import com.bukhmastov.cdoitmo.factory.module.FirebaseModule;
+import com.bukhmastov.cdoitmo.factory.module.FragmentPresenterModule;
 import com.bukhmastov.cdoitmo.factory.module.NetworkModule;
 import com.bukhmastov.cdoitmo.factory.module.ObjectModule;
 import com.bukhmastov.cdoitmo.factory.module.ActivityPresenterModule;
@@ -96,6 +98,32 @@ import com.bukhmastov.cdoitmo.fragment.UniversityFragment;
 import com.bukhmastov.cdoitmo.fragment.UniversityNewsFragment;
 import com.bukhmastov.cdoitmo.fragment.UniversityPersonsFragment;
 import com.bukhmastov.cdoitmo.fragment.UniversityUnitsFragment;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.AboutFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.ERegisterFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.HomeScreenInteractionFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.LinkedAccountsFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.LogFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.ProtocolFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.RatingFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.RatingListFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.Room101FragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleAttestationsFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleExamsFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleExamsTabFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleExamsTabHostFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleLessonsFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleLessonsModifyFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleLessonsShareFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleLessonsTabFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.ScheduleLessonsTabHostFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.SubjectShowFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.UniversityBuildingsFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.UniversityEventsFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.UniversityFacultiesFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.UniversityFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.UniversityNewsFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.UniversityPersonsFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.presenter.impl.UniversityUnitsFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsNotificationsFragment;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsTemplateHeadersFragment;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsTemplatePreferencesFragment;
@@ -158,7 +186,7 @@ import dagger.Component;
 @Singleton
 @Component(modules = {
         AppModule.class, EventBusModule.class,
-        ActivityPresenterModule.class,
+        ActivityPresenterModule.class, FragmentPresenterModule.class,
         UtilsModule.class, ObjectModule.class,
         NetworkModule.class, WidgetModule.class,
         FirebaseModule.class, ProviderModule.class
@@ -231,6 +259,33 @@ public interface AppComponent {
     void inject(SettingsTemplateHeadersFragment settingsTemplateHeadersFragment);
     void inject(SettingsTemplatePreferencesFragment settingsTemplatePreferencesFragment);
     void inject(SettingsNotificationsFragment settingsNotificationsFragment);
+    // Fragment presenters
+    void inject(AboutFragmentPresenterImpl aboutFragmentPresenter);
+    void inject(ERegisterFragmentPresenterImpl eRegisterFragmentPresenter);
+    void inject(HomeScreenInteractionFragmentPresenterImpl homeScreenInteractionFragmentPresenter);
+    void inject(LinkedAccountsFragmentPresenterImpl linkedAccountsFragmentPresenter);
+    void inject(LogFragmentPresenterImpl logFragmentPresenter);
+    void inject(ProtocolFragmentPresenterImpl protocolFragmentPresenter);
+    void inject(RatingFragmentPresenterImpl ratingFragmentPresenter);
+    void inject(RatingListFragmentPresenterImpl ratingListFragmentPresenter);
+    void inject(Room101FragmentPresenterImpl room101FragmentPresenter);
+    void inject(ScheduleAttestationsFragmentPresenterImpl scheduleAttestationsFragmentPresenter);
+    void inject(ScheduleExamsFragmentPresenterImpl scheduleExamsFragmentPresenter);
+    void inject(ScheduleExamsTabHostFragmentPresenterImpl scheduleExamsTabHostFragmentPresenter);
+    void inject(ScheduleExamsTabFragmentPresenterImpl scheduleExamsTabFragmentPresenter);
+    void inject(ScheduleLessonsTabHostFragmentPresenterImpl scheduleLessonsTabHostFragmentPresenter);
+    void inject(ScheduleLessonsTabFragmentPresenterImpl scheduleLessonsTabFragmentPresenter);
+    void inject(ScheduleLessonsFragmentPresenterImpl scheduleLessonsFragmentPresenter);
+    void inject(ScheduleLessonsModifyFragmentPresenterImpl scheduleLessonsModifyFragmentPresenter);
+    void inject(ScheduleLessonsShareFragmentPresenterImpl scheduleLessonsShareFragmentPresenter);
+    void inject(SubjectShowFragmentPresenterImpl subjectShowFragmentPresenter);
+    void inject(UniversityFragmentPresenterImpl universityFragmentPresenter);
+    void inject(UniversityBuildingsFragmentPresenterImpl universityBuildingsFragmentPresenter);
+    void inject(UniversityEventsFragmentPresenterImpl universityEventsFragmentPresenter);
+    void inject(UniversityFacultiesFragmentPresenterImpl universityFacultiesFragmentPresenter);
+    void inject(UniversityNewsFragmentPresenterImpl universityNewsFragmentPresenter);
+    void inject(UniversityPersonsFragmentPresenterImpl universityPersonsFragmentPresenter);
+    void inject(UniversityUnitsFragmentPresenterImpl universityUnitsFragmentPresenter);
 
     // Adapters
     void inject(TeacherPickerAdapter teacherPickerAdapter);
@@ -334,4 +389,5 @@ public interface AppComponent {
     void inject(ScheduleLessonsWidgetStorageImpl scheduleLessonsWidgetStorage);
     void inject(OutlineTextView outlineTextView);
     void inject(OnSwipeTouchListener onSwipeTouchListener);
+    void inject(EventBusImpl eventBus);
 }

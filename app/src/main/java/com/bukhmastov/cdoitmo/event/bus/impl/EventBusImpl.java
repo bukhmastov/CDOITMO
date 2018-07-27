@@ -7,8 +7,11 @@ import com.bukhmastov.cdoitmo.event.bus.SubscribersFinder;
 import com.bukhmastov.cdoitmo.event.bus.annotation.Tag;
 import com.bukhmastov.cdoitmo.event.bus.entity.EventType;
 import com.bukhmastov.cdoitmo.event.bus.entity.SubscriberEvent;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
+import com.bukhmastov.cdoitmo.util.Log;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -18,25 +21,40 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import javax.inject.Inject;
+
+import dagger.Lazy;
+
 public class EventBusImpl implements EventBus {
 
+    private static final String TAG = "EventBus";
     private static final String DEFAULT_IDENTIFIER = "default";
     private final String identifier;
     private final ConcurrentMap<EventType, Set<SubscriberEvent>> subscribersByType = new ConcurrentHashMap<>();
     private final ConcurrentMap<Class<?>, Set<Class<?>>> flattenHierarchyCache = new ConcurrentHashMap<>();
+
+    @Inject
+    Lazy<Log> log;
 
     public EventBusImpl() {
         this(DEFAULT_IDENTIFIER);
     }
 
     public EventBusImpl(String identifier) {
+        AppComponentProvider.getComponent().inject(this);
         this.identifier = identifier;
     }
 
     @Override
     public void register(@NonNull Object object) {
 
-        Map<EventType, Set<SubscriberEvent>> foundSubscribersMap = SubscribersFinder.findAllSubscribers(object);
+        Map<EventType, Set<SubscriberEvent>> foundSubscribersMap;
+        try {
+            foundSubscribersMap = SubscribersFinder.findAllSubscribers(object);
+        } catch (IllegalArgumentException e) {
+            log.get().v(TAG, "register | ", e.getMessage());
+            foundSubscribersMap = new HashMap<>();
+        }
 
         for (EventType type : foundSubscribersMap.keySet()) {
 
@@ -53,7 +71,8 @@ public class EventBusImpl implements EventBus {
             Set<SubscriberEvent> foundSubscribers = foundSubscribersMap.get(type);
 
             if (!subscribers.addAll(foundSubscribers)) {
-                // Object already subscribed
+                log.get().v(TAG, "register | Object ", object.getClass(), " has already been registered");
+                return;
             }
         }
     }
@@ -61,7 +80,13 @@ public class EventBusImpl implements EventBus {
     @Override
     public void unregister(@NonNull Object object) {
 
-        Map<EventType, Set<SubscriberEvent>> foundSubscribersMap = SubscribersFinder.findAllSubscribers(object);
+        Map<EventType, Set<SubscriberEvent>> foundSubscribersMap;
+        try {
+            foundSubscribersMap = SubscribersFinder.findAllSubscribers(object);
+        } catch (IllegalArgumentException e) {
+            log.get().v(TAG, "unregister | ", e.getMessage());
+            foundSubscribersMap = new HashMap<>();
+        }
 
         for (Map.Entry<EventType, Set<SubscriberEvent>> entry : foundSubscribersMap.entrySet()) {
 
@@ -70,7 +95,8 @@ public class EventBusImpl implements EventBus {
             Collection<SubscriberEvent> eventMethodsInListener = entry.getValue();
 
             if (currentSubscribers == null || !currentSubscribers.containsAll(eventMethodsInListener)) {
-                // Object not subscribed
+                log.get().v(TAG, "unregister | Object ", object.getClass(), " was not registered");
+                return;
             }
 
             for (SubscriberEvent subscriber : currentSubscribers) {
@@ -93,15 +119,22 @@ public class EventBusImpl implements EventBus {
 
         Set<Class<?>> classes = flattenHierarchy(event.getClass());
 
+        boolean dispatched = false;
+
         for (Class<?> clazz : classes) {
 
             Set<SubscriberEvent> subscribers = subscribersByType.get(new EventType(tag, clazz));
 
             if (subscribers != null && !subscribers.isEmpty()) {
+                dispatched = true;
                 for (SubscriberEvent subscriber : subscribers) {
                     dispatch(event, subscriber);
                 }
             }
+        }
+
+        if (!dispatched) {
+            log.get().v(TAG, "fire | Event ", event.getClass(), " with tag ", tag, " was not delivered, there is no receivers for it");
         }
     }
 

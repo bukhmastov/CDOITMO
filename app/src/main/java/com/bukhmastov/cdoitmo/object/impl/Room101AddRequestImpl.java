@@ -17,7 +17,7 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.fragment.Room101Fragment;
+import com.bukhmastov.cdoitmo.fragment.presenter.Room101FragmentPresenter;
 import com.bukhmastov.cdoitmo.network.Room101Client;
 import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
 import com.bukhmastov.cdoitmo.network.model.Client;
@@ -25,9 +25,8 @@ import com.bukhmastov.cdoitmo.object.Room101AddRequest;
 import com.bukhmastov.cdoitmo.parse.room101.Room101DatePickParse;
 import com.bukhmastov.cdoitmo.parse.room101.Room101TimeEndPickParse;
 import com.bukhmastov.cdoitmo.parse.room101.Room101TimeStartPickParse;
-import com.bukhmastov.cdoitmo.provider.InjectProvider;
-import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
@@ -42,6 +41,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.inject.Inject;
+
+import dagger.Lazy;
 
 public class Room101AddRequestImpl implements Room101AddRequest {
 
@@ -63,7 +64,7 @@ public class Room101AddRequestImpl implements Room101AddRequest {
     @Inject
     Storage storage;
     @Inject
-    InjectProvider injectProvider;
+    Lazy<Room101FragmentPresenter> room101FragmentPresenter; // !! presenter without setFragment call | only presenter.execute() method available
     @Inject
     Room101Client room101Client;
     @Inject
@@ -179,7 +180,7 @@ public class Room101AddRequestImpl implements Room101AddRequest {
                 callback.onDraw(getLoadingLayout(activity.getString(R.string.data_loading)));
                 data = null;
                 pick_date = null;
-                Room101Fragment.execute(activity, room101Client, injectProvider, "newRequest", new ResponseHandler() {
+                room101FragmentPresenter.get().execute(activity, "newRequest", new ResponseHandler() {
                     @Override
                     public void onSuccess(final int statusCode, final Client.Headers headers, final String response) {
                         thread.run(() -> {

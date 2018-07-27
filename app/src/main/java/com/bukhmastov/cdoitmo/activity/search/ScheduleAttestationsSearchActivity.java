@@ -5,7 +5,7 @@ import android.os.Bundle;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
-import com.bukhmastov.cdoitmo.fragment.ScheduleAttestationsFragment;
+import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleAttestationsFragmentPresenter;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Thread;
 
@@ -19,6 +19,8 @@ public class ScheduleAttestationsSearchActivity extends SearchActivity {
     Log log;
     @Inject
     Thread thread;
+    @Inject
+    ScheduleAttestationsFragmentPresenter scheduleAttestationsFragmentPresenter;
     @Inject
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
@@ -47,8 +49,8 @@ public class ScheduleAttestationsSearchActivity extends SearchActivity {
     protected void onDone(final String query) {
         thread.run(() -> {
             log.v(TAG, "onDone | query=", query);
-            ScheduleAttestationsFragment.setQuery(query);
-            ScheduleAttestationsFragment.invalidate();
+            scheduleAttestationsFragmentPresenter.setQuery(query);
+            scheduleAttestationsFragmentPresenter.invalidate();
         });
     }
 }
