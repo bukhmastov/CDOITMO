@@ -125,6 +125,7 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
     @Override
     public void onDestroy() {
         log.v(TAG, "Fragment destroyed");
+        loaded = false;
     }
 
     @Override
