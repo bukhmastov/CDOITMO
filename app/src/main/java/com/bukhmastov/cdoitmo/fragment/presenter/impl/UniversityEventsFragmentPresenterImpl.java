@@ -93,6 +93,7 @@ public class UniversityEventsFragmentPresenterImpl implements UniversityEventsFr
     @Override
     public void onDestroy() {
         log.v(TAG, "Fragment destroyed");
+        loaded = false;
     }
 
     @Override

@@ -20,6 +20,7 @@ import com.bukhmastov.cdoitmo.activity.MainActivity;
 import com.bukhmastov.cdoitmo.activity.presenter.DaysRemainingWidgetActivityPresenter;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
+import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.model.Client;
@@ -399,7 +400,7 @@ public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWi
             Intent intent = new Intent(Intent.ACTION_SEND);
             intent.setType("text/plain");
             intent.putExtra(Intent.EXTRA_TEXT, text);
-            activity.startActivity(Intent.createChooser(intent, activity.getString(R.string.share)));
+            eventBus.fire(new OpenIntentEvent(Intent.createChooser(intent, activity.getString(R.string.share))));
             // track statistics
             firebaseAnalyticsProvider.logEvent(
                     activity,

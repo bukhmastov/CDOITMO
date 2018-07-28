@@ -2,7 +2,6 @@ package com.bukhmastov.cdoitmo.util.impl;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +10,7 @@ import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.activity.MainActivity;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.events.MainActivityEvent;
+import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.Account;
 import com.bukhmastov.cdoitmo.util.Log;
@@ -63,9 +63,7 @@ public class StaticImpl implements Static {
             log.w(TAG, "reLaunch | context is null");
             return;
         }
-        Intent intent = new Intent(context, MainActivity.class);
-        intent.addFlags(App.intentFlagRestart);
-        context.startActivity(intent);
+        eventBus.fire(new OpenActivityEvent(MainActivity.class, App.intentFlagRestart));
     }
 
     @Override

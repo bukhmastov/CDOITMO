@@ -25,6 +25,8 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapter.rva.RecyclerViewOnScrollListener;
 import com.bukhmastov.cdoitmo.adapter.rva.university.UniversityFacultiesRVA;
 import com.bukhmastov.cdoitmo.adapter.rva.university.UniversityRVA;
+import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.presenter.UniversityUnitsFragmentPresenter;
@@ -65,6 +67,8 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
     @Inject
     Thread thread;
     @Inject
+    EventBus eventBus;
+    @Inject
     Storage storage;
     @Inject
     StoragePref storagePref;
@@ -96,6 +100,7 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
     @Override
     public void onDestroy() {
         log.v(TAG, "Fragment destroyed");
+        loaded = false;
     }
 
     @Override
@@ -344,7 +349,9 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
                     final int unit_id = stack.size() > 0 ? getInt(unit, "unit_id") : -1;
                     final String link = isValid(unit_id) ? "http://www.ifmo.ru/ru/viewunit/" + unit_id + "/" : null;
                     if (link != null) {
-                        container.findViewById(R.id.web).setOnClickListener(view -> activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(link.trim()))));
+                        container.findViewById(R.id.web).setOnClickListener(view -> {
+                            eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse(link.trim()))));
+                        });
                     } else {
                         staticUtil.removeView(container.findViewById(R.id.web));
                     }

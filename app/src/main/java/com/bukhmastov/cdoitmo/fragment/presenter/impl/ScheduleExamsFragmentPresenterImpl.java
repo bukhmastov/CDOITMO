@@ -84,6 +84,7 @@ public class ScheduleExamsFragmentPresenterImpl implements ScheduleExamsFragment
     @Override
     public void onDestroy() {
         log.v(TAG, "Fragment destroyed");
+        loaded = false;
         try {
             final TabLayout fixed_tabs = activity.findViewById(R.id.fixed_tabs);
             if (fixed_tabs != null) {

@@ -62,56 +62,67 @@ import dagger.Provides;
 public class FragmentPresenterModule {
 
     @Provides
+    @Singleton
     public AboutFragmentPresenter provideAboutFragmentPresenter() {
         return new AboutFragmentPresenterImpl();
     }
 
     @Provides
+    @Singleton
     public ERegisterFragmentPresenter provideERegisterFragmentPresenter() {
         return new ERegisterFragmentPresenterImpl();
     }
 
     @Provides
+    @Singleton
     public HomeScreenInteractionFragmentPresenter provideHomeScreenInteractionFragmentPresenter() {
         return new HomeScreenInteractionFragmentPresenterImpl();
     }
 
     @Provides
+    @Singleton
     public LinkedAccountsFragmentPresenter provideLinkedAccountsFragmentPresenter() {
         return new LinkedAccountsFragmentPresenterImpl();
     }
 
     @Provides
+    @Singleton
     public LogFragmentPresenter provideLogFragmentPresenter() {
         return new LogFragmentPresenterImpl();
     }
 
     @Provides
+    @Singleton
     public ProtocolFragmentPresenter provideProtocolFragmentPresenter() {
         return new ProtocolFragmentPresenterImpl();
     }
 
     @Provides
+    @Singleton
     public RatingFragmentPresenter provideRatingFragmentPresenter() {
         return new RatingFragmentPresenterImpl();
     }
 
     @Provides
+    @Singleton
     public RatingListFragmentPresenter provideRatingListFragmentPresenter() {
         return new RatingListFragmentPresenterImpl();
     }
 
     @Provides
+    @Singleton
     public Room101FragmentPresenter provideRoom101FragmentPresenter() {
         return new Room101FragmentPresenterImpl();
     }
 
     @Provides
+    @Singleton
     public ScheduleAttestationsFragmentPresenter provideScheduleAttestationsFragmentPresenter() {
         return new ScheduleAttestationsFragmentPresenterImpl();
     }
 
     @Provides
+    @Singleton
     public ScheduleExamsFragmentPresenter provideScheduleExamsFragmentPresenter() {
         return new ScheduleExamsFragmentPresenterImpl();
     }
@@ -139,56 +150,67 @@ public class FragmentPresenterModule {
     }
 
     @Provides
+    @Singleton
     public ScheduleLessonsFragmentPresenter provideScheduleLessonsFragmentPresenter() {
         return new ScheduleLessonsFragmentPresenterImpl();
     }
 
     @Provides
+    @Singleton
     public ScheduleLessonsModifyFragmentPresenter provideScheduleLessonsModifyFragmentPresenter() {
         return new ScheduleLessonsModifyFragmentPresenterImpl();
     }
 
     @Provides
+    @Singleton
     public ScheduleLessonsShareFragmentPresenter provideScheduleLessonsShareFragmentPresenter() {
         return new ScheduleLessonsShareFragmentPresenterImpl();
     }
 
     @Provides
+    @Singleton
     public SubjectShowFragmentPresenter provideSubjectShowFragmentPresenter() {
         return new SubjectShowFragmentPresenterImpl();
     }
 
     @Provides
+    @Singleton
     public UniversityFragmentPresenter provideUniversityFragmentPresenter() {
         return new UniversityFragmentPresenterImpl();
     }
 
     @Provides
+    @Singleton
     public UniversityBuildingsFragmentPresenter provideUniversityBuildingsFragmentPresenter() {
         return new UniversityBuildingsFragmentPresenterImpl();
     }
 
     @Provides
+    @Singleton
     public UniversityEventsFragmentPresenter provideUniversityEventsFragmentPresenter() {
         return new UniversityEventsFragmentPresenterImpl();
     }
 
     @Provides
+    @Singleton
     public UniversityFacultiesFragmentPresenter provideUniversityFacultiesFragmentPresenter() {
         return new UniversityFacultiesFragmentPresenterImpl();
     }
 
     @Provides
+    @Singleton
     public UniversityNewsFragmentPresenter provideUniversityNewsFragmentPresenter() {
         return new UniversityNewsFragmentPresenterImpl();
     }
 
     @Provides
+    @Singleton
     public UniversityPersonsFragmentPresenter provideUniversityPersonsFragmentPresenter() {
         return new UniversityPersonsFragmentPresenterImpl();
     }
 
     @Provides
+    @Singleton
     public UniversityUnitsFragmentPresenter provideUniversityUnitsFragmentPresenter() {
         return new UniversityUnitsFragmentPresenterImpl();
     }

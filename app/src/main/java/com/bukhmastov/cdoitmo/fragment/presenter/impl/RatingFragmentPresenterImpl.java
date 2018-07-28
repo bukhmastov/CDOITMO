@@ -1,6 +1,5 @@
 package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -15,6 +14,8 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.activity.LoginActivity;
 import com.bukhmastov.cdoitmo.adapter.rva.RatingRVA;
+import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
@@ -53,6 +54,8 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
     @Inject
     Thread thread;
     @Inject
+    EventBus eventBus;
+    @Inject
     Storage storage;
     @Inject
     StoragePref storagePref;
@@ -88,6 +91,7 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
     @Override
     public void onDestroy() {
         log.v(TAG, "Fragment destroyed");
+        loaded = false;
     }
 
     @Override
@@ -523,9 +527,9 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
         thread.run(() -> {
             try {
                 log.v(TAG, "gotoLogin | state=" + state);
-                Intent intent = new Intent(activity, LoginActivity.class);
-                intent.putExtra("state", state);
-                activity.startActivity(intent);
+                Bundle extras = new Bundle();
+                extras.putInt("state", state);
+                eventBus.fire(new OpenActivityEvent(LoginActivity.class, extras));
             } catch (Exception e) {
                 log.exception(e);
                 loadFailed();

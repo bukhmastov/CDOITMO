@@ -14,6 +14,8 @@ import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.adapter.rva.RatingListRVA;
+import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.exception.SilentException;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
@@ -58,6 +60,8 @@ public class RatingListFragmentPresenterImpl implements RatingListFragmentPresen
     @Inject
     Thread thread;
     @Inject
+    EventBus eventBus;
+    @Inject
     Storage storage;
     @Inject
     DeIfmoClient deIfmoClient;
@@ -82,12 +86,15 @@ public class RatingListFragmentPresenterImpl implements RatingListFragmentPresen
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        log.v(TAG, "Fragment created");
         fragment.setHasOptionsMenu(true);
         firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
     }
 
     @Override
     public void onDestroy() {
+        log.v(TAG, "Fragment destroyed");
+        loaded = false;
         hideShareButton();
     }
 
@@ -382,7 +389,7 @@ public class RatingListFragmentPresenterImpl implements RatingListFragmentPresen
             Intent intent = new Intent(Intent.ACTION_SEND);
             intent.setType("text/plain");
             intent.putExtra(Intent.EXTRA_TEXT, title);
-            activity.startActivity(Intent.createChooser(intent, activity.getString(R.string.share)));
+            eventBus.fire(new OpenIntentEvent(Intent.createChooser(intent, activity.getString(R.string.share))));
             // track statistics
             firebaseAnalyticsProvider.logEvent(
                     activity,

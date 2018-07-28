@@ -1,7 +1,6 @@
 package com.bukhmastov.cdoitmo.adapter.rva.university;
 
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -13,6 +12,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.WebViewActivity;
+import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 
 import java.util.ArrayList;
 
@@ -116,12 +116,10 @@ public class UniversityEventsRVA extends UniversityRVA {
             }
             if (webview != null && !webview.trim().isEmpty()) {
                 viewHolder.container.findViewById(R.id.news_click).setOnClickListener(v -> {
-                    Intent intent = new Intent(context, WebViewActivity.class);
                     Bundle extras = new Bundle();
                     extras.putString("url", webview.trim());
                     extras.putString("title", context.getString(R.string.events));
-                    intent.putExtras(extras);
-                    context.startActivity(intent);
+                    eventBus.fire(new OpenActivityEvent(WebViewActivity.class, extras));
                 });
             }
         } catch (Exception e) {

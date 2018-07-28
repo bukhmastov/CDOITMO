@@ -99,6 +99,7 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
     @Override
     public void onDestroy() {
         log.v(TAG, "Fragment destroyed");
+        loaded = false;
         try {
             if (activity.toolbar != null) {
                 MenuItem simple = activity.toolbar.findItem(R.id.action_protocol_changes_switch_to_simple);

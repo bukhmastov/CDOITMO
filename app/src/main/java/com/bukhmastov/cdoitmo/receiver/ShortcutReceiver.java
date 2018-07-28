@@ -17,6 +17,8 @@ import com.bukhmastov.cdoitmo.activity.DaysRemainingWidgetActivity;
 import com.bukhmastov.cdoitmo.activity.MainActivity;
 import com.bukhmastov.cdoitmo.activity.ShortcutReceiverActivity;
 import com.bukhmastov.cdoitmo.activity.TimeRemainingWidgetActivity;
+import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
@@ -45,6 +47,8 @@ public class ShortcutReceiver extends BroadcastReceiver {
     Log log;
     @Inject
     Thread thread;
+    @Inject
+    EventBus eventBus;
     @Inject
     NotificationMessage notificationMessage;
     @Inject
@@ -115,50 +119,44 @@ public class ShortcutReceiver extends BroadcastReceiver {
                 );
                 switch (shortcut_type) {
                     case "offline": {
-                        Intent intent = new Intent(context, MainActivity.class);
-                        intent.addFlags(App.intentFlagRestart);
-                        intent.putExtra("mode", "offline");
-                        context.startActivity(intent);
+                        Bundle extras = new Bundle();
+                        extras.putString("mode", "offline");
+                        eventBus.fire(new OpenActivityEvent(MainActivity.class, extras, App.intentFlagRestart));
                         break;
                     }
                     case "tab": {
-                        Intent intent = new Intent(context, MainActivity.class);
-                        intent.addFlags(App.intentFlagRestart);
-                        intent.putExtra("action", shortcut_data);
-                        context.startActivity(intent);
+                        Bundle extras = new Bundle();
+                        extras.putString("action", shortcut_data);
+                        eventBus.fire(new OpenActivityEvent(MainActivity.class, extras, App.intentFlagRestart));
                         break;
                     }
                     case "room101":
                     case "university": {
-                        Intent intent = new Intent(context, MainActivity.class);
-                        intent.addFlags(App.intentFlagRestart);
-                        intent.putExtra("action", shortcut_type);
-                        intent.putExtra("action_extra", shortcut_data);
-                        context.startActivity(intent);
+                        Bundle extras = new Bundle();
+                        extras.putString("action", shortcut_type);
+                        extras.putString("action_extra", shortcut_data);
+                        eventBus.fire(new OpenActivityEvent(MainActivity.class, extras, App.intentFlagRestart));
                         break;
                     }
                     case "schedule_lessons":
                     case "schedule_exams":
                     case "schedule_attestations": {
-                        Intent intent = new Intent(context, MainActivity.class);
-                        intent.addFlags(App.intentFlagRestart);
-                        intent.putExtra("action", shortcut_type);
-                        intent.putExtra("action_extra", (new JSONObject(shortcut_data)).getString("query"));
-                        context.startActivity(intent);
+                        Bundle extras = new Bundle();
+                        extras.putString("action", shortcut_type);
+                        extras.putString("action_extra", (new JSONObject(shortcut_data)).getString("query"));
+                        eventBus.fire(new OpenActivityEvent(MainActivity.class, extras, App.intentFlagRestart));
                         break;
                     }
                     case "time_remaining_widget": {
-                        Intent intent = new Intent(context, TimeRemainingWidgetActivity.class);
-                        intent.addFlags(App.intentFlagRestart);
-                        intent.putExtra("shortcut_data", shortcut_data);
-                        context.startActivity(intent);
+                        Bundle extras = new Bundle();
+                        extras.putString("shortcut_data", shortcut_data);
+                        eventBus.fire(new OpenActivityEvent(TimeRemainingWidgetActivity.class, extras, App.intentFlagRestart));
                         break;
                     }
                     case "days_remaining_widget": {
-                        Intent intent = new Intent(context, DaysRemainingWidgetActivity.class);
-                        intent.addFlags(App.intentFlagRestart);
-                        intent.putExtra("shortcut_data", shortcut_data);
-                        context.startActivity(intent);
+                        Bundle extras = new Bundle();
+                        extras.putString("shortcut_data", shortcut_data);
+                        eventBus.fire(new OpenActivityEvent(DaysRemainingWidgetActivity.class, extras, App.intentFlagRestart));
                         break;
                     }
                 }

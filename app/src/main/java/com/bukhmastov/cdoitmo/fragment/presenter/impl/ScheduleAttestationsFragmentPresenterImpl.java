@@ -18,6 +18,8 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.activity.search.ScheduleAttestationsSearchActivity;
 import com.bukhmastov.cdoitmo.adapter.rva.ScheduleAttestationsRVA;
+import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.exception.SilentException;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
@@ -64,6 +66,8 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
     @Inject
     Thread thread;
     @Inject
+    EventBus eventBus;
+    @Inject
     ScheduleAttestations scheduleAttestations;
     @Inject
     Time time;
@@ -104,6 +108,9 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
     @Override
     public void onDestroy() {
         log.v(TAG, "Fragment destroyed");
+        loaded = false;
+        tab = null;
+        scroll = null;
         try {
             if (activity.toolbar != null) {
                 MenuItem action_search = activity.toolbar.findItem(R.id.action_search);
@@ -116,8 +123,6 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
         } catch (Exception e){
             log.exception(e);
         }
-        tab = null;
-        scroll = null;
     }
 
     @Override
@@ -132,7 +137,7 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
                     action_search.setVisible(true);
                     action_search.setOnMenuItemClickListener(item -> {
                         log.v(TAG, "action_search clicked");
-                        activity.startActivity(new Intent(activity, ScheduleAttestationsSearchActivity.class));
+                        eventBus.fire(new OpenActivityEvent(ScheduleAttestationsSearchActivity.class));
                         return false;
                     });
                 }

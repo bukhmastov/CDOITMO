@@ -13,6 +13,7 @@ import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
+import com.crashlytics.android.Crashlytics;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -20,6 +21,7 @@ import java.lang.annotation.RetentionPolicy;
 import javax.inject.Inject;
 
 import dagger.Lazy;
+import io.fabric.sdk.android.Fabric;
 
 public class FirebaseCrashlyticsProviderImpl implements FirebaseCrashlyticsProvider {
 

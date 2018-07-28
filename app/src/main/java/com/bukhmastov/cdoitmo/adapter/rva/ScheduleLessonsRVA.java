@@ -1,7 +1,6 @@
 package com.bukhmastov.cdoitmo.adapter.rva;
 
 import android.app.AlertDialog;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -20,6 +19,9 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
+import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
+import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsShareFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsTabHostFragmentPresenter;
@@ -66,6 +68,8 @@ public class ScheduleLessonsRVA extends RVA {
     @Inject
     Thread thread;
     @Inject
+    EventBus eventBus;
+    @Inject
     ScheduleLessons scheduleLessons;
     @Inject
     ScheduleLessonsTabHostFragmentPresenter tabHostPresenter;
@@ -93,6 +97,7 @@ public class ScheduleLessonsRVA extends RVA {
     public ScheduleLessonsRVA(final ConnectedActivity activity, int TYPE, JSONObject data, int weekday, final CallableString callback) {
         super();
         AppComponentProvider.getComponent().inject(this);
+        eventBus.register(this);
         this.activity = activity;
         this.TYPE = TYPE;
         this.data = data;
@@ -105,6 +110,14 @@ public class ScheduleLessonsRVA extends RVA {
         } catch (Exception e) {
             log.exception(e);
         }
+    }
+
+    @Event
+    public void onOpenIntentEventFailed(OpenIntentEvent.Failed event) {
+        if (!event.getIdentity().equals(ScheduleLessonsRVA.class.getName())) {
+            return;
+        }
+        notificationMessage.snackBar(activity, activity.getString(R.string.failed_to_start_geo_activity));
     }
 
     @Override
@@ -375,11 +388,7 @@ public class ScheduleLessonsRVA extends RVA {
                             case R.id.open_teacher: callback.call(teacher_id); break;
                             case R.id.open_room: callback.call(room); break;
                             case R.id.open_location:
-                                try {
-                                    activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=Санкт-Петербург, " + building)));
-                                } catch (ActivityNotFoundException e) {
-                                    notificationMessage.snackBar(activity, activity.getString(R.string.failed_to_start_geo_activity));
-                                }
+                                eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=Санкт-Петербург, " + building))).withIdentity(ScheduleLessonsRVA.class.getName()));
                                 break;
                             case R.id.reduce_lesson:
                                 thread.run(() -> {

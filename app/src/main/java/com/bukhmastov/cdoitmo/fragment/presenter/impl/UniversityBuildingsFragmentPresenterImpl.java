@@ -25,6 +25,8 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.presenter.UniversityBuildingsFragmentPresenter;
@@ -79,6 +81,8 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
     Log log;
     @Inject
     Thread thread;
+    @Inject
+    EventBus eventBus;
     @Inject
     Storage storage;
     @Inject
@@ -403,7 +407,7 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
                 final int id = building.getInt("id");
                 final String image = building.getString("image");
                 ((TextView) marker_info.findViewById(R.id.marker_text)).setText(title);
-                marker_info.findViewById(R.id.web).setOnClickListener(view -> activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ifmo.ru/ru/map/" + id + "/"))));
+                marker_info.findViewById(R.id.web).setOnClickListener(view -> eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ifmo.ru/ru/map/" + id + "/")))));
                 Picasso.with(activity)
                         .load(image)
                         .error(R.drawable.ic_sentiment_very_satisfied)

@@ -12,6 +12,7 @@ import android.text.TextUtils;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
+import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.object.preference.Preference;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceBasic;
@@ -107,7 +108,7 @@ public class SettingsNotificationsFragment extends SettingsTemplatePreferencesFr
                         intent.putExtra("app_package", activity.getPackageName());
                         intent.putExtra("app_uid", activity.getApplicationInfo().uid);
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        activity.startActivity(intent);
+                        injectProvider.getEventBus().fire(new OpenIntentEvent(intent));
                     } catch (Exception e) {
                         injectProvider.getNotificationMessage().snackBar(activity, activity.getString(R.string.something_went_wrong));
                     }

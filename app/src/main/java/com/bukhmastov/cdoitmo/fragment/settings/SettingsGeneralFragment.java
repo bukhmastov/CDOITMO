@@ -8,6 +8,7 @@ import android.support.v7.app.AlertDialog;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.dialog.ThemeDialog;
+import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.object.preference.Preference;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceBasic;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceEditText;
@@ -99,12 +100,12 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
                         intent.setData(android.net.Uri.parse("package:" + activity.getPackageName()));
                         intent.addCategory(Intent.CATEGORY_DEFAULT);
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        activity.startActivity(intent);
+                        injectProvider.getEventBus().fire(new OpenIntentEvent(intent));
                     } catch (Exception e) {
                         try {
                             Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS);
                             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            activity.startActivity(intent);
+                            injectProvider.getEventBus().fire(new OpenIntentEvent(intent));
                         } catch (Exception ignore) {
                             injectProvider.getNotificationMessage().snackBar(activity, activity.getString(R.string.something_went_wrong));
                         }

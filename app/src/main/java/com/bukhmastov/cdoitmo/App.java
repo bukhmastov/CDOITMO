@@ -1,6 +1,7 @@
 package com.bukhmastov.cdoitmo;
 
 import android.app.Application;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.res.Configuration;
@@ -13,6 +14,7 @@ import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 
@@ -43,6 +45,8 @@ public class App extends Application {
     StoragePref storagePref;
     @Inject
     TextUtils textUtils;
+    @Inject
+    NotificationMessage notificationMessage;
     @Inject
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
     @Inject
@@ -88,8 +92,20 @@ public class App extends Application {
                 intent.addFlags(event.getFlags());
             }
             startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            log.e(TAG, "Failed to open activity | activity not found | e=", e.getMessage());
+            if (event.getIdentity() != null) {
+                eventBus.fire(new OpenActivityEvent.Failed(event.getIdentity(), e.getMessage()));
+            } else {
+                notificationMessage.toast(this, getString(R.string.something_went_wrong));
+            }
         } catch (Throwable t) {
             log.e(TAG, "Failed to open activity | throwable=", t.getMessage());
+            if (event.getIdentity() != null) {
+                eventBus.fire(new OpenActivityEvent.Failed(event.getIdentity(), t.getMessage()));
+            } else {
+                notificationMessage.toast(this, getString(R.string.something_went_wrong));
+            }
         }
     }
 
@@ -98,8 +114,20 @@ public class App extends Application {
         try {
             log.v(TAG, "onOpenActivityEvent | intent=", event.getIntent().toString());
             startActivity(event.getIntent());
+        } catch (ActivityNotFoundException e) {
+            log.e(TAG, "Failed to open intent | activity not found | e=", e.getMessage());
+            if (event.getIdentity() != null) {
+                eventBus.fire(new OpenIntentEvent.Failed(event.getIdentity(), e.getMessage()));
+            } else {
+                notificationMessage.toast(this, getString(R.string.something_went_wrong));
+            }
         } catch (Throwable t) {
             log.e(TAG, "Failed to open intent | throwable=", t.getMessage());
+            if (event.getIdentity() != null) {
+                eventBus.fire(new OpenIntentEvent.Failed(event.getIdentity(), t.getMessage()));
+            } else {
+                notificationMessage.toast(this, getString(R.string.something_went_wrong));
+            }
         }
     }
 

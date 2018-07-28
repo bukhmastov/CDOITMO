@@ -19,6 +19,8 @@ import android.widget.ProgressBar;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.WebViewActivity;
 import com.bukhmastov.cdoitmo.activity.presenter.WebViewActivityPresenter;
+import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.util.Log;
@@ -40,6 +42,8 @@ public class WebViewActivityPresenterImpl implements WebViewActivityPresenter {
 
     @Inject
     Log log;
+    @Inject
+    EventBus eventBus;
     @Inject
     NotificationMessage notificationMessage;
     @Inject
@@ -105,11 +109,7 @@ public class WebViewActivityPresenterImpl implements WebViewActivityPresenter {
             webview.setWebViewClient(new WebViewClient() {
                 @Override
                 public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                    try {
-                        activity.startActivity(new Intent(Intent.ACTION_VIEW, request.getUrl()));
-                    } catch (Exception e) {
-                        notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                    }
+                    eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, request.getUrl())));
                     return true;
                 }
                 @Override

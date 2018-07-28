@@ -113,6 +113,7 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
     @Override
     public void onDestroy() {
         log.v(TAG, "Fragment destroyed");
+        loaded = false;
         try {
             if (activity.toolbar != null) {
                 MenuItem action_info = activity.toolbar.findItem(R.id.action_info);

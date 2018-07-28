@@ -48,7 +48,7 @@ public class Room101AddRequestImpl implements Room101AddRequest {
 
     private static final String TAG = "Room101AddRequest";
     private Activity activity = null;
-    private Callback callback;
+    private Callback callback = null;
     private Pattern timePickerPattern;
     private int CURRENT_STAGE = 0;
     private Client.Request requestHandle = null;
@@ -80,9 +80,18 @@ public class Room101AddRequestImpl implements Room101AddRequest {
 
     @Override
     public void start(@NonNull Activity activity, @NonNull Callback callback) {
-        this.callback = callback;
         this.activity = activity;
+        this.callback = callback;
         this.timePickerPattern = Pattern.compile("^(\\d{1,2}:\\d{2})\\s?(\\((" + activity.getString(R.string.room101_available) + ":\\s)?(\\d*)\\))?$");
+        this.CURRENT_STAGE = 0;
+        if (this.requestHandle != null) {
+            this.requestHandle.cancel();
+        }
+        this.requestHandle = null;
+        this.data = null;
+        this.pick_date = null;
+        this.pick_time_start = null;
+        this.pick_time_end = null;
         proceedStage();
     }
 

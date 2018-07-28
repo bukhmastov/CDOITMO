@@ -15,6 +15,8 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.UniversityPersonCardActivity;
 import com.bukhmastov.cdoitmo.activity.presenter.UniversityPersonCardActivityPresenter;
+import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
@@ -47,6 +49,8 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
     Log log;
     @Inject
     Thread thread;
+    @Inject
+    EventBus eventBus;
     @Inject
     IfmoRestClient ifmoRestClient;
     @Inject
@@ -256,7 +260,9 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
             log.v(TAG, "loadNotFound");
             try {
                 activity.draw(R.layout.state_nothing_to_display_person);
-                activity.findViewById(R.id.web).setOnClickListener(view -> activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ifmo.ru/ru/viewperson/" + pid + "/"))));
+                activity.findViewById(R.id.web).setOnClickListener(view -> {
+                    eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ifmo.ru/ru/viewperson/" + pid + "/"))));
+                });
             } catch (Exception e) {
                 log.exception(e);
             }
@@ -274,7 +280,9 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
                 // кнопка сайта
                 final String persons_id = person.getString("persons_id");
                 if (persons_id != null && !persons_id.trim().isEmpty()) {
-                    activity.findViewById(R.id.web).setOnClickListener(view -> activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ifmo.ru/ru/viewperson/" + persons_id.trim() + "/"))));
+                    activity.findViewById(R.id.web).setOnClickListener(view -> {
+                        eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ifmo.ru/ru/viewperson/" + persons_id.trim() + "/"))));
+                    });
                 } else {
                     staticUtil.removeView(activity.findViewById(R.id.web));
                 }
@@ -305,7 +313,7 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
                             info_connect_container.addView(getConnectContainer(R.drawable.ic_phone, phone, exists, v -> {
                                 Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + phone.trim()));
                                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                activity.startActivity(intent);
+                                eventBus.fire(new OpenIntentEvent(intent));
                             }));
                             exists = true;
                         }
@@ -316,14 +324,16 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
                                 Intent emailIntent = new Intent(Intent.ACTION_SEND);
                                 emailIntent.setType("message/rfc822");
                                 emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{email.trim()});
-                                activity.startActivity(Intent.createChooser(emailIntent, activity.getString(R.string.send_mail) + "..."));
+                                eventBus.fire(new OpenIntentEvent(Intent.createChooser(emailIntent, activity.getString(R.string.send_mail) + "...")));
                             }));
                             exists = true;
                         }
                     }
                     for (final String web : webs) {
                         if (!web.isEmpty()) {
-                            info_connect_container.addView(getConnectContainer(R.drawable.ic_web, web, exists, v -> activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(web.trim())))));
+                            info_connect_container.addView(getConnectContainer(R.drawable.ic_web, web, exists, v -> {
+                                eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse(web.trim()))));
+                            }));
                             exists = true;
                         }
                     }

@@ -11,6 +11,8 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
+import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
@@ -37,6 +39,8 @@ public class LogFragmentPresenterImpl implements LogFragmentPresenter {
     Log log;
     @Inject
     Thread thread;
+    @Inject
+    EventBus eventBus;
     @Inject
     StoragePref storagePref;
     @Inject
@@ -157,7 +161,7 @@ public class LogFragmentPresenterImpl implements LogFragmentPresenter {
                                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                                 intent.setType(activity.getContentResolver().getType(tempUri));
                                 intent.putExtra(Intent.EXTRA_STREAM, tempUri);
-                                activity.startActivity(Intent.createChooser(intent, activity.getString(R.string.send_mail) + "..."));
+                                eventBus.fire(new OpenIntentEvent(Intent.createChooser(intent, activity.getString(R.string.send_mail) + "...")));
                             }
                         } catch (Exception e) {
                             log.exception(e);
@@ -175,7 +179,7 @@ public class LogFragmentPresenterImpl implements LogFragmentPresenter {
                                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                                 intent.setType(activity.getContentResolver().getType(tempUri));
                                 intent.putExtra(Intent.EXTRA_STREAM, tempUri);
-                                activity.startActivity(Intent.createChooser(intent, activity.getString(R.string.share) + "..."));
+                                eventBus.fire(new OpenIntentEvent(Intent.createChooser(intent, activity.getString(R.string.share) + "...")));
                             }
                         } catch (Exception e) {
                             log.exception(e);

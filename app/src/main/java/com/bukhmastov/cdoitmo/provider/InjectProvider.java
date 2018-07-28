@@ -1,5 +1,6 @@
 package com.bukhmastov.cdoitmo.provider;
 
+import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.object.ProtocolTracker;
 import com.bukhmastov.cdoitmo.object.SettingsScheduleAttestations;
@@ -25,6 +26,8 @@ public class InjectProvider {
     Lazy<Log> log;
     @Inject
     Lazy<Thread> thread;
+    @Inject
+    Lazy<EventBus> eventBus;
     @Inject
     Lazy<Storage> storage;
     @Inject
@@ -58,6 +61,10 @@ public class InjectProvider {
 
     public Thread getThread() {
         return thread.get();
+    }
+
+    public EventBus getEventBus() {
+        return eventBus.get();
     }
 
     public Storage getStorage() {

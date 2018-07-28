@@ -93,6 +93,7 @@ public class UniversityNewsFragmentPresenterImpl implements UniversityNewsFragme
     @Override
     public void onDestroy() {
         log.v(TAG, "Fragment destroyed");
+        loaded = false;
     }
 
     @Override

@@ -69,6 +69,14 @@ public class SubscriberEvent {
         return subject;
     }
 
+    public Object getTarget() {
+        return target;
+    }
+
+    public Method getMethod() {
+        return method;
+    }
+
     @Override
     public int hashCode() {
         return hashCode;

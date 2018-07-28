@@ -113,6 +113,7 @@ public class Room101FragmentPresenterImpl implements Room101FragmentPresenter, S
     @Override
     public void onDestroy() {
         log.v(TAG, "Fragment destroyed");
+        loaded = false;
     }
 
     @Override

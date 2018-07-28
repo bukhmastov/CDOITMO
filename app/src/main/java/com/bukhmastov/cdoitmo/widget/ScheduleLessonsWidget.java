@@ -26,6 +26,8 @@ import com.bukhmastov.cdoitmo.activity.MainActivity;
 import com.bukhmastov.cdoitmo.activity.PikaActivity;
 import com.bukhmastov.cdoitmo.activity.presenter.ScheduleLessonsWidgetConfigureActivityPresenter;
 import com.bukhmastov.cdoitmo.converter.schedule.lessons.ScheduleLessonsAdditionalConverter;
+import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
@@ -63,6 +65,8 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
     Log log;
     @Inject
     Thread thread;
+    @Inject
+    EventBus eventBus;
     @Inject
     ScheduleLessons scheduleLessons;
     @Inject
@@ -719,7 +723,7 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                             }
                             if (shift > 180 || shift < -180) {
                                 shift = 0;
-                                context.startActivity(new Intent(context, PikaActivity.class));
+                                eventBus.fire(new OpenActivityEvent(PikaActivity.class));
                             }
                             try {
                                 settings.put("shift", shift);
@@ -735,18 +739,17 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
                 case ACTION_WIDGET_OPEN: {
                     thread.run(() -> {
                         logStatistic(context, "schedule_open");
-                        Intent oIntent = new Intent(context, MainActivity.class);
-                        oIntent.addFlags(App.intentFlagRestart);
-                        oIntent.putExtra("action", "schedule_lessons");
+                        Bundle extras = new Bundle();
+                        extras.putString("action", "schedule_lessons");
                         try {
                             String settings = scheduleLessonsWidgetStorage.get(context, appWidgetId, "settings");
                             if (settings != null) {
-                                oIntent.putExtra("action_extra", new JSONObject(settings).getString("query"));
+                                extras.putString("action_extra", new JSONObject(settings).getString("query"));
                             }
                         } catch (Exception e) {
                             log.exception(e);
                         }
-                        context.startActivity(oIntent);
+                        eventBus.fire(new OpenActivityEvent(MainActivity.class, extras, App.intentFlagRestart));
                     });
                     break;
                 }

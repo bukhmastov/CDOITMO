@@ -1,7 +1,7 @@
 package com.bukhmastov.cdoitmo.adapter.rva.university;
 
 import android.content.Context;
-import android.content.Intent;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -12,6 +12,7 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.UniversityPersonCardActivity;
+import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.view.CircularTransformation;
 import com.squareup.picasso.Picasso;
 
@@ -93,10 +94,10 @@ public class UniversityPersonsRVA extends UniversityRVA {
             }
             viewHolder.container.setOnClickListener(v -> {
                 try {
-                    Intent intent = new Intent(context, UniversityPersonCardActivity.class);
-                    intent.putExtra("pid", item.data.getInt("persons_id"));
-                    intent.putExtra("person", item.data.toString());
-                    context.startActivity(intent);
+                    Bundle extras = new Bundle();
+                    extras.putInt("pid", item.data.getInt("persons_id"));
+                    extras.putString("person", item.data.toString());
+                    eventBus.fire(new OpenActivityEvent(UniversityPersonCardActivity.class, extras));
                 } catch (Exception e) {
                     log.exception(e);
                 }

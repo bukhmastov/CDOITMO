@@ -4,6 +4,7 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Bundle;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
@@ -17,6 +18,9 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.UniversityPersonCardActivity;
+import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
+import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
+import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.TextUtils;
@@ -47,6 +51,15 @@ public class UniversityFacultiesRVA extends UniversityRVA {
     public UniversityFacultiesRVA(final Context context, final ArrayList<Item> dataset) {
         super(context, dataset);
         AppComponentProvider.getComponent().inject(this);
+        eventBus.register(this);
+    }
+
+    @Event
+    public void onOpenIntentEventFailed(OpenIntentEvent.Failed event) {
+        if (!event.getIdentity().equals(UniversityFacultiesRVA.class.getName())) {
+            return;
+        }
+        notificationMessage.toast(context, context.getString(R.string.failed_to_start_geo_activity));
     }
 
     @NonNull
@@ -111,7 +124,7 @@ public class UniversityFacultiesRVA extends UniversityRVA {
                 if (address != null) {
                     structure_container.addView(getConnectContainer(R.drawable.ic_location, address.trim(), is_first_container, v -> {
                         try {
-                            context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + address)));
+                            eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + address))));
                         } catch (ActivityNotFoundException e) {
                             notificationMessage.toast(context, context.getString(R.string.failed_to_start_geo_activity));
                         }
@@ -123,7 +136,7 @@ public class UniversityFacultiesRVA extends UniversityRVA {
                         structure_container.addView(getConnectContainer(R.drawable.ic_phone, phone.trim(), is_first_container, v -> {
                             Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + phone.trim()));
                             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            context.startActivity(intent);
+                            eventBus.fire(new OpenIntentEvent(intent));
                         }));
                         is_first_container = false;
                     }
@@ -134,14 +147,14 @@ public class UniversityFacultiesRVA extends UniversityRVA {
                             Intent emailIntent = new Intent(Intent.ACTION_SEND);
                             emailIntent.setType("message/rfc822");
                             emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{email.trim()});
-                            context.startActivity(Intent.createChooser(emailIntent, context.getString(R.string.send_mail) + "..."));
+                            eventBus.fire(new OpenIntentEvent(Intent.createChooser(emailIntent, context.getString(R.string.send_mail) + "...")));
                         }));
                         is_first_container = false;
                     }
                 }
                 for (final String site : sites) {
                     if (site != null && !site.trim().isEmpty()) {
-                        structure_container.addView(getConnectContainer(R.drawable.ic_web, site.trim(), is_first_container, v -> context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(site.trim())))));
+                        structure_container.addView(getConnectContainer(R.drawable.ic_web, site.trim(), is_first_container, v -> eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse(site.trim()))))));
                         is_first_container = false;
                     }
                 }
@@ -180,11 +193,7 @@ public class UniversityFacultiesRVA extends UniversityRVA {
                 final String[] deanery_emails = (getString(item.data, "deanery_email") == null ? "" : getString(item.data, "deanery_email")).trim().split("[;,]");
                 if (deanery_address != null && !deanery_address.trim().isEmpty()) {
                     structure_container.addView(getConnectContainer(R.drawable.ic_location, deanery_address.trim(), is_first_container, v -> {
-                        try {
-                            context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + deanery_address)));
-                        } catch (ActivityNotFoundException e) {
-                            notificationMessage.toast(context, context.getString(R.string.failed_to_start_geo_activity));
-                        }
+                        eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + deanery_address))).withIdentity(UniversityFacultiesRVA.class.getName()));
                     }));
                     is_first_container = false;
                 }
@@ -193,7 +202,7 @@ public class UniversityFacultiesRVA extends UniversityRVA {
                         structure_container.addView(getConnectContainer(R.drawable.ic_phone, deanery_phone.trim(), is_first_container, v -> {
                             Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + deanery_phone.trim()));
                             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            context.startActivity(intent);
+                            eventBus.fire(new OpenIntentEvent(intent));
                         }));
                         is_first_container = false;
                     }
@@ -204,7 +213,7 @@ public class UniversityFacultiesRVA extends UniversityRVA {
                             Intent emailIntent = new Intent(Intent.ACTION_SEND);
                             emailIntent.setType("message/rfc822");
                             emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{deanery_email.trim()});
-                            context.startActivity(Intent.createChooser(emailIntent, context.getString(R.string.send_mail) + "..."));
+                            eventBus.fire(new OpenIntentEvent(Intent.createChooser(emailIntent, context.getString(R.string.send_mail) + "...")));
                         }));
                         is_first_container = false;
                     }
@@ -235,9 +244,9 @@ public class UniversityFacultiesRVA extends UniversityRVA {
                                 .into((ImageView) layout_university_persons_list_item.findViewById(R.id.avatar));
                     }
                     layout_university_persons_list_item.setOnClickListener(v -> {
-                        Intent intent = new Intent(context, UniversityPersonCardActivity.class);
-                        intent.putExtra("pid", head_pid);
-                        context.startActivity(intent);
+                        Bundle extras = new Bundle();
+                        extras.putInt("pid", head_pid);
+                        eventBus.fire(new OpenActivityEvent(UniversityPersonCardActivity.class, extras));
                     });
                     structure_container.addView(layout_university_persons_list_item);
                     is_first_container = false;
@@ -248,7 +257,7 @@ public class UniversityFacultiesRVA extends UniversityRVA {
                             Intent emailIntent = new Intent(Intent.ACTION_SEND);
                             emailIntent.setType("message/rfc822");
                             emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{head_email.trim()});
-                            context.startActivity(Intent.createChooser(emailIntent, context.getString(R.string.send_mail) + "..."));
+                            eventBus.fire(new OpenIntentEvent(Intent.createChooser(emailIntent, context.getString(R.string.send_mail) + "...")));
                         }));
                         is_first_container = false;
                     }

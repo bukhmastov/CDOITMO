@@ -1,12 +1,14 @@
 package com.bukhmastov.cdoitmo.event.events;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 
 public class OpenActivityEvent {
 
     private final Class<?> activity;
     private final Bundle extras;
     private final Integer flags;
+    private String identity = null;
 
     public OpenActivityEvent(Class<?> activity) {
         this(activity, null, null);
@@ -26,6 +28,11 @@ public class OpenActivityEvent {
         this.flags = flags;
     }
 
+    public OpenActivityEvent withIdentity(@NonNull String identity) {
+        this.identity = identity;
+        return this;
+    }
+
     public Class<?> getActivity() {
         return activity;
     }
@@ -36,5 +43,28 @@ public class OpenActivityEvent {
 
     public Integer getFlags() {
         return flags;
+    }
+
+    public String getIdentity() {
+        return identity;
+    }
+
+    public static class Failed {
+
+        private final String identity;
+        private final String reason;
+
+        public Failed(String identity, String reason) {
+            this.identity = identity;
+            this.reason = reason;
+        }
+
+        public String getIdentity() {
+            return identity;
+        }
+
+        public String getReason() {
+            return reason;
+        }
     }
 }

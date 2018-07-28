@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
@@ -54,6 +55,8 @@ public abstract class UniversityRVA extends RecyclerView.Adapter<RecyclerView.Vi
 
     @Inject
     Log log;
+    @Inject
+    EventBus eventBus;
     @Inject
     StoragePref storagePref;
     @Inject
