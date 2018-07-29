@@ -9,7 +9,7 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
-import com.bukhmastov.cdoitmo.event.events.ERegisterFragmentEvent;
+import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Log;
@@ -118,7 +118,7 @@ public class CacheClearDialog extends Dialog {
                             if ("_mem_".equals(item.path)) {
                                 storage.cacheReset();
                                 ConnectedActivity.clearStore();
-                                eventBus.fire(new ERegisterFragmentEvent.ClearCacheEvent());
+                                eventBus.fire(new ClearCacheEvent("all"));
                                 notificationMessage.snackBar(activity, activity.getString(R.string.cache_cleared));
                                 return;
                             } else {
@@ -128,15 +128,13 @@ public class CacheClearDialog extends Dialog {
                                 if ("_all_".equals(item.path)) {
                                     storage.clear(activity, Storage.CACHE, Storage.USER);
                                     storage.clear(activity, Storage.CACHE, Storage.GLOBAL);
-                                    eventBus.fire(new ERegisterFragmentEvent.ClearCacheEvent());
+                                    eventBus.fire(new ClearCacheEvent("all"));
                                 } else {
                                     switch (item.type) {
                                         case Storage.USER: storage.clear(activity, Storage.CACHE, Storage.USER, item.path); break;
                                         case Storage.GLOBAL: storage.clear(activity, Storage.CACHE, Storage.GLOBAL, item.path); break;
                                     }
-                                    if ("eregister".equals(item.path)) {
-                                        eventBus.fire(new ERegisterFragmentEvent.ClearCacheEvent());
-                                    }
+                                    eventBus.fire(new ClearCacheEvent(item.path));
                                 }
                             }
                             notificationMessage.snackBar(activity, activity.getString(R.string.cache_cleared));

@@ -4,6 +4,9 @@ import android.content.Context;
 
 import com.bukhmastov.cdoitmo.converter.schedule.lessons.ScheduleLessonsAdditionalConverter;
 import com.bukhmastov.cdoitmo.converter.schedule.lessons.ScheduleLessonsConverterIfmo;
+import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
+import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
 import com.bukhmastov.cdoitmo.network.handlers.RestResponseHandler;
@@ -26,10 +29,21 @@ public class ScheduleLessonsImpl extends ScheduleImpl implements ScheduleLessons
     @Inject
     Thread thread;
     @Inject
+    EventBus eventBus;
+    @Inject
     IfmoRestClient ifmoRestClient;
 
     public ScheduleLessonsImpl() {
         AppComponentProvider.getComponent().inject(this);
+        eventBus.register(this);
+    }
+
+    @Event
+    public void onClearCacheEvent(ClearCacheEvent event) {
+        if (event.isNot("schedule_lessons")) {
+            return;
+        }
+        clearLocalCache();
     }
 
     @Override

@@ -26,6 +26,8 @@ import com.bukhmastov.cdoitmo.adapter.rva.RecyclerViewOnScrollListener;
 import com.bukhmastov.cdoitmo.adapter.rva.university.UniversityFacultiesRVA;
 import com.bukhmastov.cdoitmo.adapter.rva.university.UniversityRVA;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
+import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
@@ -83,6 +85,15 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
 
     public UniversityUnitsFragmentPresenterImpl() {
         AppComponentProvider.getComponent().inject(this);
+        eventBus.register(this);
+    }
+
+    @Event
+    public void onClearCacheEvent(ClearCacheEvent event) {
+        if (event.isNot("university")) {
+            return;
+        }
+        history.clear();
     }
 
     @Override

@@ -116,6 +116,20 @@ public abstract class ConnectedFragment extends Fragment {
         }
     }
 
+    public boolean clearData(ConnectedFragment fragment) {
+        log.v(TAG, "clearData | activity=", activity, " | fragment=", fragment);
+        if (fragment == null) {
+            return false;
+        }
+        if (fragment.getClass().getCanonicalName().equals(ConnectedActivity.storedFragmentName)) {
+            ConnectedActivity.storedFragmentName = null;
+            ConnectedActivity.storedFragmentData = null;
+            ConnectedActivity.storedFragmentExtra = null;
+            return true;
+        }
+        return false;
+    }
+
     public void close() {
         if (activity != null && activity.back()) {
             activity.finish();

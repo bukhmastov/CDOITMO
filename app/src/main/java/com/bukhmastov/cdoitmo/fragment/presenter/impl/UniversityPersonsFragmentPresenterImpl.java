@@ -23,6 +23,9 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.adapter.rva.RecyclerViewOnScrollListener;
 import com.bukhmastov.cdoitmo.adapter.rva.university.UniversityPersonsRVA;
 import com.bukhmastov.cdoitmo.adapter.rva.university.UniversityRVA;
+import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
+import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.presenter.UniversityPersonsFragmentPresenter;
@@ -64,6 +67,8 @@ public class UniversityPersonsFragmentPresenterImpl implements UniversityPersons
     @Inject
     Thread thread;
     @Inject
+    EventBus eventBus;
+    @Inject
     Storage storage;
     @Inject
     StoragePref storagePref;
@@ -76,6 +81,15 @@ public class UniversityPersonsFragmentPresenterImpl implements UniversityPersons
 
     public UniversityPersonsFragmentPresenterImpl() {
         AppComponentProvider.getComponent().inject(this);
+        eventBus.register(this);
+    }
+
+    @Event
+    public void onClearCacheEvent(ClearCacheEvent event) {
+        if (event.isNot("university")) {
+            return;
+        }
+        persons = null;
     }
 
     @Override

@@ -82,16 +82,19 @@ public class ObjectModule {
     }
 
     @Provides
+    @Singleton
     public ScheduleLessons provideScheduleLessons() {
         return new ScheduleLessonsImpl();
     }
 
     @Provides
+    @Singleton
     public ScheduleExams provideScheduleExams() {
         return new ScheduleExamsImpl();
     }
 
     @Provides
+    @Singleton
     public ScheduleAttestations provideScheduleAttestations() {
         return new ScheduleAttestationsImpl();
     }

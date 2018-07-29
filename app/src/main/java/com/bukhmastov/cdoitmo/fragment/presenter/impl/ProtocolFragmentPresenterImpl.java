@@ -17,6 +17,9 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.adapter.rva.ProtocolRVA;
 import com.bukhmastov.cdoitmo.converter.ProtocolConverter;
+import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
+import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
@@ -59,6 +62,8 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
     @Inject
     Thread thread;
     @Inject
+    EventBus eventBus;
+    @Inject
     Storage storage;
     @Inject
     StoragePref storagePref;
@@ -75,6 +80,16 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
 
     public ProtocolFragmentPresenterImpl() {
         AppComponentProvider.getComponent().inject(this);
+        eventBus.register(this);
+    }
+
+    @Event
+    public void onClearCacheEvent(ClearCacheEvent event) {
+        if (event.isNot("protocol")) {
+            return;
+        }
+        data = null;
+        fragment.clearData(fragment);
     }
 
     @Override

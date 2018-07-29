@@ -2,6 +2,9 @@ package com.bukhmastov.cdoitmo.object.schedule.impl;
 
 import android.content.Context;
 
+import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
+import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.network.DeIfmoClient;
 import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
@@ -30,6 +33,8 @@ public class ScheduleAttestationsImpl extends ScheduleImpl implements ScheduleAt
     @Inject
     Thread thread;
     @Inject
+    EventBus eventBus;
+    @Inject
     StoragePref storagePref;
     @Inject
     DeIfmoClient deIfmoClient;
@@ -40,6 +45,15 @@ public class ScheduleAttestationsImpl extends ScheduleImpl implements ScheduleAt
 
     public ScheduleAttestationsImpl() {
         AppComponentProvider.getComponent().inject(this);
+        eventBus.register(this);
+    }
+
+    @Event
+    public void onClearCacheEvent(ClearCacheEvent event) {
+        if (event.isNot("schedule_attestations")) {
+            return;
+        }
+        clearLocalCache();
     }
 
     @Override

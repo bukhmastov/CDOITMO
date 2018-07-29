@@ -15,6 +15,8 @@ import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.activity.LoginActivity;
 import com.bukhmastov.cdoitmo.adapter.rva.RatingRVA;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
+import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
@@ -72,6 +74,15 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
 
     public RatingFragmentPresenterImpl() {
         AppComponentProvider.getComponent().inject(this);
+        eventBus.register(this);
+    }
+
+    @Event
+    public void onClearCacheEvent(ClearCacheEvent event) {
+        if (event.isNot("rating")) {
+            return;
+        }
+        fragment.clearData(fragment);
     }
 
     @Override

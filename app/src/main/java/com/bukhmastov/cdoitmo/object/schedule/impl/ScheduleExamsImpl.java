@@ -3,6 +3,9 @@ package com.bukhmastov.cdoitmo.object.schedule.impl;
 import android.content.Context;
 
 import com.bukhmastov.cdoitmo.converter.schedule.exams.ScheduleExamsConverterIfmo;
+import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
+import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.network.IfmoClient;
 import com.bukhmastov.cdoitmo.network.handlers.ResponseHandler;
@@ -27,10 +30,21 @@ public class ScheduleExamsImpl extends ScheduleImpl implements ScheduleExams {
     @Inject
     Thread thread;
     @Inject
+    EventBus eventBus;
+    @Inject
     IfmoClient ifmoClient;
 
     public ScheduleExamsImpl() {
         AppComponentProvider.getComponent().inject(this);
+        eventBus.register(this);
+    }
+
+    @Event
+    public void onClearCacheEvent(ClearCacheEvent event) {
+        if (event.isNot("schedule_exams")) {
+            return;
+        }
+        clearLocalCache();
     }
 
     @Override

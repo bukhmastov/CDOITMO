@@ -20,7 +20,7 @@ import com.bukhmastov.cdoitmo.adapter.rva.ERegisterSubjectsRVA;
 import com.bukhmastov.cdoitmo.converter.ERegisterConverter;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
-import com.bukhmastov.cdoitmo.event.events.ERegisterFragmentEvent;
+import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
@@ -86,8 +86,12 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
     }
 
     @Event
-    public void onClearCacheEvent(ERegisterFragmentEvent.ClearCacheEvent event) {
+    public void onClearCacheEvent(ClearCacheEvent event) {
+        if (event.isNot("eregister")) {
+            return;
+        }
         data = null;
+        fragment.clearData(fragment);
     }
 
     @Override

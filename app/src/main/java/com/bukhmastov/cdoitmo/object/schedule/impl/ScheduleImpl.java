@@ -412,6 +412,17 @@ public abstract class ScheduleImpl implements Schedule {
         }
         storage.delete(context, Storage.CACHE, Storage.GLOBAL, "schedule_" + getType() + "#lessons#" + token);
     }
+    protected void clearLocalCache() {
+        log.v(TAG, "clearLocalCache");
+        synchronized (localCache) {
+            Set<String> keySet = localCache.keySet();
+            for (String key : keySet) {
+                if (key.startsWith(getType())) {
+                    localCache.remove(key);
+                }
+            }
+        }
+    }
     // --<- Cache schedule -<--
 
     // Defines the source of the schedule
