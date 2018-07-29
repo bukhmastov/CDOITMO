@@ -80,6 +80,18 @@ public class Migration {
     @Keep
     private static void migrate115(final Context context, final InjectProvider injectProvider) {
         injectProvider.getThread().run(Thread.BACKGROUND, () -> injectProvider.getProtocolTracker().reset(context));
+        try {
+            final String rootPath = context.getCacheDir() + File.separator + "app_data";
+            getUsersFolder(context, rootPath, (file, user) -> {
+                try {
+                    if (!user.equals("general")) return;
+                    File exams = new File(rootPath + File.separator + user + File.separator + "schedule_exams" + File.separator + "lessons");
+                    if (exams.isDirectory() && exams.exists()) {
+                        deleteRecursive(exams);
+                    }
+                } catch (Exception ignore) {/* ignore */}
+            });
+        } catch (Exception ignore) {/* ignore */}
     }
 
     @Keep
@@ -848,5 +860,16 @@ public class Migration {
         FileWriter fileWriter = new FileWriter(file);
         fileWriter.write(data);
         fileWriter.close();
+    }
+    @Keep
+    private static void deleteRecursive(File fileOrDirectory) {
+        boolean result = true;
+        if (fileOrDirectory.isDirectory()) {
+            for (File child : fileOrDirectory.listFiles()) {
+                deleteRecursive(child);
+            }
+        } else {
+            fileOrDirectory.delete();
+        }
     }
 }
