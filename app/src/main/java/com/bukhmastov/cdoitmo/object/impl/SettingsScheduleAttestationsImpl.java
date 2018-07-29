@@ -30,7 +30,7 @@ public class SettingsScheduleAttestationsImpl extends SettingsSchedule implement
         log.v(TAG, "search | query=" + q);
         search(q, (context, query, handler) -> {
             log.v(TAG, "search.onSearch | query=" + query);
-            scheduleAttestations.init(handler).search(context, query);
+            scheduleAttestations.search(context, handler, query);
         });
     }
 

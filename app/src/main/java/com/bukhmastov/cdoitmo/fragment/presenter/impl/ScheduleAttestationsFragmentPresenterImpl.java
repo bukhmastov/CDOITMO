@@ -50,6 +50,7 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
         public int offset = 0;
     }
 
+    private final Schedule.Handler scheduleHandler;
     private ConnectedFragment fragment = null;
     private ConnectedActivity activity = null;
     private boolean loaded = false;
@@ -76,142 +77,7 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
 
     public ScheduleAttestationsFragmentPresenterImpl() {
         AppComponentProvider.getComponent().inject(this);
-    }
-
-    @Override
-    public void setFragment(ConnectedFragment fragment) {
-        this.fragment = fragment;
-        this.activity = fragment.activity();
-    }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        log.v(TAG, "Fragment created");
-        firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-        // define query
-        String scope = fragment.restoreData(fragment);
-        if (scope == null) {
-            scope = scheduleAttestations.getDefaultScope(activity);
-        }
-        final Intent intent = activity.getIntent();
-        if (intent != null && intent.hasExtra("action_extra")) {
-            String action_extra = intent.getStringExtra("action_extra");
-            if (action_extra != null && !action_extra.isEmpty()) {
-                intent.removeExtra("action_extra");
-                scope = action_extra;
-            }
-        }
-        setQuery(scope);
-        fragment.storeData(fragment, scope);
-    }
-
-    @Override
-    public void onDestroy() {
-        log.v(TAG, "Fragment destroyed");
-        loaded = false;
-        tab = null;
-        scroll = null;
-        try {
-            if (activity.toolbar != null) {
-                MenuItem action_search = activity.toolbar.findItem(R.id.action_search);
-                if (action_search != null && action_search.isVisible()) {
-                    log.v(TAG, "Hiding action_search");
-                    action_search.setVisible(false);
-                    action_search.setOnMenuItemClickListener(null);
-                }
-            }
-        } catch (Exception e){
-            log.exception(e);
-        }
-    }
-
-    @Override
-    public void onResume() {
-        log.v(TAG, "resumed");
-        firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-        try {
-            if (activity.toolbar != null) {
-                MenuItem action_search = activity.toolbar.findItem(R.id.action_search);
-                if (action_search != null && !action_search.isVisible()) {
-                    log.v(TAG, "Revealing action_search");
-                    action_search.setVisible(true);
-                    action_search.setOnMenuItemClickListener(item -> {
-                        log.v(TAG, "action_search clicked");
-                        eventBus.fire(new OpenActivityEvent(ScheduleAttestationsSearchActivity.class));
-                        return false;
-                    });
-                }
-            }
-        } catch (Exception e){
-            log.exception(e);
-        }
-        if (tab == null) {
-            tab = refresh -> {
-                log.v(TAG, "onInvalidate | refresh=", refresh);
-                fragment.storeData(fragment, getQuery());
-                if (fragment.isResumed()) {
-                    invalidate = false;
-                    invalidate_refresh = false;
-                    load(refresh);
-                } else {
-                    invalidate = true;
-                    invalidate_refresh = refresh;
-                }
-            };
-        }
-        if (invalidate) {
-            invalidate = false;
-            loaded = true;
-            load(invalidate_refresh);
-            invalidate_refresh = false;
-        } else if (!loaded) {
-            loaded = true;
-            load(false);
-        }
-    }
-
-    @Override
-    public void onPause() {
-        log.v(TAG, "paused");
-        if (requestHandle != null && requestHandle.cancel()) {
-            loaded = false;
-        }
-    }
-
-    private void load(final boolean refresh) {
-        thread.runOnUI(() -> {
-            if (activity == null) {
-                log.w(TAG, "load | activity is null");
-                failed(activity);
-                return;
-            }
-            fragment.draw(R.layout.state_loading_text);
-            thread.run(() -> {
-                try {
-                    if (activity == null || getQuery() == null) {
-                        log.w(TAG, "load | some values are null | activity=", activity, " | getQuery()=", getQuery());
-                        failed(activity);
-                        return;
-                    }
-                    if (scroll != null && !isSameQueryRequested()) {
-                        scroll.position = 0;
-                        scroll.offset = 0;
-                    }
-                    if (refresh) {
-                        getScheduleAttestations(activity).search(activity, getQuery(), 0);
-                    } else {
-                        getScheduleAttestations(activity).search(activity, getQuery());
-                    }
-                } catch (Exception e) {
-                    log.exception(e);
-                    failed(activity);
-                }
-            });
-        });
-    }
-
-    private @NonNull ScheduleAttestations getScheduleAttestations(final ConnectedActivity activity) {
-        scheduleAttestations.init(new Schedule.Handler() {
+        scheduleHandler = new Schedule.Handler() {
             @Override
             public void onSuccess(final JSONObject json, final boolean fromCache) {
                 thread.run(() -> {
@@ -348,8 +214,139 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
                     requestHandle.cancel();
                 }
             }
+        };
+    }
+
+    @Override
+    public void setFragment(ConnectedFragment fragment) {
+        this.fragment = fragment;
+        this.activity = fragment.activity();
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        log.v(TAG, "Fragment created");
+        firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
+        // define query
+        String scope = fragment.restoreData(fragment);
+        if (scope == null) {
+            scope = scheduleAttestations.getDefaultScope(activity);
+        }
+        final Intent intent = activity.getIntent();
+        if (intent != null && intent.hasExtra("action_extra")) {
+            String action_extra = intent.getStringExtra("action_extra");
+            if (action_extra != null && !action_extra.isEmpty()) {
+                intent.removeExtra("action_extra");
+                scope = action_extra;
+            }
+        }
+        setQuery(scope);
+        fragment.storeData(fragment, scope);
+    }
+
+    @Override
+    public void onDestroy() {
+        log.v(TAG, "Fragment destroyed");
+        loaded = false;
+        tab = null;
+        scroll = null;
+        try {
+            if (activity.toolbar != null) {
+                MenuItem action_search = activity.toolbar.findItem(R.id.action_search);
+                if (action_search != null && action_search.isVisible()) {
+                    log.v(TAG, "Hiding action_search");
+                    action_search.setVisible(false);
+                    action_search.setOnMenuItemClickListener(null);
+                }
+            }
+        } catch (Exception e){
+            log.exception(e);
+        }
+    }
+
+    @Override
+    public void onResume() {
+        log.v(TAG, "resumed");
+        firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
+        try {
+            if (activity.toolbar != null) {
+                MenuItem action_search = activity.toolbar.findItem(R.id.action_search);
+                if (action_search != null && !action_search.isVisible()) {
+                    log.v(TAG, "Revealing action_search");
+                    action_search.setVisible(true);
+                    action_search.setOnMenuItemClickListener(item -> {
+                        log.v(TAG, "action_search clicked");
+                        eventBus.fire(new OpenActivityEvent(ScheduleAttestationsSearchActivity.class));
+                        return false;
+                    });
+                }
+            }
+        } catch (Exception e){
+            log.exception(e);
+        }
+        if (tab == null) {
+            tab = refresh -> {
+                log.v(TAG, "onInvalidate | refresh=", refresh);
+                fragment.storeData(fragment, getQuery());
+                if (fragment.isResumed()) {
+                    invalidate = false;
+                    invalidate_refresh = false;
+                    load(refresh);
+                } else {
+                    invalidate = true;
+                    invalidate_refresh = refresh;
+                }
+            };
+        }
+        if (invalidate) {
+            invalidate = false;
+            loaded = true;
+            load(invalidate_refresh);
+            invalidate_refresh = false;
+        } else if (!loaded) {
+            loaded = true;
+            load(false);
+        }
+    }
+
+    @Override
+    public void onPause() {
+        log.v(TAG, "paused");
+        if (requestHandle != null && requestHandle.cancel()) {
+            loaded = false;
+        }
+    }
+
+    private void load(final boolean refresh) {
+        thread.runOnUI(() -> {
+            if (activity == null) {
+                log.w(TAG, "load | activity is null");
+                failed(activity);
+                return;
+            }
+            fragment.draw(R.layout.state_loading_text);
+            thread.run(() -> {
+                try {
+                    if (activity == null || getQuery() == null) {
+                        log.w(TAG, "load | some values are null | activity=", activity, " | getQuery()=", getQuery());
+                        failed(activity);
+                        return;
+                    }
+                    if (scroll != null && !isSameQueryRequested()) {
+                        scroll.position = 0;
+                        scroll.offset = 0;
+                    }
+                    if (refresh) {
+                        scheduleAttestations.search(activity, scheduleHandler, getQuery(), 0);
+                    } else {
+                        scheduleAttestations.search(activity, scheduleHandler, getQuery());
+                    }
+                } catch (Exception e) {
+                    log.exception(e);
+                    failed(activity);
+                }
+            });
         });
-        return scheduleAttestations;
     }
 
     private void failed(Context context) {

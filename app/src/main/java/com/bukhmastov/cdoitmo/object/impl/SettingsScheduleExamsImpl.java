@@ -30,7 +30,7 @@ public class SettingsScheduleExamsImpl extends SettingsSchedule implements Setti
         log.v(TAG, "search | query=" + q);
         search(q, (context, query, handler) -> {
             log.v(TAG, "search.onSearch | query=" + query);
-            scheduleExams.init(handler).search(context, query);
+            scheduleExams.search(context, handler, query);
         });
     }
 

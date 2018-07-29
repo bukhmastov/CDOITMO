@@ -156,55 +156,62 @@ public class ScheduleLessonsWidget extends AppWidgetProvider {
         thread.run(() -> {
             log.i(TAG, "refresh | appWidgetId=" + appWidgetId);
             try {
-                scheduleLessons.init(new Schedule.Handler() {
-                    @Override
-                    public void onSuccess(final JSONObject json, final boolean fromCache) {
-                        thread.run(() -> {
-                            try {
-                                JSONObject jsonObject = new JSONObject();
-                                jsonObject.put("timestamp", time.getCalendar().getTimeInMillis());
-                                jsonObject.put("content", json);
-                                scheduleLessonsWidgetStorage.save(context, appWidgetId, "cache", jsonObject.toString());
-                                new ScheduleLessonsAdditionalConverter(context, json, content -> {
-                                    scheduleLessonsWidgetStorage.save(context, appWidgetId, "cache_converted", content.toString());
-                                    display(context, appWidgetManager, appWidgetId, false);
-                                }).run();
-                            } catch (Exception e) {
-                                log.exception(e);
-                                failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_show_schedule));
+                scheduleLessons.search(
+                        context,
+                        new Schedule.Handler() {
+                            @Override
+                            public void onSuccess(final JSONObject json, final boolean fromCache) {
+                                thread.run(() -> {
+                                    try {
+                                        JSONObject jsonObject = new JSONObject();
+                                        jsonObject.put("timestamp", time.getCalendar().getTimeInMillis());
+                                        jsonObject.put("content", json);
+                                        scheduleLessonsWidgetStorage.save(context, appWidgetId, "cache", jsonObject.toString());
+                                        new ScheduleLessonsAdditionalConverter(context, json, content -> {
+                                            scheduleLessonsWidgetStorage.save(context, appWidgetId, "cache_converted", content.toString());
+                                            display(context, appWidgetManager, appWidgetId, false);
+                                        }).run();
+                                    } catch (Exception e) {
+                                        log.exception(e);
+                                        failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_show_schedule));
+                                    }
+                                });
                             }
-                        });
-                    }
-                    @Override
-                    public void onFailure(int state) {
-                        this.onFailure(0, null, state);
-                    }
-                    @Override
-                    public void onFailure(int statusCode, Client.Headers headers, int state) {
-                        //R.string.server_provided_corrupted_json
-                        String message;
-                        switch (state) {
-                            case IfmoRestClient.FAILED_SERVER_ERROR: message = IfmoRestClient.getFailureMessage(context, statusCode); break;
-                            case IfmoRestClient.FAILED_CORRUPTED_JSON: message = context.getString(R.string.server_provided_corrupted_json); break;
-                            default: message = context.getString(R.string.failed_to_load_schedule); break;
-                        }
-                        failed(context, appWidgetManager, appWidgetId, settings, message);
-                    }
-                    @Override
-                    public void onProgress(int state) {
-                        progress(context, appWidgetManager, appWidgetId, settings);
-                    }
-                    @Override
-                    public void onNewRequest(Client.Request request) {
-                        requestHandler = request;
-                    }
-                    @Override
-                    public void onCancelRequest() {
-                        if (requestHandler != null) {
-                            requestHandler.cancel();
-                        }
-                    }
-                }).search(context, settings.getString("query"), 0, false, false);
+                            @Override
+                            public void onFailure(int state) {
+                                this.onFailure(0, null, state);
+                            }
+                            @Override
+                            public void onFailure(int statusCode, Client.Headers headers, int state) {
+                                //R.string.server_provided_corrupted_json
+                                String message;
+                                switch (state) {
+                                    case IfmoRestClient.FAILED_SERVER_ERROR: message = IfmoRestClient.getFailureMessage(context, statusCode); break;
+                                    case IfmoRestClient.FAILED_CORRUPTED_JSON: message = context.getString(R.string.server_provided_corrupted_json); break;
+                                    default: message = context.getString(R.string.failed_to_load_schedule); break;
+                                }
+                                failed(context, appWidgetManager, appWidgetId, settings, message);
+                            }
+                            @Override
+                            public void onProgress(int state) {
+                                progress(context, appWidgetManager, appWidgetId, settings);
+                            }
+                            @Override
+                            public void onNewRequest(Client.Request request) {
+                                requestHandler = request;
+                            }
+                            @Override
+                            public void onCancelRequest() {
+                                if (requestHandler != null) {
+                                    requestHandler.cancel();
+                                }
+                            }
+                        },
+                        settings.getString("query"),
+                        0,
+                        false,
+                        false
+                );
             } catch (Exception e) {
                 log.exception(e);
                 failed(context, appWidgetManager, appWidgetId, settings, context.getString(R.string.failed_to_load_schedule));

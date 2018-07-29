@@ -691,7 +691,7 @@ public class ScheduleLessonsModifyFragmentPresenterImpl implements ScheduleLesso
                 }
                 delegate.onPermitted();
                 thread.runOnUI(() -> progressBar.setVisibility(View.VISIBLE));
-                scheduleLessons.init(new Schedule.Handler() {
+                scheduleLessons.search(context, new Schedule.Handler() {
                     @Override
                     public void onSuccess(JSONObject json, boolean fromCache) {
                         thread.runOnUI(() -> progressBar.setVisibility(View.GONE));
@@ -717,7 +717,7 @@ public class ScheduleLessonsModifyFragmentPresenterImpl implements ScheduleLesso
                             requestHandle.cancel();
                         }
                     }
-                }).search(context, query);
+                }, query);
                 lastQuery = query;
             });
         }

@@ -555,15 +555,15 @@ public class HomeScreenInteractionFragmentPresenterImpl implements HomeScreenInt
     }
 
     private void getScheduleLessons(final String scope, final Result callback) {
-        getSchedule(scope, callback, (context, query, handler) -> scheduleLessons.init(handler).search(context, query));
+        getSchedule(scope, callback, (context, query, handler) -> scheduleLessons.search(context, handler, query));
     }
     
     private void getScheduleExams(final String scope, final Result callback) {
-        getSchedule(scope, callback, (context, query, handler) -> scheduleExams.init(handler).search(context, query));
+        getSchedule(scope, callback, (context, query, handler) -> scheduleExams.search(context, handler, query));
     }
     
     private void getScheduleAttestations(final String scope, final Result callback) {
-        getSchedule(scope, callback, (context, query, handler) -> scheduleAttestations.init(handler).search(context, query));
+        getSchedule(scope, callback, (context, query, handler) -> scheduleAttestations.search(context, handler, query));
     }
     
     private void getSchedule(final String scope, final Result callback, final Schedule.ScheduleSearchProvider scheduleSearchProvider) {

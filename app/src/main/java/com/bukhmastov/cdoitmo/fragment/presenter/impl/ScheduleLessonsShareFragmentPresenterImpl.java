@@ -296,149 +296,150 @@ public class ScheduleLessonsShareFragmentPresenterImpl implements ScheduleLesson
                 finish();
             }
         });
-        scheduleLessons.init(new Schedule.Handler() {
-            @Override
-            public void onSuccess(final JSONObject json, final boolean fromCache) {
-                thread.run(() -> {
-                    try {
-                        log.v(TAG, "loadShare | success | json=" + (json == null ? "null" : "notnull"));
-                        if (json == null || json.getString("type").equals("teachers")) {
-                            notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
-                            finish();
-                            return;
-                        }
-                        final String token = query.toLowerCase();
-                        final JSONArray schedule = json.getJSONArray("schedule");
-                        final JSONArray scheduleAdded = string2json(storage.get(activity, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token, ""));
-                        final JSONArray scheduleReduced = string2json(storage.get(activity, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token, ""));
-                        for (int i = 0; i < scheduleAdded.length(); i++) {
+        scheduleLessons.search(
+                activity,
+                new Schedule.Handler() {
+                    @Override
+                    public void onSuccess(final JSONObject json, final boolean fromCache) {
+                        thread.run(() -> {
                             try {
-                                JSONObject day = scheduleAdded.getJSONObject(i);
-                                JSONArray lessons = day.getJSONArray("lessons");
-                                int weekday = day.getInt("weekday");
-                                if (lessons.length() > 0) {
-                                    for (int j = 0; j < lessons.length(); j++) {
-                                        try {
-                                            JSONObject lesson = lessons.getJSONObject(j);
-                                            changes.add(new Change(ADDED, true, weekday, lesson));
-                                        } catch (Exception ignore) {
-                                            // ignore
-                                        }
-                                    }
+                                log.v(TAG, "loadShare | success | json=" + (json == null ? "null" : "notnull"));
+                                if (json == null || json.getString("type").equals("teachers")) {
+                                    notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
+                                    finish();
+                                    return;
                                 }
-                            } catch (Exception ignore) {
-                                // ignore
-                            }
-                        }
-                        for (int i = 0; i < scheduleReduced.length(); i++) {
-                            try {
-                                JSONObject day = scheduleReduced.getJSONObject(i);
-                                JSONArray lessons = day.getJSONArray("lessons");
-                                int weekday = day.getInt("weekday");
-                                if (lessons.length() > 0) {
-                                    for (int j = 0; j < lessons.length(); j++) {
-                                        try {
-                                            String hash = lessons.getString(j);
-                                            for (int k = 0; k < 7; k++) {
-                                                JSONObject dayOriginal = schedule.getJSONObject(k);
-                                                JSONArray lessonsOriginal = dayOriginal.getJSONArray("lessons");
-                                                for (int a = 0; a < lessonsOriginal.length(); a++) {
-                                                    JSONObject lessonOriginal = lessonsOriginal.getJSONObject(a);
-                                                    String hashOriginal = scheduleLessonsHelper.getLessonHash(lessonOriginal);
-                                                    if (hashOriginal.equals(hash)) {
-                                                        lessonOriginal.put("hash", hash);
-                                                        changes.add(new Change(REDUCED, true, weekday, lessonOriginal));
-                                                    }
+                                final String token = query.toLowerCase();
+                                final JSONArray schedule = json.getJSONArray("schedule");
+                                final JSONArray scheduleAdded = string2json(storage.get(activity, Storage.PERMANENT, Storage.USER, "schedule_lessons#added#" + token, ""));
+                                final JSONArray scheduleReduced = string2json(storage.get(activity, Storage.PERMANENT, Storage.USER, "schedule_lessons#reduced#" + token, ""));
+                                for (int i = 0; i < scheduleAdded.length(); i++) {
+                                    try {
+                                        JSONObject day = scheduleAdded.getJSONObject(i);
+                                        JSONArray lessons = day.getJSONArray("lessons");
+                                        int weekday = day.getInt("weekday");
+                                        if (lessons.length() > 0) {
+                                            for (int j = 0; j < lessons.length(); j++) {
+                                                try {
+                                                    JSONObject lesson = lessons.getJSONObject(j);
+                                                    changes.add(new Change(ADDED, true, weekday, lesson));
+                                                } catch (Exception ignore) {
+                                                    // ignore
                                                 }
                                             }
-                                        } catch (Exception ignore) {
-                                            // ignore
                                         }
+                                    } catch (Exception ignore) {
+                                        // ignore
                                     }
                                 }
-                            } catch (Exception ignore) {
-                                // ignore
+                                for (int i = 0; i < scheduleReduced.length(); i++) {
+                                    try {
+                                        JSONObject day = scheduleReduced.getJSONObject(i);
+                                        JSONArray lessons = day.getJSONArray("lessons");
+                                        int weekday = day.getInt("weekday");
+                                        if (lessons.length() > 0) {
+                                            for (int j = 0; j < lessons.length(); j++) {
+                                                try {
+                                                    String hash = lessons.getString(j);
+                                                    for (int k = 0; k < 7; k++) {
+                                                        JSONObject dayOriginal = schedule.getJSONObject(k);
+                                                        JSONArray lessonsOriginal = dayOriginal.getJSONArray("lessons");
+                                                        for (int a = 0; a < lessonsOriginal.length(); a++) {
+                                                            JSONObject lessonOriginal = lessonsOriginal.getJSONObject(a);
+                                                            String hashOriginal = scheduleLessonsHelper.getLessonHash(lessonOriginal);
+                                                            if (hashOriginal.equals(hash)) {
+                                                                lessonOriginal.put("hash", hash);
+                                                                changes.add(new Change(REDUCED, true, weekday, lessonOriginal));
+                                                            }
+                                                        }
+                                                    }
+                                                } catch (Exception ignore) {
+                                                    // ignore
+                                                }
+                                            }
+                                        }
+                                    } catch (Exception ignore) {
+                                        // ignore
+                                    }
+                                }
+                                display(null);
+                            } catch (Exception e) {
+                                log.exception(e);
+                                notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
+                                finish();
                             }
-                        }
-                        display(null);
-                    } catch (Exception e) {
-                        log.exception(e);
-                        notificationMessage.toast(activity, activity.getString(R.string.something_went_wrong));
-                        finish();
+                        });
                     }
-                });
-            }
-            @Override
-            public void onFailure(int state) {
-                this.onFailure(0, null, state);
-            }
-            @Override
-            public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
-                thread.runOnUI(() -> {
-                    try {
-                        log.v(TAG, "loadShare | failure " + state);
-                        ViewGroup share_content = fragment.container().findViewById(R.id.share_content);
-                        if (share_content != null) {
-                            share_content.removeAllViews();
-                            View view;
-                            switch (state) {
-                                case Client.FAILED_OFFLINE:
-                                case ScheduleLessons.FAILED_OFFLINE:
-                                    share_content.addView(fragment.inflate(R.layout.state_offline_text_compact));
-                                    break;
-                                case Client.FAILED_SERVER_ERROR:
-                                    view = fragment.inflate(R.layout.state_failed_text_compact);
-                                    ((TextView) view.findViewById(R.id.text)).setText(Client.getFailureMessage(activity, statusCode));
-                                    share_content.addView(view);
-                                    break;
-                                case Client.FAILED_CORRUPTED_JSON:
-                                    view = fragment.inflate(R.layout.state_failed_text_compact);
-                                    ((TextView) view.findViewById(R.id.text)).setText(R.string.server_provided_corrupted_json);
-                                    share_content.addView(view);
-                                    break;
-                                case Client.FAILED_TRY_AGAIN:
-                                case ScheduleLessons.FAILED_LOAD:
-                                case ScheduleLessons.FAILED_EMPTY_QUERY:
-                                case ScheduleLessons.FAILED_NOT_FOUND:
-                                case ScheduleLessons.FAILED_INVALID_QUERY:
-                                case ScheduleLessons.FAILED_MINE_NEED_ISU:
-                                default:
-                                    share_content.addView(fragment.inflate(R.layout.state_failed_text_compact));
-                                    break;
+                    @Override
+                    public void onFailure(int state) {
+                        this.onFailure(0, null, state);
+                    }
+                    @Override
+                    public void onFailure(final int statusCode, final Client.Headers headers, final int state) {
+                        thread.runOnUI(() -> {
+                            try {
+                                log.v(TAG, "loadShare | failure " + state);
+                                ViewGroup share_content = fragment.container().findViewById(R.id.share_content);
+                                if (share_content != null) {
+                                    share_content.removeAllViews();
+                                    View view;
+                                    switch (state) {
+                                        case Client.FAILED_OFFLINE:
+                                        case ScheduleLessons.FAILED_OFFLINE:
+                                            share_content.addView(fragment.inflate(R.layout.state_offline_text_compact));
+                                            break;
+                                        case Client.FAILED_SERVER_ERROR:
+                                            view = fragment.inflate(R.layout.state_failed_text_compact);
+                                            ((TextView) view.findViewById(R.id.text)).setText(Client.getFailureMessage(activity, statusCode));
+                                            share_content.addView(view);
+                                            break;
+                                        case Client.FAILED_CORRUPTED_JSON:
+                                            view = fragment.inflate(R.layout.state_failed_text_compact);
+                                            ((TextView) view.findViewById(R.id.text)).setText(R.string.server_provided_corrupted_json);
+                                            share_content.addView(view);
+                                            break;
+                                        case Client.FAILED_TRY_AGAIN:
+                                        case ScheduleLessons.FAILED_LOAD:
+                                        case ScheduleLessons.FAILED_EMPTY_QUERY:
+                                        case ScheduleLessons.FAILED_NOT_FOUND:
+                                        case ScheduleLessons.FAILED_INVALID_QUERY:
+                                        case ScheduleLessons.FAILED_MINE_NEED_ISU:
+                                        default:
+                                            share_content.addView(fragment.inflate(R.layout.state_failed_text_compact));
+                                            break;
+                                    }
+                                }
+                            } catch (Exception e) {
+                                log.exception(e);
                             }
-                        }
-                    } catch (Exception e) {
-                        log.exception(e);
+                        });
                     }
-                });
-            }
-            @Override
-            public void onProgress(final int state) {
-                thread.runOnUI(() -> {
-                    log.v(TAG, "loadShare | progress " + state);
-                    try {
-                        ViewGroup share_content = fragment.container().findViewById(R.id.share_content);
-                        if (share_content != null) {
-                            share_content.removeAllViews();
-                            share_content.addView(fragment.inflate(R.layout.state_loading_text_compact));
-                        }
-                    } catch (Exception e) {
-                        log.exception(e);
+                    @Override
+                    public void onProgress(final int state) {
+                        thread.runOnUI(() -> {
+                            log.v(TAG, "loadShare | progress " + state);
+                            try {
+                                ViewGroup share_content = fragment.container().findViewById(R.id.share_content);
+                                if (share_content != null) {
+                                    share_content.removeAllViews();
+                                    share_content.addView(fragment.inflate(R.layout.state_loading_text_compact));
+                                }
+                            } catch (Exception e) {
+                                log.exception(e);
+                            }
+                        });
                     }
-                });
-            }
-            @Override
-            public void onNewRequest(Client.Request request) {
-                requestHandle = request;
-            }
-            @Override
-            public void onCancelRequest() {
-                if (requestHandle != null) {
-                    requestHandle.cancel();
-                }
-            }
-        }).search(
-                activity,
+                    @Override
+                    public void onNewRequest(Client.Request request) {
+                        requestHandle = request;
+                    }
+                    @Override
+                    public void onCancelRequest() {
+                        if (requestHandle != null) {
+                            requestHandle.cancel();
+                        }
+                    }
+                },
                 query,
                 false,
                 false

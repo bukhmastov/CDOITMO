@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
-import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
@@ -42,10 +41,13 @@ import javax.inject.Inject;
 public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsTabFragmentPresenter {
 
     private static final String TAG = "SLTabFragment";
+    private final Schedule.Handler scheduleHandler;
     private ConnectedActivity activity = null;
     private boolean loaded = false;
     private Client.Request requestHandle = null;
     private View container = null;
+    private boolean invalidate = false;
+    private boolean invalidateRefresh = false;
     private int type = ScheduleLessonsTabHostFragmentPresenter.DEFAULT_INVALID_TYPE;
 
     @Inject
@@ -63,105 +65,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
 
     public ScheduleLessonsTabFragmentPresenterImpl() {
         AppComponentProvider.getComponent().inject(this);
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState, ConnectedActivity activity, Fragment fragment) {
-        this.activity = activity;
-        final Bundle bundle = fragment.getArguments();
-        if (bundle != null && bundle.containsKey("type")) {
-            type = bundle.getInt("type");
-        } else {
-            log.w(TAG, "onCreate | UNDEFINED TYPE, going to use DEFAULT_TYPE");
-            type = ScheduleLessonsTabHostFragmentPresenter.DEFAULT_TYPE;
-        }
-        log.v(TAG, "Fragment created | type=", type);
-        tabHostPresenter.tabs().put(type, refresh -> {
-            log.v(TAG, "onInvalidate | type=", type, " | refresh=", refresh);
-            if (fragment.isResumed()) {
-                tabHostPresenter.setInvalidate(false);
-                tabHostPresenter.setInvalidateRefresh(false);
-                load(refresh);
-            } else {
-                tabHostPresenter.setInvalidate(true);
-                tabHostPresenter.setInvalidateRefresh(refresh);
-            }
-        });
-    }
-
-    @Override
-    public void onDestroy() {
-        log.v(TAG, "Fragment destroyed | type=", type);
-        tabHostPresenter.tabs().remove(type);
-        tabHostPresenter.scroll().remove(type);
-    }
-
-    @Override
-    public void onCreateView(View container) {
-        this.container = container;
-    }
-
-    @Override
-    public void onDestroyView() {
-        loaded = false;
-    }
-
-    @Override
-    public void onResume() {
-        log.v(TAG, "Fragment resumed | type=", type, " | loaded=", loaded, " | invalidate=", tabHostPresenter.getInvalidate(), " | invalidate_refresh=", tabHostPresenter.getInvalidateRefresh());
-        if (tabHostPresenter.getInvalidate()) {
-            tabHostPresenter.setInvalidate(false);
-            loaded = true;
-            load(tabHostPresenter.getInvalidateRefresh());
-            tabHostPresenter.setInvalidateRefresh(false);
-        } else if (!loaded) {
-            loaded = true;
-            load(false);
-        }
-    }
-
-    @Override
-    public void onPause() {
-        log.v(TAG, "Fragment paused | type=", type);
-        if (requestHandle != null && requestHandle.cancel()) {
-            log.v(TAG, "Fragment paused | type=", type, " | paused and requested reload");
-            loaded = false;
-        }
-    }
-
-    private void load(final boolean refresh) {
-        thread.runOnUI(() -> {
-            if (activity == null) {
-                log.w(TAG, "load | activity is null");
-                failed(activity);
-                return;
-            }
-            draw(activity, R.layout.state_loading_text);
-            thread.run(() -> {
-                try {
-                    if (activity == null || tabHostPresenter.getQuery() == null) {
-                        log.w(TAG, "load | some values are null | activity=", activity, " | getQuery()=", tabHostPresenter.getQuery());
-                        failed(activity);
-                        return;
-                    }
-                    if (!tabHostPresenter.isSameQueryRequested()) {
-                        tabHostPresenter.scroll().clear();
-                    }
-                    if (refresh) {
-                        getScheduleLessons(activity).search(activity, tabHostPresenter.getQuery(), 0);
-                    } else {
-                        getScheduleLessons(activity).search(activity, tabHostPresenter.getQuery());
-                    }
-                } catch (Exception e) {
-                    log.exception(e);
-                    failed(activity);
-                }
-            });
-        });
-    }
-
-    private @NonNull ScheduleLessons getScheduleLessons(final ConnectedActivity activity) {
-        scheduleLessons.init(new Schedule.Handler() {
+        scheduleHandler = new Schedule.Handler() {
             @Override
             public void onSuccess(final JSONObject json, final boolean fromCache) {
                 thread.run(() -> {
@@ -352,8 +256,102 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
                     requestHandle.cancel();
                 }
             }
+        };
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState, ConnectedActivity activity, Fragment fragment) {
+        this.activity = activity;
+        final Bundle bundle = fragment.getArguments();
+        if (bundle != null && bundle.containsKey("type")) {
+            type = bundle.getInt("type");
+        } else {
+            log.w(TAG, "onCreate | UNDEFINED TYPE, going to use DEFAULT_TYPE");
+            type = ScheduleLessonsTabHostFragmentPresenter.DEFAULT_TYPE;
+        }
+        log.v(TAG, "Fragment created | type=", type);
+        tabHostPresenter.tabs().put(type, refresh -> {
+            log.v(TAG, "onInvalidate | type=", type, " | refresh=", refresh);
+            if (fragment.isResumed()) {
+                invalidate = false;
+                invalidateRefresh = false;
+                load(refresh);
+            } else {
+                invalidate = true;
+                invalidateRefresh = refresh;
+            }
         });
-        return scheduleLessons;
+    }
+
+    @Override
+    public void onDestroy() {
+        log.v(TAG, "Fragment destroyed | type=", type);
+        tabHostPresenter.tabs().remove(type);
+        tabHostPresenter.scroll().remove(type);
+    }
+
+    @Override
+    public void onCreateView(View container) {
+        this.container = container;
+    }
+
+    @Override
+    public void onDestroyView() {
+        loaded = false;
+    }
+
+    @Override
+    public void onResume() {
+        log.v(TAG, "Fragment resumed | type=", type, " | loaded=", loaded, " | invalidate=", invalidate, " | invalidateRefresh=", invalidateRefresh);
+        if (invalidate) {
+            invalidate = false;
+            loaded = true;
+            load(invalidateRefresh);
+            invalidateRefresh = false;
+        } else if (!loaded) {
+            loaded = true;
+            load(false);
+        }
+    }
+
+    @Override
+    public void onPause() {
+        log.v(TAG, "Fragment paused | type=", type);
+        if (requestHandle != null && requestHandle.cancel()) {
+            log.v(TAG, "Fragment paused | type=", type, " | paused and requested reload");
+            loaded = false;
+        }
+    }
+
+    private void load(final boolean refresh) {
+        thread.runOnUI(() -> {
+            if (activity == null) {
+                log.w(TAG, "load | activity is null");
+                failed(activity);
+                return;
+            }
+            draw(activity, R.layout.state_loading_text);
+            thread.run(() -> {
+                try {
+                    if (activity == null || tabHostPresenter.getQuery() == null) {
+                        log.w(TAG, "load | some values are null | activity=", activity, " | getQuery()=", tabHostPresenter.getQuery());
+                        failed(activity);
+                        return;
+                    }
+                    if (!tabHostPresenter.isSameQueryRequested()) {
+                        tabHostPresenter.scroll().clear();
+                    }
+                    if (refresh) {
+                        scheduleLessons.search(activity, scheduleHandler, tabHostPresenter.getQuery(), 0);
+                    } else {
+                        scheduleLessons.search(activity, scheduleHandler, tabHostPresenter.getQuery());
+                    }
+                } catch (Exception e) {
+                    log.exception(e);
+                    failed(activity);
+                }
+            });
+        });
     }
 
     private void failed(Context context) {

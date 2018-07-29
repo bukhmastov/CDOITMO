@@ -288,7 +288,7 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
                     final String query = search_text_view.getText().toString().trim();
                     log.v(TAG, "activatePartSchedule | search action | clicked | query=" + query);
                     if (!query.isEmpty()) {
-                        scheduleLessons.init(new Schedule.Handler() {
+                        scheduleLessons.search(activity, new Schedule.Handler() {
                             @Override
                             public void onSuccess(final JSONObject json, final boolean fromCache) {
                                 thread.run(() -> {
@@ -402,7 +402,7 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
                                     requestHandle.cancel();
                                 }
                             }
-                        }).search(activity, query);
+                        }, query);
                     }
                 }));
                 search_text_view.setOnItemClickListener((parent, view, position, id) -> thread.run(() -> {

@@ -30,7 +30,7 @@ public class SettingsScheduleLessonsImpl extends SettingsSchedule implements Set
         log.v(TAG, "search | query=" + q);
         search(q, (context, query, handler) -> {
             log.v(TAG, "search.onSearch | query=" + query);
-            scheduleLessons.init(handler).search(context, query);
+            scheduleLessons.search(context, handler, query);
         });
     }
 

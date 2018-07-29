@@ -36,14 +36,6 @@ public interface ScheduleLessonsTabHostFragmentPresenter {
 
     SparseArray<TabProvider> tabs();
 
-    void setInvalidate(boolean invalidate);
-
-    boolean getInvalidate();
-
-    void setInvalidateRefresh(boolean invalidateRefresh);
-
-    boolean getInvalidateRefresh();
-
     interface TabProvider {
         void onInvalidate(boolean refresh);
     }

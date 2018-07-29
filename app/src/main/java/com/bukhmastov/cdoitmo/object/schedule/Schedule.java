@@ -15,19 +15,17 @@ public interface Schedule {
     int FAILED_INVALID_QUERY = 104;
     int FAILED_NOT_FOUND = 105;
 
-    Schedule init(final Handler handler);
+    void search(final Context context, final Handler handler, final String query);
 
-    void search(final Context context, final String query);
+    void search(final Context context, final Handler handler, final String query, final int refreshRate);
 
-    void search(final Context context, final String query, final int refreshRate);
+    void search(final Context context, final Handler handler, final String query, final boolean forceToCache);
 
-    void search(final Context context, final String query, final boolean forceToCache);
+    void search(final Context context, final Handler handler, final String query, final boolean forceToCache, final boolean withUserChanges);
 
-    void search(final Context context, final String query, final boolean forceToCache, final boolean withUserChanges);
+    void search(final Context context, final Handler handler, final String query, final int refreshRate, final boolean forceToCache);
 
-    void search(final Context context, final String query, final int refreshRate, final boolean forceToCache);
-
-    void search(final Context context, final String query, final int refreshRate, final boolean forceToCache, final boolean withUserChanges);
+    void search(final Context context, final Handler handler, final String query, final int refreshRate, final boolean forceToCache, final boolean withUserChanges);
 
     // Returns the default query string for a schedule search
     String getDefaultScope(final Context context);

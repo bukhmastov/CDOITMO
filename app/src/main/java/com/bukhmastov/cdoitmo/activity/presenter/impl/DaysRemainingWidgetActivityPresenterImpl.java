@@ -119,7 +119,7 @@ public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWi
         log.v(TAG, "Activity resumed");
         if (schedule == null) {
             if (query != null) {
-                scheduleExams.init(this).search(activity, query, true);
+                scheduleExams.search(activity, this, query, true);
             } else {
                 log.w(TAG, "onResume | query is null");
                 close();

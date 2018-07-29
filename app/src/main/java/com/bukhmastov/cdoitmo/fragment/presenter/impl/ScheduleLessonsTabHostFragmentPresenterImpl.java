@@ -20,8 +20,6 @@ public class ScheduleLessonsTabHostFragmentPresenterImpl implements ScheduleLess
     private String query = null;
     private final SparseArray<Scroll> scroll = new SparseArray<>();
     private final SparseArray<TabProvider> tabs = new SparseArray<>();
-    private boolean invalidate = false;
-    private boolean invalidateRefresh = false;
 
     @Inject
     Thread thread;
@@ -135,25 +133,5 @@ public class ScheduleLessonsTabHostFragmentPresenterImpl implements ScheduleLess
     @Override
     public SparseArray<TabProvider> tabs() {
         return tabs;
-    }
-
-    @Override
-    public void setInvalidate(boolean invalidate) {
-        this.invalidate = invalidate;
-    }
-
-    @Override
-    public boolean getInvalidate() {
-        return invalidate;
-    }
-
-    @Override
-    public void setInvalidateRefresh(boolean invalidateRefresh) {
-        this.invalidateRefresh = invalidateRefresh;
-    }
-
-    @Override
-    public boolean getInvalidateRefresh() {
-        return invalidateRefresh;
     }
 }

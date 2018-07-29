@@ -41,8 +41,6 @@ public abstract class ScheduleImpl implements Schedule {
 
     private static final String TAG = "Schedule";
 
-    private Handler handler;
-
     @Inject
     Log log;
     @Inject
@@ -85,32 +83,27 @@ public abstract class ScheduleImpl implements Schedule {
     // -->- Search schedule ->--
     // Search functions to be invoked.
     @Override
-    public Schedule init(final Handler handler) {
-        this.handler = handler;
-        return this;
+    public void search(final Context context, final Handler handler, final String query) {
+        thread.run(() -> search(context, handler, query, getRefreshRate(context)));
     }
     @Override
-    public void search(final Context context, final String query) {
-        thread.run(() -> search(context, query, getRefreshRate(context)));
+    public void search(final Context context, final Handler handler, final String query, final int refreshRate) {
+        thread.run(() -> search(context, handler, query, refreshRate, storagePref.get(context, "pref_schedule_" + getType() + "_use_cache", false)));
     }
     @Override
-    public void search(final Context context, final String query, final int refreshRate) {
-        thread.run(() -> search(context, query, refreshRate, storagePref.get(context, "pref_schedule_" + getType() + "_use_cache", false)));
+    public void search(final Context context, final Handler handler, final String query, final boolean forceToCache) {
+        thread.run(() -> search(context, handler, query, getRefreshRate(context), forceToCache));
     }
     @Override
-    public void search(final Context context, final String query, final boolean forceToCache) {
-        thread.run(() -> search(context, query, getRefreshRate(context), forceToCache));
+    public void search(final Context context, final Handler handler, final String query, final boolean forceToCache, final boolean withUserChanges) {
+        thread.run(() -> search(context, handler, query, getRefreshRate(context), forceToCache, withUserChanges));
     }
     @Override
-    public void search(final Context context, final String query, final boolean forceToCache, final boolean withUserChanges) {
-        thread.run(() -> search(context, query, getRefreshRate(context), forceToCache, withUserChanges));
+    public void search(final Context context, final Handler handler, final String query, final int refreshRate, final boolean forceToCache) {
+        thread.run(() -> search(context, handler, query, refreshRate, forceToCache, true));
     }
     @Override
-    public void search(final Context context, final String query, final int refreshRate, final boolean forceToCache) {
-        thread.run(() -> search(context, query, refreshRate, forceToCache, true));
-    }
-    @Override
-    public void search(final Context context, final String query, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
+    public void search(final Context context, final Handler handler, final String query, final int refreshRate, final boolean forceToCache, final boolean withUserChanges) {
         thread.run(() -> {
             String q = query.trim();
             log.v(TAG, "search | query=", q, " | refreshRate=", refreshRate, " | forceToCache=", forceToCache, " | withUserChanges=", withUserChanges);
@@ -140,7 +133,7 @@ public abstract class ScheduleImpl implements Schedule {
                     searchTeachers(context, q, refreshRate, forceToCache, withUserChanges);
                 } else {
                     log.v(TAG, "search | got invalid query: " + q);
-                    invokePending(q, withUserChanges, true, handler -> handler.onFailure(FAILED_INVALID_QUERY));
+                    invokePending(q, withUserChanges, true, h -> h.onFailure(FAILED_INVALID_QUERY));
                 }
             } else {
                 log.v(TAG, "search | query=", q, " | added to the pending stack");
