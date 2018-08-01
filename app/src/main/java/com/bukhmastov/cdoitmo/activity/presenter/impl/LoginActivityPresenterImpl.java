@@ -25,6 +25,7 @@ import com.bukhmastov.cdoitmo.activity.LoginActivity;
 import com.bukhmastov.cdoitmo.activity.presenter.LoginActivityPresenter;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
+import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.event.events.MainActivityEvent;
 import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
@@ -490,6 +491,7 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
     private void login(final String login, final String password, final String role, final boolean isNewUser) {
         log.v(TAG, "login | login=", login, " | role=", role, " | isNewUser=", isNewUser);
         staticUtil.lockOrientation(activity, true);
+        eventBus.fire(new ClearCacheEvent());
         account.login(activity, login, password, role, isNewUser, new Account.LoginHandler() {
             @Override
             public void onSuccess() {

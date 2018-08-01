@@ -4,6 +4,10 @@ public class ClearCacheEvent {
 
     private final String identity;
 
+    public ClearCacheEvent() {
+        this("all");
+    }
+
     public ClearCacheEvent(String identity) {
         this.identity = identity;
     }

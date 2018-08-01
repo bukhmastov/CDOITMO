@@ -118,7 +118,7 @@ public class CacheClearDialog extends Dialog {
                             if ("_mem_".equals(item.path)) {
                                 storage.cacheReset();
                                 ConnectedActivity.clearStore();
-                                eventBus.fire(new ClearCacheEvent("all"));
+                                eventBus.fire(new ClearCacheEvent());
                                 notificationMessage.snackBar(activity, activity.getString(R.string.cache_cleared));
                                 return;
                             } else {
@@ -128,7 +128,7 @@ public class CacheClearDialog extends Dialog {
                                 if ("_all_".equals(item.path)) {
                                     storage.clear(activity, Storage.CACHE, Storage.USER);
                                     storage.clear(activity, Storage.CACHE, Storage.GLOBAL);
-                                    eventBus.fire(new ClearCacheEvent("all"));
+                                    eventBus.fire(new ClearCacheEvent());
                                 } else {
                                     switch (item.type) {
                                         case Storage.USER: storage.clear(activity, Storage.CACHE, Storage.USER, item.path); break;

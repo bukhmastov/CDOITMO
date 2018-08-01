@@ -7,6 +7,8 @@ import android.support.v7.app.AlertDialog;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
@@ -34,6 +36,8 @@ public class AccountImpl implements Account {
     Log log;
     @Inject
     Thread thread;
+    @Inject
+    EventBus eventBus;
     @Inject
     Storage storage;
     @Inject
@@ -291,6 +295,7 @@ public class AccountImpl implements Account {
                 }
                 storage.delete(context, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
                 storage.cacheReset();
+                eventBus.fire(new ClearCacheEvent());
                 authorized = false;
                 App.UNAUTHORIZED_MODE = false;
                 if (callback != null) {
@@ -319,6 +324,7 @@ public class AccountImpl implements Account {
             final Callable cb = () -> {
                 storage.delete(context, Storage.PERMANENT, Storage.GLOBAL, "users#current_login");
                 storage.cacheReset();
+                eventBus.fire(new ClearCacheEvent());
                 authorized = false;
                 App.UNAUTHORIZED_MODE = false;
                 if (callback != null) {

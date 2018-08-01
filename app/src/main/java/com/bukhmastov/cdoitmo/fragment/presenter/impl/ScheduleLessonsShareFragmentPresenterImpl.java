@@ -127,6 +127,7 @@ public class ScheduleLessonsShareFragmentPresenterImpl implements ScheduleLesson
     public void onDestroy() {
         log.v(TAG, "Fragment destroyed");
         loaded = false;
+        changes.clear();
     }
 
     @Override

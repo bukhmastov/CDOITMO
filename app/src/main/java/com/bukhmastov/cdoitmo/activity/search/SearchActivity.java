@@ -200,7 +200,7 @@ public abstract class SearchActivity extends AppCompatActivity {
                                         String item = recent.getString(i);
                                         if (SearchActivity.equals(item, suggestion.query) || SearchActivity.equals(item, suggestion.title)) {
                                             recent.remove(i);
-                                            storage.get(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent", recent.toString());
+                                            storage.put(context, Storage.PERMANENT, Storage.USER, "schedule_" + getType() + "#recent", recent.toString());
                                             setSuggestions(getSuggestions(""));
                                             break;
                                         }

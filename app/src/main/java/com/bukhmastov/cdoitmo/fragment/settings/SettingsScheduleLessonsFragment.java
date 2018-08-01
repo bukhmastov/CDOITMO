@@ -76,7 +76,7 @@ public class SettingsScheduleLessonsFragment extends SettingsTemplatePreferences
                                 .setMessage(R.string.pref_schedule_lessons_clear_additional_warning)
                                 .setIcon(R.drawable.ic_warning)
                                 .setPositiveButton(R.string.proceed, (dialog, which) -> injectProvider.getThread().run(() -> {
-                                    boolean success = injectProvider.getStorage().clear(activity, Storage.CACHE, Storage.USER, "schedule_lessons");
+                                    boolean success = injectProvider.getStorage().clear(activity, Storage.PERMANENT, Storage.USER, "schedule_lessons");
                                     injectProvider.getNotificationMessage().snackBar(activity, activity.getString(success ? R.string.changes_cleared : R.string.something_went_wrong));
                                 }))
                                 .setNegativeButton(R.string.cancel, null)

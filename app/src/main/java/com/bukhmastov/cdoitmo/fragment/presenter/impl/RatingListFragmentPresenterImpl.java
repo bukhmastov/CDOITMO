@@ -106,6 +106,7 @@ public class RatingListFragmentPresenterImpl implements RatingListFragmentPresen
     public void onDestroy() {
         log.v(TAG, "Fragment destroyed");
         loaded = false;
+        fragment.clearData(fragment);
         hideShareButton();
     }
 
