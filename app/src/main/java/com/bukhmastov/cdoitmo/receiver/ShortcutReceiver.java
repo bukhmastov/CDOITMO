@@ -42,6 +42,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
 
     public static final String EXTRA_TYPE = "shortcut_type";
     public static final String EXTRA_DATA = "shortcut_data";
+    public static final String EXTRA_MODE = "shortcut_mode";
 
     @Inject
     Log log;
@@ -56,14 +57,8 @@ public class ShortcutReceiver extends BroadcastReceiver {
     @Inject
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
-    private void inject() {
-        if (thread == null) {
-            AppComponentProvider.getComponent().inject(this);
-        }
-    }
-
     public void onReceive(final Context context, final Intent intent) {
-        inject();
+        AppComponentProvider.getComponent().inject(this);
         thread.run(() -> {
             try {
                 String action = intent.getAction();
@@ -74,7 +69,8 @@ public class ShortcutReceiver extends BroadcastReceiver {
                         if (extras != null) {
                             String shortcut_type = extras.getString(ShortcutReceiver.EXTRA_TYPE);
                             String shortcut_data = extras.getString(ShortcutReceiver.EXTRA_DATA);
-                            addShortcut(context, shortcut_type, shortcut_data);
+                            String shortcut_mode = extras.getString(ShortcutReceiver.EXTRA_MODE);
+                            addShortcut(context, shortcut_type, shortcut_data, shortcut_mode);
                         } else {
                             throw new Exception("extras are null");
                         }
@@ -86,7 +82,11 @@ public class ShortcutReceiver extends BroadcastReceiver {
                         if (extras != null) {
                             String shortcut_type = extras.getString(ShortcutReceiver.EXTRA_TYPE);
                             String shortcut_data = extras.getString(ShortcutReceiver.EXTRA_DATA);
-                            resolve(context, shortcut_type, shortcut_data);
+                            String shortcut_mode = extras.getString(ShortcutReceiver.EXTRA_MODE);
+                            if (shortcut_mode == null) {
+                                shortcut_mode = "regular";
+                            }
+                            resolve(context, shortcut_type, shortcut_data, shortcut_mode);
                         } else {
                             throw new Exception("extras are null");
                         }
@@ -108,9 +108,9 @@ public class ShortcutReceiver extends BroadcastReceiver {
         });
     }
 
-    private void resolve(final Context context, final String shortcut_type, final String shortcut_data) {
+    private void resolve(final Context context, final String shortcut_type, final String shortcut_data, final String shortcut_mode) {
         thread.run(() -> {
-            log.v(TAG, "resolve | shortcut_type=" + shortcut_type + " | shortcut_data=" + shortcut_data);
+            log.v(TAG, "resolve | shortcut_type=", shortcut_type, " | shortcut_data=", shortcut_data, " | shortcut_mode=", shortcut_mode);
             try {
                 firebaseAnalyticsProvider.logEvent(
                         context,
@@ -126,6 +126,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
                     }
                     case "tab": {
                         Bundle extras = new Bundle();
+                        extras.putString("mode", shortcut_mode);
                         extras.putString("action", shortcut_data);
                         eventBus.fire(new OpenActivityEvent(MainActivity.class, extras, App.intentFlagRestart));
                         break;
@@ -133,6 +134,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
                     case "room101":
                     case "university": {
                         Bundle extras = new Bundle();
+                        extras.putString("mode", shortcut_mode);
                         extras.putString("action", shortcut_type);
                         extras.putString("action_extra", shortcut_data);
                         eventBus.fire(new OpenActivityEvent(MainActivity.class, extras, App.intentFlagRestart));
@@ -142,6 +144,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
                     case "schedule_exams":
                     case "schedule_attestations": {
                         Bundle extras = new Bundle();
+                        extras.putString("mode", shortcut_mode);
                         extras.putString("action", shortcut_type);
                         extras.putString("action_extra", (new JSONObject(shortcut_data)).getString("query"));
                         eventBus.fire(new OpenActivityEvent(MainActivity.class, extras, App.intentFlagRestart));
@@ -149,12 +152,14 @@ public class ShortcutReceiver extends BroadcastReceiver {
                     }
                     case "time_remaining_widget": {
                         Bundle extras = new Bundle();
+                        extras.putString("mode", shortcut_mode);
                         extras.putString("shortcut_data", shortcut_data);
                         eventBus.fire(new OpenActivityEvent(TimeRemainingWidgetActivity.class, extras, App.intentFlagRestart));
                         break;
                     }
                     case "days_remaining_widget": {
                         Bundle extras = new Bundle();
+                        extras.putString("mode", shortcut_mode);
                         extras.putString("shortcut_data", shortcut_data);
                         eventBus.fire(new OpenActivityEvent(DaysRemainingWidgetActivity.class, extras, App.intentFlagRestart));
                         break;
@@ -166,64 +171,64 @@ public class ShortcutReceiver extends BroadcastReceiver {
         });
     }
 
-    private void addShortcut(final Context context, final String type, final String data) {
+    private void addShortcut(final Context context, final String type, final String data, final String mode) {
         thread.run(() -> {
             log.v(TAG, "addShortcut | type=" + type + " | data=" + data);
             try {
                 switch (type) {
                     case "offline": {
-                        installShortcut(context, type, data, context.getString(R.string.app_name), R.mipmap.ic_shortcut_offline);
+                        installShortcut(context, type, data, mode, context.getString(R.string.app_name), R.mipmap.ic_shortcut_offline);
                         break;
                     }
                     case "tab": {
                         switch (data) {
                             case "e_journal":
-                                installShortcut(context, type, data, context.getString(R.string.e_journal), R.mipmap.ic_shortcut_e_journal);
+                                installShortcut(context, type, data, mode, context.getString(R.string.e_journal), R.mipmap.ic_shortcut_e_journal);
                                 break;
                             case "protocol_changes":
-                                installShortcut(context, type, data, context.getString(R.string.protocol_changes), R.mipmap.ic_shortcut_protocol_changes);
+                                installShortcut(context, type, data, mode, context.getString(R.string.protocol_changes), R.mipmap.ic_shortcut_protocol_changes);
                                 break;
                             case "rating":
-                                installShortcut(context, type, data, context.getString(R.string.rating), R.mipmap.ic_shortcut_rating);
+                                installShortcut(context, type, data, mode, context.getString(R.string.rating), R.mipmap.ic_shortcut_rating);
                                 break;
                             case "room101":
-                                installShortcut(context, type, data, context.getString(R.string.room101), R.mipmap.ic_shortcut_room101);
+                                installShortcut(context, type, data, mode, context.getString(R.string.room101), R.mipmap.ic_shortcut_room101);
                                 break;
                         }
                         break;
                     }
                     case "room101": {
-                        installShortcut(context, type, data, context.getString(R.string.shortcut_room101_short), R.mipmap.ic_shortcut_room101_add);
+                        installShortcut(context, type, data, mode, context.getString(R.string.shortcut_room101_short), R.mipmap.ic_shortcut_room101_add);
                         break;
                     }
                     case "schedule_lessons": {
                         JSONObject json = new JSONObject(data);
-                        installShortcut(context, type, data, json.getString("label"), R.mipmap.ic_shortcut_schedule_lessons);
+                        installShortcut(context, type, data, mode, json.getString("label"), R.mipmap.ic_shortcut_schedule_lessons);
                         break;
                     }
                     case "schedule_exams": {
                         JSONObject json = new JSONObject(data);
-                        installShortcut(context, type, data, json.getString("label"), R.mipmap.ic_shortcut_schedule_exams);
+                        installShortcut(context, type, data, mode, json.getString("label"), R.mipmap.ic_shortcut_schedule_exams);
                         break;
                     }
                     case "schedule_attestations": {
                         JSONObject json = new JSONObject(data);
-                        installShortcut(context, type, data, json.getString("label"), R.mipmap.ic_shortcut_schedule_attestations);
+                        installShortcut(context, type, data, mode, json.getString("label"), R.mipmap.ic_shortcut_schedule_attestations);
                         break;
                     }
                     case "time_remaining_widget": {
                         JSONObject json = new JSONObject(data);
-                        installShortcut(context, type, data, json.getString("label"), R.mipmap.ic_shortcut_time_remaining_widget);
+                        installShortcut(context, type, data, mode, json.getString("label"), R.mipmap.ic_shortcut_time_remaining_widget);
                         break;
                     }
                     case "days_remaining_widget": {
                         JSONObject json = new JSONObject(data);
-                        installShortcut(context, type, data, json.getString("label"), R.mipmap.ic_shortcut_days_remaining_widget);
+                        installShortcut(context, type, data, mode, json.getString("label"), R.mipmap.ic_shortcut_days_remaining_widget);
                         break;
                     }
                     case "university": {
                         JSONObject json = new JSONObject(data);
-                        installShortcut(context, type, json.getString("query"), json.getString("label"), R.mipmap.ic_shortcut_university);
+                        installShortcut(context, type, json.getString("query"), mode, json.getString("label"), R.mipmap.ic_shortcut_university);
                         break;
                     }
                 }
@@ -234,7 +239,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
     }
 
     @SuppressWarnings("deprecation")
-    private void installShortcut(final Context context, final String type, final String data, final String label, @DrawableRes final int icon) {
+    private void installShortcut(final Context context, final String type, final String data, final String mode, final String label, @DrawableRes final int icon) {
         thread.run(() -> {
             log.v(TAG, "installShortcut | type=" + type + " | data=" + data);
             try {
@@ -242,6 +247,7 @@ public class ShortcutReceiver extends BroadcastReceiver {
                 shortcutIntent.setAction(ShortcutReceiver.ACTION_CLICK_SHORTCUT);
                 shortcutIntent.putExtra(ShortcutReceiver.EXTRA_TYPE, type);
                 shortcutIntent.putExtra(ShortcutReceiver.EXTRA_DATA, data);
+                shortcutIntent.putExtra(ShortcutReceiver.EXTRA_MODE, mode);
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     ShortcutManager shortcutManager = context.getSystemService(ShortcutManager.class);
                     if (shortcutManager != null && shortcutManager.isRequestPinShortcutSupported()) {

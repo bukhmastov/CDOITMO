@@ -311,11 +311,11 @@ public class ThemeDialog extends Dialog {
                     int index1 = pref_theme_values.indexOf(values[1]);
                     int index2 = pref_theme_values.indexOf(values[3]);
                     if (index1 != -1 && index2 != -1) {
-                        return pref_theme_titles.get(index1) + ", " + pref_theme_titles.get(index2);
+                        return values[0] + " " + pref_theme_titles.get(index1) + ", " + values[2] + " " + pref_theme_titles.get(index2);
                     } else if (index1 != -1) {
-                        return pref_theme_titles.get(index1) + ", " + Static.GLITCH;
+                        return values[0] + " " + pref_theme_titles.get(index1) + ", " + values[2] + " " + Static.GLITCH;
                     } else {
-                        return Static.GLITCH + ", " + pref_theme_titles.get(index2);
+                        return values[0] + " " + Static.GLITCH + ", " + values[2] + " " + pref_theme_titles.get(index2);
                     }
                 } else {
                     return value;
@@ -325,7 +325,7 @@ public class ThemeDialog extends Dialog {
             }
         } else {
             int index = pref_theme_values.indexOf(value);
-            return index != -1 ? pref_theme_titles.get(index) : null;
+            return index != -1 ? pref_theme_titles.get(index) : value;
         }
     }
 }

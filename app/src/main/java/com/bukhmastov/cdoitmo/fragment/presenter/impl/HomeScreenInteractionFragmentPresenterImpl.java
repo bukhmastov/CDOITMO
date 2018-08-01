@@ -164,17 +164,13 @@ public class HomeScreenInteractionFragmentPresenterImpl implements HomeScreenInt
     public void onResume() {
         log.v(TAG, "Fragment resumed");
         firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O) {
-            activity.registerReceiver(receiver, new IntentFilter(ShortcutReceiver.ACTION_INSTALL_SHORTCUT));
-        }
+        activity.registerReceiver(receiver, new IntentFilter(ShortcutReceiver.ACTION_ADD_SHORTCUT));
     }
 
     @Override
     public void onPause() {
         log.v(TAG, "Fragment paused");
-        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O) {
-            activity.unregisterReceiver(receiver);
-        }
+        activity.unregisterReceiver(receiver);
     }
 
     @Override
@@ -282,7 +278,8 @@ public class HomeScreenInteractionFragmentPresenterImpl implements HomeScreenInt
                                         try {
                                             addShortcut(
                                                     app.id,
-                                                    new JSONObject().put("label", title).put("query", query).toString()
+                                                    new JSONObject().put("label", title).put("query", query).toString(),
+                                                    "regular"
                                             );
                                         } catch (Exception e) {
                                             log.exception(e);
@@ -296,7 +293,8 @@ public class HomeScreenInteractionFragmentPresenterImpl implements HomeScreenInt
                                         try {
                                             addShortcut(
                                                     app.id,
-                                                    new JSONObject().put("label", title).put("query", query).toString()
+                                                    new JSONObject().put("label", title).put("query", query).toString(),
+                                                    "regular"
                                             );
                                         } catch (Exception e) {
                                             log.exception(e);
@@ -354,98 +352,113 @@ public class HomeScreenInteractionFragmentPresenterImpl implements HomeScreenInt
                                 log.exception(e);
                             }
                         }
-                        item.setOnClickListener(view -> thread.run(() -> {
-                            switch (shortcut.id) {
-                                case "offline": case "tab": case "room101": {
-                                    addShortcut(shortcut.id, shortcut.meta);
-                                    break;
-                                }
-                                case "schedule_lessons": {
-                                    String group = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#group", "");
-                                    getScheduleLessons(group.isEmpty() ? null : group, (title, query) -> {
-                                        try {
-                                            addShortcut(
-                                                    shortcut.id,
-                                                    new JSONObject().put("label", title).put("query", query).toString()
-                                            );
-                                        } catch (Exception e) {
-                                            log.exception(e);
-                                            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                        }
-                                    });
-                                    break;
-                                }
-                                case "schedule_exams": {
-                                    String group = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#group", "");
-                                    getScheduleExams(group.isEmpty() ? null : group, (title, query) -> {
-                                        try {
-                                            addShortcut(
-                                                    shortcut.id,
-                                                    new JSONObject().put("label", title).put("query", query).toString()
-                                            );
-                                        } catch (Exception e) {
-                                            log.exception(e);
-                                            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                        }
-                                    });
-                                    break;
-                                }
-                                case "schedule_attestations": {
-                                    String group = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#group", "");
-                                    getScheduleAttestations(group.isEmpty() ? null : group, (title, query) -> {
-                                        try {
-                                            addShortcut(
-                                                    shortcut.id,
-                                                    new JSONObject().put("label", title).put("query", query).toString()
-                                            );
-                                        } catch (Exception e) {
-                                            log.exception(e);
-                                            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                        }
-                                    });
-                                    break;
-                                }
-                                case "university": {
-                                    final ArrayList<String> labels = new ArrayList<>(Arrays.asList(activity.getString(R.string.persons),
-                                            activity.getString(R.string.faculties),
-                                            activity.getString(R.string.units),
-                                            activity.getString(R.string.news),
-                                            activity.getString(R.string.events),
-                                            activity.getString(R.string.ubuildings)));
-                                    final ArrayList<String> values = new ArrayList<>(Arrays.asList("persons",
-                                            "faculties",
-                                            "units",
-                                            "news",
-                                            "events",
-                                            "ubuildings"));
-                                    final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(activity, R.layout.spinner_center);
-                                    arrayAdapter.addAll(labels);
-                                    new AlertDialog.Builder(activity)
-                                            .setAdapter(arrayAdapter, (dialogInterface, position) -> {
-                                                try {
-                                                    String label = labels.get(position);
-                                                    String query = values.get(position);
-                                                    addShortcut(
-                                                            "university",
-                                                            new JSONObject().put("label", label).put("query", query).toString()
-                                                    );
-                                                } catch (Exception e) {
-                                                    log.exception(e);
-                                                    notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                                }
-                                            })
-                                            .setNegativeButton(R.string.do_cancel, null)
-                                            .create().show();
-                                    break;
-                                }
-                            }
-                        }));
+                        item.setOnClickListener(view -> shortcutClicked(shortcut, "regular"));
+                        if ("offline".equals(shortcut.id) || ("room101".equals(shortcut.id) && "create".equals(shortcut.meta))) {
+                            item.findViewById(R.id.separator).setVisibility(View.GONE);
+                            item.findViewById(R.id.offline).setVisibility(View.GONE);
+                        } else {
+                            item.findViewById(R.id.offline).setOnClickListener(view -> shortcutClicked(shortcut, "offline"));
+                        }
                         content.addView(item);
                     }
                 }
             } catch (Exception e) {
                 log.exception(e);
                 notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+            }
+        });
+    }
+
+    private void shortcutClicked(Shortcut shortcut, String mode) {
+        thread.run(() -> {
+            switch (shortcut.id) {
+                case "offline": case "tab": case "room101": {
+                    addShortcut(shortcut.id, shortcut.meta, mode);
+                    break;
+                }
+                case "schedule_lessons":
+                case "schedule_lessons_offline": {
+                    String group = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#group", "");
+                    getScheduleLessons(group.isEmpty() ? null : group, (title, query) -> {
+                        try {
+                            addShortcut(
+                                    shortcut.id,
+                                    new JSONObject().put("label", title).put("query", query).toString(),
+                                    mode
+                            );
+                        } catch (Exception e) {
+                            log.exception(e);
+                            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        }
+                    });
+                    break;
+                }
+                case "schedule_exams": {
+                    String group = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#group", "");
+                    getScheduleExams(group.isEmpty() ? null : group, (title, query) -> {
+                        try {
+                            addShortcut(
+                                    shortcut.id,
+                                    new JSONObject().put("label", title).put("query", query).toString(),
+                                    mode
+                            );
+                        } catch (Exception e) {
+                            log.exception(e);
+                            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        }
+                    });
+                    break;
+                }
+                case "schedule_attestations": {
+                    String group = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#group", "");
+                    getScheduleAttestations(group.isEmpty() ? null : group, (title, query) -> {
+                        try {
+                            addShortcut(
+                                    shortcut.id,
+                                    new JSONObject().put("label", title).put("query", query).toString(),
+                                    mode
+                            );
+                        } catch (Exception e) {
+                            log.exception(e);
+                            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        }
+                    });
+                    break;
+                }
+                case "university": {
+                    final ArrayList<String> labels = new ArrayList<>(Arrays.asList(activity.getString(R.string.persons),
+                            activity.getString(R.string.faculties),
+                            activity.getString(R.string.units),
+                            activity.getString(R.string.news),
+                            activity.getString(R.string.events),
+                            activity.getString(R.string.ubuildings)));
+                    final ArrayList<String> values = new ArrayList<>(Arrays.asList("persons",
+                            "faculties",
+                            "units",
+                            "news",
+                            "events",
+                            "ubuildings"));
+                    final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(activity, R.layout.spinner_center);
+                    arrayAdapter.addAll(labels);
+                    new AlertDialog.Builder(activity)
+                            .setAdapter(arrayAdapter, (dialogInterface, position) -> {
+                                try {
+                                    String label = labels.get(position);
+                                    String query = values.get(position);
+                                    addShortcut(
+                                            "university",
+                                            new JSONObject().put("label", label).put("query", query).toString(),
+                                            mode
+                                    );
+                                } catch (Exception e) {
+                                    log.exception(e);
+                                    notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                                }
+                            })
+                            .setNegativeButton(R.string.do_cancel, null)
+                            .create().show();
+                    break;
+                }
             }
         });
     }
@@ -740,18 +753,14 @@ public class HomeScreenInteractionFragmentPresenterImpl implements HomeScreenInt
         });
     }
 
-    private void addShortcut(final String type, final String data) {
+    private void addShortcut(final String type, final String data, final String mode) {
         thread.run(() -> {
             log.v(TAG, "addShortcut | type=" + type + " | data=" + data);
             Intent intent = new Intent(ShortcutReceiver.ACTION_ADD_SHORTCUT);
             intent.putExtra(ShortcutReceiver.EXTRA_TYPE, type);
             intent.putExtra(ShortcutReceiver.EXTRA_DATA, data);
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                // TODO turn into context-registered receiver
-                new ShortcutReceiver().onReceive(activity, intent);
-            } else {
-                activity.sendBroadcast(intent);
-            }
+            intent.putExtra(ShortcutReceiver.EXTRA_MODE, mode);
+            activity.sendBroadcast(intent);
         });
     }
 }
