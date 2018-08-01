@@ -33,6 +33,7 @@ public abstract class UniversityRVA extends RecyclerView.Adapter<RecyclerView.Vi
     public static final int TYPE_UNIT_STRUCTURE_DEANERY = 5;
     public static final int TYPE_UNIT_STRUCTURE_HEAD = 6;
     public static final int TYPE_UNIT_DIVISIONS = 7;
+    public static final int TYPE_NO_DATA = 8;
     public static class Item {
         public int type;
         public JSONObject data;

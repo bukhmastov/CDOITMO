@@ -493,6 +493,9 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
                             .put("divisions", d);
                     items.add(item);
                 }
+                if (items.size() == 0) {
+                    items.add(new UniversityRVA.Item(UniversityFacultiesRVA.TYPE_NO_DATA, null));
+                }
                 thread.runOnUI(() -> {
                     if (facultiesRecyclerViewAdapter != null) {
                         facultiesRecyclerViewAdapter.setOnDivisionClickListener(dep_id -> {

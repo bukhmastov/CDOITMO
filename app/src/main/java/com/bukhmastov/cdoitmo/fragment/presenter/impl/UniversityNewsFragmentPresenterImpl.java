@@ -443,6 +443,9 @@ public class UniversityNewsFragmentPresenterImpl implements UniversityNewsFragme
                         log.exception(e);
                     }
                 }
+                if (items.size() == 0) {
+                    items.add(new UniversityRVA.Item(UniversityNewsRVA.TYPE_NO_DATA, null));
+                }
                 thread.runOnUI(() -> {
                     try {
                         if (newsRecyclerViewAdapter != null) {

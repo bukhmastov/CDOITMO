@@ -37,12 +37,15 @@ public class UniversityPersonsRVA extends UniversityRVA {
             case TYPE_INFO_ABOUT_UPDATE_TIME: {
                 return new ViewHolder((ViewGroup) LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_university_update_time, parent, false));
             }
-            default:
             case TYPE_MAIN: {
                 return new ViewHolder((ViewGroup) LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_university_persons_list_item, parent, false));
             }
             case TYPE_STATE: {
                 return new ViewHolder((ViewGroup) LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_university_list_item_state, parent, false));
+            }
+            default:
+            case TYPE_NO_DATA: {
+                return new UniversityEventsRVA.ViewHolder((ViewGroup) LayoutInflater.from(parent.getContext()).inflate(R.layout.state_nothing_to_display_compact, parent, false));
             }
         }
     }
@@ -61,6 +64,10 @@ public class UniversityPersonsRVA extends UniversityRVA {
             }
             case TYPE_STATE: {
                 bindState(holder, item);
+                break;
+            }
+            case TYPE_NO_DATA: {
+                bindNoData(holder, item);
                 break;
             }
         }
@@ -121,6 +128,14 @@ public class UniversityPersonsRVA extends UniversityRVA {
             if (onStateClickListener != null) {
                 viewHolder.container.setOnClickListener(onStateClickListener);
             }
+        } catch (Exception e) {
+            log.exception(e);
+        }
+    }
+    private void bindNoData(RecyclerView.ViewHolder holder, Item item) {
+        try {
+            UniversityEventsRVA.ViewHolder viewHolder = (UniversityEventsRVA.ViewHolder) holder;
+            ((TextView) viewHolder.container.findViewById(R.id.ntd_text)).setText(R.string.no_persons);
         } catch (Exception e) {
             log.exception(e);
         }

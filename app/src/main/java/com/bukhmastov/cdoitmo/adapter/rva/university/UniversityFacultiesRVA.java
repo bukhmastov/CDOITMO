@@ -69,12 +69,15 @@ public class UniversityFacultiesRVA extends UniversityRVA {
             case TYPE_INFO_ABOUT_UPDATE_TIME: {
                 return new ViewHolder((ViewGroup) LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_university_update_time, parent, false));
             }
-            default:
             case TYPE_UNIT_STRUCTURE_COMMON:
             case TYPE_UNIT_STRUCTURE_DEANERY:
             case TYPE_UNIT_STRUCTURE_HEAD:
             case TYPE_UNIT_DIVISIONS: {
                 return new ViewHolder((ViewGroup) LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_university_faculties_structure_unit, parent, false));
+            }
+            default:
+            case TYPE_NO_DATA: {
+                return new UniversityEventsRVA.ViewHolder((ViewGroup) LayoutInflater.from(parent.getContext()).inflate(R.layout.state_nothing_to_display_compact, parent, false));
             }
         }
     }
@@ -95,6 +98,10 @@ public class UniversityFacultiesRVA extends UniversityRVA {
             }
             case TYPE_UNIT_DIVISIONS: {
                 bindDivisions(holder, item);
+                break;
+            }
+            case TYPE_NO_DATA: {
+                bindNoData(holder, item);
                 break;
             }
         }
@@ -299,6 +306,14 @@ public class UniversityFacultiesRVA extends UniversityRVA {
                     }
                 }
             }
+        } catch (Exception e) {
+            log.exception(e);
+        }
+    }
+    private void bindNoData(RecyclerView.ViewHolder holder, Item item) {
+        try {
+            UniversityEventsRVA.ViewHolder viewHolder = (UniversityEventsRVA.ViewHolder) holder;
+            ((TextView) viewHolder.container.findViewById(R.id.ntd_text)).setText(R.string.no_data);
         } catch (Exception e) {
             log.exception(e);
         }

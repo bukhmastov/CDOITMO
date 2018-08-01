@@ -443,6 +443,9 @@ public class UniversityPersonsFragmentPresenterImpl implements UniversityPersons
                         log.exception(e);
                     }
                 }
+                if (items.size() == 0) {
+                    items.add(new UniversityRVA.Item(UniversityPersonsRVA.TYPE_NO_DATA, null));
+                }
                 thread.runOnUI(() -> {
                     try {
                         if (personsRecyclerViewAdapter != null) {
