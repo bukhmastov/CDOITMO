@@ -164,7 +164,11 @@ public class HomeScreenInteractionFragmentPresenterImpl implements HomeScreenInt
     public void onResume() {
         log.v(TAG, "Fragment resumed");
         firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-        activity.registerReceiver(receiver, new IntentFilter(ShortcutReceiver.ACTION_ADD_SHORTCUT));
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ShortcutReceiver.ACTION_ADD_SHORTCUT);
+        filter.addAction(ShortcutReceiver.ACTION_SHORTCUT_INSTALLED);
+        filter.addAction(ShortcutReceiver.ACTION_INSTALL_SHORTCUT);
+        activity.registerReceiver(receiver, filter);
     }
 
     @Override

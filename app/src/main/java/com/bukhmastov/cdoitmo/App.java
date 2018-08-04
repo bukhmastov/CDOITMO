@@ -91,6 +91,7 @@ public class App extends Application {
             if (event.getFlags() != null) {
                 intent.addFlags(event.getFlags());
             }
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
         } catch (ActivityNotFoundException e) {
             log.e(TAG, "Failed to open activity | activity not found | e=", e.getMessage());
@@ -113,7 +114,9 @@ public class App extends Application {
     public void onOpenIntentEvent(OpenIntentEvent event) {
         try {
             log.v(TAG, "onOpenActivityEvent | intent=", event.getIntent().toString());
-            startActivity(event.getIntent());
+            Intent intent = event.getIntent();
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
         } catch (ActivityNotFoundException e) {
             log.e(TAG, "Failed to open intent | activity not found | e=", e.getMessage());
             if (event.getIdentity() != null) {

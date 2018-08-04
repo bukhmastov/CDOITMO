@@ -20,22 +20,21 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
-import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
 import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsShareFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsTabHostFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleLessonsFragment;
+import com.bukhmastov.cdoitmo.interfaces.CallableString;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessonsHelper;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
-import com.bukhmastov.cdoitmo.util.singleton.Color;
-import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
-import com.bukhmastov.cdoitmo.util.Time;
-import com.bukhmastov.cdoitmo.interfaces.CallableString;
+import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.Time;
+import com.bukhmastov.cdoitmo.util.singleton.Color;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -97,7 +96,6 @@ public class ScheduleLessonsRVA extends RVA {
     public ScheduleLessonsRVA(final ConnectedActivity activity, int TYPE, JSONObject data, int weekday, final CallableString callback) {
         super();
         AppComponentProvider.getComponent().inject(this);
-        eventBus.register(this);
         this.activity = activity;
         this.TYPE = TYPE;
         this.data = data;
@@ -110,14 +108,6 @@ public class ScheduleLessonsRVA extends RVA {
         } catch (Exception e) {
             log.exception(e);
         }
-    }
-
-    @Event
-    public void onOpenIntentEventFailed(OpenIntentEvent.Failed event) {
-        if (!event.getIdentity().equals(ScheduleLessonsRVA.class.getName())) {
-            return;
-        }
-        notificationMessage.snackBar(activity, activity.getString(R.string.failed_to_start_geo_activity));
     }
 
     @Override

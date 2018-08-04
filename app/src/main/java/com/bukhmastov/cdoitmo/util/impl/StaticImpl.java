@@ -19,6 +19,8 @@ import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -28,6 +30,7 @@ import dagger.Lazy;
 public class StaticImpl implements Static {
 
     private static final String TAG = "Static";
+    private Map<String, Integer> screenOrientationMap = new HashMap<>();
 
     @Inject
     Log log;
@@ -86,8 +89,24 @@ public class StaticImpl implements Static {
     public void lockOrientation(Activity activity, boolean lock) {
         try {
             if (activity != null) {
-                log.v(TAG, "lockOrientation | activity=", activity.getComponentName().getClassName(), " | lock=", lock);
-                activity.setRequestedOrientation(lock ? ActivityInfo.SCREEN_ORIENTATION_LOCKED : ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
+                String activityName = activity.getComponentName().getClassName();
+                log.v(TAG, "lockOrientation | activity=", activityName, " | lock=", lock);
+                Integer screenOrientation = screenOrientationMap.get(activityName);
+                if (lock) {
+                    if (screenOrientation == null) {
+                        screenOrientation = activity.getRequestedOrientation();
+                        log.v(TAG, "lockOrientation | activity=", activityName, " | lock=true", " | saved orientation = ", screenOrientation);
+                        screenOrientationMap.put(activityName, screenOrientation);
+                    }
+                    activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
+                    log.v(TAG, "lockOrientation | activity=", activityName, " | lock=true", " | orientation set = ", ActivityInfo.SCREEN_ORIENTATION_LOCKED);
+                } else if (screenOrientation != null){
+                    activity.setRequestedOrientation(screenOrientation);
+                    log.v(TAG, "lockOrientation | activity=", activityName, " | lock=false", " | orientation set = ", screenOrientation);
+                    screenOrientationMap.remove(activityName);
+                } else {
+                    log.v(TAG, "lockOrientation | activity=", activityName, " | lock=false", " | no action taken");
+                }
             }
         } catch (Exception e) {
             log.exception(e);

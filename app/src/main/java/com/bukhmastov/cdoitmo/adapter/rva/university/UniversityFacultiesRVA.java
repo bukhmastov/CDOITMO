@@ -18,7 +18,6 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.UniversityPersonCardActivity;
-import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
 import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
@@ -51,15 +50,6 @@ public class UniversityFacultiesRVA extends UniversityRVA {
     public UniversityFacultiesRVA(final Context context, final ArrayList<Item> dataset) {
         super(context, dataset);
         AppComponentProvider.getComponent().inject(this);
-        eventBus.register(this);
-    }
-
-    @Event
-    public void onOpenIntentEventFailed(OpenIntentEvent.Failed event) {
-        if (!event.getIdentity().equals(UniversityFacultiesRVA.class.getName())) {
-            return;
-        }
-        notificationMessage.toast(context, context.getString(R.string.failed_to_start_geo_activity));
     }
 
     @NonNull

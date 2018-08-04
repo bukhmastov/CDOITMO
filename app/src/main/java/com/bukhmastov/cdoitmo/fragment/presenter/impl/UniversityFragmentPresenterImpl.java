@@ -11,11 +11,16 @@ import android.view.View;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.adapter.PagerUniversityAdapter;
+import com.bukhmastov.cdoitmo.adapter.rva.university.UniversityFacultiesRVA;
+import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
+import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.UniversityFragmentPresenter;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 
 import javax.inject.Inject;
@@ -31,12 +36,25 @@ public class UniversityFragmentPresenterImpl implements UniversityFragmentPresen
     @Inject
     Log log;
     @Inject
+    EventBus eventBus;
+    @Inject
     StoragePref storagePref;
     @Inject
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
+    @Inject
+    NotificationMessage notificationMessage;
 
     public UniversityFragmentPresenterImpl() {
         AppComponentProvider.getComponent().inject(this);
+        eventBus.register(this);
+    }
+
+    @Event
+    public void onOpenIntentEventFailed(OpenIntentEvent.Failed event) {
+        if (!event.getIdentity().equals(UniversityFacultiesRVA.class.getName())) {
+            return;
+        }
+        notificationMessage.toast(activity, activity.getString(R.string.failed_to_start_geo_activity));
     }
 
     @Override

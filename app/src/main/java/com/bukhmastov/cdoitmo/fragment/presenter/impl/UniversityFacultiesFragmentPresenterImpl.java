@@ -85,7 +85,6 @@ public class UniversityFacultiesFragmentPresenterImpl implements UniversityFacul
 
     public UniversityFacultiesFragmentPresenterImpl() {
         AppComponentProvider.getComponent().inject(this);
-        eventBus.register(this);
     }
 
     @Event

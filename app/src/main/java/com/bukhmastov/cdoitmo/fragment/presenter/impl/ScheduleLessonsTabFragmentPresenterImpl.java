@@ -17,6 +17,9 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.adapter.rva.ScheduleLessonsRVA;
+import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
+import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.exception.SilentException;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsTabFragmentPresenter;
@@ -26,6 +29,7 @@ import com.bukhmastov.cdoitmo.network.model.Client;
 import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
@@ -55,6 +59,8 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
     @Inject
     Thread thread;
     @Inject
+    EventBus eventBus;
+    @Inject
     ScheduleLessons scheduleLessons;
     @Inject
     ScheduleLessonsTabHostFragmentPresenter tabHostPresenter;
@@ -62,9 +68,12 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
     StoragePref storagePref;
     @Inject
     Time time;
+    @Inject
+    NotificationMessage notificationMessage;
 
     public ScheduleLessonsTabFragmentPresenterImpl() {
         AppComponentProvider.getComponent().inject(this);
+        eventBus.register(this);
         scheduleHandler = new Schedule.Handler() {
             @Override
             public void onSuccess(final JSONObject json, final boolean fromCache) {
@@ -257,6 +266,14 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
                 }
             }
         };
+    }
+
+    @Event
+    public void onOpenIntentEventFailed(OpenIntentEvent.Failed event) {
+        if (!event.getIdentity().equals(ScheduleLessonsRVA.class.getName())) {
+            return;
+        }
+        notificationMessage.snackBar(activity, activity.getString(R.string.failed_to_start_geo_activity));
     }
 
     @Override
