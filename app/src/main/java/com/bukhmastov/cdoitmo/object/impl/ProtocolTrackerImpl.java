@@ -4,9 +4,11 @@ import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
+import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
 import android.os.Build;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.converter.ProtocolConverter;
@@ -123,7 +125,17 @@ public class ProtocolTrackerImpl implements ProtocolTracker {
                 JobInfo.Builder builder = new JobInfo.Builder(0, new ComponentName(context, ProtocolTrackerJobService.class));
                 builder.setPeriodic(frequency * 60000);
                 builder.setPersisted(true);
-                builder.setRequiredNetworkType(network_unmetered ? JobInfo.NETWORK_TYPE_UNMETERED : JobInfo.NETWORK_TYPE_ANY);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    NetworkRequest.Builder nrBuilder = new NetworkRequest.Builder();
+                    nrBuilder.addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_RESTRICTED);
+                    nrBuilder.addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+                    if (network_unmetered) {
+                        nrBuilder.addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED);
+                    }
+                    builder.setRequiredNetwork(nrBuilder.build());
+                } else {
+                    builder.setRequiredNetworkType(network_unmetered ? JobInfo.NETWORK_TYPE_UNMETERED : JobInfo.NETWORK_TYPE_ANY);
+                }
                 getJobScheduler(context).schedule(builder.build());
                 storage.put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#job_service_running", "1");
                 storage.put(context, Storage.PERMANENT, Storage.USER, "protocol_tracker#protocol", "");

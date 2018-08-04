@@ -1,7 +1,7 @@
 package com.bukhmastov.cdoitmo.object;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.bukhmastov.cdoitmo.interfaces.Callable;
 

@@ -1,6 +1,6 @@
 package com.bukhmastov.cdoitmo.event.bus;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
 import com.bukhmastov.cdoitmo.event.bus.annotation.Tag;

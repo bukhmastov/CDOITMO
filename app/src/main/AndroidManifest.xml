@@ -27,7 +27,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:allowBackup="true"
-        android:fullBackupContent="@xml/backup_rules">
+        android:fullBackupContent="@xml/backup_rules"
+        android:networkSecurityConfig="@xml/network_security_config">
 
         <meta-data
             android:name="android.max_aspect"
@@ -170,7 +171,7 @@
             android:noHistory="true" />
 
         <provider
-            android:name="android.support.v4.content.FileProvider"
+            android:name="androidx.core.content.FileProvider"
             android:authorities="com.bukhmastov.cdoitmo.fileprovider"
             android:grantUriPermissions="true"
             android:exported="false">

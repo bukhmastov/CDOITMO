@@ -1,9 +1,9 @@
 package com.bukhmastov.cdoitmo.dialog;
 
 import android.content.Context;
-import android.support.annotation.LayoutRes;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,7 +16,7 @@ import com.bukhmastov.cdoitmo.util.Log;
 
 import javax.inject.Inject;
 
-public class BottomSheetDialog extends android.support.design.widget.BottomSheetDialog implements View.OnClickListener {
+public class BottomSheetDialog extends com.google.android.material.bottomsheet.BottomSheetDialog implements View.OnClickListener {
 
     private static final String TAG = "BottomSheetDialog";
     private final Context context;

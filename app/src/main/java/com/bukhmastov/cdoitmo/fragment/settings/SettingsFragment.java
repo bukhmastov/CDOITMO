@@ -2,7 +2,7 @@ package com.bukhmastov.cdoitmo.fragment.settings;
 
 import android.content.Context;
 import android.os.Build;
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.fragment.AboutFragment;

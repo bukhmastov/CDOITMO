@@ -56,7 +56,14 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
         try {
-            AppComponentProvider.getComponent().inject(this);
+            AppComponentProvider.getComponent(this).inject(this);
+            /*if (true) {
+                storagePref.put(this, "pref_allow_collect_analytics", false);
+                storagePref.put(this, "pref_allow_send_reports", false);
+                storagePref.put(this, "pref_allow_collect_logs", true);
+                firebaseAnalyticsProvider.setEnabled(this, false);
+                firebaseCrashlyticsProvider.setEnabled(this, false);
+            }*/
             eventBus.register(this);
             log.setEnabled(storagePref.get(this, "pref_allow_collect_logs", false));
             locale = textUtils.getLocale(this, storagePref);

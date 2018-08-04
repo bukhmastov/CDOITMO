@@ -1,6 +1,6 @@
 package com.bukhmastov.cdoitmo.event.bus.impl;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.bus.SubscribersFinder;

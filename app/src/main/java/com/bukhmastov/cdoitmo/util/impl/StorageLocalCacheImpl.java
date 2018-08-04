@@ -1,6 +1,6 @@
 package com.bukhmastov.cdoitmo.util.impl;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.bukhmastov.cdoitmo.util.StorageLocalCache;
 

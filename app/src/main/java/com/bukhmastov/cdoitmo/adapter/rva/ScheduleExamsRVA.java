@@ -1,8 +1,8 @@
 package com.bukhmastov.cdoitmo.adapter.rva;
 
 import android.content.Context;
-import android.support.annotation.LayoutRes;
-import android.support.v7.widget.PopupMenu;
+import androidx.annotation.LayoutRes;
+import androidx.appcompat.widget.PopupMenu;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;

@@ -1,6 +1,6 @@
 package com.bukhmastov.cdoitmo.dialog;
 
-import android.support.v7.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -128,7 +128,6 @@ public class CacheClearDialog extends Dialog {
                                 if ("_all_".equals(item.path)) {
                                     storage.clear(activity, Storage.CACHE, Storage.USER);
                                     storage.clear(activity, Storage.CACHE, Storage.GLOBAL);
-                                    eventBus.fire(new ClearCacheEvent());
                                 } else {
                                     switch (item.type) {
                                         case Storage.USER: storage.clear(activity, Storage.CACHE, Storage.USER, item.path); break;
