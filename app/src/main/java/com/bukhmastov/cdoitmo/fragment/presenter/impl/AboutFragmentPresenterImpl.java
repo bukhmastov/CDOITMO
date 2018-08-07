@@ -8,10 +8,12 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.App;
+import com.bukhmastov.cdoitmo.BuildConfig;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.activity.PikaActivity;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
+import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
 import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
@@ -29,6 +31,7 @@ import javax.inject.Inject;
 public class AboutFragmentPresenterImpl implements AboutFragmentPresenter {
 
     private static final String TAG = "AboutFragment";
+    private static final String MARKET_IDENTITY = "cdoitmo-market-identity";
     private ConnectedFragment fragment = null;
     private ConnectedActivity activity = null;
     private final Random random = new Random();
@@ -46,6 +49,15 @@ public class AboutFragmentPresenterImpl implements AboutFragmentPresenter {
 
     public AboutFragmentPresenterImpl() {
         AppComponentProvider.getComponent().inject(this);
+        eventBus.register(this);
+    }
+
+    @Event
+    public void onOpenIntentEventFailed(OpenIntentEvent.Failed event) {
+        if (!event.getIdentity().equals(MARKET_IDENTITY)) {
+            return;
+        }
+        eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.bukhmastov.cdoitmo"))));
     }
 
     @Override
@@ -81,7 +93,7 @@ public class AboutFragmentPresenterImpl implements AboutFragmentPresenter {
 
         TextView app_version = fragment.container().findViewById(R.id.app_version);
         if (app_version != null) {
-            app_version.setText(activity.getString(R.string.version) + " " + App.versionName + " (" + App.versionCode + " " + activity.getString(R.string.build) + ")");
+            app_version.setText(activity.getString(R.string.version) + " " + App.versionName + " (" + App.versionCode + " " + activity.getString(R.string.build) + (BuildConfig.DEBUG ? ", debug mode" : "") + ")");
         }
 
         View block_pika = fragment.container().findViewById(R.id.block_pika);
@@ -107,14 +119,10 @@ public class AboutFragmentPresenterImpl implements AboutFragmentPresenter {
             block_send_mail.setOnClickListener(v -> {
                 log.v(TAG, "send_mail clicked");
                 firebaseAnalyticsProvider.logBasicEvent(activity, "send mail clicked");
-                try {
-                    Intent emailIntent = new Intent(Intent.ACTION_SEND);
-                    emailIntent.setType("message/rfc822");
-                    emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{"bukhmastov-alex@ya.ru"});
-                    eventBus.fire(new OpenIntentEvent(Intent.createChooser(emailIntent, activity.getString(R.string.send_mail) + "...")));
-                } catch (Exception e) {
-                    notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                }
+                Intent emailIntent = new Intent(Intent.ACTION_SEND);
+                emailIntent.setType("message/rfc822");
+                emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{"bukhmastov-alex@ya.ru"});
+                eventBus.fire(new OpenIntentEvent(Intent.createChooser(emailIntent, activity.getString(R.string.send_mail) + "...")));
             });
         }
 
@@ -123,11 +131,7 @@ public class AboutFragmentPresenterImpl implements AboutFragmentPresenter {
             block_send_vk.setOnClickListener(v -> {
                 log.v(TAG, "send_vk clicked");
                 firebaseAnalyticsProvider.logBasicEvent(activity, "send vk clicked");
-                try {
-                    eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("https://vk.com/write9780714"))));
-                } catch (Exception e) {
-                    notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                }
+                eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("https://vk.com/write9780714"))));
             });
         }
 
@@ -136,15 +140,7 @@ public class AboutFragmentPresenterImpl implements AboutFragmentPresenter {
             block_rate.setOnClickListener(v -> {
                 log.v(TAG, "block_rate clicked");
                 firebaseAnalyticsProvider.logBasicEvent(activity, "app rate clicked");
-                try {
-                    eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.bukhmastov.cdoitmo"))));
-                } catch (Exception e) {
-                    try {
-                        eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.bukhmastov.cdoitmo"))));
-                    } catch (Exception e2) {
-                        notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                    }
-                }
+                eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.bukhmastov.cdoitmo"))).withIdentity(MARKET_IDENTITY));
             });
         }
 
@@ -153,11 +149,7 @@ public class AboutFragmentPresenterImpl implements AboutFragmentPresenter {
             block_github.setOnClickListener(v -> {
                 log.v(TAG, "block_github clicked");
                 firebaseAnalyticsProvider.logBasicEvent(activity, "view github clicked");
-                try {
-                    eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/bukhmastov/cdoitmo"))));
-                } catch (Exception e) {
-                    notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                }
+                eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/bukhmastov/cdoitmo"))));
             });
         }
 
@@ -166,11 +158,7 @@ public class AboutFragmentPresenterImpl implements AboutFragmentPresenter {
             block_donate.setOnClickListener(v -> {
                 log.v(TAG, "block_donate clicked  ┬─┬ ノ( ゜-゜ノ)");
                 firebaseAnalyticsProvider.logBasicEvent(activity, "donate clicked");
-                try {
-                    eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("http://yasobe.ru/na/cdoifmo"))));
-                } catch (Exception e) {
-                    notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                }
+                eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("http://yasobe.ru/na/cdoifmo"))));
             });
         }
     }

@@ -146,6 +146,7 @@ import com.bukhmastov.cdoitmo.object.impl.SettingsSchedule;
 import com.bukhmastov.cdoitmo.object.impl.SettingsScheduleAttestationsImpl;
 import com.bukhmastov.cdoitmo.object.impl.SettingsScheduleExamsImpl;
 import com.bukhmastov.cdoitmo.object.impl.SettingsScheduleLessonsImpl;
+import com.bukhmastov.cdoitmo.object.impl.TeacherSearchImpl;
 import com.bukhmastov.cdoitmo.object.impl.TimeRemainingWidgetImpl;
 import com.bukhmastov.cdoitmo.object.preference.Preference;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
@@ -351,6 +352,7 @@ public interface AppComponent {
     void inject(ScheduleLessonsHelperImpl scheduleLessonsHelper);
     void inject(ScheduleExamsImpl scheduleExams);
     void inject(ScheduleAttestationsImpl scheduleAttestations);
+    void inject(TeacherSearchImpl teacherSearch);
 
     // Utils
     void inject(AccountImpl account);

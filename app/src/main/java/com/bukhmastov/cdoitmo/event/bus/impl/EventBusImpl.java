@@ -47,69 +47,75 @@ public class EventBusImpl implements EventBus {
 
     @Override
     public void register(@NonNull Object object) {
-
-        log.get().v(TAG, "register | object = ", object.getClass().getName());
-
-        Map<EventType, Set<SubscriberEvent>> foundSubscribersMap;
         try {
-            foundSubscribersMap = SubscribersFinder.findAllSubscribers(object);
-        } catch (IllegalArgumentException e) {
-            log.get().w(TAG, "register | object = ", object.getClass().getName(), " | failed to find all subscribers | message = ", e.getMessage());
-            foundSubscribersMap = new HashMap<>();
-        }
+            log.get().v(TAG, "register | object = ", object.getClass().getName());
 
-        for (EventType type : foundSubscribersMap.keySet()) {
+            Map<EventType, Set<SubscriberEvent>> foundSubscribersMap;
+            try {
+                foundSubscribersMap = SubscribersFinder.findAllSubscribers(object);
+            } catch (IllegalArgumentException e) {
+                log.get().w(TAG, "register | object = ", object.getClass().getName(), " | failed to find all subscribers | message = ", e.getMessage());
+                foundSubscribersMap = new HashMap<>();
+            }
 
-            Set<SubscriberEvent> subscribers = subscribersByType.get(type);
+            for (EventType type : foundSubscribersMap.keySet()) {
 
-            if (subscribers == null) {
-                Set<SubscriberEvent> subscriberEvents = new CopyOnWriteArraySet<>();
-                subscribers = subscribersByType.putIfAbsent(type, subscriberEvents);
+                Set<SubscriberEvent> subscribers = subscribersByType.get(type);
+
                 if (subscribers == null) {
-                    subscribers = subscriberEvents;
+                    Set<SubscriberEvent> subscriberEvents = new CopyOnWriteArraySet<>();
+                    subscribers = subscribersByType.putIfAbsent(type, subscriberEvents);
+                    if (subscribers == null) {
+                        subscribers = subscriberEvents;
+                    }
+                }
+
+                Set<SubscriberEvent> foundSubscribers = foundSubscribersMap.get(type);
+
+                if (!subscribers.addAll(foundSubscribers)) {
+                    log.get().i(TAG, "register | object = ", object.getClass(), " | object has already been registered");
+                    return;
                 }
             }
-
-            Set<SubscriberEvent> foundSubscribers = foundSubscribersMap.get(type);
-
-            if (!subscribers.addAll(foundSubscribers)) {
-                log.get().i(TAG, "register | object = ", object.getClass(), " | object has already been registered");
-                return;
-            }
+        } catch (Exception e) {
+            log.get().w(TAG, "register | object = ", object.getClass().getName(), " | failed | exception = " + e.getMessage());
         }
     }
 
     @Override
     public void unregister(@NonNull Object object) {
-
-        log.get().v(TAG, "unregister | object = ", object.getClass().getName());
-
-        Map<EventType, Set<SubscriberEvent>> foundSubscribersMap;
         try {
-            foundSubscribersMap = SubscribersFinder.findAllSubscribers(object);
-        } catch (IllegalArgumentException e) {
-            log.get().w(TAG, "unregister | object = ", object.getClass().getName(), " | failed to find all subscribers | message = ", e.getMessage());
-            foundSubscribersMap = new HashMap<>();
-        }
+            log.get().v(TAG, "unregister | object = ", object.getClass().getName());
 
-        for (Map.Entry<EventType, Set<SubscriberEvent>> entry : foundSubscribersMap.entrySet()) {
-
-            Set<SubscriberEvent> currentSubscribers = subscribersByType.get(entry.getKey());
-
-            Collection<SubscriberEvent> eventMethodsInListener = entry.getValue();
-
-            if (currentSubscribers == null || !currentSubscribers.containsAll(eventMethodsInListener)) {
-                log.get().i(TAG, "unregister | object = ", object.getClass(), " | object was not registered");
-                return;
+            Map<EventType, Set<SubscriberEvent>> foundSubscribersMap;
+            try {
+                foundSubscribersMap = SubscribersFinder.findAllSubscribers(object);
+            } catch (IllegalArgumentException e) {
+                log.get().w(TAG, "unregister | object = ", object.getClass().getName(), " | failed to find all subscribers | message = ", e.getMessage());
+                foundSubscribersMap = new HashMap<>();
             }
 
-            for (SubscriberEvent subscriber : currentSubscribers) {
-                if (eventMethodsInListener.contains(subscriber)) {
-                    subscriber.invalidate();
+            for (Map.Entry<EventType, Set<SubscriberEvent>> entry : foundSubscribersMap.entrySet()) {
+
+                Set<SubscriberEvent> currentSubscribers = subscribersByType.get(entry.getKey());
+
+                Collection<SubscriberEvent> eventMethodsInListener = entry.getValue();
+
+                if (currentSubscribers == null || !currentSubscribers.containsAll(eventMethodsInListener)) {
+                    log.get().i(TAG, "unregister | object = ", object.getClass(), " | object was not registered");
+                    return;
                 }
-            }
 
-            currentSubscribers.removeAll(eventMethodsInListener);
+                for (SubscriberEvent subscriber : currentSubscribers) {
+                    if (eventMethodsInListener.contains(subscriber)) {
+                        subscriber.invalidate();
+                    }
+                }
+
+                currentSubscribers.removeAll(eventMethodsInListener);
+            }
+        } catch (Exception e) {
+            log.get().w(TAG, "unregister | object = ", object.getClass().getName(), " | failed | exception = " + e.getMessage());
         }
     }
 
@@ -120,30 +126,33 @@ public class EventBusImpl implements EventBus {
 
     @Override
     public void fire(@NonNull String tag, @NonNull Object event) {
+        try {
+            log.get().v(TAG, "fire | event = ", event.getClass().getName(), " | tag = ", tag);
 
-        log.get().v(TAG, "fire | event = ", event.getClass().getName(), " | tag = ", tag);
+            Set<Class<?>> classes = flattenHierarchy(event.getClass());
 
-        Set<Class<?>> classes = flattenHierarchy(event.getClass());
+            boolean dispatched = false;
 
-        boolean dispatched = false;
+            for (Class<?> clazz : classes) {
 
-        for (Class<?> clazz : classes) {
+                Set<SubscriberEvent> subscribers = subscribersByType.get(new EventType(tag, clazz));
 
-            Set<SubscriberEvent> subscribers = subscribersByType.get(new EventType(tag, clazz));
-
-            if (subscribers != null && !subscribers.isEmpty()) {
-                dispatched = true;
-                for (SubscriberEvent subscriber : subscribers) {
-                    if (subscriber.isValid()) {
-                        log.get().v(TAG, "fire | event = ", event.getClass().getName(), " | tag = ", tag, " | sending to ", subscriber.getTarget().getClass().getName(), "#", subscriber.getMethod().getName(), "()");
-                        subscriber.handle(event);
+                if (subscribers != null && !subscribers.isEmpty()) {
+                    dispatched = true;
+                    for (SubscriberEvent subscriber : subscribers) {
+                        if (subscriber.isValid()) {
+                            log.get().v(TAG, "fire | event = ", event.getClass().getName(), " | tag = ", tag, " | sending to ", subscriber.getTarget().getClass().getName(), "#", subscriber.getMethod().getName(), "()");
+                            subscriber.handle(event);
+                        }
                     }
                 }
             }
-        }
 
-        if (!dispatched) {
-            log.get().v(TAG, "fire | event = ", event.getClass().getName(), " | tag = ", tag, " | event was not delivered, there is no receivers for it");
+            if (!dispatched) {
+                log.get().v(TAG, "fire | event = ", event.getClass().getName(), " | tag = ", tag, " | event was not delivered, there is no receivers for it");
+            }
+        } catch (Exception e) {
+            log.get().w(TAG, "fire | event = ", event.getClass().getName(), " | tag = ", tag, " | failed | exception = " + e.getMessage());
         }
     }
 

@@ -57,13 +57,14 @@ public class App extends Application {
         super.onCreate();
         try {
             AppComponentProvider.getComponent(this).inject(this);
-            /*if (true) {
+            if (BuildConfig.DEBUG) {
                 storagePref.put(this, "pref_allow_collect_analytics", false);
                 storagePref.put(this, "pref_allow_send_reports", false);
                 storagePref.put(this, "pref_allow_collect_logs", true);
                 firebaseAnalyticsProvider.setEnabled(this, false);
                 firebaseCrashlyticsProvider.setEnabled(this, false);
-            }*/
+                log.i(TAG, "Currently running with debug mode, preferences has been reset to debug mode");
+            }
             eventBus.register(this);
             log.setEnabled(storagePref.get(this, "pref_allow_collect_logs", false));
             locale = textUtils.getLocale(this, storagePref);

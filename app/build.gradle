@@ -12,7 +12,12 @@ android {
         versionName "1.14.0"
     }
     buildTypes {
+        debug {
+            debuggable true
+            minifyEnabled false
+        }
         release {
+            debuggable false
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
@@ -24,7 +29,7 @@ android {
 }
 
 ext {
-    androidXVersion = "1.0.0-beta01"
+    androidXVersion = "1.0.0-rc01"
     firebaseCoreVersion = "16.0.1"
     firebaseMessagingVersion = "17.1.0"
     firebaseConfigVersion = "16.0.0"

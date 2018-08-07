@@ -11,5 +11,5 @@ public @interface Tag {
 
     String value() default DEFAULT;
 
-    String DEFAULT = "rx_bus_tag_default";
+    String DEFAULT = "tag_default";
 }

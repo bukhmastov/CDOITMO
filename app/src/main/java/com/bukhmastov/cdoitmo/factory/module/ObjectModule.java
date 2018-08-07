@@ -7,6 +7,7 @@ import com.bukhmastov.cdoitmo.object.Room101AddRequest;
 import com.bukhmastov.cdoitmo.object.SettingsScheduleAttestations;
 import com.bukhmastov.cdoitmo.object.SettingsScheduleExams;
 import com.bukhmastov.cdoitmo.object.SettingsScheduleLessons;
+import com.bukhmastov.cdoitmo.object.TeacherSearch;
 import com.bukhmastov.cdoitmo.object.TimeRemainingWidget;
 import com.bukhmastov.cdoitmo.object.impl.DaysRemainingWidgetImpl;
 import com.bukhmastov.cdoitmo.object.impl.ProtocolTrackerImpl;
@@ -15,6 +16,7 @@ import com.bukhmastov.cdoitmo.object.impl.Room101AddRequestImpl;
 import com.bukhmastov.cdoitmo.object.impl.SettingsScheduleAttestationsImpl;
 import com.bukhmastov.cdoitmo.object.impl.SettingsScheduleExamsImpl;
 import com.bukhmastov.cdoitmo.object.impl.SettingsScheduleLessonsImpl;
+import com.bukhmastov.cdoitmo.object.impl.TeacherSearchImpl;
 import com.bukhmastov.cdoitmo.object.impl.TimeRemainingWidgetImpl;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleAttestations;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleExams;
@@ -103,5 +105,11 @@ public class ObjectModule {
     @Singleton
     public ScheduleLessonsHelper provideScheduleLessonsHelper() {
         return new ScheduleLessonsHelperImpl();
+    }
+
+    @Provides
+    @Singleton
+    public TeacherSearch provideTeacherSearch() {
+        return new TeacherSearchImpl();
     }
 }

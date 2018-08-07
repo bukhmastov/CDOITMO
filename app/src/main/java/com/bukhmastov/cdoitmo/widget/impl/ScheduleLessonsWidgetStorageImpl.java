@@ -14,7 +14,7 @@ import javax.inject.Inject;
 
 public class ScheduleLessonsWidgetStorageImpl implements ScheduleLessonsWidgetStorage {
 
-    private final String TAG = "SLWidget";
+    private final String TAG = "SLWidgetStorage";
 
     @Inject
     Log log;

@@ -1,8 +1,9 @@
 package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
-import android.content.Context;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
+
+import com.bukhmastov.cdoitmo.object.TeacherSearch;
 import com.google.android.material.textfield.TextInputEditText;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -23,8 +24,6 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsModifyFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsTabHostFragmentPresenter;
-import com.bukhmastov.cdoitmo.network.model.Client;
-import com.bukhmastov.cdoitmo.object.schedule.Schedule;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessons;
 import com.bukhmastov.cdoitmo.object.schedule.ScheduleLessonsHelper;
 import com.bukhmastov.cdoitmo.util.Log;
@@ -63,6 +62,8 @@ public class ScheduleLessonsModifyFragmentPresenterImpl implements ScheduleLesso
     ScheduleLessons scheduleLessons;
     @Inject
     ScheduleLessonsHelper scheduleLessonsHelper;
+    @Inject
+    TeacherSearch teacherSearch;
     @Inject
     ScheduleLessonsTabHostFragmentPresenter tabHostPresenter;
     @Inject
@@ -372,8 +373,46 @@ public class ScheduleLessonsModifyFragmentPresenterImpl implements ScheduleLesso
                         final AutoCompleteTextView lesson_teacher = fragment.container().findViewById(R.id.lesson_teacher);
                         final ProgressBar lesson_teacher_bar = fragment.container().findViewById(R.id.lesson_teacher_bar);
                         final TeacherPickerAdapter teacherPickerAdapter = new TeacherPickerAdapter(activity, new ArrayList<>());
+                        final TeacherSearch.TeacherSearchCallback teacherSearchCallback = new TeacherSearch.TeacherSearchCallback() {
+                            @Override
+                            public void onState(int state) {
+                                switch (state) {
+                                    case TeacherSearch.REJECTED:
+                                    case TeacherSearch.ACCEPTED: break;
+                                    case TeacherSearch.SEARCHING:
+                                        thread.runOnUI(() -> lesson_teacher_bar.setVisibility(View.VISIBLE));
+                                        break;
+                                    case TeacherSearch.NOT_FOUND:
+                                    case TeacherSearch.FOUND:
+                                        thread.runOnUI(() -> lesson_teacher_bar.setVisibility(View.GONE));
+                                        break;
+                                }
+                            }
+                            @Override
+                            public void onSuccess(JSONObject json) {
+                                thread.runOnUI(() -> {
+                                    try {
+                                        teacherPickerAdapter.clear();
+                                        if (json.getString("type").equals("teachers")) {
+                                            JSONArray schedule = json.getJSONArray("schedule");
+                                            ArrayList<JSONObject> arrayList = new ArrayList<>();
+                                            for (int i = 0; i < schedule.length(); i++) {
+                                                arrayList.add(schedule.getJSONObject(i));
+                                            }
+                                            teacherPickerAdapter.addAll(arrayList);
+                                            teacherPickerAdapter.addTeachers(arrayList);
+                                            if (arrayList.size() > 0) {
+                                                lesson_teacher.showDropDown();
+                                            }
+                                        }
+                                    } catch (Exception ignore) {
+                                        // ignore
+                                    }
+                                });
+                            }
+                        };
                         if (lesson.teacher != null) {
-                            TeacherSearch.blocked = true;
+                            teacherSearch.blockNextCall();
                             lesson_teacher.setText(lesson.teacher);
                         }
                         teacherPickerAdapter.setNotifyOnChange(true);
@@ -386,40 +425,7 @@ public class ScheduleLessonsModifyFragmentPresenterImpl implements ScheduleLesso
                             public void onTextChanged(CharSequence s, int start, int before, int count) {}
                             @Override
                             public void afterTextChanged(Editable s) {
-                                final String query1 = s.toString().trim();
-                                teacherPickerAdapter.clear();
-                                lesson_teacher.dismissDropDown();
-                                if (!query1.isEmpty()) {
-                                    TeacherSearch.search(activity, thread, scheduleLessons, query1, lesson_teacher_bar, new TeacherSearch.response() {
-                                        @Override
-                                        public void onPermitted() {
-                                            lesson.teacher = query1;
-                                            lesson.teacher_id = "";
-                                        }
-                                        @Override
-                                        public void onSuccess(final JSONObject json) {
-                                            thread.runOnUI(() -> {
-                                                try {
-                                                    teacherPickerAdapter.clear();
-                                                    if (json.getString("type").equals("teachers")) {
-                                                        JSONArray schedule = json.getJSONArray("schedule");
-                                                        ArrayList<JSONObject> arrayList = new ArrayList<>();
-                                                        for (int i = 0; i < schedule.length(); i++) {
-                                                            arrayList.add(schedule.getJSONObject(i));
-                                                        }
-                                                        teacherPickerAdapter.addAll(arrayList);
-                                                        teacherPickerAdapter.addTeachers(arrayList);
-                                                        if (arrayList.size() > 0) {
-                                                            lesson_teacher.showDropDown();
-                                                        }
-                                                    }
-                                                } catch (Exception ignore) {
-                                                    // ignore
-                                                }
-                                            });
-                                        }
-                                    });
-                                }
+                                teacherSearch.search(s.toString().trim(), teacherSearchCallback);
                             }
                         });
                         lesson_teacher.setOnItemClickListener((parent, view, position, id) -> {
@@ -428,8 +434,8 @@ public class ScheduleLessonsModifyFragmentPresenterImpl implements ScheduleLesso
                                 if (item == null) throw new Exception("Teacher item is null");
                                 lesson.teacher = item.getString("person");
                                 lesson.teacher_id = String.valueOf(item.getInt("pid"));
-                                TeacherSearch.blocked = true;
-                                TeacherSearch.lastQuery = lesson.teacher;
+                                teacherSearch.blockNextCall();
+                                teacherSearch.setQuery(lesson.teacher);
                                 lesson_teacher.setText(lesson.teacher);
                                 lesson_teacher.dismissDropDown();
                             } catch (Exception e) {
@@ -658,68 +664,5 @@ public class ScheduleLessonsModifyFragmentPresenterImpl implements ScheduleLesso
         public String room;
         public String building;
         public String cdoitmo_type;
-    }
-    
-    private static class TeacherSearch {
-
-        interface response {
-            void onPermitted();
-            void onSuccess(JSONObject json);
-        }
-        private static Client.Request requestHandle = null;
-        static boolean blocked = false;
-        private static String lastQuery = "";
-
-        public static void search(final Context context, final Thread thread, final ScheduleLessons scheduleLessons, final String query, final ProgressBar progressBar, final response delegate) {
-            thread.run(() -> {
-                if (requestHandle != null) {
-                    requestHandle.cancel();
-                }
-                boolean allowed = !lastQuery.equals(query);
-                if (allowed) {
-                    try {
-                        new JSONObject(query);
-                        allowed = false;
-                    } catch (Exception ignore) {
-                        // ignore
-                    }
-                }
-                if (blocked || !allowed) {
-                    blocked = false;
-                    thread.runOnUI(() -> progressBar.setVisibility(View.GONE));
-                    return;
-                }
-                delegate.onPermitted();
-                thread.runOnUI(() -> progressBar.setVisibility(View.VISIBLE));
-                scheduleLessons.search(context, new Schedule.Handler() {
-                    @Override
-                    public void onSuccess(JSONObject json, boolean fromCache) {
-                        thread.runOnUI(() -> progressBar.setVisibility(View.GONE));
-                        delegate.onSuccess(json);
-                    }
-                    @Override
-                    public void onFailure(int state) {
-                        this.onFailure(0, null, state);
-                    }
-                    @Override
-                    public void onFailure(int statusCode, Client.Headers headers, int state) {
-                        thread.runOnUI(() -> progressBar.setVisibility(View.GONE));
-                    }
-                    @Override
-                    public void onProgress(int state) {}
-                    @Override
-                    public void onNewRequest(Client.Request request) {
-                        requestHandle = request;
-                    }
-                    @Override
-                    public void onCancelRequest() {
-                        if (requestHandle != null) {
-                            requestHandle.cancel();
-                        }
-                    }
-                }, query);
-                lastQuery = query;
-            });
-        }
     }
 }
