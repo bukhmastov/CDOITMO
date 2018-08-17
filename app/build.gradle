@@ -31,9 +31,9 @@ android {
 ext {
     androidXVersion = "1.0.0-rc01"
     firebaseCoreVersion = "16.0.1"
-    firebaseMessagingVersion = "17.1.0"
+    firebaseMessagingVersion = "17.3.0"
     firebaseConfigVersion = "16.0.0"
-    firebasePerfVersion = "16.0.0"
+    firebasePerfVersion = "16.1.0"
     firebaseCrashlyticsVersion = "2.9.4"
     googlePlayServicesVersion = "15.0.1"
     okhttpVersion = "3.10.0"

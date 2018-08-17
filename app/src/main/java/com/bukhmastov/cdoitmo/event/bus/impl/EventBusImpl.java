@@ -24,6 +24,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import javax.inject.Inject;
 
 import dagger.Lazy;
+import io.reactivex.plugins.RxJavaPlugins;
 
 public class EventBusImpl implements EventBus {
 
@@ -42,6 +43,9 @@ public class EventBusImpl implements EventBus {
 
     public EventBusImpl(String identifier) {
         AppComponentProvider.getComponent().inject(this);
+        if (RxJavaPlugins.getErrorHandler() == null) {
+            RxJavaPlugins.setErrorHandler(throwable -> log.get().exception("RxJava caught uncaught exception", throwable));
+        }
         this.identifier = identifier;
     }
 

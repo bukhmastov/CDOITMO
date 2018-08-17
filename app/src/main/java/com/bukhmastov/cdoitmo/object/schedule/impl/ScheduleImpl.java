@@ -31,6 +31,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -408,10 +409,10 @@ public abstract class ScheduleImpl implements Schedule {
     protected void clearLocalCache() {
         log.v(TAG, "clearLocalCache");
         synchronized (localCache) {
-            Set<String> keySet = localCache.keySet();
-            for (String key : keySet) {
-                if (key.startsWith(getType())) {
-                    localCache.remove(key);
+            for (Iterator<Map.Entry<String, String>> it = localCache.entrySet().iterator(); it.hasNext();) {
+                Map.Entry<String, String> entry = it.next();
+                if (entry.getKey().startsWith(getType())) {
+                    it.remove();
                 }
             }
         }

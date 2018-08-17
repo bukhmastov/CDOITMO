@@ -77,16 +77,18 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
                         }
                         // fetch only right exams
                         JSONObject jsonConverted = new JSONObject(json.toString());
-                        JSONArray examsConverted = new JSONArray();
-                        JSONArray exams = json.getJSONArray("schedule");
-                        for (int i = 0; i < exams.length(); i++) {
-                            JSONObject exam = exams.getJSONObject(i);
-                            String type = exam.has("type") ? exam.getString("type") : "exam";
-                            if (ScheduleExamsTabFragmentPresenterImpl.this.type == 0 && "exam".equals(type) || ScheduleExamsTabFragmentPresenterImpl.this.type == 1 && "credit".equals(type)) {
-                                examsConverted.put(exam);
+                        if (jsonConverted.has("type") && !"teachers".equals(jsonConverted.getString("type"))) {
+                            JSONArray examsConverted = new JSONArray();
+                            JSONArray exams = json.getJSONArray("schedule");
+                            for (int i = 0; i < exams.length(); i++) {
+                                JSONObject exam = exams.getJSONObject(i);
+                                String type = exam.has("type") ? exam.getString("type") : "exam";
+                                if (ScheduleExamsTabFragmentPresenterImpl.this.type == 0 && "exam".equals(type) || ScheduleExamsTabFragmentPresenterImpl.this.type == 1 && "credit".equals(type)) {
+                                    examsConverted.put(exam);
+                                }
                             }
+                            jsonConverted.put("schedule", examsConverted);
                         }
-                        jsonConverted.put("schedule", examsConverted);
                         // get rva adapter
                         final ScheduleExamsRVA adapter = new ScheduleExamsRVA(activity, jsonConverted, type, data -> {
                             tabHostPresenter.setQuery(data);
