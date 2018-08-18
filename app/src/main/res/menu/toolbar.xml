@@ -45,6 +45,13 @@
         android:visible="false" />
 
     <item
+        android:id="@+id/action_restore"
+        android:title="@string/reset_preferences"
+        android:icon="@drawable/ic_settings_restore"
+        app:showAsAction="ifRoom"
+        android:visible="false" />
+
+    <item
         android:id="@+id/action_about"
         android:title="@string/about"
         android:icon="@drawable/ic_toolbar_info"

@@ -1,17 +1,28 @@
 package com.bukhmastov.cdoitmo.fragment.settings;
 
-import android.content.Context;
-import android.os.Build;
-import androidx.fragment.app.Fragment;
+import android.app.AlertDialog;
+import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 
 import com.bukhmastov.cdoitmo.R;
+import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.fragment.AboutFragment;
-import com.bukhmastov.cdoitmo.object.preference.Preference;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceHeader;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
+import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.StoragePref;
+import com.bukhmastov.cdoitmo.util.Theme;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.inject.Inject;
+
+import androidx.fragment.app.Fragment;
+import dagger.Lazy;
 
 public class SettingsFragment extends SettingsTemplateHeadersFragment {
 
@@ -43,19 +54,76 @@ public class SettingsFragment extends SettingsTemplateHeadersFragment {
         return this;
     }
 
-    public static void applyDefaultValues(final Context context, final StoragePref storagePref) {
-        if (!storagePref.get(context, "pref_default_values_applied", false)) {
-            storagePref.put(context, "pref_default_values_applied", true);
-            for (Preference preference : SettingsGeneralFragment.preferences) preference.applyDefaultValue(context);
-            for (Preference preference : SettingsCacheFragment.preferences) preference.applyDefaultValue(context);
-            for (Preference preference : SettingsNotificationsFragment.preferences) preference.applyDefaultValue(context);
-            for (Preference preference : SettingsERegisterFragment.preferences) preference.applyDefaultValue(context);
-            for (Preference preference : SettingsProtocolFragment.preferences) preference.applyDefaultValue(context);
-            for (Preference preference : SettingsScheduleLessonsFragment.preferences) preference.applyDefaultValue(context);
-            for (Preference preference : SettingsScheduleExamsFragment.preferences) preference.applyDefaultValue(context);
-            for (Preference preference : SettingsScheduleAttestationsFragment.preferences) preference.applyDefaultValue(context);
-            for (Preference preference : SettingsSystemsFragment.preferences) preference.applyDefaultValue(context);
-            storagePref.put(context, "pref_notify_type", Build.VERSION.SDK_INT <= Build.VERSION_CODES.M ? "0" : "1");
+    @Inject
+    Lazy<StoragePref> storagePref;
+    @Inject
+    Lazy<Thread> thread;
+    @Inject
+    Lazy<Theme> theme;
+    @Inject
+    Lazy<NotificationMessage> notificationMessage;
+    @Inject
+    Lazy<Static> staticUtil;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        AppComponentProvider.getComponent().inject(this);
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        try {
+            if (activity.toolbar != null) {
+                MenuItem action = activity.toolbar.findItem(R.id.action_restore);
+                if (action != null) {
+                    action.setVisible(true);
+                    action.setOnMenuItemClickListener(item -> {
+                        new AlertDialog.Builder(activity)
+                                .setIcon(R.drawable.ic_settings_restore_black)
+                                .setTitle(R.string.reset_preferences)
+                                .setMessage(R.string.reset_preference_message)
+                                .setNegativeButton(R.string.do_cancel, null)
+                                .setPositiveButton(R.string.proceed, (dialog, which) -> resetPreferences())
+                                .create().show();
+                        return false;
+                    });
+                }
+            }
+        } catch (Exception e){
+            log.exception(e);
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        try {
+            if (activity.toolbar != null) {
+                MenuItem action = activity.toolbar.findItem(R.id.action_restore);
+                if (action != null) {
+                    action.setVisible(false);
+                }
+            }
+        } catch (Exception e){
+            log.exception(e);
+        }
+    }
+
+    private void resetPreferences() {
+        thread.get().run(() -> {
+            storagePref.get().reset(activity);
+            storagePref.get().applyDebug(activity);
+            theme.get().updateAppTheme(activity);
+            notificationMessage.get().snackBar(
+                    activity,
+                    activity.getString(R.string.restart_required),
+                    activity.getString(R.string.restart),
+                    NotificationMessage.LENGTH_LONG,
+                    view -> staticUtil.get().reLaunch(activity)
+            );
+        });
     }
 }

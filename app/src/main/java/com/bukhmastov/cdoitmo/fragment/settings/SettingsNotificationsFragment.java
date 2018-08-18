@@ -8,6 +8,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import dagger.Lazy;
+
 import android.text.TextUtils;
 
 import com.bukhmastov.cdoitmo.R;
@@ -122,7 +124,7 @@ public class SettingsNotificationsFragment extends SettingsTemplatePreferencesFr
     }
 
     @Inject
-    StoragePref storagePref;
+    Lazy<StoragePref> storagePref;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -153,7 +155,7 @@ public class SettingsNotificationsFragment extends SettingsTemplatePreferencesFr
                     if (RingtoneHelper.preference_key != null) {
                         Uri ringtone = data.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI);
                         String value = ringtone == null ? "" : ringtone.toString();
-                        storagePref.put(activity, RingtoneHelper.preference_key, value);
+                        storagePref.get().put(activity, RingtoneHelper.preference_key, value);
                         RingtoneHelper.callback.onSetSummary(activity, value);
                         RingtoneHelper.preference_key = null;
                         RingtoneHelper.callback = null;

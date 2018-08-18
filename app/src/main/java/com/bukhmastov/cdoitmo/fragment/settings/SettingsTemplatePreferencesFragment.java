@@ -88,7 +88,7 @@ public abstract class SettingsTemplatePreferencesFragment extends ConnectedFragm
                             PreferenceSwitch.toggleDependencies(activity, preferenceSwitch, injectProvider.getStoragePref().get(activity, preference.key, (Boolean) preference.defaultValue));
                             for (Preference pref : getPreferences()) {
                                 if (dependencies.contains(pref.key)) {
-                                    pref.setPreferenceDependency(preferenceSwitch);
+                                    pref.addPreferenceDependency(preferenceSwitch);
                                 }
                             }
                         }

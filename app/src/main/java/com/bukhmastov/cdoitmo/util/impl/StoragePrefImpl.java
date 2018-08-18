@@ -2,14 +2,33 @@ package com.bukhmastov.cdoitmo.util.impl;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.preference.PreferenceManager;
 import androidx.annotation.NonNull;
 
+import com.bukhmastov.cdoitmo.BuildConfig;
+import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
+import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
+import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
+import com.bukhmastov.cdoitmo.fragment.settings.SettingsCacheFragment;
+import com.bukhmastov.cdoitmo.fragment.settings.SettingsERegisterFragment;
+import com.bukhmastov.cdoitmo.fragment.settings.SettingsGeneralFragment;
+import com.bukhmastov.cdoitmo.fragment.settings.SettingsNotificationsFragment;
+import com.bukhmastov.cdoitmo.fragment.settings.SettingsProtocolFragment;
+import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleAttestationsFragment;
+import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleExamsFragment;
+import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleLessonsFragment;
+import com.bukhmastov.cdoitmo.fragment.settings.SettingsSystemsFragment;
+import com.bukhmastov.cdoitmo.fragment.settings.SettingsUncategorized;
+import com.bukhmastov.cdoitmo.object.preference.Preference;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 import javax.inject.Inject;
@@ -19,12 +38,28 @@ import dagger.Lazy;
 public class StoragePrefImpl implements StoragePref {
 
     private static final String TAG = "StoragePref";
+    private Collection<Preference> preferences = new ArrayList<>();
 
     @Inject
     Lazy<Log> log;
+    @Inject
+    Lazy<FirebaseAnalyticsProvider> firebaseAnalyticsProvider;
+    @Inject
+    Lazy<FirebaseCrashlyticsProvider> firebaseCrashlyticsProvider;
 
     public StoragePrefImpl() {
         AppComponentProvider.getComponent().inject(this);
+        preferences.clear();
+        preferences.addAll(SettingsGeneralFragment.preferences);
+        preferences.addAll(SettingsCacheFragment.preferences);
+        preferences.addAll(SettingsNotificationsFragment.preferences);
+        preferences.addAll(SettingsERegisterFragment.preferences);
+        preferences.addAll(SettingsProtocolFragment.preferences);
+        preferences.addAll(SettingsScheduleLessonsFragment.preferences);
+        preferences.addAll(SettingsScheduleExamsFragment.preferences);
+        preferences.addAll(SettingsScheduleAttestationsFragment.preferences);
+        preferences.addAll(SettingsSystemsFragment.preferences);
+        preferences.addAll(SettingsUncategorized.preferences);
     }
 
     @Override
@@ -133,5 +168,44 @@ public class StoragePrefImpl implements StoragePref {
             }
         }
         editor.apply();
+    }
+
+    @Override
+    public void applyDebug(Context context) {
+        if (BuildConfig.DEBUG) {
+            put(context, "pref_allow_collect_analytics", false);
+            put(context, "pref_allow_send_reports", false);
+            put(context, "pref_allow_collect_logs", true);
+            firebaseAnalyticsProvider.get().setEnabled(context, false);
+            firebaseCrashlyticsProvider.get().setEnabled(context, false);
+            log.get().i(TAG, "Currently running with debug mode, preferences has been reset to debug mode");
+        }
+    }
+
+    @Override
+    public void resetIfNeeded(ConnectedActivity activity) {
+        if (!get(activity, "pref_default_values_applied", false)) {
+            put(activity, "pref_default_values_applied", true);
+            reset(activity, false);
+        }
+    }
+
+    @Override
+    public void reset(ConnectedActivity activity) {
+        reset(activity, true);
+    }
+
+    private void reset(ConnectedActivity activity, boolean fire) {
+        for (Preference preference : preferences) {
+            Object previousValue = fire ? preference.getValue(activity) : null;
+            preference.applyDefaultValue(activity);
+            if (fire) {
+                Object currentValue = preference.getValue(activity);
+                if (!Objects.equals(previousValue, currentValue)) {
+                    preference.onPreferenceChanged(activity);
+                }
+            }
+        }
+        put(activity, "pref_notify_type", Build.VERSION.SDK_INT <= Build.VERSION_CODES.M ? "0" : "1");
     }
 }

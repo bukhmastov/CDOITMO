@@ -15,6 +15,7 @@ import com.bukhmastov.cdoitmo.object.preference.PreferenceEditText;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceList;
 import com.bukhmastov.cdoitmo.object.preference.PreferenceSwitch;
 import com.bukhmastov.cdoitmo.provider.InjectProvider;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -36,7 +37,7 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
                     new ThemeDialog(activity, theme, (theme1, desc) -> injectProvider.getThread().run(() -> {
                         injectProvider.getStoragePref().put(activity, "pref_theme", theme1);
                         callback.onSetSummary(activity, desc);
-                        injectProvider.getNotificationMessage().snackBar(activity, activity.getString(R.string.restart_required), activity.getString(R.string.restart), view -> {
+                        injectProvider.getNotificationMessage().snackBar(activity, activity.getString(R.string.restart_required), activity.getString(R.string.restart), NotificationMessage.LENGTH_LONG, view -> {
                             injectProvider.getTheme().updateAppTheme(activity);
                             injectProvider.getStaticUtil().reLaunch(activity);
                         });

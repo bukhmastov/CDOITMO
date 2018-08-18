@@ -124,6 +124,7 @@ import com.bukhmastov.cdoitmo.fragment.presenter.impl.UniversityFragmentPresente
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.UniversityNewsFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.UniversityPersonsFragmentPresenterImpl;
 import com.bukhmastov.cdoitmo.fragment.presenter.impl.UniversityUnitsFragmentPresenterImpl;
+import com.bukhmastov.cdoitmo.fragment.settings.SettingsFragment;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsNotificationsFragment;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsTemplateHeadersFragment;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsTemplatePreferencesFragment;
@@ -259,6 +260,7 @@ public interface AppComponent {
     void inject(UniversityUnitsFragment universityUnitsFragment);
     void inject(SettingsTemplateHeadersFragment settingsTemplateHeadersFragment);
     void inject(SettingsTemplatePreferencesFragment settingsTemplatePreferencesFragment);
+    void inject(SettingsFragment settingsFragment);
     void inject(SettingsNotificationsFragment settingsNotificationsFragment);
     // Fragment presenters
     void inject(AboutFragmentPresenterImpl aboutFragmentPresenter);

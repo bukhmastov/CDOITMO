@@ -342,7 +342,7 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
                 // apply compatibility changes
                 Migration.migrate(activity, injectProvider);
                 // set default preferences
-                SettingsFragment.applyDefaultValues(activity, storagePref);
+                storagePref.resetIfNeeded(activity);
                 // enable/disable firebase
                 firebaseCrashlyticsProvider.setEnabled(activity);
                 firebaseAnalyticsProvider.setEnabled(activity);

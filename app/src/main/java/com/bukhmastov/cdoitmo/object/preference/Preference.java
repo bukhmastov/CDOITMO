@@ -4,6 +4,8 @@ import android.content.Context;
 import androidx.annotation.LayoutRes;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
+import dagger.Lazy;
+
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -37,27 +39,27 @@ public abstract class Preference {
     public @StringRes int summary = 0;
 
     @Inject
-    Log log;
+    Lazy<Log> log;
     @Inject
-    Thread thread;
+    Lazy<Thread> thread;
     @Inject
-    Storage storage;
+    Lazy<Storage> storage;
     @Inject
-    StoragePref storagePref;
+    Lazy<StoragePref> storagePref;
     @Inject
-    DeIfmoRestClient deIfmoRestClient;
+    Lazy<DeIfmoRestClient> deIfmoRestClient;
     @Inject
-    ProtocolTracker protocolTracker;
+    Lazy<ProtocolTracker> protocolTracker;
     @Inject
-    NotificationMessage notificationMessage;
+    Lazy<NotificationMessage> notificationMessage;
     @Inject
-    Static staticUtil;
+    Lazy<Static> staticUtil;
     @Inject
-    TextUtils textUtils;
+    Lazy<TextUtils> textUtils;
     @Inject
-    FirebaseAnalyticsProvider firebaseAnalyticsProvider;
+    Lazy<FirebaseAnalyticsProvider> firebaseAnalyticsProvider;
     @Inject
-    FirebaseCrashlyticsProvider firebaseCrashlyticsProvider;
+    Lazy<FirebaseCrashlyticsProvider> firebaseCrashlyticsProvider;
 
     protected final ArrayList<PreferenceSwitch> preferenceDependencies = new ArrayList<>();
 
@@ -73,21 +75,36 @@ public abstract class Preference {
         this.summary = summary;
     }
 
-    public void setPreferenceDependency(PreferenceSwitch preferenceDependency) {
+    public void addPreferenceDependency(PreferenceSwitch preferenceDependency) {
         if (preferenceDependency != null) {
             preferenceDependencies.add(preferenceDependency);
         }
     }
 
+    public Object getValue(final Context context) {
+        if (defaultValue == null) {
+            return null;
+        }
+        if (defaultValue instanceof String) {
+            return storagePref.get().get(context, key, (String) defaultValue);
+        } else if (defaultValue instanceof Integer) {
+            return storagePref.get().get(context, key, (Integer) defaultValue);
+        } else if (defaultValue instanceof Boolean) {
+            return storagePref.get().get(context, key, (Boolean) defaultValue);
+        }
+        return null;
+    }
+
     public void applyDefaultValue(final Context context) {
-        if (defaultValue != null && !storagePref.exists(context, key)) {
-            if (defaultValue instanceof String) {
-                storagePref.put(context, key, (String) defaultValue);
-            } else if (defaultValue instanceof Integer) {
-                storagePref.put(context, key, (Integer) defaultValue);
-            } else if (defaultValue instanceof Boolean) {
-                storagePref.put(context, key, (Boolean) defaultValue);
-            }
+        if (defaultValue == null) {
+            return;
+        }
+        if (defaultValue instanceof String) {
+            storagePref.get().put(context, key, (String) defaultValue);
+        } else if (defaultValue instanceof Integer) {
+            storagePref.get().put(context, key, (Integer) defaultValue);
+        } else if (defaultValue instanceof Boolean) {
+            storagePref.get().put(context, key, (Boolean) defaultValue);
         }
     }
 
@@ -98,45 +115,45 @@ public abstract class Preference {
         return false;
     }
 
-    protected void onPreferenceChanged(final ConnectedActivity activity) {
+    public void onPreferenceChanged(final ConnectedActivity activity) {
         if (key == null) {
             return;
         }
-        log.d(TAG, "onPreferenceChanged | key=", key);
+        log.get().d(TAG, "onPreferenceChanged | key=", key);
         switch (key) {
             case "pref_use_notifications":
             case "pref_notify_frequency":
             case "pref_notify_network_unmetered":
-                thread.run(Thread.BACKGROUND, () -> protocolTracker.restart(activity));
+                thread.get().run(Thread.BACKGROUND, () -> protocolTracker.get().restart(activity));
                 break;
             case "pref_protocol_changes_track":
-                if (storagePref.get(activity, "pref_protocol_changes_track", true)) {
-                    protocolTracker.setup(activity, deIfmoRestClient, 0);
+                if (storagePref.get().get(activity, "pref_protocol_changes_track", true)) {
+                    protocolTracker.get().setup(activity, deIfmoRestClient.get(), 0);
                 } else {
-                    storage.clear(activity, Storage.CACHE, Storage.USER, "protocol#log");
+                    storage.get().clear(activity, Storage.CACHE, Storage.USER, "protocol#log");
                 }
                 break;
             case "pref_allow_send_reports":
-                firebaseCrashlyticsProvider.setEnabled(activity, storagePref.get(activity, "pref_allow_send_reports", true));
+                firebaseCrashlyticsProvider.get().setEnabled(activity, storagePref.get().get(activity, "pref_allow_send_reports", true));
                 break;
             case "pref_allow_collect_analytics":
-                firebaseAnalyticsProvider.setEnabled(activity, storagePref.get(activity, "pref_allow_collect_analytics", true), true);
+                firebaseAnalyticsProvider.get().setEnabled(activity, storagePref.get().get(activity, "pref_allow_collect_analytics", true), true);
                 break;
             case "pref_use_cache":
-                if (!storagePref.get(activity, "pref_use_cache", true)) {
-                    storage.clear(activity, Storage.CACHE, Storage.USER);
+                if (!storagePref.get().get(activity, "pref_use_cache", true)) {
+                    storage.get().clear(activity, Storage.CACHE, Storage.USER);
                 }
                 break;
             case "pref_use_university_cache":
-                if (!storagePref.get(activity, "pref_use_university_cache", false)) {
-                    storage.clear(activity, Storage.CACHE, Storage.GLOBAL, "university");
+                if (!storagePref.get().get(activity, "pref_use_university_cache", false)) {
+                    storage.get().clear(activity, Storage.CACHE, Storage.GLOBAL, "university");
                 }
                 break;
             case "pref_group_force_override":
-                storagePref.put(activity, "pref_group_force_override", textUtils.prettifyGroupNumber(storagePref.get(activity, "pref_group_force_override", "")));
+                storagePref.get().put(activity, "pref_group_force_override", textUtils.get().prettifyGroupNumber(storagePref.get().get(activity, "pref_group_force_override", "")));
                 break;
             case "pref_lang":
-                notificationMessage.snackBar(activity, activity.getString(R.string.restart_required), activity.getString(R.string.restart), v -> staticUtil.reLaunch(activity));
+                notificationMessage.get().snackBar(activity, activity.getString(R.string.restart_required), activity.getString(R.string.restart), NotificationMessage.LENGTH_LONG, v -> staticUtil.get().reLaunch(activity));
                 break;
         }
     }

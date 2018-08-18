@@ -1,6 +1,9 @@
 package com.bukhmastov.cdoitmo.util;
 
 import android.content.Context;
+
+import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
+
 import androidx.annotation.NonNull;
 
 import java.util.regex.Pattern;
@@ -30,4 +33,10 @@ public interface StoragePref {
     void clearExceptPref(@NonNull Context context);
 
     void clear(@NonNull Context context, @NonNull Pattern pattern);
+
+    void applyDebug(@NonNull Context context);
+
+    void resetIfNeeded(@NonNull ConnectedActivity activity);
+
+    void reset(@NonNull ConnectedActivity activity);
 }

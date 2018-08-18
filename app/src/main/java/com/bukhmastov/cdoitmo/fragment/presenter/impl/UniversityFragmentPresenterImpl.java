@@ -3,6 +3,8 @@ package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 import android.content.Intent;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
+
+import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.google.android.material.tabs.TabLayout;
 import androidx.fragment.app.FragmentManager;
 import androidx.viewpager.widget.ViewPager;
@@ -47,6 +49,14 @@ public class UniversityFragmentPresenterImpl implements UniversityFragmentPresen
     public UniversityFragmentPresenterImpl() {
         AppComponentProvider.getComponent().inject(this);
         eventBus.register(this);
+    }
+
+    @Event
+    public void onClearCacheEvent(ClearCacheEvent event) {
+        if (event.isNot("university")) {
+            return;
+        }
+        tabSelected = -1;
     }
 
     @Event

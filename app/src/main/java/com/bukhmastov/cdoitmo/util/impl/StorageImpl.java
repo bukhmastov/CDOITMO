@@ -3,6 +3,7 @@ package com.bukhmastov.cdoitmo.util.impl;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import dagger.Lazy;
 
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebasePerformanceProvider;
@@ -30,7 +31,7 @@ public class StorageImpl implements Storage {
     @Inject
     StorageLocalCache storageLocalCache;
     @Inject
-    StoragePref storagePref;
+    Lazy<StoragePref> storagePref;
     @Inject
     FirebasePerformanceProvider firebasePerformanceProvider;
 
@@ -48,7 +49,7 @@ public class StorageImpl implements Storage {
                 log.v(TAG, "put | mode=", mode, " | type=", type, " | path=", path, " | context is null");
                 return false;
             }
-            if (CACHE.equals(mode) && !storagePref.get(context, "pref_use_cache", true)) {
+            if (CACHE.equals(mode) && !storagePref.get().get(context, "pref_use_cache", true)) {
                 return false;
             }
             File file = new File(getFileLocation(context, mode, type, path, true));
