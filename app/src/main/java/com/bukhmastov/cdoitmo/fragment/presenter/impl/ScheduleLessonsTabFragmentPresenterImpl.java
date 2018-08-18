@@ -16,9 +16,11 @@ import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
+import com.bukhmastov.cdoitmo.activity.search.ScheduleLessonsSearchActivity;
 import com.bukhmastov.cdoitmo.adapter.rva.ScheduleLessonsRVA;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
+import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.exception.SilentException;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
@@ -204,6 +206,7 @@ public class ScheduleLessonsTabFragmentPresenterImpl implements ScheduleLessonsT
                             case Schedule.FAILED_EMPTY_QUERY: {
                                 final ViewGroup view = (ViewGroup) inflate(activity, R.layout.layout_schedule_empty_query);
                                 if (view != null) {
+                                    view.findViewById(R.id.open_search).setOnClickListener(v -> eventBus.fire(new OpenActivityEvent(ScheduleLessonsSearchActivity.class)));
                                     view.findViewById(R.id.open_settings).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleLessonsFragment.class, null));
                                     draw(view);
                                 }

@@ -162,6 +162,7 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
                             }
                             case Schedule.FAILED_EMPTY_QUERY: {
                                 final ViewGroup view = (ViewGroup) fragment.inflate(R.layout.layout_schedule_empty_query);
+                                view.findViewById(R.id.open_search).setOnClickListener(v -> eventBus.fire(new OpenActivityEvent(ScheduleAttestationsSearchActivity.class)));
                                 view.findViewById(R.id.open_settings).setOnClickListener(v -> activity.openActivity(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleAttestationsFragment.class, null));
                                 fragment.draw(view);
                                 break;
