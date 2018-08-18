@@ -2,8 +2,8 @@ package com.bukhmastov.cdoitmo.util.impl;
 
 import android.app.Activity;
 import android.content.Context;
-import com.google.android.material.navigation.NavigationView;
-import androidx.appcompat.app.AlertDialog;
+import android.support.design.widget.NavigationView;
+import android.support.v7.app.AlertDialog;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;

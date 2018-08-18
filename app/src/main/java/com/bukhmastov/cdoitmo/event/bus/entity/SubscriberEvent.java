@@ -1,6 +1,6 @@
 package com.bukhmastov.cdoitmo.event.bus.entity;
 
-import androidx.annotation.NonNull;
+import android.support.annotation.NonNull;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

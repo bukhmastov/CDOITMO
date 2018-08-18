@@ -1,7 +1,7 @@
 package com.bukhmastov.cdoitmo.fragment;
 
 import android.content.Context;
-import androidx.fragment.app.Fragment;
+import android.support.v4.app.Fragment;
 
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;

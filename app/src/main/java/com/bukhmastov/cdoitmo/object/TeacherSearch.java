@@ -5,7 +5,7 @@ import org.json.JSONObject;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-import androidx.annotation.IntDef;
+import android.support.annotation.IntDef;
 
 public interface TeacherSearch {
 

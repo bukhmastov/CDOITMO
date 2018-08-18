@@ -1,6 +1,6 @@
 package com.bukhmastov.cdoitmo.event.bus;
 
-import androidx.annotation.NonNull;
+import android.support.annotation.NonNull;
 
 public interface EventBus {
 

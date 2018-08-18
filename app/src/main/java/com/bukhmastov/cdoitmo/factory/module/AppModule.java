@@ -1,7 +1,7 @@
 package com.bukhmastov.cdoitmo.factory.module;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
+import android.support.annotation.NonNull;
 
 import javax.inject.Singleton;
 

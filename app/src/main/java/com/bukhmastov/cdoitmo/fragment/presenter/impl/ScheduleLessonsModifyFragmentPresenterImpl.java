@@ -1,10 +1,9 @@
 package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
 import android.os.Bundle;
-import androidx.annotation.Nullable;
-
 import com.bukhmastov.cdoitmo.object.TeacherSearch;
-import com.google.android.material.textfield.TextInputEditText;
+import android.support.annotation.Nullable;
+import android.support.design.widget.TextInputEditText;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;

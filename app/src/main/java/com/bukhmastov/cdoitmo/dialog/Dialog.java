@@ -1,7 +1,7 @@
 package com.bukhmastov.cdoitmo.dialog;
 
 import android.content.Context;
-import androidx.annotation.LayoutRes;
+import android.support.annotation.LayoutRes;
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;

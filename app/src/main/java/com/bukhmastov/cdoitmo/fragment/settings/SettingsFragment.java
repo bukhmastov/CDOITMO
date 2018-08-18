@@ -21,7 +21,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import androidx.fragment.app.Fragment;
+import android.support.v4.app.Fragment;
 import dagger.Lazy;
 
 public class SettingsFragment extends SettingsTemplateHeadersFragment {

@@ -1,7 +1,7 @@
 package com.bukhmastov.cdoitmo.firebase.impl;
 
 import android.content.Context;
-import androidx.annotation.StringDef;
+import android.support.annotation.StringDef;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;

@@ -1,7 +1,7 @@
 package com.bukhmastov.cdoitmo.fragment.settings;
 
-import androidx.fragment.app.Fragment;
-import androidx.appcompat.app.AlertDialog;
+import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;

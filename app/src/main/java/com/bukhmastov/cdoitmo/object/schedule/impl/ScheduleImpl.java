@@ -1,7 +1,7 @@
 package com.bukhmastov.cdoitmo.object.schedule.impl;
 
 import android.content.Context;
-import androidx.annotation.StringDef;
+import android.support.annotation.StringDef;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;

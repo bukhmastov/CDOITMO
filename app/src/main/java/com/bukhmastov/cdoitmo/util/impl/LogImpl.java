@@ -2,8 +2,8 @@ package com.bukhmastov.cdoitmo.util.impl;
 
 import android.content.Context;
 import android.os.Build;
-import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
+import android.support.annotation.NonNull;
+import android.support.v4.app.Fragment;
 
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;

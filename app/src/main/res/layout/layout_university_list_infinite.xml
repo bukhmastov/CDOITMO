@@ -16,18 +16,18 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
-        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        <android.support.v4.widget.SwipeRefreshLayout
             android:id="@+id/infinite_list_swipe"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <androidx.recyclerview.widget.RecyclerView
+            <android.support.v7.widget.RecyclerView
                 android:id="@+id/infinite_list"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:clipToPadding="false" />
 
-        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+        </android.support.v4.widget.SwipeRefreshLayout>
 
     </LinearLayout>
 

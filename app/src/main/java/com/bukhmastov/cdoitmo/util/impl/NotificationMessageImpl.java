@@ -2,9 +2,9 @@ package com.bukhmastov.cdoitmo.util.impl;
 
 import android.app.Activity;
 import android.content.Context;
-import androidx.annotation.IdRes;
-import androidx.annotation.StringRes;
-import com.google.android.material.snackbar.Snackbar;
+import android.support.annotation.IdRes;
+import android.support.annotation.StringRes;
+import android.support.design.widget.Snackbar;
 import android.view.View;
 import android.widget.Toast;
 

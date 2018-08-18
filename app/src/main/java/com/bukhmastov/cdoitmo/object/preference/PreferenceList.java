@@ -1,9 +1,9 @@
 package com.bukhmastov.cdoitmo.object.preference;
 
-import androidx.annotation.ArrayRes;
-import androidx.annotation.Nullable;
-import androidx.annotation.StringRes;
-import androidx.appcompat.app.AlertDialog;
+import android.support.annotation.ArrayRes;
+import android.support.annotation.Nullable;
+import android.support.annotation.StringRes;
+import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;

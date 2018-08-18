@@ -4,7 +4,7 @@ import android.content.Context;
 
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 
-import androidx.annotation.NonNull;
+import android.support.annotation.NonNull;
 
 import java.util.regex.Pattern;
 

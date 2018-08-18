@@ -10,7 +10,7 @@
     android:fitsSystemWindows="true"
     tools:openDrawer="start">
 
-    <com.google.android.material.navigation.NavigationView
+    <android.support.design.widget.NavigationView
         android:id="@+id/nav_view"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
@@ -29,7 +29,7 @@
         android:layout_height="match_parent"
         android:elevation="4dp" >
 
-        <androidx.appcompat.widget.Toolbar
+        <android.support.v7.widget.Toolbar
             android:id="@+id/toolbar_main"
             android:theme="@style/AppTheme.Toolbar"
             android:layout_width="match_parent"
@@ -39,7 +39,7 @@
             app:contentInsetStart="24dp"
             app:titleMarginStart="48dp" />
 
-        <com.google.android.material.tabs.TabLayout
+        <android.support.design.widget.TabLayout
             android:id="@+id/fixed_tabs"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -52,7 +52,7 @@
             app:tabGravity="fill"
             app:elevation="4dp" />
 
-        <com.google.android.material.tabs.TabLayout
+        <android.support.design.widget.TabLayout
             android:id="@+id/scrollable_tabs"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

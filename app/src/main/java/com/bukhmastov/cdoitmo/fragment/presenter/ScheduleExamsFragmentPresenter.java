@@ -1,7 +1,7 @@
 package com.bukhmastov.cdoitmo.fragment.presenter;
 
 import android.os.Bundle;
-import androidx.annotation.Nullable;
+import android.support.annotation.Nullable;
 
 import com.bukhmastov.cdoitmo.fragment.ConnectedFragment;
 

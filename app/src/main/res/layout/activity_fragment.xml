@@ -9,7 +9,7 @@
     android:fitsSystemWindows="true"
     tools:openDrawer="start">
 
-    <androidx.appcompat.widget.Toolbar
+    <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar_fragment"
         android:theme="@style/AppTheme.Toolbar"
         android:layout_width="match_parent"
@@ -17,7 +17,7 @@
         android:background="?attr/colorPrimary"
         android:elevation="4dp"/>
 
-    <androidx.drawerlayout.widget.DrawerLayout
+    <android.support.v4.widget.DrawerLayout
         android:id="@+id/drawer_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -34,7 +34,7 @@
 
         </LinearLayout>
 
-        <com.google.android.material.navigation.NavigationView
+        <android.support.design.widget.NavigationView
             android:id="@+id/nav_view"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
@@ -46,6 +46,6 @@
             app:itemIconTint="@color/navigation_view_item_color"
             app:itemTextColor="@color/navigation_view_item_color" />
 
-    </androidx.drawerlayout.widget.DrawerLayout>
+    </android.support.v4.widget.DrawerLayout>
 
 </LinearLayout>

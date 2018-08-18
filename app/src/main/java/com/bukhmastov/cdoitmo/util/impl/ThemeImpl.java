@@ -2,7 +2,7 @@ package com.bukhmastov.cdoitmo.util.impl;
 
 import android.app.Activity;
 import android.content.Context;
-import androidx.appcompat.widget.Toolbar;
+import android.support.v7.widget.Toolbar;
 
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.dialog.ThemeDialog;
