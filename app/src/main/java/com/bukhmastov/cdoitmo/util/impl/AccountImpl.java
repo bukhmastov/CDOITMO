@@ -96,8 +96,8 @@ public class AccountImpl implements Account {
                         loginHandler.onSuccess();
                         firebasePerformanceProvider.putAttributeAndStop(trace, "state", "success_unauthorized");
                     }
-                    return;
                 });
+                return;
             }
             if (App.OFFLINE_MODE) {
                 if (isNewUser) {
