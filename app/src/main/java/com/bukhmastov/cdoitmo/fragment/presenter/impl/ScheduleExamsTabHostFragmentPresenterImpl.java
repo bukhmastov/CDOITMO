@@ -71,7 +71,7 @@ public class ScheduleExamsTabHostFragmentPresenterImpl implements ScheduleExamsT
 
     @Override
     public boolean isSameQueryRequested() {
-        return lastQuery != null && query != null && lastQuery.equals(query);
+        return lastQuery != null && lastQuery.equals(query);
     }
 
     @Override
@@ -117,7 +117,7 @@ public class ScheduleExamsTabHostFragmentPresenterImpl implements ScheduleExamsT
 
     @Override
     public String restoreData() {
-        if (activity != null && ConnectedActivity.storedFragmentName != null && FRAGMENT_NAME.equals(ConnectedActivity.storedFragmentName)) {
+        if (activity != null && FRAGMENT_NAME.equals(ConnectedActivity.storedFragmentName)) {
             return ConnectedActivity.storedFragmentData;
         } else {
             return null;

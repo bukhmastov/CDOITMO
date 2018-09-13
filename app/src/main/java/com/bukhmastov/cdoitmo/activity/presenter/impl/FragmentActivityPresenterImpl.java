@@ -63,64 +63,68 @@ public class FragmentActivityPresenterImpl implements FragmentActivityPresenter,
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        log.i(TAG, "Activity created");
-        try {
-            final Intent intent = activity.getIntent();
-            if (intent != null) {
-                final Bundle extras = intent.getExtras();
-                final Class fragment_class;
-                final Bundle fragment_extras;
-                if (extras != null) {
-                    if (extras.containsKey("class")) {
-                        fragment_class = (Class) extras.get("class");
+        thread.runOnUI(() -> {
+            log.i(TAG, "Activity created");
+            try {
+                final Intent intent = activity.getIntent();
+                if (intent != null) {
+                    final Bundle extras = intent.getExtras();
+                    final Class fragment_class;
+                    final Bundle fragment_extras;
+                    if (extras != null) {
+                        if (extras.containsKey("class")) {
+                            fragment_class = (Class) extras.get("class");
+                        } else {
+                            throw new NullPointerException("Intent's extras should contains 'class'");
+                        }
+                        if (extras.containsKey("extras")) {
+                            fragment_extras = (Bundle) extras.get("extras");
+                        } else {
+                            throw new NullPointerException("Intent's extras should contains 'extras'");
+                        }
+                        if (fragment_extras != null && fragment_extras.containsKey(ConnectedActivity.ACTIVITY_WITH_MENU)) {
+                            activity.layout_with_menu = fragment_extras.getBoolean(ConnectedActivity.ACTIVITY_WITH_MENU);
+                            fragment_extras.remove(ConnectedActivity.ACTIVITY_WITH_MENU);
+                        }
                     } else {
-                        throw new NullPointerException("Intent's extras should contains 'class'");
+                        throw new NullPointerException("Intent's extras cannot be null");
                     }
-                    if (extras.containsKey("extras")) {
-                        fragment_extras = (Bundle) extras.get("extras");
-                    } else {
-                        throw new NullPointerException("Intent's extras should contains 'extras'");
+                    activity.setContentView(activity.layout_with_menu ? R.layout.activity_fragment : R.layout.activity_fragment_without_menu);
+                    final Toolbar toolbar = activity.findViewById(R.id.toolbar_fragment);
+                    if (toolbar != null) {
+                        theme.applyToolbarTheme(activity, toolbar);
+                        activity.setSupportActionBar(toolbar);
                     }
-                    if (fragment_extras != null && fragment_extras.containsKey(ConnectedActivity.ACTIVITY_WITH_MENU)) {
-                        activity.layout_with_menu = fragment_extras.getBoolean(ConnectedActivity.ACTIVITY_WITH_MENU);
-                        fragment_extras.remove(ConnectedActivity.ACTIVITY_WITH_MENU);
+                    final ActionBar actionBar = activity.getSupportActionBar();
+                    if (actionBar != null) {
+                        actionBar.setHomeButtonEnabled(true);
+                        actionBar.setDisplayHomeAsUpEnabled(true);
                     }
+                    if (activity.layout_with_menu) {
+                        ((NavigationView) activity.findViewById(R.id.nav_view)).setNavigationItemSelectedListener(this);
+                    }
+                    invoke(fragment_class, fragment_extras);
                 } else {
-                    throw new NullPointerException("Intent's extras cannot be null");
+                    throw new NullPointerException("Intent cannot be null");
                 }
-                activity.setContentView(activity.layout_with_menu ? R.layout.activity_fragment : R.layout.activity_fragment_without_menu);
-                final Toolbar toolbar = activity.findViewById(R.id.toolbar_fragment);
-                if (toolbar != null) {
-                    theme.applyToolbarTheme(activity, toolbar);
-                    activity.setSupportActionBar(toolbar);
-                }
-                final ActionBar actionBar = activity.getSupportActionBar();
-                if (actionBar != null) {
-                    actionBar.setHomeButtonEnabled(true);
-                    actionBar.setDisplayHomeAsUpEnabled(true);
-                }
-                if (activity.layout_with_menu) {
-                    ((NavigationView) activity.findViewById(R.id.nav_view)).setNavigationItemSelectedListener(this);
-                }
-                invoke(fragment_class, fragment_extras);
-            } else {
-                throw new NullPointerException("Intent cannot be null");
+            } catch (Exception e) {
+                log.exception(e);
+                activity.finish();
             }
-        } catch (Exception e) {
-            log.exception(e);
-            activity.finish();
-        }
+        });
     }
 
     @Override
     public void onResume() {
-        if (activity.layout_with_menu) {
-            NavigationView navigationView = activity.findViewById(R.id.nav_view);
-            navigationMenu.displayEnableDisableOfflineButton(navigationView);
-            navigationMenu.hideIfUnauthorizedMode(navigationView);
-            navigationMenu.displayUserData(activity, storage, navigationView);
-            navigationMenu.displayRemoteMessage(activity, firebaseConfigProvider, storage);
-        }
+        thread.runOnUI(() -> {
+            if (activity.layout_with_menu) {
+                NavigationView navigationView = activity.findViewById(R.id.nav_view);
+                navigationMenu.displayEnableDisableOfflineButton(navigationView);
+                navigationMenu.hideIfUnauthorizedMode(navigationView);
+                navigationMenu.displayUserData(activity, storage, navigationView);
+                navigationMenu.displayRemoteMessage(activity, firebaseConfigProvider, storage);
+            }
+        });
     }
 
     @Override

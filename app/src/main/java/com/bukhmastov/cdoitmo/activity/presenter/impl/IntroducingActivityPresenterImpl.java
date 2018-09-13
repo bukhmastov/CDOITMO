@@ -20,6 +20,7 @@ import com.bukhmastov.cdoitmo.activity.presenter.IntroducingActivityPresenter;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.view.OnSwipeTouchListener;
 
 import java.util.ArrayList;
@@ -38,6 +39,8 @@ public class IntroducingActivityPresenterImpl implements IntroducingActivityPres
     @Inject
     Log log;
     @Inject
+    Thread thread;
+    @Inject
     FirebaseAnalyticsProvider firebaseAnalyticsProvider;
 
     public IntroducingActivityPresenterImpl() {
@@ -51,13 +54,20 @@ public class IntroducingActivityPresenterImpl implements IntroducingActivityPres
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        log.i(TAG, "Activity created");
-        firebaseAnalyticsProvider.logCurrentScreen(activity);
-        activity.findViewById(R.id.content).setPadding(0, getStatusBarHeight(), 0, 0);
-        initScreens();
-        initInterface();
-        initControls();
-        next();
+        thread.runOnUI(() -> {
+            try {
+                log.i(TAG, "Activity created");
+                firebaseAnalyticsProvider.logCurrentScreen(activity);
+                activity.findViewById(R.id.content).setPadding(0, getStatusBarHeight(), 0, 0);
+                initScreens();
+                initInterface();
+                initControls();
+                next();
+            } catch (Exception e) {
+                log.exception(e);
+                close();
+            }
+        });
     }
 
     @Override
@@ -82,48 +92,33 @@ public class IntroducingActivityPresenterImpl implements IntroducingActivityPres
     }
 
     private void initScreens() {
-        try {
-            position = -1;
-            screens.add(new Screen(R.string.intro_title_1, R.string.intro_desc_1, R.drawable.image_intro_1, "#9c27b0", "#cddc39"));
-            screens.add(new Screen(R.string.intro_title_2, R.string.intro_desc_2, R.drawable.image_intro_2, "#2196f3", "#ff9800"));
-            screens.add(new Screen(R.string.intro_title_3, R.string.intro_desc_3, R.drawable.image_intro_3, "#cddc39", "#673ab7"));
-            screens.add(new Screen(R.string.intro_title_4, R.string.intro_desc_4, R.drawable.image_intro_4, "#00bcd4", "#cddc39"));
-            screens.add(new Screen(R.string.intro_title_5, R.string.intro_desc_5, R.drawable.image_intro_5, "#1946ba", "#ff5722"));
-        } catch (Exception e) {
-            log.exception(e);
-            close();
-        }
+        position = -1;
+        screens.add(new Screen(R.string.intro_title_1, R.string.intro_desc_1, R.drawable.image_intro_1, "#9c27b0", "#cddc39"));
+        screens.add(new Screen(R.string.intro_title_2, R.string.intro_desc_2, R.drawable.image_intro_2, "#2196f3", "#ff9800"));
+        screens.add(new Screen(R.string.intro_title_3, R.string.intro_desc_3, R.drawable.image_intro_3, "#cddc39", "#673ab7"));
+        screens.add(new Screen(R.string.intro_title_4, R.string.intro_desc_4, R.drawable.image_intro_4, "#00bcd4", "#cddc39"));
+        screens.add(new Screen(R.string.intro_title_5, R.string.intro_desc_5, R.drawable.image_intro_5, "#1946ba", "#ff5722"));
     }
 
     private void initInterface() {
-        try {
-            ViewGroup indicators = activity.findViewById(R.id.indicators);
-            int color = getColor(colorIndicatorInActive);
-            for (int i = 0; i < screens.size(); i++) {
-                TextView indicator = (TextView) activity.inflate(R.layout.layout_introducing_indicator);
-                indicator.setTextColor(color);
-                indicators.addView(indicator);
-            }
-        } catch (Exception e) {
-            log.exception(e);
-            close();
+        ViewGroup indicators = activity.findViewById(R.id.indicators);
+        int color = getColor(colorIndicatorInActive);
+        for (int i = 0; i < screens.size(); i++) {
+            TextView indicator = (TextView) activity.inflate(R.layout.layout_introducing_indicator);
+            indicator.setTextColor(color);
+            indicators.addView(indicator);
         }
     }
 
     private void initControls() {
-        try {
-            activity.findViewById(R.id.skip).setOnClickListener(view -> close());
-            activity.findViewById(R.id.next).setOnClickListener(view -> next());
-            activity.findViewById(R.id.container).setOnTouchListener(new OnSwipeTouchListener(activity) {
-                @Override
-                public void onSwipeLeft2Right() {
-                    next();
-                }
-            });
-        } catch (Exception e) {
-            log.exception(e);
-            close();
-        }
+        activity.findViewById(R.id.skip).setOnClickListener(view -> close());
+        activity.findViewById(R.id.next).setOnClickListener(view -> next());
+        activity.findViewById(R.id.container).setOnTouchListener(new OnSwipeTouchListener(activity) {
+            @Override
+            public void onSwipeLeft2Right() {
+                next();
+            }
+        });
     }
 
     private void next() {

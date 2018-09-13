@@ -71,68 +71,78 @@ public class UniversityPersonCardActivityPresenterImpl implements UniversityPers
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        log.i(TAG, "Activity created");
-        try {
-            Intent intent = activity.getIntent();
-            if (intent == null) throw new NullPointerException("intent is null");
-            Bundle extras = intent.getExtras();
-            if (extras == null) throw new NullPointerException("extras are null");
-            boolean ok = false;
-            if (extras.containsKey("person")) {
-                try {
-                    person = new JSONObject(extras.getString("person"));
-                    pid = person.getInt("persons_id");
-                    ok = true;
-                } catch (Exception e) {
-                    ok = false;
+        thread.runOnUI(() -> {
+            log.i(TAG, "Activity created");
+            try {
+                Intent intent = activity.getIntent();
+                if (intent == null) throw new NullPointerException("intent is null");
+                Bundle extras = intent.getExtras();
+                if (extras == null) throw new NullPointerException("extras are null");
+                boolean ok = false;
+                if (extras.containsKey("person")) {
+                    try {
+                        person = new JSONObject(extras.getString("person"));
+                        pid = person.getInt("persons_id");
+                        ok = true;
+                    } catch (Exception e) {
+                        ok = false;
+                    }
                 }
-            }
-            if (!ok && extras.containsKey("pid")) {
-                try {
-                    person = null;
-                    pid = extras.getInt("pid");
-                    ok = true;
-                } catch (Exception e) {
-                    ok = false;
+                if (!ok && extras.containsKey("pid")) {
+                    try {
+                        person = null;
+                        pid = extras.getInt("pid");
+                        ok = true;
+                    } catch (Exception e) {
+                        ok = false;
+                    }
                 }
+                if (!ok) throw new Exception("failed to get info from extras");
+                if (pid < 0) throw new Exception("Invalid person id provided");
+            } catch (Exception e) {
+                activity.finish();
             }
-            if (!ok) throw new Exception("failed to get info from extras");
-            if (pid < 0) throw new Exception("Invalid person id provided");
-        } catch (Exception e) {
-            activity.finish();
-        }
-        firebaseAnalyticsProvider.logCurrentScreen(activity);
+            firebaseAnalyticsProvider.logCurrentScreen(activity);
+        });
     }
 
     @Override
     public void onResume() {
-        log.v(TAG, "resumed");
-        firebaseAnalyticsProvider.setCurrentScreen(activity);
-        if (!loaded) {
-            loaded = true;
-            load();
-        }
+        thread.runOnUI(() -> {
+            log.v(TAG, "resumed");
+            firebaseAnalyticsProvider.setCurrentScreen(activity);
+            if (!loaded) {
+                loaded = true;
+                load();
+            }
+        });
     }
 
     @Override
     public void onPause() {
-        log.v(TAG, "paused");
-        if (requestHandle != null && requestHandle.cancel()) {
-            loaded = false;
-        }
+        thread.runOnUI(() -> {
+            log.v(TAG, "paused");
+            if (requestHandle != null && requestHandle.cancel()) {
+                loaded = false;
+            }
+        });
     }
 
     @Override
     public void onDestroy() {
-        log.v(TAG, "Fragment destroyed");
-        loaded = false;
+        thread.runOnUI(() -> {
+            log.v(TAG, "Fragment destroyed");
+            loaded = false;
+        });
     }
 
     @Override
     public void onRefresh() {
-        log.v(TAG, "refreshing");
-        person = null;
-        load();
+        thread.runOnUI(() -> {
+            log.v(TAG, "refreshing");
+            person = null;
+            load();
+        });
     }
 
     private void load() {

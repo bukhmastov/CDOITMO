@@ -97,24 +97,31 @@ public class RatingListFragmentPresenterImpl implements RatingListFragmentPresen
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        log.v(TAG, "Fragment created");
-        fragment.setHasOptionsMenu(true);
-        firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
+        thread.run(() -> {
+            log.v(TAG, "Fragment created");
+            fragment.setHasOptionsMenu(true);
+            firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
+        });
     }
 
     @Override
     public void onDestroy() {
-        log.v(TAG, "Fragment destroyed");
-        loaded = false;
-        fragment.clearData(fragment);
-        hideShareButton();
+        thread.run(() -> {
+            log.v(TAG, "Fragment destroyed");
+            loaded = false;
+            fragment.clearData(fragment);
+            hideShareButton();
+        });
     }
 
     @Override
     public void onResume() {
-        log.v(TAG, "Fragment resumed");
-        firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-        if (!loaded) {
+        thread.run(() -> {
+            log.v(TAG, "Fragment resumed");
+            firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
+            if (loaded) {
+                return;
+            }
             loaded = true;
             try {
                 String stored = fragment.restoreData(fragment);
@@ -127,42 +134,46 @@ public class RatingListFragmentPresenterImpl implements RatingListFragmentPresen
                 log.exception(e);
                 load();
             }
-        }
+        });
     }
 
     @Override
     public void onPause() {
-        log.v(TAG, "Fragment paused");
-        if (requestHandle != null && requestHandle.cancel()) {
-            loaded = false;
-        }
+        thread.run(() -> {
+            log.v(TAG, "Fragment paused");
+            if (requestHandle != null && requestHandle.cancel()) {
+                loaded = false;
+            }
+        });
     }
 
     @Override
     public void onViewCreated() {
-        activity.updateToolbar(activity, activity.getString(R.string.top_rating), R.drawable.ic_rating);
-        try {
-            Bundle extras = fragment.getArguments();
-            if (extras == null) {
-                throw new NullPointerException("extras are null");
+        thread.runOnUI(() -> {
+            activity.updateToolbar(activity, activity.getString(R.string.top_rating), R.drawable.ic_rating);
+            try {
+                Bundle extras = fragment.getArguments();
+                if (extras == null) {
+                    throw new NullPointerException("extras are null");
+                }
+                faculty = extras.getString("faculty");
+                course = extras.getString("course");
+                years = extras.getString("years");
+                if (years == null || years.isEmpty()) {
+                    Calendar now = time.getCalendar();
+                    int year = now.get(Calendar.YEAR);
+                    int month = now.get(Calendar.MONTH);
+                    years = month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year;
+                }
+                log.v(TAG, "faculty=" + faculty + " | course=" + course + " | years=" + years);
+                if (faculty == null || faculty.isEmpty() || course == null || course.isEmpty()) {
+                    throw new Exception("wrong extras provided | faculty=" + (faculty == null ? "<null>" : faculty) + " | course=" + (course == null ? "<null>" : course));
+                }
+            } catch (Exception e) {
+                log.exception(e);
+                activity.back();
             }
-            faculty = extras.getString("faculty");
-            course = extras.getString("course");
-            years = extras.getString("years");
-            if (years == null || years.isEmpty()) {
-                Calendar now = time.getCalendar();
-                int year = now.get(Calendar.YEAR);
-                int month = now.get(Calendar.MONTH);
-                years = month > Calendar.AUGUST ? year + "/" + (year + 1) : (year - 1) + "/" + year;
-            }
-            log.v(TAG, "faculty=" + faculty + " | course=" + course + " | years=" + years);
-            if (faculty == null || faculty.isEmpty() || course == null || course.isEmpty()) {
-                throw new Exception("wrong extras provided | faculty=" + (faculty == null ? "<null>" : faculty) + " | course=" + (course == null ? "<null>" : course));
-            }
-        } catch (Exception e) {
-            log.exception(e);
-            activity.back();
-        }
+        });
     }
 
     @Override

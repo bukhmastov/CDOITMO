@@ -84,7 +84,7 @@ public class LogFragmentPresenterImpl implements LogFragmentPresenter {
 
     @Override
     public void onViewCreated() {
-        try {
+        thread.runOnUI(() -> {
             ((TextView) fragment.container().findViewById(R.id.warn)).setText(String.valueOf(LogMetrics.warn));
             ((TextView) fragment.container().findViewById(R.id.error)).setText(String.valueOf(LogMetrics.error));
             ((TextView) fragment.container().findViewById(R.id.exception)).setText(String.valueOf(LogMetrics.exception));
@@ -132,9 +132,7 @@ public class LogFragmentPresenterImpl implements LogFragmentPresenter {
                 }
             }));
             genericToggled(generic_logs_switch.isChecked());
-        } catch (Exception e) {
-            log.exception(e);
-        }
+        });
     }
 
     private void firebaseToggled(final boolean allowed) {

@@ -121,10 +121,12 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        log.v(TAG, "Fragment created");
-        firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-        markers_campus = storagePref.get(activity, "pref_university_buildings_campus", true);
-        markers_dormitory = storagePref.get(activity, "pref_university_buildings_dormitory", true);
+        thread.run(() -> {
+            log.v(TAG, "Fragment created");
+            firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
+            markers_campus = storagePref.get(activity, "pref_university_buildings_campus", true);
+            markers_dormitory = storagePref.get(activity, "pref_university_buildings_dormitory", true);
+        });
     }
 
     @Override
@@ -140,45 +142,51 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
 
     @Override
     public void onPause() {
-        log.v(TAG, "Fragment paused");
-        if (requestHandle != null) {
-            requestHandle.cancel();
-        }
+        thread.run(() -> {
+            log.v(TAG, "Fragment paused");
+            if (requestHandle != null) {
+                requestHandle.cancel();
+            }
+        });
     }
 
     @Override
     public void onCreateView(View container) {
-        this.container = container;
-        try {
-            SupportMapFragment mapFragment = (SupportMapFragment) fragment.getChildFragmentManager().findFragmentById(R.id.buildings_map);
-            mapFragment.getMapAsync(this);
-        } catch (Exception e) {
-            log.exception(e);
-            failed();
-            load();
-        }
-        Switch dormitory_switch = container.findViewById(R.id.dormitory_switch);
-        if (dormitory_switch != null) {
-            dormitory_switch.setChecked(markers_dormitory);
-            dormitory_switch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                markers_dormitory = isChecked;
-                displayMarkers();
-                storagePref.put(activity, "pref_university_buildings_dormitory", markers_dormitory);
-            });
-        }
-        Switch campus_switch = container.findViewById(R.id.campus_switch);
-        if (campus_switch != null) {
-            campus_switch.setChecked(markers_campus);
-            campus_switch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                markers_campus = isChecked;
-                displayMarkers();
-                storagePref.put(activity, "pref_university_buildings_campus", markers_campus);
-            });
-        }
-        View view_list = container.findViewById(R.id.view_list);
-        if (view_list != null) {
-            view_list.setOnClickListener(v -> openList());
-        }
+        thread.runOnUI(() -> {
+            this.container = container;
+            try {
+                SupportMapFragment mapFragment = (SupportMapFragment) fragment.getChildFragmentManager().findFragmentById(R.id.buildings_map);
+                if (mapFragment != null) {
+                    mapFragment.getMapAsync(this);
+                }
+            } catch (Exception e) {
+                log.exception(e);
+                failed();
+                load();
+            }
+            Switch dormitory_switch = container.findViewById(R.id.dormitory_switch);
+            if (dormitory_switch != null) {
+                dormitory_switch.setChecked(markers_dormitory);
+                dormitory_switch.setOnCheckedChangeListener((buttonView, isChecked) -> thread.run(() -> {
+                    markers_dormitory = isChecked;
+                    displayMarkers();
+                    storagePref.put(activity, "pref_university_buildings_dormitory", markers_dormitory);
+                }));
+            }
+            Switch campus_switch = container.findViewById(R.id.campus_switch);
+            if (campus_switch != null) {
+                campus_switch.setChecked(markers_campus);
+                campus_switch.setOnCheckedChangeListener((buttonView, isChecked) -> thread.run(() -> {
+                    markers_campus = isChecked;
+                    displayMarkers();
+                    storagePref.put(activity, "pref_university_buildings_campus", markers_campus);
+                }));
+            }
+            View view_list = container.findViewById(R.id.view_list);
+            if (view_list != null) {
+                view_list.setOnClickListener(v -> openList());
+            }
+        });
     }
 
     private void load() {

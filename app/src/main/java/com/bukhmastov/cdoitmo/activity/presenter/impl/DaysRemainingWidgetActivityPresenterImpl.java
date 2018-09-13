@@ -43,7 +43,7 @@ public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWi
     private String query = null;
     private JSONObject schedule = null;
     private Client.Request requestHandle = null;
-    private boolean is_message_displaying = false;
+    private Boolean isMessageDisplaying = null;
     private final LinearLayout.LayoutParams hide = new LinearLayout.LayoutParams(0, 0);
     private final LinearLayout.LayoutParams show = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
     private final LinearLayout.LayoutParams showMatch = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -75,69 +75,77 @@ public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWi
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        log.i(TAG, "Activity created");
-        firebaseAnalyticsProvider.logCurrentScreen(activity);
-        try {
-            String shortcut_data = activity.getIntent().getStringExtra("shortcut_data");
-            if (shortcut_data == null) throw new Exception("shortcut_data cannot be null");
-            JSONObject json = new JSONObject(shortcut_data);
-            query = json.getString("query");
-            log.v(TAG, "query=" + query);
-        } catch (Exception e) {
-            log.exception(e);
-            close();
-        }
-        View wr_container = activity.findViewById(R.id.wr_container);
-        if (wr_container != null) {
-            wr_container.setOnClickListener(v -> {
-                log.v(TAG, "wr_container clicked");
-                Bundle bundle = new Bundle();
-                bundle.putString("action", "schedule_exams");
-                bundle.putString("action_extra", query);
-                eventBus.fire(new OpenActivityEvent(MainActivity.class, bundle, App.intentFlagRestart));
+        thread.runOnUI(() -> {
+            log.i(TAG, "Activity created");
+            firebaseAnalyticsProvider.logCurrentScreen(activity);
+            try {
+                String shortcut_data = activity.getIntent().getStringExtra("shortcut_data");
+                if (shortcut_data == null) throw new Exception("shortcut_data cannot be null");
+                JSONObject json = new JSONObject(shortcut_data);
+                query = json.getString("query");
+                log.v(TAG, "query=" + query);
+            } catch (Exception e) {
+                log.exception(e);
                 close();
-            });
-        }
-        View wr_share = activity.findViewById(R.id.wr_share);
-        if (wr_share != null) {
-            wr_share.setOnClickListener(v -> thread.runOnUI(() -> {
-                log.v(TAG, "wr_share clicked");
-                share();
-            }));
-        }
-        View widget_remaining = activity.findViewById(R.id.widget_remaining);
-        if (widget_remaining != null) {
-            widget_remaining.setOnClickListener(v -> {
-                log.v(TAG, "widget_remaining clicked");
-                close();
-            });
-        }
+            }
+            View wr_container = activity.findViewById(R.id.wr_container);
+            if (wr_container != null) {
+                wr_container.setOnClickListener(v -> {
+                    log.v(TAG, "wr_container clicked");
+                    Bundle bundle = new Bundle();
+                    bundle.putString("action", "schedule_exams");
+                    bundle.putString("action_extra", query);
+                    eventBus.fire(new OpenActivityEvent(MainActivity.class, bundle, App.intentFlagRestart));
+                    close();
+                });
+            }
+            View wr_share = activity.findViewById(R.id.wr_share);
+            if (wr_share != null) {
+                wr_share.setOnClickListener(v -> thread.runOnUI(() -> {
+                    log.v(TAG, "wr_share clicked");
+                    share();
+                }));
+            }
+            View widget_remaining = activity.findViewById(R.id.widget_remaining);
+            if (widget_remaining != null) {
+                widget_remaining.setOnClickListener(v -> {
+                    log.v(TAG, "widget_remaining clicked");
+                    close();
+                });
+            }
+        });
     }
 
     @Override
     public void onResume() {
-        log.v(TAG, "Activity resumed");
-        if (schedule == null) {
+        thread.run(() -> {
+            log.v(TAG, "Activity resumed");
+            if (schedule != null) {
+                begin();
+                return;
+            }
             if (query != null) {
                 scheduleExams.search(activity, this, query, true);
-            } else {
-                log.w(TAG, "onResume | query is null");
-                close();
+                return;
             }
-        } else {
-            begin();
-        }
+            log.w(TAG, "onResume | query is null");
+            close();
+        });
     }
 
     @Override
     public void onPause() {
-        log.v(TAG, "Activity paused");
-        daysRemainingWidget.stop();
+        thread.run(() -> {
+            log.v(TAG, "Activity paused");
+            daysRemainingWidget.stop();
+        });
     }
 
     @Override
     public void onDestroy() {
-        log.i(TAG, "Activity destroyed");
+        thread.runOnUI(() -> {
+            log.i(TAG, "Activity destroyed");
+        });
     }
 
     @Override
@@ -153,8 +161,8 @@ public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWi
 
     @Override
     public void onFailure(int statusCode, Client.Headers headers, int state) {
-        log.v(TAG, "failure " + state);
-        try {
+        thread.run(() -> {
+            log.v(TAG, "failure " + state);
             switch (state) {
                 case Client.FAILED_OFFLINE:
                 case ScheduleExams.FAILED_OFFLINE:
@@ -179,28 +187,30 @@ public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWi
                     message(activity.getString(R.string.load_failed));
                     break;
             }
-        } catch (Exception e){
-            log.exception(e);
-        }
+        });
     }
 
     @Override
     public void onSuccess(JSONObject json, boolean fromCache) {
-        log.v(TAG, "success");
-        try {
-            if (json == null) throw new NullPointerException("json cannot be null");
-            String type = json.getString("type");
-            switch (type) {
-                case "group":
-                case "teacher": break;
-                default: throw new Exception("json.type wrong value: " + type);
+        thread.run(() -> {
+            log.v(TAG, "success");
+            try {
+                if (json == null) throw new NullPointerException("json cannot be null");
+                String type = json.getString("type");
+                switch (type) {
+                    case "group":
+                    case "teacher":
+                        break;
+                    default:
+                        throw new Exception("json.type wrong value: " + type);
+                }
+                schedule = json;
+                begin();
+            } catch (Exception e) {
+                log.exception(e);
+                onFailure(ScheduleExams.FAILED_LOAD);
             }
-            schedule = json;
-            begin();
-        } catch (Exception e) {
-            log.exception(e);
-            onFailure(ScheduleExams.FAILED_LOAD);
-        }
+        });
     }
 
     @Override
@@ -217,22 +227,24 @@ public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWi
 
     @Override
     public void onAction(ArrayList<DaysRemainingWidget.Data> data) {
-        this.data = data;
-        if (data.size() == 0) {
-            message(activity.getString(R.string.exams_gone));
-        } else {
-            if (is_message_displaying) {
-                draw(R.layout.widget_remaining_days);
-                is_message_displaying = false;
+        thread.runOnUI(() -> {
+            this.data = data;
+            if (data.size() == 0) {
+                message(activity.getString(R.string.exams_gone));
+            } else {
+                if (isMessageDisplaying == null || isMessageDisplaying) {
+                    draw(R.layout.widget_remaining_days);
+                    isMessageDisplaying = false;
+                }
+                DaysRemainingWidget.Data currentData = data.get(0);
+                setText(R.id.exam_subject, currentData.subject);
+                setText(R.id.exam_teacher, currentData.desc);
+                setText(R.id.exam_time_day, R.id.exam_time_day_value, currentData.time.day);
+                setText(R.id.exam_time_hour, R.id.exam_time_hour_value, currentData.time.hour);
+                setText(R.id.exam_time_min, R.id.exam_time_min_value, currentData.time.min);
+                setText(R.id.exam_time_sec, R.id.exam_time_sec_value, currentData.time.sec);
             }
-            DaysRemainingWidget.Data currentData = data.get(0);
-            setText(R.id.exam_subject, currentData.subject);
-            setText(R.id.exam_teacher, currentData.desc);
-            setText(R.id.exam_time_day, R.id.exam_time_day_value, currentData.time.day);
-            setText(R.id.exam_time_hour, R.id.exam_time_hour_value, currentData.time.hour);
-            setText(R.id.exam_time_min, R.id.exam_time_min_value, currentData.time.min);
-            setText(R.id.exam_time_sec, R.id.exam_time_sec_value, currentData.time.sec);
-        }
+        });
     }
 
     @Override
@@ -260,52 +272,12 @@ public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWi
         });
     }
 
-    private void setText(final int layout, final String text) {
-        thread.runOnUI(() -> {
-            TextView textView = activity.findViewById(layout);
-            if (textView != null) {
-                if (text == null || text.isEmpty()) {
-                    if (textView.getLayoutParams() == showMatch || textView.getLayoutParams() != hide) {
-                        textView.setLayoutParams(hide);
-                    }
-                } else {
-                    textView.setText(text);
-                    if (textView.getLayoutParams() == hide || textView.getLayoutParams() != showMatch) {
-                        textView.setLayoutParams(showMatch);
-                    }
-                }
-            }
-        });
-    }
-
-    private void setText(final int container, final int layout, final String text) {
-        thread.runOnUI(() -> {
-            try {
-                if (text == null) {
-                    View view = activity.findViewById(container);
-                    if (view != null && (view.getLayoutParams() == show || view.getLayoutParams() != hide)) {
-                        view.setLayoutParams(hide);
-                    }
-                } else {
-                    View view = activity.findViewById(container);
-                    if (view != null && (view.getLayoutParams() == hide || view.getLayoutParams() != show)) {
-                        view.setLayoutParams(show);
-                    }
-                    TextView textView = activity.findViewById(layout);
-                    if (textView != null) {
-                        textView.setText(text);
-                    }
-                }
-            } catch (Exception e) {
-                log.exception(e);
-            }
-        });
-    }
-
     private void message(final String text) {
         thread.runOnUI(() -> {
-            draw(R.layout.widget_remaining_message);
-            is_message_displaying = true;
+            if (isMessageDisplaying == null || !isMessageDisplaying) {
+                draw(R.layout.widget_remaining_message);
+                isMessageDisplaying = true;
+            }
             TextView message = activity.findViewById(R.id.message);
             if (message != null) {
                 message.setText(text);
@@ -314,7 +286,7 @@ public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWi
     }
 
     private void share() {
-        thread.runOnUI(() -> {
+        thread.run(() -> {
             if (data == null) {
                 notificationMessage.snackBar(activity, activity.getString(R.string.share_unable));
                 return;
@@ -396,32 +368,70 @@ public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWi
     }
 
     private void share(String text) {
-        if (!text.isEmpty()) {
-            Intent intent = new Intent(Intent.ACTION_SEND);
-            intent.setType("text/plain");
-            intent.putExtra(Intent.EXTRA_TEXT, text);
-            eventBus.fire(new OpenIntentEvent(Intent.createChooser(intent, activity.getString(R.string.share))));
-            // track statistics
-            firebaseAnalyticsProvider.logEvent(
-                    activity,
-                    FirebaseAnalyticsProvider.Event.SHARE,
-                    firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "days_remaining_widget")
-            );
+        thread.runOnUI(() -> {
+            if (!text.isEmpty()) {
+                Intent intent = new Intent(Intent.ACTION_SEND);
+                intent.setType("text/plain");
+                intent.putExtra(Intent.EXTRA_TEXT, text);
+                eventBus.fire(new OpenIntentEvent(Intent.createChooser(intent, activity.getString(R.string.share))));
+                // track statistics
+                firebaseAnalyticsProvider.logEvent(
+                        activity,
+                        FirebaseAnalyticsProvider.Event.SHARE,
+                        firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "days_remaining_widget")
+                );
+            }
+        });
+    }
+
+    private void setText(final int layout, final String text) {
+        TextView textView = activity.findViewById(layout);
+        if (textView != null) {
+            if (text == null || text.isEmpty()) {
+                if (textView.getLayoutParams() == showMatch || textView.getLayoutParams() != hide) {
+                    textView.setLayoutParams(hide);
+                }
+            } else {
+                textView.setText(text);
+                if (textView.getLayoutParams() == hide || textView.getLayoutParams() != showMatch) {
+                    textView.setLayoutParams(showMatch);
+                }
+            }
+        }
+    }
+
+    private void setText(final int container, final int layout, final String text) {
+        try {
+            if (text == null) {
+                View view = activity.findViewById(container);
+                if (view != null && (view.getLayoutParams() == show || view.getLayoutParams() != hide)) {
+                    view.setLayoutParams(hide);
+                }
+            } else {
+                View view = activity.findViewById(container);
+                if (view != null && (view.getLayoutParams() == hide || view.getLayoutParams() != show)) {
+                    view.setLayoutParams(show);
+                }
+                TextView textView = activity.findViewById(layout);
+                if (textView != null) {
+                    textView.setText(text);
+                }
+            }
+        } catch (Exception e) {
+            log.exception(e);
         }
     }
 
     private void draw(final int layoutId) {
-        thread.runOnUI(() -> {
-            try {
-                ViewGroup vg = activity.findViewById(R.id.wr_container);
-                if (vg != null) {
-                    vg.removeAllViews();
-                    vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-                }
-            } catch (Exception e){
-                log.exception(e);
+        try {
+            ViewGroup vg = activity.findViewById(R.id.wr_container);
+            if (vg != null) {
+                vg.removeAllViews();
+                vg.addView(inflate(layoutId), 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             }
-        });
+        } catch (Exception e){
+            log.exception(e);
+        }
     }
 
     private View inflate(@LayoutRes int layout) throws InflateException {

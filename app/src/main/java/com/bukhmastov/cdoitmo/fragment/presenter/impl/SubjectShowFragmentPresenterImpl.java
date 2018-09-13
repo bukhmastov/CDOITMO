@@ -68,46 +68,50 @@ public class SubjectShowFragmentPresenterImpl implements SubjectShowFragmentPres
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        log.v(TAG, "Fragment created");
-        firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-        fragment.setHasOptionsMenu(true);
-        try {
-            final Bundle extras = fragment.getArguments();
-            if (extras == null) {
-                throw new NullPointerException("extras are null");
+        thread.run(() -> {
+            log.v(TAG, "Fragment created");
+            firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
+            fragment.setHasOptionsMenu(true);
+            try {
+                final Bundle extras = fragment.getArguments();
+                if (extras == null) {
+                    throw new NullPointerException("extras are null");
+                }
+                String data = extras.getString("data");
+                if (data == null || data.isEmpty()) {
+                    throw new Exception("Wrong extras provided: " + extras.toString());
+                }
+                this.data = new JSONObject(data);
+            } catch (Exception e) {
+                log.exception(e);
+                this.data = null;
+                activity.back();
             }
-            String data = extras.getString("data");
-            if (data == null || data.isEmpty()) {
-                throw new Exception("Wrong extras provided: " + extras.toString());
-            }
-            this.data = new JSONObject(data);
-        } catch (Exception e) {
-            log.exception(e);
-            this.data = null;
-            activity.back();
-        }
+        });
     }
 
     @Override
     public void onDestroy() {
-        log.v(TAG, "Fragment destroyed");
-        try {
+        thread.runOnUI(() -> {
+            log.v(TAG, "Fragment destroyed");
             if (activity != null && activity.toolbar != null) {
                 MenuItem action_share = activity.toolbar.findItem(R.id.action_share);
-                if (action_share != null) action_share.setVisible(false);
+                if (action_share != null) {
+                    action_share.setVisible(false);
+                }
             }
-        } catch (Exception e){
-            log.exception(e);
-        }
+        });
     }
 
     @Override
     public void onResume() {
-        if (data == null) {
-            return;
-        }
-        log.v(TAG, "Fragment resumed");
-        firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
+        thread.run(() -> {
+            if (data == null) {
+                return;
+            }
+            log.v(TAG, "Fragment resumed");
+            firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
+        });
     }
 
     @Override

@@ -14,6 +14,7 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.util.Random;
 
@@ -28,6 +29,8 @@ public class PikaActivityPresenterImpl implements PikaActivityPresenter {
 
     @Inject
     Log log;
+    @Inject
+    Thread thread;
     @Inject
     StoragePref storagePref;
     @Inject
@@ -46,29 +49,33 @@ public class PikaActivityPresenterImpl implements PikaActivityPresenter {
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        log.v(TAG, "PIKA is no longer hiding");
-        firebaseAnalyticsProvider.logCurrentScreen(activity);
-        activity.overridePendingTransition(R.anim.zoom_bottom_in, R.anim.zoom_bottom_out);
-        if (random.nextInt(6) % 6 == 0) {
-            log.v(TAG, "LEGENDARY D1MA$ APPEARS, so pika went away");
-            dimas = true;
-            ((ImageView) activity.findViewById(R.id.image)).setImageDrawable(activity.getDrawable(R.drawable.wuwari));
-        }
-        View pika_container = activity.findViewById(R.id.pika_container);
-        if (pika_container != null) {
-            pika_container.setOnClickListener(v -> {
-                activity.finish();
-                activity.overridePendingTransition(R.anim.zoom_bottom_in, R.anim.zoom_bottom_out);
-            });
-        }
+        thread.runOnUI(() -> {
+            log.v(TAG, "PIKA is no longer hiding");
+            firebaseAnalyticsProvider.logCurrentScreen(activity);
+            activity.overridePendingTransition(R.anim.zoom_bottom_in, R.anim.zoom_bottom_out);
+            if (random.nextInt(6) % 6 == 0) {
+                log.v(TAG, "LEGENDARY D1MA$ APPEARS, so pika went away");
+                dimas = true;
+                ((ImageView) activity.findViewById(R.id.image)).setImageDrawable(activity.getDrawable(R.drawable.wuwari));
+            }
+            View pika_container = activity.findViewById(R.id.pika_container);
+            if (pika_container != null) {
+                pika_container.setOnClickListener(v -> {
+                    activity.finish();
+                    activity.overridePendingTransition(R.anim.zoom_bottom_in, R.anim.zoom_bottom_out);
+                });
+            }
+        });
     }
 
     @Override
     public void onDestroy() {
-        if (dimas) {
-            log.v(TAG, "D1MA$ left us to not to be late for some movies");
-        } else {
-            log.v(TAG, "PIKA left us to stream some games");
-        }
+        thread.runOnUI(() -> {
+            if (dimas) {
+                log.v(TAG, "D1MA$ left us to not to be late for some movies");
+            } else {
+                log.v(TAG, "PIKA left us to stream some games");
+            }
+        });
     }
 }

@@ -110,27 +110,29 @@ public class ScheduleLessonsModifyFragmentPresenterImpl implements ScheduleLesso
 
     @Override
     public void onViewCreated() {
-        try {
-            if (fragment.extras() == null) {
-                throw new NullPointerException("extras cannot be null");
+        thread.run(() -> {
+            try {
+                if (fragment.extras() == null) {
+                    throw new NullPointerException("extras cannot be null");
+                }
+                type = fragment.extras().getString("action_type");
+                if (type == null) {
+                    throw new NullPointerException("type cannot be null");
+                }
+                switch (type) {
+                    case CREATE: activity.updateToolbar(activity, activity.getString(R.string.lesson_creation), R.drawable.ic_schedule_lessons); break;
+                    case EDIT: activity.updateToolbar(activity, activity.getString(R.string.lesson_editing), R.drawable.ic_schedule_lessons); break;
+                    default:
+                        Exception exception = new Exception("got wrong type from arguments bundle: " + type);
+                        log.wtf(exception);
+                        throw exception;
+                }
+                display();
+            } catch (Exception e) {
+                log.exception(e);
+                fragment.close();
             }
-            type = fragment.extras().getString("action_type");
-            if (type == null) {
-                throw new NullPointerException("type cannot be null");
-            }
-            switch (type) {
-                case CREATE: activity.updateToolbar(activity, activity.getString(R.string.lesson_creation), R.drawable.ic_schedule_lessons); break;
-                case EDIT: activity.updateToolbar(activity, activity.getString(R.string.lesson_editing), R.drawable.ic_schedule_lessons); break;
-                default:
-                    Exception exception = new Exception("got wrong type from arguments bundle: " + type);
-                    log.wtf(exception);
-                    throw exception;
-            }
-            display();
-        } catch (Exception e) {
-            log.exception(e);
-            fragment.close();
-        }
+        });
     }
 
     private void display() {

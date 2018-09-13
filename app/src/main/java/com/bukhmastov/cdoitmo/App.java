@@ -17,6 +17,7 @@ import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.util.Locale;
 import java.util.UUID;
@@ -40,6 +41,8 @@ public class App extends Application {
     @Inject
     Log log;
     @Inject
+    Thread thread;
+    @Inject
     EventBus eventBus;
     @Inject
     StoragePref storagePref;
@@ -57,6 +60,12 @@ public class App extends Application {
         super.onCreate();
         try {
             AppComponentProvider.getComponent(this).inject(this);
+        } catch (Throwable throwable) {
+            android.util.Log.wtf(TAG, "Failed to get app component and inject dependencies", throwable);
+            android.util.Log.wtf(TAG, "App initialization failed, app is going to crash...");
+            throw throwable;
+        }
+        try {
             storagePref.applyDebug(this);
             eventBus.register(this);
             log.setEnabled(storagePref.get(this, "pref_allow_collect_logs", false));
@@ -66,8 +75,8 @@ public class App extends Application {
             setUUID();
             setLocale();
             setFirebase();
-        } catch (Throwable e) {
-            log.exception(e);
+        } catch (Throwable throwable) {
+            log.exception(throwable);
         }
     }
 
@@ -83,56 +92,60 @@ public class App extends Application {
 
     @Event
     public void onOpenActivityEvent(OpenActivityEvent event) {
-        try {
-            log.v(TAG, "onOpenActivityEvent | activity=", event.getActivity().getCanonicalName());
-            Intent intent = new Intent(this, event.getActivity());
-            if (event.getExtras() != null) {
-                intent.putExtras(event.getExtras());
+        thread.runOnUI(() -> {
+            try {
+                log.v(TAG, "onOpenActivityEvent | activity=", event.getActivity().getCanonicalName());
+                Intent intent = new Intent(this, event.getActivity());
+                if (event.getExtras() != null) {
+                    intent.putExtras(event.getExtras());
+                }
+                if (event.getFlags() != null) {
+                    intent.addFlags(event.getFlags());
+                }
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            } catch (ActivityNotFoundException e) {
+                log.e(TAG, "Failed to open activity | activity not found | e=", e.getMessage());
+                if (event.getIdentity() != null) {
+                    eventBus.fire(new OpenActivityEvent.Failed(event.getIdentity(), e.getMessage()));
+                } else {
+                    notificationMessage.toast(this, getString(R.string.something_went_wrong));
+                }
+            } catch (Throwable t) {
+                log.e(TAG, "Failed to open activity | throwable=", t.getMessage());
+                if (event.getIdentity() != null) {
+                    eventBus.fire(new OpenActivityEvent.Failed(event.getIdentity(), t.getMessage()));
+                } else {
+                    notificationMessage.toast(this, getString(R.string.something_went_wrong));
+                }
             }
-            if (event.getFlags() != null) {
-                intent.addFlags(event.getFlags());
-            }
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-        } catch (ActivityNotFoundException e) {
-            log.e(TAG, "Failed to open activity | activity not found | e=", e.getMessage());
-            if (event.getIdentity() != null) {
-                eventBus.fire(new OpenActivityEvent.Failed(event.getIdentity(), e.getMessage()));
-            } else {
-                notificationMessage.toast(this, getString(R.string.something_went_wrong));
-            }
-        } catch (Throwable t) {
-            log.e(TAG, "Failed to open activity | throwable=", t.getMessage());
-            if (event.getIdentity() != null) {
-                eventBus.fire(new OpenActivityEvent.Failed(event.getIdentity(), t.getMessage()));
-            } else {
-                notificationMessage.toast(this, getString(R.string.something_went_wrong));
-            }
-        }
+        });
     }
 
     @Event
     public void onOpenIntentEvent(OpenIntentEvent event) {
-        try {
-            log.v(TAG, "onOpenActivityEvent | intent=", event.getIntent().toString());
-            Intent intent = event.getIntent();
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-        } catch (ActivityNotFoundException e) {
-            log.e(TAG, "Failed to open intent | activity not found | e=", e.getMessage());
-            if (event.getIdentity() != null) {
-                eventBus.fire(new OpenIntentEvent.Failed(event.getIdentity(), e.getMessage()));
-            } else {
-                notificationMessage.toast(this, getString(R.string.something_went_wrong));
+        thread.runOnUI(() -> {
+            try {
+                log.v(TAG, "onOpenActivityEvent | intent=", event.getIntent().toString());
+                Intent intent = event.getIntent();
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            } catch (ActivityNotFoundException e) {
+                log.e(TAG, "Failed to open intent | activity not found | e=", e.getMessage());
+                if (event.getIdentity() != null) {
+                    eventBus.fire(new OpenIntentEvent.Failed(event.getIdentity(), e.getMessage()));
+                } else {
+                    notificationMessage.toast(this, getString(R.string.something_went_wrong));
+                }
+            } catch (Throwable t) {
+                log.e(TAG, "Failed to open intent | throwable=", t.getMessage());
+                if (event.getIdentity() != null) {
+                    eventBus.fire(new OpenIntentEvent.Failed(event.getIdentity(), t.getMessage()));
+                } else {
+                    notificationMessage.toast(this, getString(R.string.something_went_wrong));
+                }
             }
-        } catch (Throwable t) {
-            log.e(TAG, "Failed to open intent | throwable=", t.getMessage());
-            if (event.getIdentity() != null) {
-                eventBus.fire(new OpenIntentEvent.Failed(event.getIdentity(), t.getMessage()));
-            } else {
-                notificationMessage.toast(this, getString(R.string.something_went_wrong));
-            }
-        }
+        });
     }
 
     private void init() {

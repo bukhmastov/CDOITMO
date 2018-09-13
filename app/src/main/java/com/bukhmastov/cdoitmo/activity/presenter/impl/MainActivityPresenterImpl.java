@@ -122,28 +122,32 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        if (!initialized) {
-            log.i(TAG, "Activity created, initialization");
-            init(activity);
-        } else {
-            log.i(TAG, "Activity created, setup");
-            setup(activity, savedInstanceState);
-        }
+        thread.runOnUI(() -> {
+            if (!initialized) {
+                log.i(TAG, "Activity created, initialization");
+                init(activity);
+            } else {
+                log.i(TAG, "Activity created, setup");
+                setup(activity, savedInstanceState);
+            }
+        });
     }
 
     @Override
     public void onResume() {
-        log.v(TAG, "Activity resumed");
-        if (initialized) {
-            final NavigationView navigationView = activity.findViewById(R.id.nav_view);
-            navigationMenu.displayEnableDisableOfflineButton(navigationView);
-            navigationMenu.hideIfUnauthorizedMode(navigationView);
-            if (!exitOfflineMode && (App.OFFLINE_MODE || account.isAuthorized())) {
-                authorized();
-            } else {
-                authorize(LoginActivity.SIGNAL_LOGIN);
+        thread.runOnUI(() -> {
+            log.v(TAG, "Activity resumed");
+            if (initialized) {
+                final NavigationView navigationView = activity.findViewById(R.id.nav_view);
+                navigationMenu.displayEnableDisableOfflineButton(navigationView);
+                navigationMenu.hideIfUnauthorizedMode(navigationView);
+                if (!exitOfflineMode && (App.OFFLINE_MODE || account.isAuthorized())) {
+                    authorized();
+                } else {
+                    authorize(LoginActivity.SIGNAL_LOGIN);
+                }
             }
-        }
+        });
     }
 
     @Override
@@ -372,66 +376,84 @@ public class MainActivityPresenterImpl implements MainActivityPresenter, Navigat
     }
 
     private void setup(@NonNull ConnectedActivity activity, @Nullable Bundle savedInstanceState) {
-        // setup toolbar and drawer layout
-        final Toolbar toolbar = activity.findViewById(R.id.toolbar_main);
-        final DrawerLayout drawer_layout = activity.findViewById(R.id.drawer_layout);
-        if (toolbar != null) {
-            theme.applyToolbarTheme(activity, toolbar);
-            activity.setSupportActionBar(toolbar);
-        }
-        if (drawer_layout != null) {
-            App.tablet = false;
+        thread.runOnUI(() -> {
+            // setup toolbar and drawer layout
+            final Toolbar toolbar = activity.findViewById(R.id.toolbar_main);
+            final DrawerLayout drawer_layout = activity.findViewById(R.id.drawer_layout);
             if (toolbar != null) {
-                ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(activity, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-                drawer_layout.addDrawerListener(mDrawerToggle);
-                mDrawerToggle.syncState();
-                if (App.isFirstLaunchEver) {
-                    drawer_layout.openDrawer(Gravity.START);
+                theme.applyToolbarTheme(activity, toolbar);
+                activity.setSupportActionBar(toolbar);
+            }
+            if (drawer_layout != null) {
+                App.tablet = false;
+                if (toolbar != null) {
+                    ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(activity, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+                    drawer_layout.addDrawerListener(mDrawerToggle);
+                    mDrawerToggle.syncState();
+                    if (App.isFirstLaunchEver) {
+                        drawer_layout.openDrawer(Gravity.START);
+                    }
                 }
+            } else {
+                App.tablet = true;
             }
-        } else {
-            App.tablet = true;
-        }
-        NavigationView navigationView = activity.findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
-        // track to firebase
-        firebaseAnalyticsProvider.logCurrentScreen(activity);
-        firebaseAnalyticsProvider.setUserProperty(activity, FirebaseAnalyticsProvider.Property.DEVICE, App.tablet ? "tablet" : "mobile");
-        // setup static variables
-        App.OFFLINE_MODE = "offline".equals(activity.getIntent().getStringExtra("mode")) ||
-                !Client.isOnline(activity) ||
-                (App.firstLaunch && storagePref.get(activity, "pref_initial_offline", false));
-        App.firstLaunch = false;
-        App.isFirstLaunchEver = false;
-        // do some logging
-        log.i(TAG, "Device = ", (App.tablet ? "tablet" : "mobile"));
-        log.i(TAG, "Mode = ", (App.OFFLINE_MODE ? "offline" : "online"));
-        // define section to be opened
-        final String action = activity.getIntent().getStringExtra("action");
-        if (action == null && savedInstanceState != null && savedInstanceState.containsKey(STATE_SELECTED_SELECTION)) {
-            selectedSection = savedInstanceState.getInt(STATE_SELECTED_SELECTION);
-            log.v(TAG, "Section selected from savedInstanceState");
-        } else {
-            String act = action == null ? storagePref.get(activity, "pref_default_fragment", "e_journal") : action;
-            log.v(TAG, "Section = ", act, " from ", (action == null ? "preference" : "intent's extras"));
-            switch (act) {
-                case "e_journal": selectedSection = R.id.nav_e_register; break;
-                case "protocol_changes": selectedSection = R.id.nav_protocol_changes; break;
-                case "rating": selectedSection = R.id.nav_rating; break;
-                case "schedule_lessons": selectedSection = R.id.nav_schedule; break;
-                case "schedule_exams": selectedSection = R.id.nav_schedule_exams; break;
-                case "schedule_attestations": selectedSection = R.id.nav_schedule_attestations; break;
-                case "room101": selectedSection = R.id.nav_room101; break;
-                case "university": selectedSection = R.id.nav_university; break;
-                default:
-                    log.wtf(TAG, "unsupported act: '", act, "'. Going to select 'e_journal' instead");
-                    selectedSection = R.id.nav_e_register;
-                    break;
+            NavigationView navigationView = activity.findViewById(R.id.nav_view);
+            navigationView.setNavigationItemSelectedListener(this);
+            // track to firebase
+            firebaseAnalyticsProvider.logCurrentScreen(activity);
+            firebaseAnalyticsProvider.setUserProperty(activity, FirebaseAnalyticsProvider.Property.DEVICE, App.tablet ? "tablet" : "mobile");
+            // setup static variables
+            App.OFFLINE_MODE = "offline".equals(activity.getIntent().getStringExtra("mode")) ||
+                    !Client.isOnline(activity) ||
+                    (App.firstLaunch && storagePref.get(activity, "pref_initial_offline", false));
+            App.firstLaunch = false;
+            App.isFirstLaunchEver = false;
+            // do some logging
+            log.i(TAG, "Device = ", (App.tablet ? "tablet" : "mobile"));
+            log.i(TAG, "Mode = ", (App.OFFLINE_MODE ? "offline" : "online"));
+            // define section to be opened
+            final String action = activity.getIntent().getStringExtra("action");
+            if (action == null && savedInstanceState != null && savedInstanceState.containsKey(STATE_SELECTED_SELECTION)) {
+                selectedSection = savedInstanceState.getInt(STATE_SELECTED_SELECTION);
+                log.v(TAG, "Section selected from savedInstanceState");
+            } else {
+                String act = action == null ? storagePref.get(activity, "pref_default_fragment", "e_journal") : action;
+                log.v(TAG, "Section = ", act, " from ", (action == null ? "preference" : "intent's extras"));
+                switch (act) {
+                    case "e_journal":
+                        selectedSection = R.id.nav_e_register;
+                        break;
+                    case "protocol_changes":
+                        selectedSection = R.id.nav_protocol_changes;
+                        break;
+                    case "rating":
+                        selectedSection = R.id.nav_rating;
+                        break;
+                    case "schedule_lessons":
+                        selectedSection = R.id.nav_schedule;
+                        break;
+                    case "schedule_exams":
+                        selectedSection = R.id.nav_schedule_exams;
+                        break;
+                    case "schedule_attestations":
+                        selectedSection = R.id.nav_schedule_attestations;
+                        break;
+                    case "room101":
+                        selectedSection = R.id.nav_room101;
+                        break;
+                    case "university":
+                        selectedSection = R.id.nav_university;
+                        break;
+                    default:
+                        log.wtf(TAG, "unsupported act: '", act, "'. Going to select 'e_journal' instead");
+                        selectedSection = R.id.nav_e_register;
+                        break;
+                }
+                if (action != null) activity.getIntent().removeExtra("action");
             }
-            if (action != null) activity.getIntent().removeExtra("action");
-        }
-        // activity ready to be loaded
-        loaded = false;
+            // activity ready to be loaded
+            loaded = false;
+        });
     }
 
     private int applySectionUnAuthorizedMode(int section) {

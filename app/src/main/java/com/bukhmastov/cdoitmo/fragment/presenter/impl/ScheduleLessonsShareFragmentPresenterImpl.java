@@ -102,42 +102,49 @@ public class ScheduleLessonsShareFragmentPresenterImpl implements ScheduleLesson
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-        action = fragment.extras().getString("action");
-        log.v(TAG, "Fragment created | action=" + action);
-        if (action == null || !(action.equals("share") || action.equals("handle"))) {
-            keepGoing = false;
-            notificationMessage.toast(activity, activity.getString(R.string.corrupted_data));
-            finish();
-        }
-        switch (action) {
-            case "share":
-            default: {
-                activity.updateToolbar(activity, activity.getString(R.string.share_changes), R.drawable.ic_share);
-                break;
+        thread.run(() -> {
+            firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
+            action = fragment.extras().getString("action");
+            log.v(TAG, "Fragment created | action=" + action);
+            if (action == null || !(action.equals("share") || action.equals("handle"))) {
+                keepGoing = false;
+                notificationMessage.toast(activity, activity.getString(R.string.corrupted_data));
+                finish();
             }
-            case "handle": {
-                activity.updateToolbar(activity, activity.getString(R.string.accept_changes), R.drawable.ic_share);
-                break;
+            switch (action) {
+                case "share":
+                default: {
+                    activity.updateToolbar(activity, activity.getString(R.string.share_changes), R.drawable.ic_share);
+                    break;
+                }
+                case "handle": {
+                    activity.updateToolbar(activity, activity.getString(R.string.accept_changes), R.drawable.ic_share);
+                    break;
+                }
             }
-        }
+        });
     }
 
     @Override
     public void onDestroy() {
-        log.v(TAG, "Fragment destroyed");
-        loaded = false;
-        changes.clear();
+        thread.run(() -> {
+            log.v(TAG, "Fragment destroyed");
+            loaded = false;
+            changes.clear();
+        });
     }
 
     @Override
     public void onResume() {
-        if (!keepGoing) {
-            return;
-        }
-        log.v(TAG, "Fragment resumed");
-        firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-        if (!loaded) {
+        thread.run(() -> {
+            if (!keepGoing) {
+                return;
+            }
+            log.v(TAG, "Fragment resumed");
+            firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
+            if (loaded) {
+                return;
+            }
             loaded = true;
             try {
                 Bundle extras = fragment.getArguments();
@@ -149,15 +156,17 @@ public class ScheduleLessonsShareFragmentPresenterImpl implements ScheduleLesson
                 log.exception(e);
                 finish();
             }
-        }
+        });
     }
 
     @Override
     public void onPause() {
-        log.v(TAG, "Fragment paused");
-        if (requestHandle != null && requestHandle.cancel()) {
-            loaded = false;
-        }
+        thread.run(() -> {
+            log.v(TAG, "Fragment paused");
+            if (requestHandle != null && requestHandle.cancel()) {
+                loaded = false;
+            }
+        });
     }
 
     @Override

@@ -93,23 +93,30 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        log.v(TAG, "Fragment created");
-        firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-        data.put(COMMON, new Info(EMPTY, null));
-        data.put(OWN,    new Info(EMPTY, null));
+        thread.run(() -> {
+            log.v(TAG, "Fragment created");
+            firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
+            data.put(COMMON, new Info(EMPTY, null));
+            data.put(OWN, new Info(EMPTY, null));
+        });
     }
 
     @Override
     public void onDestroy() {
-        log.v(TAG, "Fragment destroyed");
-        loaded = false;
+        thread.run(() -> {
+            log.v(TAG, "Fragment destroyed");
+            loaded = false;
+        });
     }
 
     @Override
     public void onResume() {
-        log.v(TAG, "Fragment resumed");
-        firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-        if (!loaded) {
+        thread.run(() -> {
+            log.v(TAG, "Fragment resumed");
+            firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
+            if (loaded) {
+                return;
+            }
             loaded = true;
             try {
                 String storedData = fragment.restoreData(fragment);
@@ -131,21 +138,25 @@ public class RatingFragmentPresenterImpl implements RatingFragmentPresenter, Swi
                 log.exception(e);
                 load();
             }
-        }
+        });
     }
 
     @Override
     public void onPause() {
-        log.v(TAG, "Fragment paused");
-        if (requestHandle != null && requestHandle.cancel()) {
-            loaded = false;
-        }
+        thread.run(() -> {
+            log.v(TAG, "Fragment paused");
+            if (requestHandle != null && requestHandle.cancel()) {
+                loaded = false;
+            }
+        });
     }
 
     @Override
     public void onRefresh() {
-        log.v(TAG, "refreshing");
-        load(COMMON, true);
+        thread.run(() -> {
+            log.v(TAG, "refreshing");
+            load(COMMON, true);
+        });
     }
 
     private void load() {

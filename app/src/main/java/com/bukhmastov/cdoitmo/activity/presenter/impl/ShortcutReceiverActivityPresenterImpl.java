@@ -11,6 +11,7 @@ import com.bukhmastov.cdoitmo.activity.presenter.ShortcutReceiverActivityPresent
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.receiver.ShortcutReceiver;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import javax.inject.Inject;
 
@@ -22,6 +23,8 @@ public class ShortcutReceiverActivityPresenterImpl implements ShortcutReceiverAc
 
     @Inject
     Log log;
+    @Inject
+    Thread thread;
 
     public ShortcutReceiverActivityPresenterImpl() {
         AppComponentProvider.getComponent().inject(this);
@@ -34,25 +37,29 @@ public class ShortcutReceiverActivityPresenterImpl implements ShortcutReceiverAc
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(ShortcutReceiver.ACTION_CLICK_SHORTCUT);
-        filter.addAction(ShortcutReceiver.ACTION_ADD_SHORTCUT);
-        filter.addAction(ShortcutReceiver.ACTION_SHORTCUT_INSTALLED);
-        filter.addAction(ShortcutReceiver.ACTION_REMOVE_SHORTCUT);
-        activity.registerReceiver(receiver, filter);
-        Intent intent = activity.getIntent();
-        Bundle extras = intent.getExtras();
-        Intent remoteIntent = new Intent();
-        remoteIntent.setAction(intent.getAction());
-        if (extras != null) remoteIntent.putExtras(extras);
-        log.v(TAG, "Activity created | action=" + remoteIntent.getAction() + " | " + remoteIntent.toString());
-        activity.sendBroadcast(remoteIntent);
-        activity.finish();
+        thread.runOnUI(() -> {
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(ShortcutReceiver.ACTION_CLICK_SHORTCUT);
+            filter.addAction(ShortcutReceiver.ACTION_ADD_SHORTCUT);
+            filter.addAction(ShortcutReceiver.ACTION_SHORTCUT_INSTALLED);
+            filter.addAction(ShortcutReceiver.ACTION_REMOVE_SHORTCUT);
+            activity.registerReceiver(receiver, filter);
+            Intent intent = activity.getIntent();
+            Bundle extras = intent.getExtras();
+            Intent remoteIntent = new Intent();
+            remoteIntent.setAction(intent.getAction());
+            if (extras != null) remoteIntent.putExtras(extras);
+            log.v(TAG, "Activity created | action=" + remoteIntent.getAction() + " | " + remoteIntent.toString());
+            activity.sendBroadcast(remoteIntent);
+            activity.finish();
+        });
     }
 
     @Override
     public void onDestroy() {
-        log.v(TAG, "Activity destroyed");
-        activity.unregisterReceiver(receiver);
+        thread.runOnUI(() -> {
+            log.v(TAG, "Activity destroyed");
+            activity.unregisterReceiver(receiver);
+        });
     }
 }

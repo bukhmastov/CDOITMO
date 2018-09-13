@@ -26,6 +26,7 @@ import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Theme;
+import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
 
 import javax.inject.Inject;
@@ -42,6 +43,8 @@ public class WebViewActivityPresenterImpl implements WebViewActivityPresenter {
 
     @Inject
     Log log;
+    @Inject
+    Thread thread;
     @Inject
     EventBus eventBus;
     @Inject
@@ -62,79 +65,83 @@ public class WebViewActivityPresenterImpl implements WebViewActivityPresenter {
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        log.i(TAG, "Activity created");
-        try {
-            Intent intent = activity.getIntent();
-            if (intent == null) throw new NullPointerException("intent is null");
-            Bundle extras = intent.getExtras();
-            if (extras == null) throw new NullPointerException("extras are null");
-            url = extras.getString("url");
-            if (url == null) throw new NullPointerException("url is null");
-            title = extras.getString("title");
-        } catch (Exception e) {
-            activity.finish();
-        }
-        firebaseAnalyticsProvider.logCurrentScreen(activity);
-        Toolbar toolbar = activity.findViewById(R.id.toolbar_webview);
-        if (toolbar != null) {
-            theme.applyToolbarTheme(activity, toolbar);
-            activity.setSupportActionBar(toolbar);
-        }
-        ActionBar actionBar = activity.getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setHomeButtonEnabled(true);
-            actionBar.setDisplayHomeAsUpEnabled(true);
-            actionBar.setTitle(title == null ? activity.getString(R.string.web_browser) : title);
-        }
-        // инициализируем
-        webview = activity.findViewById(R.id.webview);
-        webviewProgressBar = activity.findViewById(R.id.webviewProgressBar);
-        swipe = activity.findViewById(R.id.swipe);
-        // работаем со свайпом
-        if (swipe != null) {
-            swipe.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
-            swipe.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));
-            swipe.setOnRefreshListener(() -> {
-                if (swipe != null && swipe.isRefreshing()) {
-                    swipe.setRefreshing(false);
-                }
-                if (webview != null) {
-                    webview.stopLoading();
-                    webview.reload();
-                }
-            });
-        }
-        // загружаем
-        if (webview != null) {
-            webview.setWebViewClient(new WebViewClient() {
-                @Override
-                public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                    eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, request.getUrl())));
-                    return true;
-                }
-                @Override
-                public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                    if (webviewProgressBar != null) {
-                        webviewProgressBar.setVisibility(View.VISIBLE);
+        thread.runOnUI(() -> {
+            log.i(TAG, "Activity created");
+            try {
+                Intent intent = activity.getIntent();
+                if (intent == null) throw new NullPointerException("intent is null");
+                Bundle extras = intent.getExtras();
+                if (extras == null) throw new NullPointerException("extras are null");
+                url = extras.getString("url");
+                if (url == null) throw new NullPointerException("url is null");
+                title = extras.getString("title");
+            } catch (Exception e) {
+                activity.finish();
+            }
+            firebaseAnalyticsProvider.logCurrentScreen(activity);
+            Toolbar toolbar = activity.findViewById(R.id.toolbar_webview);
+            if (toolbar != null) {
+                theme.applyToolbarTheme(activity, toolbar);
+                activity.setSupportActionBar(toolbar);
+            }
+            ActionBar actionBar = activity.getSupportActionBar();
+            if (actionBar != null) {
+                actionBar.setHomeButtonEnabled(true);
+                actionBar.setDisplayHomeAsUpEnabled(true);
+                actionBar.setTitle(title == null ? activity.getString(R.string.web_browser) : title);
+            }
+            // инициализируем
+            webview = activity.findViewById(R.id.webview);
+            webviewProgressBar = activity.findViewById(R.id.webviewProgressBar);
+            swipe = activity.findViewById(R.id.swipe);
+            // работаем со свайпом
+            if (swipe != null) {
+                swipe.setColorSchemeColors(Color.resolve(activity, R.attr.colorAccent));
+                swipe.setProgressBackgroundColorSchemeColor(Color.resolve(activity, R.attr.colorBackgroundRefresh));
+                swipe.setOnRefreshListener(() -> {
+                    if (swipe != null && swipe.isRefreshing()) {
+                        swipe.setRefreshing(false);
                     }
-                }
-                @Override
-                public void onPageFinished(WebView view, String url) {
-                    if (webviewProgressBar != null) {
-                        webviewProgressBar.setVisibility(View.GONE);
+                    if (webview != null) {
+                        webview.stopLoading();
+                        webview.reload();
                     }
-                }
-            });
-            webview.setWebChromeClient(new WebChromeClient() {
-                @Override
-                public void onProgressChanged(WebView view, int progress) {
-                    if (webviewProgressBar != null) {
-                        webviewProgressBar.setProgress(progress);
+                });
+            }
+            // загружаем
+            if (webview != null) {
+                webview.setWebViewClient(new WebViewClient() {
+                    @Override
+                    public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                        eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, request.getUrl())));
+                        return true;
                     }
-                }
-            });
-            webview.loadUrl(url);
-        }
+
+                    @Override
+                    public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                        if (webviewProgressBar != null) {
+                            webviewProgressBar.setVisibility(View.VISIBLE);
+                        }
+                    }
+
+                    @Override
+                    public void onPageFinished(WebView view, String url) {
+                        if (webviewProgressBar != null) {
+                            webviewProgressBar.setVisibility(View.GONE);
+                        }
+                    }
+                });
+                webview.setWebChromeClient(new WebChromeClient() {
+                    @Override
+                    public void onProgressChanged(WebView view, int progress) {
+                        if (webviewProgressBar != null) {
+                            webviewProgressBar.setProgress(progress);
+                        }
+                    }
+                });
+                webview.loadUrl(url);
+            }
+        });
     }
 
     @Override

@@ -131,28 +131,30 @@ public class HomeScreenInteractionFragmentPresenterImpl implements HomeScreenInt
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        log.v(TAG, "Fragment created");
-        firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-        ConnectedFragment.Data data = ConnectedFragment.getData(activity, this.getClass());
-        if (data != null) {
-            activity.updateToolbar(activity, data.title, data.image);
-        }
-        // Инициализируем приложения
-        apps.clear();
-        apps.add(new App("time_remaining_widget", activity.getString(R.string.time_remaining_widget), activity.getString(R.string.time_remaining_widget_desc), activity.getString(R.string.need_to_choose_schedule), R.mipmap.ic_shortcut_time_remaining_widget));
-        apps.add(new App("days_remaining_widget", activity.getString(R.string.days_remaining_widget), activity.getString(R.string.days_remaining_widget_desc), activity.getString(R.string.need_to_choose_schedule), R.mipmap.ic_shortcut_days_remaining_widget));
-        // Инициализируем ярлыки
-        shortcuts.clear();
-        shortcuts.add(new Shortcut("offline", null, activity.getString(R.string.app_name), activity.getString(R.string.launch_app_offline), R.mipmap.ic_shortcut_offline));
-        shortcuts.add(new Shortcut("tab", "e_journal", activity.getString(R.string.e_journal), null, R.mipmap.ic_shortcut_e_journal));
-        shortcuts.add(new Shortcut("tab", "protocol_changes", activity.getString(R.string.protocol_changes), null, R.mipmap.ic_shortcut_protocol_changes));
-        shortcuts.add(new Shortcut("tab", "rating", activity.getString(R.string.rating), null, R.mipmap.ic_shortcut_rating));
-        shortcuts.add(new Shortcut("tab", "room101", activity.getString(R.string.room101), null, R.mipmap.ic_shortcut_room101));
-        shortcuts.add(new Shortcut("room101", "create", activity.getString(R.string.room101create), null, R.mipmap.ic_shortcut_room101_add));
-        shortcuts.add(new Shortcut("schedule_lessons", null, activity.getString(R.string.schedule_lessons), activity.getString(R.string.need_to_choose_schedule), R.mipmap.ic_shortcut_schedule_lessons));
-        shortcuts.add(new Shortcut("schedule_exams", null, activity.getString(R.string.schedule_exams), activity.getString(R.string.need_to_choose_schedule), R.mipmap.ic_shortcut_schedule_exams));
-        shortcuts.add(new Shortcut("schedule_attestations", null, activity.getString(R.string.schedule_attestations), activity.getString(R.string.need_to_choose_schedule), R.mipmap.ic_shortcut_schedule_attestations));
-        shortcuts.add(new Shortcut("university", null, activity.getString(R.string.university), activity.getString(R.string.need_to_choose_type), R.mipmap.ic_shortcut_university));
+        thread.runOnUI(() -> {
+            log.v(TAG, "Fragment created");
+            firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
+            ConnectedFragment.Data data = ConnectedFragment.getData(activity, this.getClass());
+            if (data != null) {
+                activity.updateToolbar(activity, data.title, data.image);
+            }
+            // Инициализируем приложения
+            apps.clear();
+            apps.add(new App("time_remaining_widget", activity.getString(R.string.time_remaining_widget), activity.getString(R.string.time_remaining_widget_desc), activity.getString(R.string.need_to_choose_schedule), R.mipmap.ic_shortcut_time_remaining_widget));
+            apps.add(new App("days_remaining_widget", activity.getString(R.string.days_remaining_widget), activity.getString(R.string.days_remaining_widget_desc), activity.getString(R.string.need_to_choose_schedule), R.mipmap.ic_shortcut_days_remaining_widget));
+            // Инициализируем ярлыки
+            shortcuts.clear();
+            shortcuts.add(new Shortcut("offline", null, activity.getString(R.string.app_name), activity.getString(R.string.launch_app_offline), R.mipmap.ic_shortcut_offline));
+            shortcuts.add(new Shortcut("tab", "e_journal", activity.getString(R.string.e_journal), null, R.mipmap.ic_shortcut_e_journal));
+            shortcuts.add(new Shortcut("tab", "protocol_changes", activity.getString(R.string.protocol_changes), null, R.mipmap.ic_shortcut_protocol_changes));
+            shortcuts.add(new Shortcut("tab", "rating", activity.getString(R.string.rating), null, R.mipmap.ic_shortcut_rating));
+            shortcuts.add(new Shortcut("tab", "room101", activity.getString(R.string.room101), null, R.mipmap.ic_shortcut_room101));
+            shortcuts.add(new Shortcut("room101", "create", activity.getString(R.string.room101create), null, R.mipmap.ic_shortcut_room101_add));
+            shortcuts.add(new Shortcut("schedule_lessons", null, activity.getString(R.string.schedule_lessons), activity.getString(R.string.need_to_choose_schedule), R.mipmap.ic_shortcut_schedule_lessons));
+            shortcuts.add(new Shortcut("schedule_exams", null, activity.getString(R.string.schedule_exams), activity.getString(R.string.need_to_choose_schedule), R.mipmap.ic_shortcut_schedule_exams));
+            shortcuts.add(new Shortcut("schedule_attestations", null, activity.getString(R.string.schedule_attestations), activity.getString(R.string.need_to_choose_schedule), R.mipmap.ic_shortcut_schedule_attestations));
+            shortcuts.add(new Shortcut("university", null, activity.getString(R.string.university), activity.getString(R.string.need_to_choose_type), R.mipmap.ic_shortcut_university));
+        });
     }
 
     @Override
@@ -162,19 +164,23 @@ public class HomeScreenInteractionFragmentPresenterImpl implements HomeScreenInt
 
     @Override
     public void onResume() {
-        log.v(TAG, "Fragment resumed");
-        firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(ShortcutReceiver.ACTION_ADD_SHORTCUT);
-        filter.addAction(ShortcutReceiver.ACTION_SHORTCUT_INSTALLED);
-        filter.addAction(ShortcutReceiver.ACTION_INSTALL_SHORTCUT);
-        activity.registerReceiver(receiver, filter);
+        thread.runOnUI(() -> {
+            log.v(TAG, "Fragment resumed");
+            firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(ShortcutReceiver.ACTION_ADD_SHORTCUT);
+            filter.addAction(ShortcutReceiver.ACTION_SHORTCUT_INSTALLED);
+            filter.addAction(ShortcutReceiver.ACTION_INSTALL_SHORTCUT);
+            activity.registerReceiver(receiver, filter);
+        });
     }
 
     @Override
     public void onPause() {
-        log.v(TAG, "Fragment paused");
-        activity.unregisterReceiver(receiver);
+        thread.runOnUI(() -> {
+            log.v(TAG, "Fragment paused");
+            activity.unregisterReceiver(receiver);
+        });
     }
 
     @Override

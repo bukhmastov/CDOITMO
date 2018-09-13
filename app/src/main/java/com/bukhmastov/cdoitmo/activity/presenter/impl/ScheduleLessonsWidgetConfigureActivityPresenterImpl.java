@@ -90,30 +90,32 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        log.i(TAG, "Activity created");
-        firebaseAnalyticsProvider.logCurrentScreen(activity);
-        activity.setResult(Activity.RESULT_CANCELED);
-        final String th = theme.getAppTheme(activity);
-        isDarkTheme = "dark".equals(th) || "black".equals(th);
-        Toolbar toolbar = activity.findViewById(R.id.toolbar_widget);
-        if (toolbar != null) {
-            theme.applyToolbarTheme(activity, toolbar);
-            toolbar.setTitle(R.string.configure_schedule_widget);
-            activity.setSupportActionBar(toolbar);
-        }
-        Intent intent = activity.getIntent();
-        Bundle extras = intent.getExtras();
-        if (extras != null) {
-            mAppWidgetId = extras.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
-        }
-        if (mAppWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
-            log.w(TAG, "Wrong AppWidgetId provided by intent's extra");
-            close(Activity.RESULT_CANCELED, null);
-            return;
-        }
-        Settings.Schedule.query = Default.Schedule.query;
-        Settings.Schedule.title = Default.Schedule.title;
-        init();
+        thread.runOnUI(() -> {
+            log.i(TAG, "Activity created");
+            firebaseAnalyticsProvider.logCurrentScreen(activity);
+            activity.setResult(Activity.RESULT_CANCELED);
+            final String th = theme.getAppTheme(activity);
+            isDarkTheme = "dark".equals(th) || "black".equals(th);
+            Toolbar toolbar = activity.findViewById(R.id.toolbar_widget);
+            if (toolbar != null) {
+                theme.applyToolbarTheme(activity, toolbar);
+                toolbar.setTitle(R.string.configure_schedule_widget);
+                activity.setSupportActionBar(toolbar);
+            }
+            Intent intent = activity.getIntent();
+            Bundle extras = intent.getExtras();
+            if (extras != null) {
+                mAppWidgetId = extras.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
+            }
+            if (mAppWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
+                log.w(TAG, "Wrong AppWidgetId provided by intent's extra");
+                close(Activity.RESULT_CANCELED, null);
+                return;
+            }
+            Settings.Schedule.query = Default.Schedule.query;
+            Settings.Schedule.title = Default.Schedule.title;
+            init();
+        });
     }
 
     @Override

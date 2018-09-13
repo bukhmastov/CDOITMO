@@ -76,26 +76,26 @@ public class FileReceiveActivityPresenterImpl implements FileReceiveActivityPres
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        log.i(TAG, "Activity created");
-        firebaseAnalyticsProvider.logCurrentScreen(activity);
-        activity.setContentView(R.layout.activity_file_receive);
-        Toolbar toolbar = activity.findViewById(R.id.toolbar_file);
-        if (toolbar != null) {
-            theme.applyToolbarTheme(activity, toolbar);
-            activity.setSupportActionBar(toolbar);
-        }
-        ActionBar actionBar = activity.getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setHomeButtonEnabled(true);
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
-        proceed();
+        thread.runOnUI(() -> {
+            log.i(TAG, "Activity created");
+            firebaseAnalyticsProvider.logCurrentScreen(activity);
+            activity.setContentView(R.layout.activity_file_receive);
+            Toolbar toolbar = activity.findViewById(R.id.toolbar_file);
+            if (toolbar != null) {
+                theme.applyToolbarTheme(activity, toolbar);
+                activity.setSupportActionBar(toolbar);
+            }
+            ActionBar actionBar = activity.getSupportActionBar();
+            if (actionBar != null) {
+                actionBar.setHomeButtonEnabled(true);
+                actionBar.setDisplayHomeAsUpEnabled(true);
+            }
+            proceed();
+        });
     }
 
     @Override
-    public void onDestroy() {
-
-    }
+    public void onDestroy() {}
 
     @Override
     public boolean onToolbarSelected(MenuItem item) {

@@ -72,14 +72,14 @@ public class LinkedAccountsFragmentPresenterImpl implements LinkedAccountsFragme
 
     @Override
     public void onViewCreated() {
-        try {
+        thread.runOnUI(() -> {
             final View account_cdo_link = fragment.container().findViewById(R.id.account_cdo_link);
             final View account_cdo_info = fragment.container().findViewById(R.id.account_cdo_info);
             if (account_cdo_link != null) {
-                account_cdo_link.setOnClickListener(v -> {
+                account_cdo_link.setOnClickListener(v -> thread.run(() -> {
                     log.v(TAG, "account_cdo_link clicked");
                     eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("http://de.ifmo.ru"))));
-                });
+                }));
             }
             thread.run(() -> {
                 final String cdo_user_info = storage.get(activity, Storage.PERMANENT, Storage.USER, "user#deifmo#login", "").trim() + " (" + storage.get(activity, Storage.PERMANENT, Storage.USER, "user#name", "").trim() + ")";
@@ -89,8 +89,6 @@ public class LinkedAccountsFragmentPresenterImpl implements LinkedAccountsFragme
                     }
                 });
             });
-        } catch (Exception e) {
-            log.exception(e);
-        }
+        });
     }
 }

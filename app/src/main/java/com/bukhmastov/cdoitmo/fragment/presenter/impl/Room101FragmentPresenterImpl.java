@@ -108,58 +108,69 @@ public class Room101FragmentPresenterImpl implements Room101FragmentPresenter, S
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        log.v(TAG, "Fragment created");
-        if (App.UNAUTHORIZED_MODE) {
-            forbidden = true;
-            log.w(TAG, "Fragment created | UNAUTHORIZED_MODE not allowed, closing fragment...");
-            fragment.close();
-            return;
-        }
-        firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-        Intent intent = activity.getIntent();
-        if (intent != null) {
-            action_extra = intent.getStringExtra("action_extra");
-            if (action_extra != null) {
-                intent.removeExtra("action_extra");
+        thread.run(() -> {
+            log.v(TAG, "Fragment created");
+            if (App.UNAUTHORIZED_MODE) {
+                forbidden = true;
+                log.w(TAG, "Fragment created | UNAUTHORIZED_MODE not allowed, closing fragment...");
+                thread.runOnUI(() -> fragment.close());
+                return;
             }
-        }
+            firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
+            Intent intent = activity.getIntent();
+            if (intent != null) {
+                action_extra = intent.getStringExtra("action_extra");
+                if (action_extra != null) {
+                    intent.removeExtra("action_extra");
+                }
+            }
+        });
     }
 
     @Override
     public void onDestroy() {
-        log.v(TAG, "Fragment destroyed");
-        loaded = false;
+        thread.run(() -> {
+            log.v(TAG, "Fragment destroyed");
+            loaded = false;
+        });
     }
 
     @Override
     public void onResume() {
-        log.v(TAG, "Fragment resumed");
-        if (forbidden) {
-            return;
-        }
-        firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-        if (!loaded) {
+        thread.run(() -> {
+            log.v(TAG, "Fragment resumed");
+            if (forbidden) {
+                return;
+            }
+            firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
+            if (loaded) {
+                return;
+            }
             loaded = true;
             if (getData() == null) {
                 load();
             } else {
                 display();
             }
-        }
+        });
     }
 
     @Override
     public void onPause() {
-        log.v(TAG, "paused");
-        if (requestHandle != null && requestHandle.cancel()) {
-            loaded = false;
-        }
+        thread.run(() -> {
+            log.v(TAG, "paused");
+            if (requestHandle != null && requestHandle.cancel()) {
+                loaded = false;
+            }
+        });
     }
 
     @Override
     public void onRefresh() {
-        log.v(TAG, "refreshing");
-        load(true);
+        thread.run(() -> {
+            log.v(TAG, "refreshing");
+            load(true);
+        });
     }
 
     @Override

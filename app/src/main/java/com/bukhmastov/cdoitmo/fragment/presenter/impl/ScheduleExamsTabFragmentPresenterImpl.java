@@ -258,33 +258,37 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
 
     @Override
     public void onCreate(Bundle savedInstanceState, ConnectedActivity activity, Fragment fragment) {
-        this.activity = activity;
-        Bundle bundle = fragment.getArguments();
-        if (bundle != null && bundle.containsKey("type")) {
-            type = bundle.getInt("type");
-        } else {
-            log.w(TAG, "onCreate | UNDEFINED TYPE, going to use DEFAULT_TYPE");
-            type = ScheduleExamsTabHostFragmentPresenter.DEFAULT_TYPE;
-        }
-        log.v(TAG, "Fragment created | type=", type);
-        tabHostPresenter.tabs().put(type, refresh -> {
-            log.v(TAG, "onInvalidate | type=", type, " | refresh=", refresh);
-            if (fragment.isResumed()) {
-                invalidate = false;
-                invalidateRefresh = false;
-                load(refresh);
+        thread.run(() -> {
+            this.activity = activity;
+            Bundle bundle = fragment.getArguments();
+            if (bundle != null && bundle.containsKey("type")) {
+                type = bundle.getInt("type");
             } else {
-                invalidate = true;
-                invalidateRefresh = refresh;
+                log.w(TAG, "onCreate | UNDEFINED TYPE, going to use DEFAULT_TYPE");
+                type = ScheduleExamsTabHostFragmentPresenter.DEFAULT_TYPE;
             }
+            log.v(TAG, "Fragment created | type=", type);
+            tabHostPresenter.tabs().put(type, refresh -> thread.run(() -> {
+                log.v(TAG, "onInvalidate | type=", type, " | refresh=", refresh);
+                if (fragment.isResumed()) {
+                    invalidate = false;
+                    invalidateRefresh = false;
+                    load(refresh);
+                } else {
+                    invalidate = true;
+                    invalidateRefresh = refresh;
+                }
+            }));
         });
     }
 
     @Override
     public void onDestroy() {
-        log.v(TAG, "Fragment destroyed | type=", type);
-        tabHostPresenter.tabs().remove(type);
-        tabHostPresenter.scroll().remove(type);
+        thread.run(() -> {
+            log.v(TAG, "Fragment destroyed | type=", type);
+            tabHostPresenter.tabs().remove(type);
+            tabHostPresenter.scroll().remove(type);
+        });
     }
 
     @Override
@@ -299,25 +303,29 @@ public class ScheduleExamsTabFragmentPresenterImpl implements ScheduleExamsTabFr
 
     @Override
     public void onResume() {
-        log.v(TAG, "Fragment resumed | type=", type, " | loaded=", loaded, " | invalidate=", invalidate, " | invalidateRefresh=", invalidateRefresh);
-        if (invalidate) {
-            invalidate = false;
-            loaded = true;
-            load(invalidateRefresh);
-            invalidateRefresh = false;
-        } else if (!loaded) {
-            loaded = true;
-            load(false);
-        }
+        thread.run(() -> {
+            log.v(TAG, "Fragment resumed | type=", type, " | loaded=", loaded, " | invalidate=", invalidate, " | invalidateRefresh=", invalidateRefresh);
+            if (invalidate) {
+                invalidate = false;
+                loaded = true;
+                load(invalidateRefresh);
+                invalidateRefresh = false;
+            } else if (!loaded) {
+                loaded = true;
+                load(false);
+            }
+        });
     }
 
     @Override
     public void onPause() {
-        log.v(TAG, "Fragment paused | type=", type);
-        if (requestHandle != null && requestHandle.cancel()) {
-            log.v(TAG, "Fragment paused | type=", type, " | paused and requested reload");
-            loaded = false;
-        }
+        thread.run(() -> {
+            log.v(TAG, "Fragment paused | type=", type);
+            if (requestHandle != null && requestHandle.cancel()) {
+                log.v(TAG, "Fragment paused | type=", type, " | paused and requested reload");
+                loaded = false;
+            }
+        });
     }
 
     private void load(final boolean refresh) {

@@ -23,6 +23,7 @@ import com.bukhmastov.cdoitmo.fragment.LogFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.AboutFragmentPresenter;
 import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import java.util.Random;
 
@@ -40,6 +41,8 @@ public class AboutFragmentPresenterImpl implements AboutFragmentPresenter {
 
     @Inject
     Log log;
+    @Inject
+    Thread thread;
     @Inject
     EventBus eventBus;
     @Inject
@@ -90,76 +93,80 @@ public class AboutFragmentPresenterImpl implements AboutFragmentPresenter {
 
     @Override
     public void onViewCreated() {
+        thread.runOnUI(() -> {
 
-        TextView app_version = fragment.container().findViewById(R.id.app_version);
-        if (app_version != null) {
-            app_version.setText(activity.getString(R.string.version) + " " + App.versionName + " (" + App.versionCode + " " + activity.getString(R.string.build) + (BuildConfig.DEBUG ? ", debug mode" : "") + ")");
-        }
+            TextView app_version = fragment.container().findViewById(R.id.app_version);
+            if (app_version != null) {
+                app_version.setText(activity.getString(R.string.version) + " " + App.versionName + " (" + App.versionCode + " " + activity.getString(R.string.build) + (BuildConfig.DEBUG ? ", debug mode" : "") + ")");
+            }
 
-        View block_pika = fragment.container().findViewById(R.id.block_pika);
-        if (block_pika != null) {
-            block_pika.setOnClickListener(v -> {
-                if (counterToPika >= tapsToPika) {
-                    if (random.nextInt(200) % 10 == 0) {
-                        eventBus.fire(new OpenActivityEvent(PikaActivity.class));
+            View block_pika = fragment.container().findViewById(R.id.block_pika);
+            if (block_pika != null) {
+                block_pika.setOnClickListener(v -> thread.run(() -> {
+                    if (counterToPika >= tapsToPika) {
+                        if (random.nextInt(200) % 10 == 0) {
+                            eventBus.fire(new OpenActivityEvent(PikaActivity.class));
+                        }
+                    } else {
+                        counterToPika++;
                     }
-                } else {
-                    counterToPika++;
-                }
-            });
-        }
+                }));
+            }
 
-        View open_log = fragment.container().findViewById(R.id.open_log);
-        if (open_log != null) {
-            open_log.setOnClickListener(v -> activity.openFragment(ConnectedActivity.TYPE.STACKABLE, LogFragment.class, null));
-        }
+            View open_log = fragment.container().findViewById(R.id.open_log);
+            if (open_log != null) {
+                open_log.setOnClickListener(v -> thread.runOnUI(() -> {
+                    activity.openFragment(ConnectedActivity.TYPE.STACKABLE, LogFragment.class, null);
+                }));
+            }
 
-        View block_send_mail = fragment.container().findViewById(R.id.block_send_mail);
-        if (block_send_mail != null) {
-            block_send_mail.setOnClickListener(v -> {
-                log.v(TAG, "send_mail clicked");
-                firebaseAnalyticsProvider.logBasicEvent(activity, "send mail clicked");
-                Intent emailIntent = new Intent(Intent.ACTION_SEND);
-                emailIntent.setType("message/rfc822");
-                emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{"bukhmastov-alex@ya.ru"});
-                eventBus.fire(new OpenIntentEvent(Intent.createChooser(emailIntent, activity.getString(R.string.send_mail) + "...")));
-            });
-        }
+            View block_send_mail = fragment.container().findViewById(R.id.block_send_mail);
+            if (block_send_mail != null) {
+                block_send_mail.setOnClickListener(v -> thread.run(() -> {
+                    log.v(TAG, "send_mail clicked");
+                    firebaseAnalyticsProvider.logBasicEvent(activity, "send mail clicked");
+                    Intent emailIntent = new Intent(Intent.ACTION_SEND);
+                    emailIntent.setType("message/rfc822");
+                    emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{"bukhmastov-alex@ya.ru"});
+                    eventBus.fire(new OpenIntentEvent(Intent.createChooser(emailIntent, activity.getString(R.string.send_mail) + "...")));
+                }));
+            }
 
-        View block_send_vk = fragment.container().findViewById(R.id.block_send_vk);
-        if (block_send_vk != null) {
-            block_send_vk.setOnClickListener(v -> {
-                log.v(TAG, "send_vk clicked");
-                firebaseAnalyticsProvider.logBasicEvent(activity, "send vk clicked");
-                eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("https://vk.com/write9780714"))));
-            });
-        }
+            View block_send_vk = fragment.container().findViewById(R.id.block_send_vk);
+            if (block_send_vk != null) {
+                block_send_vk.setOnClickListener(v -> thread.run(() -> {
+                    log.v(TAG, "send_vk clicked");
+                    firebaseAnalyticsProvider.logBasicEvent(activity, "send vk clicked");
+                    eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("https://vk.com/write9780714"))));
+                }));
+            }
 
-        View block_rate = fragment.container().findViewById(R.id.block_rate);
-        if (block_rate != null) {
-            block_rate.setOnClickListener(v -> {
-                log.v(TAG, "block_rate clicked");
-                firebaseAnalyticsProvider.logBasicEvent(activity, "app rate clicked");
-                eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.bukhmastov.cdoitmo"))).withIdentity(MARKET_IDENTITY));
-            });
-        }
+            View block_rate = fragment.container().findViewById(R.id.block_rate);
+            if (block_rate != null) {
+                block_rate.setOnClickListener(v -> thread.run(() -> {
+                    log.v(TAG, "block_rate clicked");
+                    firebaseAnalyticsProvider.logBasicEvent(activity, "app rate clicked");
+                    eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.bukhmastov.cdoitmo"))).withIdentity(MARKET_IDENTITY));
+                }));
+            }
 
-        View block_github = fragment.container().findViewById(R.id.block_github);
-        if (block_github != null) {
-            block_github.setOnClickListener(v -> {
-                log.v(TAG, "block_github clicked");
-                firebaseAnalyticsProvider.logBasicEvent(activity, "view github clicked");
-                eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/bukhmastov/cdoitmo"))));
-            });
-        }
+            View block_github = fragment.container().findViewById(R.id.block_github);
+            if (block_github != null) {
+                block_github.setOnClickListener(v -> thread.run(() -> {
+                    log.v(TAG, "block_github clicked");
+                    firebaseAnalyticsProvider.logBasicEvent(activity, "view github clicked");
+                    eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/bukhmastov/cdoitmo"))));
+                }));
+            }
 
-        View block_donate = fragment.container().findViewById(R.id.block_donate);
-        if (block_donate != null) {
-            block_donate.setOnClickListener(v -> {
-                log.v(TAG, "block_donate clicked  ┬─┬ ノ( ゜-゜ノ)");
-                firebaseAnalyticsProvider.logBasicEvent(activity, "donate clicked");
-                eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("http://yasobe.ru/na/cdoifmo"))));
-            });
-        }
+            View block_donate = fragment.container().findViewById(R.id.block_donate);
+            if (block_donate != null) {
+                block_donate.setOnClickListener(v -> thread.run(() -> {
+                    log.v(TAG, "block_donate clicked  ┬─┬ ノ( ゜-゜ノ)");
+                    firebaseAnalyticsProvider.logBasicEvent(activity, "donate clicked");
+                    eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("http://yasobe.ru/na/cdoifmo"))));
+                }));
+            }
+        });
     }
 }

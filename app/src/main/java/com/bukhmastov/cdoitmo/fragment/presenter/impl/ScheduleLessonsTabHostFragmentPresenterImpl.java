@@ -72,7 +72,7 @@ public class ScheduleLessonsTabHostFragmentPresenterImpl implements ScheduleLess
 
     @Override
     public boolean isSameQueryRequested() {
-        return lastQuery != null && query != null && lastQuery.equals(query);
+        return lastQuery != null && lastQuery.equals(query);
     }
 
     @Override
@@ -100,10 +100,10 @@ public class ScheduleLessonsTabHostFragmentPresenterImpl implements ScheduleLess
     public void invalidateOnDemand() {
         if (!isActive() || activity == null) return;
         thread.run(() -> {
-            notificationMessage.snackBar(activity, activity.findViewById(android.R.id.content), activity.getString(R.string.schedule_refresh), activity.getString(R.string.update), v -> {
+            notificationMessage.snackBar(activity, activity.findViewById(android.R.id.content), activity.getString(R.string.schedule_refresh), activity.getString(R.string.update), v -> thread.run(() -> {
                 setQuery(getQuery());
                 invalidate();
-            });
+            }));
         });
     }
 
@@ -118,7 +118,7 @@ public class ScheduleLessonsTabHostFragmentPresenterImpl implements ScheduleLess
 
     @Override
     public String restoreData() {
-        if (activity != null && ConnectedActivity.storedFragmentName != null && FRAGMENT_NAME.equals(ConnectedActivity.storedFragmentName)) {
+        if (activity != null && FRAGMENT_NAME.equals(ConnectedActivity.storedFragmentName)) {
             return ConnectedActivity.storedFragmentData;
         } else {
             return null;

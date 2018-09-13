@@ -102,85 +102,89 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        log.v(TAG, "Fragment created");
-        if (App.UNAUTHORIZED_MODE) {
-            forbidden = true;
-            log.w(TAG, "Fragment created | UNAUTHORIZED_MODE not allowed, closing fragment...");
-            fragment.close();
-            return;
-        }
-        firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-        group = storage.get(activity, Storage.CACHE, Storage.USER, "eregister#params#selected_group", "");
-        term = -2;
+        thread.run(() -> {
+            log.v(TAG, "Fragment created");
+            if (App.UNAUTHORIZED_MODE) {
+                forbidden = true;
+                log.w(TAG, "Fragment created | UNAUTHORIZED_MODE not allowed, closing fragment...");
+                thread.runOnUI(() -> fragment.close());
+                return;
+            }
+            firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
+            group = storage.get(activity, Storage.CACHE, Storage.USER, "eregister#params#selected_group", "");
+            term = -2;
+        });
     }
 
     @Override
     public void onDestroy() {
-        log.v(TAG, "Fragment destroyed");
-        loaded = false;
-        try {
-            if (activity.toolbar != null) {
+        thread.runOnUI(() -> {
+            log.v(TAG, "Fragment destroyed");
+            loaded = false;
+            if (activity != null && activity.toolbar != null) {
                 MenuItem action_info = activity.toolbar.findItem(R.id.action_info);
                 if (action_info != null) {
                     action_info.setVisible(false);
                 }
             }
-        } catch (Exception e){
-            log.exception(e);
-        }
+        });
     }
 
     @Override
     public void onResume() {
-        log.v(TAG, "Fragment resumed");
-        if (forbidden) {
-            return;
-        }
-        firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-        try {
-            if (activity.toolbar != null) {
+        thread.runOnUI(() -> {
+            log.v(TAG, "Fragment resumed");
+            if (forbidden) {
+                return;
+            }
+            firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
+            if (activity != null && activity.toolbar != null) {
                 MenuItem action_info = activity.toolbar.findItem(R.id.action_info);
                 if (action_info != null) {
                     action_info.setVisible(true);
                     action_info.setOnMenuItemClickListener(item -> {
-                        if (activity.isFinishing() || activity.isDestroyed()) {
-                            return false;
-                        }
-                        new AlertDialog.Builder(activity)
-                                .setIcon(R.drawable.ic_info_outline)
-                                .setTitle(R.string.e_journal)
-                                .setMessage(R.string.e_journal_help)
-                                .setNegativeButton(R.string.close, null)
-                                .create().show();
+                        thread.runOnUI(() -> {
+                            if (activity.isFinishing() || activity.isDestroyed()) {
+                                return;
+                            }
+                            new AlertDialog.Builder(activity)
+                                    .setIcon(R.drawable.ic_info_outline)
+                                    .setTitle(R.string.e_journal)
+                                    .setMessage(R.string.e_journal_help)
+                                    .setNegativeButton(R.string.close, null)
+                                    .create().show();
+                        });
                         return false;
                     });
                 }
             }
-        } catch (Exception e){
-            log.exception(e);
-        }
-        if (!loaded) {
-            loaded = true;
-            if (getData() == null) {
-                load();
-            } else {
-                display();
+            if (!loaded) {
+                loaded = true;
+                if (getData() == null) {
+                    load();
+                } else {
+                    display();
+                }
             }
-        }
+        });
     }
 
     @Override
     public void onPause() {
-        log.v(TAG, "Fragment paused");
-        if (requestHandle != null && requestHandle.cancel()) {
-            loaded = false;
-        }
+        thread.runOnUI(() -> {
+            log.v(TAG, "Fragment paused");
+            if (requestHandle != null && requestHandle.cancel()) {
+                loaded = false;
+            }
+        });
     }
 
     @Override
     public void onRefresh() {
-        log.v(TAG, "refreshing");
-        load(true);
+        thread.runOnUI(() -> {
+            log.v(TAG, "refreshing");
+            load(true);
+        });
     }
 
     private void load() {

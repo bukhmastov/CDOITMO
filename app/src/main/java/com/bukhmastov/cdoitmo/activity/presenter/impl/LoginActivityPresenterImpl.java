@@ -1,6 +1,8 @@
 package com.bukhmastov.cdoitmo.activity.presenter.impl;
 
 import android.content.Intent;
+import android.content.res.TypedArray;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -98,36 +100,40 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        log.i(TAG, "Activity created");
-        firebaseAnalyticsProvider.logCurrentScreen(activity);
-        // Show introducing activity
-        if (App.showIntroducingActivity) {
-            App.showIntroducingActivity = false;
-            eventBus.fire(new OpenActivityEvent(IntroducingActivity.class));
-        }
-        // setup toolbar
-        Toolbar toolbar = activity.findViewById(R.id.toolbar_login);
-        if (toolbar != null) {
-            theme.applyToolbarTheme(activity, toolbar);
-            activity.setSupportActionBar(toolbar);
-        }
-        ActionBar actionBar = activity.getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setTitle(activity.getString(R.string.title_activity_login));
-            actionBar.setLogo(activity.obtainStyledAttributes(new int[] { R.attr.ic_toolbar_security }).getDrawable(0));
-        }
-        displayRemoteMessage();
-        if (autoLogout) {
-            autoLogout = false;
-            route(LoginActivity.SIGNAL_LOGOUT);
-        } else {
-            Intent intent = activity.getIntent();
-            if (intent != null) {
-                route(intent.getIntExtra("state", LoginActivity.SIGNAL_LOGIN));
-            } else {
-                route(LoginActivity.SIGNAL_LOGIN);
+        thread.runOnUI(() -> {
+            log.i(TAG, "Activity created");
+            firebaseAnalyticsProvider.logCurrentScreen(activity);
+            // Show introducing activity
+            if (App.showIntroducingActivity) {
+                App.showIntroducingActivity = false;
+                eventBus.fire(new OpenActivityEvent(IntroducingActivity.class));
             }
-        }
+            // setup toolbar
+            Toolbar toolbar = activity.findViewById(R.id.toolbar_login);
+            if (toolbar != null) {
+                theme.applyToolbarTheme(activity, toolbar);
+                activity.setSupportActionBar(toolbar);
+            }
+            ActionBar actionBar = activity.getSupportActionBar();
+            if (actionBar != null) {
+                actionBar.setTitle(activity.getString(R.string.title_activity_login));
+                TypedArray resource = activity.obtainStyledAttributes(new int[]{R.attr.ic_toolbar_security});
+                actionBar.setLogo(resource.getDrawable(0));
+                resource.recycle();
+            }
+            displayRemoteMessage();
+            if (autoLogout) {
+                autoLogout = false;
+                route(LoginActivity.SIGNAL_LOGOUT);
+            } else {
+                Intent intent = activity.getIntent();
+                if (intent != null) {
+                    route(intent.getIntExtra("state", LoginActivity.SIGNAL_LOGIN));
+                } else {
+                    route(LoginActivity.SIGNAL_LOGIN);
+                }
+            }
+        });
     }
 
     @Override
@@ -137,19 +143,23 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
 
     @Override
     public void onToolbarSetup() {
-        if (activity.toolbar == null) {
-            return;
-        }
-        MenuItem action_about = activity.toolbar.findItem(R.id.action_about);
-        if (action_about != null) {
-            action_about.setVisible(true);
-            action_about.setOnMenuItemClickListener(item -> {
-                final Bundle extras = new Bundle();
-                extras.putBoolean(ConnectedActivity.ACTIVITY_WITH_MENU, false);
-                activity.openActivity(AboutFragment.class, extras);
-                return false;
-            });
-        }
+        thread.runOnUI(() -> {
+            if (activity.toolbar == null) {
+                return;
+            }
+            MenuItem action_about = activity.toolbar.findItem(R.id.action_about);
+            if (action_about != null) {
+                action_about.setVisible(true);
+                action_about.setOnMenuItemClickListener(item -> {
+                    thread.runOnUI(() -> {
+                        final Bundle extras = new Bundle();
+                        extras.putBoolean(ConnectedActivity.ACTIVITY_WITH_MENU, false);
+                        activity.openActivity(AboutFragment.class, extras);
+                    });
+                    return false;
+                });
+            }
+        });
     }
 
     private void route(final int signal) {

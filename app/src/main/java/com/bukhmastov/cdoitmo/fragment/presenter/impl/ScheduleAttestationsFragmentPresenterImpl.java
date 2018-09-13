@@ -226,33 +226,35 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        log.v(TAG, "Fragment created");
-        firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-        // define query
-        String scope = fragment.restoreData(fragment);
-        if (scope == null) {
-            scope = scheduleAttestations.getDefaultScope(activity);
-        }
-        final Intent intent = activity.getIntent();
-        if (intent != null && intent.hasExtra("action_extra")) {
-            String action_extra = intent.getStringExtra("action_extra");
-            if (action_extra != null && !action_extra.isEmpty()) {
-                intent.removeExtra("action_extra");
-                scope = action_extra;
+        thread.run(() -> {
+            log.v(TAG, "Fragment created");
+            firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
+            // define query
+            String scope = fragment.restoreData(fragment);
+            if (scope == null) {
+                scope = scheduleAttestations.getDefaultScope(activity);
             }
-        }
-        setQuery(scope);
-        fragment.storeData(fragment, scope);
+            final Intent intent = activity.getIntent();
+            if (intent != null && intent.hasExtra("action_extra")) {
+                String action_extra = intent.getStringExtra("action_extra");
+                if (action_extra != null && !action_extra.isEmpty()) {
+                    intent.removeExtra("action_extra");
+                    scope = action_extra;
+                }
+            }
+            setQuery(scope);
+            fragment.storeData(fragment, scope);
+        });
     }
 
     @Override
     public void onDestroy() {
-        log.v(TAG, "Fragment destroyed");
-        loaded = false;
-        tab = null;
-        scroll = null;
-        try {
-            if (activity.toolbar != null) {
+        thread.runOnUI(() -> {
+            log.v(TAG, "Fragment destroyed");
+            loaded = false;
+            tab = null;
+            scroll = null;
+            if (activity != null && activity.toolbar != null) {
                 MenuItem action_search = activity.toolbar.findItem(R.id.action_search);
                 if (action_search != null && action_search.isVisible()) {
                     log.v(TAG, "Hiding action_search");
@@ -260,62 +262,64 @@ public class ScheduleAttestationsFragmentPresenterImpl implements ScheduleAttest
                     action_search.setOnMenuItemClickListener(null);
                 }
             }
-        } catch (Exception e){
-            log.exception(e);
-        }
+        });
     }
 
     @Override
     public void onResume() {
-        log.v(TAG, "resumed");
-        firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-        try {
-            if (activity.toolbar != null) {
-                MenuItem action_search = activity.toolbar.findItem(R.id.action_search);
-                if (action_search != null && !action_search.isVisible()) {
-                    log.v(TAG, "Revealing action_search");
-                    action_search.setVisible(true);
-                    action_search.setOnMenuItemClickListener(item -> {
-                        log.v(TAG, "action_search clicked");
-                        eventBus.fire(new OpenActivityEvent(ScheduleAttestationsSearchActivity.class));
-                        return false;
-                    });
+        thread.run(() -> {
+            log.v(TAG, "resumed");
+            firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
+            thread.runOnUI(() -> {
+                if (activity != null && activity.toolbar != null) {
+                    MenuItem action_search = activity.toolbar.findItem(R.id.action_search);
+                    if (action_search != null && !action_search.isVisible()) {
+                        log.v(TAG, "Revealing action_search");
+                        action_search.setVisible(true);
+                        action_search.setOnMenuItemClickListener(item -> {
+                            thread.run(() -> {
+                                log.v(TAG, "action_search clicked");
+                                eventBus.fire(new OpenActivityEvent(ScheduleAttestationsSearchActivity.class));
+                            });
+                            return false;
+                        });
+                    }
                 }
+            });
+            if (tab == null) {
+                tab = refresh -> thread.run(() -> {
+                    log.v(TAG, "onInvalidate | refresh=", refresh);
+                    fragment.storeData(fragment, getQuery());
+                    if (fragment.isResumed()) {
+                        invalidate = false;
+                        invalidate_refresh = false;
+                        load(refresh);
+                    } else {
+                        invalidate = true;
+                        invalidate_refresh = refresh;
+                    }
+                });
             }
-        } catch (Exception e){
-            log.exception(e);
-        }
-        if (tab == null) {
-            tab = refresh -> {
-                log.v(TAG, "onInvalidate | refresh=", refresh);
-                fragment.storeData(fragment, getQuery());
-                if (fragment.isResumed()) {
-                    invalidate = false;
-                    invalidate_refresh = false;
-                    load(refresh);
-                } else {
-                    invalidate = true;
-                    invalidate_refresh = refresh;
-                }
-            };
-        }
-        if (invalidate) {
-            invalidate = false;
-            loaded = true;
-            load(invalidate_refresh);
-            invalidate_refresh = false;
-        } else if (!loaded) {
-            loaded = true;
-            load(false);
-        }
+            if (invalidate) {
+                invalidate = false;
+                loaded = true;
+                load(invalidate_refresh);
+                invalidate_refresh = false;
+            } else if (!loaded) {
+                loaded = true;
+                load(false);
+            }
+        });
     }
 
     @Override
     public void onPause() {
-        log.v(TAG, "paused");
-        if (requestHandle != null && requestHandle.cancel()) {
-            loaded = false;
-        }
+        thread.run(() -> {
+            log.v(TAG, "paused");
+            if (requestHandle != null && requestHandle.cancel()) {
+                loaded = false;
+            }
+        });
     }
 
     private void load(final boolean refresh) {

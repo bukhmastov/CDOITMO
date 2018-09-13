@@ -100,42 +100,42 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        log.v(TAG, "Fragment created");
-        if (App.UNAUTHORIZED_MODE) {
-            forbidden = true;
-            log.w(TAG, "Fragment created | UNAUTHORIZED_MODE not allowed, closing fragment...");
-            fragment.close();
-            return;
-        }
-        firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
-        number_of_weeks = Integer.parseInt(storagePref.get(activity, "pref_protocol_changes_weeks", "1"));
+        thread.run(() -> {
+            log.v(TAG, "Fragment created");
+            if (App.UNAUTHORIZED_MODE) {
+                forbidden = true;
+                log.w(TAG, "Fragment created | UNAUTHORIZED_MODE not allowed, closing fragment...");
+                thread.runOnUI(() -> fragment.close());
+                return;
+            }
+            firebaseAnalyticsProvider.logCurrentScreen(activity, fragment);
+            number_of_weeks = Integer.parseInt(storagePref.get(activity, "pref_protocol_changes_weeks", "1"));
+        });
     }
 
     @Override
     public void onDestroy() {
-        log.v(TAG, "Fragment destroyed");
-        loaded = false;
-        try {
-            if (activity.toolbar != null) {
+        thread.runOnUI(() -> {
+            log.v(TAG, "Fragment destroyed");
+            loaded = false;
+            if (activity != null && activity.toolbar != null) {
                 MenuItem simple = activity.toolbar.findItem(R.id.action_protocol_changes_switch_to_simple);
                 MenuItem advanced = activity.toolbar.findItem(R.id.action_protocol_changes_switch_to_advanced);
                 if (simple != null) simple.setVisible(false);
                 if (advanced != null) advanced.setVisible(false);
             }
-        } catch (Exception e){
-            log.exception(e);
-        }
+        });
     }
 
     @Override
     public void onResume() {
-        log.v(TAG, "Fragment resumed");
-        if (forbidden) {
-            return;
-        }
-        firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
-        try {
-            if (activity.toolbar != null) {
+        thread.runOnUI(() -> {
+            log.v(TAG, "Fragment resumed");
+            if (forbidden) {
+                return;
+            }
+            firebaseAnalyticsProvider.setCurrentScreen(activity, fragment);
+            if (activity != null && activity.toolbar != null) {
                 final MenuItem simple = activity.toolbar.findItem(R.id.action_protocol_changes_switch_to_simple);
                 final MenuItem advanced = activity.toolbar.findItem(R.id.action_protocol_changes_switch_to_advanced);
                 if (simple != null && advanced != null) {
@@ -144,46 +144,52 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
                         case "advanced": simple.setVisible(true); break;
                     }
                     simple.setOnMenuItemClickListener(item -> {
-                        storagePref.put(activity, "pref_protocol_changes_mode", "simple");
-                        simple.setVisible(false);
-                        advanced.setVisible(true);
-                        load(false);
+                        thread.runOnUI(() -> {
+                            storagePref.put(activity, "pref_protocol_changes_mode", "simple");
+                            simple.setVisible(false);
+                            advanced.setVisible(true);
+                            load(false);
+                        });
                         return false;
                     });
                     advanced.setOnMenuItemClickListener(item -> {
-                        storagePref.put(activity, "pref_protocol_changes_mode", "advanced");
-                        simple.setVisible(true);
-                        advanced.setVisible(false);
-                        load(false);
+                        thread.runOnUI(() -> {
+                            storagePref.put(activity, "pref_protocol_changes_mode", "advanced");
+                            simple.setVisible(true);
+                            advanced.setVisible(false);
+                            load(false);
+                        });
                         return false;
                     });
                 }
             }
-        } catch (Exception e){
-            log.exception(e);
-        }
-        if (!loaded) {
-            loaded = true;
-            if (getData() == null) {
-                load();
-            } else {
-                display();
+            if (!loaded) {
+                loaded = true;
+                if (getData() == null) {
+                    load();
+                } else {
+                    display();
+                }
             }
-        }
+        });
     }
 
     @Override
     public void onPause() {
-        log.v(TAG, "Fragment paused");
-        if (requestHandle != null && requestHandle.cancel()) {
-            loaded = false;
-        }
+        thread.run(() -> {
+            log.v(TAG, "Fragment paused");
+            if (requestHandle != null && requestHandle.cancel()) {
+                loaded = false;
+            }
+        });
     }
 
     @Override
     public void onRefresh() {
-        log.v(TAG, "refreshing");
-        load(true);
+        thread.run(() -> {
+            log.v(TAG, "refreshing");
+            load(true);
+        });
     }
 
     private void load() {
