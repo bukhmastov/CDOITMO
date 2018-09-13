@@ -65,7 +65,9 @@ public class PreferenceEditText extends Preference {
             }
         }
         preference_basic.setOnClickListener(v -> {
-            if (preference.isDisabled()) return;
+            if (activity.isFinishing() || activity.isDestroyed() || preference.isDisabled()) {
+                return;
+            }
             final View view = inflate(activity, R.layout.preference_dialog_input);
             final TextView message = view.findViewById(R.id.message);
             final EditText edittext = view.findViewById(R.id.edittext);

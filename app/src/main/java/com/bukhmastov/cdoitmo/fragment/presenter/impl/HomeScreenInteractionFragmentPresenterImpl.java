@@ -375,6 +375,9 @@ public class HomeScreenInteractionFragmentPresenterImpl implements HomeScreenInt
 
     private void shortcutClicked(Shortcut shortcut, String mode) {
         thread.run(() -> {
+            if (activity.isFinishing() || activity.isDestroyed()) {
+                return;
+            }
             switch (shortcut.id) {
                 case "offline": case "tab": case "room101": {
                     addShortcut(shortcut.id, shortcut.meta, mode);

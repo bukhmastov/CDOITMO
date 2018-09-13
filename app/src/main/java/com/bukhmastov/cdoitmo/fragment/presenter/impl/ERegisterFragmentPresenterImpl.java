@@ -143,6 +143,9 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
                 if (action_info != null) {
                     action_info.setVisible(true);
                     action_info.setOnMenuItemClickListener(item -> {
+                        if (activity.isFinishing() || activity.isDestroyed()) {
+                            return false;
+                        }
                         new AlertDialog.Builder(activity)
                                 .setIcon(R.drawable.ic_info_outline)
                                 .setTitle(R.string.e_journal)

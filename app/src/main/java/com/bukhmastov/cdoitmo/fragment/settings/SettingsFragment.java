@@ -81,6 +81,9 @@ public class SettingsFragment extends SettingsTemplateHeadersFragment {
                 if (action != null) {
                     action.setVisible(true);
                     action.setOnMenuItemClickListener(item -> {
+                        if (activity.isFinishing() || activity.isDestroyed()) {
+                            return false;
+                        }
                         new AlertDialog.Builder(activity)
                                 .setIcon(R.drawable.ic_settings_restore_black)
                                 .setTitle(R.string.reset_preferences)

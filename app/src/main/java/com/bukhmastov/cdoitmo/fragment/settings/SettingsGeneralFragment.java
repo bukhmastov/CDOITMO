@@ -122,6 +122,9 @@ public class SettingsGeneralFragment extends SettingsTemplatePreferencesFragment
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, final Preference preference, final InjectProvider injectProvider, final PreferenceBasic.OnPreferenceClickedCallback callback) {
                 injectProvider.getThread().runOnUI(() -> {
+                    if (activity.isFinishing() || activity.isDestroyed()) {
+                        return;
+                    }
                     new AlertDialog.Builder(activity)
                             .setTitle(R.string.pref_reset_application_summary)
                             .setMessage(R.string.pref_reset_application_warning)

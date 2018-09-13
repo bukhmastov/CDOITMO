@@ -257,7 +257,13 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
         log.v(TAG, "activatePartSchedule | scope=" + title);
         thread.run(() -> {
             try {
+                if (activity.isFinishing() || activity.isDestroyed()) {
+                    return;
+                }
                 final ViewGroup layout = (ViewGroup) inflate(R.layout.widget_configure_schedule_lessons_create_search);
+                if (layout == null) {
+                    return;
+                }
                 final AlertDialog alertDialog = new AlertDialog.Builder(activity)
                         .setView(layout)
                         .setNegativeButton(R.string.do_cancel, null)
@@ -438,8 +444,15 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
         log.v(TAG, "activatePartTheme");
         thread.run(() -> {
             try {
+                if (activity.isFinishing() || activity.isDestroyed()) {
+                    return;
+                }
+
                 // define variables
                 final ViewGroup layout = (ViewGroup) inflate(R.layout.widget_configure_schedule_lessons_create_theme);
+                if (layout == null) {
+                    return;
+                }
 
                 final ViewGroup default_theme_light = layout.findViewById(R.id.default_theme_light);
                 final TextView default_theme_light_background = layout.findViewById(R.id.default_theme_light_background);
@@ -621,6 +634,9 @@ public class ScheduleLessonsWidgetConfigureActivityPresenterImpl implements Sche
         log.v(TAG, "activatePartUpdate");
         thread.run(() -> {
             try {
+                if (activity.isFinishing() || activity.isDestroyed()) {
+                    return;
+                }
                 int select = 0;
                 switch (Settings.updateTime){
                     case 0: select = 0; break;

@@ -71,6 +71,9 @@ public abstract class SettingsSchedule {
         this.callback = callback;
         thread.runOnUI(() -> {
             try {
+                if (activity.isFinishing() || activity.isDestroyed()) {
+                    return;
+                }
                 final String value = storagePref.get(activity, preference.key, (String) preference.defaultValue);
                 final ViewGroup layout = (ViewGroup) inflate(R.layout.preference_schedule);
                 final RadioGroup lsp_radio_group = layout.findViewById(R.id.lsp_radio_group);

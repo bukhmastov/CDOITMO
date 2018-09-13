@@ -70,18 +70,19 @@ public class SettingsScheduleLessonsFragment extends SettingsTemplatePreferences
             @Override
             public void onPreferenceClicked(final ConnectedActivity activity, Preference preference, final InjectProvider injectProvider, PreferenceBasic.OnPreferenceClickedCallback callback) {
                 injectProvider.getThread().runOnUI(() -> {
-                    if (activity != null) {
-                        new AlertDialog.Builder(activity)
-                                .setTitle(R.string.pref_schedule_lessons_clear_additional_title)
-                                .setMessage(R.string.pref_schedule_lessons_clear_additional_warning)
-                                .setIcon(R.drawable.ic_warning)
-                                .setPositiveButton(R.string.proceed, (dialog, which) -> injectProvider.getThread().run(() -> {
-                                    boolean success = injectProvider.getStorage().clear(activity, Storage.PERMANENT, Storage.USER, "schedule_lessons");
-                                    injectProvider.getNotificationMessage().snackBar(activity, activity.getString(success ? R.string.changes_cleared : R.string.something_went_wrong));
-                                }))
-                                .setNegativeButton(R.string.cancel, null)
-                                .create().show();
+                    if (activity == null || activity.isFinishing() || activity.isDestroyed()) {
+                        return;
                     }
+                    new AlertDialog.Builder(activity)
+                            .setTitle(R.string.pref_schedule_lessons_clear_additional_title)
+                            .setMessage(R.string.pref_schedule_lessons_clear_additional_warning)
+                            .setIcon(R.drawable.ic_warning)
+                            .setPositiveButton(R.string.proceed, (dialog, which) -> injectProvider.getThread().run(() -> {
+                                boolean success = injectProvider.getStorage().clear(activity, Storage.PERMANENT, Storage.USER, "schedule_lessons");
+                                injectProvider.getNotificationMessage().snackBar(activity, activity.getString(success ? R.string.changes_cleared : R.string.something_went_wrong));
+                            }))
+                            .setNegativeButton(R.string.cancel, null)
+                            .create().show();
                 });
             }
             @Override

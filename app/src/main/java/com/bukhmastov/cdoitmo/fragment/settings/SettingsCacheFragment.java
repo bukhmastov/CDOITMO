@@ -28,17 +28,17 @@ public class SettingsCacheFragment extends SettingsTemplatePreferencesFragment {
                 R.string.pref_use_cache,
                 new ArrayList<>(Arrays.asList("pref_dynamic_refresh", "pref_static_refresh", "pref_use_university_cache", "pref_clear_cache", "pref_schedule_lessons_clear_cache", "pref_schedule_exams_clear_cache", "pref_schedule_attestations_clear_cache", "pref_university_clear_cache")),
                 (activity, preference, value, callback) -> {
-                    if (!value) {
-                        new AlertDialog.Builder(activity)
-                                .setTitle(R.string.pref_use_cache)
-                                .setMessage(R.string.pref_use_cache_message)
-                                .setPositiveButton(R.string.proceed, (dialog, which) -> callback.onDecisionMade(activity, preference, true))
-                                .setNegativeButton(R.string.cancel, (dialog, which) -> callback.onDecisionMade(activity, preference, false))
-                                .setOnCancelListener(dialog -> callback.onDecisionMade(activity, preference, false))
-                                .create().show();
-                    } else {
+                    if (value || activity.isFinishing() || activity.isDestroyed()) {
                         callback.onDecisionMade(activity, preference, true);
+                        return;
                     }
+                    new AlertDialog.Builder(activity)
+                            .setTitle(R.string.pref_use_cache)
+                            .setMessage(R.string.pref_use_cache_message)
+                            .setPositiveButton(R.string.proceed, (dialog, which) -> callback.onDecisionMade(activity, preference, true))
+                            .setNegativeButton(R.string.cancel, (dialog, which) -> callback.onDecisionMade(activity, preference, false))
+                            .setOnCancelListener(dialog -> callback.onDecisionMade(activity, preference, false))
+                            .create().show();
                 }
         ));
         preferences.add(new PreferenceList("pref_dynamic_refresh", "0", R.string.pref_dynamic_refresh, R.array.pref_refresh_titles, R.array.pref_refresh_values, true));

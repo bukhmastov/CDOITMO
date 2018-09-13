@@ -142,6 +142,9 @@ public class CacheClearDialog extends Dialog {
                         cache_list.addView(layout_item);
                     }
                     // show dialog
+                    if (activity.isFinishing() || activity.isDestroyed()) {
+                        return;
+                    }
                     thread.runOnUI(() -> new AlertDialog.Builder(activity)
                             .setTitle(R.string.cache_clear)
                             .setView(layout)

@@ -241,6 +241,9 @@ public class Room101FragmentPresenterImpl implements Room101FragmentPresenter, S
                 log.v(TAG, "onDenyRequest rejected: offline mode");
                 notificationMessage.snackBar(activity, R.id.room101_review_swipe, activity.getString(R.string.device_offline_action_refused));
             } else {
+                if (activity.isFinishing() || activity.isDestroyed()) {
+                    return;
+                }
                 (new AlertDialog.Builder(activity)
                         .setTitle(R.string.request_deny)
                         .setMessage(activity.getString(R.string.request_deny_1) + "\n" + activity.getString(R.string.request_deny_2))

@@ -249,6 +249,9 @@ public class ScheduleLessonsRVA extends RVA {
                                 }
                                 case R.id.add_military_day: {
                                     thread.runOnUI(() -> {
+                                        if (activity.isFinishing() || activity.isDestroyed()) {
+                                            return;
+                                        }
                                         final List<String> days = new ArrayList<>(Arrays.asList(activity.getString(R.string.monday), activity.getString(R.string.tuesday), activity.getString(R.string.wednesday), activity.getString(R.string.thursday), activity.getString(R.string.friday), activity.getString(R.string.saturday), activity.getString(R.string.sunday)));
                                         final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(activity, R.layout.spinner_center);
                                         arrayAdapter.addAll(days);
@@ -289,18 +292,23 @@ public class ScheduleLessonsRVA extends RVA {
                                     break;
                                 }
                                 case R.id.remove_changes: {
-                                    thread.run(() -> new AlertDialog.Builder(activity)
-                                            .setTitle(R.string.pref_schedule_lessons_clear_additional_title)
-                                            .setMessage(R.string.pref_schedule_lessons_clear_direct_additional_warning)
-                                            .setIcon(R.drawable.ic_warning)
-                                            .setPositiveButton(R.string.proceed, (dialog, which) -> thread.run(() -> {
-                                                log.v(TAG, "menu | popup item | remove_changes | dialog accepted");
-                                                if (!scheduleLessonsHelper.clearChanges(activity, storage, query, () -> tabHostPresenter.invalidateOnDemand())) {
-                                                    notificationMessage.snackBar(activity, activity.getString(R.string.no_changes));
-                                                }
-                                            }))
-                                            .setNegativeButton(R.string.cancel, null)
-                                            .create().show());
+                                    thread.run(() -> {
+                                        if (activity.isFinishing() || activity.isDestroyed()) {
+                                            return;
+                                        }
+                                        new AlertDialog.Builder(activity)
+                                                .setTitle(R.string.pref_schedule_lessons_clear_additional_title)
+                                                .setMessage(R.string.pref_schedule_lessons_clear_direct_additional_warning)
+                                                .setIcon(R.drawable.ic_warning)
+                                                .setPositiveButton(R.string.proceed, (dialog, which) -> thread.run(() -> {
+                                                    log.v(TAG, "menu | popup item | remove_changes | dialog accepted");
+                                                    if (!scheduleLessonsHelper.clearChanges(activity, storage, query, () -> tabHostPresenter.invalidateOnDemand())) {
+                                                        notificationMessage.snackBar(activity, activity.getString(R.string.no_changes));
+                                                    }
+                                                }))
+                                                .setNegativeButton(R.string.cancel, null)
+                                                .create().show();
+                                    });
                                     break;
                                 }
                                 case R.id.open_settings: {

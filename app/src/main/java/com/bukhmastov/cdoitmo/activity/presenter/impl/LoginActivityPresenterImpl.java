@@ -13,6 +13,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -136,6 +137,9 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
 
     @Override
     public void onToolbarSetup() {
+        if (activity.toolbar == null) {
+            return;
+        }
         MenuItem action_about = activity.toolbar.findItem(R.id.action_about);
         if (action_about != null) {
             action_about.setVisible(true);
@@ -280,6 +284,9 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
         });
         new_user_tile.findViewById(R.id.help).setOnClickListener(view -> {
             firebaseAnalyticsProvider.logBasicEvent(activity, "Help with login clicked");
+            if (activity.isFinishing() || activity.isDestroyed()) {
+                return;
+            }
             new AlertDialog.Builder(activity)
                     .setIcon(R.drawable.ic_help)
                     .setTitle(R.string.auth_help_0)
@@ -372,6 +379,9 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
                             case R.id.change_password: {
                                 thread.runOnUI(() -> {
                                     try {
+                                        if (activity.isFinishing() || activity.isDestroyed()) {
+                                            return;
+                                        }
                                         final View layout = activity.inflate(R.layout.preference_dialog_input);
                                         final EditText editText = layout.findViewById(R.id.edittext);
                                         final TextView message = layout.findViewById(R.id.message);
@@ -473,6 +483,9 @@ public class LoginActivityPresenterImpl implements LoginActivityPresenter {
         });
         anonymous_user_tile.findViewById(R.id.info).setOnClickListener(view -> {
             firebaseAnalyticsProvider.logBasicEvent(activity, "Help with anonymous login clicked");
+            if (activity.isFinishing() || activity.isDestroyed()) {
+                return;
+            }
             new AlertDialog.Builder(activity)
                     .setIcon(R.drawable.ic_help)
                     .setTitle(R.string.anonymous_login)

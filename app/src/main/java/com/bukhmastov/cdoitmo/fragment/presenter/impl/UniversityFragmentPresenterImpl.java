@@ -112,13 +112,17 @@ public class UniversityFragmentPresenterImpl implements UniversityFragmentPresen
     @Override
     public void onViewCreated() {
         TabLayout main_tabs = activity.findViewById(R.id.scrollable_tabs);
-        ViewPager pager = fragment.container().findViewById(R.id.pager);
-        FragmentManager fragmentManager = fragment.getChildFragmentManager();
-        if (pager != null) {
-            pager.setAdapter(new PagerUniversityAdapter(fragmentManager, activity));
-            pager.addOnPageChangeListener(this);
-            main_tabs.setupWithViewPager(pager);
+        if (main_tabs == null) {
+            return;
         }
+        ViewPager pager = fragment.container().findViewById(R.id.pager);
+        if (pager == null) {
+            return;
+        }
+        FragmentManager fragmentManager = fragment.getChildFragmentManager();
+        pager.setAdapter(new PagerUniversityAdapter(fragmentManager, activity));
+        pager.addOnPageChangeListener(this);
+        main_tabs.setupWithViewPager(pager);
         TabLayout.Tab tab = null;
         try {
             if (action_extra != null) {

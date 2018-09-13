@@ -152,21 +152,25 @@ public abstract class ScheduleImpl implements Schedule {
         log.v(TAG, "addPending | query=", query, " | withUserChanges=", withUserChanges);
         final String token = getType() + "_" + query.toLowerCase() + "_" + (withUserChanges ? "t" : "f");
         if (ScheduleImpl.pending.containsKey(token)) {
-            ScheduleImpl.pending.get(token).add(handler);
-            return false;
-        } else {
-            ArrayList<Handler> handlers = new ArrayList<>();
-            handlers.add(handler);
-            String name;
-            switch (getType()) {
-                case "attestations": name = FirebasePerformanceProvider.Trace.Schedule.ATTESTATIONS; break;
-                case "exams": name = FirebasePerformanceProvider.Trace.Schedule.EXAMS; break;
-                case "lessons": default: name = FirebasePerformanceProvider.Trace.Schedule.LESSONS; break;
+            ArrayList<Handler> handlers = ScheduleImpl.pending.get(token);
+            if (handlers == null) {
+                ScheduleImpl.pending.remove(token);
+                return addPending(query, withUserChanges, handler);
             }
-            trace.put(token, firebasePerformanceProvider.startTrace(name));
-            ScheduleImpl.pending.put(token, handlers);
-            return true;
+            handlers.add(handler);
+            return false;
         }
+        ArrayList<Handler> handlers = new ArrayList<>();
+        handlers.add(handler);
+        String name;
+        switch (getType()) {
+            case "attestations": name = FirebasePerformanceProvider.Trace.Schedule.ATTESTATIONS; break;
+            case "exams": name = FirebasePerformanceProvider.Trace.Schedule.EXAMS; break;
+            case "lessons": default: name = FirebasePerformanceProvider.Trace.Schedule.LESSONS; break;
+        }
+        trace.put(token, firebasePerformanceProvider.startTrace(name));
+        ScheduleImpl.pending.put(token, handlers);
+        return true;
     }
     protected void invokePending(String query, boolean withUserChanges, boolean remove, Pending pending) {
         log.v(TAG, "invokePending | query=", query, " | withUserChanges=", withUserChanges, " | remove=", remove);
@@ -355,12 +359,10 @@ public abstract class ScheduleImpl implements Schedule {
     protected String getCache(Context context, String token) {
         token = token.toLowerCase();
         log.v(TAG, "getCache | token=", token);
-        String cache = null;
+        String cache;
         synchronized (ScheduleImpl.localCache) {
-            final String memoizeKey = getType() + "_" + token;
-            if (ScheduleImpl.localCache.containsKey(memoizeKey)) {
-                cache = ScheduleImpl.localCache.get(memoizeKey);
-            }
+            final String key = getType() + "_" + token;
+            cache = ScheduleImpl.localCache.get(key);
         }
         if (cache == null || cache.isEmpty()) {
             cache = storage.get(context, Storage.CACHE, Storage.GLOBAL, "schedule_" + getType() + "#lessons#" + token, "");
@@ -400,9 +402,7 @@ public abstract class ScheduleImpl implements Schedule {
         log.v(TAG, "removeCache | token=", token);
         synchronized (localCache) {
             final String memoizeKey = getType() + "_" + token;
-            if (localCache.containsKey(memoizeKey)) {
-                localCache.remove(memoizeKey);
-            }
+            localCache.remove(memoizeKey);
         }
         storage.delete(context, Storage.CACHE, Storage.GLOBAL, "schedule_" + getType() + "#lessons#" + token);
     }

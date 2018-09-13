@@ -70,7 +70,9 @@ public class PreferenceList extends Preference {
             preference_list_summary.setText(titles.get(values.indexOf(injectProvider.getStoragePref().get(activity, preference.key, preference.defaultValue == null ? "" : (String) preference.defaultValue))));
         }
         preference_list.setOnClickListener(v -> {
-            if (preference.isDisabled()) return;
+            if (activity.isFinishing() || activity.isDestroyed() || preference.isDisabled()) {
+                return;
+            }
             int checked = 0;
             if (preference.defaultValue != null) {
                 checked = values.indexOf(injectProvider.getStoragePref().get(activity, preference.key, (String) preference.defaultValue));

@@ -282,13 +282,14 @@ public class ScheduleLessonsShareFragmentPresenterImpl implements ScheduleLesson
                 ViewGroup share_info = fragment.container().findViewById(R.id.share_info);
                 if (share_info != null) {
                     share_info.setOnClickListener(view -> thread.run(() -> {
-                        if (activity != null) {
-                            new AlertDialog.Builder(activity)
-                                    .setTitle(R.string.share_changes)
-                                    .setMessage(R.string.share_changes_info)
-                                    .setPositiveButton(R.string.close, null)
-                                    .create().show();
+                        if (activity == null || activity.isFinishing() || activity.isDestroyed()) {
+                            return;
                         }
+                        new AlertDialog.Builder(activity)
+                                .setTitle(R.string.share_changes)
+                                .setMessage(R.string.share_changes_info)
+                                .setPositiveButton(R.string.close, null)
+                                .create().show();
                     }));
                 }
             } catch (Exception e) {

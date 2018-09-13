@@ -149,6 +149,9 @@ public class SubjectShowFragmentPresenterImpl implements SubjectShowFragmentPres
                 if (shareEntities.size() == 0) return;
                 thread.runOnUI(() -> {
                     try {
+                        if (activity == null || activity.toolbar == null) {
+                            return;
+                        }
                         final MenuItem action_share = activity.toolbar.findItem(R.id.action_share);
                         if (action_share == null) return;
                         action_share.setVisible(true);
@@ -157,6 +160,9 @@ public class SubjectShowFragmentPresenterImpl implements SubjectShowFragmentPres
                                 if (shareEntities.size() == 1) {
                                     share(shareEntities.get(0).text);
                                 } else {
+                                    if (activity.isFinishing() || activity.isDestroyed()) {
+                                        return false;
+                                    }
                                     final ArrayList<String> labels = new ArrayList<>();
                                     for (ShareEntity shareEntity : shareEntities) {
                                         labels.add(shareEntity.attestation != null && !shareEntity.attestation.isEmpty() ? shareEntity.attestation : sbj);
