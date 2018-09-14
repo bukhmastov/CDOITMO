@@ -1,13 +1,17 @@
 package com.bukhmastov.cdoitmo.util.impl;
 
+import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Process;
 
+import com.bukhmastov.cdoitmo.BuildConfig;
+import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Thread;
 
 import javax.inject.Inject;
@@ -17,10 +21,14 @@ import dagger.Lazy;
 public class ThreadImpl implements Thread {
 
     private static final String TAG = "Thread";
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = BuildConfig.DEBUG;
 
     @Inject
     Lazy<Log> log;
+    @Inject
+    Lazy<Context> context;
+    @Inject
+    Lazy<NotificationMessage> notificationMessage;
 
     public ThreadImpl() {
         AppComponentProvider.getComponent().inject(this);
@@ -36,36 +44,36 @@ public class ThreadImpl implements Thread {
         if (runnable == null) {
             throw new NullPointerException("Passed runnable is null");
         }
-        final HasThread hasThread = getThread(type);
-        if (hasThread.thread != null && !hasThread.thread.isAlive()) {
-            log("run | HandlerThread is not alive, going to quit | id = " + hasThread.thread.getId() + " | name = " + hasThread.thread.getName());
-            Looper looper = hasThread.thread.getLooper();
+        final ThreadFacade threadFacade = getThreadFacade(type);
+        if (threadFacade.thread != null && !threadFacade.thread.isAlive()) {
+            log("run | HandlerThread is not alive, going to quit | id = " + threadFacade.thread.getId() + " | name = " + threadFacade.thread.getName());
+            Looper looper = threadFacade.thread.getLooper();
             if (looper != null) {
                 looper.quit();
             }
             try {
-                hasThread.thread.interrupt();
+                threadFacade.thread.interrupt();
             } catch (Throwable ignore) {
                 // just ignore
             }
-            hasThread.thread = null;
+            threadFacade.thread = null;
         }
-        if (hasThread.thread == null) {
-            hasThread.thread = new HandlerThread(hasThread.thread_name, hasThread.thread_priority);
-            hasThread.thread.start();
-            log("run | initialized new HandlerThread | id = " + hasThread.thread.getId() + " | name = " + hasThread.thread.getName());
+        if (threadFacade.thread == null) {
+            threadFacade.thread = new HandlerThread(threadFacade.name, threadFacade.priority);
+            threadFacade.thread.start();
+            log("run | initialized new HandlerThread | id = " + threadFacade.thread.getId() + " | name = " + threadFacade.thread.getName());
         }
-        log("run | run with Handler.post | id = " + hasThread.thread.getId() + " | name = " + hasThread.thread.getName());
+        // log("run | run with Handler.post | id = " + threadFacade.thread.getId() + " | name = " + threadFacade.thread.getName());
         try {
-            new Handler(hasThread.thread.getLooper()).post(() -> {
+            new Handler(threadFacade.thread.getLooper()).post(() -> {
                 try {
                     runnable.run();
                 } catch (Throwable throwable) {
-                    log.get().exception("Run on " + hasThread.thread.getName() + " thread failed", throwable);
+                    onCaughtUncaughtException(threadFacade.thread.getName(), throwable);
                 }
             });
         } catch (Throwable throwable) {
-            log.get().exception("Run on " + hasThread.thread.getName() + " thread failed", throwable);
+            onCaughtUncaughtException(threadFacade.thread.getName(), throwable);
         }
     }
 
@@ -74,25 +82,30 @@ public class ThreadImpl implements Thread {
         if (runnable == null) {
             throw new NullPointerException("Passed runnable is null");
         }
+        try {
+            runnable.run();
+        } catch (Throwable throwable) {
+            onCaughtUncaughtException("main", throwable);
+        }
         if (isMainThread()) {
-            log("runOnUI | run on current thread");
+            // log("runOnUI | run on current thread");
             try {
                 runnable.run();
             } catch (Throwable throwable) {
-                log.get().exception("Run on main thread failed", throwable);
+                onCaughtUncaughtException("main", throwable);
             }
         } else {
-            log("runOnUI | run with Handler.post");
+            // log("runOnUI | run with Handler.post");
             try {
                 new Handler(Looper.getMainLooper()).post(() -> {
                     try {
                         runnable.run();
                     } catch (Throwable throwable) {
-                        log.get().exception("Run on main thread failed", throwable);
+                        onCaughtUncaughtException("main", throwable);
                     }
                 });
             } catch (Throwable throwable) {
-                log.get().exception("Run on main thread failed", throwable);
+                onCaughtUncaughtException("main", throwable);
             }
         }
     }
@@ -110,11 +123,16 @@ public class ThreadImpl implements Thread {
         return java.lang.Thread.currentThread() == Foreground.thread || java.lang.Thread.currentThread() == Background.thread || isMainThread();
     }
 
-    private HasThread getThread(@Thread.TYPE int type) {
+    private ThreadFacade getThreadFacade(@Thread.TYPE int type) {
         switch (type) {
             case BACKGROUND: return Background;
             case FOREGROUND: default: return Foreground;
         }
+    }
+
+    private void onCaughtUncaughtException(String thread, Throwable throwable) {
+        log.get().exception("Run on " + thread + " thread failed", throwable);
+        notificationMessage.get().toast(context.get(), R.string.something_went_wrong);
     }
 
     private void log(String log) {
@@ -123,17 +141,17 @@ public class ThreadImpl implements Thread {
         }
     }
 
-    private static class HasThread {
+    private static class ThreadFacade {
         public HandlerThread thread = null;
         public final @Thread.TYPE int type;
-        public final String thread_name;
-        public final int thread_priority;
-        public HasThread(@Thread.TYPE int type, String thread_name, int thread_priority) {
+        public final String name;
+        public final int priority;
+        public ThreadFacade(@Thread.TYPE int type, String name, int priority) {
             this.type = type;
-            this.thread_name = thread_name;
-            this.thread_priority = thread_priority;
+            this.name = name;
+            this.priority = priority;
         }
     }
-    private static final HasThread Foreground = new HasThread(FOREGROUND, "CDOExecutorForeground", Process.THREAD_PRIORITY_FOREGROUND);
-    private static final HasThread Background = new HasThread(BACKGROUND, "CDOExecutorBackground", Process.THREAD_PRIORITY_BACKGROUND);
+    private static final ThreadFacade Foreground = new ThreadFacade(FOREGROUND, "CDOExecutorForeground", Process.THREAD_PRIORITY_FOREGROUND);
+    private static final ThreadFacade Background = new ThreadFacade(BACKGROUND, "CDOExecutorBackground", Process.THREAD_PRIORITY_BACKGROUND);
 }

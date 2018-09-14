@@ -11,6 +11,7 @@ import android.widget.Toast;
 import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
+import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
@@ -24,6 +25,8 @@ public class NotificationMessageImpl implements NotificationMessage {
 
     @Inject
     Thread thread;
+    @Inject
+    Lazy<Log> log;
     @Inject
     Lazy<Time> time;
 
@@ -72,11 +75,15 @@ public class NotificationMessageImpl implements NotificationMessage {
 
     @Override
     public void toast(final Context context, final String text) {
+        if (context == null) {
+            return;
+        }
         thread.runOnUI(() -> {
-            if (context == null) {
-                return;
+            try {
+                Toast.makeText(context, text, Toast.LENGTH_SHORT).show();
+            } catch (Throwable throwable) {
+                log.get().exception("NotificationMessage | Failed to make toast", throwable);
             }
-            Toast.makeText(context, text, Toast.LENGTH_SHORT).show();
         });
     }
 
