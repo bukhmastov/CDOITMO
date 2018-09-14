@@ -35,6 +35,7 @@ import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
+import com.bukhmastov.cdoitmo.util.singleton.JsonUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -178,8 +179,8 @@ public class ScheduleLessonsRVA extends RVA {
 
     private void bindHeader(View container, Item item) {
         try {
-            final String title = getString(item.data, "title");
-            final String week = getString(item.data, "week");
+            final String title = JsonUtils.getString(item.data, "title");
+            final String week = JsonUtils.getString(item.data, "week");
             TextView schedule_lessons_header = container.findViewById(R.id.schedule_lessons_header);
             if (title != null && !title.isEmpty()) {
                 schedule_lessons_header.setText(title);
@@ -331,7 +332,7 @@ public class ScheduleLessonsRVA extends RVA {
     }
     private void bindDay(View container, Item item) {
         try {
-            final String text = getString(item.data, "text");
+            final String text = JsonUtils.getString(item.data, "text");
             ((TextView) container.findViewById(R.id.day_title)).setText(text != null && !text.isEmpty() ? text : Static.GLITCH);
         } catch (Exception e) {
             log.exception(e);
@@ -341,9 +342,9 @@ public class ScheduleLessonsRVA extends RVA {
         try {
             final JSONObject lesson = item.data;
             final int weekday = (int) item.extras.get("weekday");
-            final String cdoitmo_type = getString(lesson, "cdoitmo_type");
-            final String type = getString(lesson, "type");
-            final int week = getInt(lesson, "week");
+            final String cdoitmo_type = JsonUtils.getString(lesson, "cdoitmo_type");
+            final String type = JsonUtils.getString(lesson, "type");
+            final int week = JsonUtils.getInt(lesson, "week", -1);
             final boolean isReduced = "reduced".equals(cdoitmo_type);
             final boolean isCompact = isReduced && "compact".equals(reduced_lesson_mode);
             final boolean isSynthetic = "synthetic".equals(cdoitmo_type);
@@ -442,19 +443,19 @@ public class ScheduleLessonsRVA extends RVA {
                 }
             });
             // title and time
-            ((TextView) container.findViewById(R.id.lesson_title)).setText(getString(lesson, "subject"));
-            ((TextView) container.findViewById(R.id.lesson_time_start)).setText(getString(lesson, "timeStart"));
-            ((TextView) container.findViewById(R.id.lesson_time_end)).setText(getString(lesson, "timeEnd"));
+            ((TextView) container.findViewById(R.id.lesson_title)).setText(JsonUtils.getString(lesson, "subject"));
+            ((TextView) container.findViewById(R.id.lesson_time_start)).setText(JsonUtils.getString(lesson, "timeStart"));
+            ((TextView) container.findViewById(R.id.lesson_time_end)).setText(JsonUtils.getString(lesson, "timeEnd"));
             // desc
             TextView lesson_desc = container.findViewById(R.id.lesson_desc);
             String desc = null;
             switch (this.type) {
-                case "group": desc = getString(lesson, "teacher"); break;
-                case "teacher": desc = getString(lesson, "group"); break;
+                case "group": desc = JsonUtils.getString(lesson, "teacher"); break;
+                case "teacher": desc = JsonUtils.getString(lesson, "group"); break;
                 case "mine":
                 case "room": {
-                    String group = getString(lesson, "group");
-                    String teacher = getString(lesson, "teacher");
+                    String group = JsonUtils.getString(lesson, "group");
+                    String teacher = JsonUtils.getString(lesson, "teacher");
                     if (group.isEmpty()) {
                         desc = teacher;
                     } else {
@@ -508,8 +509,8 @@ public class ScheduleLessonsRVA extends RVA {
                 case "mine":
                 case "group":
                 case "teacher": {
-                    String room = getString(lesson, "room");
-                    String building = getString(lesson, "building");
+                    String room = JsonUtils.getString(lesson, "room");
+                    String building = JsonUtils.getString(lesson, "building");
                     if (room.isEmpty()) {
                         meta = building;
                     } else {
@@ -521,7 +522,7 @@ public class ScheduleLessonsRVA extends RVA {
                     break;
                 }
                 case "room": {
-                    meta = getString(lesson, "building");
+                    meta = JsonUtils.getString(lesson, "building");
                     break;
                 }
             }
@@ -537,7 +538,7 @@ public class ScheduleLessonsRVA extends RVA {
     }
     private void bindNotification(View container, Item item) {
         try {
-            final String text = getString(item.data, "text");
+            final String text = JsonUtils.getString(item.data, "text");
             ((TextView) container.findViewById(R.id.lessons_warning)).setText(text != null && !text.isEmpty() ? text : Static.GLITCH);
         } catch (Exception e) {
             log.exception(e);
@@ -545,7 +546,7 @@ public class ScheduleLessonsRVA extends RVA {
     }
     private void bindUpdateTime(View container, Item item) {
         try {
-            final String text = getString(item.data, "text");
+            final String text = JsonUtils.getString(item.data, "text");
             ((TextView) container.findViewById(R.id.update_time)).setText(text != null && !text.isEmpty() ? text : Static.GLITCH);
         } catch (Exception e) {
             log.exception(e);
@@ -729,34 +730,6 @@ public class ScheduleLessonsRVA extends RVA {
         return days_positions.get(weekday, -1);
     }
 
-    protected String getString(JSONObject json, String key) throws JSONException {
-        if (json.has(key)) {
-            Object object = json.get(key);
-            if (json.isNull(key) || object == null) {
-                return null;
-            } else {
-                try {
-                    String value = (String) object;
-                    return value.equals("null") ? null : value;
-                } catch (Exception e) {
-                    return null;
-                }
-            }
-        } else {
-            return null;
-        }
-    }
-    protected int getInt(JSONObject json, String key) {
-        if (json.has(key)) {
-            try {
-                return json.getInt(key);
-            } catch (Exception e) {
-                return -1;
-            }
-        } else {
-            return -1;
-        }
-    }
     private FrameLayout getFlag(String text, int textColor, int backgroundColor) {
         FrameLayout flagContainer = (FrameLayout) inflate(R.layout.layout_schedule_lessons_flag);
         TextView flag_content = flagContainer.findViewById(R.id.flag_content);

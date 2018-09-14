@@ -19,9 +19,9 @@ import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.Storage;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
+import com.bukhmastov.cdoitmo.util.singleton.JsonUtils;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -142,8 +142,8 @@ public class ScheduleAttestationsRVA extends RVA {
 
     private void bindHeader(View container, Item item) {
         try {
-            final String title = getString(item.data, "title");
-            final String week = getString(item.data, "week");
+            final String title = JsonUtils.getString(item.data, "title");
+            final String week = JsonUtils.getString(item.data, "week");
             TextView schedule_lessons_header = container.findViewById(R.id.schedule_lessons_header);
             if (title != null && !title.isEmpty()) {
                 schedule_lessons_header.setText(title);
@@ -234,7 +234,7 @@ public class ScheduleAttestationsRVA extends RVA {
     }
     private void bindUpdateTime(View container, Item item) {
         try {
-            final String text = getString(item.data, "text");
+            final String text = JsonUtils.getString(item.data, "text");
             ((TextView) container.findViewById(R.id.update_time)).setText(text != null && !text.isEmpty() ? text : Static.GLITCH);
         } catch (Exception e) {
             log.exception(e);
@@ -245,34 +245,6 @@ public class ScheduleAttestationsRVA extends RVA {
             ((TextView) container.findViewById(R.id.ntd_text)).setText(R.string.no_attestations);
         } catch (Exception e) {
             log.exception(e);
-        }
-    }
-    protected String getString(JSONObject json, String key) throws JSONException {
-        if (json.has(key)) {
-            Object object = json.get(key);
-            if (json.isNull(key) || object == null) {
-                return null;
-            } else {
-                try {
-                    String value = (String) object;
-                    return value.equals("null") ? null : value;
-                } catch (Exception e) {
-                    return null;
-                }
-            }
-        } else {
-            return null;
-        }
-    }
-    protected int getInt(JSONObject json, String key) {
-        if (json.has(key)) {
-            try {
-                return json.getInt(key);
-            } catch (Exception e) {
-                return -1;
-            }
-        } else {
-            return -1;
         }
     }
 }

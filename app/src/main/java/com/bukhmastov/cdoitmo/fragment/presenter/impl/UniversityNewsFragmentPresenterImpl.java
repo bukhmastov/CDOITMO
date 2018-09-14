@@ -38,6 +38,7 @@ import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
+import com.bukhmastov.cdoitmo.util.singleton.JsonUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -436,7 +437,7 @@ public class UniversityNewsFragmentPresenterImpl implements UniversityNewsFragme
                     try {
                         final JSONObject news = list.getJSONObject(i);
                         UniversityNewsRVA.Item item = new UniversityNewsRVA.Item();
-                        item.type = getBoolean(news, "main") ? UniversityNewsRVA.TYPE_MAIN : UniversityNewsRVA.TYPE_MINOR;
+                        item.type = JsonUtils.getBoolean(news, "main") ? UniversityNewsRVA.TYPE_MAIN : UniversityNewsRVA.TYPE_MINOR;
                         item.data = news;
                         items.add(item);
                     } catch (Exception e) {
@@ -466,18 +467,6 @@ public class UniversityNewsFragmentPresenterImpl implements UniversityNewsFragme
                 loadFailed();
             }
         });
-    }
-
-    private boolean getBoolean(JSONObject json, String key) {
-        if (json.has(key)) {
-            try {
-                return json.getBoolean(key);
-            } catch (Exception e) {
-                return true;
-            }
-        } else {
-            return true;
-        }
     }
 
     private void draw(int layoutId) {

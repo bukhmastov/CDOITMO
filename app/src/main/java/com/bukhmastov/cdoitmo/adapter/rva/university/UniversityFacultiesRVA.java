@@ -23,6 +23,7 @@ import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.singleton.JsonUtils;
 import com.bukhmastov.cdoitmo.view.CircularTransformation;
 import com.squareup.picasso.Picasso;
 
@@ -113,11 +114,11 @@ public class UniversityFacultiesRVA extends UniversityRVA {
             }
             if (item.type == TYPE_UNIT_STRUCTURE_COMMON) {
                 boolean is_first_container = true;
-                final String address = getString(item.data, "address");
-                final String[] phones = (getString(item.data, "phone") == null ? "" : getString(item.data, "phone")).trim().split("[;,]");
-                final String[] emails = (getString(item.data, "email") == null ? "" : getString(item.data, "email")).trim().split("[;,]");
-                final String[] sites = (getString(item.data, "site") == null ? "" : getString(item.data, "site")).trim().split("[;,]");
-                final String working_hours = getString(item.data, "working_hours");
+                final String address = JsonUtils.getString(item.data, "address");
+                final String[] phones = (JsonUtils.getString(item.data, "phone") == null ? "" : JsonUtils.getString(item.data, "phone")).trim().split("[;,]");
+                final String[] emails = (JsonUtils.getString(item.data, "email") == null ? "" : JsonUtils.getString(item.data, "email")).trim().split("[;,]");
+                final String[] sites = (JsonUtils.getString(item.data, "site") == null ? "" : JsonUtils.getString(item.data, "site")).trim().split("[;,]");
+                final String working_hours = JsonUtils.getString(item.data, "working_hours");
                 if (address != null) {
                     structure_container.addView(getConnectContainer(R.drawable.ic_location, address.trim(), is_first_container, v -> {
                         try {
@@ -185,9 +186,9 @@ public class UniversityFacultiesRVA extends UniversityRVA {
             }
             if (item.type == TYPE_UNIT_STRUCTURE_DEANERY) {
                 boolean is_first_container = true;
-                final String deanery_address = getString(item.data, "deanery_address");
-                final String[] deanery_phones = (getString(item.data, "deanery_phone") == null ? "" : getString(item.data, "deanery_phone")).trim().split("[;,]");
-                final String[] deanery_emails = (getString(item.data, "deanery_email") == null ? "" : getString(item.data, "deanery_email")).trim().split("[;,]");
+                final String deanery_address = JsonUtils.getString(item.data, "deanery_address");
+                final String[] deanery_phones = (JsonUtils.getString(item.data, "deanery_phone") == null ? "" : JsonUtils.getString(item.data, "deanery_phone")).trim().split("[;,]");
+                final String[] deanery_emails = (JsonUtils.getString(item.data, "deanery_email") == null ? "" : JsonUtils.getString(item.data, "deanery_email")).trim().split("[;,]");
                 if (deanery_address != null && !deanery_address.trim().isEmpty()) {
                     structure_container.addView(getConnectContainer(R.drawable.ic_location, deanery_address.trim(), is_first_container, v -> {
                         eventBus.fire(new OpenIntentEvent(new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + deanery_address))).withIdentity(UniversityFacultiesRVA.class.getName()));
@@ -218,13 +219,13 @@ public class UniversityFacultiesRVA extends UniversityRVA {
             }
             if (item.type == TYPE_UNIT_STRUCTURE_HEAD) {
                 boolean is_first_container = true;
-                final String head_lastname = getString(item.data, "head_lastname");
-                final String head_firstname = getString(item.data, "head_firstname");
-                final String head_middlename = getString(item.data, "head_middlename");
-                final String head_avatar = getString(item.data, "head_avatar");
-                final String head_degree = getString(item.data, "head_degree");
-                final String[] head_emails = (getString(item.data, "head_email") == null ? "" : getString(item.data, "head_email")).trim().split("[;,]");
-                final int head_pid = getInt(item.data, "head_pid");
+                final String head_lastname = JsonUtils.getString(item.data, "head_lastname");
+                final String head_firstname = JsonUtils.getString(item.data, "head_firstname");
+                final String head_middlename = JsonUtils.getString(item.data, "head_middlename");
+                final String head_avatar = JsonUtils.getString(item.data, "head_avatar");
+                final String head_degree = JsonUtils.getString(item.data, "head_degree");
+                final String[] head_emails = (JsonUtils.getString(item.data, "head_email") == null ? "" : JsonUtils.getString(item.data, "head_email")).trim().split("[;,]");
+                final int head_pid = JsonUtils.getInt(item.data, "head_pid", -1);
                 if (head_lastname != null && head_firstname != null) {
                     final View layout_university_persons_list_item = inflate(R.layout.layout_university_persons_list_item);
                     ((TextView) layout_university_persons_list_item.findViewById(R.id.name)).setText((head_lastname + " " + head_firstname + " " + (head_middlename == null ? "" : head_middlename)).trim());
@@ -268,7 +269,7 @@ public class UniversityFacultiesRVA extends UniversityRVA {
         try {
             ViewHolder viewHolder = (ViewHolder) holder;
             removeFirstSeparator(viewHolder.container);
-            String header = getString(item.data, "header");
+            String header = JsonUtils.getString(item.data, "header");
             if (header != null) {
                 ((TextView) viewHolder.container.findViewById(R.id.structure_header)).setText(textUtils.capitalizeFirstLetter(header.trim()));
             } else {
@@ -278,12 +279,12 @@ public class UniversityFacultiesRVA extends UniversityRVA {
             if (structure_container == null) {
                 return;
             }
-            JSONArray divisions = getJsonArray(item.data, "divisions");
+            JSONArray divisions = JsonUtils.getJsonArray(item.data, "divisions");
             if (divisions != null) {
                 for (int i = 0; i < divisions.length(); i++) {
                     final JSONObject division = divisions.getJSONObject(i);
-                    final String title = getString(division, "title");
-                    final int id = getInt(division, "id");
+                    final String title = JsonUtils.getString(division, "title");
+                    final int id = JsonUtils.getInt(division, "id", -1);
                     if (title != null && !title.trim().isEmpty()) {
                         View view = inflate(R.layout.layout_university_faculties_divisions_list_item);
                         ((TextView) view.findViewById(R.id.title)).setText(title);

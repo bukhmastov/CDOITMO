@@ -42,6 +42,7 @@ import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
+import com.bukhmastov.cdoitmo.util.singleton.JsonUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -337,8 +338,8 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
     private void display(final JSONObject json) {
         thread.runOnUI(() -> {
             try {
-                JSONObject unit = getJsonObject(json, "unit");
-                JSONArray divisions = getJsonArray(json, "divisions");
+                JSONObject unit = JsonUtils.getJsonObject(json, "unit");
+                JSONArray divisions = JsonUtils.getJsonArray(json, "divisions");
                 draw(R.layout.layout_university_list_finite);
                 // заголовок
                 if (stack.size() == 0 || unit == null) {
@@ -351,13 +352,13 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
                         stack.remove(stack.size() - 1);
                         load();
                     });
-                    final String name = getString(unit, "unit_title");
+                    final String name = JsonUtils.getString(unit, "unit_title");
                     if (name != null && !name.trim().isEmpty()) {
                         ((TextView) container.findViewById(R.id.title)).setText(name.trim());
                     } else {
                         staticUtil.removeView(container.findViewById(R.id.title));
                     }
-                    final int unit_id = stack.size() > 0 ? getInt(unit, "unit_id") : -1;
+                    final int unit_id = stack.size() > 0 ? JsonUtils.getInt(unit, "unit_id", -1) : -1;
                     final String link = isValid(unit_id) ? "http://www.ifmo.ru/ru/viewunit/" + unit_id + "/" : null;
                     if (link != null) {
                         container.findViewById(R.id.web).setOnClickListener(view -> {
@@ -418,11 +419,11 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
                 final ArrayList<UniversityFacultiesRVA.Item> items = new ArrayList<>();
                 if (unit != null) {
                     // основная информация
-                    final String address = getString(unit, "address");
-                    final String phone = getString(unit, "phone");
-                    final String email = getString(unit, "email");
-                    final String site = getString(unit, "site");
-                    final String working_hours = getString(unit, "working_hours");
+                    final String address = JsonUtils.getString(unit, "address");
+                    final String phone = JsonUtils.getString(unit, "phone");
+                    final String email = JsonUtils.getString(unit, "email");
+                    final String site = JsonUtils.getString(unit, "site");
+                    final String working_hours = JsonUtils.getString(unit, "working_hours");
                     if (isValid(address) || isValid(phone) || isValid(email) || isValid(site) || isValid(working_hours)) {
                         UniversityFacultiesRVA.Item item = new UniversityFacultiesRVA.Item();
                         item.type = UniversityFacultiesRVA.TYPE_UNIT_STRUCTURE_COMMON;
@@ -436,12 +437,12 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
                         items.add(item);
                     }
                     // глава
-                    final String head_post = getString(unit, "post");
-                    final String head_lastname = getString(unit, "lastname");
-                    final String head_firstname = getString(unit, "firstname");
-                    final String head_middlename = getString(unit, "middlename");
-                    final String head_avatar = getString(unit, "avatar");
-                    final int head_pid = getInt(unit, "ifmo_person_id");
+                    final String head_post = JsonUtils.getString(unit, "post");
+                    final String head_lastname = JsonUtils.getString(unit, "lastname");
+                    final String head_firstname = JsonUtils.getString(unit, "firstname");
+                    final String head_middlename = JsonUtils.getString(unit, "middlename");
+                    final String head_avatar = JsonUtils.getString(unit, "avatar");
+                    final int head_pid = JsonUtils.getInt(unit, "ifmo_person_id", -1);
                     if (isValid(head_lastname) || isValid(head_firstname) || isValid(head_middlename)) {
                         UniversityFacultiesRVA.Item item = new UniversityFacultiesRVA.Item();
                         item.type = UniversityFacultiesRVA.TYPE_UNIT_STRUCTURE_HEAD;
@@ -461,8 +462,8 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
                     for (int i = 0; i < divisions.length(); i++) {
                         final JSONObject division = divisions.getJSONObject(i);
                         d.put(new JSONObject()
-                                .put("title", getString(division, "unit_title"))
-                                .put("id", getInt(division, "unit_id"))
+                                .put("title", JsonUtils.getString(division, "unit_title"))
+                                .put("id", JsonUtils.getInt(division, "unit_id", -1))
                         );
                     }
                     UniversityFacultiesRVA.Item item = new UniversityFacultiesRVA.Item();
@@ -500,69 +501,6 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
         return number >= 0;
     }
 
-    private JSONObject getJsonObject(JSONObject json, String key) throws JSONException {
-        if (json.has(key)) {
-            Object object = json.get(key);
-            if (object == null) {
-                return null;
-            } else {
-                try {
-                    return (JSONObject) object;
-                } catch (Exception e) {
-                    return null;
-                }
-            }
-        } else {
-            return null;
-        }
-    }
-
-    private JSONArray getJsonArray(JSONObject json, String key) throws JSONException {
-        if (json.has(key)) {
-            Object object = json.get(key);
-            if (object == null) {
-                return null;
-            } else {
-                try {
-                    return (JSONArray) object;
-                } catch (Exception e) {
-                    return null;
-                }
-            }
-        } else {
-            return null;
-        }
-    }
-
-    private String getString(JSONObject json, String key) throws JSONException {
-        if (json.has(key)) {
-            Object object = json.get(key);
-            if (object == null) {
-                return null;
-            } else {
-                try {
-                    return (String) object;
-                } catch (Exception e) {
-                    return null;
-                }
-            }
-        } else {
-            return null;
-        }
-    }
-
-    private int getInt(JSONObject json, String key) {
-        if (json.has(key)) {
-            try {
-                return json.getInt(key);
-            } catch (Exception e) {
-                return -1;
-            }
-        } else {
-            return -1;
-        }
-    }
-
     private void draw(int layoutId) {
         try {
             ViewGroup vg = ((ViewGroup) container);
@@ -578,5 +516,4 @@ public class UniversityUnitsFragmentPresenterImpl implements UniversityUnitsFrag
     private View inflate(@LayoutRes int layoutId) throws InflateException {
         return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layoutId, null);
     }
-
 }

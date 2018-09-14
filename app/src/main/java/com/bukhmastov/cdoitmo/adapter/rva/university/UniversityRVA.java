@@ -14,9 +14,8 @@ import com.bukhmastov.cdoitmo.util.Log;
 import com.bukhmastov.cdoitmo.util.Static;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.TextUtils;
+import com.bukhmastov.cdoitmo.util.singleton.JsonUtils;
 
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -92,7 +91,7 @@ public abstract class UniversityRVA extends RecyclerView.Adapter<RecyclerView.Vi
     protected void bindInfoAboutUpdateTime(RecyclerView.ViewHolder holder, Item item) {
         try {
             ViewHolder viewHolder = (ViewHolder) holder;
-            String title = getString(item.data, "title");
+            String title = JsonUtils.getString(item.data, "title");
             if (title != null) {
                 ((TextView) viewHolder.container.findViewById(R.id.update_time)).setText(title);
             }
@@ -137,65 +136,5 @@ public abstract class UniversityRVA extends RecyclerView.Adapter<RecyclerView.Vi
         item.type = TYPE_STATE;
         item.data_state_keep = type;
         addItem(item);
-    }
-
-    protected JSONObject getJsonObject(JSONObject json, String key) throws JSONException {
-        if (json.has(key)) {
-            Object object = json.get(key);
-            if (object == null) {
-                return null;
-            } else {
-                try {
-                    return (JSONObject) object;
-                } catch (Exception e) {
-                    return null;
-                }
-            }
-        } else {
-            return null;
-        }
-    }
-    protected JSONArray getJsonArray(JSONObject json, String key) throws JSONException {
-        if (json.has(key)) {
-            Object object = json.get(key);
-            if (object == null) {
-                return null;
-            } else {
-                try {
-                    return (JSONArray) object;
-                } catch (Exception e) {
-                    return null;
-                }
-            }
-        } else {
-            return null;
-        }
-    }
-    protected String getString(JSONObject json, String key) throws JSONException {
-        if (json.has(key)) {
-            Object object = json.get(key);
-            if (object == null) {
-                return null;
-            } else {
-                try {
-                    return (String) object;
-                } catch (Exception e) {
-                    return null;
-                }
-            }
-        } else {
-            return null;
-        }
-    }
-    protected int getInt(JSONObject json, String key) {
-        if (json.has(key)) {
-            try {
-                return json.getInt(key);
-            } catch (Exception e) {
-                return -1;
-            }
-        } else {
-            return -1;
-        }
     }
 }

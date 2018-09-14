@@ -13,6 +13,7 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.WebViewActivity;
 import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
+import com.bukhmastov.cdoitmo.util.singleton.JsonUtils;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
@@ -81,16 +82,16 @@ public class UniversityNewsRVA extends UniversityRVA {
     private void bindMain(RecyclerView.ViewHolder holder, Item item) {
         try {
             ViewHolder viewHolder = (ViewHolder) holder;
-            String title = getString(item.data, "news_title");
-            String img = getString(item.data, "img");
-            String img_small = getString(item.data, "img_small");
-            String anons = getString(item.data, "anons");
-            String category_parent = getString(item.data, "category_parent");
-            String category_child = getString(item.data, "category_child");
-            String color_hex = getString(item.data, "color_hex");
-            String date = getString(item.data, "pub_date");
-            final String webview = getString(item.data, "url_webview");
-            int count_view = getInt(item.data, "count_view");
+            String title = JsonUtils.getString(item.data, "news_title");
+            String img = JsonUtils.getString(item.data, "img");
+            String img_small = JsonUtils.getString(item.data, "img_small");
+            String anons = JsonUtils.getString(item.data, "anons");
+            String category_parent = JsonUtils.getString(item.data, "category_parent");
+            String category_child = JsonUtils.getString(item.data, "category_child");
+            String color_hex = JsonUtils.getString(item.data, "color_hex");
+            String date = JsonUtils.getString(item.data, "pub_date");
+            final String webview = JsonUtils.getString(item.data, "url_webview");
+            int count_view = JsonUtils.getInt(item.data, "count_view", -1);
             if (title == null || title.trim().isEmpty()) {
                 // skip news with empty title
                 return;
@@ -205,15 +206,15 @@ public class UniversityNewsRVA extends UniversityRVA {
     private void bindMinor(RecyclerView.ViewHolder holder, Item item) {
         try {
             ViewHolder viewHolder = (ViewHolder) holder;
-            String title = getString(item.data, "news_title");
-            String img = getString(item.data, "img");
-            String img_small = getString(item.data, "img_small");
-            String category_parent = getString(item.data, "category_parent");
-            String category_child = getString(item.data, "category_child");
-            String color_hex = getString(item.data, "color_hex");
-            String date = getString(item.data, "pub_date");
-            final String webview = getString(item.data, "url_webview");
-            int count_view = getInt(item.data, "count_view");
+            String title = JsonUtils.getString(item.data, "news_title");
+            String img = JsonUtils.getString(item.data, "img");
+            String img_small = JsonUtils.getString(item.data, "img_small");
+            String category_parent = JsonUtils.getString(item.data, "category_parent");
+            String category_child = JsonUtils.getString(item.data, "category_child");
+            String color_hex = JsonUtils.getString(item.data, "color_hex");
+            String date = JsonUtils.getString(item.data, "pub_date");
+            final String webview = JsonUtils.getString(item.data, "url_webview");
+            int count_view = JsonUtils.getInt(item.data, "count_view", -1);
             if (title == null || title.trim().isEmpty()) {
                 // skip news with empty title
                 return;

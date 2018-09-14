@@ -18,11 +18,10 @@ import javax.inject.Inject;
 public class TeacherSearchImpl implements TeacherSearch {
 
     private static final String TAG = "TeacherSearch";
-    private final int interval = 250;
+    private static final int SEARCH_DELAY_MS = 250;
     private final Handler handler = new Handler();
     private Client.Request requestHandle = null;
-    private boolean blockNextCall = false;
-    private String query = "";
+    //private String query = "";
 
     @Inject
     Log log;
@@ -51,23 +50,30 @@ public class TeacherSearchImpl implements TeacherSearch {
             }
             handler.removeCallbacksAndMessages(null);
 
-            boolean reject = query == null || query.isEmpty() || this.query.equals(query);
-            if (!reject) {
-                try {
-                    new JSONObject(query);
-                    reject = true;
-                } catch (Exception ignore) {
-                    // ignore
-                }
-            }
-            if (blockNextCall || reject) {
-                blockNextCall = false;
-                callback.onState(REJECTED);
-                log.v(TAG, "search | query = ", query, " | rejected");
+            boolean isEmptyQuery = query == null || query.isEmpty();
+            if (isEmptyQuery) {
+                log.v(TAG, "search | query = ", query, " | empty");
+                callback.onState(REJECTED_EMPTY);
                 return;
             }
 
-            this.query = query;
+            //boolean isInvalidQuery = this.query.equals(query); // should be different
+            //if (!isInvalidQuery) {
+            boolean isInvalidQuery = false;
+            try {
+                new JSONObject(query);
+                isInvalidQuery = true; // should not be json
+            } catch (Exception ignore) {
+                // ignore
+            }
+            //}
+            if (isInvalidQuery) {
+                log.v(TAG, "search | query = ", query, " | rejected");
+                callback.onState(REJECTED);
+                return;
+            }
+
+            //this.query = query;
             callback.onState(ACCEPTED);
 
             handler.postDelayed(() -> {
@@ -102,17 +108,12 @@ public class TeacherSearchImpl implements TeacherSearch {
                         }
                     }
                 }, query);
-            }, interval);
+            }, SEARCH_DELAY_MS);
         });
     }
 
-    @Override
-    public void setQuery(String query) {
-        this.query = query;
-    }
-
-    @Override
-    public void blockNextCall() {
-        blockNextCall = true;
-    }
+    //@Override
+    //public void setQuery(String query) {
+    //    this.query = query;
+    //}
 }

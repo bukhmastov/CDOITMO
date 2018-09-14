@@ -13,6 +13,7 @@ import android.widget.TextView;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.WebViewActivity;
 import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
+import com.bukhmastov.cdoitmo.util.singleton.JsonUtils;
 
 import java.util.ArrayList;
 
@@ -71,12 +72,12 @@ public class UniversityEventsRVA extends UniversityRVA {
     private void bindMinor(RecyclerView.ViewHolder holder, Item item) {
         try {
             UniversityEventsRVA.ViewHolder viewHolder = (UniversityEventsRVA.ViewHolder) holder;
-            String title = getString(item.data, "name");
-            String type = getString(item.data, "type_name");
+            String title = JsonUtils.getString(item.data, "name");
+            String type = JsonUtils.getString(item.data, "type_name");
             String color_hex = "#DF1843";
-            String date_begin = getString(item.data, "date_begin");
-            String date_end = getString(item.data, "date_end");
-            final String webview = getString(item.data, "url_webview");
+            String date_begin = JsonUtils.getString(item.data, "date_begin");
+            String date_end = JsonUtils.getString(item.data, "date_end");
+            final String webview = JsonUtils.getString(item.data, "url_webview");
             if (title == null || title.trim().isEmpty()) {
                 // skip event with empty title
                 return;

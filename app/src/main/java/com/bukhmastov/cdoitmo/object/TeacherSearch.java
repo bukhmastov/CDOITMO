@@ -11,9 +11,7 @@ public interface TeacherSearch {
 
     void search(final String query, final TeacherSearchCallback callback);
 
-    void setQuery(String query);
-
-    void blockNextCall();
+    //void setQuery(String query);
 
     interface TeacherSearchCallback {
         void onState(@State int state);
@@ -21,11 +19,12 @@ public interface TeacherSearch {
     }
 
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({REJECTED, ACCEPTED, SEARCHING, NOT_FOUND, FOUND})
+    @IntDef({REJECTED_EMPTY, REJECTED, ACCEPTED, SEARCHING, NOT_FOUND, FOUND})
     @interface State {}
-    int REJECTED = 0;
-    int ACCEPTED = 1;
-    int SEARCHING = 2;
-    int NOT_FOUND = 3;
-    int FOUND = 4;
+    int REJECTED_EMPTY = 0;
+    int REJECTED = 1;
+    int ACCEPTED = 2;
+    int SEARCHING = 3;
+    int NOT_FOUND = 4;
+    int FOUND = 5;
 }
