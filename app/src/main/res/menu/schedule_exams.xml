@@ -10,6 +10,10 @@
         android:title="@string/remove_from_cache" />
 
     <item
+        android:id="@+id/share_schedule"
+        android:title="@string/share_schedule" />
+
+    <item
         android:id="@+id/open_settings"
         android:title="@string/open_settings" />
 

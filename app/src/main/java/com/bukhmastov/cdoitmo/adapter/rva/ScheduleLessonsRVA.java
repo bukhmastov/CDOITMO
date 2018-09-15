@@ -25,7 +25,6 @@ import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
-import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsShareFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsTabHostFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleLessonsFragment;
@@ -52,8 +51,6 @@ import java.util.Calendar;
 import java.util.List;
 
 import javax.inject.Inject;
-
-import dagger.Lazy;
 
 public class ScheduleLessonsRVA extends RVA {
 
@@ -90,8 +87,6 @@ public class ScheduleLessonsRVA extends RVA {
     NotificationMessage notificationMessage;
     @Inject
     Time time;
-    @Inject
-    Lazy<FirebaseAnalyticsProvider> firebaseAnalyticsProvider;
 
     private final ConnectedActivity activity;
     private final int TYPE;
