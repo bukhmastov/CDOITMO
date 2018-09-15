@@ -18,6 +18,10 @@
         android:title="@string/add_military_day" />
 
     <item
+        android:id="@+id/share_schedule"
+        android:title="@string/share_schedule" />
+
+    <item
         android:id="@+id/share_changes"
         android:title="@string/share_changes" />
 

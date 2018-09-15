@@ -83,7 +83,7 @@ public class JsonUtils {
             String value = (String) object;
             return value.equals("null") ? orElse : value;
         } catch (Exception e) {
-            return null;
+            return orElse;
         }
     }
 

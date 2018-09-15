@@ -6,11 +6,13 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.PopupMenu;
 import android.util.SparseIntArray;
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -21,7 +23,9 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
+import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
+import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.fragment.ScheduleLessonsShareFragment;
 import com.bukhmastov.cdoitmo.fragment.presenter.ScheduleLessonsTabHostFragmentPresenter;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleLessonsFragment;
@@ -36,6 +40,7 @@ import com.bukhmastov.cdoitmo.util.Thread;
 import com.bukhmastov.cdoitmo.util.Time;
 import com.bukhmastov.cdoitmo.util.singleton.Color;
 import com.bukhmastov.cdoitmo.util.singleton.JsonUtils;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -47,6 +52,8 @@ import java.util.Calendar;
 import java.util.List;
 
 import javax.inject.Inject;
+
+import dagger.Lazy;
 
 public class ScheduleLessonsRVA extends RVA {
 
@@ -83,6 +90,8 @@ public class ScheduleLessonsRVA extends RVA {
     NotificationMessage notificationMessage;
     @Inject
     Time time;
+    @Inject
+    Lazy<FirebaseAnalyticsProvider> firebaseAnalyticsProvider;
 
     private final ConnectedActivity activity;
     private final int TYPE;
@@ -181,151 +190,19 @@ public class ScheduleLessonsRVA extends RVA {
         try {
             final String title = JsonUtils.getString(item.data, "title");
             final String week = JsonUtils.getString(item.data, "week");
-            TextView schedule_lessons_header = container.findViewById(R.id.schedule_lessons_header);
-            if (title != null && !title.isEmpty()) {
+            final TextView schedule_lessons_header = container.findViewById(R.id.schedule_lessons_header);
+            final TextView schedule_lessons_week = container.findViewById(R.id.schedule_lessons_week);
+            if (StringUtils.isNotBlank(title)) {
                 schedule_lessons_header.setText(title);
             } else {
                 ((ViewGroup) schedule_lessons_header.getParent()).removeView(schedule_lessons_header);
             }
-            TextView schedule_lessons_week = container.findViewById(R.id.schedule_lessons_week);
-            if (week != null && !week.isEmpty()) {
+            if (StringUtils.isNotBlank(week)) {
                 schedule_lessons_week.setText(week);
             } else {
                 ((ViewGroup) schedule_lessons_week.getParent()).removeView(schedule_lessons_week);
             }
-            container.findViewById(R.id.schedule_lessons_menu).setOnClickListener(view -> thread.run(() -> {
-                final String cache_token = query == null ? null : query.toLowerCase();
-                final boolean cached = cache_token != null && !storage.get(activity, Storage.CACHE, Storage.GLOBAL, "schedule_lessons#lessons#" + cache_token, "").isEmpty();
-                thread.runOnUI(() -> {
-                    try {
-                        final PopupMenu popup = new PopupMenu(activity, view);
-                        final Menu menu = popup.getMenu();
-                        popup.getMenuInflater().inflate(R.menu.schedule_lessons, menu);
-                        menu.findItem(cached ? R.id.add_to_cache : R.id.remove_from_cache).setVisible(false);
-                        popup.setOnMenuItemClickListener(item1 -> {
-                            log.v(TAG, "menu | popup item | clicked | " + item1.getTitle().toString());
-                            switch (item1.getItemId()) {
-                                case R.id.add_to_cache:
-                                case R.id.remove_from_cache: {
-                                    try {
-                                        if (cache_token == null) {
-                                            notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
-                                        } else {
-                                            if (storage.exists(activity, Storage.CACHE, Storage.GLOBAL, "schedule_lessons#lessons#" + cache_token)) {
-                                                if (storage.delete(activity, Storage.CACHE, Storage.GLOBAL, "schedule_lessons#lessons#" + cache_token)) {
-                                                    notificationMessage.snackBar(activity, activity.getString(R.string.cache_false));
-                                                } else {
-                                                    notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
-                                                }
-                                            } else {
-                                                if (data == null) {
-                                                    notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
-                                                } else {
-                                                    if (storage.put(activity, Storage.CACHE, Storage.GLOBAL, "schedule_lessons#lessons#" + cache_token, data.toString())) {
-                                                        notificationMessage.snackBar(activity, activity.getString(R.string.cache_true));
-                                                    } else {
-                                                        notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    } catch (Exception e) {
-                                        log.exception(e);
-                                        notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
-                                    }
-                                    break;
-                                }
-                                case R.id.add_lesson: {
-                                    thread.run(() -> {
-                                        try {
-                                            if (!scheduleLessonsHelper.createLesson(activity, query, data.getString("title"), type, time.getWeekDay(), new JSONObject(), null)) {
-                                                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                            }
-                                        } catch (Exception e) {
-                                            log.exception(e);
-                                            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                        }
-                                    });
-                                    break;
-                                }
-                                case R.id.add_military_day: {
-                                    thread.runOnUI(() -> {
-                                        if (activity.isFinishing() || activity.isDestroyed()) {
-                                            return;
-                                        }
-                                        final List<String> days = new ArrayList<>(Arrays.asList(activity.getString(R.string.monday), activity.getString(R.string.tuesday), activity.getString(R.string.wednesday), activity.getString(R.string.thursday), activity.getString(R.string.friday), activity.getString(R.string.saturday), activity.getString(R.string.sunday)));
-                                        final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(activity, R.layout.spinner_center);
-                                        arrayAdapter.addAll(days);
-                                        new AlertDialog.Builder(activity)
-                                                .setAdapter(arrayAdapter, (dialogInterface, position) -> thread.run(() -> {
-                                                    try {
-                                                        scheduleLessonsHelper.createLesson(activity, storage, query, position, new JSONObject().put("subject", "Утренний осмотр, строевая подготовка").put("type", "Военка").put("week", 2).put("timeStart", "9:05").put("timeEnd", "9:20").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
-                                                        scheduleLessonsHelper.createLesson(activity, storage, query, position, new JSONObject().put("subject", "1 пара").put("type", "Военка").put("week", 2).put("timeStart", "9:30").put("timeEnd", "10:50").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
-                                                        scheduleLessonsHelper.createLesson(activity, storage, query, position, new JSONObject().put("subject", "2 пара").put("type", "Военка").put("week", 2).put("timeStart", "11:00").put("timeEnd", "12:20").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
-                                                        scheduleLessonsHelper.createLesson(activity, storage, query, position, new JSONObject().put("subject", "3 пара").put("type", "Военка").put("week", 2).put("timeStart", "12:30").put("timeEnd", "13:50").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
-                                                        scheduleLessonsHelper.createLesson(activity, storage, query, position, new JSONObject().put("subject", "4 пара").put("type", "Военка").put("week", 2).put("timeStart", "14:50").put("timeEnd", "16:10").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
-                                                        scheduleLessonsHelper.createLesson(activity, storage, query, position, new JSONObject().put("subject", "Строевая подготовка").put("type", "Военка").put("week", 2).put("timeStart", "16:20").put("timeEnd", "16:35").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
-                                                        scheduleLessonsHelper.createLesson(activity, storage, query, position, new JSONObject().put("subject", "Кураторский час").put("type", "Военка").put("week", 2).put("timeStart", "16:45").put("timeEnd", "17:30").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
-                                                        tabHostPresenter.invalidateOnDemand();
-                                                    } catch (Exception e) {
-                                                        log.exception(e);
-                                                        notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                                    }
-                                                }))
-                                                .setNegativeButton(R.string.do_cancel, null)
-                                                .create().show();
-                                    });
-                                    break;
-                                }
-                                case R.id.share_changes: {
-                                    thread.run(() -> {
-                                        try {
-                                            final Bundle extras = new Bundle();
-                                            extras.putString("action", "share");
-                                            extras.putString("query", query);
-                                            extras.putString("type", type);
-                                            extras.putString("title", data.getString("title"));
-                                            thread.runOnUI(() -> activity.openActivityOrFragment(ScheduleLessonsShareFragment.class, extras));
-                                        } catch (Exception e) {
-                                            log.exception(e);
-                                        }
-                                    });
-                                    break;
-                                }
-                                case R.id.remove_changes: {
-                                    thread.run(() -> {
-                                        if (activity.isFinishing() || activity.isDestroyed()) {
-                                            return;
-                                        }
-                                        new AlertDialog.Builder(activity)
-                                                .setTitle(R.string.pref_schedule_lessons_clear_additional_title)
-                                                .setMessage(R.string.pref_schedule_lessons_clear_direct_additional_warning)
-                                                .setIcon(R.drawable.ic_warning)
-                                                .setPositiveButton(R.string.proceed, (dialog, which) -> thread.run(() -> {
-                                                    log.v(TAG, "menu | popup item | remove_changes | dialog accepted");
-                                                    if (!scheduleLessonsHelper.clearChanges(activity, storage, query, () -> tabHostPresenter.invalidateOnDemand())) {
-                                                        notificationMessage.snackBar(activity, activity.getString(R.string.no_changes));
-                                                    }
-                                                }))
-                                                .setNegativeButton(R.string.cancel, null)
-                                                .create().show();
-                                    });
-                                    break;
-                                }
-                                case R.id.open_settings: {
-                                    activity.openActivityOrFragment(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleLessonsFragment.class, null);
-                                    break;
-                                }
-                            }
-                            return false;
-                        });
-                        popup.show();
-                    } catch (Exception e) {
-                        log.exception(e);
-                        notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                    }
-                });
-            }));
+            container.findViewById(R.id.schedule_lessons_menu).setOnClickListener(this::showOptionsMenu);
         } catch (Exception e) {
             log.exception(e);
         }
@@ -448,25 +325,8 @@ public class ScheduleLessonsRVA extends RVA {
             ((TextView) container.findViewById(R.id.lesson_time_end)).setText(JsonUtils.getString(lesson, "timeEnd"));
             // desc
             TextView lesson_desc = container.findViewById(R.id.lesson_desc);
-            String desc = null;
-            switch (this.type) {
-                case "group": desc = JsonUtils.getString(lesson, "teacher"); break;
-                case "teacher": desc = JsonUtils.getString(lesson, "group"); break;
-                case "mine":
-                case "room": {
-                    String group = JsonUtils.getString(lesson, "group");
-                    String teacher = JsonUtils.getString(lesson, "teacher");
-                    if (group.isEmpty()) {
-                        desc = teacher;
-                    } else {
-                        desc = group;
-                        if (!teacher.isEmpty()) desc += " (" + teacher + ")";
-                    }
-                    break;
-                }
-            }
-            desc = desc == null || desc.isEmpty() ? null : desc;
-            if (desc == null) {
+            String desc = getLessonDesc(lesson, this.type);
+            if (StringUtils.isBlank(desc)) {
                 lesson_desc.setVisibility(View.GONE);
             } else {
                 lesson_desc.setText(desc);
@@ -482,21 +342,11 @@ public class ScheduleLessonsRVA extends RVA {
             if (colorScheduleFlagIwsBG == -1) colorScheduleFlagIwsBG = Color.resolve(activity, R.attr.colorScheduleFlagIwsBG);
             if (!type.isEmpty()) {
                 switch (type) {
-                    case "practice":
-                        lesson_flags.addView(getFlag(activity.getString(R.string.practice), colorScheduleFlagTEXT, colorScheduleFlagPracticeBG));
-                        break;
-                    case "lecture":
-                        lesson_flags.addView(getFlag(activity.getString(R.string.lecture), colorScheduleFlagTEXT, colorScheduleFlagLectureBG));
-                        break;
-                    case "lab":
-                        lesson_flags.addView(getFlag(activity.getString(R.string.lab), colorScheduleFlagTEXT, colorScheduleFlagLabBG));
-                        break;
-                    case "iws":
-                        lesson_flags.addView(getFlag(activity.getString(R.string.iws), colorScheduleFlagTEXT, colorScheduleFlagIwsBG));
-                        break;
-                    default:
-                        lesson_flags.addView(getFlag(type, colorScheduleFlagTEXT, colorScheduleFlagCommonBG));
-                        break;
+                    case "practice": lesson_flags.addView(getFlag(activity.getString(R.string.practice), colorScheduleFlagTEXT, colorScheduleFlagPracticeBG)); break;
+                    case "lecture": lesson_flags.addView(getFlag(activity.getString(R.string.lecture), colorScheduleFlagTEXT, colorScheduleFlagLectureBG)); break;
+                    case "lab": lesson_flags.addView(getFlag(activity.getString(R.string.lab), colorScheduleFlagTEXT, colorScheduleFlagLabBG)); break;
+                    case "iws": lesson_flags.addView(getFlag(activity.getString(R.string.iws), colorScheduleFlagTEXT, colorScheduleFlagIwsBG)); break;
+                    default: lesson_flags.addView(getFlag(type, colorScheduleFlagTEXT, colorScheduleFlagCommonBG)); break;
                 }
             }
             if (TYPE == 2 && (week == 0 || week == 1)) {
@@ -504,30 +354,8 @@ public class ScheduleLessonsRVA extends RVA {
             }
             // meta
             TextView lesson_meta = container.findViewById(R.id.lesson_meta);
-            String meta = null;
-            switch (this.type) {
-                case "mine":
-                case "group":
-                case "teacher": {
-                    String room = JsonUtils.getString(lesson, "room");
-                    String building = JsonUtils.getString(lesson, "building");
-                    if (room.isEmpty()) {
-                        meta = building;
-                    } else {
-                        meta = activity.getString(R.string.room_short) + " " + room;
-                        if (!building.isEmpty()) {
-                            meta += " (" + building + ")";
-                        }
-                    }
-                    break;
-                }
-                case "room": {
-                    meta = JsonUtils.getString(lesson, "building");
-                    break;
-                }
-            }
-            meta = meta == null || meta.isEmpty() ? null : meta;
-            if (meta == null) {
+            String meta = getLessonMeta(lesson, this.type);
+            if (StringUtils.isBlank(meta)) {
                 lesson_meta.setVisibility(View.GONE);
             } else {
                 lesson_meta.setText(meta);
@@ -606,6 +434,263 @@ public class ScheduleLessonsRVA extends RVA {
         }
     }
 
+    private void showOptionsMenu(View anchor) {
+        thread.run(() -> {
+            final String cacheToken = query == null ? null : query.toLowerCase();
+            final boolean isCached = cacheToken != null && !storage.get(activity, Storage.CACHE, Storage.GLOBAL, "schedule_lessons#lessons#" + cacheToken, "").isEmpty();
+            thread.runOnUI(() -> {
+                try {
+                    final PopupMenu popup = new PopupMenu(activity, anchor);
+                    final Menu menu = popup.getMenu();
+                    popup.getMenuInflater().inflate(R.menu.schedule_lessons, menu);
+                    menu.findItem(isCached ? R.id.add_to_cache : R.id.remove_from_cache).setVisible(false);
+                    popup.setOnMenuItemClickListener(menuItem -> {
+                        optionsMenuClicked(menuItem, cacheToken);
+                        return false;
+                    });
+                    popup.show();
+                } catch (Exception e) {
+                    log.exception(e);
+                    notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                }
+            });
+        });
+    }
+    private void optionsMenuClicked(MenuItem item, String cacheToken) {
+        log.v(TAG, "menu | popup item | clicked | " + item.getTitle().toString());
+        switch (item.getItemId()) {
+            case R.id.add_to_cache:
+            case R.id.remove_from_cache: {
+                toggleCache(cacheToken);
+                break;
+            }
+            case R.id.add_lesson: {
+                addLesson();
+                break;
+            }
+            case R.id.add_military_day: {
+                addMilitaryDay();
+                break;
+            }
+            case R.id.share_schedule: {
+                shareSchedule();
+                break;
+            }
+            case R.id.share_changes: {
+                shareChanges();
+                break;
+            }
+            case R.id.remove_changes: {
+                clearChanges();
+                break;
+            }
+            case R.id.open_settings: {
+                activity.openActivityOrFragment(ConnectedActivity.TYPE.STACKABLE, SettingsScheduleLessonsFragment.class, null);
+                break;
+            }
+        }
+    }
+    private void toggleCache(String cacheToken) {
+        thread.run(() -> {
+            try {
+                if (cacheToken == null) {
+                    notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+                    return;
+                }
+                if (storage.exists(activity, Storage.CACHE, Storage.GLOBAL, "schedule_lessons#lessons#" + cacheToken)) {
+                    if (storage.delete(activity, Storage.CACHE, Storage.GLOBAL, "schedule_lessons#lessons#" + cacheToken)) {
+                        notificationMessage.snackBar(activity, activity.getString(R.string.cache_false));
+                    } else {
+                        notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+                    }
+                } else {
+                    if (data == null) {
+                        notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+                        return;
+                    }
+                    if (storage.put(activity, Storage.CACHE, Storage.GLOBAL, "schedule_lessons#lessons#" + cacheToken, data.toString())) {
+                        notificationMessage.snackBar(activity, activity.getString(R.string.cache_true));
+                    } else {
+                        notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+                    }
+                }
+            } catch (Exception e) {
+                log.exception(e);
+                notificationMessage.snackBar(activity, activity.getString(R.string.cache_failed));
+            }
+        });
+    }
+    private void addLesson() {
+        thread.run(() -> {
+            try {
+                if (!scheduleLessonsHelper.createLesson(activity, query, data.getString("title"), type, time.getWeekDay(), new JSONObject(), null)) {
+                    notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                }
+            } catch (Exception e) {
+                log.exception(e);
+                notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+            }
+        });
+    }
+    private void addMilitaryDay() {
+        thread.runOnUI(() -> {
+            if (activity.isFinishing() || activity.isDestroyed()) {
+                return;
+            }
+            final List<String> days = new ArrayList<>(Arrays.asList(activity.getString(R.string.monday), activity.getString(R.string.tuesday), activity.getString(R.string.wednesday), activity.getString(R.string.thursday), activity.getString(R.string.friday), activity.getString(R.string.saturday), activity.getString(R.string.sunday)));
+            final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(activity, R.layout.spinner_center);
+            arrayAdapter.addAll(days);
+            new AlertDialog.Builder(activity)
+                    .setAdapter(arrayAdapter, (dialogInterface, position) -> thread.run(() -> {
+                        try {
+                            scheduleLessonsHelper.createLesson(activity, storage, query, position, new JSONObject().put("subject", "Утренний осмотр, строевая подготовка").put("type", "Военка").put("week", 2).put("timeStart", "9:05").put("timeEnd", "9:20").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
+                            scheduleLessonsHelper.createLesson(activity, storage, query, position, new JSONObject().put("subject", "1 пара").put("type", "Военка").put("week", 2).put("timeStart", "9:30").put("timeEnd", "10:50").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
+                            scheduleLessonsHelper.createLesson(activity, storage, query, position, new JSONObject().put("subject", "2 пара").put("type", "Военка").put("week", 2).put("timeStart", "11:00").put("timeEnd", "12:20").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
+                            scheduleLessonsHelper.createLesson(activity, storage, query, position, new JSONObject().put("subject", "3 пара").put("type", "Военка").put("week", 2).put("timeStart", "12:30").put("timeEnd", "13:50").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
+                            scheduleLessonsHelper.createLesson(activity, storage, query, position, new JSONObject().put("subject", "4 пара").put("type", "Военка").put("week", 2).put("timeStart", "14:50").put("timeEnd", "16:10").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
+                            scheduleLessonsHelper.createLesson(activity, storage, query, position, new JSONObject().put("subject", "Строевая подготовка").put("type", "Военка").put("week", 2).put("timeStart", "16:20").put("timeEnd", "16:35").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
+                            scheduleLessonsHelper.createLesson(activity, storage, query, position, new JSONObject().put("subject", "Кураторский час").put("type", "Военка").put("week", 2).put("timeStart", "16:45").put("timeEnd", "17:30").put("group", "").put("teacher", "").put("teacher_id", "").put("room", "").put("building", "").put("cdoitmo_type", "synthetic"), null);
+                            tabHostPresenter.invalidateOnDemand();
+                        } catch (Exception e) {
+                            log.exception(e);
+                            notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
+                        }
+                    }))
+                    .setNegativeButton(R.string.do_cancel, null)
+                    .create().show();
+        });
+    }
+    private void shareSchedule() {
+        thread.run(() -> {
+            StringBuilder sb = new StringBuilder();
+            sb.append(scheduleLessons.getScheduleHeader(activity, JsonUtils.getString(data, "title"), JsonUtils.getString(data, "type")));
+            sb.append("\n");
+            JSONArray schedule = JsonUtils.getJsonArray(data, "schedule");
+            if (schedule == null || schedule.length() == 0) {
+                sb.append(activity.getString(R.string.no_lessons));
+            } else {
+                String type = JsonUtils.getString(data, "type", "");
+                if (shareScheduleIsScheduleHasEvenOddWeekLessons(schedule)) {
+                    shareScheduleAppendLessonsForWeek(sb, schedule, type, 0);
+                    shareScheduleAppendLessonsForWeek(sb, schedule, type, 1);
+                } else {
+                    shareScheduleAppendLessonsForWeek(sb, schedule, type, 2);
+                }
+            }
+            eventBus.fire(new ShareTextEvent(sb.toString(), "schedule_lessons_plain"));
+        });
+    }
+    private boolean shareScheduleIsScheduleHasEvenOddWeekLessons(JSONArray schedule) {
+        for (int i = 0; i < schedule.length(); i++) {
+            JSONObject day = JsonUtils.getJsonObject(schedule, i);
+            if (day == null) {
+                continue;
+            }
+            JSONArray lessons = JsonUtils.getJsonArray(day, "lessons");
+            if (lessons == null) {
+                continue;
+            }
+            for (int j = 0; j < lessons.length(); j++) {
+                JSONObject lesson = JsonUtils.getJsonObject(lessons, j);
+                if (lesson != null && JsonUtils.getInt(lesson, "week", -1) != 2) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    private void shareScheduleAppendLessonsForWeek(StringBuilder sb, JSONArray schedule, String scheduleType, int week) {
+        if (week == 0 || week == 1) {
+            sb.append(activity.getString(week == 0 ? R.string.week_even : R.string.week_odd).toUpperCase());
+            sb.append("\n");
+        }
+        int lessonsThisWeek = 0;
+        for (int i = 0; i < schedule.length(); i++) {
+            JSONObject day = JsonUtils.getJsonObject(schedule, i);
+            if (day == null) {
+                continue;
+            }
+            JSONArray lessons = JsonUtils.getJsonArray(day, "lessons");
+            if (lessons == null || lessons.length() == 0) {
+                continue;
+            }
+            lessons = filterLessons(lessons, week, true);
+            if (lessons == null || lessons.length() == 0) {
+                continue;
+            }
+            sb.append(getDayTitle(day)).append("\n");
+            for (int j = 0; j < lessons.length(); j++) {
+                JSONObject lesson = JsonUtils.getJsonObject(lessons, j);
+                if (lesson == null) {
+                    continue;
+                }
+                lessonsThisWeek++;
+                String subject = JsonUtils.getString(lesson, "subject", Static.GLITCH);
+                String desc = getLessonDesc(lesson, scheduleType);
+                String meta = getLessonMeta(lesson, scheduleType);
+                String lessonType = JsonUtils.getString(lesson, "type", "");
+                switch (lessonType) {
+                    case "practice": lessonType = activity.getString(R.string.practice); break;
+                    case "lecture": lessonType = activity.getString(R.string.lecture); break;
+                    case "lab": lessonType = activity.getString(R.string.lab); break;
+                    case "iws": lessonType = activity.getString(R.string.iws); break;
+                }
+                sb.append(JsonUtils.getString(lesson, "timeStart", "∞"));
+                sb.append("-");
+                sb.append(JsonUtils.getString(lesson, "timeEnd", "∞"));
+                sb.append(" ");
+                sb.append(subject);
+                sb.append(". ");
+                if (StringUtils.isNotBlank(lessonType)) {
+                    sb.append(lessonType).append(". ");
+                }
+                if (StringUtils.isNotBlank(desc)) {
+                    sb.append(desc).append(". ");
+                }
+                if (StringUtils.isNotBlank(meta)) {
+                    sb.append(meta).append(". ");
+                }
+                sb.append("\n");
+            }
+        }
+        if (lessonsThisWeek == 0) {
+            sb.append(activity.getString(R.string.no_lessons)).append("\n");
+        }
+    }
+    private void shareChanges() {
+        thread.run(() -> {
+            try {
+                final Bundle extras = new Bundle();
+                extras.putString("action", "share");
+                extras.putString("query", query);
+                extras.putString("type", type);
+                extras.putString("title", data.getString("title"));
+                thread.runOnUI(() -> activity.openActivityOrFragment(ScheduleLessonsShareFragment.class, extras));
+            } catch (Exception e) {
+                log.exception(e);
+            }
+        });
+    }
+    private void clearChanges() {
+        thread.run(() -> {
+            if (activity.isFinishing() || activity.isDestroyed()) {
+                return;
+            }
+            new AlertDialog.Builder(activity)
+                    .setTitle(R.string.pref_schedule_lessons_clear_additional_title)
+                    .setMessage(R.string.pref_schedule_lessons_clear_direct_additional_warning)
+                    .setIcon(R.drawable.ic_warning)
+                    .setPositiveButton(R.string.proceed, (dialog, which) -> thread.run(() -> {
+                        log.v(TAG, "menu | popup item | remove_changes | dialog accepted");
+                        if (!scheduleLessonsHelper.clearChanges(activity, storage, query, () -> tabHostPresenter.invalidateOnDemand())) {
+                            notificationMessage.snackBar(activity, activity.getString(R.string.no_changes));
+                        }
+                    }))
+                    .setNegativeButton(R.string.cancel, null)
+                    .create().show();
+        });
+    }
+
     private ArrayList<Item> json2dataset(ConnectedActivity activity, JSONObject json, int weekday) throws JSONException {
         final ArrayList<Item> dataset = new ArrayList<>();
         // check
@@ -640,54 +725,14 @@ public class ScheduleLessonsRVA extends RVA {
                 final JSONObject day = schedule.getJSONObject(i);
                 final int day_weekday = day.getInt("weekday");
                 JSONArray lessons = day.getJSONArray("lessons");
-                if (lessons.length() == 0) continue;
-                final JSONArray lessonsFiltered = new JSONArray();
-                for (int j = 0; j < lessons.length(); j++) {
-                    final JSONObject lesson = lessons.getJSONObject(j);
-                    if (!(TYPE == 2 || TYPE == lesson.getInt("week") || lesson.getInt("week") == 2)) continue;
-                    if ("hidden".equals(reduced_lesson_mode) && "reduced".equals(lesson.getString("cdoitmo_type"))) continue;
-                    lessonsFiltered.put(lesson);
+                if (lessons.length() == 0) {
+                    continue;
                 }
-                lessons = lessonsFiltered;
-                if (lessons.length() == 0) continue;
-                // day title
-                String day_title;
-                switch (day_weekday) {
-                    case 0: day_title = activity.getString(R.string.monday); break;
-                    case 1: day_title = activity.getString(R.string.tuesday); break;
-                    case 2: day_title = activity.getString(R.string.wednesday); break;
-                    case 3: day_title = activity.getString(R.string.thursday); break;
-                    case 4: day_title = activity.getString(R.string.friday); break;
-                    case 5: day_title = activity.getString(R.string.saturday); break;
-                    case 6: day_title = activity.getString(R.string.sunday); break;
-                    default:
-                        try {
-                            if (day.has("type") && !day.isNull("type")) {
-                                switch (day.getString("type")) {
-                                    /*TODO implement when isu will be ready
-                                    расписание из ису, когда есть расписания на определенный день
-                                    case "date":
-                                        if (day.has("title") && !day.isNull("title")) {
-                                            day_title = day.getString("title");
-                                        } else {
-                                            day_title = activity.getString(R.string.unknown_day);
-                                        }
-                                        break;
-                                    */
-                                    default:
-                                    case "unknown":
-                                        day_title = activity.getString(R.string.unknown_day);
-                                        break;
-                                }
-                            } else {
-                                day_title = activity.getString(R.string.unknown_day);
-                            }
-                        } catch (Exception e) {
-                            day_title = Static.GLITCH;
-                        }
-                        break;
+                lessons = filterLessons(lessons, TYPE, "hidden".equals(reduced_lesson_mode));
+                if (lessons.length() == 0) {
+                    continue;
                 }
-                dataset.add(getNewItem(TYPE_DAY, new JSONObject().put("text", day_title)));
+                dataset.add(getNewItem(TYPE_DAY, new JSONObject().put("text", getDayTitle(day))));
                 days_positions.append(day_weekday, position++);
                 int day_lessons_count_total = lessons.length();
                 for (int j = 0; j < day_lessons_count_total; j++) {
@@ -725,6 +770,93 @@ public class ScheduleLessonsRVA extends RVA {
         // that's all
         return dataset;
     }
+    @NonNull
+    private String getDayTitle(JSONObject day) {
+        switch (JsonUtils.getInt(day, "weekday", -1)) {
+            case 0: return activity.getString(R.string.monday);
+            case 1: return activity.getString(R.string.tuesday);
+            case 2: return activity.getString(R.string.wednesday);
+            case 3: return activity.getString(R.string.thursday);
+            case 4: return activity.getString(R.string.friday);
+            case 5: return activity.getString(R.string.saturday);
+            case 6: return activity.getString(R.string.sunday);
+            default:
+                /*TODO implement when isu will be ready
+                расписание из ису, когда есть расписания на определенный день
+                String type = JsonUtils.getString(day, "type");
+                if ("date".equals(type)) {
+                    String title = JsonUtils.getString(day, "title");
+                    if (StringUtils.isNotBlank(title)) {
+                        return title;
+                    }
+                }
+                */
+                return activity.getString(R.string.unknown_day);
+        }
+    }
+    private JSONArray filterLessons(JSONArray lessons, int week, boolean hideReducedLessons) {
+        final JSONArray filtered = new JSONArray();
+        for (int i = 0; i < lessons.length(); i++) {
+            JSONObject lesson = JsonUtils.getJsonObject(lessons, i);
+            if (lesson == null) {
+                continue;
+            }
+            int lWeek = JsonUtils.getInt(lesson, "week", -1);
+            if (!(week == 2 || lWeek == 2 || week == lWeek)) {
+                continue;
+            }
+            if (hideReducedLessons) {
+                String cdoitmoType = JsonUtils.getString(lesson, "cdoitmo_type");
+                if ("reduced".equals(cdoitmoType)) {
+                    continue;
+                }
+            }
+            filtered.put(lesson);
+        }
+        return filtered;
+    }
+    private String getLessonDesc(JSONObject lesson, String type) {
+        switch (type) {
+            case "group": return JsonUtils.getString(lesson, "teacher");
+            case "teacher": return JsonUtils.getString(lesson, "group");
+            case "mine":
+            case "room": {
+                String group = JsonUtils.getString(lesson, "group");
+                String teacher = JsonUtils.getString(lesson, "teacher");
+                if (StringUtils.isBlank(group)) {
+                    return teacher;
+                }
+                String desc = group;
+                if (StringUtils.isNotBlank(teacher)) {
+                    desc += " (" + teacher + ")";
+                }
+                return desc;
+            }
+        }
+        return null;
+    }
+    private String getLessonMeta(JSONObject lesson, String type) {
+        switch (type) {
+            case "mine":
+            case "group":
+            case "teacher": {
+                String room = JsonUtils.getString(lesson, "room");
+                String building = JsonUtils.getString(lesson, "building");
+                if (StringUtils.isBlank(room)) {
+                    return building;
+                }
+                String meta = activity.getString(R.string.room_short) + " " + room;
+                if (StringUtils.isNotBlank(building)) {
+                    meta += " (" + building + ")";
+                }
+                return meta;
+            }
+            case "room": {
+                return JsonUtils.getString(lesson, "building");
+            }
+        }
+        return null;
+    }
 
     public int getDayPosition(int weekday) {
         return days_positions.get(weekday, -1);
@@ -732,6 +864,9 @@ public class ScheduleLessonsRVA extends RVA {
 
     private FrameLayout getFlag(String text, int textColor, int backgroundColor) {
         FrameLayout flagContainer = (FrameLayout) inflate(R.layout.layout_schedule_lessons_flag);
+        if (flagContainer == null) {
+            return null;
+        }
         TextView flag_content = flagContainer.findViewById(R.id.flag_content);
         flag_content.setText(text);
         flag_content.setBackgroundColor(backgroundColor);
@@ -751,7 +886,16 @@ public class ScheduleLessonsRVA extends RVA {
             menu.findItem(id).setTitle(text);
         }
     }
-    private View inflate(int layout) throws InflateException {
-        return ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(layout, null);
+    private View inflate(@LayoutRes int layout) throws InflateException {
+        if (activity == null) {
+            log.e(TAG, "Failed to inflate layout, activity is null");
+            return null;
+        }
+        LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        if (inflater == null) {
+            log.e(TAG, "Failed to inflate layout, inflater is null");
+            return null;
+        }
+        return inflater.inflate(layout, null);
     }
 }

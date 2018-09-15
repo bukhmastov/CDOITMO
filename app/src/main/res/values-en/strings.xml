@@ -512,5 +512,6 @@
     <string name="reset_preferences">Reset preferences</string>
     <string name="reset_preference_message">You are about to reset the application settings to the default values</string>
     <string name="open_search">Open search</string>
+    <string name="share_schedule">Share timetable</string>
 
 </resources>

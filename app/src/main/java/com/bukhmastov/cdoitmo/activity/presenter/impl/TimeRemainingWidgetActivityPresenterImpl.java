@@ -1,7 +1,6 @@
 package com.bukhmastov.cdoitmo.activity.presenter.impl;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
@@ -20,7 +19,7 @@ import com.bukhmastov.cdoitmo.activity.presenter.TimeRemainingWidgetActivityPres
 import com.bukhmastov.cdoitmo.dialog.BottomSheetDialog;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
-import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
+import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.IfmoRestClient;
@@ -316,7 +315,7 @@ public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWi
                 return;
             }
             if (data.current == null && data.next == null && data.day == null) {
-                share(activity.getString(R.string.time_remaining_widget_share_1));
+                eventBus.fire(new ShareTextEvent(activity.getString(R.string.time_remaining_widget_share_1), "time_remaining_widget"));
                 return;
             }
             new BottomSheetDialog(
@@ -328,33 +327,16 @@ public class TimeRemainingWidgetActivityPresenterImpl implements TimeRemainingWi
             ).setListener(tag -> {
                 switch (tag) {
                     case "current":
-                        share(activity.getString(R.string.time_remaining_widget_share_2) + " " + time2readable(data.current));
+                        eventBus.fire(new ShareTextEvent(activity.getString(R.string.time_remaining_widget_share_2) + " " + time2readable(data.current), "time_remaining_widget"));
                         break;
                     case "next":
-                        share(activity.getString(R.string.time_remaining_widget_share_3) + " " + time2readable(data.next));
+                        eventBus.fire(new ShareTextEvent(activity.getString(R.string.time_remaining_widget_share_3) + " " + time2readable(data.next), "time_remaining_widget"));
                         break;
                     case "day":
-                        share(activity.getString(R.string.time_remaining_widget_share_4) + " " + time2readable(data.day));
+                        eventBus.fire(new ShareTextEvent(activity.getString(R.string.time_remaining_widget_share_4) + " " + time2readable(data.day), "time_remaining_widget"));
                         break;
                 }
             }).show();
-        });
-    }
-
-    private void share(String text) {
-        thread.runOnUI(() -> {
-            if (!text.isEmpty()) {
-                Intent intent = new Intent(Intent.ACTION_SEND);
-                intent.setType("text/plain");
-                intent.putExtra(Intent.EXTRA_TEXT, text);
-                eventBus.fire(new OpenIntentEvent(Intent.createChooser(intent, activity.getString(R.string.share))));
-                // track statistics
-                firebaseAnalyticsProvider.logEvent(
-                        activity,
-                        FirebaseAnalyticsProvider.Event.SHARE,
-                        firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "time_remaining_widget")
-                );
-            }
         });
     }
 

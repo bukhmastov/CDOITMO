@@ -1,6 +1,5 @@
 package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -17,7 +16,7 @@ import com.bukhmastov.cdoitmo.adapter.rva.RatingListRVA;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
 import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
-import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
+import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.exception.SilentException;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
@@ -375,9 +374,10 @@ public class RatingListFragmentPresenterImpl implements RatingListFragmentPresen
                         action_share.setVisible(true);
                         action_share.setOnMenuItemClickListener(menuItem -> {
                             try {
-                                share("Я на %position% позиции в рейтинге %faculty%!"
+                                eventBus.fire(new ShareTextEvent("Я на %position% позиции в рейтинге %faculty%!"
                                         .replace("%position%", String.valueOf(minePosition))
                                         .replace("%faculty%", mineFaculty.isEmpty() ? "факультета" : mineFaculty)
+                                        , "rating")
                                 );
                             } catch (Exception e) {
                                 log.exception(e);
@@ -403,22 +403,6 @@ public class RatingListFragmentPresenterImpl implements RatingListFragmentPresen
             } catch (Exception e){
                 log.exception(e);
             }
-        });
-    }
-    
-    private void share(final String title) {
-        thread.runOnUI(() -> {
-            log.v(TAG, "share | " + title);
-            Intent intent = new Intent(Intent.ACTION_SEND);
-            intent.setType("text/plain");
-            intent.putExtra(Intent.EXTRA_TEXT, title);
-            eventBus.fire(new OpenIntentEvent(Intent.createChooser(intent, activity.getString(R.string.share))));
-            // track statistics
-            firebaseAnalyticsProvider.logEvent(
-                    activity,
-                    FirebaseAnalyticsProvider.Event.SHARE,
-                    firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "rating")
-            );
         });
     }
 }

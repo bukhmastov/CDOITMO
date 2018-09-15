@@ -82,11 +82,6 @@ public class ThreadImpl implements Thread {
         if (runnable == null) {
             throw new NullPointerException("Passed runnable is null");
         }
-        try {
-            runnable.run();
-        } catch (Throwable throwable) {
-            onCaughtUncaughtException("main", throwable);
-        }
         if (isMainThread()) {
             // log("runOnUI | run on current thread");
             try {

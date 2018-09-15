@@ -1,7 +1,6 @@
 package com.bukhmastov.cdoitmo.activity.presenter.impl;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
@@ -20,7 +19,7 @@ import com.bukhmastov.cdoitmo.activity.MainActivity;
 import com.bukhmastov.cdoitmo.activity.presenter.DaysRemainingWidgetActivityPresenter;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
-import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
+import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.network.model.Client;
@@ -292,7 +291,7 @@ public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWi
                 return;
             }
             if (data.size() == 0) {
-                share("У меня закончились экзамены!");
+                eventBus.fire(new ShareTextEvent("У меня закончились экзамены!", "days_remaining_widget"));
                 return;
             }
             DaysRemainingWidget.Data currentData = data.get(0);
@@ -363,24 +362,7 @@ public class DaysRemainingWidgetActivityPresenterImpl implements DaysRemainingWi
             String pattern = "Следующий экзамен %scope% уже через %time%";
             pattern = pattern.replace("%scope%", scope.trim());
             pattern = pattern.replace("%time%", time.trim());
-            share(pattern);
-        });
-    }
-
-    private void share(String text) {
-        thread.runOnUI(() -> {
-            if (!text.isEmpty()) {
-                Intent intent = new Intent(Intent.ACTION_SEND);
-                intent.setType("text/plain");
-                intent.putExtra(Intent.EXTRA_TEXT, text);
-                eventBus.fire(new OpenIntentEvent(Intent.createChooser(intent, activity.getString(R.string.share))));
-                // track statistics
-                firebaseAnalyticsProvider.logEvent(
-                        activity,
-                        FirebaseAnalyticsProvider.Event.SHARE,
-                        firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "days_remaining_widget")
-                );
-            }
+            eventBus.fire(new ShareTextEvent(pattern, "days_remaining_widget"));
         });
     }
 

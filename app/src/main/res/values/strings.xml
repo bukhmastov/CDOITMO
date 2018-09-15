@@ -520,5 +520,6 @@
     <string name="reset_preferences">Сбросить настройки</string>
     <string name="reset_preference_message">Вы собираетесь сбросить настройки приложения до значений по умолчанию</string>
     <string name="open_search">Открыть поиск</string>
+    <string name="share_schedule">Поделиться расписанием</string>
 
 </resources>

@@ -432,11 +432,14 @@ public abstract class Client {
         return context.getString(R.string.server_error) + (statusCode > 0 ? "\n[status code: " + statusCode + "]" : "");
     }
     public static boolean isOnline(@NonNull final Context context) {
-        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        if (connectivityManager != null) {
+        try {
+            ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (connectivityManager == null) {
+                return true;
+            }
             NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
             return (networkInfo != null && networkInfo.isConnected());
-        } else {
+        } catch (Exception e) {
             return true;
         }
     }

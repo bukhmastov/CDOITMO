@@ -10,6 +10,7 @@ import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
 import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
+import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseCrashlyticsProvider;
@@ -18,6 +19,7 @@ import com.bukhmastov.cdoitmo.util.NotificationMessage;
 import com.bukhmastov.cdoitmo.util.StoragePref;
 import com.bukhmastov.cdoitmo.util.TextUtils;
 import com.bukhmastov.cdoitmo.util.Thread;
+import com.bukhmastov.cdoitmo.util.singleton.StringUtils;
 
 import java.util.Locale;
 import java.util.UUID;
@@ -144,6 +146,28 @@ public class App extends Application {
                 } else {
                     notificationMessage.toast(this, getString(R.string.something_went_wrong));
                 }
+            }
+        });
+    }
+
+    @Event
+    public void onShareTextEvent(ShareTextEvent event) {
+        thread.run(() -> {
+            if (StringUtils.isBlank(event.getText())) {
+                return;
+            }
+            // share
+            Intent intent = new Intent(Intent.ACTION_SEND);
+            intent.setType("text/plain");
+            intent.putExtra(Intent.EXTRA_TEXT, event.getText());
+            eventBus.fire(new OpenIntentEvent(Intent.createChooser(intent, getString(R.string.share))));
+            // track statistics
+            if (StringUtils.isNotBlank(event.getAnalyticsType())) {
+                firebaseAnalyticsProvider.logEvent(
+                        this,
+                        FirebaseAnalyticsProvider.Event.SHARE,
+                        firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, event.getAnalyticsType())
+                );
             }
         });
     }

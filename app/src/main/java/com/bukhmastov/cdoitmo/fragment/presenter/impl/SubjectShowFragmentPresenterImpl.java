@@ -1,6 +1,5 @@
 package com.bukhmastov.cdoitmo.fragment.presenter.impl;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
@@ -13,7 +12,7 @@ import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.adapter.rva.ERegisterSubjectViewRVA;
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
-import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
+import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
 import com.bukhmastov.cdoitmo.exception.SilentException;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
@@ -162,7 +161,7 @@ public class SubjectShowFragmentPresenterImpl implements SubjectShowFragmentPres
                         action_share.setOnMenuItemClickListener(menuItem -> {
                             try {
                                 if (shareEntities.size() == 1) {
-                                    share(shareEntities.get(0).text);
+                                    eventBus.fire(new ShareTextEvent(shareEntities.get(0).text, "subject"));
                                 } else {
                                     if (activity.isFinishing() || activity.isDestroyed()) {
                                         return false;
@@ -174,14 +173,7 @@ public class SubjectShowFragmentPresenterImpl implements SubjectShowFragmentPres
                                     final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(activity, R.layout.spinner_center);
                                     arrayAdapter.addAll(labels);
                                     new AlertDialog.Builder(activity)
-                                            .setAdapter(arrayAdapter, (dialogInterface, position) -> {
-                                                try {
-                                                    share(shareEntities.get(position).text);
-                                                } catch (Exception e) {
-                                                    log.exception(e);
-                                                    notificationMessage.snackBar(activity, activity.getString(R.string.something_went_wrong));
-                                                }
-                                            })
+                                            .setAdapter(arrayAdapter, (dialogInterface, position) -> eventBus.fire(new ShareTextEvent(shareEntities.get(position).text, "subject")))
                                             .setNegativeButton(R.string.do_cancel, null)
                                             .create().show();
                                 }
@@ -294,21 +286,5 @@ public class SubjectShowFragmentPresenterImpl implements SubjectShowFragmentPres
             log.w(TAG, "Failed to build text to share (mine subject progress) | subject=" + sbj + " | points=" + shareEntity.value.toString() + " | mark=" + shareEntity.mark);
             return "";
         }
-    }
-    
-    private void share(final String title) {
-        thread.runOnUI(() -> {
-            log.v(TAG, "share | " + title);
-            Intent intent = new Intent(Intent.ACTION_SEND);
-            intent.setType("text/plain");
-            intent.putExtra(Intent.EXTRA_TEXT, title);
-            eventBus.fire(new OpenIntentEvent(Intent.createChooser(intent, activity.getString(R.string.share))));
-            // track statistics
-            firebaseAnalyticsProvider.logEvent(
-                    activity,
-                    FirebaseAnalyticsProvider.Event.SHARE,
-                    firebaseAnalyticsProvider.getBundle(FirebaseAnalyticsProvider.Param.TYPE, "subject")
-            );
-        });
     }
 }
