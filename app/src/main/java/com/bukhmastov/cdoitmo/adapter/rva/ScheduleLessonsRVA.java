@@ -572,7 +572,7 @@ public class ScheduleLessonsRVA extends RVA {
                     shareScheduleAppendLessonsForWeek(sb, schedule, type, 2);
                 }
             }
-            eventBus.fire(new ShareTextEvent(sb.toString(), "schedule_lessons_plain"));
+            eventBus.fire(new ShareTextEvent(sb.toString().trim(), "schedule_lessons_plain"));
         });
     }
     private boolean shareScheduleIsScheduleHasEvenOddWeekLessons(JSONArray schedule) {
@@ -596,6 +596,7 @@ public class ScheduleLessonsRVA extends RVA {
     }
     private void shareScheduleAppendLessonsForWeek(StringBuilder sb, JSONArray schedule, String scheduleType, int week) {
         if (week == 0 || week == 1) {
+            sb.append("\n");
             sb.append(activity.getString(week == 0 ? R.string.week_even : R.string.week_odd).toUpperCase());
             sb.append("\n");
         }
@@ -613,7 +614,9 @@ public class ScheduleLessonsRVA extends RVA {
             if (lessons == null || lessons.length() == 0) {
                 continue;
             }
-            sb.append(getDayTitle(day)).append("\n");
+            sb.append("\n");
+            sb.append(getDayTitle(day));
+            sb.append("\n");
             for (int j = 0; j < lessons.length(); j++) {
                 JSONObject lesson = JsonUtils.getJsonObject(lessons, j);
                 if (lesson == null) {

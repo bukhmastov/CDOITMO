@@ -516,7 +516,7 @@ public class ScheduleExamsRVA extends RVA {
                     sb.append(activity.getString(R.string.no_exams));
                 }
             }
-            eventBus.fire(new ShareTextEvent(sb.toString(), "schedule_exams_plain"));
+            eventBus.fire(new ShareTextEvent(sb.toString().trim(), "schedule_exams_plain"));
         });
     }
     private void shareScheduleAppendEvent(StringBuilder sb, JSONObject event, String title) {
