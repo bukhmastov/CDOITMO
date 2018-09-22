@@ -148,58 +148,64 @@ public class ScheduleExamsFragmentPresenterImpl implements ScheduleExamsFragment
     public void onPageScrollStateChanged(int state) {}
 
     private void load() {
-        final FragmentManager fragmentManager = fragment.getChildFragmentManager();
-        thread.run(() -> {
+        thread.runOnUI(() -> {
+            if (fragment.isNotAddedToActivity()) {
+                log.w(TAG, "load | fragment not added to activity");
+                return;
+            }
             if (activity == null) {
                 log.w(TAG, "load | activity is null");
                 return;
             }
-            if (tabHostPresenter.getQuery() == null) {
-                tabHostPresenter.setQuery(scheduleExams.getDefaultScope(activity));
-            }
-            thread.runOnUI(() -> {
-                try {
-                    if (activity == null) {
-                        log.w(TAG, "load | activity is null");
-                        return;
-                    }
-                    // setup pager adapter
-                    final TabLayout fixed_tabs = activity.findViewById(R.id.fixed_tabs);
-                    if (fixed_tabs == null) {
-                        loaded = false;
-                        return;
-                    }
-                    fixed_tabs.setVisibility(View.VISIBLE);
-                    fragment.draw(R.layout.fragment_pager);
-                    final ViewPager pager = fragment.container().findViewById(R.id.pager);
-                    if (pager != null) {
-                        pager.setAdapter(new PagerExamsAdapter(fragmentManager, activity));
-                        pager.addOnPageChangeListener(this);
-                        fixed_tabs.setupWithViewPager(pager);
-                    }
-                    // select tab
-                    TabLayout.Tab tab = null;
-                    if (activeTab != -1) {
+            final FragmentManager fragmentManager = fragment.getChildFragmentManager();
+            thread.run(() -> {
+                if (tabHostPresenter.getQuery() == null) {
+                    tabHostPresenter.setQuery(scheduleExams.getDefaultScope(activity));
+                }
+                thread.runOnUI(() -> {
+                    try {
+                        if (activity == null) {
+                            log.w(TAG, "load | activity is null");
+                            return;
+                        }
+                        // setup pager adapter
+                        final TabLayout fixed_tabs = activity.findViewById(R.id.fixed_tabs);
+                        if (fixed_tabs == null) {
+                            loaded = false;
+                            return;
+                        }
+                        fixed_tabs.setVisibility(View.VISIBLE);
+                        fragment.draw(R.layout.fragment_pager);
+                        final ViewPager pager = fragment.container().findViewById(R.id.pager);
+                        if (pager != null) {
+                            pager.setAdapter(new PagerExamsAdapter(fragmentManager, activity));
+                            pager.addOnPageChangeListener(this);
+                            fixed_tabs.setupWithViewPager(pager);
+                        }
+                        // select tab
+                        TabLayout.Tab tab = null;
+                        if (activeTab != -1) {
+                            try {
+                                tab = fixed_tabs.getTabAt(activeTab);
+                            } catch (Exception e) {
+                                activeTab = -1;
+                            }
+                        }
+                        if (activeTab == -1) {
+                            int activeTabByDefault = Integer.parseInt(storagePref.get(activity, "pref_schedule_exams_type", "0"));
+                            tab = fixed_tabs.getTabAt(activeTabByDefault);
+                        }
+                        if (tab != null) tab.select();
+                    } catch (Exception e) {
+                        log.exception(e);
                         try {
-                            tab = fixed_tabs.getTabAt(activeTab);
-                        } catch (Exception e) {
-                            activeTab = -1;
+                            failed(activity);
+                        } catch (Exception e1) {
+                            loaded = false;
+                            log.exception(e1);
                         }
                     }
-                    if (activeTab == -1) {
-                        int activeTabByDefault = Integer.parseInt(storagePref.get(activity, "pref_schedule_exams_type", "0"));
-                        tab = fixed_tabs.getTabAt(activeTabByDefault);
-                    }
-                    if (tab != null) tab.select();
-                } catch (Exception e) {
-                    log.exception(e);
-                    try {
-                        failed(activity);
-                    } catch (Exception e1) {
-                        loaded = false;
-                        log.exception(e1);
-                    }
-                }
+                });
             });
         });
     }

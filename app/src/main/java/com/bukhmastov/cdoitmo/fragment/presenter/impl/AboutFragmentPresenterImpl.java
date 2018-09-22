@@ -8,7 +8,6 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.bukhmastov.cdoitmo.App;
-import com.bukhmastov.cdoitmo.BuildConfig;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.activity.PikaActivity;
@@ -97,7 +96,7 @@ public class AboutFragmentPresenterImpl implements AboutFragmentPresenter {
 
             TextView app_version = fragment.container().findViewById(R.id.app_version);
             if (app_version != null) {
-                app_version.setText(activity.getString(R.string.version) + " " + App.versionName + " (" + App.versionCode + " " + activity.getString(R.string.build) + (BuildConfig.DEBUG ? ", debug mode" : "") + ")");
+                app_version.setText(activity.getString(R.string.version) + " " + App.versionName + " (" + App.versionCode + " " + activity.getString(R.string.build) + (App.DEBUG ? ", debug mode" : "") + ")");
             }
 
             View block_pika = fragment.container().findViewById(R.id.block_pika);

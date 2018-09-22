@@ -6,7 +6,7 @@ import android.os.Build;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 
-import com.bukhmastov.cdoitmo.BuildConfig;
+import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.activity.ConnectedActivity;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.firebase.FirebaseAnalyticsProvider;
@@ -172,7 +172,7 @@ public class StoragePrefImpl implements StoragePref {
 
     @Override
     public void applyDebug(Context context) {
-        if (BuildConfig.DEBUG) {
+        if (App.DEBUG) {
             put(context, "pref_allow_collect_analytics", false);
             put(context, "pref_allow_send_reports", false);
             put(context, "pref_allow_collect_logs", true);

@@ -82,7 +82,7 @@ public class RatingListFragmentPresenterImpl implements RatingListFragmentPresen
 
     @Event
     public void onClearCacheEvent(ClearCacheEvent event) {
-        if (event.isNot("rating")) {
+        if (event.isNot(ClearCacheEvent.RATING)) {
             return;
         }
         fragment.clearData(fragment);

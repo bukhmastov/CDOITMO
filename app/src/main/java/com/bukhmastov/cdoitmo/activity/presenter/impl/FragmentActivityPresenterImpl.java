@@ -67,46 +67,45 @@ public class FragmentActivityPresenterImpl implements FragmentActivityPresenter,
             log.i(TAG, "Activity created");
             try {
                 final Intent intent = activity.getIntent();
-                if (intent != null) {
-                    final Bundle extras = intent.getExtras();
-                    final Class fragment_class;
-                    final Bundle fragment_extras;
-                    if (extras != null) {
-                        if (extras.containsKey("class")) {
-                            fragment_class = (Class) extras.get("class");
-                        } else {
-                            throw new NullPointerException("Intent's extras should contains 'class'");
-                        }
-                        if (extras.containsKey("extras")) {
-                            fragment_extras = (Bundle) extras.get("extras");
-                        } else {
-                            throw new NullPointerException("Intent's extras should contains 'extras'");
-                        }
-                        if (fragment_extras != null && fragment_extras.containsKey(ConnectedActivity.ACTIVITY_WITH_MENU)) {
-                            activity.layout_with_menu = fragment_extras.getBoolean(ConnectedActivity.ACTIVITY_WITH_MENU);
-                            fragment_extras.remove(ConnectedActivity.ACTIVITY_WITH_MENU);
-                        }
-                    } else {
-                        throw new NullPointerException("Intent's extras cannot be null");
-                    }
-                    activity.setContentView(activity.layout_with_menu ? R.layout.activity_fragment : R.layout.activity_fragment_without_menu);
-                    final Toolbar toolbar = activity.findViewById(R.id.toolbar_fragment);
-                    if (toolbar != null) {
-                        theme.applyToolbarTheme(activity, toolbar);
-                        activity.setSupportActionBar(toolbar);
-                    }
-                    final ActionBar actionBar = activity.getSupportActionBar();
-                    if (actionBar != null) {
-                        actionBar.setHomeButtonEnabled(true);
-                        actionBar.setDisplayHomeAsUpEnabled(true);
-                    }
-                    if (activity.layout_with_menu) {
-                        ((NavigationView) activity.findViewById(R.id.nav_view)).setNavigationItemSelectedListener(this);
-                    }
-                    invoke(fragment_class, fragment_extras);
-                } else {
+                if (intent == null) {
                     throw new NullPointerException("Intent cannot be null");
                 }
+                final Bundle extras = intent.getExtras();
+                final Class fragment_class;
+                final Bundle fragment_extras;
+                if (extras != null) {
+                    if (extras.containsKey("class")) {
+                        fragment_class = (Class) extras.get("class");
+                    } else {
+                        throw new NullPointerException("Intent's extras should contains 'class'");
+                    }
+                    if (extras.containsKey("extras")) {
+                        fragment_extras = (Bundle) extras.get("extras");
+                    } else {
+                        throw new NullPointerException("Intent's extras should contains 'extras'");
+                    }
+                    if (fragment_extras != null && fragment_extras.containsKey(ConnectedActivity.ACTIVITY_WITH_MENU)) {
+                        activity.layout_with_menu = fragment_extras.getBoolean(ConnectedActivity.ACTIVITY_WITH_MENU);
+                        fragment_extras.remove(ConnectedActivity.ACTIVITY_WITH_MENU);
+                    }
+                } else {
+                    throw new NullPointerException("Intent's extras cannot be null");
+                }
+                activity.setContentView(activity.layout_with_menu ? R.layout.activity_fragment : R.layout.activity_fragment_without_menu);
+                final Toolbar toolbar = activity.findViewById(R.id.toolbar_fragment);
+                if (toolbar != null) {
+                    theme.applyToolbarTheme(activity, toolbar);
+                    activity.setSupportActionBar(toolbar);
+                }
+                final ActionBar actionBar = activity.getSupportActionBar();
+                if (actionBar != null) {
+                    actionBar.setHomeButtonEnabled(true);
+                    actionBar.setDisplayHomeAsUpEnabled(true);
+                }
+                if (activity.layout_with_menu) {
+                    ((NavigationView) activity.findViewById(R.id.nav_view)).setNavigationItemSelectedListener(this);
+                }
+                invoke(fragment_class, fragment_extras);
             } catch (Exception e) {
                 log.exception(e);
                 activity.finish();
@@ -206,11 +205,9 @@ public class FragmentActivityPresenterImpl implements FragmentActivityPresenter,
                 }
                 if (fragmentManager != null) {
                     FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-                    if (fragmentTransaction != null) {
-                        fragmentTransaction.replace(activity.getRootViewId(), fragment);
-                        fragmentTransaction.commitAllowingStateLoss();
-                        activity.pushFragment(new ConnectedActivity.StackElement(ConnectedActivity.TYPE.ROOT, connectedFragmentClass, extras));
-                    }
+                    fragmentTransaction.replace(activity.getRootViewId(), fragment);
+                    fragmentTransaction.commitAllowingStateLoss();
+                    activity.pushFragment(new ConnectedActivity.StackElement(ConnectedActivity.TYPE.ROOT, connectedFragmentClass, extras));
                 }
             } catch (Exception e) {
                 log.exception(e);

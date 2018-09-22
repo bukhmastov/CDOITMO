@@ -7,7 +7,7 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Process;
 
-import com.bukhmastov.cdoitmo.BuildConfig;
+import com.bukhmastov.cdoitmo.App;
 import com.bukhmastov.cdoitmo.R;
 import com.bukhmastov.cdoitmo.factory.AppComponentProvider;
 import com.bukhmastov.cdoitmo.util.Log;
@@ -21,7 +21,7 @@ import dagger.Lazy;
 public class ThreadImpl implements Thread {
 
     private static final String TAG = "Thread";
-    private static final boolean DEBUG = BuildConfig.DEBUG;
+    private static final boolean DEBUG = App.DEBUG;
 
     @Inject
     Lazy<Log> log;
@@ -108,6 +108,34 @@ public class ThreadImpl implements Thread {
     @Override
     public void sleep(long millis) throws InterruptedException {
         java.lang.Thread.sleep(millis, 0);
+    }
+
+    @Override
+    public boolean assertUI() {
+        if (isMainThread()) {
+            return true;
+        } else {
+            if (App.DEBUG) {
+                throw new IllegalStateException("Main thread required");
+            } else {
+                log.get().wtf(new IllegalStateException("Main thread required"));
+            }
+            return false;
+        }
+    }
+
+    @Override
+    public boolean assertNotUI() {
+        if (!isMainThread()) {
+            return true;
+        } else {
+            if (App.DEBUG) {
+                throw new IllegalStateException("Not main thread required");
+            } else {
+                log.get().wtf(new IllegalStateException("Not main thread required"));
+            }
+            return false;
+        }
     }
 
     private boolean isMainThread() {

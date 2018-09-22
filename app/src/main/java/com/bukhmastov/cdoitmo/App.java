@@ -8,6 +8,7 @@ import android.content.res.Configuration;
 
 import com.bukhmastov.cdoitmo.event.bus.EventBus;
 import com.bukhmastov.cdoitmo.event.bus.annotation.Event;
+import com.bukhmastov.cdoitmo.event.events.ClearCacheEvent;
 import com.bukhmastov.cdoitmo.event.events.OpenActivityEvent;
 import com.bukhmastov.cdoitmo.event.events.OpenIntentEvent;
 import com.bukhmastov.cdoitmo.event.events.ShareTextEvent;
@@ -29,6 +30,7 @@ import javax.inject.Inject;
 public class App extends Application {
 
     private static final String TAG = "Application";
+    public static final boolean DEBUG = BuildConfig.DEBUG;
     public static final int intentFlagRestart = Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK;
     public static String versionName;
     public static int versionCode;
@@ -90,6 +92,18 @@ public class App extends Application {
         } catch (Throwable e) {
             log.exception(e);
         }
+    }
+
+    @Override
+    public void onTrimMemory(int level) {
+        if (level >= TRIM_MEMORY_MODERATE) {
+            log.i(TAG, "onTrimMemory called with level = ", level, " | going to clear all cache");
+            eventBus.fire(new ClearCacheEvent(ClearCacheEvent.ALL));
+        } else if (level >= TRIM_MEMORY_BACKGROUND) {
+            log.i(TAG, "onTrimMemory called with level = ", level, " | going to clear not valuable cache");
+            eventBus.fire(new ClearCacheEvent(ClearCacheEvent.NOT_VALUABLE));
+        }
+        super.onTrimMemory(level);
     }
 
     @Event

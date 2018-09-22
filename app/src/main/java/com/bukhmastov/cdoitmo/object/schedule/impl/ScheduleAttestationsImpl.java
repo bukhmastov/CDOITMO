@@ -50,7 +50,7 @@ public class ScheduleAttestationsImpl extends ScheduleImpl implements ScheduleAt
 
     @Event
     public void onClearCacheEvent(ClearCacheEvent event) {
-        if (event.isNot("schedule_attestations")) {
+        if (event.isNot(ClearCacheEvent.SCHEDULE_ATTESTATIONS)) {
             return;
         }
         clearLocalCache();

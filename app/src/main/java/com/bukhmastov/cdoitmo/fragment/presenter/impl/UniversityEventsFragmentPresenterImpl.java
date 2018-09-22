@@ -86,7 +86,7 @@ public class UniversityEventsFragmentPresenterImpl implements UniversityEventsFr
 
     @Event
     public void onClearCacheEvent(ClearCacheEvent event) {
-        if (event.isNot("university")) {
+        if (event.isNot(ClearCacheEvent.UNIVERSITY)) {
             return;
         }
         events = null;

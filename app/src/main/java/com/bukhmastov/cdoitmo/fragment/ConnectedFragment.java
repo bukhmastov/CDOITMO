@@ -7,6 +7,7 @@ import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,6 +28,7 @@ import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleExamsFragment;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsScheduleLessonsFragment;
 import com.bukhmastov.cdoitmo.fragment.settings.SettingsSystemsFragment;
 import com.bukhmastov.cdoitmo.util.Log;
+import com.bukhmastov.cdoitmo.util.Thread;
 
 import javax.inject.Inject;
 
@@ -42,6 +44,8 @@ public abstract class ConnectedFragment extends Fragment {
 
     @Inject
     Log log;
+    @Inject
+    Thread thread;
 
     @Override
     public void onAttach(Context context) {
@@ -72,6 +76,18 @@ public abstract class ConnectedFragment extends Fragment {
     }
 
     public void onViewCreated() {}
+
+    public boolean isNotAddedToActivity() {
+        if (!thread.assertUI()) {
+            return true;
+        }
+        FragmentManager fragmentManager = getFragmentManager();
+        if (fragmentManager == null) {
+            return true;
+        }
+        fragmentManager.executePendingTransactions();
+        return !isAdded();
+    }
 
     public ConnectedActivity activity() {
         return activity;

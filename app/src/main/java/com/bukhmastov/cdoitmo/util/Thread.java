@@ -15,6 +15,10 @@ public interface Thread {
 
     void sleep(long millis) throws InterruptedException;
 
+    boolean assertUI();
+
+    boolean assertNotUI();
+
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({FOREGROUND, BACKGROUND})
     @interface TYPE {}

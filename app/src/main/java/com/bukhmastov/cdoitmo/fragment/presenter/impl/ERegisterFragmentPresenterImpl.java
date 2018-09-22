@@ -87,7 +87,7 @@ public class ERegisterFragmentPresenterImpl implements ERegisterFragmentPresente
 
     @Event
     public void onClearCacheEvent(ClearCacheEvent event) {
-        if (event.isNot("eregister")) {
+        if (event.isNot(ClearCacheEvent.EREGISTER)) {
             return;
         }
         data = null;

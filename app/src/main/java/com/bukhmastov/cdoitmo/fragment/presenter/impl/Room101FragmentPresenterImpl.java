@@ -93,7 +93,7 @@ public class Room101FragmentPresenterImpl implements Room101FragmentPresenter, S
 
     @Event
     public void onClearCacheEvent(ClearCacheEvent event) {
-        if (event.isNot("room101")) {
+        if (event.isNot(ClearCacheEvent.ROOM101)) {
             return;
         }
         data = null;

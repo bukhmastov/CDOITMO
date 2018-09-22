@@ -41,7 +41,7 @@ public class ScheduleExamsImpl extends ScheduleImpl implements ScheduleExams {
 
     @Event
     public void onClearCacheEvent(ClearCacheEvent event) {
-        if (event.isNot("schedule_exams")) {
+        if (event.isNot(ClearCacheEvent.SCHEDULE_EXAMS)) {
             return;
         }
         clearLocalCache();

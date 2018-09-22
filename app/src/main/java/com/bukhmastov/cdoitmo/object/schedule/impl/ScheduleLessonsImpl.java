@@ -40,7 +40,7 @@ public class ScheduleLessonsImpl extends ScheduleImpl implements ScheduleLessons
 
     @Event
     public void onClearCacheEvent(ClearCacheEvent event) {
-        if (event.isNot("schedule_lessons")) {
+        if (event.isNot(ClearCacheEvent.SCHEDULE_LESSONS)) {
             return;
         }
         clearLocalCache();

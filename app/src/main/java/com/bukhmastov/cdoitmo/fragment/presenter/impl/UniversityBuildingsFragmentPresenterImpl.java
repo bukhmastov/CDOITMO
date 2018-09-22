@@ -15,6 +15,7 @@ import android.support.annotation.LayoutRes;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -107,7 +108,7 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
 
     @Event
     public void onClearCacheEvent(ClearCacheEvent event) {
-        if (event.isNot("university")) {
+        if (event.isNot(ClearCacheEvent.UNIVERSITY)) {
             return;
         }
         building_map = null;
@@ -154,6 +155,10 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
     public void onCreateView(View container) {
         thread.runOnUI(() -> {
             this.container = container;
+            if (isNotAddedToActivity()) {
+                log.w(TAG, "onCreateView | fragment not added to activity");
+                return;
+            }
             try {
                 SupportMapFragment mapFragment = (SupportMapFragment) fragment.getChildFragmentManager().findFragmentById(R.id.buildings_map);
                 if (mapFragment != null) {
@@ -637,6 +642,21 @@ public class UniversityBuildingsFragmentPresenterImpl implements UniversityBuild
                 log.exception(e);
             }
         });
+    }
+
+    private boolean isNotAddedToActivity() {
+        if (!thread.assertUI()) {
+            return true;
+        }
+        if (fragment == null) {
+            return true;
+        }
+        FragmentManager fragmentManager = fragment.getFragmentManager();
+        if (fragmentManager == null) {
+            return true;
+        }
+        fragmentManager.executePendingTransactions();
+        return !fragment.isAdded();
     }
 
     private View inflate(@LayoutRes int layout) throws InflateException {

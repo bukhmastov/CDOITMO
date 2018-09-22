@@ -85,7 +85,7 @@ public class ProtocolFragmentPresenterImpl implements ProtocolFragmentPresenter,
 
     @Event
     public void onClearCacheEvent(ClearCacheEvent event) {
-        if (event.isNot("protocol")) {
+        if (event.isNot(ClearCacheEvent.PROTOCOL)) {
             return;
         }
         data = null;

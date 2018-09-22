@@ -55,7 +55,7 @@ public class UniversityFragmentPresenterImpl implements UniversityFragmentPresen
 
     @Event
     public void onClearCacheEvent(ClearCacheEvent event) {
-        if (event.isNot("university")) {
+        if (event.isNot(ClearCacheEvent.UNIVERSITY)) {
             return;
         }
         tabSelected = -1;
@@ -121,6 +121,10 @@ public class UniversityFragmentPresenterImpl implements UniversityFragmentPresen
     @Override
     public void onViewCreated() {
         thread.runOnUI(() -> {
+            if (fragment.isNotAddedToActivity()) {
+                log.w(TAG, "onViewCreated | fragment not added to activity");
+                return;
+            }
             TabLayout main_tabs = activity.findViewById(R.id.scrollable_tabs);
             if (main_tabs == null) {
                 return;
