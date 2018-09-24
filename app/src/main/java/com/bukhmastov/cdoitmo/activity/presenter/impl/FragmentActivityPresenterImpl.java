@@ -103,7 +103,10 @@ public class FragmentActivityPresenterImpl implements FragmentActivityPresenter,
                     actionBar.setDisplayHomeAsUpEnabled(true);
                 }
                 if (activity.layout_with_menu) {
-                    ((NavigationView) activity.findViewById(R.id.nav_view)).setNavigationItemSelectedListener(this);
+                    NavigationView navigationView = activity.findViewById(R.id.nav_view);
+                    if (navigationView != null) {
+                        navigationView.setNavigationItemSelectedListener(this);
+                    }
                 }
                 invoke(fragment_class, fragment_extras);
             } catch (Exception e) {
